@@ -34,7 +34,7 @@ export default defineConfig({
     environment: 'node',
     setupFiles: [resolve(__dirname, 'vitest.setup.ts')],
     coverage: {
-      provider: 'v8', // Revert to v8 with location-independent globs
+      provider: 'istanbul', // Switch to istanbul for better Bun compatibility
       all: true,
       // Reporters: text shows summary at end, others for artifact generation
       reporter: [
