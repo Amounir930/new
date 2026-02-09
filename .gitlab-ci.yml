@@ -40,8 +40,8 @@ code_integrity:
     - "if [ ! -f 'packages/export/tsconfig.json' ]; then exit 1; fi"
     - bunx tsc --noEmit --project packages/export/tsconfig.json
     - echo "🧹 Verifying S14 Cleanup Logic..."
-    - CLEANUP_COUNT=$(grep -cE "rm.*-rf|rm.*-f|cleanup" packages/export/src/strategies/*.ts | awk -F: '{sum+=$NF} END {print sum+0}')
-    - if [ "$CLEANUP_COUNT" -lt 3 ]; then echo "🚨 Missing Cleanup Logic!"; exit 1; fi
+    - 'CLEANUP_COUNT=$(grep -cE "rm.*-rf|rm.*-f|cleanup" packages/export/src/strategies/*.ts | awk -F: ''{sum+=$NF} END {print sum+0}'')'
+    - 'if [ "$CLEANUP_COUNT" -lt 3 ]; then echo "🚨 Missing Cleanup Logic!"; exit 1; fi'
     - echo "✨ Running Global Lint Check..."
     - bun run lint
 
