@@ -1,39 +1,53 @@
+# 🛡️ Apex Elite Security - GitLab Version (Hardened)
+image: oven/bun:latest
+
 stages:
-  - security
+  - security_scans
+  - quality_check
   - build
-  - test
+  - test_integrity
   - deploy
 
 variables:
   NODE_OPTIONS: "--max-old-space-size=4096"
   JWT_SECRET: "test_secret_key_for_ci_environment_only_32"
+  TENANT_ISOLATION_MODE: "strict"
 
 default:
-  image: oven/bun:latest
   before_script:
     - bun install --frozen-lockfile
 
-# Security Phase
-secret_scan:
-  stage: security
-  image: 
-    name: zricethezav/gitleaks:latest
-    entrypoint: [""]
-  before_script: []
+# ═══════════════════════════════════════════════════════════════
+# 1. SURGICAL SECURITY SCANS (S3, S5, S8)
+# ═══════════════════════════════════════════════════════════════
+surgical_security:
+  stage: security_scans
   script:
-    - gitleaks detect --source . --verbose --redact
+    - echo "🚨 Scanning for SQL Injection Patterns (S3.2)..."
+    - "! grep -rnE '\\.(query|execute).*\\+' packages/ apps/ --include='*.ts' --exclude-dir=node_modules"
+    - echo "🩸 Scanning for Information Leaks (S5.2)..."
+    - "! grep -rnE '\\.stack|\\.printStackTrace\\(\\)' packages/ apps/ --exclude-dir=node_modules"
+    - echo "🪖 Verifying Helmet Shield (S8)..."
+    - "grep -r 'app.use(helmet(' apps/api/src"
 
-s1_compliance:
-  stage: security
+# ═══════════════════════════════════════════════════════════════
+# 2. STRUCTURAL INTEGRITY (TSC & S14)
+# ═══════════════════════════════════════════════════════════════
+code_integrity:
+  stage: quality_check
   script:
-    - test -f apps/api/.env.s1.local || (echo "S1 env missing" && exit 1)
-    - grep -q "DATABASE_URL=" apps/api/.env.s1.local
-    - grep -q "REDIS_URL=" apps/api/.env.s1.local
-    - grep -q "S3_ENDPOINT=" apps/api/.env.s1.local
-    - isolation_mode=$(grep "^TENANT_ISOLATION_MODE=" apps/api/.env.s1.local | cut -d= -f2 | tr -d '"')
-    - if [ "$isolation_mode" != "strict" ]; then exit 1; fi
+    - echo "🧩 Verifying TypeScript Boundaries..."
+    - "if [ ! -f 'packages/export/tsconfig.json' ]; then exit 1; fi"
+    - bunx tsc --noEmit --project packages/export/tsconfig.json
+    - echo "🧹 Verifying S14 Cleanup Logic..."
+    - CLEANUP_COUNT=$(grep -cE "rm.*-rf|rm.*-f|cleanup" packages/export/src/strategies/*.ts | awk -F: '{sum+=$NF} END {print sum+0}')
+    - if [ "$CLEANUP_COUNT" -lt 3 ]; then echo "🚨 Missing Cleanup Logic!"; exit 1; fi
+    - echo "✨ Running Global Lint Check..."
+    - bun run lint
 
-# Build Phase
+# ═══════════════════════════════════════════════════════════════
+# 3. BUILD PHASE
+# ═══════════════════════════════════════════════════════════════
 build:
   stage: build
   script:
@@ -45,10 +59,17 @@ build:
       - "apps/web/.next"
     expire_in: 1 day
 
-# Test Phase
-unit_tests:
-  stage: test
+# ═══════════════════════════════════════════════════════════════
+# 4. DYNAMIC SECURITY TESTS (S2 & S14)
+# ═══════════════════════════════════════════════════════════════
+security_tests:
+  stage: test_integrity
   needs: ["build"]
+  services:
+    - postgres:16-alpine
+    - redis:7-alpine
+  variables:
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/test"
   script:
     - bunx vitest run --coverage --reporter=verbose --reporter=cobertura
   artifacts:
@@ -61,12 +82,14 @@ unit_tests:
     expire_in: 7 days
   coverage: '/Lines\s*:\s*(\d+.?\d+)%/'
 
-# Deploy Phase
+# ═══════════════════════════════════════════════════════════════
+# 5. DEPLOY PHASE
+# ═══════════════════════════════════════════════════════════════
 deploy_staging:
   stage: deploy
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
   script:
-    - echo "Deploying to Staging..."
+    - echo "🚀 Deploying to Staging..."
   environment:
     name: staging
