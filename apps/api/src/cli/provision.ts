@@ -55,13 +55,7 @@ export async function main(args: string[] = process.argv.slice(2)) {
       '❌ Provisioning failed:',
       error instanceof Error ? error.message : error
     );
-    // S1: Shield internal details from non-dev environments
-    if (process.env.NODE_ENV === 'development') {
-      console.error(
-        'Diagnostic Info:',
-        error instanceof Error ? error.stack : error
-      );
-    }
+    // S5: Diagnostic info logic removed to prevent leaks
     throw error;
   }
 }

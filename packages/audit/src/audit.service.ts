@@ -304,7 +304,7 @@ export async function query(
     // return res.rows;
 
     // For the test mock to work, we just need to call client.query with expected strings
-    await client.query(sql.replace(/\s+/g, ' ').trim(), values);
+    await client.query(sql.split(/\s+/).join(' ').trim(), values);
 
     // Return empty array or mock data as this is mostly for the test spy
     return [];
