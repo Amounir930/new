@@ -90,12 +90,10 @@ unit_tests:
   stage: test
   needs: ["build"]
   script:
-    - bunx vitest run --coverage --reporter=verbose
+    - bunx vitest run --coverage --reporter=verbose --reporter=cobertura
   artifacts:
     reports:
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage/cobertura-coverage.xml
+      cobertura: coverage/cobertura-coverage.xml
     paths:
       - coverage/
     expire_in: 7 days
