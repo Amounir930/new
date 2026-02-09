@@ -53,7 +53,9 @@ unit_tests:
     - bunx vitest run --coverage --reporter=verbose --reporter=cobertura
   artifacts:
     reports:
-      cobertura: coverage/cobertura-coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
     paths:
       - coverage/
     expire_in: 7 days
