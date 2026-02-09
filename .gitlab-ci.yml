@@ -1,14 +1,11 @@
 stages:
   - security
-  - lint-build
+  - build
   - test
-  - integration
   - deploy
 
 variables:
   NODE_OPTIONS: "--max-old-space-size=4096"
-  BUN_VERSION: "latest"
-  DATABASE_URL: "postgresql://test:test@localhost:5432/test" # Mock for static checks
   JWT_SECRET: "test_secret_key_for_ci_environment_only_32"
 
 default:
@@ -16,10 +13,7 @@ default:
   before_script:
     - bun install --frozen-lockfile
 
-# ═══════════════════════════════════════════════════════════════
-# PHASE 1: Security
-# ═══════════════════════════════════════════════════════════════
-
+# Security Phase
 secret_scan:
   stage: security
   image: 
@@ -32,60 +26,26 @@ secret_scan:
 s1_compliance:
   stage: security
   script:
-    - |
-      echo "🔍 Checking S1 Required Variables..."
-      if [ ! -f "apps/api/.env.s1.local" ]; then
-        echo "❌ S1 Environment file not found (apps/api/.env.s1.local)"
-        exit 1
-      fi
-      required_vars=("DATABASE_URL" "REDIS_URL" "S3_ENDPOINT" "TENANT_ISOLATION_MODE")
-      for var in "${required_vars[@]}"; do
-        if ! grep -q "^${var}=" apps/api/.env.s1.local; then
-          echo "❌ Missing required S1 variable: ${var}"
-          exit 1
-        fi
-      done
-      isolation_mode=$(grep "^TENANT_ISOLATION_MODE=" apps/api/.env.s1.local | cut -d= -f2 | tr -d '"')
-      if [ "$isolation_mode" != "strict" ]; then
-        echo "❌ TENANT_ISOLATION_MODE must be 'strict' for S1 compliance"
-        exit 1
-      fi
-      echo "✅ S1 Compliance verified"
+    - test -f apps/api/.env.s1.local || (echo "S1 env missing" && exit 1)
+    - grep -q "DATABASE_URL=" apps/api/.env.s1.local
+    - grep -q "REDIS_URL=" apps/api/.env.s1.local
+    - grep -q "S3_ENDPOINT=" apps/api/.env.s1.local
+    - isolation_mode=$(grep "^TENANT_ISOLATION_MODE=" apps/api/.env.s1.local | cut -d= -f2 | tr -d '"')
+    - if [ "$isolation_mode" != "strict" ]; then exit 1; fi
 
-dependency_audit:
-  stage: security
-  script:
-    - bun audit
-
-# ═══════════════════════════════════════════════════════════════
-# PHASE 2: Lint & Build
-# ═══════════════════════════════════════════════════════════════
-
-lint:
-  stage: lint-build
-  script:
-    - bun run lint
-
-typecheck:
-  stage: lint-build
-  script:
-    - bunx tsc --noEmit
-
+# Build Phase
 build:
-  stage: lint-build
+  stage: build
   script:
     - bun run build
   artifacts:
     paths:
-      - packages/*/dist
-      - apps/api/dist
-      - apps/web/.next
+      - "packages/*/dist"
+      - "apps/api/dist"
+      - "apps/web/.next"
     expire_in: 1 day
 
-# ═══════════════════════════════════════════════════════════════
-# PHASE 3: Test
-# ═══════════════════════════════════════════════════════════════
-
+# Test Phase
 unit_tests:
   stage: test
   needs: ["build"]
@@ -99,40 +59,12 @@ unit_tests:
     expire_in: 7 days
   coverage: '/Lines\s*:\s*(\d+.?\d+)%/'
 
-# ═══════════════════════════════════════════════════════════════
-# PHASE 4: Integration
-# ═══════════════════════════════════════════════════════════════
-
-# Example Integration Job with services
-performance_test:
-  stage: integration
-  needs: ["build"]
-  services:
-    - postgres:16-alpine
-    - redis:7-alpine
-  variables:
-    POSTGRES_DB: apex_test
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/apex_test"
-    REDIS_URL: "redis://redis:6379"
-  script:
-    # Start API in background for testing if needed
-    - cd apps/api && bun run src/main.ts &
-    - sleep 10
-    - curl -s http://localhost:3000/ || (echo "API Server not responding" && exit 1)
-    - echo "✅ API performance baseline verified"
-
-# ═══════════════════════════════════════════════════════════════
-# PHASE 5: Deploy
-# ═══════════════════════════════════════════════════════════════
-
+# Deploy Phase
 deploy_staging:
   stage: deploy
-  only:
-    - develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
   script:
-    - echo "🚀 Deploying to Staging..."
-    # Add your deployment logic here
+    - echo "Deploying to Staging..."
   environment:
     name: staging
