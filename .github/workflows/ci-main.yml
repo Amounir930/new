@@ -189,10 +189,8 @@ jobs:
       # ═══════════════════════════════════════════════════════════════════════
       # S10: ADVANCED SECRET DETECTION (HARDENED)
       # ═══════════════════════════════════════════════════════════════════════
-      - name: "S10a - Gitleaks Scan"
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # S10a: Primary Gitleaks scan is performed in S1 Environment Gate (s1-env)
+      # to prevent artifact name conflicts and redundancy.
 
       - name: "S10b - Secondary Secret & Env Scan"
         run: |
