@@ -36,7 +36,9 @@ describe('mTLS Implementation', () => {
   afterAll(() => {
     try {
       rmSync(testDir, { recursive: true });
-    } catch { }
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
   describe('Certificate Loading', () => {
