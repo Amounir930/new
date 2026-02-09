@@ -18,6 +18,7 @@ vi.mock('bullmq', () => ({
   Queue: vi.fn().mockImplementation(() => ({
     getJob: vi.fn(),
     add: vi.fn(),
+    close: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
@@ -92,9 +93,7 @@ describe('ExportWorker', () => {
       }),
     });
     worker = new ExportWorker(mockFactory, mockAudit as any);
-    (worker as any).exportQueue = {
-      getJob: vi.fn(),
-    };
+    vi.mocked((worker as any).exportQueue.getJob).mockResolvedValue(null);
   });
 
   afterEach(async () => {

@@ -1,5 +1,5 @@
 import { AuditService } from '@apex/audit';
-import { publicPool } from '@apex/db';
+import { TenantRegistryService } from '@apex/db';
 import * as provisioning from '@apex/provisioning';
 import {
   ConflictException,
@@ -24,9 +24,9 @@ vi.mock('@apex/provisioning', () => ({
 
 // Mock @apex/db
 vi.mock('@apex/db', () => ({
-  publicPool: {
-    connect: vi.fn(),
-  },
+  TenantRegistryService: vi.fn().mockImplementation(() => ({
+    register: vi.fn(),
+  })),
 }));
 
 describe('ProvisioningService', () => {
@@ -37,10 +37,6 @@ describe('ProvisioningService', () => {
     log: vi.fn(),
   };
 
-  const mockClient = {
-    query: vi.fn(),
-    release: vi.fn(),
-  };
 
   const options: ProvisioningOptions = {
     subdomain: 'test-store',
@@ -52,6 +48,10 @@ describe('ProvisioningService', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
 
+    const mockTenantRegistry = {
+      register: vi.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProvisioningService,
@@ -59,14 +59,17 @@ describe('ProvisioningService', () => {
           provide: 'AUDIT_SERVICE',
           useValue: mockAuditService,
         },
+        {
+          provide: TenantRegistryService,
+          useValue: mockTenantRegistry,
+        },
       ],
     }).compile();
 
     service = module.get<ProvisioningService>(ProvisioningService);
     _audit = module.get<AuditService>('AUDIT_SERVICE');
+    (service as any).tenantRegistry = mockTenantRegistry; // Force override just in case
 
-    // Default mock behavior for database
-    vi.mocked(publicPool.connect).mockResolvedValue(mockClient as any);
   });
 
   describe('provision', () => {
@@ -95,7 +98,7 @@ describe('ProvisioningService', () => {
           entityId: 'test-store',
         })
       );
-      expect(mockClient.query).toHaveBeenCalled();
+      expect((service as any).tenantRegistry.register).toHaveBeenCalled();
     });
 
     it('should throw ConflictException if resource already exists', async () => {
@@ -183,7 +186,7 @@ describe('ProvisioningService', () => {
   });
 
   describe('registerTenant', () => {
-    it('should release client even if query fails', async () => {
+    it('should throw InternalServerErrorException if registry fails', async () => {
       vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
         undefined as any
       );
@@ -197,12 +200,12 @@ describe('ProvisioningService', () => {
         adminId: 'admin-123',
       } as any);
 
-      mockClient.query.mockRejectedValue(new Error('DB Query Fail'));
+      const mockTenantRegistry = (service as any).tenantRegistry;
+      mockTenantRegistry.register.mockRejectedValue(new Error('Registry Fail'));
 
       await expect(service.provision(options)).rejects.toThrow(
         InternalServerErrorException
       );
-      expect(mockClient.release).toHaveBeenCalled();
     });
   });
   describe('Logger & Non-Standard Errors', () => {

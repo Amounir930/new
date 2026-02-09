@@ -23,10 +23,10 @@ process.env.MINIO_ACCESS_KEY =
   process.env.CI_MINIO_ACCESS_KEY || generateTestSecret(20);
 process.env.MINIO_SECRET_KEY =
   process.env.CI_MINIO_SECRET_KEY || generateTestSecret(40);
-process.env.NODE_ENV = 'test';
+// Vitest sets NODE_ENV to 'test' automatically
 process.env.JWT_EXPIRES_IN = '1h';
 process.env.ENABLE_S1_ENFORCEMENT = 'false';
 
 // S7 FIX: Generate secure encryption key for tests (32+ chars with mixed case, numbers, special chars)
 process.env.ENCRYPTION_MASTER_KEY =
-  generateTestSecret(16) + 'A1!' + generateTestSecret(16);
+  `${generateTestSecret(16)}A1!${generateTestSecret(16)}`;

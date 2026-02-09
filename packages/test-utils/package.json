@@ -15,7 +15,7 @@
     "scripts": {
         "build": "tsup",
         "dev": "tsup --watch",
-        "test": "vitest",
+        "test": "vitest run",
         "lint": "biome check .",
         "typecheck": "tsc --noEmit"
     },

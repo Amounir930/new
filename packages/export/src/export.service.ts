@@ -8,13 +8,13 @@
 
 import { randomUUID } from 'crypto';
 import { AuditService } from '@apex/audit';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { ExportStrategyFactory } from './export-strategy.factory.js';
 import type { ExportJob, ExportOptions, ExportResult } from './types.js';
 
 @Injectable()
-export class ExportService {
+export class ExportService implements OnModuleDestroy {
   private readonly logger = new Logger(ExportService.name);
   private exportQueue: Queue;
 
@@ -67,7 +67,7 @@ export class ExportService {
     if (tenantJobs.length > 0) {
       throw new Error(
         `Export already in progress for tenant ${options.tenantId}. ` +
-          `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
+        `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
       );
     }
 
@@ -155,9 +155,9 @@ export class ExportService {
       progress: job.progress as number | undefined,
       result: result
         ? {
-            ...result,
-            expiresAt: new Date(result.expiresAt),
-          }
+          ...result,
+          expiresAt: new Date(result.expiresAt),
+        }
         : undefined,
       error: job.failedReason || undefined,
     };
@@ -209,6 +209,10 @@ export class ExportService {
         requestedAt: new Date(j.timestamp),
         status: this.mapJobState(j.getState()),
       }));
+  }
+
+  async onModuleDestroy() {
+    await this.exportQueue.close();
   }
 
   private mapJobState(state: string | Promise<string>): ExportJob['status'] {

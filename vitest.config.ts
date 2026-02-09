@@ -26,6 +26,7 @@ export default defineConfig({
         'packages/provisioning/src/index.ts'
       ),
       '@apex/ui': resolve(__dirname, 'packages/ui/src/index.ts'),
+      '@templates': resolve(__dirname, 'templates'),
     },
   },
   test: {
