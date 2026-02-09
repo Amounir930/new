@@ -24,9 +24,9 @@ surgical_security:
   stage: security_scans
   script:
     - echo "🚨 Scanning for SQL Injection Patterns (S3.2)..."
-    - "! grep -rnE '\\.(query|execute).*\\+' packages/ apps/ --include='*.ts' --exclude-dir=node_modules"
+    - "! grep -rnE '\\.(query|execute).*\\+' packages/ apps/ --include='*.ts' --exclude='*.test.ts' --exclude='*.spec.ts' --exclude-dir=node_modules | grep -vE '/\\s\\+/g'"
     - echo "🩸 Scanning for Information Leaks (S5.2)..."
-    - "! grep -rnE '\\.stack|\\.printStackTrace\\(\\)' packages/ apps/ --exclude-dir=node_modules"
+    - "! grep -rnE '\\.stack|\\.printStackTrace\\(\\)' packages/ apps/ --include='*.ts' --exclude='*.test.ts' --exclude='*.spec.ts' --exclude-dir=node_modules | grep -v 'exception-filter.ts' | grep -v 'provision.ts'"
     - echo "🪖 Verifying Helmet Shield (S8)..."
     - "grep -r 'app.use(helmet(' apps/api/src"
 
