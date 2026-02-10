@@ -79,29 +79,79 @@ jobs:
           
           echo "✅ S7.2: No obvious plaintext storage patterns found"
 
+      - name: "S7.3 - Seed Encrypted Data for Raw Inspection"
+        run: |
+          echo "🌱 Seeding encrypted data for raw-byte verification..."
+          # Create a dedicated verification table and insert encrypted data
+          # This ensures S7.3 NEVER relies on S7.1 test cleanup behavior
+          psql $DATABASE_URL -c "
+            CREATE TABLE IF NOT EXISTS public.s7_verification_data (
+              id SERIAL PRIMARY KEY,
+              label TEXT NOT NULL,
+              encrypted_payload TEXT NOT NULL,
+              created_at TIMESTAMP DEFAULT NOW()
+            );
+          "
+          
+          # Use the encryption service to store known plaintext
+          cd packages/db
+          DATABASE_URL=$DATABASE_URL bun run -e "
+            import { encryptField } from './src/encryption';
+            import { sql } from './src/client';
+            
+            const KNOWN_PLAINTEXT = 'S7_VERIFICATION_SECRET_PLAINTEXT_2026';
+            const encrypted = encryptField(KNOWN_PLAINTEXT);
+            
+            await sql\`
+              INSERT INTO public.s7_verification_data (label, encrypted_payload)
+              VALUES ('s7_gate_test', \${encrypted})
+            \`;
+            
+            console.log('✅ Verification data seeded (encrypted)');
+            process.exit(0);
+          " || {
+            echo "⚠️ Encryption service not available, using direct SQL seed..."
+            # Fallback: insert a raw marker that should NEVER appear if encryption works
+            psql $DATABASE_URL -c "INSERT INTO public.s7_verification_data (label, encrypted_payload) VALUES ('s7_gate_test', 'FALLBACK_MARKER_ENCRYPTION_NOT_ACTIVE');"
+          }
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          ENCRYPTION_MASTER_KEY: ValidTestKey32CharsWith1$!Abc1234
+          NODE_ENV: test
+          JWT_SECRET: test_secret_key_for_ci_environment_only_32
+          MINIO_ACCESS_KEY: test_access_key
+          MINIO_SECRET_KEY: test_secret_key
+
       - name: "S7.3 - Verification of Encrypted Bytes (Raw Storage Inspection)"
         run: |
           echo "🕵️ Inspecting Raw Database Bytes..."
-          # Radical Fix: Verify that data is actually stored as Ciphertext in DB
-          # Note: This requires the S7.1 test to have run recently and NOT cleaned up yet,
-          # OR we run a specific seeding script here.
-          # For this gate, we use the  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testDATABASE_URL
           
-          # Since the previous step might have cleaned up, we skip cleanup in s7-encryption.test.ts 
-          # or rerun a seeding command. We'll rely on a manual check for ciphertext patterns.
+          # Query the dedicated verification table (seeded in previous step)
+          RAW_DATA=$(psql $DATABASE_URL -t -c "SELECT encrypted_payload FROM public.s7_verification_data WHERE label = 's7_gate_test' LIMIT 1;" 2>/dev/null || echo "")
           
-          RAW_DATA=$(psql $DATABASE_URL -t -c "SELECT encrypted_data FROM public.s7_test_storage LIMIT 1;" || echo "table_not_found")
-          
-          if [[ "$RAW_DATA" == *"MY_SUPER_SECRET_PII_DATA"* ]]; then
-            echo "🚨 CRITICAL FAILURE: Data stored in Plaintext! S7 Encryption at Rest breached."
+          # Gate 1: Table/data MUST exist (no silent bypass)
+          if [ -z "$(echo "$RAW_DATA" | tr -d '[:space:]')" ]; then
+            echo "🚨 CRITICAL FAILURE: S7.3 verification data not found!"
+            echo "   The seed step must have failed. This gate CANNOT be bypassed."
             exit 1
           fi
           
-          if [[ "$RAW_DATA" == "table_not_found" ]]; then
-            echo "⚠️  Note: S7.1 cleanup removed the table. Behavioral bypass active."
-          else
-             echo "✅ S7.3: Verified that raw storage remains encrypted."
-          fi
+          # Gate 2: Raw data must NOT contain known plaintext markers
+          KNOWN_MARKERS=("S7_VERIFICATION_SECRET_PLAINTEXT_2026" "MY_SUPER_SECRET_PII_DATA" "FALLBACK_MARKER_ENCRYPTION_NOT_ACTIVE")
+          for marker in "${KNOWN_MARKERS[@]}"; do
+            if [[ "$RAW_DATA" == *"$marker"* ]]; then
+              echo "🚨 CRITICAL FAILURE: Data stored in PLAINTEXT! Marker '$marker' found in raw bytes."
+              echo "   S7 Encryption at Rest is BREACHED."
+              exit 1
+            fi
+          done
+          
+          echo "✅ S7.3: Raw storage verified - data is encrypted (no plaintext markers found)"
+          
+          # Cleanup verification table
+          psql $DATABASE_URL -c "DROP TABLE IF EXISTS public.s7_verification_data;" 2>/dev/null || true
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
 
       - name: S7 Final Report
         if: always()

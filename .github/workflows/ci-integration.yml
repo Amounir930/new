@@ -3,7 +3,24 @@ name: CI Integration Tests
 on:
   push:
     branches: [main]
-  workflow_dispatch:  # Manual trigger only for now
+    paths:
+      - 'apps/api/**'
+      - 'packages/db/**'
+      - 'packages/middleware/**'
+      - 'packages/auth/**'
+      - 'packages/audit/**'
+      - 'packages/export/**'
+      - 'docker-compose.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/api/**'
+      - 'packages/db/**'
+      - 'packages/middleware/**'
+      - 'packages/auth/**'
+      - 'packages/audit/**'
+      - 'packages/export/**'
+  workflow_dispatch:  # Manual trigger still available
 
 permissions:
   contents: read

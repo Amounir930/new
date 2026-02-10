@@ -70,7 +70,7 @@ async function orchestrate() {
     if (require('fs').existsSync(reportPath)) {
       const templateReport = JSON.parse(readFileSync(reportPath, 'utf-8'));
       // Merge violations
-      Object.values(templateReport.phases).forEach((phase: any) => {
+      for (const phase of Object.values(templateReport.phases) as any[]) {
         reports.protocols.violations.push(
           ...phase.violations.map((v: any) => ({
             rule: phase.name,
@@ -79,7 +79,7 @@ async function orchestrate() {
             file: v.file,
           }))
         );
-      });
+      }
     }
   } catch (_error) {
     console.warn(

@@ -4,12 +4,11 @@
  */
 
 import { UnauthorizedException } from '@nestjs/common';
-import { NextFunction, Response } from 'express';
+import { NextFunction } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SuperAdminOrTenantGuard,
   TenantIsolationMiddleware,
-  TenantRequest,
   TenantScopedGuard,
 } from './tenant-isolation.middleware.js';
 

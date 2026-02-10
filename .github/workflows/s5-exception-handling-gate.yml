@@ -67,6 +67,53 @@ jobs:
           fi
           
           echo "✅ S5.2: No direct stack trace leaks found"
+      - name: "S5.3 - Error Response Body Safety Test"
+        run: |
+          echo "🔍 Scanning for unsafe error response patterns..."
+          
+          # Gate 1: Detect responses that leak internal error details to clients
+          # Look for patterns where raw error messages/objects are sent in HTTP responses
+          UNSAFE_RESPONSE=$(grep -rnE \
+            "(res\.json\(.*error\.message|res\.send\(.*err\.|response\.json\(.*\.stack|throw new HttpException\(.*error\.message)" \
+            apps/*/src packages/*/src --include="*.ts" 2>/dev/null | \
+            grep -vE "^\s*//" | \
+            grep -vE "(\.test\.|\.spec\.|exception-filter\.ts|logger\.service)" || true)
+          
+          if [ -n "$UNSAFE_RESPONSE" ]; then
+            echo "🚨 CRITICAL: Raw error details potentially exposed in HTTP responses!"
+            echo "$UNSAFE_RESPONSE"
+            echo "   Fix: Use standardized error DTOs, never pass raw error.message to clients."
+            exit 1
+          fi
+          
+          # Gate 2: Detect database error details leaking through responses
+          DB_LEAK=$(grep -rnE \
+            "(QueryFailedError|TypeORMError|DrizzleError|PrismaClientKnownRequestError|SQLSTATE)" \
+            apps/*/src packages/*/src --include="*.ts" 2>/dev/null | \
+            grep -vE "^\s*//" | \
+            grep -vE "(exception-filter\.ts|logger\.service|\.test\.|\.spec\.|error-handler)" || true)
+          
+          if [ -n "$DB_LEAK" ]; then
+            echo "⚠️ WARNING: Database error type references found in application code."
+            echo "$DB_LEAK"
+            echo "   Ensure these are caught by the exception filter and NOT forwarded to clients."
+          fi
+          
+          # Gate 3: Detect file path exposure patterns
+          PATH_LEAK=$(grep -rnE \
+            "(__dirname|__filename|process\.cwd\(\)|path\.resolve|path\.join)" \
+            apps/*/src packages/*/src --include="*.ts" 2>/dev/null | \
+            grep -E "(res\.|response\.|json\(|send\()" | \
+            grep -vE "^\s*//" | \
+            grep -vE "(\.test\.|\.spec\.)" || true)
+          
+          if [ -n "$PATH_LEAK" ]; then
+            echo "🚨 CRITICAL: Server file paths potentially exposed in HTTP responses!"
+            echo "$PATH_LEAK"
+            exit 1
+          fi
+          
+          echo "✅ S5.3: Error response bodies are safe (no internal detail leaks)"
 
       - name: S5 Final Report
         if: always()

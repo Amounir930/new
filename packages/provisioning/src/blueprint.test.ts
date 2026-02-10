@@ -11,7 +11,6 @@ import {
   getAllBlueprints,
   getBlueprintById,
   getDefaultBlueprint,
-  updateBlueprint,
   validateBlueprint,
 } from './blueprint.js';
 

@@ -71,7 +71,7 @@ export class ExportService implements OnModuleDestroy {
     if (tenantJobs.length > 0) {
       throw new Error(
         `Export already in progress for tenant ${options.tenantId}. ` +
-        `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
+          `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
       );
     }
 
@@ -164,9 +164,9 @@ export class ExportService implements OnModuleDestroy {
       progress: job.progress as number | undefined,
       result: result
         ? {
-          ...result,
-          expiresAt: new Date(result.expiresAt),
-        }
+            ...result,
+            expiresAt: new Date(result.expiresAt),
+          }
         : undefined,
       error: job.failedReason || undefined,
     };

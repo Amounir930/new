@@ -2,7 +2,6 @@
  * JWT Strategy Tests
  */
 
-import { ConfigService } from '@apex/config';
 import { UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { JwtStrategy } from './jwt.strategy.js';

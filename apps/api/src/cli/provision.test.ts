@@ -2,7 +2,6 @@
  * CLI Provisioning Tool Tests
  */
 
-import { NestFactory } from '@nestjs/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { main } from './provision.js';
 

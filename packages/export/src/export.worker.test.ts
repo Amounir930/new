@@ -4,7 +4,6 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { AuditService } from '@apex/audit';
 import { Job } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExportWorker } from './export.worker.js';

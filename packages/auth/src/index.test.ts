@@ -4,7 +4,7 @@
  */
 
 import { UnauthorizedException } from '@nestjs/common';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { JwtAuthGuard } from './index.js';
 
 describe('JwtAuthGuard', () => {
@@ -40,7 +40,7 @@ describe('JwtAuthGuard', () => {
     // In a real NestJS test, super.canActivate would be the actual AuthGuard logic.
     try {
       await guard.canActivate(mockContext);
-    } catch (e) {
+    } catch (_e) {
       // It might fail because of missing passport logic, but the line is hit.
     }
 

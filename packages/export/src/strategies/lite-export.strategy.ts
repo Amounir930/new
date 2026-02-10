@@ -22,7 +22,7 @@ export class LiteExportStrategy implements ExportStrategy {
   constructor(
     private readonly tenantRegistry: TenantRegistryService,
     private readonly shell: BunShell
-  ) { }
+  ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
     return this.tenantRegistry.exists(options.tenantId);
@@ -129,12 +129,12 @@ export class LiteExportStrategy implements ExportStrategy {
     } catch (error) {
       // Cleanup even on error
       await this.shell.spawn(['rm', '-rf', workDir]).exited;
-      await this.shell.spawn(['rm', '-f', tarPath]).exited.catch(() => { });
+      await this.shell.spawn(['rm', '-f', tarPath]).exited.catch(() => {});
       throw error;
     } finally {
       client.release();
       // 🧹 Cleanup: Remove work directory after tarball is created
-      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => { });
+      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => {});
     }
   }
 

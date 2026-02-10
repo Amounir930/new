@@ -97,13 +97,15 @@ jobs:
           CSP_EXISTS=$(grep -rE "Content-Security-Policy|contentSecurityPolicy|csp" packages apps --include="*.ts" --include="*.js" 2>/dev/null | grep -vE "^\s*//" || true)
           
           if [ -z "$CSP_EXISTS" ]; then
-            echo "⚠️ WARNING: No CSP configuration found. Ensure CSP is set via Helmet or manual headers."
+            echo "🚨 CRITICAL: No CSP configuration found! XSS protection requires Content-Security-Policy."
+            exit 1
           fi
           
           # Check for HSTS
           HSTS_EXISTS=$(grep -rE "Strict-Transport-Security|hsts" packages apps --include="*.ts" 2>/dev/null | grep -vE "^\s*//" || true)
           if [ -z "$HSTS_EXISTS" ]; then
-            echo "⚠️ WARNING: HSTS configuration not detected."
+            echo "🚨 CRITICAL: HSTS configuration not detected! Required for HTTPS enforcement."
+            exit 1
           fi
           
           echo "✅ Security headers structural verification complete"

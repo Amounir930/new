@@ -50,7 +50,7 @@ function getAllFiles(dir: string): string[] {
   if (!statSync(dir).isDirectory()) return [dir];
 
   const list = readdirSync(dir);
-  list.forEach((file) => {
+  for (const file of list) {
     const filePath = join(dir, file);
     const stat = statSync(filePath);
     if (stat.isDirectory()) {
@@ -60,7 +60,7 @@ function getAllFiles(dir: string): string[] {
     } else if (file.match(/\.(ts|tsx|js|jsx)$/)) {
       results.push(filePath);
     }
-  });
+  }
   return results;
 }
 
@@ -69,12 +69,12 @@ function scan(scanPath: string) {
   const files = getAllFiles(scanPath);
   const violations: Violation[] = [];
 
-  files.forEach((file) => {
+  for (const file of files) {
     const content = readFileSync(file, 'utf-8');
     const lines = content.split('\n');
 
-    PATTERNS.forEach((pattern) => {
-      lines.forEach((line, index) => {
+    for (const pattern of PATTERNS) {
+      for (const [index, line] of lines.entries()) {
         if (line.match(pattern.regex) && !line.trim().startsWith('//')) {
           violations.push({
             rule: pattern.name,
@@ -84,9 +84,9 @@ function scan(scanPath: string) {
             line: index + 1,
           });
         }
-      });
-    });
-  });
+      }
+    }
+  }
 
   const report = {
     violations,

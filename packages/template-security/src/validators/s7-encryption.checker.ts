@@ -12,99 +12,18 @@ import type { CheckResult, Violation } from './s2-isolation.checker';
 
 export class S7EncryptionChecker {
   async validate(templatePath: string): Promise<CheckResult> {
-    const violations: Violation[] = [];
-
     const codeFiles = await fg(`${templatePath}/**/*.{ts,tsx,js,jsx}`, {
       ignore: ['**/node_modules/**', '**/dist/**', '**/.next/**'],
     });
 
-    const piiPatterns = [
-      'email',
-      'phone',
-      'address',
-      'card',
-      'ssn',
-      'jwt',
-      'token',
-      'password',
-    ];
+    const violations: Violation[] = [];
 
     for (const file of codeFiles) {
       const content = await readFile(file, 'utf-8');
-
-      // 1. Check for PII in localStorage
-      const localStorageMatches = content.matchAll(
-        /localStorage\.setItem\(['"]([^'"]*)['"]/g
-      );
-
-      for (const match of localStorageMatches) {
-        const key = match[1].toLowerCase();
-        if (piiPatterns.some((pattern) => key.includes(pattern))) {
-          const line = this.findLineNumber(content, match.index!);
-          violations.push({
-            severity: 'FATAL',
-            rule: 'S7-001',
-            file,
-            line,
-            message: `PII stored in localStorage: ${match[1]}`,
-            suggestion: 'Use httpOnly cookies for sensitive data',
-            evidence: match[0],
-          });
-        }
-      }
-
-      // 2. Check for console.log with PII
-      const consoleMatches = content.matchAll(
-        /console\.(log|info|debug)\(.*?(email|phone|password|card)/gi
-      );
-
-      for (const match of consoleMatches) {
-        const line = this.findLineNumber(content, match.index!);
-        violations.push({
-          severity: 'WARNING',
-          rule: 'S7-002',
-          file,
-          line,
-          message: 'PII logged to console',
-          suggestion: 'Remove console.log or redact PII',
-          evidence: match[0],
-        });
-      }
-
-      // 3. Check for raw credit card input (without Stripe Elements)
-      const cardInputMatches = content.matchAll(/<input[^>]+name=["']card/gi);
-
-      if (cardInputMatches && Array.from(cardInputMatches).length > 0) {
-        const hasStripeElements =
-          content.includes('CardElement') ||
-          content.includes('@stripe/react-stripe-js') ||
-          content.includes('stripe-js');
-
-        if (!hasStripeElements) {
-          violations.push({
-            severity: 'FATAL',
-            rule: 'S7-003',
-            file,
-            message: 'Raw credit card input detected without Stripe Elements',
-            suggestion: 'Use Stripe Elements or CardElement component',
-          });
-        }
-      }
-
-      // 4. Check for dangerouslySetInnerHTML with user input
-      const dangerousMatches = content.matchAll(/dangerouslySetInnerHTML/g);
-
-      for (const match of dangerousMatches) {
-        const line = this.findLineNumber(content, match.index!);
-        violations.push({
-          severity: 'WARNING',
-          rule: 'S7-004',
-          file,
-          line,
-          message: 'dangerouslySetInnerHTML detected (XSS risk)',
-          suggestion: 'Sanitize HTML with DOMPurify or avoid HTML rendering',
-        });
-      }
+      this.checkLocalStoragePii(content, file, violations);
+      this.checkConsolePii(content, file, violations);
+      this.checkRawCardInput(content, file, violations);
+      this.checkDangerousHtml(content, file, violations);
     }
 
     return {
@@ -112,6 +31,98 @@ export class S7EncryptionChecker {
       violations,
       score: this.calculateScore(violations),
     };
+  }
+
+  private checkLocalStoragePii(
+    content: string,
+    file: string,
+    violations: Violation[]
+  ) {
+    const piiPatterns = [
+      'email', 'phone', 'address', 'card', 'ssn', 'jwt', 'token', 'password',
+    ];
+    const matches = content.matchAll(/localStorage\.setItem\(['"]([^'"]*)['"]/g);
+    for (const match of matches) {
+      const key = match[1].toLowerCase();
+      if (piiPatterns.some((p) => key.includes(p))) {
+        const line = this.findLineNumber(content, match.index ?? 0);
+        violations.push({
+          severity: 'FATAL',
+          rule: 'S7-001',
+          file,
+          line,
+          message: `PII stored in localStorage: ${match[1]}`,
+          suggestion: 'Use httpOnly cookies for sensitive data',
+          evidence: match[0],
+        });
+      }
+    }
+  }
+
+  private checkConsolePii(
+    content: string,
+    file: string,
+    violations: Violation[]
+  ) {
+    const matches = content.matchAll(
+      /console\.(log|info|debug)\(.*?(email|phone|password|card)/gi
+    );
+    for (const match of matches) {
+      const line = this.findLineNumber(content, match.index ?? 0);
+      violations.push({
+        severity: 'WARNING',
+        rule: 'S7-002',
+        file,
+        line,
+        message: 'PII logged to console',
+        suggestion: 'Remove console.log or redact PII',
+        evidence: match[0],
+      });
+    }
+  }
+
+  private checkRawCardInput(
+    content: string,
+    file: string,
+    violations: Violation[]
+  ) {
+    const cardInputMatches = content.matchAll(/<input[^>]+name=["']card/gi);
+    const hasCards = Array.from(cardInputMatches).length > 0;
+    if (!hasCards) return;
+
+    const hasStripeElements =
+      content.includes('CardElement') ||
+      content.includes('@stripe/react-stripe-js') ||
+      content.includes('stripe-js');
+
+    if (!hasStripeElements) {
+      violations.push({
+        severity: 'FATAL',
+        rule: 'S7-003',
+        file,
+        message: 'Raw credit card input detected without Stripe Elements',
+        suggestion: 'Use Stripe Elements or CardElement component',
+      });
+    }
+  }
+
+  private checkDangerousHtml(
+    content: string,
+    file: string,
+    violations: Violation[]
+  ) {
+    const matches = content.matchAll(/dangerouslySetInnerHTML/g);
+    for (const match of matches) {
+      const line = this.findLineNumber(content, match.index ?? 0);
+      violations.push({
+        severity: 'WARNING',
+        rule: 'S7-004',
+        file,
+        line,
+        message: 'dangerouslySetInnerHTML detected (XSS risk)',
+        suggestion: 'Sanitize HTML with DOMPurify or avoid HTML rendering',
+      });
+    }
   }
 
   private findLineNumber(content: string, index: number): number {
