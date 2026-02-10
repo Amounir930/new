@@ -7,11 +7,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportOptions } from '../types.js';
 import { AnalyticsExportStrategy } from './analytics-export.strategy.js';
 
-// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
-const mockClient = {
-  query: vi.fn(),
-  release: vi.fn(),
-};
+// 🛡️ Stabilization: Use vi.hoisted to ensure these are available for vi.mock
+const { mockClient } = vi.hoisted(() => ({
+  mockClient: {
+    query: vi.fn(),
+    release: vi.fn(),
+  }
+}));
 
 const mockShell = {
   spawn: vi.fn(),

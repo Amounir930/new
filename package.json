@@ -15,6 +15,7 @@
     "test": "bun test",
     "test:coverage": "bun test --coverage",
     "typecheck": "turbo run typecheck",
+    "audit": "bun audit",
     "cli": "cd apps/api && bun run cli",
     "db:push": "echo 'No migrations to push'",
     "postinstall": "echo 'Run: bun install'",

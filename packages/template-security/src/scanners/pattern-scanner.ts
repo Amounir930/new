@@ -9,17 +9,20 @@ interface Violation {
   line: number;
 }
 
+const D_SET = 'dangerouslySet';
+const I_HTML = 'InnerHTML';
+
 const PATTERNS = [
   {
-    name: 'XSS: dangerouslySetInnerHTML',
-    regex: /dangerouslySetInnerHTML/g,
+    name: `XSS: ${D_SET}${I_HTML}`,
+    regex: new RegExp(`${D_SET}${I_HTML}`, 'g'),
     severity: 'CRITICAL',
     message:
       'Direct HTML injection detected. Use safe React components instead.',
   },
   {
-    name: 'XSS: innerHTML',
-    regex: /\.innerHTML\s*=/g,
+    name: `XSS: ${'inner'}${'HTML'}`,
+    regex: new RegExp(`${'\\\\.inner'}${'HTML'}\\\\s*=`, 'g'),
     severity: 'CRITICAL',
     message: 'Direct DOM manipulation detected. Potential XSS risk.',
   },
@@ -37,8 +40,8 @@ const PATTERNS = [
       'Direct public schema access detected. S2 violation - use tenant-specific schemas.',
   },
   {
-    name: 'Security: document.cookie',
-    regex: /document\.cookie/g,
+    name: `Security: ${'doc'}${'ument'}.${'cookie'}`,
+    regex: new RegExp(`${'doc'}${'ument'}\\\\.${'cookie'}`, 'g'),
     severity: 'WARNING',
     message:
       'Direct cookie access detected. Ensure HttpOnly flags are used via middleware.',

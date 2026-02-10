@@ -9,7 +9,8 @@
       "**/coverage/**",
       "**/out/**",
       "**/build/**",
-      "**/drizzle/**"
+      "**/drizzle/**",
+      "**/next-env.d.ts"
     ]
   },
   "formatter": {

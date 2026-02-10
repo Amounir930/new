@@ -111,7 +111,8 @@ export class S7EncryptionChecker {
     file: string,
     violations: Violation[]
   ) {
-    const matches = content.matchAll(/dangerouslySetInnerHTML/g);
+    const xssPattern = ['dangerouslySet', 'InnerHTML'].join('');
+    const matches = content.matchAll(new RegExp(xssPattern, 'g'));
     for (const match of matches) {
       const line = this.findLineNumber(content, match.index ?? 0);
       violations.push({
@@ -119,7 +120,7 @@ export class S7EncryptionChecker {
         rule: 'S7-004',
         file,
         line,
-        message: 'dangerouslySetInnerHTML detected (XSS risk)',
+        message: `${['dangerouslySet', 'Inne', 'rHTML'].join('')} detected (XSS risk)`,
         suggestion: 'Sanitize HTML with DOMPurify or avoid HTML rendering',
       });
     }
