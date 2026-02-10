@@ -165,16 +165,16 @@ export class TemplateSecurityValidator {
 
     lines.push(`# Security Validation Report: ${result.templateName}`);
     lines.push(`Generated: ${result.timestamp}`);
-    lines.push(`\n## Overall Result`);
+    lines.push('\n## Overall Result');
     lines.push(`- **Status:** ${result.passed ? '✅ PASSED' : '❌ FAILED'}`);
     lines.push(`- **Score:** ${result.overallScore}/100`);
     lines.push(
       `- **Violations:** ${result.summary.fatalViolations} fatal, ${result.summary.warningViolations} warnings`
     );
 
-    lines.push(`\n## Phase Results`);
+    lines.push('\n## Phase Results');
 
-    for (const [key, phase] of Object.entries(result.phases)) {
+    for (const [_key, phase] of Object.entries(result.phases)) {
       lines.push(`\n### ${phase.name}`);
       lines.push(`- Score: ${phase.score}/100`);
       lines.push(`- Status: ${phase.passed ? '✅ PASSED' : '❌ FAILED'}`);

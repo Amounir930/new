@@ -10,7 +10,7 @@ permissions:
 
 env:
   JWT_SECRET: test_secret_key_for_ci_environment_only_32
-  DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safe
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
 
 jobs:
   # ═══════════════════════════════════════════════════════════════
@@ -23,8 +23,8 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: apex
-          POSTGRES_PASSWORD: apex
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test
         ports:
           - 5432:5432
@@ -61,13 +61,13 @@ jobs:
           cd packages/db
           bun run db:migrate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
       - name: Run API Tests
         run: |
           cd apps/api
           bun run test
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
           JWT_SECRET: test_secret_key_for_ci_environment_only_32
           MINIO_ACCESS_KEY: test
           MINIO_SECRET_KEY: minioadmin123
@@ -84,8 +84,8 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: apex
-          POSTGRES_PASSWORD: apex
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test
         ports:
           - 5432:5432
@@ -130,7 +130,7 @@ jobs:
           psql "$DATABASE_URL" -c "DROP SCHEMA IF EXISTS tenant_test_s2 CASCADE;" || true
           echo "✅ S2 test completed"
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
 
   # ═══════════════════════════════════════════════════════════════
   # Docker Stack Verification

@@ -15,7 +15,7 @@ interface PageProps {
   params: { slug: string };
 }
 
-async function getProduct(slug: string) {
+async function getProduct(_slug: string) {
   // TODO: Fetch from API
   // const response = await endpoints.products.getBySlug(slug);
   // return response.data;

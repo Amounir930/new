@@ -63,7 +63,10 @@ async function orchestrate() {
     // Example: run on fashion-boutique if it exists
     execSync(`bun ${cliPath} templates/fashion-boutique`, { stdio: 'pipe' });
 
-    const reportPath = join(process.cwd(), 'templates/fashion-boutique/.security-reports/validation-report.json');
+    const reportPath = join(
+      process.cwd(),
+      'templates/fashion-boutique/.security-reports/validation-report.json'
+    );
     if (require('fs').existsSync(reportPath)) {
       const templateReport = JSON.parse(readFileSync(reportPath, 'utf-8'));
       // Merge violations
@@ -78,7 +81,7 @@ async function orchestrate() {
         );
       });
     }
-  } catch (error) {
+  } catch (_error) {
     console.warn(
       '  ⚠️  Modern Template Validator skipped or failed (template not found)'
     );
@@ -98,7 +101,7 @@ async function orchestrate() {
       const patternReport = JSON.parse(readFileSync(staticReportPath, 'utf-8'));
       reports.static.violations.push(...patternReport.violations);
     }
-  } catch (error) {
+  } catch (_error) {
     console.warn('  ⚠️  Pattern Scanner failed.');
   }
 

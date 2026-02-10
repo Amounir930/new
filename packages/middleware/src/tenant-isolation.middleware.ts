@@ -108,6 +108,13 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       return next();
     }
 
+    // S2/S4 Bypass: Specific routes that don't require tenant isolation
+    // e.g., provisioning a new tenant or system health checks
+    const bypassRoutes = ['/api/provision', '/health', '/api/health'];
+    if (bypassRoutes.some((route) => req.path.startsWith(route))) {
+      return next();
+    }
+
     try {
       const tenantContext = await validateTenant(subdomain);
 

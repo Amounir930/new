@@ -34,7 +34,7 @@ export function CheckoutForm() {
           <span>Shipping</span>
         </div>
 
-        <div className="h-px w-16 bg-gray-300"></div>
+        <div className="h-px w-16 bg-gray-300" />
 
         <div
           className={`flex items-center gap-2 ${

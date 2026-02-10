@@ -25,7 +25,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: placeholder
+          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: test
         ports:
           - 5432:5432
@@ -52,8 +52,8 @@ jobs:
           DATABASE_URL=$DATABASE_URL bun test s7-encryption.test.ts
         working-directory: packages/db
         env:
-          DATABASE_URL: postgresql://placeholder-user:placeholder-password@localhost:5432/db_safe
-          POSTGRES_PASSWORD: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          POSTGRES_PASSWORD: postgres
           ENCRYPTION_MASTER_KEY: ValidTestKey32CharsWith1$!Abc1234
           NODE_ENV: test
           JWT_SECRET: test_secret_key_for_ci_environment_only_32
@@ -85,7 +85,7 @@ jobs:
           # Radical Fix: Verify that data is actually stored as Ciphertext in DB
           # Note: This requires the S7.1 test to have run recently and NOT cleaned up yet,
           # OR we run a specific seeding script here.
-          # For this gate, we use the  DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safeDATABASE_URL
+          # For this gate, we use the  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testDATABASE_URL
           
           # Since the previous step might have cleaned up, we skip cleanup in s7-encryption.test.ts 
           # or rerun a seeding command. We'll rely on a manual check for ciphertext patterns.

@@ -24,7 +24,7 @@ export default function LoginPage() {
       // TODO: Implement actual login
       // await endpoints.auth.login(email, password);
       alert('Login functionality will be implemented');
-    } catch (error) {
+    } catch (_error) {
       console.error('Login failed');
     } finally {
       setIsLoading(false);

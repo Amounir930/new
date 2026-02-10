@@ -1,6 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { TemplateLoader } from './loader';
 import React from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { TemplateLoader } from './loader';
 
 // Mock @apex/audit
 vi.mock('@apex/audit', () => ({

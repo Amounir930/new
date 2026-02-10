@@ -2,16 +2,16 @@
 /**
  * S2 Data Isolation Checker (AST Edition)
  * Uses ts-morph to analyze the Abstract Syntax Tree for security violations.
- * 
+ *
  * Capabilities:
  * - Detects direct access to public schema (AST string literals).
  * - Detects unsafe raw SQL usage specific to Drizzle ORM.
  * - Enforces tenant isolation in queries.
  */
 
-import { Project, SyntaxKind, Node, CallExpression } from 'ts-morph';
-import { join } from 'path';
 import { existsSync } from 'fs';
+import { join } from 'path';
+import { CallExpression, Node, Project, SyntaxKind } from 'ts-morph';
 
 // Configuration
 const PROJECT_ROOT = process.cwd();
@@ -51,11 +51,18 @@ function report(type: 'CRITICAL' | 'WARNING', message: string, node: Node) {
 
 // Analysis Pass
 for (const sourceFile of project.getSourceFiles()) {
-  if (sourceFile.getFilePath().includes('.test.') || sourceFile.getFilePath().includes('.spec.')) continue;
+  if (
+    sourceFile.getFilePath().includes('.test.') ||
+    sourceFile.getFilePath().includes('.spec.')
+  )
+    continue;
 
   sourceFile.forEachDescendant((node: Node) => {
     // 1. Check for "public." string literals (Schema Bypass)
-    if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
+    if (
+      Node.isStringLiteral(node) ||
+      Node.isNoSubstitutionTemplateLiteral(node)
+    ) {
       const text = node.getLiteralText();
       if (text.includes('public.') && !text.includes('search_path')) {
         // Allow comments/safe usage if needed, but start strict
@@ -79,7 +86,11 @@ for (const sourceFile of project.getSourceFiles()) {
           text.includes('WHERE'); // Basic heuristic: must have a WHERE clause at minimum
 
         if (!hasTenantContext) {
-          report('WARNING', 'Raw SQL query detected without visible tenant isolation (missing tenant_id/search_path/WHERE)', node);
+          report(
+            'WARNING',
+            'Raw SQL query detected without visible tenant isolation (missing tenant_id/search_path/WHERE)',
+            node
+          );
         }
       }
     }
@@ -87,16 +98,25 @@ for (const sourceFile of project.getSourceFiles()) {
     if (Node.isCallExpression(node)) {
       const expression = node.getExpression();
       if (Node.isPropertyAccessExpression(expression)) {
-        if (expression.getName() === 'raw' && expression.getExpression().getText() === 'sql') {
-          report('WARNING', 'Unsafe usage of sql.raw() detected. Verify manual sanitization.', node);
+        if (
+          expression.getName() === 'raw' &&
+          expression.getExpression().getText() === 'sql'
+        ) {
+          report(
+            'WARNING',
+            'Unsafe usage of sql.raw() detected. Verify manual sanitization.',
+            node
+          );
         }
       }
     }
   });
 }
 
-console.log('\n' + '='.repeat(60));
-console.log(`📊 Scan Complete: ${criticalViolations} Critical, ${warnings} Warnings`);
+console.log(`\n${'='.repeat(60)}`);
+console.log(
+  `📊 Scan Complete: ${criticalViolations} Critical, ${warnings} Warnings`
+);
 console.log('='.repeat(60));
 
 if (criticalViolations > 0) {

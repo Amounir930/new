@@ -38,7 +38,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
       // Show success toast
       alert(`Added ${quantity}x ${product.name} to cart!`);
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to add to cart');
       alert('Failed to add to cart. Please try again.');
     } finally {

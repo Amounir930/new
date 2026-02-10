@@ -34,7 +34,7 @@ export default function RegisterPage() {
       // TODO: Implement actual registration
       // await endpoints.auth.register(formData);
       alert('Registration functionality will be implemented');
-    } catch (error) {
+    } catch (_error) {
       console.error('Registration failed');
     } finally {
       setIsLoading(false);

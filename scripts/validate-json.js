@@ -13,7 +13,7 @@ function validateJson(filePath) {
     const sanitized = raw
       .replace(
         /("(?:[^"\\]|\\.)*")|(?:\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)/g,
-        (match, string) => {
+        (_match, string) => {
           if (string) return string; // Return the string as-is
           return ''; // Return empty for comments
         }
@@ -45,7 +45,7 @@ function validateJson(filePath) {
       // Also show the "sanitized" version for debugging
       const sanitizedDebug = raw.replace(
         /("(?:[^"\\]|\\.)*")|(?:\/\*[\s\S]*?\*\/|\/\/[^\n\r]*)/g,
-        (m, s) => s || ''
+        (_m, s) => s || ''
       );
       const sContext = sanitizedDebug.substring(
         Math.max(0, pos - 20),

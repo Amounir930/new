@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OrderSchema, CreateOrderSchema } from './order.schema.js';
+import { CreateOrderSchema, OrderSchema } from './order.schema.js';
 
 describe('OrderSchema', () => {
   const validOrder = {

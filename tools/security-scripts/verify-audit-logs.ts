@@ -12,7 +12,7 @@ function getAllFiles(dir: string, extension: string): string[] {
   list.forEach((file) => {
     file = join(dir, file);
     const stat = statSync(file);
-    if (stat && stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       results = results.concat(getAllFiles(file, extension));
     } else if (file.endsWith(extension)) {
       results.push(file);

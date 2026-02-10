@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CartSchema, AddToCartSchema } from './cart.schema.js';
+import { AddToCartSchema, CartSchema } from './cart.schema.js';
 
 describe('CartSchema', () => {
   const validCart = {

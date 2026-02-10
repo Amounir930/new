@@ -51,7 +51,7 @@ export function CartSummary({ cart }: CartSummaryProps) {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-300 my-3"></div>
+        <div className="border-t border-gray-300 my-3" />
 
         {/* Total */}
         <div className="flex justify-between text-lg font-bold">

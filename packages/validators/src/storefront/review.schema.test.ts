@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ReviewSchema, CreateReviewSchema } from './review.schema.js';
+import { CreateReviewSchema, ReviewSchema } from './review.schema.js';
 
 describe('ReviewSchema', () => {
   const validReview = {

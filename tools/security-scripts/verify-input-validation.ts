@@ -12,7 +12,7 @@ function getAllFiles(dir: string, extension: string): string[] {
   list.forEach((file) => {
     file = join(dir, file);
     const stat = statSync(file);
-    if (stat && stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       results = results.concat(getAllFiles(file, extension));
     } else if (file.endsWith(extension)) {
       results.push(file);
@@ -32,7 +32,7 @@ function auditControllers() {
     const lines = content.split('\n');
 
     // Check for global validation pipe in the file or assumed global
-    const hasPipe =
+    const _hasPipe =
       content.includes('UsePipes') || content.includes('ZodValidationPipe');
 
     lines.forEach((line, index) => {
@@ -91,7 +91,7 @@ function auditControllers() {
       `❌ S3.3 VIOLATION: Global payload size limit not found in ${mainPath}`
     );
     console.error(
-      `   > Security best practice requires explicit limits to prevent DoS.`
+      '   > Security best practice requires explicit limits to prevent DoS.'
     );
     violations++;
   } else {

@@ -8,7 +8,7 @@ permissions:
   checks: write
 
 env:
-  DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safe
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
   MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
   MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}

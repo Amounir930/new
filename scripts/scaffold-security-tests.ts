@@ -12,61 +12,64 @@ const APPS_DIR = path.join(PROJECT_ROOT, 'apps');
 const PACKAGES_DIR = path.join(PROJECT_ROOT, 'packages');
 
 function findAllModules(dir: string): string[] {
-    if (!fs.existsSync(dir)) return [];
+  if (!fs.existsSync(dir)) return [];
 
-    let results: string[] = [];
-    const list = fs.readdirSync(dir);
+  let results: string[] = [];
+  const list = fs.readdirSync(dir);
 
-    for (const file of list) {
-        const fullPath = path.join(dir, file);
-        const stat = fs.statSync(fullPath);
+  for (const file of list) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
 
-        if (stat && stat.isDirectory()) {
-            if (['node_modules', 'dist', 'coverage', '.turbo', '.next'].includes(file)) continue;
-            results = results.concat(findAllModules(fullPath));
-        } else {
-            // Heuristic for NestJS Modules: ends with .module.ts
-            if (file.endsWith('.module.ts')) {
-                results.push(fullPath);
-            }
-        }
+    if (stat?.isDirectory()) {
+      if (
+        ['node_modules', 'dist', 'coverage', '.turbo', '.next'].includes(file)
+      )
+        continue;
+      results = results.concat(findAllModules(fullPath));
+    } else {
+      // Heuristic for NestJS Modules: ends with .module.ts
+      if (file.endsWith('.module.ts')) {
+        results.push(fullPath);
+      }
     }
-    return results;
+  }
+  return results;
 }
 
 function generateSecurityTest(modulePath: string) {
-    const dir = path.dirname(modulePath);
-    const filename = path.basename(modulePath, '.ts'); // e.g., 'auth.module'
-    const testFilename = `${filename}.security.spec.ts`;
-    const testPath = path.join(dir, testFilename);
+  const dir = path.dirname(modulePath);
+  const filename = path.basename(modulePath, '.ts'); // e.g., 'auth.module'
+  const testFilename = `${filename}.security.spec.ts`;
+  const testPath = path.join(dir, testFilename);
 
-    // Skip if already exists
-    if (fs.existsSync(testPath)) {
-        console.log(`⏩ Skipping ${testFilename} (exists)`);
-        return;
-    }
+  // Skip if already exists
+  if (fs.existsSync(testPath)) {
+    console.log(`⏩ Skipping ${testFilename} (exists)`);
+    return;
+  }
 
-    // Read Module Class Name
-    const project = new Project();
-    const sourceFile = project.addSourceFileAtPath(modulePath);
-    const classDecl = sourceFile.getClasses()[0];
+  // Read Module Class Name
+  const project = new Project();
+  const sourceFile = project.addSourceFileAtPath(modulePath);
+  const classDecl = sourceFile.getClasses()[0];
 
-    if (!classDecl) {
-        console.warn(`⚠️  Skipping ${modulePath}: No class found.`);
-        return;
-    }
+  if (!classDecl) {
+    console.warn(`⚠️  Skipping ${modulePath}: No class found.`);
+    return;
+  }
 
-    const className = classDecl.getName();
-    if (!className) return;
+  const className = classDecl.getName();
+  if (!className) return;
 
-    // Calculate relative path to test-utils
-    // Note: In monorepo, usually use package alias, but let's check tsconfig paths or just use relative for robustness or alias if configured.
-    // Assuming @apex/test-utils is available or we use relative path. 
-    // Best practice: use the package alias '@apex/test-utils' if acceptable by bundler, 
-    // otherwise extensive relative path calculation.
-    // We'll stick to @apex/test-utils assuming tsconfig is set up (it is in package.json).
+  // Calculate relative path to test-utils
+  // Note: In monorepo, usually use package alias, but let's check tsconfig paths or just use relative for robustness or alias if configured.
+  // Assuming @apex/test-utils is available or we use relative path.
+  // Best practice: use the package alias '@apex/test-utils' if acceptable by bundler,
+  // otherwise extensive relative path calculation.
+  // We'll stick to @apex/test-utils assuming tsconfig is set up (it is in package.json).
 
-    const content = `
+  const content = `
 import { Test, TestingModule } from '@nestjs/testing';
 import { ${className} } from './${path.basename(modulePath, '.ts')}';
 import { BaseSecurityTest } from '@apex/test-utils';
@@ -84,28 +87,28 @@ describe('${className} Security Checks', () => {
 });
 `.trim();
 
-    fs.writeFileSync(testPath, content);
-    console.log(`✅ Generated ${testFilename}`);
+  fs.writeFileSync(testPath, content);
+  console.log(`✅ Generated ${testFilename}`);
 }
 
 async function main() {
-    console.log('🛡️  Scanning for NestJS Modules to Scaffold Security Tests...');
+  console.log('🛡️  Scanning for NestJS Modules to Scaffold Security Tests...');
 
-    const appModules = findAllModules(APPS_DIR);
-    const pkgModules = findAllModules(PACKAGES_DIR);
-    const allModules = [...appModules, ...pkgModules];
+  const appModules = findAllModules(APPS_DIR);
+  const pkgModules = findAllModules(PACKAGES_DIR);
+  const allModules = [...appModules, ...pkgModules];
 
-    console.log(`🔍 Found ${allModules.length} modules.`);
+  console.log(`🔍 Found ${allModules.length} modules.`);
 
-    for (const mod of allModules) {
-        try {
-            generateSecurityTest(mod);
-        } catch (e) {
-            console.error(`❌ Failed to scaffold for ${mod}:`, e);
-        }
+  for (const mod of allModules) {
+    try {
+      generateSecurityTest(mod);
+    } catch (e) {
+      console.error(`❌ Failed to scaffold for ${mod}:`, e);
     }
+  }
 
-    console.log('✨ Scaffolding Complete.');
+  console.log('✨ Scaffolding Complete.');
 }
 
 main();
