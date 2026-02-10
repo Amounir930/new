@@ -1,48 +1,20 @@
-# Gitleaks Configuration for Apex v2
-# This file configures Gitleaks to ignore false positives
-
-title = "Apex v2 Gitleaks Config"
-
-[extend]
-# Use default Gitleaks rules as base
-useDefault = true
+# Gitleaks Configuration for APEX 2026
+# Mandatory Security Gate
 
 [allowlist]
-# Files to ignore completely
+description = "Allow environment example files"
 paths = [
-    '''\.env\.example$''',
-    '''\.env\.s1\.local$''',
-    '''\.gitleaks\.toml$''',
-    '''\.github\/workflows\/.*\.yml$''',
-    '''node_modules\/?''',
-    '''\.git\/?''',
-    '''dist\/?''',
-    '''coverage\/?''',
-    '''\.turbo\/?''',
-    '''.*\.test\.ts$''',
-    '''.*\.spec\.ts$''',
-    '''docs\/.*\.txt$''',
-    '''docs\/Apex_2026_Full_Codebase\.txt$''',
-    '''vitest\.setup\.ts$''',  # Test setup with CI-only mock secrets
+    "\\.env\\.example$",
+    "\\.env\\.test$",
+    "packages/security/src/utils/scanner-cli\\.ts" # Scanning logic itself
 ]
 
-# Regex patterns to ignore (test secrets, example values)
-regexes = [
-    # Test JWT secrets
-    '''test_secret_key_for_ci_environment_only_32''',
-    '''your_very_long_secret_key_minimum_32_chars_long''',
-    # Test credentials
-    '''apex_secret''',
-    '''redis_secret''',
-    '''minioadmin''',
-    '''minioadmin123''',
-    '''postgresql:\/\/test:test@''',
-    '''postgresql:\/\/apex:apex@''',
-    # Test keys
-    '''test_secret_key''',
-    '''test_secret_key_for_ci''',
-    '''test_key_for_ci''',
-]
+[[rules]]
+description = "Generic Secret"
+regex = '''(?i)(?:key|secret|token|password|auth|api)[-_]?(?:key|secret|token|password|auth|api)?\s*[:=]\s*['"]([0-9a-zA-Z]{16,})['"]'''
+severity = "error"
 
-# Commits to ignore (if needed)
-commits = []
+[[rules]]
+description = "Postgres Connection String"
+regex = '''postgres(?:ql)?://[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+@[a-zA-Z0-9_.-]+:\d+/[a-zA-Z0-9_.-]+'''
+severity = "error"

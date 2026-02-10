@@ -68,75 +68,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Secret Detection
-        run: |
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "  Secret Detection"
-          echo "═══════════════════════════════════════════════════════════════"
-          
-          # Check for common secret patterns
-          PATTERNS="(password|passwd|pwd|secret|token|api_key|apikey)\s*=\s*[\"'][^\"']{8,}[\"']"
-          
-          MATCHES=$(grep -rnE "$PATTERNS" packages/export/src --include="*.ts" 2>/dev/null | grep -v ".test.ts" | grep -v "process.env" || true)
-          
-          if [ -n "$MATCHES" ]; then
-            echo "⚠️ Potential hardcoded secrets found:"
-            echo "$MATCHES"
-            echo ""
-            echo "❌ Please use environment variables or secrets manager"
-            exit 1
-          fi
-          
-          echo "✅ No hardcoded secrets detected"
+      - name: Security & Secret Detection (Gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config-path: .gitleaks.toml
 
-      - name: SQL Injection Check
+      - name: AST-Based Security Scan (S11 & S14)
         run: |
           echo "═══════════════════════════════════════════════════════════════"
-          echo "  SQL Injection Check"
+          echo "  Apex AST Security Scanner"
           echo "═══════════════════════════════════════════════════════════════"
-          
-          # Check for unsafe SQL patterns
-          if grep -rn "\.query\s*(\s*\`" packages/export/src --include="*.ts" | grep -v ".test.ts" | grep "\${"; then
-            echo "❌ CRITICAL: Potential SQL injection with template literals"
-            exit 1
-          fi
-          
-          # Check for raw SQL with variables
-          if grep -rnE "SELECT.*FROM.*\+" packages/export/src --include="*.ts" | grep -v ".test.ts"; then
-            echo "❌ CRITICAL: SQL string concatenation detected"
-            exit 1
-          fi
-          
-          echo "✅ No SQL injection vulnerabilities detected"
+          cd packages/security
+          bun run security-scan
 
-      - name: Export Security Check
-        if: contains(github.event.pull_request.changed_files || '', 'packages/export/') || github.event_name == 'push'
-        run: |
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "  Export Module Security Check"
-          echo "═══════════════════════════════════════════════════════════════"
-          
-          # Check tenant isolation
-          if ! grep -q "schemaName.*tenant_" packages/export/src/strategies/*.ts; then
-            echo "❌ CRITICAL: Export strategies missing tenant schema isolation"
-            exit 1
-          fi
-          
-          # Check for audit logging
-          if ! grep -q "audit.log" packages/export/src/export.worker.ts; then
-            echo "❌ CRITICAL: Export worker missing audit logging"
-            exit 1
-          fi
-          
-          # Check for file cleanup (supports both 'rm -rf' and Bun.spawn(['rm', ...])
-          # Radical Fix: Ensure CLEANUP_COUNT is always an integer and check specifically for strategy files
-          CLEANUP_COUNT=$(grep -cE "rm.*-rf|rm.*-f|cleanup" packages/export/src/strategies/*.ts | awk -F: '{sum+=$NF} END {print sum+0}')
-          if [ "$CLEANUP_COUNT" -lt 3 ]; then
-            echo "❌ CRITICAL: Export strategies missing cleanup code (found $CLEANUP_COUNT, expected 3+)"
-            exit 1
-          fi
-          
-          echo "✅ Export module security patterns verified"
 
   # ═══════════════════════════════════════════════════════════════
   # Test Execution

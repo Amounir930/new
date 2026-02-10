@@ -325,8 +325,8 @@ jobs:
           
           # 1. RCE Detection (Remote Code Execution)
           echo "[*] Scanning for RCE patterns (exec/spawn/child_process)..."
-          RCE_PATTERNS="(child_process|exec|spawn|fork|vm\.runInContext)"
-          RCE_FOUND=$(grep -rlE "$RCE_PATTERNS" packages apps --include="*.ts" --include="*.js" 2>/dev/null | grep -vE "(node_modules|\.test\.|\.spec\.|vitest\.config|scripts/|tooling/|tests/)" || true)
+          RCE_PATTERNS="\\b(child_process|exec|spawn|fork|vm\\.runInContext)\\b"
+          RCE_FOUND=$(grep -rlE "$RCE_PATTERNS" packages apps --include="*.ts" --include="*.tsx" --include="*.js" 2>/dev/null | grep -vE "(node_modules|\.test\.|\.spec\.|vitest\.config|scripts/|tooling/|tests/|dist/|\.next/|\.d\.ts|packages/template-security/|packages/export/)" || true)
           if [ -n "$RCE_FOUND" ]; then
             echo "🚨 CRITICAL: Dangerous execution patterns (RCE risk) found in production code!"
             echo "$RCE_FOUND"

@@ -1,9 +1,18 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Project, SyntaxKind } from 'ts-morph';
+import {
+  BinaryExpression,
+  CallExpression,
+  Identifier,
+  Node,
+  Project,
+  SyntaxKind,
+  TaggedTemplateExpression,
+  VariableDeclaration,
+} from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 
-describe('SQL Injection Defense - ORM Compliance (AST Analysis)', () => {
+describe('SQL Injection Defense - ORM Compliance (Advanced AST)', () => {
   const project = new Project({
     tsConfigFilePath: path.resolve(__dirname, '../../../../tsconfig.json'),
     skipAddingFilesFromTsConfig: true,
@@ -11,11 +20,10 @@ describe('SQL Injection Defense - ORM Compliance (AST Analysis)', () => {
 
   const dbDir = path.resolve(__dirname, '../../../../packages/db/src');
 
-  // Helper to load files into project
   function addFilesToProject(dir: string) {
     if (!fs.existsSync(dir)) return;
 
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Recursive file search is naturally complex
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Recursive file search by nature is complex
     function getTsFiles(dirPath: string, fileList: string[] = []) {
       const files = fs.readdirSync(dirPath);
       for (const file of files) {
@@ -41,112 +49,148 @@ describe('SQL Injection Defense - ORM Compliance (AST Analysis)', () => {
     }
   }
 
-  // Load DB files
   addFilesToProject(dbDir);
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: AST analysis requires deep nesting
+  // Helper: Trace variable definition to check for string concatenation
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: AST traversal checks are complex
+  function isCreatedByConcatenation(node: Node): boolean {
+    if (Node.isBinaryExpression(node)) {
+      if (node.getOperatorToken().getKind() === SyntaxKind.PlusToken) {
+        return true; // Direct concatenation
+      }
+    } else if (Node.isIdentifier(node)) {
+      const definitions = node.getDefinitions();
+      for (const def of definitions) {
+        const declaration = def.getDeclarationNode();
+        if (declaration && Node.isVariableDeclaration(declaration)) {
+          const initializer = declaration.getInitializer();
+          if (initializer && isCreatedByConcatenation(initializer)) {
+            return true;
+          }
+        }
+      }
+    } else if (Node.isTemplateExpression(node)) {
+      return true; // Template literal with substitutions is risky if passed to raw()
+      // Note: Helper logic might need refinement if we want to allow SAFE templates, but for raw(), avoiding templates is safer.
+    }
+    return false;
+  }
+
+  // Helper: Check if a node refers to 'drizzle-orm' symbol (handling aliases)
+  function isDrizzleSymbol(node: Node, symbolName: string): boolean {
+    // Naive symbol check might fail if types aren't fully resolved/installed in this env context
+    // Fallback to text + import check is robust enough for now if symbol fails.
+    // However, let's try to trace the symbol.
+    const symbol = node.getSymbol();
+    if (symbol) {
+      const declarations = symbol.getDeclarations();
+      for (const decl of declarations) {
+        const sourceFile = decl.getSourceFile();
+        // Check if declaration comes from drizzle-orm module or import
+        if (Node.isImportSpecifier(decl)) {
+          const importDecl = decl.getImportDeclaration();
+          if (importDecl.getModuleSpecifierValue() === 'drizzle-orm' && decl.getName() === symbolName) {
+            return true;
+          }
+        }
+      }
+    }
+    // Fallback: Check text and existing imports (for safety if symbol resolution fails in test env)
+    if (node.getText() === symbolName) return true; // Weak check, but standard
+    return false;
+  }
+
+
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Analysis needs deep nesting
   it('should enforce Parameterized Query patterns in the database layer', () => {
     const sourceFiles = project.getSourceFiles();
     let checkedFiles = 0;
 
     for (const sourceFile of sourceFiles) {
-      // Skip if not in packages/db
       if (!sourceFile.getFilePath().includes('packages/db')) continue;
 
       checkedFiles++;
-      const descendants = sourceFile.getDescendantsOfKind(
-        SyntaxKind.TaggedTemplateExpression
-      );
 
-      for (const node of descendants) {
+      // 1. Detect 'sql' tag usage
+      const taggedTemplates = sourceFile.getDescendantsOfKind(SyntaxKind.TaggedTemplateExpression);
+      for (const node of taggedTemplates) {
         const tag = node.getTag();
-        if (tag.getText() === 'sql') {
-          // Check 1: Ensure drizzle-orm is imported
+        // Check if it's the drizzle 'sql' tag
+        if (isDrizzleSymbol(tag, 'sql') || tag.getText() === 'sql') {
+          // Basic Check: Ensure drizzle-orm is imported (redundant if symbol check passed, but good for reporting)
           const imports = sourceFile.getImportDeclarations();
-          const hasDrizzleImport = imports.some(
-            (imp) =>
-              imp.getModuleSpecifierValue() === 'drizzle-orm' &&
-              imp.getNamedImports().some((ni) => ni.getName() === 'sql')
+          const hasDrizzleImport = imports.some(imp =>
+            imp.getModuleSpecifierValue() === 'drizzle-orm' &&
+            imp.getNamedImports().some(ni => ni.getName() === 'sql')
           );
+          expect(hasDrizzleImport, `File ${sourceFile.getFilePath()} uses 'sql' tag but missing 'import { sql } from "drizzle-orm"'`).toBe(true);
 
-          expect(
-            hasDrizzleImport,
-            `File ${sourceFile.getFilePath()} uses 'sql' tag but missing 'import { sql } from "drizzle-orm"'`
-          ).toBe(true);
+          // Advanced Check: Nested sql.raw() inside sql``
+          // Example: sql`SELECT * FROM ${ sql.raw(userInput) } `
+          const templateSpans = node.getTemplate().getKind() === SyntaxKind.TemplateExpression
+            ? (node.getTemplate() as any).getTemplateSpans() // cast to access spans
+            : [];
 
-          // Check 2: Detect String Concatenation/Interpolation inside sql``
-          // In ts-morph, a TemplateExpression (backticks with ${}) has a 'templateSpans' property.
-          // If it's a NoSubstitutionTemplateLiteral (backticks without ${}), it's safe constant SQL.
+          // Traverse template spans/parts involves checking expressions within ${}
+          // For simplicity, we just check all descendants of the template for CallExpressions to sql.raw
+          const unsafeRawCalls = node.getTemplate().getDescendantsOfKind(SyntaxKind.CallExpression).filter(call => {
+            const expr = call.getExpression();
+            return expr.getText().includes('raw'); // heuristic for sql.raw or raw()
+          });
 
-          const template = node.getTemplate();
-          if (template.getKind() === SyntaxKind.TemplateExpression) {
-            // It has ${...} interpolations. We must ensure they are NOT just raw strings.
-            // However, Drizzle `sql` tag handles parameterization for values passed in ${}.
-            // The danger is if someone does: sql`SELECT * FROM table WHERE id = ${req.body.id}` -> Drizzle treats this as a param ($1), so it IS safe from injection!
-            // The REAL danger is usage of `sql.raw()` with user input, or building the string BEFORE passing to sql``.
-            // Wait, user asked to "Block String Concatenation in SQL Tags".
-            // Drizzle's `sql` tag turns ${value} into a bind parameter ($1, $2).
-            // So `sql` tag usage IS the safe pattern.
-            // What IS unsafe is `sql.raw('SELECT ... ' + userInput)`.
+          for (const call of unsafeRawCalls) {
+            // If we find raw() inside sql``, we must check if its arg is safe
+            const args = call.getArguments();
+            if (args.length > 0 && isCreatedByConcatenation(args[0])) {
+              expect(false, `File ${sourceFile.getFilePath()} uses unsafe sql.raw() inside sql template tag`).toBe(true);
+            }
           }
         }
       }
 
-      // Check 3: Forbid raw SQL string concatenation being passed to sql.raw() or similar
-      const callExpressions = sourceFile.getDescendantsOfKind(
-        SyntaxKind.CallExpression
-      );
+      // 2. Detect direct 'sql.raw()' usage
+      const callExpressions = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
       for (const call of callExpressions) {
         const expression = call.getExpression();
-        if (expression.getText().includes('sql.raw')) {
-          const args = call.getArguments();
-          if (args.length > 0) {
-            const firstArg = args[0];
-            // If argument involves binary expression with '+' (concatenation)
-            if (firstArg.getKind() === SyntaxKind.BinaryExpression) {
-              // Check if it's string concatenation
-              if (firstArg.getText().includes('+')) {
-                // This is a heuristic, but sufficient for now
-                // We fail if we see `sql.raw('...' + var)`
+        // Check for 'sql.raw' or aliased usage
+        // Note: tracing 'sql.raw' properly requires checking PropertyAccessExpression
+        if (expression.getKind() === SyntaxKind.PropertyAccessExpression && expression.getText().endsWith('.raw')) {
+          // Check if the object is 'sql' (or alias)
+          const obj = (expression as any).getExpression(); // accessing 'sql' in 'sql.raw'
+          if (isDrizzleSymbol(obj, 'sql') || obj.getText() === 'sql') {
+            // This IS sql.raw()
+            const args = call.getArguments();
+            if (args.length > 0) {
+              const firstArg = args[0];
+              // Check for pre-concatenation or binary expression
+              if (isCreatedByConcatenation(firstArg)) {
                 expect(
                   false,
-                  `File ${sourceFile.getFilePath()} uses unsafe string concatenation in sql.raw()`
+                  `File ${sourceFile.getFilePath()} uses unsafe string concatenation in sql.raw(). Trace: ${firstArg.getText()}`
                 ).toBe(true);
               }
             }
-            // If argument is a TemplateExpression (backticks with ${})
-            if (firstArg.getKind() === SyntaxKind.TemplateExpression) {
-              expect(
-                false,
-                `File ${sourceFile.getFilePath()} uses template literals in sql.raw() - use sql\`...\` tag instead for parameterization`
-              ).toBe(true);
-            }
           }
         }
       }
     }
 
-    // Ensure we actually checked implementation files
     if (fs.existsSync(dbDir)) {
       expect(checkedFiles).toBeGreaterThan(0);
     }
-  });
+  }, 30000);
 
   it('should verify Drizzle ORM usage (pgTable) in schema files', () => {
-    // Only check files in schema directory
     const schemaDir = path.join(dbDir, 'schema');
     if (!fs.existsSync(schemaDir)) return;
 
     const schemaSourceFiles = project.getSourceFiles().filter(
       (sf) =>
         sf.getFilePath().includes(schemaDir.replace(/\\/g, '/')) &&
-        !sf.getFilePath().endsWith('index.ts') // Skip index files
+        !sf.getFilePath().endsWith('index.ts')
     );
 
     for (const sourceFile of schemaSourceFiles) {
-      // Just check if it imports pgTable if it defines a table
-      // This is harder to do perfectly with AST without semantic analysis,
-      // but checking for pgTable import is a good proxy for "using Drizzle".
       const text = sourceFile.getText();
       if (text.includes('pgTable')) {
         const imports = sourceFile.getImportDeclarations();
@@ -157,7 +201,7 @@ describe('SQL Injection Defense - ORM Compliance (AST Analysis)', () => {
         );
         expect(
           hasPgTableImport,
-          `File ${sourceFile.getFilePath()} uses pgTable but missing import`
+          `File ${sourceFile.getFilePath()} uses pgTable but missing import `
         ).toBe(true);
       }
     }
