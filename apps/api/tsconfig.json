@@ -7,37 +7,17 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "paths": {
-      "@apex/audit": [
-        "../../packages/audit/src/index.ts"
-      ],
-      "@apex/db": [
-        "../../packages/db/src/index.ts"
-      ],
-      "@apex/config": [
-        "../../packages/config/src/index.ts"
-      ],
-      "@apex/provisioning": [
-        "../../packages/provisioning/src/index.ts"
-      ],
-      "@apex/middleware": [
-        "../../packages/middleware/src/index.ts"
-      ],
-      "@apex/events": [
-        "../../packages/events/src/index.ts"
-      ],
-      "@apex/ui": [
-        "../../packages/ui/src/index.ts"
-      ]
+      "@apex/audit": ["../../packages/audit/src/index.ts"],
+      "@apex/db": ["../../packages/db/src/index.ts"],
+      "@apex/config": ["../../packages/config/src/index.ts"],
+      "@apex/provisioning": ["../../packages/provisioning/src/index.ts"],
+      "@apex/middleware": ["../../packages/middleware/src/index.ts"],
+      "@apex/events": ["../../packages/events/src/index.ts"],
+      "@apex/ui": ["../../packages/ui/src/index.ts"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist", "build",
-    "**/*.spec.ts"
-  ],
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "build", "**/*.spec.ts"],
   "references": [
     {
       "path": "../../packages/config"

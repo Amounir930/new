@@ -3,7 +3,7 @@
  * Purpose: Automatic secrets rotation with zero-downtime
  */
 
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'node:crypto';
 
 export interface SecretConfig {
   /** Secret name/identifier */

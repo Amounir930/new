@@ -6,11 +6,16 @@
  * S7: Secure presigned URLs
  */
 
-import { randomUUID } from 'crypto';
-import { AuditService } from '@apex/audit';
-import { Inject, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import type { AuditService } from '@apex/audit';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnModuleDestroy,
+} from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { ExportStrategyFactory } from './export-strategy.factory.js';
+import type { ExportStrategyFactory } from './export-strategy.factory.js';
 import type { ExportJob, ExportOptions, ExportResult } from './types.js';
 
 @Injectable()
@@ -26,7 +31,7 @@ export class ExportService implements OnModuleDestroy {
     this.exportQueue = new Queue('tenant-export', {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
       },
       defaultJobOptions: {
         attempts: 3,

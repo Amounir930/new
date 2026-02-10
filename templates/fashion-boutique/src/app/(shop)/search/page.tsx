@@ -8,9 +8,9 @@
 
 'use client';
 
-import { ProductCard } from '@/components/product/ProductCard';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { ProductCard } from '@/components/product/ProductCard';
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -32,7 +32,10 @@ function SearchContent() {
             placeholder="Search products..."
             className="flex-1 px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          <button className="bg-primary text-white px-6 py-3 rounded-md hover:bg-primary-600 transition-colors">
+          <button
+            type="button"
+            className="bg-primary text-white px-6 py-3 rounded-md hover:bg-primary-600 transition-colors"
+          >
             Search
           </button>
         </div>

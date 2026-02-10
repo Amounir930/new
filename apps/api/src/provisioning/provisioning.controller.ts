@@ -3,7 +3,7 @@
  * Exposed API for Super Admins to create new store environments
  */
 
-import { AuditLog, AuditService } from '@apex/audit';
+import { AuditLog, type AuditService } from '@apex/audit';
 import {
   Body,
   Controller,
@@ -14,7 +14,7 @@ import {
   Post,
 } from '@nestjs/common';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
-import { ProvisioningService } from './provisioning.service.js';
+import type { ProvisioningService } from './provisioning.service.js';
 
 @Controller('provision')
 export class ProvisioningController {

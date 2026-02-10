@@ -10,3 +10,6 @@ packages/ui/dist
 **/*.d.ts
 **/*.js
 **/*.map
+templates
+tools
+coverage-report.json

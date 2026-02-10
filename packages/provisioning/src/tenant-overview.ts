@@ -4,8 +4,7 @@
  * Purpose: Super Admin page showing searchable table of all tenants
  */
 
-import { type Tenant, tenants } from '@apex/db';
-import { publicDb } from '@apex/db';
+import { publicDb, type Tenant, tenants } from '@apex/db';
 import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
 
 export type TenantStatus = 'active' | 'suspended' | 'pending' | 'maintenance';

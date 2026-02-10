@@ -6,7 +6,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  AuditLogEntry,
+  type AuditLogEntry,
   AuditService,
   initializeAuditTable,
   logProvisioning,

@@ -6,10 +6,10 @@
  * @route /products/[slug]
  */
 
+import { notFound } from 'next/navigation';
 import { AddToCartButton } from '@/components/product/AddToCartButton';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { formatPrice } from '@/lib/formatters';
-import { notFound } from 'next/navigation';
 
 interface PageProps {
   params: { slug: string };

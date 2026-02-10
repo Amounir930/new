@@ -7,38 +7,36 @@
  * - Penetration testing utilities
  */
 
+// Encryption Module (S7)
+export {
+  decrypt,
+  type EncryptedData,
+  EncryptionService,
+  encrypt,
+  generateApiKey,
+  hashApiKey,
+  maskSensitive,
+} from './encryption.js';
 // mTLS Module
 export {
-  MTLSServer,
-  loadCertificates,
-  createMTLSServerOptions,
   createMTLSClientConfig,
+  createMTLSServerOptions,
   getCertificatePaths,
-  mtlsMiddleware,
-  type MTLSConfig,
+  loadCertificates,
   type MTLSClientConfig,
+  type MTLSConfig,
+  MTLSServer,
+  mtlsMiddleware,
 } from './mtls/index.js';
-
 // Secrets Module
 export {
+  generateSecret,
+  hashSecret,
+  type RotationListener,
+  type SecretConfig,
+  type SecretRotationEvent,
   SecretsManager,
   secretsManager,
   VaultIntegration,
-  generateSecret,
-  hashSecret,
   verifySecret,
-  type SecretConfig,
-  type SecretRotationEvent,
-  type RotationListener,
 } from './secrets/index.js';
-
-// Encryption Module (S7)
-export {
-  EncryptionService,
-  encrypt,
-  decrypt,
-  hashApiKey,
-  generateApiKey,
-  maskSensitive,
-  type EncryptedData,
-} from './encryption.js';

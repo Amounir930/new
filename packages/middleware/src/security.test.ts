@@ -1,12 +1,12 @@
-import { ExecutionContext } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
+import type { ExecutionContext } from '@nestjs/common';
+import type { NextFunction, Request, Response } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CsrfGuard,
   CsrfProtection,
-  SecurityHeadersMiddleware,
   defaultCorsConfig,
   getTenantCorsConfig,
+  SecurityHeadersMiddleware,
 } from './security.js';
 
 describe('SecurityMiddleware', () => {

@@ -4,7 +4,7 @@
  * Best for: Migration to other platforms, backups
  */
 
-import { TenantRegistryService, publicPool } from '@apex/db';
+import { publicPool, type TenantRegistryService } from '@apex/db';
 import { Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,
@@ -12,7 +12,7 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
-import { BunShell } from '../utils/bun-shell.js';
+import type { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class LiteExportStrategy implements ExportStrategy {

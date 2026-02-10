@@ -50,9 +50,11 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
     <div className="space-y-4">
       {/* Quantity Selector */}
       <div className="flex items-center gap-4">
+        {/* biome-ignore lint/a11y/noLabelWithoutControl: template form */}
         <label className="font-medium">Quantity:</label>
         <div className="flex items-center border border-gray-300 rounded-md">
           <button
+            type="button"
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
             className="px-3 py-2 hover:bg-gray-100"
             disabled={isAdding}
@@ -63,13 +65,14 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
             type="number"
             value={quantity}
             onChange={(e) =>
-              setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+              setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))
             }
             className="w-16 text-center border-x border-gray-300 py-2"
             min="1"
             disabled={isAdding}
           />
           <button
+            type="button"
             onClick={() => setQuantity(quantity + 1)}
             className="px-3 py-2 hover:bg-gray-100"
             disabled={isAdding}
@@ -81,6 +84,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
       {/* Add to Cart Button */}
       <button
+        type="button"
         onClick={handleAddToCart}
         disabled={!product.inStock || isAdding}
         className="w-full bg-primary text-white py-3 px-6 rounded-md font-medium hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
@@ -95,6 +99,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       {/* Buy Now Button (Optional) */}
       {product.inStock && (
         <button
+          type="button"
           className="w-full border-2 border-primary text-primary py-3 px-6 rounded-md font-medium hover:bg-primary-50 transition-colors"
           disabled={isAdding}
         >

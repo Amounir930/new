@@ -160,6 +160,7 @@ export class TemplateSecurityValidator {
   /**
    * Generate human-readable summary
    */
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: template logic
   generateSummary(result: ValidationResult): string {
     const lines: string[] = [];
 

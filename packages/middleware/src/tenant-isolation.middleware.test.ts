@@ -4,7 +4,7 @@
  */
 
 import { UnauthorizedException } from '@nestjs/common';
-import { NextFunction } from 'express';
+import type { NextFunction } from 'express';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SuperAdminOrTenantGuard,

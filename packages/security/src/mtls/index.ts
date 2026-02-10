@@ -3,9 +3,9 @@
  * Purpose: Secure inter-service communication with mutual authentication
  */
 
-import { readFileSync } from 'fs';
-import { Server, ServerOptions, createServer } from 'https';
-import { join } from 'path';
+import { readFileSync } from 'node:fs';
+import { createServer, type Server, type ServerOptions } from 'node:https';
+import { join } from 'node:path';
 
 export interface MTLSConfig {
   /** Path to CA certificate */

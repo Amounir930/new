@@ -1,30 +1,24 @@
 {
-    "extends": "../../tsconfig.json",
-    "compilerOptions": {
-        "outDir": "dist",
-        "rootDir": "src",
-        "jsx": "react-jsx",
-        "composite": true,
-        "declaration": true,
-        "declarationMap": true
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "jsx": "react-jsx",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"],
+  "references": [
+    {
+      "path": "../template-config"
     },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist",
-        "**/*.test.ts"
-    ],
-    "references": [
-        {
-            "path": "../template-config"
-        },
-        {
-            "path": "../config"
-        },
-        {
-            "path": "../audit"
-        }
-    ]
+    {
+      "path": "../config"
+    },
+    {
+      "path": "../audit"
+    }
+  ]
 }

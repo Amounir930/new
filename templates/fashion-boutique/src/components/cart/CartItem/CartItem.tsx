@@ -8,9 +8,9 @@
 
 'use client';
 
-import { formatPrice } from '@/lib/formatters';
 import Image from 'next/image';
 import Link from 'next/link';
+import { formatPrice } from '@/lib/formatters';
 
 export interface CartItemProps {
   item: {
@@ -79,6 +79,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
       {/* Quantity Controls */}
       <div className="flex flex-col items-end justify-between">
         <button
+          type="button"
           onClick={() => onRemove?.(item.id)}
           className="text-red-600 hover:text-red-700 text-sm"
         >
@@ -87,6 +88,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
 
         <div className="flex items-center border border-gray-300 rounded-md">
           <button
+            type="button"
             onClick={() =>
               onUpdateQuantity?.(item.id, Math.max(1, item.quantity - 1))
             }
@@ -98,6 +100,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
             {item.quantity}
           </span>
           <button
+            type="button"
             onClick={() => onUpdateQuantity?.(item.id, item.quantity + 1)}
             className="px-2 py-1 hover:bg-gray-100"
           >

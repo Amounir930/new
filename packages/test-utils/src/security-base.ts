@@ -1,8 +1,8 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Test } from '@nestjs/testing';
 import 'reflect-metadata';
-import { CallExpression, Node, Project, SourceFile } from 'ts-morph';
+import { type CallExpression, Node, Project, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'vitest';
 
 /**
@@ -69,7 +69,7 @@ export function validateMetadataValue(value: any, pathIdx: string) {
   } else if (typeof value === 'object' && value !== null) {
     // Recursive scan
     for (const key in value) {
-      if (Object.prototype.hasOwnProperty.call(value, key)) {
+      if (Object.hasOwn(value, key)) {
         validateMetadataValue(value[key], `${pathIdx}.${key}`);
       }
     }

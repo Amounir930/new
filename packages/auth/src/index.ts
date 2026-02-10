@@ -3,7 +3,7 @@
  * @module @apex/auth
  */
 
-import { type TenantContext, getCurrentTenantContext } from '@apex/middleware';
+import { getCurrentTenantContext, type TenantContext } from '@apex/middleware';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -11,13 +11,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 
 export * from './auth.module.js';
 export * from './auth.service.js';
-export * from './strategies/jwt.strategy.js';
 export * from './decorators/current-user.decorator.js';
 export * from './decorators/public.decorator.js';
+export * from './strategies/jwt.strategy.js';
 export type { TenantContext };
 
 @Injectable()

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { Node, Project, Symbol as TsSymbol, SyntaxKind } from 'ts-morph';
+import { Node, Project, SyntaxKind, type Symbol as TsSymbol } from 'ts-morph';
 
 interface Violation {
   file: string;

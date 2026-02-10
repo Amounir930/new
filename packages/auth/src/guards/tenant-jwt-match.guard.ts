@@ -5,12 +5,12 @@
  */
 
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 export interface TenantRequest extends Request {
   tenantContext?: {

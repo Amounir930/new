@@ -4,7 +4,7 @@
  * S1 FIX: Using cryptographically secure random generation for test secrets
  */
 
-import { randomBytes } from 'crypto';
+import { randomBytes } from 'node:crypto';
 
 // S1 FIX: Generate secure random secrets instead of predictable patterns
 // These are test-only values generated at runtime, never hardcoded

@@ -55,8 +55,12 @@ export function Header() {
           {/* Actions */}
           <div className="flex items-center gap-4">
             {/* Search Icon */}
-            <button className="hover:text-primary transition-colors">
+            <button
+              type="button"
+              className="hover:text-primary transition-colors"
+            >
               <svg
+                aria-hidden="true"
                 className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
@@ -77,6 +81,7 @@ export function Header() {
               className="hover:text-primary transition-colors"
             >
               <svg
+                aria-hidden="true"
                 className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
@@ -97,6 +102,7 @@ export function Header() {
               className="relative hover:text-primary transition-colors"
             >
               <svg
+                aria-hidden="true"
                 className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
@@ -116,10 +122,12 @@ export function Header() {
 
             {/* Mobile Menu Toggle */}
             <button
+              type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden hover:text-primary transition-colors"
             >
               <svg
+                aria-hidden="true"
                 className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"

@@ -4,8 +4,8 @@
  * Purpose: CSP, HSTS, CORS, CSRF protection
  */
 
-import { Injectable, NestMiddleware } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
+import { Injectable, type NestMiddleware } from '@nestjs/common';
+import type { NextFunction, Request, Response } from 'express';
 
 /**
  * Security headers configuration
@@ -196,12 +196,11 @@ export class CsrfProtection {
   }
 }
 
-import { randomBytes } from 'crypto';
-
+import { randomBytes } from 'node:crypto';
 /**
  * NestJS CSRF Guard
  */
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import type { CanActivate, ExecutionContext } from '@nestjs/common';
 
 @Injectable()
 export class CsrfGuard implements CanActivate {

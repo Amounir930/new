@@ -11,7 +11,7 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
-import { BunShell } from '../utils/bun-shell.js';
+import type { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class NativeExportStrategy implements ExportStrategy {

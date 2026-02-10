@@ -1,5 +1,5 @@
-import { AuditService } from '@apex/audit';
-import { TenantRegistryService } from '@apex/db';
+import type { AuditService } from '@apex/audit';
+import type { TenantRegistryService } from '@apex/db';
 import * as provisioning from '@apex/provisioning';
 import {
   ConflictException,

@@ -3,8 +3,8 @@
  * Orchestrates the 60-second store creation process
  */
 
-import { AuditService } from '@apex/audit';
-import { TenantRegistryService } from '@apex/db';
+import type { AuditService } from '@apex/audit';
+import type { TenantRegistryService } from '@apex/db';
 import {
   createStorageBucket,
   createTenantSchema,

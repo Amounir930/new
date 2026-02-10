@@ -9,9 +9,9 @@
  * - Enforces tenant isolation in queries.
  */
 
-import { existsSync } from 'fs';
-import { join } from 'path';
-import { CallExpression, Node, Project, SyntaxKind } from 'ts-morph';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { Node, Project } from 'ts-morph';
 
 // Configuration
 const PROJECT_ROOT = process.cwd();
@@ -57,6 +57,7 @@ for (const sourceFile of project.getSourceFiles()) {
   )
     continue;
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: analysis script
   sourceFile.forEachDescendant((node: Node) => {
     // 1. Check for "public." string literals (Schema Bypass)
     if (

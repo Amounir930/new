@@ -5,14 +5,14 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import {
-  type TenantPlan,
-  type TenantStatus,
   deleteTenant,
   getTenantById,
   getTenantBySubdomain,
   getTenantList,
   getTenantStats,
   killSwitch,
+  type TenantPlan,
+  type TenantStatus,
   updateTenant,
   updateTenantPlan,
   updateTenantStatus,
@@ -85,10 +85,12 @@ vi.mock('@apex/db', () => {
       offset: vi
         .fn()
         .mockImplementation(() => Promise.resolve(mockTenants.slice(0, n))),
+      // biome-ignore lint/suspicious/noThenProperty: mock promise
       then: (onfulfilled: any) =>
         Promise.resolve(mockTenants.slice(0, n)).then(onfulfilled),
     })),
     orderBy: vi.fn().mockReturnThis(),
+    // biome-ignore lint/suspicious/noThenProperty: mock promise
     then: (onfulfilled: any) => Promise.resolve(mockTenants).then(onfulfilled),
     returning: vi.fn().mockResolvedValue([mockTenants[0]]),
   };
@@ -354,6 +356,7 @@ describe('Tenant Overview Service', () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue([]),
+          // biome-ignore lint/suspicious/noThenProperty: mock promise
           then: (onfulfilled: any) => Promise.resolve([]).then(onfulfilled),
         }),
       } as any);

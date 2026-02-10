@@ -8,8 +8,7 @@
  * bun validate-template ./templates/fashion-boutique
  */
 
-import { writeFileSync } from 'fs';
-import { join } from 'path';
+import { join } from 'node:path';
 import { TemplateSecurityValidator } from './index';
 
 const args = process.argv.slice(2);

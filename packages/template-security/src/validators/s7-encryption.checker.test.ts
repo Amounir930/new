@@ -2,8 +2,8 @@
  * S7 Encryption Checker Tests
  */
 
+import { readFile } from 'node:fs/promises';
 import fg from 'fast-glob';
-import { readFile } from 'fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { S7EncryptionChecker } from './s7-encryption.checker.js';
 

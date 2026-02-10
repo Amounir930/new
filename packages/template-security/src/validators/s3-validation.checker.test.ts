@@ -2,8 +2,8 @@
  * S3 Validation Checker Tests
  */
 
+import { readFile } from 'node:fs/promises';
 import fg from 'fast-glob';
-import { readFile } from 'fs/promises';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { S3ValidationChecker } from './s3-validation.checker.js';
 
@@ -71,6 +71,7 @@ describe('S3ValidationChecker', () => {
     it('should detect direct user input in template literals (FATAL)', async () => {
       vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
       vi.mocked(readFile).mockResolvedValue(
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: test case
         'const sql = `SELECT * FROM users WHERE id = ${request.body.id}`;' as never
       );
 

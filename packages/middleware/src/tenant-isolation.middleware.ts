@@ -7,12 +7,12 @@
 import { publicDb, tenants } from '@apex/db';
 import {
   Injectable,
-  NestMiddleware,
+  type NestMiddleware,
   UnauthorizedException,
 } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import { NextFunction, Request, Response } from 'express';
-import { TenantContext, tenantStorage } from './connection-context.js';
+import type { NextFunction, Request, Response } from 'express';
+import { type TenantContext, tenantStorage } from './connection-context.js';
 
 export interface TenantRequest extends Request {
   tenantContext?: TenantContext;
@@ -138,7 +138,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 /**
  * NestJS Guard for Tenant Access Control
  */
-import { CanActivate, ExecutionContext } from '@nestjs/common';
+import type { CanActivate, ExecutionContext } from '@nestjs/common';
 
 @Injectable()
 export class TenantScopedGuard implements CanActivate {

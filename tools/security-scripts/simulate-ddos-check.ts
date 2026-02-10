@@ -6,7 +6,7 @@ import { RedisRateLimitStore } from '../../packages/middleware/src/rate-limit';
  * This script interacts directly with the RateLimitStore to verify behavioral integrity.
  */
 async function runTest() {
-  const maxRequests = parseInt(process.env.MAX_REQUESTS || '10');
+  const maxRequests = parseInt(process.env.MAX_REQUESTS || '10', 10);
   const store = new RedisRateLimitStore();
   const testKey = 'stress:test:behavioral';
   const windowMs = 60000;

@@ -7,8 +7,8 @@
  * @module @apex/template-security/validators/s2-isolation
  */
 
+import { readFile } from 'node:fs/promises';
 import fg from 'fast-glob';
-import { readFile } from 'fs/promises';
 
 export interface Violation {
   severity: 'FATAL' | 'WARNING' | 'INFO';

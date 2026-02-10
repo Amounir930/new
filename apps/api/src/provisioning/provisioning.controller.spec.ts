@@ -1,7 +1,7 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProvisioningController } from './provisioning.controller.js';
-import { ProvisioningService } from './provisioning.service.js';
+import type { ProvisioningService } from './provisioning.service.js';
 
 describe('ProvisioningController', () => {
   let controller: ProvisioningController;

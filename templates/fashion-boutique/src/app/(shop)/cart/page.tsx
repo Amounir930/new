@@ -8,9 +8,9 @@
 
 'use client';
 
+import Link from 'next/link';
 import { CartItem } from '@/components/cart/CartItem';
 import { CartSummary } from '@/components/cart/CartSummary';
-import Link from 'next/link';
 
 export default function CartPage() {
   // TODO: Replace with actual cart state

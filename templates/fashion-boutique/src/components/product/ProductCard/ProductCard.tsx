@@ -6,9 +6,9 @@
  * @module components/product/ProductCard
  */
 
-import { calculateDiscount, formatPrice } from '@/lib/formatters';
 import Image from 'next/image';
 import Link from 'next/link';
+import { calculateDiscount, formatPrice } from '@/lib/formatters';
 
 // Inline Product type (avoiding workspace dependency)
 interface Product {
@@ -78,6 +78,7 @@ export function ProductCard({
         {/* Quick View Button */}
         {showQuickView && onQuickView && (
           <button
+            type="button"
             onClick={(e) => {
               e.preventDefault();
               onQuickView(product);
@@ -129,6 +130,7 @@ export function ProductCard({
         {/* Add to Cart */}
         {onAddToCart && (
           <button
+            type="button"
             onClick={() => onAddToCart(product)}
             disabled={!product.inStock}
             className="mt-3 w-full bg-primary text-white py-2 rounded-md hover:bg-primary-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-medium"

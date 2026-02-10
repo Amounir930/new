@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs';
+import { writeFileSync } from 'node:fs';
 import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Test } from '@nestjs/testing';
@@ -15,7 +15,7 @@ process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 process.env.JWT_SECRET =
   process.env.JWT_SECRET || 'mock-secret-for-docs-generation-only-32-chars-min';
 process.env.TENANT_ISOLATION_MODE = 'strict';
-// @ts-ignore NODE_ENV is read-only in some environments
+// @ts-expect-error NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';
 process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
 process.env.MINIO_ACCESS_KEY =

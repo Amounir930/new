@@ -1,14 +1,14 @@
-import { mkdirSync, rmSync } from 'fs';
-import { tmpdir } from 'os';
-import { join } from 'path';
+import { mkdirSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
-  SecretsManager,
   generateSecret,
   hashSecret,
+  SecretsManager,
   verifySecret,
 } from '../secrets/index.js';
-import { MTLSServer, loadCertificates } from './index.js';
+import { loadCertificates, MTLSServer } from './index.js';
 
 describe('mTLS Implementation', () => {
   const testDir = join(tmpdir(), `mtls-test-${Date.now()}`);
@@ -18,7 +18,7 @@ describe('mTLS Implementation', () => {
     mkdirSync(testDir, { recursive: true });
 
     // Generate self-signed cert for testing
-    const { execSync } = require('child_process');
+    const { execSync } = require('node:child_process');
     try {
       execSync(`
         cd ${testDir}

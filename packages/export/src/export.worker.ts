@@ -5,7 +5,8 @@
  * S4: Comprehensive audit logging
  */
 
-import { AuditService } from '@apex/audit';
+import { readFile, rm } from 'node:fs/promises';
+import type { AuditService } from '@apex/audit';
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -15,12 +16,11 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   Injectable,
   Logger,
-  OnModuleDestroy,
-  OnModuleInit,
+  type OnModuleDestroy,
+  type OnModuleInit,
 } from '@nestjs/common';
-import { Job, Queue, Worker } from 'bullmq';
-import { readFile, rm } from 'fs/promises';
-import { ExportStrategyFactory } from './export-strategy.factory.js';
+import { type Job, Queue, Worker } from 'bullmq';
+import type { ExportStrategyFactory } from './export-strategy.factory.js';
 import type { ExportOptions, ExportResult } from './types.js';
 
 @Injectable()
@@ -49,7 +49,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
     this.exportQueue = new Queue('tenant-export', {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
       },
     });
   }
@@ -62,7 +62,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       {
         connection: {
           host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379'),
+          port: parseInt(process.env.REDIS_PORT || '6379', 10),
         },
         concurrency: 3, // Process 3 exports simultaneously (different tenants)
         limiter: {

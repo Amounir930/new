@@ -1,49 +1,49 @@
 {
-    "name": "@apex/test-utils",
-    "version": "1.0.0",
-    "description": "Testing utilities for Apex v2 templates",
-    "main": "./dist/index.js",
-    "module": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.js",
-            "default": "./dist/index.js"
-        }
-    },
-    "scripts": {
-        "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
-        "dev": "tsup --watch",
-        "test": "bun test",
-        "lint": "biome check .",
-        "typecheck": "tsc --noEmit"
-    },
-    "keywords": [
-        "testing",
-        "mocks",
-        "fixtures",
-        "test-utils"
-    ],
-    "dependencies": {
-        "@faker-js/faker": "^8.3.1",
-        "@nestjs/common": "^10.3.0",
-        "@nestjs/testing": "^10.3.0",
-        "@testing-library/react": "^14.1.2",
-        "@testing-library/user-event": "^14.5.1",
-        "msw": "^2.0.11",
-        "reflect-metadata": "^0.2.1",
-        "ts-morph": "^21.0.1"
-    },
-    "devDependencies": {
-        "@apex/validators": "workspace:*",
-        "@types/react": "^18.2.45",
-        "react": "^18.2.0",
-        "tsup": "^8.0.1",
-        "typescript": "^5.3.3",
-        "vitest": "^1.0.4"
-    },
-    "peerDependencies": {
-        "react": ">=18.0.0"
+  "name": "@apex/test-utils",
+  "version": "1.0.0",
+  "description": "Testing utilities for Apex v2 templates",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
+    "dev": "tsup --watch",
+    "test": "bun test",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "testing",
+    "mocks",
+    "fixtures",
+    "test-utils"
+  ],
+  "dependencies": {
+    "@faker-js/faker": "^8.3.1",
+    "@nestjs/common": "^10.3.0",
+    "@nestjs/testing": "^10.3.0",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "msw": "^2.0.11",
+    "reflect-metadata": "^0.2.1",
+    "ts-morph": "^21.0.1"
+  },
+  "devDependencies": {
+    "@apex/validators": "workspace:*",
+    "@types/react": "^18.2.45",
+    "react": "^18.2.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.4"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
 }

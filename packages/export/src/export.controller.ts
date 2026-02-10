@@ -18,8 +18,8 @@ import {
   Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { ExportService } from './export.service.js';
-import { ExportWorker } from './export.worker.js';
+import type { ExportService } from './export.service.js';
+import type { ExportWorker } from './export.worker.js';
 import type { ExportJob, ExportProfile } from './types.js';
 
 interface AuthenticatedRequest extends Request {

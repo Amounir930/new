@@ -1,8 +1,7 @@
-import fs from 'fs';
-import path from 'path';
-import { TemplateConfigSchema } from '@apex/template-config';
+import fs from 'node:fs';
+import path from 'node:path';
 import type { TemplateConfig } from '@apex/template-config';
-import fg from 'fast-glob';
+import { TemplateConfigSchema } from '@apex/template-config';
 
 export interface ValidationResult {
   isValid: boolean;

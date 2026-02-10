@@ -1,6 +1,6 @@
-import { execSync } from 'child_process';
-import { readFileSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 /**
  * Report Orchestrator
@@ -67,7 +67,7 @@ async function orchestrate() {
       process.cwd(),
       'templates/fashion-boutique/.security-reports/validation-report.json'
     );
-    if (require('fs').existsSync(reportPath)) {
+    if (require('node:fs').existsSync(reportPath)) {
       const templateReport = JSON.parse(readFileSync(reportPath, 'utf-8'));
       // Merge violations
       for (const phase of Object.values(templateReport.phases) as any[]) {
@@ -97,7 +97,7 @@ async function orchestrate() {
 
     // Check if report exists
     const staticReportPath = join(process.cwd(), 'static-analysis-report.json');
-    if (require('fs').existsSync(staticReportPath)) {
+    if (require('node:fs').existsSync(staticReportPath)) {
       const patternReport = JSON.parse(readFileSync(staticReportPath, 'utf-8'));
       reports.static.violations.push(...patternReport.violations);
     }

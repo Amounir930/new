@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -21,6 +21,7 @@ function getAllFiles(dir: string, extension: string): string[] {
   return results;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy maintenance script
 function auditAuditLogging() {
   console.log('🔍 S4: Auditing Audit Logging Coverage...');
 

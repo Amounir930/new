@@ -1,45 +1,45 @@
 {
-    "name": "@apex/validators",
-    "version": "1.0.0",
-    "description": "Zod validation schemas for Apex v2 template system",
-    "main": "./dist/index.js",
-    "module": "./dist/index.mjs",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.js"
-        },
-        "./storefront": {
-            "types": "./dist/storefront/index.d.ts",
-            "import": "./dist/storefront/index.mjs",
-            "require": "./dist/storefront/index.js"
-        }
+  "name": "@apex/validators",
+  "version": "1.0.0",
+  "description": "Zod validation schemas for Apex v2 template system",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
-    "scripts": {
-        "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsup",
-        "dev": "tsup --watch",
-        "typecheck": "tsc --noEmit",
-        "test": "bun test",
-        "test:coverage": "bun test --coverage"
-    },
-    "keywords": [
-        "zod",
-        "validation",
-        "schema",
-        "typescript"
-    ],
-    "dependencies": {
-        "zod": "^3.22.4"
-    },
-    "devDependencies": {
-        "@types/bun": "latest",
-        "cross-env": "^10.1.0",
-        "tsup": "^8.0.1",
-        "typescript": "^5.3.3"
-    },
-    "peerDependencies": {
-        "typescript": ">=5.0.0"
+    "./storefront": {
+      "types": "./dist/storefront/index.d.ts",
+      "import": "./dist/storefront/index.mjs",
+      "require": "./dist/storefront/index.js"
     }
+  },
+  "scripts": {
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage"
+  },
+  "keywords": [
+    "zod",
+    "validation",
+    "schema",
+    "typescript"
+  ],
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "cross-env": "^10.1.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  }
 }

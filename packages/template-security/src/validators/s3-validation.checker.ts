@@ -6,8 +6,8 @@
  * @module @apex/template-security/validators/s3-validation
  */
 
+import { readFile } from 'node:fs/promises';
 import fg from 'fast-glob';
-import { readFile } from 'fs/promises';
 import type { CheckResult, Violation } from './s2-isolation.checker';
 
 export class S3ValidationChecker {

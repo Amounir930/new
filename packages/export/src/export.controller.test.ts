@@ -6,8 +6,8 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExportController } from './export.controller.js';
-import { ExportService } from './export.service.js';
-import { ExportWorker } from './export.worker.js';
+import type { ExportService } from './export.service.js';
+import type { ExportWorker } from './export.worker.js';
 
 describe('ExportController', () => {
   let controller: ExportController;

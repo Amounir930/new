@@ -4,7 +4,7 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { Job } from 'bullmq';
+import type { Job } from 'bullmq';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExportWorker } from './export.worker.js';
 
@@ -59,7 +59,7 @@ describe('ExportWorker', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     worker = new ExportWorker(mockFactory as any, mockAudit);
-    // @ts-ignore - access private for testing
+    // @ts-expect-error - access private for testing
     worker.logger = { log: vi.fn(), error: vi.fn() } as any;
   });
 
@@ -76,7 +76,7 @@ describe('ExportWorker', () => {
       updateData: vi.fn().mockResolvedValue(undefined),
     } as unknown as Job;
 
-    // @ts-ignore - access private to trigger processJob
+    // @ts-expect-error - access private to trigger processJob
     const result = await worker.processJob(mockJob);
 
     expect(result.downloadUrl).toBe('https://mock-presigned-url.com');
@@ -102,7 +102,7 @@ describe('ExportWorker', () => {
       checksum: 'big-file',
     });
 
-    // @ts-ignore
+    // @ts-expect-error
     await expect(worker.processJob(mockJob)).rejects.toThrow(/exceeds limit/);
     expect(mockAudit.log).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -120,7 +120,7 @@ describe('ExportWorker', () => {
 
     mockStrategy.export.mockRejectedValueOnce(new Error('Export crash'));
 
-    // @ts-ignore
+    // @ts-expect-error
     await expect(worker.processJob(mockJob)).rejects.toThrow('Export crash');
     expect(mockAudit.log).toHaveBeenCalledWith(
       expect.objectContaining({

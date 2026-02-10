@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -35,6 +35,7 @@ function auditControllers() {
     const _hasPipe =
       content.includes('UsePipes') || content.includes('ZodValidationPipe');
 
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy maintenance script
     lines.forEach((line, index) => {
       // 1. Detect any type in Body/Query/Param (S3 violation)
       if (line.match(/@(Body|Query|Param)\(.*\).*:.*any/)) {

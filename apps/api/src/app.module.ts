@@ -4,7 +4,11 @@
  */
 
 import { TenantIsolationMiddleware } from '@apex/middleware';
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  type MiddlewareConsumer,
+  Module,
+  type NestModule,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -23,8 +27,8 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     ThrottlerModule.forRoot([
       {
         name: 'default',
-        ttl: parseInt(process.env.RATE_LIMIT_TTL || '60000'),
-        limit: parseInt(process.env.RATE_LIMIT_MAX || '100'),
+        ttl: parseInt(process.env.RATE_LIMIT_TTL || '60000', 10),
+        limit: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
       },
       {
         name: 'strict',

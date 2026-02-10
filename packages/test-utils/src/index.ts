@@ -6,21 +6,20 @@
  * @module @apex/test-utils
  */
 
+export * from './fixtures/cart.fixtures';
+export * from './fixtures/customer.fixtures';
+export * from './fixtures/order.fixtures';
 // ═══════════════════════════════════════════════════════════
 // Mock Data Fixtures
 // ═══════════════════════════════════════════════════════════
 export * from './fixtures/product.fixtures';
-export * from './fixtures/cart.fixtures';
-export * from './fixtures/order.fixtures';
-export * from './fixtures/customer.fixtures';
-
+export * from './mocks/handlers/cart.handlers';
+export * from './mocks/handlers/orders.handlers';
+export * from './mocks/handlers/products.handlers';
 // ═══════════════════════════════════════════════════════════
 // MSW Mocks
 // ═══════════════════════════════════════════════════════════
 export * from './mocks/server';
-export * from './mocks/handlers/products.handlers';
-export * from './mocks/handlers/cart.handlers';
-export * from './mocks/handlers/orders.handlers';
 
 // ═══════════════════════════════════════════════════════════
 // Security Utilities

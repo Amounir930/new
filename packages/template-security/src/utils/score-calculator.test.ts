@@ -2,7 +2,7 @@
  * Security Score Calculator Tests
  */
 
-import fs from 'fs';
+import fs from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { calculateSecurityScore } from './score-calculator.js';
 

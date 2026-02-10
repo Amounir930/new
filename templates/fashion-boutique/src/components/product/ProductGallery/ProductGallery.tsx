@@ -51,6 +51,8 @@ export function ProductGallery({ images }: ProductGalleryProps) {
         <div className="grid grid-cols-4 gap-2">
           {images.map((image, index) => (
             <button
+              type="button"
+              // biome-ignore lint/suspicious/noArrayIndexKey: template demo
               key={index}
               onClick={() => setSelectedImage(index)}
               className={`aspect-square relative overflow-hidden rounded-md border-2 transition-all ${

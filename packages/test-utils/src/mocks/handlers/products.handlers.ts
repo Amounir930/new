@@ -6,7 +6,7 @@
  * @module @apex/test-utils/mocks/handlers/products
  */
 
-import { http, HttpResponse } from 'msw';
+import { HttpResponse, http } from 'msw';
 import {
   createMockProduct,
   createMockProductList,

@@ -1,6 +1,6 @@
 import { logSecurityEvent } from '@apex/audit';
-import { env } from '@apex/config';
-import React, { type ComponentType } from 'react';
+import type React from 'react';
+import type { ComponentType } from 'react';
 
 export interface TemplateLoaderOptions {
   baseUrl?: string;

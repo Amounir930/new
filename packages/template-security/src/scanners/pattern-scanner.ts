@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 interface Violation {
   rule: string;

@@ -2,7 +2,7 @@
  * Template Validator Tests
  */
 
-import fs from 'fs';
+import fs from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TemplateValidator } from './validator.js';
 

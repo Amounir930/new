@@ -8,8 +8,8 @@
 
 'use client';
 
-import { formatPrice } from '@/lib/formatters';
 import Link from 'next/link';
+import { formatPrice } from '@/lib/formatters';
 
 export interface CartSummaryProps {
   cart: {
@@ -88,7 +88,10 @@ export function CartSummary({ cart }: CartSummaryProps) {
             placeholder="Enter code"
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
-          <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md font-medium">
+          <button
+            type="button"
+            className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md font-medium"
+          >
             Apply
           </button>
         </div>

@@ -4,8 +4,7 @@
  * Purpose: JSON editor UI in Super Admin for tenant provisioning templates
  */
 
-import { onboardingBlueprints } from '@apex/db';
-import { publicDb } from '@apex/db';
+import { onboardingBlueprints, publicDb } from '@apex/db';
 import { and, desc, eq } from 'drizzle-orm';
 
 export interface BlueprintTemplate {
