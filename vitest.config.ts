@@ -35,7 +35,7 @@ export default defineConfig({
     environment: 'node',
     setupFiles: [resolve(__dirname, 'vitest.setup.ts')],
     coverage: {
-      provider: 'istanbul', // Switch to istanbul for better Bun compatibility
+      provider: 'v8', // Switch to v8 for better speed and integration coverage
       all: true,
       // Reporters: text shows summary at end, others for artifact generation
       reporter: [
@@ -61,10 +61,10 @@ export default defineConfig({
       // Coverage Thresholds (Modified to 45% to unblock verify step)
       // Constitution Rule 4.1: Comprehensive Test Coverage Mandate
       thresholds: {
-        branches: 45,
-        functions: 45,
-        lines: 45,
-        statements: 45,
+        branches: 95,
+        functions: 95,
+        lines: 95,
+        statements: 95,
       },
       // Report uncovered files
       reportOnFailure: true,
