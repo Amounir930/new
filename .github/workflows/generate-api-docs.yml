@@ -6,7 +6,6 @@ name: "📚 API Documentation"
 
 on:
   push:
-    branches: [main, develop]
     paths:
       - 'apps/api/src/**/*.ts'
       - 'packages/*/src/**/*.ts'
@@ -68,7 +67,7 @@ jobs:
     name: 'Deploy to Pages'
     needs: generate-docs
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     permissions:
       pages: write
       id-token: write
