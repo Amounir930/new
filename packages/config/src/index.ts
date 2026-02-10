@@ -21,6 +21,12 @@ export function validateEnv(): EnvConfig {
 
     // Additional S1 Security Checks
     if (parsed.NODE_ENV === 'production') {
+      // JWT Secret Strength Check
+      if (parsed.JWT_SECRET.length < 32) {
+        throw new Error(
+          'S1 Violation: JWT_SECRET must be at least 32 characters in production'
+        );
+      }
       if (
         parsed.JWT_SECRET.includes('default') ||
         parsed.JWT_SECRET.includes('test')
@@ -30,12 +36,25 @@ export function validateEnv(): EnvConfig {
         );
       }
 
+      // Database Security Check
       if (
         parsed.DATABASE_URL.includes('localhost') &&
         !parsed.DATABASE_URL.includes('ssl')
       ) {
         throw new Error('S1 Violation: Production database must use SSL');
       }
+    }
+
+    // Generic Checks (All Environments)
+    if (parsed.JWT_SECRET.length < 8) {
+      throw new Error('S1 Violation: JWT_SECRET is too short (min 8 chars)');
+    }
+
+    if (
+      !parsed.DATABASE_URL.startsWith('postgres://') &&
+      !parsed.DATABASE_URL.startsWith('postgresql://')
+    ) {
+      throw new Error('S1 Violation: Invalid DATABASE_URL protocol');
     }
 
     console.warn(

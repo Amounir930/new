@@ -59,7 +59,11 @@ export class ExportService implements OnModuleDestroy {
     }
 
     // Check tenant concurrency (1 job per tenant)
-    const activeJobs = await this.exportQueue.getJobs(['active', 'waiting']);
+    const activeJobs = await this.exportQueue.getJobs([
+      'active',
+      'waiting',
+      'delayed',
+    ]);
     const tenantJobs = activeJobs.filter(
       (j) => j.data.tenantId === options.tenantId
     );
@@ -67,25 +71,30 @@ export class ExportService implements OnModuleDestroy {
     if (tenantJobs.length > 0) {
       throw new Error(
         `Export already in progress for tenant ${options.tenantId}. ` +
-          `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
+        `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
       );
     }
 
     // Check for duplicate requests (same profile within 1 minute)
     const recentJobs = await this.exportQueue.getJobs(['completed']);
-    const recentDuplicate = recentJobs.find(
-      (j) =>
+    const recentDuplicate = recentJobs.find((j) => {
+      const completionTime = j.finishedOn || j.processedOn || j.timestamp;
+      return (
         j.data.tenantId === options.tenantId &&
         j.data.profile === options.profile &&
-        j.processedOn &&
-        Date.now() - j.processedOn < 60 * 1000
-    );
+        completionTime &&
+        Date.now() - completionTime < 60 * 1000
+      );
+    });
 
     if (recentDuplicate) {
+      const completionTime =
+        recentDuplicate.finishedOn ||
+        recentDuplicate.processedOn ||
+        recentDuplicate.timestamp;
+      const ago = Math.floor((Date.now() - (completionTime ?? 0)) / 1000);
       throw new Error(
-        `Duplicate export request. Similar export completed ${Math.floor(
-          (Date.now() - (recentDuplicate.processedOn ?? 0)) / 1000
-        )}s ago.`
+        `Duplicate export request. Similar export completed ${ago}s ago.`
       );
     }
 
@@ -155,9 +164,9 @@ export class ExportService implements OnModuleDestroy {
       progress: job.progress as number | undefined,
       result: result
         ? {
-            ...result,
-            expiresAt: new Date(result.expiresAt),
-          }
+          ...result,
+          expiresAt: new Date(result.expiresAt),
+        }
         : undefined,
       error: job.failedReason || undefined,
     };

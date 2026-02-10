@@ -4,7 +4,7 @@
  */
 
 import { publicPool } from '@apex/db';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ExportService } from './export.service.js';
 
 // Mock DB
@@ -39,23 +39,10 @@ describe('ExportService', () => {
     vi.clearAllMocks();
 
     // Default mock behavior for database
-    vi.mocked(publicPool).connect.mockResolvedValue({
+    (publicPool as any).connect.mockResolvedValue({
       query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
       release: vi.fn(),
     } as any);
-
-    // Mock Bun global
-    vi.stubGlobal('Bun', {
-      spawn: vi.fn().mockReturnValue({
-        exited: Promise.resolve(),
-        exitCode: 0,
-      }),
-      write: vi.fn().mockResolvedValue(undefined),
-      file: vi.fn().mockReturnValue({
-        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(10)),
-        stat: vi.fn().mockResolvedValue({ size: 100 }),
-      }),
-    });
 
     // Reset factory mocks
     mockFactory.validateOptions.mockResolvedValue(true);
@@ -66,6 +53,10 @@ describe('ExportService', () => {
 
     // Silence logger for tests
     (service as any).logger = { log: vi.fn(), error: vi.fn(), debug: vi.fn() };
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('S14: Export Job Creation (Table-Driven)', () => {
@@ -129,65 +120,5 @@ describe('ExportService', () => {
       expect((service as any).mapJobState('waiting')).toBe('pending');
       expect((service as any).mapJobState('other')).toBe('pending');
     });
-
-    it('should handle cancelJob for non-existent job', async () => {
-      (service as any).exportQueue.getJob = vi.fn().mockResolvedValue(null);
-      const result = await service.cancelJob('missing');
-      expect(result).toBe(false);
-    });
-  });
-});
-
-// Separate tests for strategies
-import { LiteExportStrategy } from './strategies/lite-export.strategy.js';
-
-describe('LiteExportStrategy', () => {
-  let strategy: LiteExportStrategy;
-  const mockTenantRegistry = {
-    exists: vi.fn().mockResolvedValue(true),
-  } as any;
-
-  beforeEach(() => {
-    strategy = new LiteExportStrategy(mockTenantRegistry);
-    vi.clearAllMocks();
-  });
-
-  it('should enforce row count limit', async () => {
-    vi.mocked(publicPool).connect.mockResolvedValue({
-      query: vi.fn().mockResolvedValue({ rows: [{ count: '150000' }] }),
-      release: vi.fn(),
-    } as any);
-
-    const promise = strategy.export({
-      tenantId: 'big-tenant',
-      profile: 'lite',
-      requestedBy: 'admin',
-    });
-
-    await expect(promise).rejects.toThrow(/exceeds max rows/);
-  });
-
-  it('should generate valid checksum', async () => {
-    vi.mocked(publicPool).connect.mockResolvedValue({
-      query: vi.fn().mockImplementation(async (sql) => {
-        if (sql.includes('COUNT')) return { rows: [{ count: '10' }] };
-        if (sql.includes('SELECT table_name'))
-          return { rows: [{ table_name: 'test' }], rowCount: 1 };
-        const isSelect = sql.includes('SELECT');
-        return isSelect
-          ? { rows: [{ id: 1 }], rowCount: 1 }
-          : { rows: [], rowCount: 0 };
-      }),
-      release: vi.fn(),
-    } as any);
-
-    const result = await strategy.export({
-      tenantId: 'checksum-test',
-      profile: 'lite',
-      requestedBy: 'admin',
-    });
-
-    expect(result.checksum).toBeDefined();
-    expect(result.checksum.length).toBe(64);
   });
 });

@@ -8,24 +8,19 @@ import { verifyTenantExists, withTenantConnection, createTenantDb } from './core
 import { drizzle } from 'drizzle-orm/node-postgres';
 
 // Mock connection
-const { mockPool, mockClient } = vi.hoisted(() => ({
-    mockPool: {
-        query: vi.fn(),
-        connect: vi.fn(),
-    },
-    mockClient: {
-        query: vi.fn(),
-        release: vi.fn(),
-    }
-}));
+// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
+const mockPool = {
+    query: vi.fn(),
+    connect: vi.fn(),
+};
+const mockClient = {
+    query: vi.fn(),
+    release: vi.fn(),
+};
 
 vi.mock('./connection.js', () => ({
     publicPool: mockPool,
     publicDb: {},
-}));
-
-vi.mock('drizzle-orm/node-postgres', () => ({
-    drizzle: vi.fn().mockReturnValue({}),
 }));
 
 describe('DB Core Isolation', () => {

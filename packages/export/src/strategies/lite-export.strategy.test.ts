@@ -7,13 +7,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportOptions } from '../types.js';
 import { LiteExportStrategy } from './lite-export.strategy.js';
 
-// Mock database
-const { mockClient } = vi.hoisted(() => ({
-  mockClient: {
-    query: vi.fn(),
-    release: vi.fn(),
-  },
-}));
+// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
+const mockClient = {
+  query: vi.fn(),
+  release: vi.fn(),
+};
+
+const mockShell = {
+    spawn: vi.fn(),
+    write: vi.fn(),
+    file: vi.fn(),
+};
 
 vi.mock('@apex/db', () => ({
   publicPool: {
@@ -21,17 +25,7 @@ vi.mock('@apex/db', () => ({
   },
 }));
 
-// Mock Bun
-global.Bun = {
-  spawn: vi.fn().mockReturnValue({
-    exited: Promise.resolve(),
-  }),
-  write: vi.fn().mockResolvedValue(undefined),
-  file: vi.fn().mockReturnValue({
-    arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
-    stat: vi.fn().mockResolvedValue({ size: 1024 }),
-  }),
-} as any;
+// Mock Bun (handled in vitest.setup.ts or via vi.stubGlobal if needed)
 
 // Mock TenantRegistryService
 const mockTenantRegistry = {
@@ -43,7 +37,19 @@ describe('LiteExportStrategy', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    strategy = new LiteExportStrategy(mockTenantRegistry as any);
+
+    // Default mock behavior for mockShell
+    mockShell.spawn.mockReturnValue({
+      exited: Promise.resolve(0),
+      exitCode: 0,
+    });
+    mockShell.write.mockResolvedValue(undefined);
+    mockShell.file.mockReturnValue({
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
+      stat: vi.fn().mockResolvedValue({ size: 1024 }),
+    });
+
+    strategy = new LiteExportStrategy(mockTenantRegistry as any, mockShell as any);
   });
 
   afterEach(() => {
@@ -193,7 +199,7 @@ describe('LiteExportStrategy', () => {
       await expect(strategy.export(options)).rejects.toThrow('Export failed');
 
       // Verify cleanup was called
-      expect(Bun.spawn).toHaveBeenCalledWith(
+      expect(mockShell.spawn).toHaveBeenCalledWith(
         expect.arrayContaining(['rm', '-rf'])
       );
       expect(mockClient.release).toHaveBeenCalled();
@@ -297,13 +303,13 @@ describe('LiteExportStrategy', () => {
       await strategy.export(options);
 
       // Verify work directory cleanup (but not tar.gz)
-      const spawnCalls = vi.mocked(Bun.spawn).mock.calls;
+      const spawnCalls = mockShell.spawn.mock.calls;
       const cleanupCall = spawnCalls.find(
         (call) =>
           Array.isArray(call[0]) &&
           call[0].includes('rm') &&
           call[0].includes('-rf') &&
-          !call[0].some((arg) => arg.includes('.tar.gz'))
+          !call[0].some((arg: any) => arg.includes('.tar.gz'))
       );
       expect(cleanupCall).toBeDefined();
     });

@@ -7,13 +7,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportOptions } from '../types.js';
 import { AnalyticsExportStrategy } from './analytics-export.strategy.js';
 
-// Mock database
-const { mockClient } = vi.hoisted(() => ({
-  mockClient: {
-    query: vi.fn(),
-    release: vi.fn(),
-  },
-}));
+// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
+const mockClient = {
+  query: vi.fn(),
+  release: vi.fn(),
+};
+
+const mockShell = {
+  spawn: vi.fn(),
+  write: vi.fn(),
+  file: vi.fn(),
+};
 
 vi.mock('@apex/db', () => ({
   publicPool: {
@@ -21,17 +25,7 @@ vi.mock('@apex/db', () => ({
   },
 }));
 
-// Mock Bun
-global.Bun = {
-  spawn: vi.fn().mockReturnValue({
-    exited: Promise.resolve(),
-  }),
-  write: vi.fn().mockResolvedValue(undefined),
-  file: vi.fn().mockReturnValue({
-    arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
-    stat: vi.fn().mockResolvedValue({ size: 512 }),
-  }),
-} as any;
+// Mock Bun (handled in vitest.setup.ts or via vi.stubGlobal if needed)
 
 describe('AnalyticsExportStrategy', () => {
   let strategy: AnalyticsExportStrategy;
@@ -40,7 +34,19 @@ describe('AnalyticsExportStrategy', () => {
     vi.clearAllMocks();
     mockClient.query.mockReset();
     mockClient.release.mockReset();
-    strategy = new AnalyticsExportStrategy();
+
+    // Default mock behavior for mockShell
+    mockShell.spawn.mockReturnValue({
+      exited: Promise.resolve(0),
+      exitCode: 0,
+    });
+    mockShell.write.mockResolvedValue(undefined);
+    mockShell.file.mockReturnValue({
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
+      stat: vi.fn().mockResolvedValue({ size: 512 }),
+    });
+
+    strategy = new AnalyticsExportStrategy(mockShell as any);
   });
 
   describe('validate', () => {
@@ -214,7 +220,7 @@ describe('AnalyticsExportStrategy', () => {
       await strategy.export(options);
 
       // Verify CSV write
-      const writeCalls = vi.mocked(Bun.write).mock.calls;
+      const writeCalls = mockShell.write.mock.calls;
       const csvWrite = writeCalls.find((call) =>
         call[0].toString().includes('products_performance.csv')
       );
@@ -311,7 +317,7 @@ describe('AnalyticsExportStrategy', () => {
       await expect(strategy.export(options)).rejects.toThrow('Query failed');
 
       // Verify cleanup
-      const spawnCalls = vi.mocked(Bun.spawn).mock.calls;
+      const spawnCalls = mockShell.spawn.mock.calls;
       const cleanupCall = spawnCalls.find(
         (call) => Array.isArray(call[0]) && call[0].includes('rm')
       );

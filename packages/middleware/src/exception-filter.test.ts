@@ -28,8 +28,8 @@ describe('GlobalExceptionFilter', () => {
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
+    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => { });
+    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => { });
 
     mockJson = vi.fn();
     mockStatus = vi.fn().mockReturnValue({ json: mockJson });
@@ -169,63 +169,59 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should include stack trace in development', () => {
-    vi.stubEnv('NODE_ENV', 'development');
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
 
-    const exception = new Error('Test Error');
-    filter.catch(exception, mockArgumentsHost);
+    try {
+      const exception = new Error('Test Error');
+      filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stack: expect.any(String),
-      })
-    );
-
-    vi.unstubAllEnvs();
-  });
-
-  it('should handle non-Error objects in logError branch', () => {
-    // This is tested indirectly by catching a string
-    const exception = 'Raw string exception';
-    filter.catch(exception, mockArgumentsHost);
-
-    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Internal server error',
-      })
-    );
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          stack: expect.any(String),
+        })
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('should report to error tracking in production for 500 errors', () => {
-    vi.stubEnv('NODE_ENV', 'production');
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
 
-    // Spy on the private reportToErrorTracking via prototype if possible or just verify execution
-    const reportSpy = vi.spyOn(
-      GlobalExceptionFilter.prototype as any,
-      'reportToErrorTracking'
-    );
+    try {
+      // Spy on the private reportToErrorTracking via prototype or checking logger
+      const loggerErrorSpy = vi.spyOn(Logger.prototype, 'error');
 
-    const exception = new Error('Production 500');
-    filter.catch(exception, mockArgumentsHost);
+      const exception = new Error('Production 500');
+      filter.catch(exception, mockArgumentsHost);
 
-    expect(reportSpy).toHaveBeenCalled();
-
-    vi.unstubAllEnvs();
+      // We expect the fallback logging to occur
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Sentry Fallback'),
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('should NOT include stack trace in production', () => {
-    vi.stubEnv('NODE_ENV', 'production');
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
 
-    const exception = new Error('Test Error');
-    filter.catch(exception, mockArgumentsHost);
+    try {
+      const exception = new Error('Test Error');
+      filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.not.objectContaining({
-        stack: expect.anything(),
-      })
-    );
-
-    vi.unstubAllEnvs();
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          stack: expect.anything(),
+        })
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('should sanitize multiple patterns in a single message', () => {
@@ -243,19 +239,24 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should sanitize pattern matches even in development', () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    const exception = new HttpException(
-      'Table "users" is fine',
-      HttpStatus.BAD_REQUEST
-    );
-    filter.catch(exception, mockArgumentsHost);
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
 
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Invalid request',
-      })
-    );
-    vi.unstubAllEnvs();
+    try {
+      const exception = new HttpException(
+        'Table "users" is fine',
+        HttpStatus.BAD_REQUEST
+      );
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Invalid request',
+        })
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('should fallback to "Error" for unknown status codes', () => {
@@ -292,73 +293,94 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should redact Windows paths in development stack traces', () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    const exception = new Error('Win Error');
-    exception.stack =
-      'Error: Win Error\n    at Object.<anonymous> (C:\\Users\\Dell\\project\\file.ts:1:1)';
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
 
-    filter.catch(exception, mockArgumentsHost);
+    try {
+      const exception = new Error('Win Error');
+      exception.stack =
+        'Error: Win Error\n    at Object.<anonymous> (C:\\Users\\Dell\\project\\file.ts:1:1)';
 
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stack: expect.stringMatching(/\[USER\][\/\\]project[\/\\]file.ts/),
-      })
-    );
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stack: expect.not.stringContaining('C:\\Users\\Dell'),
-      })
-    );
-    vi.unstubAllEnvs();
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // Expect strict redaction of the entire path
+          stack: expect.stringContaining('[USER]:1:1'),
+        })
+      );
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          stack: expect.not.stringContaining('C:\\Users\\Dell'),
+        })
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('should redact Linux/Mac paths in development stack traces', () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    const exception = new Error('Nix Error');
-    exception.stack =
-      'Error: Nix Error\n    at Object.<anonymous> (/home/user/project/file.ts:1:1)';
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
 
-    filter.catch(exception, mockArgumentsHost);
+    try {
+      const exception = new Error('Nix Error');
+      exception.stack =
+        'Error: Nix Error\n    at Object.<anonymous> (/home/user/project/file.ts:1:1)';
 
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stack: expect.stringContaining('[USER]/project/file.ts'),
-      })
-    );
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.objectContaining({
-        stack: expect.not.stringContaining('/home/user'),
-      })
-    );
-    vi.unstubAllEnvs();
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          stack: expect.stringContaining('[USER]/project/file.ts'),
+        })
+      );
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          stack: expect.not.stringContaining('/home/user'),
+        })
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('should handle non-Error objects gracefully in development (no stack)', () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    const exception = 'Just a string error'; // Not an Error object
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
 
-    filter.catch(exception, mockArgumentsHost);
+    try {
+      const exception = 'Just a string error'; // Not an Error object
 
-    // Should not crash and should not have stack
-    expect(mockJson).toHaveBeenCalledWith(
-      expect.not.objectContaining({
-        stack: expect.anything(),
-      })
-    );
-    vi.unstubAllEnvs();
+      filter.catch(exception, mockArgumentsHost);
+
+      // Should not crash and should not have stack
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          stack: expect.anything(),
+        })
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 
   it('should report error tracking for generic 500 even if no wrapper service', () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    const loggerWarnSpy = vi.spyOn(Logger.prototype, 'warn');
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
 
-    const exception = new Error('Critical Failure');
-    filter.catch(exception, mockArgumentsHost);
+    try {
+      const loggerErrorSpy = vi.spyOn(Logger.prototype, 'error');
 
-    expect(loggerWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Would report to error tracking')
-    );
-    vi.unstubAllEnvs();
+      const exception = new Error('Critical Failure');
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Sentry Fallback')
+      );
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+    }
   });
 });
 

@@ -95,7 +95,7 @@ describe('BlueprintManager', () => {
     };
 
     it('should create a blueprint', async () => {
-      vi.mocked(publicDb.returning).mockResolvedValue([mockRecord]);
+      (publicDb.returning as any).mockResolvedValue([mockRecord]);
 
       const result = await createBlueprint('Test', { version: '1.0', name: 'Test' });
 
@@ -105,7 +105,7 @@ describe('BlueprintManager', () => {
     });
 
     it('should get all blueprints', async () => {
-      vi.mocked(publicDb.select().from().orderBy as any).mockResolvedValue([mockRecord]);
+      (publicDb.select().from().orderBy as any).mockResolvedValue([mockRecord]);
 
       const results = await getAllBlueprints();
 
@@ -114,7 +114,7 @@ describe('BlueprintManager', () => {
     });
 
     it('should get blueprint by ID', async () => {
-      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValue([mockRecord]);
+      (publicDb.select().from().where().limit as any).mockResolvedValue([mockRecord]);
 
       const result = await getBlueprintById('uuid-1');
 
@@ -122,7 +122,7 @@ describe('BlueprintManager', () => {
     });
 
     it('should return null if blueprint ID not found', async () => {
-      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValue([]);
+      (publicDb.select().from().where().limit as any).mockResolvedValue([]);
 
       const result = await getBlueprintById('missing');
 
@@ -138,7 +138,7 @@ describe('BlueprintManager', () => {
         isDefault: 'true',
         plan: 'free',
       };
-      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValue([mockDefault]);
+      (publicDb.select().from().where().limit as any).mockResolvedValue([mockDefault]);
 
       const result = await getDefaultBlueprint('free');
 
@@ -147,8 +147,8 @@ describe('BlueprintManager', () => {
     });
 
     it('should fallback to any blueprint if no default is found', async () => {
-      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValueOnce([]); // No default
-      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValueOnce([{
+      (publicDb.select().from().where().limit as any).mockResolvedValueOnce([]); // No default
+      (publicDb.select().from().where().limit as any).mockResolvedValueOnce([{
         name: 'Fallback',
         blueprint: JSON.stringify({ version: '1.0', name: 'F' }),
         isDefault: 'false',

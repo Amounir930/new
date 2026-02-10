@@ -74,8 +74,8 @@ describe('RateLimitGuard', () => {
         getRequest: () => mockRequest,
         getResponse: () => mockResponse,
       }),
-      getHandler: () => function testHandler() {},
-      getClass: () => class TestController {},
+      getHandler: () => function testHandler() { },
+      getClass: () => class TestController { },
     } as any;
   });
 
@@ -213,14 +213,16 @@ describe('RedisRateLimitStore Branches', () => {
   });
 
   it('should fallback to memory in non-production on Redis failure', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
+
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
     // Force Redis connect to fail
     const mockRedis = {
       on: vi.fn(),
       connect: vi.fn().mockRejectedValue(new Error('Redis Down')),
       isOpen: false,
     };
-    vi.mocked(createClient).mockReturnValue(mockRedis as any);
+    (createClient as any).mockReturnValue(mockRedis as any);
 
     // Call increment - should trigger connect and fallback
     await store.increment('test-key', 60000);
@@ -229,11 +231,12 @@ describe('RedisRateLimitStore Branches', () => {
     const client = await store.getClient();
     expect(client).toBeNull();
 
-    vi.unstubAllEnvs();
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('should throw in production if Redis is unavailable', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
 
     // Mock getClient to return null
     vi.spyOn(store, 'getClient').mockResolvedValue(null);
@@ -242,7 +245,7 @@ describe('RedisRateLimitStore Branches', () => {
       HttpException
     );
 
-    vi.unstubAllEnvs();
+    process.env.NODE_ENV = originalEnv;
   });
 
   it('should return null if already connecting', async () => {

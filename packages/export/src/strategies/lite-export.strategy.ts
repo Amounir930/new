@@ -12,13 +12,17 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
+import { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class LiteExportStrategy implements ExportStrategy {
   readonly name = 'lite' as const;
   private readonly logger = new Logger(LiteExportStrategy.name);
 
-  constructor(private readonly tenantRegistry: TenantRegistryService) {}
+  constructor(
+    private readonly tenantRegistry: TenantRegistryService,
+    private readonly shell: BunShell
+  ) { }
 
   async validate(options: ExportOptions): Promise<boolean> {
     return this.tenantRegistry.exists(options.tenantId);
@@ -31,15 +35,16 @@ export class LiteExportStrategy implements ExportStrategy {
 
     const schemaName = `tenant_${options.tenantId}`;
     const workDir = `/tmp/export-${options.tenantId}-${Date.now()}`;
+    const tarPath = `${workDir}.tar.gz`;
 
     // Cleanup on any error
     const cleanup = async () => {
-      await Bun.spawn(['rm', '-rf', workDir]).exited.catch(() => {});
-      await Bun.spawn(['rm', '-f', `${workDir}.tar.gz`]).exited.catch(() => {});
+      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => { });
+      await this.shell.spawn(['rm', '-f', tarPath]).exited.catch(() => { });
     };
 
     // Create work directory
-    await Bun.spawn(['mkdir', '-p', `${workDir}/database`]).exited;
+    await this.shell.spawn(['mkdir', '-p', `${workDir}/database`]).exited;
 
     const client = await publicPool.connect();
     try {
@@ -63,7 +68,7 @@ export class LiteExportStrategy implements ExportStrategy {
         const countResult = await client.query(
           `SELECT COUNT(*) FROM ${schemaName}.${table}`
         );
-        const rowCount = parseInt(countResult.rows[0].count);
+        const rowCount = Number(countResult.rows[0].count);
 
         if (rowCount > this.MAX_ROWS_PER_TABLE) {
           throw new Error(
@@ -78,9 +83,9 @@ export class LiteExportStrategy implements ExportStrategy {
         totalRows += dataResult.rowCount || 0;
 
         // Write to JSON file
-        await Bun.write(
+        await this.writeTableToFile(
           `${workDir}/database/${table}.json`,
-          JSON.stringify(dataResult.rows, null, 2)
+          dataResult.rows
         );
       }
 
@@ -94,40 +99,47 @@ export class LiteExportStrategy implements ExportStrategy {
         version: '1.0.0',
       };
 
-      await Bun.write(
+      await this.shell.write(
         `${workDir}/manifest.json`,
         JSON.stringify(manifest, null, 2)
       );
 
-      // Compress
-      const outputFile = `${workDir}.tar.gz`;
-      await Bun.spawn(['tar', '-czf', outputFile, '-C', workDir, '.']).exited;
+      // 4. Create tarball
+      const proc = this.shell.spawn(['tar', '-czf', tarPath, '-C', workDir, '.']);
+      const exitCode = await proc.exited;
 
-      // Calculate checksum
-      const fileData = await Bun.file(outputFile).arrayBuffer();
+      // 5. Finalize Result
+      const stat = await this.shell.file(tarPath).stat();
+      const fileData = await this.shell.file(tarPath).arrayBuffer();
       const hashBuffer = await crypto.subtle.digest('SHA-256', fileData);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const checksumHex = hashArray
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
 
-      this.logger.log(`Lite export completed: ${outputFile}`);
+      this.logger.log(`Lite export completed: ${tarPath}`);
 
       return {
-        downloadUrl: outputFile,
+        downloadUrl: tarPath,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        sizeBytes: (await Bun.file(outputFile).stat()).size,
+        sizeBytes: stat.size,
         checksum: checksumHex,
         manifest,
       };
     } catch (error) {
-      // Cleanup on any error
-      await cleanup();
+      // Cleanup even on error
+      await this.shell.spawn(['rm', '-rf', workDir]).exited;
+      await this.shell.spawn(['rm', '-f', tarPath]).exited.catch(() => { });
       throw error;
     } finally {
       client.release();
-      // Cleanup work directory (keep tar.gz on success)
-      await Bun.spawn(['rm', '-rf', workDir]).exited.catch(() => {});
+      // 🧹 Cleanup: Remove work directory after tarball is created
+      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => { });
     }
+  }
+
+  private async writeTableToFile(filePath: string, data: any[]): Promise<void> {
+    const json = JSON.stringify(data, null, 2);
+    await this.shell.write(filePath, json);
   }
 }

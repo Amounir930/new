@@ -8,19 +8,13 @@ import { TenantIsolationMiddleware, TenantScopedGuard, SuperAdminOrTenantGuard, 
 import { UnauthorizedException } from '@nestjs/common';
 import { Response, NextFunction } from 'express';
 
-// Mock DB
-const { mockDb } = vi.hoisted(() => ({
-    mockDb: {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
-    }
-}));
-
-vi.mock('drizzle-orm', () => ({
-    eq: vi.fn(),
-}));
+// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
+const mockDb = {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([]),
+};
 
 vi.mock('@apex/db', () => ({
     publicDb: mockDb,

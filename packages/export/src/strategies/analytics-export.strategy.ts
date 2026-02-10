@@ -12,11 +12,14 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
+import { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class AnalyticsExportStrategy implements ExportStrategy {
   readonly name = 'analytics' as const;
   private readonly logger = new Logger(AnalyticsExportStrategy.name);
+
+  constructor(private readonly shell: BunShell) { }
 
   async validate(options: ExportOptions): Promise<boolean> {
     return !!options.dateRange; // Requires date range
@@ -29,7 +32,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
     const schemaName = `tenant_${options.tenantId}`;
     const workDir = `/tmp/export-${options.tenantId}-${Date.now()}`;
-    await Bun.spawn(['mkdir', '-p', `${workDir}/analytics`]).exited;
+    await this.shell.spawn(['mkdir', '-p', `${workDir}/analytics`]).exited;
 
     const client = await publicPool.connect();
     const exportedFiles: string[] = [];
@@ -104,17 +107,18 @@ export class AnalyticsExportStrategy implements ExportStrategy {
         version: '1.0.0',
       };
 
-      await Bun.write(
+      await this.shell.write(
         `${workDir}/manifest.json`,
         JSON.stringify(manifest, null, 2)
       );
 
       // Compress
       const outputFile = `${workDir}.tar.gz`;
-      await Bun.spawn(['tar', '-czf', outputFile, '-C', workDir, '.']).exited;
+      const proc = this.shell.spawn(['tar', '-czf', outputFile, '-C', workDir, '.']);
+      await proc.exited;
 
-      // Calculate checksum
-      const fileData = await Bun.file(outputFile).arrayBuffer();
+      const stat = await this.shell.file(outputFile).stat();
+      const fileData = await this.shell.file(outputFile).arrayBuffer();
       const hashBuffer = await crypto.subtle.digest('SHA-256', fileData);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const checksumHex = hashArray
@@ -126,18 +130,18 @@ export class AnalyticsExportStrategy implements ExportStrategy {
       return {
         downloadUrl: outputFile,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        sizeBytes: (await Bun.file(outputFile).stat()).size,
+        sizeBytes: stat.size,
         checksum: checksumHex,
         manifest,
       };
     } finally {
       client.release();
-      await Bun.spawn(['rm', '-rf', workDir]).exited.catch(() => {});
+      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => { });
     }
   }
 
   private async writeCSV(
-    path: string,
+    filePath: string,
     rows: any[],
     headers: string[]
   ): Promise<void> {
@@ -154,6 +158,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
       csvLines.push(values.join(','));
     }
 
-    await Bun.write(path, csvLines.join('\n'));
+    const csv = csvLines.join('\n');
+    await this.shell.write(filePath, csv);
   }
 }

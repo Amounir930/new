@@ -24,6 +24,33 @@ export async function verifyTenantExists(tenantId: string): Promise<boolean> {
 }
 
 /**
+ * Sanitize subdomain to valid PostgreSQL schema name
+ * @param subdomain - Raw subdomain
+ * @returns Valid schema name (tenant_{sanitized})
+ */
+export function sanitizeSchemaName(subdomain: string): string {
+  const clean = subdomain.toLowerCase().trim();
+
+  // Strict S2 Validation: Reject special characters
+  if (!/^[a-z0-9_-]+$/.test(clean)) {
+    throw new Error('Invalid subdomain');
+  }
+
+  // PG identifiers can't start with numbers (but we prefix with tenant_ so it's usually safe)
+  const sanitized = clean.replace(/^[0-9]/, '_$&');
+
+  if (sanitized.length < 3) {
+    throw new Error('Invalid subdomain: too short');
+  }
+
+  if (sanitized.length > 50) {
+    throw new Error('Invalid subdomain: exceeds 50 character limit');
+  }
+
+  return `tenant_${sanitized}`;
+}
+
+/**
  * Execute operation within tenant context using shared pool
  * S2: Verifies tenant validity before connection
  */
@@ -42,9 +69,9 @@ export async function withTenantConnection<T>(
 
   try {
     // 🔒 S2 Enforcement: Switch to tenant context
-    // Radical Fix: Sanitize tenantId and use quoted identifiers to prevent SQL injection or path escape
-    const safeTenantId = tenantId.replace(/[^a-z0-9_-]/gi, '');
-    await client.query(`SET search_path TO "tenant_${safeTenantId}", public`);
+    // Radical Fix: Use the standard sanitizer to ensure consistent schema naming and prevent injection
+    const schemaName = sanitizeSchemaName(tenantId);
+    await client.query(`SET search_path TO "${schemaName}", public`);
 
     const db = drizzle(client);
     const result = await operation(db);

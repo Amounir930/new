@@ -19,48 +19,43 @@ vi.mock('@apex/db', () => ({
   },
 }));
 
-// Mock Bun
-global.Bun = {
-  spawn: vi.fn().mockReturnValue({
-    exited: Promise.resolve(),
-    stdout: {
-      text: vi.fn().mockResolvedValue(''),
-    },
-  }),
-  write: vi.fn().mockResolvedValue(undefined),
-  file: vi.fn().mockReturnValue({
-    arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
-    stat: vi.fn().mockResolvedValue({ size: 2048 }),
-  }),
-} as any;
+// Mock Bun (handled in beforeEach via stubGlobal for stability)
+
+// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
+const mockShell = {
+  spawn: vi.fn(),
+  write: vi.fn(),
+  file: vi.fn(),
+};
 
 describe('NativeExportStrategy', () => {
   let strategy: NativeExportStrategy;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubGlobal('Bun', {
-      spawn: vi.fn().mockReturnValue({
-        exited: Promise.resolve(0),
-        exitCode: 0,
-        stdout: {
-          text: vi.fn().mockResolvedValue(''),
-        },
-        stderr: {
-          text: vi.fn().mockResolvedValue(''),
-        },
-      }),
-      write: vi.fn().mockResolvedValue(undefined),
-      file: vi.fn().mockReturnValue({
-        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
-        stat: vi.fn().mockResolvedValue({ size: 2048 }),
-      }),
+
+    // Default mock behavior for mockShell
+    mockShell.spawn.mockReturnValue({
+      exited: Promise.resolve(0),
+      exitCode: 0,
+      stdout: {
+        text: vi.fn().mockResolvedValue(''),
+      },
+      stderr: {
+        text: vi.fn().mockResolvedValue(''),
+      },
     });
-    strategy = new NativeExportStrategy();
+    mockShell.write.mockResolvedValue(undefined);
+    mockShell.file.mockReturnValue({
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
+      stat: vi.fn().mockResolvedValue({ size: 2048 }),
+    });
+
+    strategy = new NativeExportStrategy(mockShell as any);
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   describe('validate', () => {
@@ -93,7 +88,7 @@ describe('NativeExportStrategy', () => {
       expect(result.manifest.database.format).toBe('sql');
 
       // Verify pg_dump was called with correct schema
-      const spawnCalls = vi.mocked(Bun.spawn).mock.calls;
+      const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
         (call) => Array.isArray(call[0]) && call[0].includes('pg_dump')
       );
@@ -112,7 +107,7 @@ describe('NativeExportStrategy', () => {
 
       await strategy.export(options);
 
-      const spawnCalls = vi.mocked(Bun.spawn).mock.calls;
+      const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
         (call) => Array.isArray(call[0]) && call[0].includes('pg_dump')
       );
@@ -124,7 +119,7 @@ describe('NativeExportStrategy', () => {
     });
 
     it('should handle pg_dump failure', async () => {
-      vi.mocked(Bun.spawn).mockReturnValueOnce({
+      mockShell.spawn.mockReturnValueOnce({
         exited: Promise.resolve(1),
         exitCode: 1,
         stderr: new Response('pg_dump failed'),

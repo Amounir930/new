@@ -21,7 +21,7 @@ describe('S2IsolationChecker', () => {
     describe('validate', () => {
         it('should pass clean code', async () => {
             vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-            vi.mocked(readFile).mockResolvedValue('const x = useTenant();' as never);
+            (readFile as any).mockResolvedValue('const x = useTenantDb()');
 
             const result = await checker.validate(mockTemplatePath);
 

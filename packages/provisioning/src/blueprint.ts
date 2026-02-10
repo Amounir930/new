@@ -231,7 +231,17 @@ export async function getDefaultBlueprint(
       .limit(1);
 
     if (anyBlueprint.length === 0) {
-      return null;
+      // 🛡️ S21 FIX: Hardcoded fallback if database is empty
+      return {
+        id: 'hardcoded-default',
+        name: defaultBlueprintTemplate.name,
+        description: defaultBlueprintTemplate.description || null,
+        blueprint: defaultBlueprintTemplate,
+        isDefault: true,
+        plan: plan,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
     }
 
     return {

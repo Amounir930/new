@@ -7,17 +7,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TenantRegistryService } from './tenant-registry.service.js';
 
 // Mock DB
-const { mockDb } = vi.hoisted(() => ({
-    mockDb: {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockResolvedValue([]),
-        insert: vi.fn().mockReturnThis(),
-        values: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([]),
-    }
-}));
+// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
+const mockDb = {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue([]),
+    insert: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    returning: vi.fn().mockResolvedValue([]),
+};
 
 vi.mock('./connection.js', () => ({
     publicDb: mockDb,

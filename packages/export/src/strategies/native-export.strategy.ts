@@ -11,16 +11,19 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
+import { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class NativeExportStrategy implements ExportStrategy {
   readonly name = 'native' as const;
   private readonly logger = new Logger(NativeExportStrategy.name);
 
+  constructor(private readonly shell: BunShell) { }
+
   async validate(_options: ExportOptions): Promise<boolean> {
     // Check pg_dump availability
     try {
-      const proc = Bun.spawn(['pg_dump', '--version']);
+      const proc = this.shell.spawn(['pg_dump', '--version']);
       await proc.exited;
       return proc.exitCode === 0;
     } catch {
@@ -35,7 +38,7 @@ export class NativeExportStrategy implements ExportStrategy {
     const outputFile = `/tmp/export-${options.tenantId}-${Date.now()}.dump`;
 
     // Run pg_dump for specific schema
-    const proc = Bun.spawn([
+    const proc = this.shell.spawn([
       'pg_dump',
       '-Fc', // Custom format (compressed)
       '-n',
@@ -53,10 +56,10 @@ export class NativeExportStrategy implements ExportStrategy {
     }
 
     // Get file stats
-    const stat = await Bun.file(outputFile).stat();
+    const stat = await this.shell.file(outputFile).stat();
 
     // Calculate checksum
-    const fileData = await Bun.file(outputFile).arrayBuffer();
+    const fileData = await this.shell.file(outputFile).arrayBuffer();
     const hashBuffer = await crypto.subtle.digest('SHA-256', fileData);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const checksumHex = hashArray

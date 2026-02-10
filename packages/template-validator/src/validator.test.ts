@@ -108,7 +108,7 @@ describe('TemplateValidator', () => {
         });
 
         it('should handle fatal errors in validate', async () => {
-            vi.mocked(fs.existsSync).mockImplementation(() => { throw new Error('System Crash'); });
+            (fs.existsSync as any).mockImplementation(() => { throw new Error('System Crash'); });
             const result = await validator.validate(mockTemplatePath);
             expect(result.isValid).toBe(false);
             expect(result.errors[0]).toContain('Fatal validation error: System Crash');

@@ -10,7 +10,7 @@ describe('Config Package', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    vi.resetModules();
+    // vi.resetModules();
     process.env = { ...originalEnv };
   });
 
@@ -68,7 +68,7 @@ describe('Config Package', () => {
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
 
-      vi.resetModules();
+      // vi.resetModules();
       const { ConfigService } = await import('./index.js');
       const service = new ConfigService();
       expect(service.get('JWT_SECRET')).toBe('a'.repeat(32));
@@ -82,7 +82,7 @@ describe('Config Package', () => {
       process.env.MINIO_ENDPOINT = 'localhost';
       delete process.env.JWT_EXPIRES_IN; // Ensure we test the default
 
-      vi.resetModules();
+      // vi.resetModules();
       const { ConfigService } = await import('./index.js');
       const service = new ConfigService();
       // In the actual schema, JWT_EXPIRES_IN defaults to '7d'

@@ -17,7 +17,7 @@ describe('calculateSecurityScore', () => {
     });
 
     it('should calculate perfect score (100) when all reports are clean', () => {
-        vi.mocked(fs.readFileSync).mockImplementation((p: any) => {
+        (fs.readFileSync as any).mockImplementation((p: any) => {
             if (p.includes('static-analysis-report.json')) return JSON.stringify({ violations: [] });
             if (p.includes('s1-s9-report.json')) return JSON.stringify({ violations: [] });
             if (p.includes('penetration-test-full-report.json')) return JSON.stringify({ vulnerabilities: [] });
@@ -35,7 +35,7 @@ describe('calculateSecurityScore', () => {
     });
 
     it('should drop score for critical violations', () => {
-        vi.mocked(fs.readFileSync).mockImplementation((p: any) => {
+        (fs.readFileSync as any).mockImplementation((p: any) => {
             if (p.includes('static-analysis-report.json')) return JSON.stringify({
                 violations: [{ severity: 'CRITICAL' }, { severity: 'LOW' }]
             });
@@ -54,7 +54,7 @@ describe('calculateSecurityScore', () => {
     });
 
     it('should handle missing reports gracefully (score 0 for that phase)', () => {
-        vi.mocked(fs.readFileSync).mockImplementation(() => { throw new Error('File not found'); });
+        (fs.readFileSync as any).mockImplementation(() => { throw new Error('File not found'); });
 
         const report = calculateSecurityScore(mockReportsDir);
 

@@ -64,7 +64,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           .map(
             (line) =>
               line
-                .replace(/[A-Z]:\\Users\\[^\\]+\\/gi, '[USER]/') // Windows paths
+                .replace(/[a-zA-Z]:\\(?:[^\\/:*?"<>|]+\\)*[^\\/:*?"<>|]*/g, '[USER]') // Windows paths (Robost Regex)
                 .replace(/\/home\/[^/]+\//g, '[USER]/') // Linux paths
                 .replace(/\/Users\/[^/]+\//g, '[USER]/') // macOS paths
           )
@@ -222,7 +222,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // Sentry.captureException(exception, {
     //   extra: { requestId }
     // });
-    this.logger.warn(`Would report to error tracking: ${requestId}`);
+
+    // Fallback: Log to console if no specific error tracking service is configured
+    // This ensures production errors are at least visible in logs
+    this.logger.error(`[Sentry Fallback ${requestId}]: Error reported to tracking (simulation)`);
   }
 }
 
@@ -231,7 +234,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException {}
+export class OperationalError extends HttpException { }
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {

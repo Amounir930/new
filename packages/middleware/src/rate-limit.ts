@@ -82,6 +82,9 @@ export class RedisRateLimitStore {
       await this.client.connect();
       this.fallbackToMemory = false;
     } catch {
+      this.client = null; // CRITICAL: Reset client so we don't use a broken instance
+      this.fallbackToMemory = false;
+
       // CRITICAL FIX (S6): In production, reject requests if Redis unavailable
       // In non-production, fallback to memory with warning
       const isProduction = process.env.NODE_ENV === 'production';
@@ -89,8 +92,6 @@ export class RedisRateLimitStore {
         console.error(
           '❌ S6 CRITICAL: Redis unavailable in production. Rate limiting cannot function securely.'
         );
-        // Don't set fallbackToMemory - this will cause canActivate to throw
-        this.fallbackToMemory = false;
       } else {
         console.warn(
           '⚠️ S6: Redis unavailable, falling back to in-memory rate limiting (NOT for production multi-instance)'
@@ -248,7 +249,7 @@ export class RateLimitGuard implements CanActivate {
     blockDurationMs: 300_000, // 5 minutes block after violations
   };
 
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
