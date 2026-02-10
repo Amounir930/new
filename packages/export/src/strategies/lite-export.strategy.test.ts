@@ -14,9 +14,9 @@ const mockClient = {
 };
 
 const mockShell = {
-    spawn: vi.fn(),
-    write: vi.fn(),
-    file: vi.fn(),
+  spawn: vi.fn(),
+  write: vi.fn(),
+  file: vi.fn(),
 };
 
 vi.mock('@apex/db', () => ({
@@ -49,7 +49,10 @@ describe('LiteExportStrategy', () => {
       stat: vi.fn().mockResolvedValue({ size: 1024 }),
     });
 
-    strategy = new LiteExportStrategy(mockTenantRegistry as any, mockShell as any);
+    strategy = new LiteExportStrategy(
+      mockTenantRegistry as any,
+      mockShell as any
+    );
   });
 
   afterEach(() => {

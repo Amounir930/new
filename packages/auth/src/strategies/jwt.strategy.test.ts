@@ -2,10 +2,10 @@
  * JWT Strategy Tests
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { JwtStrategy } from './jwt.strategy.js';
-import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@apex/config';
+import { UnauthorizedException } from '@nestjs/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { JwtStrategy } from './jwt.strategy.js';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
@@ -32,11 +32,15 @@ describe('JwtStrategy', () => {
 
     it('should throw UnauthorizedException if sub is missing', async () => {
       const payload = { email: 'test@test.com' } as any;
-      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow(
+        UnauthorizedException
+      );
     });
 
     it('should throw UnauthorizedException if payload is null', async () => {
-      await expect(strategy.validate(null as any)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(null as any)).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 });

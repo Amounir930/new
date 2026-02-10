@@ -97,7 +97,10 @@ describe('BlueprintManager', () => {
     it('should create a blueprint', async () => {
       (publicDb.returning as any).mockResolvedValue([mockRecord]);
 
-      const result = await createBlueprint('Test', { version: '1.0', name: 'Test' });
+      const result = await createBlueprint('Test', {
+        version: '1.0',
+        name: 'Test',
+      });
 
       expect(result.id).toBe('uuid-1');
       expect(result.isDefault).toBe(true);
@@ -114,7 +117,9 @@ describe('BlueprintManager', () => {
     });
 
     it('should get blueprint by ID', async () => {
-      (publicDb.select().from().where().limit as any).mockResolvedValue([mockRecord]);
+      (publicDb.select().from().where().limit as any).mockResolvedValue([
+        mockRecord,
+      ]);
 
       const result = await getBlueprintById('uuid-1');
 
@@ -138,7 +143,9 @@ describe('BlueprintManager', () => {
         isDefault: 'true',
         plan: 'free',
       };
-      (publicDb.select().from().where().limit as any).mockResolvedValue([mockDefault]);
+      (publicDb.select().from().where().limit as any).mockResolvedValue([
+        mockDefault,
+      ]);
 
       const result = await getDefaultBlueprint('free');
 
@@ -148,12 +155,14 @@ describe('BlueprintManager', () => {
 
     it('should fallback to any blueprint if no default is found', async () => {
       (publicDb.select().from().where().limit as any).mockResolvedValueOnce([]); // No default
-      (publicDb.select().from().where().limit as any).mockResolvedValueOnce([{
-        name: 'Fallback',
-        blueprint: JSON.stringify({ version: '1.0', name: 'F' }),
-        isDefault: 'false',
-        plan: 'free'
-      }]);
+      (publicDb.select().from().where().limit as any).mockResolvedValueOnce([
+        {
+          name: 'Fallback',
+          blueprint: JSON.stringify({ version: '1.0', name: 'F' }),
+          isDefault: 'false',
+          plan: 'free',
+        },
+      ]);
 
       const result = await getDefaultBlueprint('free');
 

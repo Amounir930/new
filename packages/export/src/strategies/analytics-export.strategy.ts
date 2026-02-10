@@ -19,7 +19,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
   readonly name = 'analytics' as const;
   private readonly logger = new Logger(AnalyticsExportStrategy.name);
 
-  constructor(private readonly shell: BunShell) { }
+  constructor(private readonly shell: BunShell) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
     return !!options.dateRange; // Requires date range
@@ -114,7 +114,14 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
       // Compress
       const outputFile = `${workDir}.tar.gz`;
-      const proc = this.shell.spawn(['tar', '-czf', outputFile, '-C', workDir, '.']);
+      const proc = this.shell.spawn([
+        'tar',
+        '-czf',
+        outputFile,
+        '-C',
+        workDir,
+        '.',
+      ]);
       await proc.exited;
 
       const stat = await this.shell.file(outputFile).stat();
@@ -136,7 +143,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
       };
     } finally {
       client.release();
-      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => { });
+      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => {});
     }
   }
 

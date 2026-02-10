@@ -9,15 +9,15 @@ import { join } from 'node:path';
 function getAllFiles(dir: string, extension: string): string[] {
   let results: string[] = [];
   const list = readdirSync(dir);
-  list.forEach((file) => {
-    file = join(dir, file);
-    const stat = statSync(file);
+  for (const name of list) {
+    const filePath = join(dir, name);
+    const stat = statSync(filePath);
     if (stat?.isDirectory()) {
-      results = results.concat(getAllFiles(file, extension));
-    } else if (file.endsWith(extension)) {
-      results.push(file);
+      results = results.concat(getAllFiles(filePath, extension));
+    } else if (filePath.endsWith(extension)) {
+      results.push(filePath);
     }
-  });
+  }
   return results;
 }
 
@@ -27,11 +27,12 @@ function auditAuditLogging() {
   const controllers = getAllFiles('apps/api/src', '.controller.ts');
   let violations = 0;
 
-  controllers.forEach((file) => {
+  for (const file of controllers) {
     const content = readFileSync(file, 'utf-8');
     const lines = content.split('\n');
 
-    lines.forEach((line, index) => {
+    for (let index = 0; index < lines.length; index++) {
+      const line = lines[index];
       // Detect mutation endpoints
       if (line.match(/@(Post|Put|Patch|Delete)\(/)) {
         // Look ahead for @AuditLog in the decorators block (usually few lines above or same block)
@@ -46,8 +47,7 @@ function auditAuditLogging() {
           // Heuristic: Check if it's a mutation. Read/Get of non-sensitive data might not need audit.
           // But our policy (per user request) wants to find these.
           console.warn(
-            `⚠️  S4 WARNING: Potential missing audit log on mutation endpoint at ${file}:${
-              index + 1
+            `⚠️  S4 WARNING: Potential missing audit log on mutation endpoint at ${file}:${index + 1
             }`
           );
           console.warn(`   > ${line.trim()}`);
@@ -55,8 +55,8 @@ function auditAuditLogging() {
           if (line.includes('Post')) violations++;
         }
       }
-    });
-  });
+    }
+  }
 
   if (violations > 10) {
     // Tolerant for now as we transition

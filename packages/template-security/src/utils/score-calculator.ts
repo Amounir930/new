@@ -114,9 +114,9 @@ export function calculateSecurityScore(
   // Static: 25%, Protocols: 25%, Penetration: 40%, Performance: 10%
   const finalScore = Math.round(
     results.static.score * 0.25 +
-    results.protocols.score * 0.25 +
-    results.penetration.score * 0.4 +
-    results.performance.score * 0.1
+      results.protocols.score * 0.25 +
+      results.penetration.score * 0.4 +
+      results.performance.score * 0.1
   );
 
   return {

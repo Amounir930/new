@@ -9,10 +9,7 @@ import { describe, expect, it } from 'vitest';
  * Validates the security compliance of a NestJS module.
  * Checks for hardcoded secrets (S1) and SQL Injection vulnerabilities (S11).
  */
-export function validateModuleSecurity(
-  module: any,
-  providers: any[] = []
-) {
+export function validateModuleSecurity(module: any, providers: any[] = []) {
   describe(`${module.name} Security Compliance (Reference Architecture)`, () => {
     // S1: Secrets Management (Deep Scan)
     it('S1: Should NOT have hardcoded secrets in providers or metadata (Deep Scan)', async () => {

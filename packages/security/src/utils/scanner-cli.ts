@@ -91,7 +91,10 @@ export class ApexSecurityScanner {
     }
 
     if (Node.isBinaryExpression(node)) {
-      return this.isRiskyPathNode(node.getLeft()) || this.isRiskyPathNode(node.getRight());
+      return (
+        this.isRiskyPathNode(node.getLeft()) ||
+        this.isRiskyPathNode(node.getRight())
+      );
     }
 
     if (Node.isIdentifier(node)) {
@@ -106,29 +109,44 @@ export class ApexSecurityScanner {
     if (!symbol) return false;
 
     for (const decl of symbol.getDeclarations()) {
-      if (Node.isVariableDeclaration(decl)) {
-        const init = decl.getInitializer();
-        if (init) {
-          if (init.getText().match(pattern)) return true;
-          // Recursive check for nested identifiers or expressions
-          if (Node.isIdentifier(init) || Node.isTemplateExpression(init) || Node.isBinaryExpression(init)) {
-            // Avoid infinite recursion for simple cases
-            if (init !== node) {
-              if (Node.isTemplateExpression(init)) {
-                for (const span of init.getTemplateSpans()) {
-                  if (this.traceRiskyValue(span.getExpression(), pattern)) return true;
-                }
-              }
-              if (Node.isBinaryExpression(init)) {
-                if (this.traceRiskyValue(init.getLeft(), pattern) || this.traceRiskyValue(init.getRight(), pattern)) return true;
-              }
-              // If it's a direct reference to another identifier
-              if (Node.isIdentifier(init)) return this.traceRiskyValue(init, pattern);
-            }
-          }
-        }
-      }
+      if (this.isRiskyDeclaration(decl, node, pattern)) return true;
     }
+    return false;
+  }
+
+  private isRiskyDeclaration(
+    decl: Node,
+    originalNode: Node,
+    pattern: RegExp
+  ): boolean {
+    if (!Node.isVariableDeclaration(decl)) return false;
+
+    const init = decl.getInitializer();
+    if (!init || init === originalNode) return false;
+
+    if (init.getText().match(pattern)) return true;
+
+    return this.isRiskyInitializer(init, pattern);
+  }
+
+  private isRiskyInitializer(init: Node, pattern: RegExp): boolean {
+    if (Node.isTemplateExpression(init)) {
+      return init
+        .getTemplateSpans()
+        .some((span) => this.traceRiskyValue(span.getExpression(), pattern));
+    }
+
+    if (Node.isBinaryExpression(init)) {
+      return (
+        this.traceRiskyValue(init.getLeft(), pattern) ||
+        this.traceRiskyValue(init.getRight(), pattern)
+      );
+    }
+
+    if (Node.isIdentifier(init)) {
+      return this.traceRiskyValue(init, pattern);
+    }
+
     return false;
   }
 
@@ -263,7 +281,10 @@ export class ApexSecurityScanner {
     // Support for string concatenation via .concat()
     if (Node.isCallExpression(node)) {
       const expr = node.getExpression();
-      if (Node.isPropertyAccessExpression(expr) && expr.getName() === 'concat') {
+      if (
+        Node.isPropertyAccessExpression(expr) &&
+        expr.getName() === 'concat'
+      ) {
         return true;
       }
     }

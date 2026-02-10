@@ -62,34 +62,39 @@ describe.skipIf(!hasDb)(
       mockPool.connect.mockImplementation(async () => {
         let currentPath = 'public';
         return {
-          query: vi.fn().mockImplementation(async (query: any, params?: any[]) => {
-            const queryString = typeof query === 'string' ? query : query.text;
-            // console.log(`S2 DEBUG: Query: ${queryString}, Path: ${currentPath}`);
+          query: vi
+            .fn()
+            .mockImplementation(async (query: any, params?: any[]) => {
+              const queryString =
+                typeof query === 'string' ? query : query.text;
+              // console.log(`S2 DEBUG: Query: ${queryString}, Path: ${currentPath}`);
 
-            if (queryString.includes('SET search_path')) {
-              const match = queryString.match(/SET search_path TO "([^"]+)"/i);
-              if (match) {
-                currentPath = match[1];
-                // console.log(`S2 DEBUG: SET PATH TO ${currentPath}`);
+              if (queryString.includes('SET search_path')) {
+                const match = queryString.match(
+                  /SET search_path TO "([^"]+)"/i
+                );
+                if (match) {
+                  currentPath = match[1];
+                  // console.log(`S2 DEBUG: SET PATH TO ${currentPath}`);
+                }
+                return { rows: [], rowCount: 0 };
+              }
+              if (queryString.includes('RESET search_path')) {
+                currentPath = 'public';
+                return { rows: [], rowCount: 0 };
+              }
+              if (queryString.includes('SHOW search_path')) {
+                return { rows: [{ search_path: currentPath }], rowCount: 1 };
+              }
+              if (queryString.includes('SELECT name FROM products')) {
+                if (currentPath === `tenant_${tenantAlpha}`)
+                  return { rows: [{ name: 'Alpha Secret' }], rowCount: 1 };
+                if (currentPath === `tenant_${tenantBeta}`)
+                  return { rows: [{ name: 'Beta Secret' }], rowCount: 1 };
+                return { rows: [], rowCount: 0 };
               }
               return { rows: [], rowCount: 0 };
-            }
-            if (queryString.includes('RESET search_path')) {
-              currentPath = 'public';
-              return { rows: [], rowCount: 0 };
-            }
-            if (queryString.includes('SHOW search_path')) {
-              return { rows: [{ search_path: currentPath }], rowCount: 1 };
-            }
-            if (queryString.includes('SELECT name FROM products')) {
-              if (currentPath === `tenant_${tenantAlpha}`)
-                return { rows: [{ name: 'Alpha Secret' }], rowCount: 1 };
-              if (currentPath === `tenant_${tenantBeta}`)
-                return { rows: [{ name: 'Beta Secret' }], rowCount: 1 };
-              return { rows: [], rowCount: 0 };
-            }
-            return { rows: [], rowCount: 0 };
-          }),
+            }),
           release: vi.fn(),
           on: vi.fn(),
         };
@@ -160,7 +165,7 @@ describe.skipIf(!hasDb)(
 
     it('should throw S2 Violation error for non-existent tenant', async () => {
       await expect(
-        withTenantConnection('fake_tenant', async () => { })
+        withTenantConnection('fake_tenant', async () => {})
       ).rejects.toThrow(
         "S2 Violation: Tenant 'fake_tenant' not found or invalid"
       );
@@ -168,7 +173,7 @@ describe.skipIf(!hasDb)(
 
     it('should NOT have cross-tenant schemas in search_path (Leak Prevention)', async () => {
       // Run a tenant operation
-      await withTenantConnection(tenantAlpha, async () => { });
+      await withTenantConnection(tenantAlpha, async () => {});
 
       // Immediately check a fresh connection from the pool
       const client = await publicPool.connect();

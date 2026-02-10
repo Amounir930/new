@@ -208,25 +208,26 @@ export class ExportService implements OnModuleDestroy {
       'failed',
     ]);
 
-    return jobs
-      .filter((j) => j.data.tenantId === tenantId)
-      .map((j) => ({
-        id: j.id as string,
-        tenantId: j.data.tenantId,
-        profile: j.data.profile,
-        requestedBy: j.data.requestedBy,
-        requestedAt: new Date(j.timestamp),
-        status: this.mapJobState(j.getState()),
-      }));
+    return Promise.all(
+      jobs
+        .filter((j) => j.data.tenantId === tenantId)
+        .map(async (j) => ({
+          id: j.id as string,
+          tenantId: j.data.tenantId,
+          profile: j.data.profile,
+          requestedBy: j.data.requestedBy,
+          requestedAt: new Date(j.timestamp),
+          status: this.mapJobState(await j.getState()),
+        }))
+    );
   }
 
   async onModuleDestroy() {
     await this.exportQueue.close();
   }
 
-  private mapJobState(state: string | Promise<string>): ExportJob['status'] {
-    const resolved = typeof state === 'string' ? state : 'pending';
-    switch (resolved) {
+  private mapJobState(state: string): ExportJob['status'] {
+    switch (state) {
       case 'waiting':
       case 'delayed':
         return 'pending';

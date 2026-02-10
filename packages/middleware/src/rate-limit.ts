@@ -249,7 +249,7 @@ export class RateLimitGuard implements CanActivate {
     blockDurationMs: 300_000, // 5 minutes block after violations
   };
 
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();

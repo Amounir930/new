@@ -28,8 +28,8 @@ describe('GlobalExceptionFilter', () => {
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => { });
-    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => { });
+    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
 
     mockJson = vi.fn();
     mockStatus = vi.fn().mockReturnValue({ json: mockJson });
@@ -199,7 +199,7 @@ describe('GlobalExceptionFilter', () => {
 
       // We expect the fallback logging to occur
       expect(loggerErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Sentry Fallback'),
+        expect.stringContaining('[Sentry Fallback')
       );
     } finally {
       process.env.NODE_ENV = originalEnv;

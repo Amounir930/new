@@ -6,7 +6,7 @@
  * @module lib/api
  */
 
-import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import axios, { type AxiosInstance } from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID;

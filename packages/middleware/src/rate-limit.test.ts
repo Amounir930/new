@@ -74,8 +74,8 @@ describe('RateLimitGuard', () => {
         getRequest: () => mockRequest,
         getResponse: () => mockResponse,
       }),
-      getHandler: () => function testHandler() { },
-      getClass: () => class TestController { },
+      getHandler: () => function testHandler() {},
+      getClass: () => class TestController {},
     } as any;
   });
 
@@ -213,7 +213,6 @@ describe('RedisRateLimitStore Branches', () => {
   });
 
   it('should fallback to memory in non-production on Redis failure', async () => {
-
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'development';
     // Force Redis connect to fail

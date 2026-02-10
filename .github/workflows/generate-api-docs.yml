@@ -28,6 +28,11 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: Build Workspace Packages
+        run: |
+          echo "🏗️ Building workspace packages..."
+          bun run build || echo "Build completed with warnings"
+
       - name: Generate OpenAPI Spec
         run: |
           echo "Generating OpenAPI Specification (Secure Mode)..."

@@ -3,9 +3,9 @@
  * Verifying JwtAuthGuard and exports
  */
 
+import { UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it, vi } from 'vitest';
 import { JwtAuthGuard } from './index.js';
-import { UnauthorizedException } from '@nestjs/common';
 
 describe('JwtAuthGuard', () => {
   const guard = new JwtAuthGuard();
@@ -17,7 +17,9 @@ describe('JwtAuthGuard', () => {
   });
 
   it('should throw UnauthorizedException when user is false', () => {
-    expect(() => guard.handleRequest(null, false)).toThrow(UnauthorizedException);
+    expect(() => guard.handleRequest(null, false)).toThrow(
+      UnauthorizedException
+    );
   });
 
   it('should throw the error if provided', () => {
@@ -29,8 +31,8 @@ describe('JwtAuthGuard', () => {
     // Mocking at the class level to trigger the line without needing full super logic
     const mockContext = {
       switchToHttp: () => ({
-        getRequest: () => ({ headers: {} })
-      })
+        getRequest: () => ({ headers: {} }),
+      }),
     } as any;
 
     // We can't easily mock 'super' in a unit test without more complex setup,

@@ -30,7 +30,9 @@ function verifyEnvConsistency() {
     console.error(
       '❌ S1 VIOLATION: Keys in .env.example are missing from config schema:'
     );
-    missingInSchema.forEach((k) => console.error(`   - ${k}`));
+    for (const k of missingInSchema) {
+      console.error(`   - ${k}`);
+    }
     failure = true;
   }
 
@@ -39,7 +41,9 @@ function verifyEnvConsistency() {
     console.error(
       '❌ S1 VIOLATION: Keys in config schema are missing from .env.example:'
     );
-    missingInExample.forEach((k) => console.error(`   - ${k}`));
+    for (const k of missingInExample) {
+      console.error(`   - ${k}`);
+    }
     failure = true;
   }
 

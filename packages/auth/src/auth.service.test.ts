@@ -2,9 +2,9 @@
  * Auth Service Tests
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { AuthService } from './auth.service.js';
 import { UnauthorizedException } from '@nestjs/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AuthService } from './auth.service.js';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -48,7 +48,9 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if sub is missing', async () => {
       const payload = { email: 'test@test.com' } as any;
-      await expect(service.validateUser(payload)).rejects.toThrow(UnauthorizedException);
+      await expect(service.validateUser(payload)).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 
@@ -64,9 +66,13 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException for an invalid token', async () => {
-      mockJwtService.verify.mockImplementation(() => { throw new Error('Invalid'); });
+      mockJwtService.verify.mockImplementation(() => {
+        throw new Error('Invalid');
+      });
 
-      await expect(service.verifyToken('invalid-token')).rejects.toThrow(UnauthorizedException);
+      await expect(service.verifyToken('invalid-token')).rejects.toThrow(
+        UnauthorizedException
+      );
     });
   });
 });

@@ -2,11 +2,11 @@
  * Auth Module Tests
  */
 
+import { ConfigModule, ConfigService } from '@apex/config';
 import { Test } from '@nestjs/testing';
+import { describe, expect, it, vi } from 'vitest';
 import { AuthModule } from './auth.module.js';
 import { AuthService } from './auth.service.js';
-import { ConfigModule, ConfigService } from '@apex/config';
-import { describe, expect, it, vi } from 'vitest';
 
 describe('AuthModule', () => {
   it('should be defined', async () => {
@@ -16,7 +16,8 @@ describe('AuthModule', () => {
       .overrideProvider(ConfigService)
       .useValue({
         get: vi.fn().mockImplementation((key) => {
-          if (key === 'JWT_SECRET') return 'super-secret-key-at-least-32-chars-long';
+          if (key === 'JWT_SECRET')
+            return 'super-secret-key-at-least-32-chars-long';
           return null;
         }),
         getWithDefault: vi.fn().mockReturnValue('7d'),

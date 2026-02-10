@@ -16,7 +16,8 @@ const generateTestSecret = (length: number): string => {
 process.env.JWT_SECRET = generateTestSecret(32);
 
 process.env.DATABASE_URL =
-  process.env.CI_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/apex_test';
+  process.env.CI_DATABASE_URL ||
+  'postgresql://postgres:postgres@localhost:5432/apex_test';
 process.env.REDIS_URL = process.env.CI_REDIS_URL || 'redis://localhost:6379';
 process.env.MINIO_ENDPOINT = process.env.CI_MINIO_ENDPOINT || 'localhost';
 process.env.MINIO_PORT = '9000';

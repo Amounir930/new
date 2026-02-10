@@ -3,8 +3,8 @@
  * S1 Protocol: Environment Verification
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { validateEnv, ConfigService } from './index.js';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { validateEnv } from './index.js';
 
 describe('Config Package', () => {
   const originalEnv = process.env;
@@ -45,7 +45,9 @@ describe('Config Package', () => {
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
 
-      expect(() => validateEnv()).toThrow('S1 Violation: JWT_SECRET appears to be a default/test value');
+      expect(() => validateEnv()).toThrow(
+        'S1 Violation: JWT_SECRET appears to be a default/test value'
+      );
     });
 
     it('should enforce production security constraints (SSL)', () => {
@@ -56,7 +58,9 @@ describe('Config Package', () => {
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
 
-      expect(() => validateEnv()).toThrow('S1 Violation: Production database must use SSL');
+      expect(() => validateEnv()).toThrow(
+        'S1 Violation: Production database must use SSL'
+      );
     });
   });
 
@@ -80,7 +84,7 @@ describe('Config Package', () => {
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
-      delete process.env.JWT_EXPIRES_IN; // Ensure we test the default
+      (process.env as any).JWT_EXPIRES_IN = undefined; // Ensure we test the default
 
       // vi.resetModules();
       const { ConfigService } = await import('./index.js');

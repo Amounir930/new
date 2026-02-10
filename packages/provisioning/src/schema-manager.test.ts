@@ -58,19 +58,27 @@ describe('SchemaManager', () => {
       const result = await createTenantSchema('new-tenant');
 
       expect(result.schemaName).toBe('tenant_new-tenant');
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('CREATE SCHEMA'));
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('CREATE SCHEMA')
+      );
     });
 
     it('should throw if schema already exists', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [{ schema_name: 'tenant_exists' }] });
+      mockClient.query.mockResolvedValueOnce({
+        rows: [{ schema_name: 'tenant_exists' }],
+      });
 
-      await expect(createTenantSchema('exists')).rejects.toThrow('already exists');
+      await expect(createTenantSchema('exists')).rejects.toThrow(
+        'already exists'
+      );
     });
   });
 
   describe('verifySchemaExists', () => {
     it('should return true and table count if schema exists', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [{ schema_name: 'tenant_tenant1' }] });
+      mockClient.query.mockResolvedValueOnce({
+        rows: [{ schema_name: 'tenant_tenant1' }],
+      });
       mockClient.query.mockResolvedValueOnce({ rows: [{ count: '10' }] });
 
       const result = await verifySchemaExists('tenant1');
@@ -91,13 +99,17 @@ describe('SchemaManager', () => {
 
   describe('dropTenantSchema', () => {
     it('should drop existing schema', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [{ schema_name: 'tenant_tenant2' }] });
+      mockClient.query.mockResolvedValueOnce({
+        rows: [{ schema_name: 'tenant_tenant2' }],
+      });
       mockClient.query.mockResolvedValueOnce({}); // drop
 
       const result = await dropTenantSchema('tenant2');
 
       expect(result).toBe(true);
-      expect(mockClient.query).toHaveBeenCalledWith(expect.stringContaining('DROP SCHEMA'));
+      expect(mockClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('DROP SCHEMA')
+      );
     });
 
     it('should return false if schema does not exist', async () => {
@@ -109,14 +121,20 @@ describe('SchemaManager', () => {
     });
 
     it('should prevent dropping non-empty schema if verifyEmpty is true', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [{ schema_name: 'tenant_busy' }] });
+      mockClient.query.mockResolvedValueOnce({
+        rows: [{ schema_name: 'tenant_busy' }],
+      });
       mockClient.query.mockResolvedValueOnce({ rows: [{ count: '5' }] });
 
-      await expect(dropTenantSchema('busy', true)).rejects.toThrow('is not empty');
+      await expect(dropTenantSchema('busy', true)).rejects.toThrow(
+        'is not empty'
+      );
     });
 
     it('should allow dropping empty schema if verifyEmpty is true', async () => {
-      mockClient.query.mockResolvedValueOnce({ rows: [{ schema_name: 'tenant_empty' }] });
+      mockClient.query.mockResolvedValueOnce({
+        rows: [{ schema_name: 'tenant_empty' }],
+      });
       mockClient.query.mockResolvedValueOnce({ rows: [{ count: '0' }] });
       mockClient.query.mockResolvedValueOnce({}); // drop
 
@@ -128,10 +146,7 @@ describe('SchemaManager', () => {
   describe('listTenantSchemas', () => {
     it('should return a list of tenant schemas', async () => {
       mockClient.query.mockResolvedValueOnce({
-        rows: [
-          { schema_name: 'tenant_a' },
-          { schema_name: 'tenant_b' },
-        ],
+        rows: [{ schema_name: 'tenant_a' }, { schema_name: 'tenant_b' }],
       });
 
       const { listTenantSchemas } = await import('./schema-manager.js');

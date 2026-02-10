@@ -36,13 +36,6 @@ export class LiteExportStrategy implements ExportStrategy {
     const schemaName = `tenant_${options.tenantId}`;
     const workDir = `/tmp/export-${options.tenantId}-${Date.now()}`;
     const tarPath = `${workDir}.tar.gz`;
-
-    // Cleanup on any error
-    const cleanup = async () => {
-      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => { });
-      await this.shell.spawn(['rm', '-f', tarPath]).exited.catch(() => { });
-    };
-
     // Create work directory
     await this.shell.spawn(['mkdir', '-p', `${workDir}/database`]).exited;
 
@@ -105,8 +98,15 @@ export class LiteExportStrategy implements ExportStrategy {
       );
 
       // 4. Create tarball
-      const proc = this.shell.spawn(['tar', '-czf', tarPath, '-C', workDir, '.']);
-      const exitCode = await proc.exited;
+      const proc = this.shell.spawn([
+        'tar',
+        '-czf',
+        tarPath,
+        '-C',
+        workDir,
+        '.',
+      ]);
+      await proc.exited;
 
       // 5. Finalize Result
       const stat = await this.shell.file(tarPath).stat();
