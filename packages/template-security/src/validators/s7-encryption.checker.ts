@@ -39,9 +39,18 @@ export class S7EncryptionChecker {
     violations: Violation[]
   ) {
     const piiPatterns = [
-      'email', 'phone', 'address', 'card', 'ssn', 'jwt', 'token', 'password',
+      'email',
+      'phone',
+      'address',
+      'card',
+      'ssn',
+      'jwt',
+      'token',
+      'password',
     ];
-    const matches = content.matchAll(/localStorage\.setItem\(['"]([^'"]*)['"]/g);
+    const matches = content.matchAll(
+      /localStorage\.setItem\(['"]([^'"]*)['"]/g
+    );
     for (const match of matches) {
       const key = match[1].toLowerCase();
       if (piiPatterns.some((p) => key.includes(p))) {
@@ -120,7 +129,9 @@ export class S7EncryptionChecker {
         rule: 'S7-004',
         file,
         line,
-        message: `${['dangerouslySet', 'Inne', 'rHTML'].join('')} detected (XSS risk)`,
+        message: `${['dangerouslySet', 'Inne', 'rHTML'].join(
+          ''
+        )} detected (XSS risk)`,
         suggestion: 'Sanitize HTML with DOMPurify or avoid HTML rendering',
       });
     }

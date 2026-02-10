@@ -1,12 +1,12 @@
 import { ConfigService } from '@apex/config';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { AuthUser, JwtPayload } from '../auth.service.js';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(@Inject(ConfigService) configService: ConfigService) {
     if (!configService) {
       throw new Error('ConfigService is missing in JwtStrategy constructor');
     }

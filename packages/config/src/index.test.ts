@@ -3,14 +3,23 @@
  * S1 Protocol: Environment Verification
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.hoisted(() => {
+  process.env.JWT_SECRET = 'a'.repeat(32);
+  process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
+  process.env.MINIO_ACCESS_KEY = 'minioadmin';
+  process.env.MINIO_SECRET_KEY = 'minioadmin';
+  process.env.MINIO_ENDPOINT = 'localhost';
+});
+
 import { validateEnv } from './index.js';
 
 describe('Config Package', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    // vi.resetModules();
+    vi.resetModules();
     process.env = { ...originalEnv };
   });
 

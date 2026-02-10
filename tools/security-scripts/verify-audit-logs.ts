@@ -47,7 +47,8 @@ function auditAuditLogging() {
           // Heuristic: Check if it's a mutation. Read/Get of non-sensitive data might not need audit.
           // But our policy (per user request) wants to find these.
           console.warn(
-            `⚠️  S4 WARNING: Potential missing audit log on mutation endpoint at ${file}:${index + 1
+            `⚠️  S4 WARNING: Potential missing audit log on mutation endpoint at ${file}:${
+              index + 1
             }`
           );
           console.warn(`   > ${line.trim()}`);

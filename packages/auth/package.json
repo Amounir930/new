@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
-    "test": "bun test",
+    "test": "cross-env NODE_ENV=test vitest run",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
   },

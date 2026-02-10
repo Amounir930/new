@@ -2,11 +2,29 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "outDir": "dist",
+        "rootDir": "src",
         "jsx": "react-jsx",
-        "composite": false,
-        "incremental": false
+        "composite": true,
+        "declaration": true,
+        "declarationMap": true
     },
     "include": [
         "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "**/*.test.ts"
+    ],
+    "references": [
+        {
+            "path": "../template-config"
+        },
+        {
+            "path": "../config"
+        },
+        {
+            "path": "../audit"
+        }
     ]
 }

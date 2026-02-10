@@ -18,16 +18,18 @@ vi.mock('@apex/db', () => ({
   },
 }));
 
-// Mock BullMQ
-vi.mock('bullmq', () => ({
-  Queue: vi.fn().mockImplementation(() => ({
-    add: vi.fn(),
-    getJobs: vi.fn(),
-    getJob: vi.fn(),
-    on: vi.fn(),
-    close: vi.fn(),
-  })),
-}));
+// 🛡️ Stabilization: Use Class-based mock for BullMQ Queue to ensure method presence in constructor
+vi.mock('bullmq', () => {
+  return {
+    Queue: class {
+      on = vi.fn();
+      add = vi.fn();
+      getJobs = vi.fn();
+      getJob = vi.fn();
+      close = vi.fn();
+    },
+  };
+});
 
 // Mock strategies and factory
 const mockStrategy = {

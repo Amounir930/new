@@ -3,9 +3,21 @@
     "compilerOptions": {
         "outDir": "dist",
         "rootDir": "src",
-        "composite": false
+        "composite": true,
+        "declaration": true,
+        "declarationMap": true
     },
     "include": [
         "src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "**/*.test.ts"
+    ],
+    "references": [
+        {
+            "path": "../template-config"
+        }
     ]
 }

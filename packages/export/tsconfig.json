@@ -19,5 +19,16 @@
     "dist",
     "build",
     "**/*.test.ts"
+  ],
+  "references": [
+    {
+      "path": "../db"
+    },
+    {
+      "path": "../audit"
+    },
+    {
+      "path": "../test-utils"
+    }
   ]
 }

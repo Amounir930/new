@@ -1,31 +1,30 @@
 {
     "name": "@apex/template-validator",
     "version": "1.0.0",
-    "description": "Logical and structural validation for Apex v2 templates",
+    "type": "module",
     "main": "./dist/index.js",
-    "module": "./dist/index.mjs",
+    "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.js"
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
         }
     },
     "scripts": {
-        "build": "tsup",
-        "dev": "tsup --watch",
-        "typecheck": "tsc --noEmit",
-        "test": "bun test"
+        "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
+        "test": "vitest run",
+        "typecheck": "tsc --noEmit"
     },
     "dependencies": {
         "@apex/template-config": "workspace:*",
-        "zod": "^3.22.4",
-        "fast-glob": "^3.3.2"
+        "zod": "^3.22.4"
     },
     "devDependencies": {
-        "@types/bun": "latest",
-        "tsup": "^8.0.1",
-        "typescript": "^5.3.3"
+        "@types/node": "^20.0.0",
+        "bun-types": "latest",
+        "vitest": "1.6.1",
+        "typescript": "^5.3.0"
     }
 }

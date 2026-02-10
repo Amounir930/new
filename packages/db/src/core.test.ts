@@ -11,15 +11,17 @@ import {
 } from './core.js';
 
 // Mock connection
-// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
-const mockPool = {
-  query: vi.fn(),
-  connect: vi.fn(),
-};
-const mockClient = {
-  query: vi.fn(),
-  release: vi.fn(),
-};
+// 🛡️ Stabilization: Use vi.hoisted to ensure these are available for vi.mock
+const { mockPool, mockClient } = vi.hoisted(() => ({
+  mockPool: {
+    query: vi.fn(),
+    connect: vi.fn(),
+  },
+  mockClient: {
+    query: vi.fn(),
+    release: vi.fn(),
+  },
+}));
 
 vi.mock('./connection.js', () => ({
   publicPool: mockPool,

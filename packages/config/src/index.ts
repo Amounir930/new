@@ -21,12 +21,17 @@ export function validateEnv(): EnvConfig {
     enforceProductionChecks(parsed);
     enforceGenericChecks(parsed);
 
-    console.warn(
-      '✅ S1 Compliance: Environment variables validated successfully'
-    );
     return parsed;
   } catch (error) {
-    return handleValidationError(error);
+    if (error instanceof z.ZodError) {
+      const issues = error.issues
+        .map((i) => `${i.path.join('.')}: ${i.message}`)
+        .join('; ');
+      throw new Error(
+        `S1 Violation: Environment validation failed - ${issues}`
+      );
+    }
+    throw error;
   }
 }
 
@@ -56,31 +61,19 @@ function enforceProductionChecks(parsed: EnvConfig): void {
 }
 
 function enforceGenericChecks(parsed: EnvConfig): void {
+  // Common checks for all environments (including test/dev)
   if (parsed.JWT_SECRET.length < 8) {
     throw new Error('S1 Violation: JWT_SECRET is too short (min 8 chars)');
   }
 
   const dbUrl = parsed.DATABASE_URL;
-  if (!dbUrl.startsWith('postgres://') && !dbUrl.startsWith('postgresql://')) {
+  if (
+    dbUrl &&
+    !dbUrl.startsWith('postgres://') &&
+    !dbUrl.startsWith('postgresql://')
+  ) {
     throw new Error('S1 Violation: Invalid DATABASE_URL protocol');
   }
-}
-
-function handleValidationError(error: unknown): EnvConfig {
-  // S1 Protocol Implementation: Application MUST crash on invalid ENV in production
-  // In test mode, we log but don't always crash to allow partial testing
-  if (process.env.NODE_ENV === 'test') {
-    console.warn('⚠️ S1 Warning: Environment validation bypass in TEST mode');
-    return process.env as unknown as EnvConfig;
-  }
-
-  if (error instanceof z.ZodError) {
-    const issues = error.issues
-      .map((i) => `${i.path.join('.')}: ${i.message}`)
-      .join('; ');
-    throw new Error(`S1 Violation: Environment validation failed - ${issues}`);
-  }
-  throw error;
 }
 
 /**
@@ -93,7 +86,7 @@ export function enforceS1Compliance(): void {
     validateEnv();
   } catch (error) {
     if (process.env.NODE_ENV === 'test') {
-      return; // Permitted path for Rule S1 in Sandbox/Test environment
+      return; // Permitted path for Rule S1 in Sandbox/Test environment to allow partial tests
     }
     console.error('❌ CRITICAL: S1 Protocol Violation');
     console.error(error instanceof Error ? error.message : 'Unknown error');
@@ -104,25 +97,29 @@ export function enforceS1Compliance(): void {
 
 // Auto-execute on import for fail-fast behavior
 // CRITICAL FIX (S1): Always enforce in production, respect flag only in non-production
-// Skip auto-enforcement during tests to allow mocking
 if (process.env.NODE_ENV !== 'test') {
   if (process.env.NODE_ENV === 'production') {
-    // In production, S1 is ALWAYS enforced - no bypass allowed
     enforceS1Compliance();
   } else if (process.env.ENABLE_S1_ENFORCEMENT !== 'false') {
-    // In non-production, respect the flag (default to enforce)
     enforceS1Compliance();
   }
 }
 
 /**
- * Cached environment configuration
- * Use this for direct access to env vars after validation
+ * Global validated environment configuration
+ * (Fail-fast initialization)
+ * In TEST mode, we fallback to process.env if parsing fails to avoid breaking module load
  */
-export const env: EnvConfig =
-  process.env.NODE_ENV === 'test'
-    ? (process.env as unknown as EnvConfig)
-    : validateEnv();
+export const env: EnvConfig = (() => {
+  if (process.env.NODE_ENV === 'test') {
+    try {
+      return EnvSchema.parse(process.env);
+    } catch (_e) {
+      return process.env as unknown as EnvConfig;
+    }
+  }
+  return validateEnv();
+})();
 
 /**
  * NestJS-compatible ConfigService
@@ -132,7 +129,17 @@ export class ConfigService {
   private readonly config: EnvConfig;
 
   constructor() {
-    this.config = env;
+    // S1: Always validate environment on service construction
+    // In test mode, we fallback to raw process.env to allow partial testing/mocking
+    try {
+      this.config = validateEnv();
+    } catch (error) {
+      if (process.env.NODE_ENV === 'test') {
+        this.config = process.env as unknown as EnvConfig;
+      } else {
+        throw error;
+      }
+    }
   }
 
   /**

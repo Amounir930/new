@@ -7,17 +7,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportOptions } from '../types.js';
 import { LiteExportStrategy } from './lite-export.strategy.js';
 
-// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
-const mockClient = {
+// 🛡️ Stabilization: Use vi.hoisted to ensure these are available for vi.mock
+// 🛡️ Stabilization: Use vi.hoisted for top-level mocks
+const mockClient = vi.hoisted(() => ({
   query: vi.fn(),
   release: vi.fn(),
-};
+}));
 
-const mockShell = {
+const mockShell = vi.hoisted(() => ({
   spawn: vi.fn(),
   write: vi.fn(),
   file: vi.fn(),
-};
+}));
 
 vi.mock('@apex/db', () => ({
   publicPool: {

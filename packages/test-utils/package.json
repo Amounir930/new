@@ -3,17 +3,17 @@
     "version": "1.0.0",
     "description": "Testing utilities for Apex v2 templates",
     "main": "./dist/index.js",
-    "module": "./dist/index.mjs",
+    "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.js"
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
         }
     },
     "scripts": {
-        "build": "tsup",
+        "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
         "dev": "tsup --watch",
         "test": "bun test",
         "lint": "biome check .",

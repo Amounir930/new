@@ -3,21 +3,21 @@
     "version": "1.0.0",
     "description": "Security validation and penetration testing for Apex v2 templates",
     "main": "./dist/index.js",
-    "module": "./dist/index.mjs",
+    "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.js"
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
         }
     },
     "scripts": {
-        "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsup",
-        "dev": "tsup --watch",
+        "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
+        "dev": "tsc -p tsconfig.json --watch",
         "typecheck": "tsc --noEmit",
-        "test": "bun test",
-        "test:coverage": "bun test --coverage",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
         "validate:s1": "bun ../../tools/security-scripts/verify-env-config.ts",
         "scan:patterns": "bun src/scanners/pattern-scanner.ts",
         "report:orchestrate": "bun src/utils/report-orchestrator.ts",
@@ -37,7 +37,7 @@
     "devDependencies": {
         "@types/bun": "latest",
         "cross-env": "^10.1.0",
-        "tsup": "^8.0.1",
+        "vitest": "1.6.1",
         "typescript": "^5.3.3"
     }
 }

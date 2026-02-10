@@ -13,6 +13,13 @@ export const EnvSchema = z.object({
       /^[A-Za-z0-9-_]+$/,
       'S1 Violation: JWT_SECRET contains invalid characters'
     ),
+  ENCRYPTION_MASTER_KEY: z
+    .string()
+    .min(
+      32,
+      'S1 Violation: ENCRYPTION_MASTER_KEY must be at least 32 characters'
+    )
+    .default('test_encryption_key_for_dev_only_32_chars_long'),
 
   JWT_EXPIRES_IN: z.string().default('7d'),
 

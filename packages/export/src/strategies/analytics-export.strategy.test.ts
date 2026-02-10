@@ -12,7 +12,7 @@ const { mockClient } = vi.hoisted(() => ({
   mockClient: {
     query: vi.fn(),
     release: vi.fn(),
-  }
+  },
 }));
 
 const mockShell = {

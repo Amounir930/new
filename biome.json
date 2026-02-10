@@ -1,6 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
   "files": {
+    "ignoreUnknown": true,
     "ignore": [
       "**/node_modules/**",
       "**/dist/**",
@@ -10,7 +11,9 @@
       "**/out/**",
       "**/build/**",
       "**/drizzle/**",
-      "**/next-env.d.ts"
+      "**/next-env.d.ts",
+      "**/*.d.ts",
+      "**/*.js"
     ]
   },
   "formatter": {

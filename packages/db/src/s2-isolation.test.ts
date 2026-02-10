@@ -4,14 +4,17 @@ import { publicPool, withTenantConnection } from './index';
 
 // 🛡️ Radical Mocking: Ensure publicPool is a Vitest mock by mocking its source
 // 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
-const mockPool = {
-  connect: vi.fn(),
-  query: vi.fn(),
-  on: vi.fn(),
-};
-const mockDb = {
-  execute: vi.fn(),
-};
+// 🛡️ Stabilization: Use vi.hoisted to ensure these are available for vi.mock
+const { mockPool, mockDb } = vi.hoisted(() => ({
+  mockPool: {
+    connect: vi.fn(),
+    query: vi.fn(),
+    on: vi.fn(),
+  },
+  mockDb: {
+    execute: vi.fn(),
+  },
+}));
 
 vi.mock('./connection.js', () => ({
   publicPool: mockPool,
