@@ -42,7 +42,8 @@ chown -R $USER:$USER /opt/apex-v2
 
 # 5. Firewall Setup (UFW)
 echo "🛡️ Configuring Firewall..."
-ufw allow 22/tcp
+ALLOWED_SSH_IP="${ALLOWED_SSH_IP:-any}" # Default to 'any' but allow restriction via env
+ufw allow from "$ALLOWED_SSH_IP" to any port 22 proto tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
 ufw allow 8080/tcp # Traefik Dashboard (secured)

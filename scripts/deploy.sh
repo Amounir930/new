@@ -3,9 +3,17 @@
 # Usage: ./scripts/deploy.sh
 
 # Configuration
-SERVER_IP="136.111.146.88"
-SSH_USER="apex-v2-dev"
-SSH_KEY="C:/Users/Dell/.ssh/id_ed25519_apex"
+# Configuration
+SERVER_IP="${DEPLOY_SERVER_IP:-136.111.146.88}" # Default or override from env
+SSH_USER="${DEPLOY_SSH_USER:-apex-v2-dev}"
+SSH_KEY="${DEPLOY_SSH_KEY:-$HOME/.ssh/id_ed25519_apex}"
+
+# Ensure SSH Key exists
+if [ ! -f "$SSH_KEY" ]; then
+    echo "❌ SSH Key not found at $SSH_KEY"
+    echo "   Please set DEPLOY_SSH_KEY environment variable."
+    exit 1
+fi
 TARGET_DIR="/opt/apex-v2"
 
 echo "🚀 Deploying Apex v2 to $SSH_USER@$SERVER_IP..."

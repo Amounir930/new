@@ -66,6 +66,18 @@ const tests = [
     shouldCrash: false,
     expectedError: null,
   },
+  {
+    name: 'Production DB on Localhost (Security Risk)',
+    env: {
+      JWT_SECRET: 'valid_secret_key_minimum_32_chars_long',
+      DATABASE_URL: 'postgresql://postgres:password@localhost:5432/prod_db', // Localhost DB in prod
+      NODE_ENV: 'production',
+      MINIO_ACCESS_KEY: 'test',
+      MINIO_SECRET_KEY: 'minioadmin123',
+    },
+    shouldCrash: true,
+    expectedError: 'S1 Violation: Production database cannot be on localhost',
+  },
 ];
 
 let passed = 0;

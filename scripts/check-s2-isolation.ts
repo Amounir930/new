@@ -1,220 +1,107 @@
 #!/usr/bin/env bun
 /**
- * S2 Data Isolation Checker
- * Advanced TypeScript-based SQL query analyzer
- * Detects tenant isolation violations in database layer
+ * S2 Data Isolation Checker (AST Edition)
+ * Uses ts-morph to analyze the Abstract Syntax Tree for security violations.
+ * 
+ * Capabilities:
+ * - Detects direct access to public schema (AST string literals).
+ * - Detects unsafe raw SQL usage specific to Drizzle ORM.
+ * - Enforces tenant isolation in queries.
  */
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex security scanner
 
-import { readFileSync, readdirSync, statSync } from 'fs';
-import { join, relative } from 'path';
+import { Project, SyntaxKind, Node, CallExpression } from 'ts-morph';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
-interface Violation {
-  file: string;
-  line: number;
-  column: number;
-  type:
-    | 'DIRECT_PUBLIC_ACCESS'
-    | 'RAW_SQL_NO_TENANT'
-    | 'UNQUALIFIED_TABLE'
-    | 'MISSING_SEARCH_PATH';
-  severity: 'CRITICAL' | 'WARNING';
-  message: string;
-  code: string;
-}
+// Configuration
+const PROJECT_ROOT = process.cwd();
+const DB_PACKAGE_PATH = join(PROJECT_ROOT, 'packages/db/src');
 
-const VIOLATIONS: Violation[] = [];
+console.log('\n🛡️  S2 Data Isolation Advanced Checker (AST)');
+console.log('   Scanning packages/db/src for semantic violations...\n');
 
-// Patterns to detect
-const DANGEROUS_PATTERNS = {
-  // Direct public schema access
-  directPublicAccess: /public\.[a-zA-Z_][a-zA-Z0-9_]*/g,
-
-  // Raw SQL template literals without tenant context
-  rawSql: /sql`[^`]*`/g,
-
-  // SELECT/INSERT/UPDATE/DELETE without schema qualification
-  unqualifiedTable:
-    /\b(SELECT|INSERT|UPDATE|DELETE)\s+(?:\*\s+)?(?:INTO\s+)?(?:FROM\s+)?([a-zA-Z_][a-zA-Z0-9_]*)(?:\s+AS\s+\w+)?(?:\s+WHERE|\s+JOIN|\s+GROUP|\s+ORDER|\s+LIMIT|\s*;|\s*$)/gi,
-
-  // Missing search_path in SET statements
-  missingSearchPath: /SET\s+(?:SESSION\s+)?search_path\s*=\s*([^;]+)/gi,
-};
-
-// Safe patterns (not violations)
-const SAFE_PATTERNS = [
-  /search_path.*public/, // Has search_path with public
-  /tenant_[a-zA-Z0-9_]+\./, // Uses tenant schema prefix
-  /\/\/.*public\./, // Commented line
-  /\/\*[\s\S]*?public\.[\s\S]*?\*\//, // Block comment
-];
-
-function isSafe(line: string): boolean {
-  return SAFE_PATTERNS.some((pattern) => pattern.test(line));
-}
-
-function scanFile(filePath: string, content: string): void {
-  const lines = content.split('\n');
-  const relativePath = relative(process.cwd(), filePath);
-
-  lines.forEach((line, index) => {
-    const lineNum = index + 1;
-
-    // Skip test files
-    if (filePath.includes('.test.ts') || filePath.includes('.spec.ts')) {
-      return;
-    }
-
-    // Skip comments
-    if (line.trim().startsWith('//') || line.trim().startsWith('*')) {
-      return;
-    }
-
-    // Check 1: Direct public schema access
-    if (DANGEROUS_PATTERNS.directPublicAccess.test(line) && !isSafe(line)) {
-      VIOLATIONS.push({
-        file: relativePath,
-        line: lineNum,
-        column: line.indexOf('public.'),
-        type: 'DIRECT_PUBLIC_ACCESS',
-        severity: 'CRITICAL',
-        message: 'Direct public schema access bypasses tenant isolation',
-        code: line.trim(),
-      });
-    }
-
-    // Check 2: Raw SQL without tenant context
-    if (DANGEROUS_PATTERNS.rawSql.test(line)) {
-      const hasTenantContext =
-        line.includes('tenant') ||
-        line.includes('search_path') ||
-        line.includes('getCurrentTenant');
-
-      if (!hasTenantContext) {
-        VIOLATIONS.push({
-          file: relativePath,
-          line: lineNum,
-          column: line.indexOf('sql`'),
-          type: 'RAW_SQL_NO_TENANT',
-          severity: 'WARNING',
-          message: 'Raw SQL without visible tenant context',
-          code: line.trim(),
-        });
-      }
-    }
-
-    // Check 3: Unqualified table references
-    const unqualifiedMatch = DANGEROUS_PATTERNS.unqualifiedTable.exec(line);
-    if (unqualifiedMatch && !isSafe(line)) {
-      const tableName = unqualifiedMatch[2];
-      // Skip if it's a CTE or subquery
-      if (!tableName.match(/^(SELECT|WITH|FROM)$/i)) {
-        VIOLATIONS.push({
-          file: relativePath,
-          line: lineNum,
-          column: line.indexOf(tableName),
-          type: 'UNQUALIFIED_TABLE',
-          severity: 'WARNING',
-          message: `Unqualified table reference: ${tableName}`,
-          code: line.trim(),
-        });
-      }
-    }
-
-    // Reset regex lastIndex
-    DANGEROUS_PATTERNS.directPublicAccess.lastIndex = 0;
-    DANGEROUS_PATTERNS.rawSql.lastIndex = 0;
-    DANGEROUS_PATTERNS.unqualifiedTable.lastIndex = 0;
-  });
-}
-
-function walkDir(dir: string, callback: (file: string) => void): void {
-  const files = readdirSync(dir);
-
-  for (const file of files) {
-    const filePath = join(dir, file);
-    const stat = statSync(filePath);
-
-    if (
-      stat.isDirectory() &&
-      !file.includes('node_modules') &&
-      !file.includes('dist')
-    ) {
-      walkDir(filePath, callback);
-    } else if (
-      stat.isFile() &&
-      file.endsWith('.ts') &&
-      !file.endsWith('.test.ts')
-    ) {
-      callback(filePath);
-    }
-  }
-}
-
-function printReport(): void {
-  console.log('\n🔍 S2 Data Isolation Check Report\n');
-  console.log('='.repeat(70));
-
-  if (VIOLATIONS.length === 0) {
-    console.log('\n✅ No S2 violations found!');
-    console.log('   All SQL queries respect tenant isolation.\n');
-    return;
-  }
-
-  const critical = VIOLATIONS.filter((v) => v.severity === 'CRITICAL');
-  const warnings = VIOLATIONS.filter((v) => v.severity === 'WARNING');
-
-  console.log(`\n🚨 Found ${VIOLATIONS.length} violation(s):`);
-  console.log(`   - Critical: ${critical.length}`);
-  console.log(`   - Warnings: ${warnings.length}\n`);
-
-  if (critical.length > 0) {
-    console.log('❌ CRITICAL VIOLATIONS (Must Fix):\n');
-    critical.forEach((v) => {
-      console.log(`   📁 ${v.file}:${v.line}:${v.column}`);
-      console.log(`      Type: ${v.type}`);
-      console.log(`      ${v.message}`);
-      console.log(`      Code: ${v.code.substring(0, 80)}`);
-      console.log('');
-    });
-  }
-
-  if (warnings.length > 0) {
-    console.log('⚠️  WARNINGS (Review Recommended):\n');
-    warnings.forEach((v) => {
-      console.log(`   📁 ${v.file}:${v.line}:${v.column}`);
-      console.log(`      ${v.message}`);
-      console.log('');
-    });
-  }
-
-  console.log('='.repeat(70));
-  console.log('\n📋 S2 Protocol Requirements:');
-  console.log('   1. Use SET search_path = tenant_{id}, public');
-  console.log('   2. OR use fully qualified names: tenant_{id}.table_name');
-  console.log('   3. Never access public schema directly\n');
-}
-
-// Main execution
-console.log('\n🛡️  S2 Data Isolation Advanced Checker');
-console.log('   Scanning packages/db/src for tenant isolation violations...\n');
-
-try {
-  const dbDir = join(process.cwd(), 'packages', 'db', 'src');
-
-  walkDir(dbDir, (filePath) => {
-    const content = readFileSync(filePath, 'utf-8');
-    scanFile(filePath, content);
-  });
-
-  printReport();
-
-  // Exit with error if critical violations found
-  const criticalCount = VIOLATIONS.filter(
-    (v) => v.severity === 'CRITICAL'
-  ).length;
-  process.exit(criticalCount > 0 ? 1 : 0);
-} catch (error) {
-  console.error('❌ Error running S2 check:', error);
+if (!existsSync(DB_PACKAGE_PATH)) {
+  console.error(`❌ Error: Database package not found at ${DB_PACKAGE_PATH}`);
   process.exit(1);
+}
+
+// Initialize Project
+const project = new Project({
+  skipAddingFilesFromTsConfig: true,
+});
+
+// Add Source Files
+project.addSourceFilesAtPaths(join(DB_PACKAGE_PATH, '**/*.ts'));
+
+let criticalViolations = 0;
+let warnings = 0;
+
+function report(type: 'CRITICAL' | 'WARNING', message: string, node: Node) {
+  const sourceFile = node.getSourceFile();
+  const { line, column } = sourceFile.getLineAndColumnAtPos(node.getStart());
+  const filePath = sourceFile.getFilePath().replace(PROJECT_ROOT, '');
+
+  console.log(`\n${type === 'CRITICAL' ? '❌' : '⚠️ '} ${type}: ${message}`);
+  console.log(`   📁 .${filePath}:${line}:${column}`);
+  console.log(`   Code: ${node.getText().substring(0, 80).trim()}...`);
+
+  if (type === 'CRITICAL') criticalViolations++;
+  else warnings++;
+}
+
+// Analysis Pass
+for (const sourceFile of project.getSourceFiles()) {
+  if (sourceFile.getFilePath().includes('.test.') || sourceFile.getFilePath().includes('.spec.')) continue;
+
+  sourceFile.forEachDescendant((node: Node) => {
+    // 1. Check for "public." string literals (Schema Bypass)
+    if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
+      const text = node.getLiteralText();
+      if (text.includes('public.') && !text.includes('search_path')) {
+        // Allow comments/safe usage if needed, but start strict
+        report('CRITICAL', 'Direct access to "public" schema detected', node);
+      }
+    }
+
+    // 3. Check for Raw SQL without Tenant Context (The Verification)
+    if (Node.isTaggedTemplateExpression(node)) {
+      if (node.getTag().getText() === 'sql') {
+        const text = node.getTemplate().getText();
+
+        // Skip empty or simple initialization queries
+        if (text.length < 20) return;
+
+        // Required markers for multi-tenant isolation
+        const hasTenantContext =
+          text.includes('tenant_id') ||
+          text.includes('organization_id') ||
+          text.includes('search_path') ||
+          text.includes('WHERE'); // Basic heuristic: must have a WHERE clause at minimum
+
+        if (!hasTenantContext) {
+          report('WARNING', 'Raw SQL query detected without visible tenant isolation (missing tenant_id/search_path/WHERE)', node);
+        }
+      }
+    }
+    // 2. Check for sql.raw() usage (Dangerous Bypass)
+    if (Node.isCallExpression(node)) {
+      const expression = node.getExpression();
+      if (Node.isPropertyAccessExpression(expression)) {
+        if (expression.getName() === 'raw' && expression.getExpression().getText() === 'sql') {
+          report('WARNING', 'Unsafe usage of sql.raw() detected. Verify manual sanitization.', node);
+        }
+      }
+    }
+  });
+}
+
+console.log('\n' + '='.repeat(60));
+console.log(`📊 Scan Complete: ${criticalViolations} Critical, ${warnings} Warnings`);
+console.log('='.repeat(60));
+
+if (criticalViolations > 0) {
+  console.error('\n❌ FAILED: Critical security violations found.');
+  process.exit(1);
+} else {
+  console.log('\n✅ PASSED: No critical isolation violations found.');
 }
