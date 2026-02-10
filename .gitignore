@@ -55,7 +55,17 @@ letsencrypt_data/
 *.tmp
 *.temp
 
+# Agent & Security Vaults
+.agent/
+.gemini/
+brain/
+*masterlist.md
+
 # Update/Codebase exports (contain full source with potential secrets)
 update/
 Apex_2026_*.txt
 Collect-Project.ps1
+
+# Local development files
+.env.s1.local
+.env.test.local

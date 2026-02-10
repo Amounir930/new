@@ -7,6 +7,6 @@ export default {
   dbCredentials: {
     url:
       process.env.DATABASE_URL ||
-      'postgresql://apex:apex_secret@localhost:5432/apex_v2',
+      'postgresql://postgres:postgres@localhost:5432/postgres',
   },
 } satisfies Config;

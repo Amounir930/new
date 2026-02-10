@@ -8,12 +8,13 @@ import { Test } from '@nestjs/testing';
 // -----------------------------------------------------------------------------
 
 // Mock Environment Variables BEFORE import to satisfy ConfigModule validation
-process.env.DATABASE_URL = 'postgresql://mock:mock@localhost:5432/mock';
-process.env.REDIS_URL = 'redis://localhost:6379';
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
+process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 process.env.JWT_SECRET =
-  'mock-secret-for-docs-generation-only-should-be-32-chars';
+  process.env.JWT_SECRET || 'mock-secret-for-docs-generation-only-32-chars-min';
 process.env.TENANT_ISOLATION_MODE = 'strict';
-// @ts-expect-error NODE_ENV is read-only in some environments
+// @ts-ignore NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';
 process.env.MINIO_ENDPOINT = 'localhost';
 process.env.MINIO_ACCESS_KEY = 'mock-access-key';
@@ -34,7 +35,9 @@ async function generate() {
   try {
     // Dynamic import to ensure env vars are set before module load
     const { AppModule } = await import('../src/app.module.js');
-    const { TenantRegistryService } = await import('@apex/db');
+    // Use dynamic import for db to avoid type issues with index vs dist
+    const dbModule = await import('@apex/db') as any;
+    const TenantRegistryService = dbModule.TenantRegistryService;
 
     // Mock Services
     const mockTenantRegistryService = {

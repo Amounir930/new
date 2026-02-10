@@ -23,7 +23,7 @@ const tests = [
     name: 'Missing JWT_SECRET',
     env: {
       JWT_SECRET: '',
-      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
     },
@@ -34,7 +34,7 @@ const tests = [
     name: 'Short JWT_SECRET (<32 chars)',
     env: {
       JWT_SECRET: 'short_secret',
-      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
     },
@@ -45,7 +45,7 @@ const tests = [
     name: 'Invalid JWT_SECRET (special chars)',
     env: {
       JWT_SECRET: 'invalid_secret_with_@_symbol!',
-      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
     },
@@ -56,9 +56,12 @@ const tests = [
     name: 'Valid JWT_SECRET (32+ chars)',
     env: {
       JWT_SECRET: 'valid_secret_key_minimum_32_chars_long',
-      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+      DATABASE_URL: 'postgresql://postgres:postgres@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
+      MINIO_ENDPOINT: 'localhost',
+      MINIO_PORT: '9000',
+      MINIO_USE_SSL: 'false',
     },
     shouldCrash: false,
     expectedError: null,
@@ -105,8 +108,7 @@ for (const test of tests) {
     ) {
       console.log('   Result: ✅ PASS (Crashed with expected error)');
       console.log(
-        `   Error: ${
-          fullOutput.split('S1 Violation')[1]?.substring(0, 100) || 'N/A'
+        `   Error: ${fullOutput.split('S1 Violation')[1]?.substring(0, 100) || 'N/A'
         }`
       );
       passed++;
@@ -120,8 +122,7 @@ for (const test of tests) {
     }
   } else {
     console.log(
-      `   Result: ❌ FAIL (Expected ${
-        test.shouldCrash ? 'crash' : 'success'
+      `   Result: ❌ FAIL (Expected ${test.shouldCrash ? 'crash' : 'success'
       }, got ${crashed ? 'crash' : 'success'})`
     );
     console.log(`   Output: ${fullOutput.substring(0, 200)}`);
