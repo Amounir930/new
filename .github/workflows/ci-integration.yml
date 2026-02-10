@@ -65,7 +65,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.1.45"
       - name: Install dependencies
         run: bun install
       - name: Download Build Artifacts
@@ -116,7 +116,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.1.45"
       - name: Install dependencies
         run: bun install
       - name: Run S2 Isolation Checker
