@@ -15,7 +15,7 @@ vi.mock('./connection.js', () => ({
 }));
 
 // Helper to check DB availability
-const isDbReachable = async () => {
+const _isDbReachable = async () => {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl || dbUrl.includes('undefined')) return false;
   try {

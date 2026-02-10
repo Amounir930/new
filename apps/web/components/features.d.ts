@@ -1,1 +1,1 @@
-export declare function Features(): import("react").JSX.Element;
+export declare function Features(): import('react').JSX.Element;

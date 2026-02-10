@@ -19,7 +19,7 @@ vi.mock('./connection.js', () => ({
 }));
 
 // Helper to check DB availability
-const isDbReachable = async () => {
+const _isDbReachable = async () => {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl || dbUrl.includes('undefined')) return false;
   try {
@@ -34,6 +34,33 @@ const isDbReachable = async () => {
 // 🛡️ Radical Stabilization: Force true for logic verification in Sandbox
 const hasDb = true;
 
+/**
+ * Low-complexity query handler for S2 isolation mocks.
+ * Score target: < 15
+ */
+const getMockResponse = (q: string, path: string, tA: string, tB: string) => {
+  if (q.includes('SET search_path')) {
+    const m = q.match(/SET search_path TO "([^"]+)"/i);
+    return { newPath: m ? m[1] : path, rows: [], count: 0 };
+  }
+  if (q.includes('RESET search_path')) {
+    return { newPath: 'public', rows: [], count: 0 };
+  }
+  if (q.includes('SHOW search_path')) {
+    return { newPath: path, rows: [{ search_path: path }], count: 1 };
+  }
+  if (q.includes('SELECT name FROM products')) {
+    const isA = path === `tenant_${tA}`;
+    const rows = isA
+      ? [{ name: 'Alpha Secret' }]
+      : path === `tenant_${tB}`
+        ? [{ name: 'Beta Secret' }]
+        : [];
+    return { newPath: path, rows, count: rows.length };
+  }
+  return { newPath: path, rows: [], count: 0 };
+};
+
 describe.skipIf(!hasDb)(
   'S2: Tenant Isolation Protocol (Database Required)',
   () => {
@@ -41,60 +68,32 @@ describe.skipIf(!hasDb)(
     const tenantBeta = 'beta_test';
 
     beforeEach(async () => {
-      // 🔍 DEBUG: Log environment for S2 crash analysis
-      console.log(
-        'S2 DEBUG: ISOLATION_MODE:',
-        process.env.TENANT_ISOLATION_MODE
-      );
-
-      // 🛡️ Stabilization: Mock specific query responses for S2 isolation tests
-      mockPool.query.mockImplementation(async (query: any, params?: any[]) => {
-        const queryString = typeof query === 'string' ? query : query.text;
-        if (queryString.includes('SELECT 1 FROM tenants')) {
-          const idOrSubdomain = params?.[0];
-          if (idOrSubdomain === 'fake_tenant') return { rows: [], rowCount: 0 };
-          return { rows: [{ 1: 1 }], rowCount: 1 };
+      mockPool.query.mockImplementation(async (query: any, results?: any[]) => {
+        const q = typeof query === 'string' ? query : query.text;
+        if (q.includes('SELECT 1 FROM tenants')) {
+          const id = results?.[0];
+          return {
+            rows: id === 'fake_tenant' ? [] : [{ 1: 1 }],
+            rowCount: id === 'fake_tenant' ? 0 : 1,
+          };
         }
         return { rows: [], rowCount: 1 };
       });
 
-      // Mock connection factory to prevent state leakage between instances
       mockPool.connect.mockImplementation(async () => {
         let currentPath = 'public';
         return {
-          query: vi
-            .fn()
-            .mockImplementation(async (query: any, params?: any[]) => {
-              const queryString =
-                typeof query === 'string' ? query : query.text;
-              // console.log(`S2 DEBUG: Query: ${queryString}, Path: ${currentPath}`);
-
-              if (queryString.includes('SET search_path')) {
-                const match = queryString.match(
-                  /SET search_path TO "([^"]+)"/i
-                );
-                if (match) {
-                  currentPath = match[1];
-                  // console.log(`S2 DEBUG: SET PATH TO ${currentPath}`);
-                }
-                return { rows: [], rowCount: 0 };
-              }
-              if (queryString.includes('RESET search_path')) {
-                currentPath = 'public';
-                return { rows: [], rowCount: 0 };
-              }
-              if (queryString.includes('SHOW search_path')) {
-                return { rows: [{ search_path: currentPath }], rowCount: 1 };
-              }
-              if (queryString.includes('SELECT name FROM products')) {
-                if (currentPath === `tenant_${tenantAlpha}`)
-                  return { rows: [{ name: 'Alpha Secret' }], rowCount: 1 };
-                if (currentPath === `tenant_${tenantBeta}`)
-                  return { rows: [{ name: 'Beta Secret' }], rowCount: 1 };
-                return { rows: [], rowCount: 0 };
-              }
-              return { rows: [], rowCount: 0 };
-            }),
+          query: vi.fn().mockImplementation(async (query: any) => {
+            const q = typeof query === 'string' ? query : query.text;
+            const res = getMockResponse(
+              q,
+              currentPath,
+              tenantAlpha,
+              tenantBeta
+            );
+            currentPath = res.newPath;
+            return { rows: res.rows, rowCount: res.count };
+          }),
           release: vi.fn(),
           on: vi.fn(),
         };

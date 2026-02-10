@@ -1,1 +1,1 @@
-export declare function Pricing(): import("react").JSX.Element;
+export declare function Pricing(): import('react').JSX.Element;

@@ -1,1 +1,1 @@
-export default function Home(): import("react").JSX.Element;
+export default function Home(): import('react').JSX.Element;

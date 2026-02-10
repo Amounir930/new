@@ -1,1 +1,1 @@
-export declare function Footer(): import("react").JSX.Element;
+export declare function Footer(): import('react').JSX.Element;

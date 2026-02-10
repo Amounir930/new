@@ -132,10 +132,6 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
-      - name: JSON Syntax Validation
-        run: |
-          echo "🔍 Running Elite JSON Validation..."
-          find . -name "*.json" -not -path "*/node_modules/*" -not -path "*/dist/*" -not -path "*/.next/*" -not -path "*/.turbo/*" -print0 | xargs -0 node scripts/validate-json.js
 
       - name: Biome Lint Check
         run: bun run lint

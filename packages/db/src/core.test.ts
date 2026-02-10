@@ -3,7 +3,6 @@
  * S2 Protocol: Tenant Isolation via search_path
  */
 
-import { drizzle } from 'drizzle-orm/node-postgres';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createTenantDb,
