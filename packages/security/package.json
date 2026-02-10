@@ -23,7 +23,8 @@
     "test:watch": "vitest",
     "lint": "biome check .",
     "lint:fix": "biome check --apply .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "security-scan": "bun run src/utils/scanner-cli.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

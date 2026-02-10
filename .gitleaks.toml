@@ -6,8 +6,8 @@ description = "Allow environment example files"
 paths = [
     "\\.env\\.example$",
     "\\.env\\.test$",
-    "packages/security/src/utils/scanner-cli\\.ts", # Scanning logic itself
-    "postgresql://placeholder-user@localhost:5432/db_safe",
+    "packages/security/src/utils/scanner-cli\\.ts",
+    "postgresql://postgres:placeholder@localhost:5432/test",
     "mock-secret-for-docs-generation-only",
     "valid_secret_key_minimum_32_chars_long"
 ]
