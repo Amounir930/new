@@ -150,7 +150,7 @@ jobs:
           echo "═══════════════════════════════════════════════════════════════"
           
           cd packages/export
-          bun test
+          bun run test:coverage
           
           echo "✅ Export module tests completed"
         env:
