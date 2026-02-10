@@ -23,7 +23,7 @@ const tests = [
     name: 'Missing JWT_SECRET',
     env: {
       JWT_SECRET: '',
-      DATABASE_URL: 'postgresql://postgres:placeholder@localhost:5432/test',
+      DATABASE_URL: 'postgresql://placeholder-user@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
     },
@@ -34,7 +34,7 @@ const tests = [
     name: 'Short JWT_SECRET (<32 chars)',
     env: {
       JWT_SECRET: 'short_secret',
-      DATABASE_URL: 'postgresql://postgres:placeholder@localhost:5432/test',
+      DATABASE_URL: 'postgresql://placeholder-user@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
     },
@@ -45,7 +45,7 @@ const tests = [
     name: 'Invalid JWT_SECRET (special chars)',
     env: {
       JWT_SECRET: 'invalid_secret_with_@_symbol!',
-      DATABASE_URL: 'postgresql://postgres:placeholder@localhost:5432/test',
+      DATABASE_URL: 'postgresql://placeholder-user@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
     },
@@ -56,7 +56,7 @@ const tests = [
     name: 'Valid JWT_SECRET (32+ chars)',
     env: {
       JWT_SECRET: 'valid_secret_key_minimum_32_chars_long',
-      DATABASE_URL: 'postgresql://postgres:placeholder@localhost:5432/test',
+      DATABASE_URL: 'postgresql://placeholder-user@localhost:5432/test',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',
       MINIO_ENDPOINT: 'localhost',

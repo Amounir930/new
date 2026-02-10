@@ -9,7 +9,7 @@ paths = [
     "packages/security/src/utils/scanner-cli\\.ts"
 ]
 regexes = [
-    '''postgresql://postgres:placeholder@localhost:5432/test''',
+    '''postgresql://placeholder-user@localhost:5432/db_safe''',
     '''postgresql://postgres:postgres@localhost:5432/test''',
     '''postgresql://postgres:postgres@localhost:5432/apex_test''',
     '''mock-secret-for-docs-generation-only''',
