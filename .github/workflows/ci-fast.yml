@@ -54,6 +54,14 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Create S1 Compliance Mocks
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:placeholder@localhost:5432/test" > apps/api/.env.s1.local
+          echo "REDIS_URL=redis://localhost:6379" >> apps/api/.env.s1.local
+          echo "S3_ENDPOINT=localhost" >> apps/api/.env.s1.local
+          echo "TENANT_ISOLATION_MODE=strict" >> apps/api/.env.s1.local
+          echo "JWT_SECRET=test_secret_key_for_ci_environment_only_32" >> apps/api/.env.s1.local
+
       - name: Check S1 Environment File Exists
         run: |
           if [ ! -f "apps/api/.env.s1.local" ]; then
