@@ -7,7 +7,7 @@
 ## 🌍 Production Server Details
 - **Provider:** Google Cloud Platform (GCP)
 - **Instance Name:** apex-v2-server
-- **Public IP:** `136.111.146.88`
+- **Public IP:** `[[REDACTED_IP]]`
 - **Zone:** `us-central1-a`
 - **OS:** Ubuntu 22.04 LTS
 
@@ -22,32 +22,32 @@
 - **Host:** `localhost` (Internal Docker Network)
 - **Port:** `5432`
 - **User:** `postgres`
-- **Password:** `placeholder` (⚠️ CHANGE FOR PRODUCTION)
+- **Password:** `[[REDACTED_PASSWORD]]` (⚠️ CHANGE FOR PRODUCTION)
 - **Database:** `test`
-- **URL:** `postgresql://postgres:placeholder@localhost:5432/test`
+- **URL:** `postgresql://placeholder-user@localhost:5432/db_safe`
 
 ---
 
 ## 🚀 Cache & Queue (Redis)
 - **Host:** `localhost`
 - **Port:** `6379`
-- **Password:** `placeholder` (⚠️ CHANGE FOR PRODUCTION)
+- **Password:** `[[REDACTED_PASSWORD]]` (⚠️ CHANGE FOR PRODUCTION)
 - **URL:** `redis://:placeholder@localhost:6379`
 
 ---
 
 ## 📦 Object Storage (MinIO / S3)
-- **Console URL:** `http://136.111.146.88:9001`
-- **API URL:** `http://136.111.146.88:9000`
+- **Console URL:** `http://[[REDACTED_IP]]:9001`
+- **API URL:** `http://[[REDACTED_IP]]:9000`
 - **Root User:** `minioadmin`
-- **Root Password:** `minioadmin123` (⚠️ CHANGE FOR PRODUCTION)
+- **Root Password:** `[[REDACTED_PASSWORD]]` (⚠️ CHANGE FOR PRODUCTION)
 - **Default Bucket:** `apex-assets`
 
 ---
 
 ## 🛡️ Security Keys
 ### JWT (JSON Web Token)
-- **Secret:** `your_very_long_secret_key_minimum_32_chars_long` (⚠️ DEV KEY)
+- **Secret:** `[[REDACTED_SECRET]]` (⚠️ DEV KEY)
 - **Expiry:** `7d`
 
 ---

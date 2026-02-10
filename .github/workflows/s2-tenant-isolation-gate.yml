@@ -63,7 +63,7 @@ jobs:
             exit 1
           fi
         env:
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
+          DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safe
 
       - name: "S2.1 - Programmatic Isolation Test"
         run: |
@@ -72,7 +72,7 @@ jobs:
           DATABASE_URL=$DATABASE_URL bun test s2-isolation.test.ts
         working-directory: packages/db
         env:
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
+          DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safe
           POSTGRES_PASSWORD: test
           NODE_ENV: test
           JWT_SECRET: test_secret_key_for_ci_environment_only_32
