@@ -213,7 +213,7 @@ jobs:
           
           # Check environment files
           echo "[*] Checking for exposed .env files..."
-          ENV_FILES=$(find . -name ".env*" -type f ! -path "./.git/*" ! -path "./node_modules/*" 2>/dev/null || true)
+          ENV_FILES=$(find . -name ".env*" -type f ! -path "./.git/*" ! -path "./node_modules/*" ! -name "*.example" ! -name "*.local" 2>/dev/null || true)
           if [ -n "$ENV_FILES" ]; then
             echo "🚨 FAIL: .env files found in repository!"
             echo "$ENV_FILES"

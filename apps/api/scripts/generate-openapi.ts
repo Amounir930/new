@@ -1,10 +1,7 @@
-
-import { Test } from '@nestjs/testing';
-import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import { Logger } from '@nestjs/common';
-import { TenantRegistryService } from '@apex/db';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Test } from '@nestjs/testing';
 
 // -----------------------------------------------------------------------------
 // 🛡️ Security & Isolation Setup
@@ -13,8 +10,10 @@ import { TenantRegistryService } from '@apex/db';
 // Mock Environment Variables BEFORE import to satisfy ConfigModule validation
 process.env.DATABASE_URL = 'postgresql://mock:mock@localhost:5432/mock';
 process.env.REDIS_URL = 'redis://localhost:6379';
-process.env.JWT_SECRET = 'mock-secret-for-docs-generation-only-should-be-32-chars';
+process.env.JWT_SECRET =
+  'mock-secret-for-docs-generation-only-should-be-32-chars';
 process.env.TENANT_ISOLATION_MODE = 'strict';
+// @ts-expect-error NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';
 process.env.MINIO_ENDPOINT = 'localhost';
 process.env.MINIO_ACCESS_KEY = 'mock-access-key';
@@ -23,53 +22,53 @@ process.env.MINIO_BUCKET = 'mock-bucket';
 process.env.MINIO_REGION = 'us-east-1';
 
 console.log('DEBUG: Env vars set:', {
-    DB: process.env.DATABASE_URL,
-    JWT: process.env.JWT_SECRET ? 'Exists' : 'Missing',
-    MINIO: process.env.MINIO_ENDPOINT
+  DB: process.env.DATABASE_URL,
+  JWT: process.env.JWT_SECRET ? 'Exists' : 'Missing',
+  MINIO: process.env.MINIO_ENDPOINT,
 });
 
 async function generate() {
-    const logger = new Logger('OpenAPIGenerator');
-    logger.log('🚀 Starting OpenAPI Specification Generation (Mocked Mode)...');
+  const logger = new Logger('OpenAPIGenerator');
+  logger.log('🚀 Starting OpenAPI Specification Generation (Mocked Mode)...');
 
-    try {
-        // Dynamic import to ensure env vars are set before module load
-        const { AppModule } = await import('../src/app.module.js');
-        const { TenantRegistryService } = await import('@apex/db');
+  try {
+    // Dynamic import to ensure env vars are set before module load
+    const { AppModule } = await import('../src/app.module.js');
+    const { TenantRegistryService } = await import('@apex/db');
 
-        // Mock Services
-        const mockTenantRegistryService = {
-            get: () => Promise.resolve(null),
-            register: () => Promise.resolve({}),
-        };
+    // Mock Services
+    const mockTenantRegistryService = {
+      get: () => Promise.resolve(null),
+      register: () => Promise.resolve({}),
+    };
 
-        const mockProvisioningService = {
-            provision: () => Promise.resolve({ success: true }),
-        };
+    const mockProvisioningService = {
+      provision: () => Promise.resolve({ success: true }),
+    };
 
-        const mockAuditService = {
-            log: () => Promise.resolve(),
-        };
+    const mockAuditService = {
+      log: () => Promise.resolve(),
+    };
 
-        // Create Testing Module to override infrastructure dependencies
-        const moduleRef = await Test.createTestingModule({
-            imports: [AppModule],
-        })
-            .overrideProvider(TenantRegistryService)
-            .useValue(mockTenantRegistryService)
-            .overrideProvider('PROVISIONING_SERVICE')
-            .useValue(mockProvisioningService)
-            .overrideProvider('AUDIT_SERVICE')
-            .useValue(mockAuditService)
-            .compile();
+    // Create Testing Module to override infrastructure dependencies
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(TenantRegistryService)
+      .useValue(mockTenantRegistryService)
+      .overrideProvider('PROVISIONING_SERVICE')
+      .useValue(mockProvisioningService)
+      .overrideProvider('AUDIT_SERVICE')
+      .useValue(mockAuditService)
+      .compile();
 
-        const app = moduleRef.createNestApplication();
+    const app = moduleRef.createNestApplication();
 
-        // Configure Document Builder with Security Specs
-        const config = new DocumentBuilder()
-            .setTitle('KIMI API')
-            .setDescription(
-                `60-Second Store Provisioning Engine API
+    // Configure Document Builder with Security Specs
+    const config = new DocumentBuilder()
+      .setTitle('KIMI API')
+      .setDescription(
+        `60-Second Store Provisioning Engine API
         
         ## Security Protocols
         - **S6 Rate Limiting**: Strict throttling enabled (Default: 100 req/min, Auth: 10 req/min).
@@ -79,33 +78,33 @@ async function generate() {
         ## Usage
         All endpoints require Bearer Authentication (JWT).
         `
-            )
-            .setVersion('2.0.0')
-            .addBearerAuth()
-            .addTag('Provisioning', 'Store provisioning and management')
-            .addTag('Export', 'Data export and portability (S14)')
-            .addTag('Health', 'System health and conductivity checks')
-            .build();
+      )
+      .setVersion('2.0.0')
+      .addBearerAuth()
+      .addTag('Provisioning', 'Store provisioning and management')
+      .addTag('Export', 'Data export and portability (S14)')
+      .addTag('Health', 'System health and conductivity checks')
+      .build();
 
-        const document = SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, config);
 
-        // Filter sensitive paths (Administrative or internal only)
-        if (document.paths) {
-            Object.keys(document.paths).forEach((path) => {
-                if (path.includes('/admin')) {
-                    delete document.paths[path]; // Hide admin routes from public docs
-                }
-            });
+    // Filter sensitive paths (Administrative or internal only)
+    if (document.paths) {
+      for (const path of Object.keys(document.paths)) {
+        if (path.includes('/admin')) {
+          delete document.paths[path]; // Hide admin routes from public docs
         }
-
-        writeFileSync('./openapi-spec.json', JSON.stringify(document, null, 2));
-        logger.log('✅ Generated openapi-spec.json successfully');
-
-        await app.close();
-    } catch (error) {
-        logger.error('❌ Failed to generate OpenAPI spec', error);
-        process.exit(1);
+      }
     }
+
+    writeFileSync('./openapi-spec.json', JSON.stringify(document, null, 2));
+    logger.log('✅ Generated openapi-spec.json successfully');
+
+    await app.close();
+  } catch (error) {
+    logger.error('❌ Failed to generate OpenAPI spec', error);
+    process.exit(1);
+  }
 }
 
 generate();

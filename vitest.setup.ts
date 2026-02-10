@@ -28,5 +28,6 @@ process.env.JWT_EXPIRES_IN = '1h';
 process.env.ENABLE_S1_ENFORCEMENT = 'false';
 
 // S7 FIX: Generate secure encryption key for tests (32+ chars with mixed case, numbers, special chars)
-process.env.ENCRYPTION_MASTER_KEY =
-  `${generateTestSecret(16)}A1!${generateTestSecret(16)}`;
+process.env.ENCRYPTION_MASTER_KEY = `${generateTestSecret(
+  16
+)}A1!${generateTestSecret(16)}`;

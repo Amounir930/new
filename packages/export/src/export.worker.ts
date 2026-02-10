@@ -131,7 +131,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       if (result.sizeBytes > this.MAX_EXPORT_SIZE_BYTES) {
         throw new Error(
           `Export size (${(result.sizeBytes / 1024 / 1024).toFixed(2)}MB) ` +
-          `exceeds limit (${this.MAX_EXPORT_SIZE_BYTES / 1024 / 1024}MB)`
+            `exceeds limit (${this.MAX_EXPORT_SIZE_BYTES / 1024 / 1024}MB)`
         );
       }
 
@@ -196,7 +196,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       });
 
       // Cleanup local file immediately (S14.8: Native Node.js cleanup)
-      await rm(result.downloadUrl, { force: true }).catch(() => { });
+      await rm(result.downloadUrl, { force: true }).catch(() => {});
       this.logger.log(`Cleaned up local file: ${result.downloadUrl}`);
 
       await job.updateProgress(100);
@@ -234,7 +234,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
 
       // Cleanup on failure (S14.8: Native Node.js cleanup)
       if (localFilePath) {
-        await rm(localFilePath, { force: true }).catch(() => { });
+        await rm(localFilePath, { force: true }).catch(() => {});
         this.logger.log(`Cleaned up failed export file: ${localFilePath}`);
       }
 

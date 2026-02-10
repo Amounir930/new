@@ -37,7 +37,6 @@ describe('ProvisioningService', () => {
     log: vi.fn(),
   };
 
-
   const options: ProvisioningOptions = {
     subdomain: 'test-store',
     adminEmail: 'admin@test.com',
@@ -69,7 +68,6 @@ describe('ProvisioningService', () => {
     service = module.get<ProvisioningService>(ProvisioningService);
     _audit = module.get<AuditService>('AUDIT_SERVICE');
     (service as any).tenantRegistry = mockTenantRegistry; // Force override just in case
-
   });
 
   describe('provision', () => {
