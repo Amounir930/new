@@ -232,61 +232,7 @@ jobs:
           echo "  S11: ORM COMPLIANCE & ARCHITECTURAL GATES"
           echo "═══════════════════════════════════════════════════════════════════"
           
-          # Create comprehensive ORM compliance test suite
-          mkdir -p packages/security/src/sqli
-          
-          cat > packages/security/src/sqli/sqli-penetration.test.ts << 'TESTEOF'
-          import { describe, it, expect } from 'vitest';
-          import * as fs from 'fs';
-          import * as path from 'path';
-          
-          describe('SQL Injection Defense - ORM Compliance', () => {
-            const schemaDir = './packages/db/src/schema';
-            
-            // 🔥 Dynamic discovery: Find all schema files recursively
-            function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
-              if (!fs.existsSync(dirPath)) return arrayOfFiles;
-              const files = fs.readdirSync(dirPath);
-              files.forEach(function(file) {
-                const fullPath = path.join(dirPath, file);
-                if (fs.statSync(fullPath).isDirectory()) {
-                  getAllFiles(fullPath, arrayOfFiles);
-                } else {
-                  if (fullPath.endsWith('.ts')) arrayOfFiles.push(fullPath);
-                }
-              });
-              return arrayOfFiles;
-            }
-
-            const schemaFiles = [
-              './packages/db/src/schema.ts', // Base schema
-              ...getAllFiles(schemaDir)     // All sub-schemas
-            ].filter(f => fs.existsSync(f));
-
-            it('should verify Drizzle ORM usage (pgTable) in all discovered schemas', () => {
-              schemaFiles.forEach(schemaPath => {
-                const schema = fs.readFileSync(schemaPath, 'utf8');
-                expect(schema, `Schema ${schemaPath} must use pgTable`).toContain('pgTable');
-              });
-            });
-            
-            it('should enforce Parameterized Query patterns in the database layer', () => {
-              const dbDir = './packages/db/src';
-              if (fs.existsSync(dbDir)) {
-                const files = fs.readdirSync(dbDir, { recursive: true }) as string[];
-                const dbFiles = files.filter(f => f.endsWith('.ts') && !f.includes('.test.'));
-                
-                dbFiles.forEach(file => {
-                  const content = fs.readFileSync(path.join(dbDir, file), 'utf8');
-                  // Ensure any 'sql' usage is accompanied by Drizzle imports (parameterization safety)
-                  if (content.includes('sql`')) {
-                    expect(content, `File ${file} uses sql tag without drizzle-orm import`).toContain('drizzle-orm');
-                  }
-                });
-              }
-            });
-          });
-          TESTEOF
+          # Using committed S11 compliance test: packages/security/src/sqli/sqli-penetration.test.ts
           
           echo "[*] Running ORM compliance structural verification..."
           bun test packages/security/src/sqli/sqli-penetration.test.ts || {
