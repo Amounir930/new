@@ -40,7 +40,8 @@ async function orchestrate() {
   for (const script of scripts) {
     try {
       console.log(`  Checking ${script.name}...`);
-      execSync(`bun ${script.path}`, { stdio: 'pipe' });
+      const scriptPath = join(process.cwd(), script.path);
+      execSync(`bun ${scriptPath}`, { stdio: 'pipe' });
     } catch (error: any) {
       const output = error.stdout?.toString() || error.message;
       reports.protocols.violations.push({
@@ -56,30 +57,27 @@ async function orchestrate() {
   }
 
   // 2. Run Modern Template Validators (S2, S3, S7)
-  // These generate their own internal reports in .security-reports if run via CLI
-  // For orchestration, we'll run the CLI against a mock/test template or similar
   try {
     console.log('  Running Template Security Validator CLI...');
+    const cliPath = join(process.cwd(), 'src/cli.ts');
     // Example: run on fashion-boutique if it exists
-    execSync('bun src/cli.ts templates/fashion-boutique', { stdio: 'pipe' });
-    const templateReport = JSON.parse(
-      readFileSync(
-        'templates/fashion-boutique/.security-reports/validation-report.json',
-        'utf-8'
-      )
-    );
+    execSync(`bun ${cliPath} templates/fashion-boutique`, { stdio: 'pipe' });
 
-    // Merge violations
-    Object.values(templateReport.phases).forEach((phase: any) => {
-      reports.protocols.violations.push(
-        ...phase.violations.map((v: any) => ({
-          rule: phase.name,
-          severity: v.severity === 'FATAL' ? 'CRITICAL' : 'WARNING',
-          message: v.message,
-          file: v.file,
-        }))
-      );
-    });
+    const reportPath = join(process.cwd(), 'templates/fashion-boutique/.security-reports/validation-report.json');
+    if (require('fs').existsSync(reportPath)) {
+      const templateReport = JSON.parse(readFileSync(reportPath, 'utf-8'));
+      // Merge violations
+      Object.values(templateReport.phases).forEach((phase: any) => {
+        reports.protocols.violations.push(
+          ...phase.violations.map((v: any) => ({
+            rule: phase.name,
+            severity: v.severity === 'FATAL' ? 'CRITICAL' : 'WARNING',
+            message: v.message,
+            file: v.file,
+          }))
+        );
+      });
+    }
   } catch (error) {
     console.warn(
       '  ⚠️  Modern Template Validator skipped or failed (template not found)'
@@ -89,14 +87,17 @@ async function orchestrate() {
   // 3. Run Pattern Scanner (Static Analysis)
   try {
     console.log('  Running Surgical Grep Pattern Scanner...');
-    // We'll implement this script next
-    execSync('bun src/scanners/pattern-scanner.ts --path=templates', {
+    const scannerPath = join(process.cwd(), 'src/scanners/pattern-scanner.ts');
+    execSync(`bun ${scannerPath} --path=templates`, {
       stdio: 'pipe',
     });
-    const patternReport = JSON.parse(
-      readFileSync('static-analysis-report.json', 'utf-8')
-    );
-    reports.static.violations.push(...patternReport.violations);
+
+    // Check if report exists
+    const staticReportPath = join(process.cwd(), 'static-analysis-report.json');
+    if (require('fs').existsSync(staticReportPath)) {
+      const patternReport = JSON.parse(readFileSync(staticReportPath, 'utf-8'));
+      reports.static.violations.push(...patternReport.violations);
+    }
   } catch (error) {
     console.warn('  ⚠️  Pattern Scanner failed.');
   }
