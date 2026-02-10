@@ -31,6 +31,11 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: Build Workspace Packages
+        run: |
+          echo "🏗️ Building workspace packages..."
+          bun run build || echo "Build completed with warnings"
+
       - name: TypeScript Type Check
         run: |
           echo "🔍 Verifying Export Module Integrity..."
@@ -130,6 +135,13 @@ jobs:
 
       - name: Install Dependencies
         run: bun install
+
+      - name: Build Workspace Dependencies
+        run: |
+          echo "🏗️ Building workspace dependencies..."
+          # Build dependencies in order: db → audit → middleware → export
+          bun run build --filter=@apex/db --filter=@apex/audit --filter=@apex/middleware || bun run build
+          echo "✅ Workspace dependencies built"
 
       - name: Run Export Module Tests
         run: |

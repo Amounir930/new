@@ -13,6 +13,7 @@ describe('Security Base Utils', () => {
         // or just test the logic directly if exported.
 
         it('should detect hardcoded postgres strings', () => {
+            // gitleaks:allow - Test value for security validation logic
             const val = 'postgres://user:pass@localhost:5432/db';
             expect(() => (BaseSecurityTest as any).validateMetadataValue(val, 'path'))
                 .toThrow(/S1 Violation/);

@@ -7,7 +7,10 @@ paths = [
     "\\.env\\.example$",
     "\\.env\\.test$",
     "packages/security/src/utils/scanner-cli\\.ts",
-    "scripts/test-s1\\.ts"
+    "scripts/test-s1\\.ts",
+    # Test files with mock secrets (non-production)
+    "packages/security/src/encryption\\.test\\.ts",
+    "packages/test-utils/src/security-base\\.test\\.ts"
 ]
 regexes = [
     '''postgresql://placeholder-user@localhost:5432/db_safe''',
@@ -21,7 +24,10 @@ regexes = [
     '''test_secret_key_for_ci_environment_only_32''',
     '''minio-test-secret-key-for-ci-only''',
     '''placeholder-password''',
-    '''db_safe'''
+    '''db_safe''',
+    # Test encryption keys (non-production)
+    '''test-encryption-key-for-unit-tests-min-length-32''',
+    '''random-test-key-[0-9a-f]{32}'''
 ]
 
 [[rules]]

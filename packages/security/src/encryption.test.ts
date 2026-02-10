@@ -107,6 +107,7 @@ describe('EncryptionService', () => {
 
   it('should throw if key misses special characters', () => {
     process.env.NODE_ENV = 'production';
+    // gitleaks:allow - Test value for encryption validation logic
     process.env.ENCRYPTION_MASTER_KEY =
       'MasterPassWithoutSpecialCharsLongEnough';
     expect(() => new EncryptionService()).toThrow('must contain');
