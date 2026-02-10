@@ -2,14 +2,18 @@
 # Mandatory Security Gate
 
 [allowlist]
-description = "Allow environment example files"
+description = "Global allowlist"
 paths = [
     "\\.env\\.example$",
     "\\.env\\.test$",
-    "packages/security/src/utils/scanner-cli\\.ts",
-    "postgresql://postgres:placeholder@localhost:5432/test",
-    "mock-secret-for-docs-generation-only",
-    "valid_secret_key_minimum_32_chars_long"
+    "packages/security/src/utils/scanner-cli\\.ts"
+]
+regexes = [
+    '''postgresql://postgres:placeholder@localhost:5432/test''',
+    '''mock-secret-for-docs-generation-only''',
+    '''valid_secret_key_minimum_32_chars_long''',
+    '''test_secret_key_for_ci_environment_only_32''',
+    '''minio-test-secret-key-for-ci-only'''
 ]
 
 [[rules]]
