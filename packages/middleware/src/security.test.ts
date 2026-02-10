@@ -111,16 +111,17 @@ describe('CORS Configuration', () => {
     });
 
     it('should allow origins from ALLOWED_ORIGINS env', () => {
-      vi.stubEnv('ALLOWED_ORIGINS', 'https://myapp.com,https://api.myapp.com');
+      const originalEnv = process.env.ALLOWED_ORIGINS;
+      process.env.ALLOWED_ORIGINS = 'https://myapp.com,https://api.myapp.com';
       const callback = vi.fn();
       originFn('https://myapp.com', callback);
       expect(callback).toHaveBeenCalledWith(null, true);
-      vi.unstubAllEnvs();
+      process.env.ALLOWED_ORIGINS = originalEnv;
     });
 
     it('should block non-whitelisted origins', () => {
       const callback = vi.fn();
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => { });
       originFn('http://evil.com', callback);
       expect(callback).toHaveBeenCalledWith(expect.any(Error));
       expect(consoleSpy).toHaveBeenCalled();
@@ -136,10 +137,11 @@ describe('CORS Configuration', () => {
     });
 
     it('should include dev origins in development environment', () => {
-      vi.stubEnv('NODE_ENV', 'development');
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
       const config = getTenantCorsConfig('https://tenant1.com');
       expect(config.origin as string[]).toContain('http://localhost:3000');
-      vi.unstubAllEnvs();
+      process.env.NODE_ENV = originalEnv;
     });
   });
 });

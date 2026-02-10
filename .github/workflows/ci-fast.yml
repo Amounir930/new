@@ -314,8 +314,8 @@ jobs:
       - name: Run Unit Tests
         run: |
           echo "🧪 Running unit tests..."
-          # turbo doesn't support --coverage flag, run vitest directly
-          bunx vitest run --coverage --reporter=verbose --reporter=json --reporter=html --outputFile=coverage/report.json
+          # turbo doesn't support --coverage flag, run bun test directly
+          bun test --coverage
         env:
           NODE_ENV: test
           SKIP_DOCKER_TESTS: true

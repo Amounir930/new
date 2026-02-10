@@ -68,58 +68,72 @@ describe('ExportService', () => {
     (service as any).logger = { log: vi.fn(), error: vi.fn(), debug: vi.fn() };
   });
 
-  describe('S14.1: Tenant Isolation', () => {
-    it('should reject export for non-existent tenant', async () => {
-      mockFactory.validateOptions.mockResolvedValueOnce(false);
+  describe('S14: Export Job Creation (Table-Driven)', () => {
+    it.each([
+      {
+        name: 'Happy Path: Valid Lite Export',
+        options: { tenantId: 't1', profile: 'lite', requestedBy: 'u1' },
+        factoryValid: true,
+        activeJobs: [],
+        recentJobs: [],
+        expectedStatus: 'pending',
+      },
+      {
+        name: 'Error: Invalid Profile',
+        options: { tenantId: 't1', profile: 'invalid', requestedBy: 'u1' },
+        factoryValid: false,
+        activeJobs: [],
+        recentJobs: [],
+        error: 'Invalid export options',
+      },
+      {
+        name: 'Error: Concurrent Job Restriction',
+        options: { tenantId: 't-active', profile: 'lite', requestedBy: 'u1' },
+        factoryValid: true,
+        activeJobs: [{ data: { tenantId: 't-active' }, id: 'active-1' }],
+        recentJobs: [],
+        error: 'Export already in progress',
+      },
+      {
+        name: 'Error: Duplicate within 1 minute',
+        options: { tenantId: 't-dup', profile: 'lite', requestedBy: 'u1' },
+        factoryValid: true,
+        activeJobs: [],
+        recentJobs: [{ data: { tenantId: 't-dup', profile: 'lite' }, processedOn: Date.now() - 30000 }],
+        error: 'Duplicate export request',
+      },
+    ])('$name', async ({ options, factoryValid, activeJobs, recentJobs, error, expectedStatus }) => {
+      mockFactory.validateOptions.mockResolvedValue(factoryValid);
+      (service as any).exportQueue.getJobs = vi.fn().mockImplementation(async (types) => {
+        if (types.includes('active')) return activeJobs;
+        if (types.includes('completed')) return recentJobs;
+        return [];
+      });
+      (service as any).exportQueue.add = vi.fn().mockResolvedValue({ id: 'new-job' });
 
-      await expect(
-        service.createExportJob({
-          tenantId: 'non-existent-tenant',
-          profile: 'lite',
-          requestedBy: 'admin-123',
-        })
-      ).rejects.toThrow('Invalid export options');
-    });
-
-    it('should allow only one concurrent export per tenant', async () => {
-      // Mock queue.getJobs to simulate an active job
-      const mockJob = { data: { tenantId: 'test-tenant' }, id: 'job-1' };
-      (service as any).exportQueue.getJobs = vi
-        .fn()
-        .mockResolvedValue([mockJob]);
-
-      await expect(
-        service.createExportJob({
-          tenantId: 'test-tenant',
-          profile: 'lite',
-          requestedBy: 'admin-123',
-        })
-      ).rejects.toThrow('Export already in progress');
+      if (error) {
+        await expect(service.createExportJob(options as any)).rejects.toThrow(error);
+      } else {
+        const result = await service.createExportJob(options as any);
+        expect(result.status).toBe(expectedStatus);
+        expect(mockAudit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'EXPORT_REQUESTED' }));
+      }
     });
   });
 
-  describe('S14.2: Duplicate Detection', () => {
-    it('should reject duplicate requests within 1 minute', async () => {
-      const tenantId = 'dup-test-tenant';
-      const recentJob = {
-        data: { tenantId, profile: 'lite' },
-        processedOn: Date.now() - 30000, // 30s ago
-      };
+  describe('Utility Methods', () => {
+    it('should map BullMQ states correctly', () => {
+      expect((service as any).mapJobState('active')).toBe('processing');
+      expect((service as any).mapJobState('completed')).toBe('completed');
+      expect((service as any).mapJobState('failed')).toBe('failed');
+      expect((service as any).mapJobState('waiting')).toBe('pending');
+      expect((service as any).mapJobState('other')).toBe('pending');
+    });
 
-      (service as any).exportQueue.getJobs = vi
-        .fn()
-        .mockImplementation(async (types) => {
-          if (types.includes('completed')) return [recentJob];
-          return [];
-        });
-
-      await expect(
-        service.createExportJob({
-          tenantId,
-          profile: 'lite',
-          requestedBy: 'admin-123',
-        })
-      ).rejects.toThrow('Duplicate export request');
+    it('should handle cancelJob for non-existent job', async () => {
+      (service as any).exportQueue.getJob = vi.fn().mockResolvedValue(null);
+      const result = await service.cancelJob('missing');
+      expect(result).toBe(false);
     });
   });
 });

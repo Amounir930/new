@@ -23,46 +23,46 @@
     "baseUrl": ".",
     "paths": {
       "@apex/audit": [
-        "packages/audit/src/index.ts"
+        "packages/audit/dist/index.d.ts"
       ],
       "@apex/db": [
-        "packages/db/src/index.ts"
+        "packages/db/dist/index.d.ts"
       ],
       "@apex/config": [
-        "packages/config/src/index.ts"
+        "packages/config/dist/index.d.ts"
       ],
       "@apex/provisioning": [
-        "packages/provisioning/src/index.ts"
+        "packages/provisioning/dist/index.d.ts"
       ],
       "@apex/middleware": [
-        "packages/middleware/src/index.ts"
+        "packages/middleware/dist/index.d.ts"
       ],
       "@apex/events": [
-        "packages/events/src/index.ts"
+        "packages/events/dist/index.d.ts"
       ],
       "@apex/ui": [
-        "packages/ui/src/index.ts"
+        "packages/ui/dist/index.d.ts"
       ],
       "@apex/security": [
-        "packages/security/src/index.ts"
+        "packages/security/dist/index.d.ts"
       ],
       "@apex/auth": [
-        "packages/auth/src/index.ts"
+        "packages/auth/dist/index.d.ts"
       ],
       "@apex/template-config": [
-        "packages/template-config/src/index.ts"
+        "packages/template-config/dist/index.d.ts"
       ],
       "@apex/template-validator": [
-        "packages/template-validator/src/index.ts"
+        "packages/template-validator/dist/index.d.ts"
       ],
       "@apex/template-loader": [
-        "packages/template-loader/src/index.ts"
+        "packages/template-loader/dist/index.d.ts"
       ],
       "@apex/template-security": [
-        "packages/template-security/src/index.ts"
+        "packages/template-security/dist/index.d.ts"
       ],
       "@apex/test-utils": [
-        "packages/test-utils/src/index.ts"
+        "packages/test-utils/dist/index.d.ts"
       ]
     }
   },

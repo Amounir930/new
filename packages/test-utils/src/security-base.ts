@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
  * Validates the security compliance of a NestJS module.
  * Checks for hardcoded secrets (S1) and SQL Injection vulnerabilities (S11).
  */
-export async function validateModuleSecurity(
+export function validateModuleSecurity(
   module: any,
   providers: any[] = []
 ) {
@@ -51,7 +51,7 @@ export async function validateModuleSecurity(
   });
 }
 
-function validateMetadataValue(value: any, pathIdx: string) {
+export function validateMetadataValue(value: any, pathIdx: string) {
   if (typeof value === 'string') {
     // Postgres/MySQL/Redis connection strings
     if (/(postgres|mysql|redis):\/\//.test(value)) {
@@ -206,6 +206,7 @@ function fileContainsClass(filePath: string, className: string): boolean {
  */
 export const BaseSecurityTest = {
   validateModule: validateModuleSecurity,
+  validateMetadataValue,
   // Expose internal helpers if needed by other tests, or keep them private to the module
   findModuleFile,
   runASTCheck,

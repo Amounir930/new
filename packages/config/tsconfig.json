@@ -3,19 +3,20 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "types": [
       "node",
       "bun-types"
     ],
-    "declaration": true,
-    "emitDeclarationOnly": true
+    "declaration": true
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist", "build",
+    "dist",
+    "build",
     "**/*.test.ts"
   ]
 }

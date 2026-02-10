@@ -40,7 +40,7 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      vi.mocked(mockService.createExportJob).mockResolvedValue(mockJob);
+      (mockService.createExportJob as any).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -98,7 +98,7 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      vi.mocked(mockService.createExportJob).mockResolvedValue(mockJob);
+      (mockService.createExportJob as any).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -122,7 +122,7 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      vi.mocked(mockService.createExportJob).mockResolvedValue(mockJob);
+      (mockService.createExportJob as any).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -162,7 +162,7 @@ describe('ExportController', () => {
         status: 'processing' as const,
       };
 
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -177,7 +177,7 @@ describe('ExportController', () => {
     });
 
     it('should throw NotFoundException for non-existent job', async () => {
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(null);
+      (mockService.getJobStatus as any).mockResolvedValue(null);
 
       const req = {
         user: {
@@ -202,7 +202,7 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -227,7 +227,7 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -253,8 +253,8 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
-      vi.mocked(mockWorker.confirmDownload).mockResolvedValue(undefined);
+      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
+      (mockWorker.confirmDownload as any).mockResolvedValue(undefined);
 
       const req = {
         user: {
@@ -282,7 +282,7 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -309,8 +309,8 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
-      vi.mocked(mockService.cancelJob).mockResolvedValue(true);
+      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
+      (mockService.cancelJob as any).mockResolvedValue(true);
 
       const req = {
         user: {
@@ -336,8 +336,8 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
-      vi.mocked(mockService.cancelJob).mockResolvedValue(false);
+      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
+      (mockService.cancelJob as any).mockResolvedValue(false);
 
       const req = {
         user: {
@@ -374,7 +374,7 @@ describe('ExportController', () => {
         },
       ];
 
-      vi.mocked(mockService.listTenantExports).mockResolvedValue(mockJobs);
+      (mockService.listTenantExports as any).mockResolvedValue(mockJobs);
 
       const req = {
         user: {

@@ -21,8 +21,8 @@
         "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsup",
         "dev": "tsup --watch",
         "typecheck": "tsc --noEmit",
-        "test": "vitest run",
-        "test:coverage": "vitest run --coverage"
+        "test": "bun test",
+        "test:coverage": "bun test --coverage"
     },
     "keywords": [
         "zod",

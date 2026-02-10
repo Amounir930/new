@@ -1,0 +1,45 @@
+bun test v1.3.8 (b64edcb4)
+
+packages\export\src\export.controller.test.ts:
+✅ S1 Compliance: Environment variables validated successfully
+✅ S1 Compliance: Environment variables validated successfully
+(pass) ExportController > createExport > should create export for admin user
+(pass) ExportController > createExport > should reject unauthenticated request
+(pass) ExportController > createExport > should reject non-admin user
+(pass) ExportController > createExport > should accept super_admin role
+(pass) ExportController > createExport > should handle date range for analytics export
+(pass) ExportController > getStatus > should return job status for authorized user [15.00ms]
+(pass) ExportController > getStatus > should throw NotFoundException for non-existent job [16.00ms]
+(pass) ExportController > getStatus > should deny access to other tenant job
+(pass) ExportController > getStatus > should allow super_admin to access any tenant job
+DEBUG: confirmDownload job {
+  id: "job-123",
+  tenantId: "tenant-123",
+  profile: "lite",
+  requestedBy: "user-456",
+  requestedAt: 2026-02-10T17:57:53.022Z,
+  status: "completed",
+} user {
+  id: "user-456",
+  tenantId: "tenant-123",
+  role: "admin",
+}
+(pass) ExportController > confirmDownload > should confirm download and delete file [16.00ms]
+280 |         requestedBy: 'user-789',
+281 |         requestedAt: new Date(),
+282 |         status: 'completed' as const,
+283 |       };
+284 | 
+285 |       vi.mocked(mockService.getJobStatus).mockResolvedValue(mockJob);
+               ^
+TypeError: vi.mocked is not a function. (In 'vi.mocked(mockService.getJobStatus)', 'vi.mocked' is undefined)
+      at <anonymous> (C:\Users\Dell\Desktop\60sec.shop\packages\export\src\export.controller.test.ts:285:10)
+(fail) ExportController > confirmDownload > should deny confirm for other tenant
+(pass) ExportController > cancelJob > should cancel job successfully
+(pass) ExportController > cancelJob > should handle already completed job
+(pass) ExportController > listJobs > should list all jobs for tenant
+
+ 13 pass
+ 1 fail
+ 18 expect() calls
+Ran 14 tests across 1 file. [3.35s]

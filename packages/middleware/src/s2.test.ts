@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { describe, expect, it, vi } from 'vitest';
-import { tenantStorage } from './tenant-context.js';
+import { tenantStorage } from './connection-context.js';
 import { extractSubdomain, resolveTenant } from './tenant-resolution.js';
 
 describe('S2 Middleware: Tenant Resolution', () => {

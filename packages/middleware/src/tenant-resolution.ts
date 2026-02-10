@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { tenantStorage } from './tenant-context.js';
+import { tenantStorage } from './connection-context.js';
 // Note: We will integrate actual DB lookup later. For now, strict types and structure.
 
 export async function resolveTenant(

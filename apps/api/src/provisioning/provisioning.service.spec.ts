@@ -23,11 +23,13 @@ vi.mock('@apex/provisioning', () => ({
 }));
 
 // Mock @apex/db
-vi.mock('@apex/db', () => ({
-  TenantRegistryService: vi.fn().mockImplementation(() => ({
-    register: vi.fn(),
-  })),
-}));
+vi.mock('@apex/db', () => {
+  return {
+    TenantRegistryService: class TenantRegistryService {
+      register = vi.fn();
+    },
+  };
+});
 
 describe('ProvisioningService', () => {
   let service: ProvisioningService;
@@ -49,39 +51,29 @@ describe('ProvisioningService', () => {
 
     const mockTenantRegistry = {
       register: vi.fn(),
-    };
+    } as unknown as TenantRegistryService;
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ProvisioningService,
-        {
-          provide: 'AUDIT_SERVICE',
-          useValue: mockAuditService,
-        },
-        {
-          provide: TenantRegistryService,
-          useValue: mockTenantRegistry,
-        },
-      ],
-    }).compile();
-
-    service = module.get<ProvisioningService>(ProvisioningService);
-    _audit = module.get<AuditService>('AUDIT_SERVICE');
-    (service as any).tenantRegistry = mockTenantRegistry; // Force override just in case
+    // Manual instantiation to bypass NestJS DI issues with Bun/swc
+    service = new ProvisioningService(
+      mockAuditService as any,
+      mockTenantRegistry
+    );
+    _audit = mockAuditService as any;
+    (service as any).tenantRegistry = mockTenantRegistry;
   });
 
   describe('provision', () => {
     it('should successfully provision a store', async () => {
-      vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
+      (provisioning.createTenantSchema as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.runTenantMigrations).mockResolvedValue(
+      (provisioning.runTenantMigrations as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.createStorageBucket).mockResolvedValue(
+      (provisioning.createStorageBucket as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.seedTenantData).mockResolvedValue({
+      (provisioning.seedTenantData as any).mockResolvedValue({
         adminId: 'admin-123',
       } as any);
 
@@ -100,7 +92,7 @@ describe('ProvisioningService', () => {
     });
 
     it('should throw ConflictException if resource already exists', async () => {
-      vi.mocked(provisioning.createTenantSchema).mockRejectedValue(
+      (provisioning.createTenantSchema as any).mockRejectedValue(
         new Error('schema "tenant_test-store" already exists')
       );
 
@@ -112,11 +104,11 @@ describe('ProvisioningService', () => {
 
     it('should rollback and throw InternalServerErrorException on step failure', async () => {
       // Step 0 succeeds
-      vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
+      (provisioning.createTenantSchema as any).mockResolvedValue(
         undefined as any
       );
       // Step 1 fails
-      vi.mocked(provisioning.runTenantMigrations).mockRejectedValue(
+      (provisioning.runTenantMigrations as any).mockRejectedValue(
         new Error('Migration failed')
       );
 
@@ -129,13 +121,13 @@ describe('ProvisioningService', () => {
     });
 
     it('should handle rollback failure gracefully', async () => {
-      vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
+      (provisioning.createTenantSchema as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.runTenantMigrations).mockRejectedValue(
+      (provisioning.runTenantMigrations as any).mockRejectedValue(
         new Error('Fail')
       );
-      vi.mocked(provisioning.dropTenantSchema).mockRejectedValue(
+      (provisioning.dropTenantSchema as any).mockRejectedValue(
         new Error('Rollback Fail')
       );
 
@@ -146,13 +138,13 @@ describe('ProvisioningService', () => {
     });
 
     it('should proceed with rollback if multiple steps succeeded before failure', async () => {
-      vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
+      (provisioning.createTenantSchema as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.runTenantMigrations).mockResolvedValue(
+      (provisioning.runTenantMigrations as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.createStorageBucket).mockRejectedValue(
+      (provisioning.createStorageBucket as any).mockRejectedValue(
         new Error('Bucket Fail')
       );
 
@@ -163,16 +155,16 @@ describe('ProvisioningService', () => {
     });
 
     it('should throw InternalServerErrorException if seeding fails', async () => {
-      vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
+      (provisioning.createTenantSchema as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.runTenantMigrations).mockResolvedValue(
+      (provisioning.runTenantMigrations as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.createStorageBucket).mockResolvedValue(
+      (provisioning.createStorageBucket as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.seedTenantData).mockRejectedValue(
+      (provisioning.seedTenantData as any).mockRejectedValue(
         new Error('Seed Fail')
       );
 
@@ -185,16 +177,16 @@ describe('ProvisioningService', () => {
 
   describe('registerTenant', () => {
     it('should throw InternalServerErrorException if registry fails', async () => {
-      vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
+      (provisioning.createTenantSchema as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.runTenantMigrations).mockResolvedValue(
+      (provisioning.runTenantMigrations as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.createStorageBucket).mockResolvedValue(
+      (provisioning.createStorageBucket as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.seedTenantData).mockResolvedValue({
+      (provisioning.seedTenantData as any).mockResolvedValue({
         adminId: 'admin-123',
       } as any);
 
@@ -210,13 +202,13 @@ describe('ProvisioningService', () => {
     it('should log error when rollback fails', async () => {
       const loggerSpy = vi.spyOn(Logger.prototype, 'error');
 
-      vi.mocked(provisioning.createTenantSchema).mockResolvedValue(
+      (provisioning.createTenantSchema as any).mockResolvedValue(
         undefined as any
       );
-      vi.mocked(provisioning.runTenantMigrations).mockRejectedValue(
+      (provisioning.runTenantMigrations as any).mockRejectedValue(
         new Error('Migrate Fail')
       );
-      vi.mocked(provisioning.dropTenantSchema).mockRejectedValue(
+      (provisioning.dropTenantSchema as any).mockRejectedValue(
         new Error('Drop Fail')
       );
 
@@ -231,7 +223,7 @@ describe('ProvisioningService', () => {
     });
 
     it('should handle non-Error objects thrown during provisioning', async () => {
-      vi.mocked(provisioning.createTenantSchema).mockRejectedValue(
+      (provisioning.createTenantSchema as any).mockRejectedValue(
         'String Error'
       );
 

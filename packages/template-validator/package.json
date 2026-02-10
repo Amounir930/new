@@ -16,7 +16,7 @@
         "build": "tsup",
         "dev": "tsup --watch",
         "typecheck": "tsc --noEmit",
-        "test": "vitest run"
+        "test": "bun test"
     },
     "dependencies": {
         "@apex/template-config": "workspace:*",

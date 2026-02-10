@@ -138,7 +138,7 @@ jobs:
           echo "═══════════════════════════════════════════════════════════════"
           
           cd packages/export
-          bunx vitest run
+          bun test
           
           echo "✅ Export module tests completed"
         env:

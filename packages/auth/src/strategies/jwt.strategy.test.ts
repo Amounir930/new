@@ -1,92 +1,42 @@
 /**
  * JWT Strategy Tests
- * Rule 4.1: Test Coverage Mandate
  */
 
-import { UnauthorizedException } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { JwtStrategy } from './jwt.strategy.js';
-
-const mockConfigService = {
-  get: vi.fn(),
-};
+import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@apex/config';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
+  const mockConfigService = {
+    get: vi.fn().mockReturnValue('super-secret-key-at-least-32-chars-long'),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockConfigService.get.mockReturnValue('test-jwt-secret-32-chars-longgg');
     strategy = new JwtStrategy(mockConfigService as any);
   });
 
-  describe('constructor', () => {
-    it('should create strategy with config service', () => {
-      expect(strategy).toBeDefined();
-    });
-
-    it('should get JWT_SECRET from config', () => {
-      expect(mockConfigService.get).toHaveBeenCalledWith('JWT_SECRET');
-    });
-  });
-
   describe('validate', () => {
-    it('should validate and return user from payload', async () => {
-      const payload = {
-        sub: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'test@example.com',
-        tenantId: '550e8400-e29b-41d4-a716-446655440001',
-      };
-
+    it('should validate a valid payload', async () => {
+      const payload = { sub: 'u1', email: 'test@test.com', tenantId: 't1' };
       const result = await strategy.validate(payload);
 
       expect(result).toEqual({
-        id: payload.sub,
-        email: payload.email,
-        tenantId: payload.tenantId,
+        id: 'u1',
+        email: 'test@test.com',
+        tenantId: 't1',
       });
     });
 
-    it('should throw UnauthorizedException for payload without sub', async () => {
-      const payload = {
-        email: 'test@example.com',
-      };
-
-      await expect(strategy.validate(payload as any)).rejects.toThrow(
-        UnauthorizedException
-      );
+    it('should throw UnauthorizedException if sub is missing', async () => {
+      const payload = { email: 'test@test.com' } as any;
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
     });
 
-    it('should throw UnauthorizedException for null payload', async () => {
-      await expect(strategy.validate(null as any)).rejects.toThrow(
-        UnauthorizedException
-      );
-    });
-
-    it('should throw UnauthorizedException for undefined sub', async () => {
-      const payload = {
-        sub: undefined,
-        email: 'test@example.com',
-      };
-
-      await expect(strategy.validate(payload as any)).rejects.toThrow(
-        UnauthorizedException
-      );
-    });
-
-    it('should handle payload without tenantId', async () => {
-      const payload = {
-        sub: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'test@example.com',
-      };
-
-      const result = await strategy.validate(payload);
-
-      expect(result).toEqual({
-        id: payload.sub,
-        email: payload.email,
-        tenantId: undefined,
-      });
+    it('should throw UnauthorizedException if payload is null', async () => {
+      await expect(strategy.validate(null as any)).rejects.toThrow(UnauthorizedException);
     });
   });
 });

@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod';
+import { Global, Module } from '@nestjs/common';
 import { type EnvConfig, EnvSchema } from './schema';
 
 export * from './schema';
@@ -117,3 +118,10 @@ export class ConfigService {
     return this.config[key] ?? defaultValue;
   }
 }
+
+@Global()
+@Module({
+  providers: [ConfigService],
+  exports: [ConfigService],
+})
+export class ConfigModule { }

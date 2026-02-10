@@ -14,8 +14,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
-    "test": "vitest run",
-    "test:unit": "vitest run --coverage",
+    "test": "bun test",
+    "test:unit": "bun test --coverage",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"

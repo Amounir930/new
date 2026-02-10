@@ -3,15 +3,17 @@
   "version": "1.0.0",
   "description": "Tenant Data Export System - S2 Compliant with BullMQ",
   "type": "module",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "types": "./src/index.ts"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
-    "test": "vitest run",
+    "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
+    "test": "bun test",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
   },

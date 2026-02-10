@@ -47,10 +47,11 @@ export function calculateSecurityScore(
     const critical =
       data.violations?.filter((v: any) => v.severity === 'CRITICAL').length ||
       0;
+    const issues = data.violations?.length || 0;
     results.static = {
       passed: critical === 0,
-      issues: data.violations?.length || 0,
-      score: Math.max(0, 100 - critical * 50 - results.static.issues * 5),
+      issues,
+      score: Math.max(0, 100 - critical * 50 - issues * 5),
     };
   } catch {
     /* Report missing */
@@ -64,10 +65,11 @@ export function calculateSecurityScore(
     const critical =
       data.violations?.filter((v: any) => v.severity === 'CRITICAL').length ||
       0;
+    const issues = data.violations?.length || 0;
     results.protocols = {
       passed: critical === 0,
-      issues: data.violations?.length || 0,
-      score: Math.max(0, 100 - critical * 50 - results.protocols.issues * 10),
+      issues,
+      score: Math.max(0, 100 - critical * 50 - issues * 10),
     };
   } catch {
     /* Report missing */
@@ -112,9 +114,9 @@ export function calculateSecurityScore(
   // Static: 25%, Protocols: 25%, Penetration: 40%, Performance: 10%
   const finalScore = Math.round(
     results.static.score * 0.25 +
-      results.protocols.score * 0.25 +
-      results.penetration.score * 0.4 +
-      results.performance.score * 0.1
+    results.protocols.score * 0.25 +
+    results.penetration.score * 0.4 +
+    results.performance.score * 0.1
   );
 
   return {

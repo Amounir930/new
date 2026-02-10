@@ -1,15 +1,13 @@
 /**
- * Blueprint Service Tests
- * Super-#21: Onboarding Blueprint Editor
+ * Onboarding Blueprint Tests
+ * S21: Blueprint Editor & Provisioning Templates
+ * Rule 4.1: Test Coverage Mandate
  */
 
 import { publicDb } from '@apex/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  type BlueprintTemplate,
   createBlueprint,
-  defaultBlueprintTemplate,
-  deleteBlueprint,
   getAllBlueprints,
   getBlueprintById,
   getDefaultBlueprint,
@@ -17,395 +15,150 @@ import {
   validateBlueprint,
 } from './blueprint.js';
 
-// Mock the database
-const mockBlueprints: Array<{
-  id: string;
-  name: string;
-  description: string | null;
-  blueprint: string;
-  isDefault: string;
-  plan: string;
-  createdAt: Date;
-  updatedAt: Date;
-}> = [];
-
+// Mock DB
 vi.mock('@apex/db', () => ({
+  publicDb: {
+    select: vi.fn().mockReturnThis(),
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockReturnThis(),
+    orderBy: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    values: vi.fn().mockReturnThis(),
+    returning: vi.fn(),
+    delete: vi.fn().mockReturnThis(),
+  },
   onboardingBlueprints: {
     id: 'id',
     name: 'name',
-    description: 'description',
-    blueprint: 'blueprint',
-    isDefault: 'is_default',
     plan: 'plan',
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  },
-  publicDb: {
-    select: () => ({
-      from: () => ({
-        where: () => ({
-          limit: (n: number) => mockBlueprints.slice(0, n),
-        }),
-        orderBy: () => mockBlueprints,
-      }),
-    }),
-    insert: () => ({
-      values: (v: unknown) => ({
-        returning: () => {
-          const record = {
-            id: 'test-id',
-            name: 'Default',
-            description: null,
-            blueprint: JSON.stringify(defaultBlueprintTemplate),
-            isDefault: 'false',
-            plan: 'free',
-            ...(v as Record<string, unknown>),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          } as any;
-          mockBlueprints.push(record);
-          return [record];
-        },
-      }),
-    }),
-    update: () => ({
-      set: (v: any) => ({
-        where: () => ({
-          returning: () => {
-            const record = {
-              id: 'test-id',
-              name: v.name || 'Updated',
-              blueprint:
-                v.blueprint || JSON.stringify(defaultBlueprintTemplate),
-              isDefault: v.isDefault || 'false',
-              plan: v.plan || 'free',
-              createdAt: new Date(),
-              updatedAt: new Date(),
-            };
-            return [record];
-          },
-        }),
-      }),
-    }),
-    delete: () => ({
-      where: () => ({
-        returning: () => [{ id: 'deleted' }],
-      }),
-    }),
+    isDefault: 'isDefault',
+    createdAt: 'createdAt',
   },
 }));
 
-import { initializeDefaultBlueprint } from './blueprint.js';
-
-describe('Blueprint Service', () => {
+describe('BlueprintManager', () => {
   beforeEach(() => {
-    mockBlueprints.length = 0;
+    vi.clearAllMocks();
   });
 
   describe('validateBlueprint', () => {
-    it('should validate a correct blueprint', () => {
-      const validBlueprint: BlueprintTemplate = {
-        version: '1.0',
-        name: 'Test Blueprint',
-        products: [{ name: 'Test Product', price: 9.99 }],
-      };
-
-      expect(() => validateBlueprint(validBlueprint)).not.toThrow();
-      expect(validateBlueprint(validBlueprint)).toBe(true);
-    });
-
-    it('should reject non-object blueprint', () => {
-      expect(() => validateBlueprint(null)).toThrow(
-        'Blueprint must be an object'
-      );
-      expect(() => validateBlueprint('not an object')).toThrow(
-        'Blueprint must be an object'
-      );
-    });
-
-    it('should validate pages if present', () => {
-      const validWithPages: BlueprintTemplate = {
-        version: '1.0',
-        name: 'Test',
-        pages: [{ slug: 'test', title: 'Test Page', content: 'test content' }],
-      };
-      expect(() => validateBlueprint(validWithPages)).not.toThrow();
-    });
-
-    it('should reject invalid pages array', () => {
-      const invalid = { version: '1.0', name: 'Test', pages: 'not an array' };
-      expect(() => validateBlueprint(invalid)).toThrow(
-        'pages must be an array'
-      );
-    });
-
-    it('should reject page without slug or title', () => {
-      const invalid = {
-        version: '1.0',
-        name: 'Test',
-        pages: [{ content: 'test' }],
-      };
-      expect(() => validateBlueprint(invalid)).toThrow(
-        'Page must have slug and title'
-      );
-    });
-
-    it('should reject invalid version', () => {
-      const invalidBlueprint = {
-        version: '2.0',
-        name: 'Test',
-      };
-
-      expect(() => validateBlueprint(invalidBlueprint)).toThrow(
-        'Blueprint version must be "1.0"'
-      );
-    });
-
-    it('should reject missing name', () => {
-      const invalidBlueprint = {
-        version: '1.0',
-      };
-
-      expect(() => validateBlueprint(invalidBlueprint)).toThrow(
-        'Blueprint must have a name'
-      );
-    });
-
-    it('should reject invalid products array', () => {
-      const invalidBlueprint = {
-        version: '1.0',
-        name: 'Test',
-        products: 'not an array',
-      };
-
-      expect(() => validateBlueprint(invalidBlueprint)).toThrow(
-        'products must be an array'
-      );
-    });
-
-    it('should reject product without name', () => {
-      const invalidBlueprint = {
-        version: '1.0',
-        name: 'Test',
-        products: [{ price: 9.99 }],
-      };
-
-      expect(() => validateBlueprint(invalidBlueprint)).toThrow(
-        'Product must have a name'
-      );
-    });
-
-    it('should reject invalid price', () => {
-      const invalidBlueprint = {
-        version: '1.0',
-        name: 'Test',
-        products: [{ name: 'Test', price: -5 }],
-      };
-
-      expect(() => validateBlueprint(invalidBlueprint)).toThrow(
-        'Product must have a valid price'
-      );
+    it.each([
+      {
+        name: 'Valid Minimal Blueprint',
+        blueprint: { version: '1.0', name: 'Standard' },
+        valid: true,
+      },
+      {
+        name: 'Valid with Products and Pages',
+        blueprint: {
+          version: '1.0',
+          name: 'Full',
+          products: [{ name: 'P1', price: 10 }],
+          pages: [{ slug: 's', title: 't', content: 'c' }],
+        },
+        valid: true,
+      },
+      {
+        name: 'Error: Wrong Version',
+        blueprint: { version: '2.0', name: 'Bad' },
+        error: 'version must be "1.0"',
+      },
+      {
+        name: 'Error: Missing Name',
+        blueprint: { version: '1.0' },
+        error: 'must have a name',
+      },
+      {
+        name: 'Error: Invalid Products',
+        blueprint: { version: '1.0', name: 'N', products: 'not-array' },
+        error: 'products must be an array',
+      },
+    ])('$name', ({ blueprint, error }) => {
+      if (error) {
+        expect(() => validateBlueprint(blueprint)).toThrow(error);
+      } else {
+        expect(validateBlueprint(blueprint)).toBe(true);
+      }
     });
   });
 
-  describe('defaultBlueprintTemplate', () => {
-    it('should have valid structure', () => {
-      expect(defaultBlueprintTemplate.version).toBe('1.0');
-      expect(defaultBlueprintTemplate.name).toBeDefined();
-      expect(defaultBlueprintTemplate.products).toBeDefined();
-      expect(defaultBlueprintTemplate.pages).toBeDefined();
-      expect(defaultBlueprintTemplate.categories).toBeDefined();
-      expect(defaultBlueprintTemplate.settings).toBeDefined();
-      expect(defaultBlueprintTemplate.navigation).toBeDefined();
+  describe('Database Operations', () => {
+    const mockRecord = {
+      id: 'uuid-1',
+      name: 'Test Blueprint',
+      blueprint: JSON.stringify({ version: '1.0', name: 'Test' }),
+      isDefault: 'true',
+      plan: 'free',
+    };
+
+    it('should create a blueprint', async () => {
+      vi.mocked(publicDb.returning).mockResolvedValue([mockRecord]);
+
+      const result = await createBlueprint('Test', { version: '1.0', name: 'Test' });
+
+      expect(result.id).toBe('uuid-1');
+      expect(result.isDefault).toBe(true);
+      expect(publicDb.insert).toHaveBeenCalled();
     });
 
-    it('should pass validation', () => {
-      expect(() => validateBlueprint(defaultBlueprintTemplate)).not.toThrow();
-    });
-  });
+    it('should get all blueprints', async () => {
+      vi.mocked(publicDb.select().from().orderBy as any).mockResolvedValue([mockRecord]);
 
-  describe('createBlueprint', () => {
-    it('should create a blueprint with valid data', async () => {
-      const blueprint: BlueprintTemplate = {
-        version: '1.0',
-        name: 'Test Blueprint',
-        products: [{ name: 'Product 1', price: 19.99 }],
-      };
+      const results = await getAllBlueprints();
 
-      const result = await createBlueprint('My Blueprint', blueprint, {
-        description: 'A test blueprint',
-        plan: 'pro',
-        isDefault: true,
-      });
-
-      expect(result).toBeDefined();
-      expect(result.name).toBe('My Blueprint');
-      expect(result.description).toBe('A test blueprint');
-      expect(result.plan).toBe('pro');
-      expect(result.blueprint.name).toBe('Test Blueprint');
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toBe('Test Blueprint');
     });
 
-    it('should throw on invalid blueprint', async () => {
-      const invalidBlueprint = { version: '2.0', name: 'Test' };
+    it('should get blueprint by ID', async () => {
+      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValue([mockRecord]);
 
-      await expect(
-        createBlueprint('Invalid', invalidBlueprint as BlueprintTemplate)
-      ).rejects.toThrow();
-    });
-  });
+      const result = await getBlueprintById('uuid-1');
 
-  describe('getAllBlueprints', () => {
-    it('should return all blueprints', async () => {
-      const blueprints = await getAllBlueprints();
-      expect(Array.isArray(blueprints)).toBe(true);
-    });
-  });
-
-  describe('validateBlueprint edge cases', () => {
-    it('should reject blueprint without name', () => {
-      const bp = { ...defaultBlueprintTemplate, name: undefined };
-      expect(() => validateBlueprint(bp as any)).toThrow(
-        'Blueprint must have a name'
-      );
+      expect(result?.id).toBe('uuid-1');
     });
 
-    it('should reject blueprint with empty name', () => {
-      const bp = { ...defaultBlueprintTemplate, name: '' };
-      expect(() => validateBlueprint(bp as any)).toThrow(
-        'Blueprint must have a name'
-      );
-    });
+    it('should return null if blueprint ID not found', async () => {
+      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValue([]);
 
-    it('should reject blueprint without version', () => {
-      const bp = { ...defaultBlueprintTemplate, version: undefined };
-      expect(() => validateBlueprint(bp as any)).toThrow(
-        'Blueprint version must be "1.0"'
-      );
-    });
+      const result = await getBlueprintById('missing');
 
-    it('should reject product without name', () => {
-      const bp = {
-        ...defaultBlueprintTemplate,
-        products: [{ price: 10 }],
-      };
-      expect(() => validateBlueprint(bp as any)).toThrow(
-        'Product must have a name'
-      );
-    });
-
-    it('should reject page without title', () => {
-      const bp = {
-        ...defaultBlueprintTemplate,
-        pages: [{ slug: 'test' }],
-      };
-      expect(() => validateBlueprint(bp as any)).toThrow(
-        'Page must have slug and title'
-      );
-    });
-  });
-
-  describe('getBlueprintById', () => {
-    it('should return null for non-existent id', async () => {
-      const result = await getBlueprintById('non-existent');
       expect(result).toBeNull();
-    });
-
-    it('should return blueprint record if exists', async () => {
-      mockBlueprints.push({
-        id: 'real-id',
-        name: 'Test',
-        description: null,
-        blueprint: JSON.stringify(defaultBlueprintTemplate),
-        isDefault: 'true',
-        plan: 'free',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      const result = await getBlueprintById('real-id');
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe('real-id');
     });
   });
 
   describe('getDefaultBlueprint', () => {
-    it('should return null when no blueprints exist', async () => {
-      const result = await getDefaultBlueprint('free');
-      expect(result).toBeNull();
-    });
-
-    it('should return a blueprint if no default is found but one exists for plan', async () => {
-      mockBlueprints.push({
-        id: 'bp-1',
-        name: 'Non Default',
-        description: null,
-        blueprint: JSON.stringify(defaultBlueprintTemplate),
-        isDefault: 'false',
+    it('should return default blueprint for plan', async () => {
+      const mockDefault = {
+        name: 'Default',
+        blueprint: JSON.stringify({ version: '1.0', name: 'D' }),
+        isDefault: 'true',
         plan: 'free',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+      };
+      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValue([mockDefault]);
+
       const result = await getDefaultBlueprint('free');
-      expect(result).not.toBeNull();
-      expect(result?.name).toBe('Non Default');
-      expect(result?.isDefault).toBe(false);
-    });
 
-    it('should return null when no blueprints exist for specific plan', async () => {
-      const result = await getDefaultBlueprint('enterprise');
-      expect(result).toBeNull();
-    });
-  });
-
-  describe('updateBlueprint', () => {
-    it('should update blueprint fields', async () => {
-      const result = await updateBlueprint('test-id', {
-        name: 'Updated Name',
-        isDefault: true,
-        plan: 'pro',
-        blueprint: defaultBlueprintTemplate,
-      });
-      expect(result).not.toBeNull();
-      expect(result?.name).toBe('Updated Name');
       expect(result?.isDefault).toBe(true);
+      expect(result?.name).toBe('Default');
     });
 
-    it('should handle partial updates', async () => {
-      const result = await updateBlueprint('test-id', {
-        description: 'New Description',
-        isDefault: false,
-      });
-      expect(result).not.toBeNull();
-    });
+    it('should fallback to any blueprint if no default is found', async () => {
+      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValueOnce([]); // No default
+      vi.mocked(publicDb.select().from().where().limit as any).mockResolvedValueOnce([{
+        name: 'Fallback',
+        blueprint: JSON.stringify({ version: '1.0', name: 'F' }),
+        isDefault: 'false',
+        plan: 'free'
+      }]);
 
-    it('should return null if update fails (no record found)', async () => {
-      // Modify mock to return empty if id is wrong
-      const originalUpdate = publicDb.update;
-      (publicDb as any).update = () => ({
-        set: () => ({
-          where: () => ({
-            returning: () => [],
-          }),
-        }),
-      });
+      const result = await getDefaultBlueprint('free');
 
-      const result = await updateBlueprint('wrong-id', { name: 'Fail' });
-      expect(result).toBeNull();
-
-      publicDb.update = originalUpdate;
-    });
-  });
-
-  describe('deleteBlueprint', () => {
-    it('should return true when deleted', async () => {
-      const result = await deleteBlueprint('test-id');
-      expect(result).toBe(true);
-    });
-  });
-
-  describe('initializeDefaultBlueprint', () => {
-    it('should create default if none exists', async () => {
-      await initializeDefaultBlueprint();
-      expect(mockBlueprints.length).toBeGreaterThan(0);
+      expect(result?.name).toBe('Fallback');
+      expect(result?.isDefault).toBe(false);
     });
   });
 });

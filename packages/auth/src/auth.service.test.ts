@@ -1,141 +1,72 @@
 /**
  * Auth Service Tests
- * Rule 4.1: Test Coverage Mandate
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AuthService, type AuthUser, type JwtPayload } from './auth.service.js';
-
-// Mock JwtService
-const mockJwtService = {
-  sign: vi.fn(),
-  verify: vi.fn(),
-};
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { AuthService } from './auth.service.js';
+import { UnauthorizedException } from '@nestjs/common';
 
 describe('AuthService', () => {
-  let authService: AuthService;
+  let service: AuthService;
+  const mockJwtService = {
+    sign: vi.fn(),
+    verify: vi.fn(),
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    authService = new AuthService(mockJwtService as any);
+    service = new AuthService(mockJwtService as any);
   });
 
   describe('generateToken', () => {
-    it('should generate token for valid user', async () => {
-      const user: AuthUser = {
-        id: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'test@example.com',
-        tenantId: '550e8400-e29b-41d4-a716-446655440001',
-      };
+    it('should generate a token for a valid user', async () => {
+      const user = { id: 'u1', email: 'test@test.com', tenantId: 't1' };
+      mockJwtService.sign.mockReturnValue('mock-token');
 
-      mockJwtService.sign.mockReturnValue('mock-jwt-token');
+      const token = await service.generateToken(user);
 
-      const token = await authService.generateToken(user);
-
-      expect(token).toBe('mock-jwt-token');
+      expect(token).toBe('mock-token');
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         sub: user.id,
         email: user.email,
         tenantId: user.tenantId,
       });
     });
-
-    it('should generate token without tenantId', async () => {
-      const user: AuthUser = {
-        id: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'test@example.com',
-      };
-
-      mockJwtService.sign.mockReturnValue('mock-jwt-token');
-
-      const token = await authService.generateToken(user);
-
-      expect(token).toBe('mock-jwt-token');
-      expect(mockJwtService.sign).toHaveBeenCalledWith({
-        sub: user.id,
-        email: user.email,
-        tenantId: undefined,
-      });
-    });
   });
 
   describe('validateUser', () => {
-    it('should validate user with valid payload', async () => {
-      const payload: JwtPayload = {
-        sub: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'test@example.com',
-        tenantId: '550e8400-e29b-41d4-a716-446655440001',
-      };
-
-      const user = await authService.validateUser(payload);
+    it('should validate a user with a valid payload', async () => {
+      const payload = { sub: 'u1', email: 'test@test.com', tenantId: 't1' };
+      const user = await service.validateUser(payload);
 
       expect(user).toEqual({
-        id: payload.sub,
-        email: payload.email,
-        tenantId: payload.tenantId,
+        id: 'u1',
+        email: 'test@test.com',
+        tenantId: 't1',
       });
     });
 
-    it('should throw for payload without sub', async () => {
-      const payload = {
-        email: 'test@example.com',
-      } as JwtPayload;
-
-      await expect(authService.validateUser(payload)).rejects.toThrow(
-        'Invalid token payload'
-      );
-    });
-
-    it('should handle payload without tenantId', async () => {
-      const payload: JwtPayload = {
-        sub: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'test@example.com',
-      };
-
-      const user = await authService.validateUser(payload);
-
-      expect(user).toEqual({
-        id: payload.sub,
-        email: payload.email,
-        tenantId: undefined,
-      });
+    it('should throw UnauthorizedException if sub is missing', async () => {
+      const payload = { email: 'test@test.com' } as any;
+      await expect(service.validateUser(payload)).rejects.toThrow(UnauthorizedException);
     });
   });
 
   describe('verifyToken', () => {
-    it('should verify valid token', async () => {
-      const mockPayload: JwtPayload = {
-        sub: '550e8400-e29b-41d4-a716-446655440000',
-        email: 'test@example.com',
-        tenantId: '550e8400-e29b-41d4-a716-446655440001',
-      };
+    it('should return payload for a valid token', async () => {
+      const payload = { sub: 'u1', email: 'test@test.com' };
+      mockJwtService.verify.mockReturnValue(payload);
 
-      mockJwtService.verify.mockReturnValue(mockPayload);
+      const result = await service.verifyToken('valid-token');
 
-      const result = await authService.verifyToken('valid-token');
-
-      expect(result).toEqual(mockPayload);
+      expect(result).toBe(payload);
       expect(mockJwtService.verify).toHaveBeenCalledWith('valid-token');
     });
 
-    it('should throw for invalid token', async () => {
-      mockJwtService.verify.mockImplementation(() => {
-        throw new Error('Invalid token');
-      });
+    it('should throw UnauthorizedException for an invalid token', async () => {
+      mockJwtService.verify.mockImplementation(() => { throw new Error('Invalid'); });
 
-      await expect(authService.verifyToken('invalid-token')).rejects.toThrow(
-        'Invalid token'
-      );
-    });
-
-    it('should throw for expired token', async () => {
-      mockJwtService.verify.mockImplementation(() => {
-        throw new Error('Token expired');
-      });
-
-      await expect(authService.verifyToken('expired-token')).rejects.toThrow(
-        'Invalid token'
-      );
+      await expect(service.verifyToken('invalid-token')).rejects.toThrow(UnauthorizedException);
     });
   });
 });

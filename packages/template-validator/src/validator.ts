@@ -1,9 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import {
-  type TemplateConfig,
-  TemplateConfigSchema,
-} from '@apex/template-config';
+import { TemplateConfigSchema } from '@apex/template-config';
+import type { TemplateConfig } from '@apex/template-config';
 import fg from 'fast-glob';
 
 export interface ValidationResult {
@@ -34,6 +32,7 @@ export class TemplateValidator {
       errors.push(...structureResult.errors);
       warnings.push(...structureResult.warnings);
 
+      // 3. Resolve cross-field dependencies
       // 3. Resolve cross-field dependencies
       if (config) {
         const depResult = await this.validateDependencies(templatePath, config);
@@ -71,7 +70,7 @@ export class TemplateValidator {
       if (!result.success) {
         return {
           errors: result.error.errors.map(
-            (e) => `Config error: ${e.path.join('.')} - ${e.message}`
+            (e) => `Config error: ${e.path.join('.')} - ${e.message} (Got: ${JSON.stringify(data)})`
           ),
           warnings: [],
         };

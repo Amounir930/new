@@ -44,7 +44,7 @@ export class ExportController {
   constructor(
     private readonly exportService: ExportService,
     private readonly exportWorker: ExportWorker
-  ) {}
+  ) { }
 
   /**
    * POST /api/v1/tenant/export
@@ -73,9 +73,9 @@ export class ExportController {
       includeAssets: dto.includeAssets,
       dateRange: dto.dateRange
         ? {
-            from: new Date(dto.dateRange.from),
-            to: new Date(dto.dateRange.to),
-          }
+          from: new Date(dto.dateRange.from),
+          to: new Date(dto.dateRange.to),
+        }
         : undefined,
     });
 

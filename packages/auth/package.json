@@ -14,16 +14,16 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
-    "test": "vitest run",
+    "test": "bun test",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
-    "@nestjs/jwt": "^10.2.0",
-    "@nestjs/passport": "^10.0.0",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
     "passport": "^0.7.0",
-    "passport-jwt": "^4.0.0",
+    "passport-jwt": "^4.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "@apex/config": "workspace:*",
@@ -34,12 +34,13 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/passport-jwt": "^3.0.0",
+    "@apex/test-utils": "workspace:*",
+    "@nestjs/testing": "^11.1.13",
     "@types/express": "^4.17.17",
     "@types/node": "^20.0.0",
+    "@types/passport-jwt": "^4.0.1",
     "bun-types": "latest",
-    "vitest": "1.6.1",
     "typescript": "^5.3.0",
-    "@apex/test-utils": "workspace:*"
+    "vitest": "1.6.1"
   }
 }

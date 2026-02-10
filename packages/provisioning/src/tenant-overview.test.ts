@@ -18,9 +18,38 @@ import {
   updateTenantStatus,
 } from './tenant-overview.js';
 
-// Mock database
-const { mockTenants } = vi.hoisted(() => ({
-  mockTenants: [
+const mockTenants = [
+  {
+    id: 'tenant-1',
+    subdomain: 'alpha',
+    name: 'Alpha Store',
+    plan: 'pro',
+    status: 'active',
+    createdAt: new Date('2026-01-01'),
+    updatedAt: new Date('2026-01-01'),
+  },
+  {
+    id: 'tenant-2',
+    subdomain: 'beta',
+    name: 'Beta Shop',
+    plan: 'free',
+    status: 'suspended',
+    createdAt: new Date('2026-01-15'),
+    updatedAt: new Date('2026-01-20'),
+  },
+  {
+    id: 'tenant-3',
+    subdomain: 'gamma',
+    name: 'Gamma Market',
+    plan: 'enterprise',
+    status: 'active',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
+
+vi.mock('@apex/db', () => {
+  const mockTenants = [
     {
       id: 'tenant-1',
       subdomain: 'alpha',
@@ -48,10 +77,8 @@ const { mockTenants } = vi.hoisted(() => ({
       createdAt: new Date(),
       updatedAt: new Date(),
     },
-  ],
-}));
+  ];
 
-vi.mock('@apex/db', () => {
   const mockQuery = {
     where: vi.fn().mockReturnThis(),
     limit: vi.fn().mockImplementation((n: number) => ({
@@ -148,7 +175,7 @@ describe('Tenant Overview Service', () => {
 
     it('should handle empty count result in getTenantList', async () => {
       const { publicDb } = await import('@apex/db');
-      vi.mocked(publicDb.select).mockReturnValueOnce({
+      (publicDb.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockResolvedValue([]), // Empty count array
         }),
@@ -168,7 +195,7 @@ describe('Tenant Overview Service', () => {
     it('should return null for non-existent id', async () => {
       // Ensure the mock for this specific case resolves to empty array
       const { publicDb } = await import('@apex/db');
-      vi.mocked(publicDb.select).mockReturnValueOnce({
+      (publicDb.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue([]),
@@ -188,7 +215,7 @@ describe('Tenant Overview Service', () => {
 
     it('should return null for non-existent subdomain', async () => {
       const { publicDb } = await import('@apex/db');
-      vi.mocked(publicDb.select).mockReturnValueOnce({
+      (publicDb.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue([]),
@@ -208,7 +235,7 @@ describe('Tenant Overview Service', () => {
 
     it('should return null for non-existent tenant', async () => {
       const { publicDb } = await import('@apex/db');
-      vi.mocked(publicDb.update).mockReturnValueOnce({
+      (publicDb.update as any).mockReturnValueOnce({
         set: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         returning: vi.fn().mockResolvedValue([]),
@@ -248,7 +275,7 @@ describe('Tenant Overview Service', () => {
     it('should allow deletion of suspended tenants', async () => {
       // Mock getTenantById to return a suspended tenant
       const { publicDb } = await import('@apex/db');
-      vi.mocked(publicDb.select).mockReturnValueOnce({
+      (publicDb.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue([mockTenants[1]]), // tenant-2 is suspended
@@ -256,7 +283,7 @@ describe('Tenant Overview Service', () => {
       } as any);
 
       // Also mock delete to return success
-      vi.mocked(publicDb.delete).mockReturnValueOnce({
+      (publicDb.delete as any).mockReturnValueOnce({
         where: vi.fn().mockReturnThis(),
         returning: vi.fn().mockResolvedValue([{ id: 'tenant-2' }]),
       } as any);
@@ -268,7 +295,7 @@ describe('Tenant Overview Service', () => {
     it('should handle non-Error objects in deleteTenant catch block', async () => {
       const { publicDb } = await import('@apex/db');
       // Mock existing tenant
-      vi.mocked(publicDb.select).mockReturnValueOnce({
+      (publicDb.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue([mockTenants[1]]), // Suspended
@@ -276,7 +303,7 @@ describe('Tenant Overview Service', () => {
       } as any);
 
       // Mock delete to throw raw string
-      vi.mocked(publicDb.delete).mockImplementation(() => {
+      (publicDb.delete as any).mockImplementation(() => {
         throw 'Raw Delete Fail';
       });
 
@@ -303,7 +330,7 @@ describe('Tenant Overview Service', () => {
 
     it('should handle records with missing dates in getTenantStats', async () => {
       const { publicDb } = await import('@apex/db');
-      vi.mocked(publicDb.select).mockReturnValueOnce({
+      (publicDb.select as any).mockReturnValueOnce({
         from: vi.fn().mockResolvedValue([
           { status: 'active', plan: 'free' }, // Missing createdAt
         ]),
@@ -323,7 +350,7 @@ describe('Tenant Overview Service', () => {
     it('should return false for non-existent subdomain', async () => {
       // Setup mock to return empty array for non-existent subdomain search
       const { publicDb } = await import('@apex/db');
-      vi.mocked(publicDb.select).mockReturnValueOnce({
+      (publicDb.select as any).mockReturnValueOnce({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue([]),

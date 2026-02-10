@@ -16,7 +16,7 @@
         "build": "tsup",
         "dev": "tsup --watch",
         "typecheck": "tsc --noEmit",
-        "test": "vitest run"
+        "test": "bun test"
     },
     "dependencies": {
         "react": "^18.2.0",

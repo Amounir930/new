@@ -58,7 +58,7 @@ describe('EncryptionService', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
-    vi.resetModules();
+
     process.env = { ...originalEnv };
   });
 
@@ -67,16 +67,16 @@ describe('EncryptionService', () => {
   });
 
   it('should initialize with provided master key', () => {
-    vi.stubEnv('ENCRYPTION_MASTER_KEY', 'ValidProdPass32CharsWith1$!Abc12');
-    vi.stubEnv('NODE_ENV', 'production');
+    process.env.ENCRYPTION_MASTER_KEY = 'ValidProdPass32CharsWith1$!Abc12';
+    process.env.NODE_ENV = 'production';
 
     service = new EncryptionService();
     expect(service).toBeDefined();
   });
 
   it('should use default test key in test environment if missing', () => {
-    vi.stubEnv('ENCRYPTION_MASTER_KEY', '');
-    vi.stubEnv('NODE_ENV', 'test');
+    process.env.ENCRYPTION_MASTER_KEY = '';
+    process.env.NODE_ENV = 'test';
 
     service = new EncryptionService();
     expect(service).toBeDefined();
@@ -86,8 +86,8 @@ describe('EncryptionService', () => {
   });
 
   it('should throw in production if key is missing', () => {
-    vi.stubEnv('ENCRYPTION_MASTER_KEY', '');
-    vi.stubEnv('NODE_ENV', 'production');
+    process.env.ENCRYPTION_MASTER_KEY = '';
+    process.env.NODE_ENV = 'production';
 
     expect(() => new EncryptionService()).toThrow(
       'S1 Violation: ENCRYPTION_MASTER_KEY is required'
@@ -95,34 +95,32 @@ describe('EncryptionService', () => {
   });
 
   it('should throw if key is too short', () => {
-    vi.stubEnv('ENCRYPTION_MASTER_KEY', 'short');
+    process.env.ENCRYPTION_MASTER_KEY = 'short';
     expect(() => new EncryptionService()).toThrow('S1 Violation');
   });
 
   it('should throw in production if key contains forbidden patterns', () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    vi.stubEnv('ENCRYPTION_MASTER_KEY', 'test-encryption-key-32-chars-long!'); // contains 'test'
+    process.env.NODE_ENV = 'production';
+    process.env.ENCRYPTION_MASTER_KEY = 'test-encryption-key-32-chars-long!'; // contains 'test'
     expect(() => new EncryptionService()).toThrow('forbidden pattern');
   });
 
   it('should throw if key misses special characters', () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    vi.stubEnv(
-      'ENCRYPTION_MASTER_KEY',
-      'MasterPassWithoutSpecialCharsLongEnough'
-    );
+    process.env.NODE_ENV = 'production';
+    process.env.ENCRYPTION_MASTER_KEY =
+      'MasterPassWithoutSpecialCharsLongEnough';
     expect(() => new EncryptionService()).toThrow('must contain');
   });
 
   it('should throw in production if key has low entropy', () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    vi.stubEnv('ENCRYPTION_MASTER_KEY', 'AAAAaaaa1111!!!!AAAAaaaa1111!!!!');
+    process.env.NODE_ENV = 'production';
+    process.env.ENCRYPTION_MASTER_KEY = 'AAAAaaaa1111!!!!AAAAaaaa1111!!!!';
     expect(() => new EncryptionService()).toThrow('insufficient entropy');
   });
 
   it('should delegate methods to utility functions', () => {
-    vi.stubEnv('ENCRYPTION_MASTER_KEY', 'Test-Encryption-Key-32-Chars-Long!1');
-    vi.stubEnv('NODE_ENV', 'test');
+    process.env.ENCRYPTION_MASTER_KEY = 'Test-Encryption-Key-32-Chars-Long!1';
+    process.env.NODE_ENV = 'test';
     const srv = new EncryptionService();
 
     const enc = srv.encrypt('data');

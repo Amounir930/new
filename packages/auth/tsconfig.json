@@ -3,12 +3,12 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "types": [
       "node",
       "bun-types"
     ],
-    "declaration": true,
-    "emitDeclarationOnly": true
+    "declaration": true
   },
   "include": [
     "src/**/*"

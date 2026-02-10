@@ -16,7 +16,7 @@
         "build": "tsup",
         "dev": "tsup --watch",
         "typecheck": "tsc --noEmit",
-        "test": "vitest run"
+        "test": "bun test"
     },
     "dependencies": {
         "zod": "^3.22.4"

@@ -18,7 +18,7 @@
     "db:push": "drizzle-kit push:pg",
     "db:migrate": "bun src/migrate.ts",
     "db:studio": "drizzle-kit studio",
-    "test": "vitest run",
+    "test": "bun test",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
   },

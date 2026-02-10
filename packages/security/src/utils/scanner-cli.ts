@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { Node, Project, Symbol as TsSymbol, SyntaxKind } from 'ts-morph';
 
 interface Violation {
@@ -12,6 +12,10 @@ interface Violation {
 export class ApexSecurityScanner {
   private project: Project;
   private violations: Violation[] = [];
+
+  public clearViolations() {
+    this.violations = [];
+  }
 
   constructor(tsConfigPath: string) {
     this.project = new Project({
@@ -67,18 +71,65 @@ export class ApexSecurityScanner {
   private analyzePathArguments(call: any) {
     const args = call.getArguments();
     for (const arg of args) {
-      const argText = arg.getText();
-      // If the path contains '..' interpolation or is a raw variable suspicious of being user-controlled
-      const isRisky =
-        argText.includes('..') &&
-        (Node.isTemplateExpression(arg) || Node.isBinaryExpression(arg));
-      if (isRisky) {
+      if (this.isRiskyPathNode(arg)) {
         this.addViolation(
           arg,
-          'S14: Potential Path Traversal detected via ".." interpolation.'
+          'S14: Potential Path Traversal detected. Ensure user input is sanitized and does not contain ".." or absolute paths.'
         );
       }
     }
+  }
+
+  private isRiskyPathNode(node: Node): boolean {
+    const text = node.getText();
+    if (text.includes('..')) return true;
+
+    if (Node.isTemplateExpression(node)) {
+      for (const span of node.getTemplateSpans()) {
+        if (this.isRiskyPathNode(span.getExpression())) return true;
+      }
+    }
+
+    if (Node.isBinaryExpression(node)) {
+      return this.isRiskyPathNode(node.getLeft()) || this.isRiskyPathNode(node.getRight());
+    }
+
+    if (Node.isIdentifier(node)) {
+      return this.traceRiskyValue(node, /\.\./);
+    }
+
+    return false;
+  }
+
+  private traceRiskyValue(node: Node, pattern: RegExp): boolean {
+    const symbol = node.getSymbol();
+    if (!symbol) return false;
+
+    for (const decl of symbol.getDeclarations()) {
+      if (Node.isVariableDeclaration(decl)) {
+        const init = decl.getInitializer();
+        if (init) {
+          if (init.getText().match(pattern)) return true;
+          // Recursive check for nested identifiers or expressions
+          if (Node.isIdentifier(init) || Node.isTemplateExpression(init) || Node.isBinaryExpression(init)) {
+            // Avoid infinite recursion for simple cases
+            if (init !== node) {
+              if (Node.isTemplateExpression(init)) {
+                for (const span of init.getTemplateSpans()) {
+                  if (this.traceRiskyValue(span.getExpression(), pattern)) return true;
+                }
+              }
+              if (Node.isBinaryExpression(init)) {
+                if (this.traceRiskyValue(init.getLeft(), pattern) || this.traceRiskyValue(init.getRight(), pattern)) return true;
+              }
+              // If it's a direct reference to another identifier
+              if (Node.isIdentifier(init)) return this.traceRiskyValue(init, pattern);
+            }
+          }
+        }
+      }
+    }
+    return false;
   }
 
   // --- SQL Injection Checks (S11) ---
@@ -105,7 +156,8 @@ export class ApexSecurityScanner {
       .getTemplate()
       .getDescendantsOfKind(SyntaxKind.CallExpression)
       .filter((call: any) => {
-        return call.getExpression().getText().includes('raw');
+        const exprText = call.getExpression().getText();
+        return exprText.includes('raw') || exprText.endsWith('.raw');
       });
 
     for (const call of unsafeRawCalls) {
@@ -154,7 +206,7 @@ export class ApexSecurityScanner {
   private checkCleanup(sourceFile: any) {
     const content = sourceFile.getText();
     const hasCleanupStr =
-      /rm.*-rf|rm.*-f|fs\.unlink|fs\.rm|cleanup|Bun\.spawn\(\['rm'/.test(
+      /\b(rm\s+.*-rf|rm\s+.*-f|fs\.unlink|fs\.rm|Bun\.spawn\(\['rm')\b/.test(
         content
       );
 
@@ -193,22 +245,38 @@ export class ApexSecurityScanner {
   private isCreatedByConcatenation(node: Node): boolean {
     if (
       Node.isBinaryExpression(node) &&
-      node.getOperatorToken().getKind() === SyntaxKind.PlusToken
+      (node.getOperatorToken().getKind() === SyntaxKind.PlusToken ||
+        node.getOperatorToken().getText() === '+')
     )
       return true;
+
+    // Check for both TemplateExpression and NoSubstitutionTemplateLiteral if they contain variables
     if (Node.isTemplateExpression(node)) return true;
+
+    // String interpolation check for TemplateHead/TemplateMiddle/TemplateTail
+    if (node.getKind() === SyntaxKind.TemplateExpression) return true;
 
     if (Node.isIdentifier(node)) {
       return this.traceVariableInitialization(node);
     }
+
+    // Support for string concatenation via .concat()
+    if (Node.isCallExpression(node)) {
+      const expr = node.getExpression();
+      if (Node.isPropertyAccessExpression(expr) && expr.getName() === 'concat') {
+        return true;
+      }
+    }
+
     return false;
   }
 
   private traceVariableInitialization(node: Node): boolean {
-    const defs = (node as any).getDefinitions();
-    for (const def of defs) {
-      const decl = def.getDeclarationNode();
-      if (decl && Node.isVariableDeclaration(decl)) {
+    const symbol = node.getSymbol();
+    if (!symbol) return false;
+
+    for (const decl of symbol.getDeclarations()) {
+      if (Node.isVariableDeclaration(decl)) {
         const init = decl.getInitializer();
         if (init && this.isCreatedByConcatenation(init)) return true;
       }
@@ -239,11 +307,11 @@ export class ApexSecurityScanner {
     pattern: RegExp,
     fileList: string[] = []
   ): string[] {
-    if (!fs.existsSync(dir)) return [];
-    const files = fs.readdirSync(dir);
+    if (!existsSync(dir)) return [];
+    const files = readdirSync(dir);
     for (const file of files) {
-      const fullPath = path.join(dir, file);
-      if (fs.statSync(fullPath).isDirectory()) {
+      const fullPath = join(dir, file);
+      if (statSync(fullPath).isDirectory()) {
         this.handleDirectoryRecursion(fullPath, file, pattern, fileList);
       } else if (
         pattern.test(file) &&
@@ -284,8 +352,8 @@ export class ApexSecurityScanner {
 }
 
 // CLI Runner
-if (require.main === module) {
-  const tsConfig = path.resolve(process.cwd(), 'tsconfig.json');
+if (import.meta.main) {
+  const tsConfig = resolve(process.cwd(), 'tsconfig.json');
   const scanner = new ApexSecurityScanner(tsConfig);
 
   console.log('🚀 Apex AST Security Scanner starting...');
@@ -294,8 +362,8 @@ if (require.main === module) {
   let allViolations: Violation[] = [];
 
   for (const dir of targetDirs) {
-    const fullPath = path.resolve(process.cwd(), dir);
-    if (fs.existsSync(fullPath)) {
+    const fullPath = resolve(process.cwd(), dir);
+    if (existsSync(fullPath)) {
       console.log(`🔍 Scanning ${dir}...`);
       allViolations = allViolations.concat(scanner.scanDirectory(fullPath));
     }

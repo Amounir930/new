@@ -71,7 +71,7 @@ security_tests:
   variables:
     DATABASE_URL: ${{ secrets.DATABASE_URL }}
   script:
-    - bunx vitest run --coverage --reporter=verbose --reporter=cobertura
+    - bun test --coverage
   artifacts:
     reports:
       coverage_report:
