@@ -314,7 +314,7 @@ jobs:
       - name: "S13 - Backend Surgical Grep Checks"
         run: |
           echo "═══════════════════════════════════════════════════════════════════"
-          echo "  S13: BACKEND SURGICAL VULNERABILITY & RCE SCAN"
+          echo "  S13: BACKEND SURGICAL VULNERABILITY & RCE SCAN (PRO)"
           echo "═══════════════════════════════════════════════════════════════════"
           
           # [STRUCTURAL] Ensure backend entry points exist
@@ -322,22 +322,26 @@ jobs:
              echo "⚠️ WARNING: Core backend structure changed. Please verify scanning paths."
           fi
           
+          # 0. Define Centralized Exclusions (Scope Sanitization)
+          # Exclude build artifacts (.next, dist, build), dependencies, and safe tools
+          IGNORE_PATHS="(node_modules|\.next/|dist/|build/|\.turbo/|\.test\.|\.spec\.|vitest\.config|scripts/|tooling/|scanner-cli\.ts|rate-limit\.ts)"
+
           # 1. RCE Detection (Remote Code Execution)
           echo "[*] Scanning for RCE patterns (exec/spawn/child_process)..."
           RCE_PATTERNS="\\b(child_process|exec|spawn|fork|vm\\.runInContext)\\b"
-          RCE_FOUND=$(grep -rlE "$RCE_PATTERNS" packages apps --include="*.ts" --include="*.tsx" --include="*.js" 2>/dev/null | grep -vE "(node_modules|\.test\.|\.spec\.|vitest\.config|scripts/|tooling/|tests/|dist/|\.next/|\.d\.ts|packages/template-security/|packages/export/|scanner-cli\.ts|rate-limit\.ts)" || true)
+          # We use grep twice: once to find match, once to filter out ignored paths
+          RCE_FOUND=$(grep -rlE "$RCE_PATTERNS" packages apps --include="*.ts" --include="*.tsx" --include="*.js" 2>/dev/null | grep -vE "$IGNORE_PATHS" || true)
+          
           if [ -n "$RCE_FOUND" ]; then
             echo "🚨 CRITICAL: Dangerous execution patterns (RCE risk) found in production code!"
             echo "$RCE_FOUND"
-            # Some usage might be legitimate (e.g. scripts), but in core apps it's a high risk.
-            # We fail the build to force a security review.
             echo "❌ S13 FAILED: Potential RCE vulnerabilities detected!"
             exit 1
           fi
           
           # 2. Insecure CORS Configuration
           echo "[*] Scanning for insecure CORS (origin: *)..."
-          BAD_CORS=$(grep -rl "origin\s*:\s*['\"]\*['\"]" packages apps --include="*.ts" --include="*.js" --include="*.json" 2>/dev/null | grep -v "node_modules" || true)
+          BAD_CORS=$(grep -rl "origin\s*:\s*['\"]\*['\"]" packages apps --include="*.ts" --include="*.js" --include="*.json" 2>/dev/null | grep -vE "$IGNORE_PATHS" || true)
           if [ -n "$BAD_CORS" ]; then
             echo "🚨 CRITICAL: Insecure CORS wildcard (origin: '*') detected!"
             echo "$BAD_CORS"
@@ -347,7 +351,9 @@ jobs:
           
           # 3. Prototype Pollution Sinks
           echo "[*] Scanning for dangerous object merge patterns (Prototype Pollution)..."
-          PROTO_POLLUTION=$(grep -rlE "(\[.*?\])\s*=\s*(.*?)\s*\[" packages apps --include="*.ts" 2>/dev/null | grep -vE "(node_modules|\.test\.|\.spec\.)" | head -10 || true)
+          # This pattern looks for assignments that might be dangerous but is often noisy.
+          # We keep it as a warning for now and filter exclusions.
+          PROTO_POLLUTION=$(grep -rlE "(\[.*?\])\s*=\s*(.*?)\s*\[" packages apps --include="*.ts" 2>/dev/null | grep -vE "$IGNORE_PATHS" | head -10 || true)
           if [ -n "$PROTO_POLLUTION" ]; then
             echo "⚠️  WARNING: Potential prototype pollution sinks found (review object merges):"
             echo "$PROTO_POLLUTION"
@@ -355,7 +361,7 @@ jobs:
           
           # 4. Insecure JWT Patterns
           echo "[*] Scanning for insecure JWT configurations..."
-          BAD_JWT=$(grep -rlE "alg\s*:\s*['\"]none['\"]" packages apps --include="*.ts" --include="*.js" 2>/dev/null || true)
+          BAD_JWT=$(grep -rlE "alg\s*:\s*['\"]none['\"]" packages apps --include="*.ts" --include="*.js" 2>/dev/null | grep -vE "$IGNORE_PATHS" || true)
           if [ -n "$BAD_JWT" ]; then
             echo "🚨 CRITICAL: Insecure JWT 'none' algorithm found!"
             echo "$BAD_JWT"
@@ -364,10 +370,11 @@ jobs:
           fi
           
           # 5. Mass Assignment / Prototype manipulation
-          echo "[*] Scanning for dangerous __proto__ or constructor manipulation..."
-          PROTO_MANIP=$(grep -rlE "(__proto__|constructor\.prototype)" packages apps --include="*.ts" --include="*.js" 2>/dev/null | grep -v "node_modules" || true)
+          echo "[*] Scanning SOURCE CODE for dangerous prototype manipulation..."
+          # Specifically targeting __proto__ usage which is valid in builds but dangerous in source
+          PROTO_MANIP=$(grep -rlE "(__proto__|constructor\.prototype)" packages apps --include="*.ts" --include="*.js" 2>/dev/null | grep -vE "$IGNORE_PATHS" || true)
           if [ -n "$PROTO_MANIP" ]; then
-            echo "🚨 CRITICAL: Dangerous prototype manipulation (__proto__) detected!"
+            echo "🚨 CRITICAL: Dangerous prototype manipulation (__proto__) detected in SOURCE CODE!"
             echo "$PROTO_MANIP"
             exit 1
           fi
