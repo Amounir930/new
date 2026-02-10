@@ -75,6 +75,14 @@ jobs:
         with:
           config-path: .gitleaks.toml
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install
+
       - name: AST-Based Security Scan (S11 & S14)
         run: |
           echo "═══════════════════════════════════════════════════════════════"

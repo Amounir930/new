@@ -85,8 +85,7 @@ jobs:
           # Radical Fix: Verify that data is actually stored as Ciphertext in DB
           # Note: This requires the S7.1 test to have run recently and NOT cleaned up yet,
           # OR we run a specific seeding script here. 
-          # For this gate, we use the  DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safe
-.
+          # For this gate, we use the placeholder DATABASE_URL
           
           # Since the previous step might have cleaned up, we skip cleanup in s7-encryption.test.ts 
           # or rerun a seeding command. We'll rely on a manual check for ciphertext patterns.
