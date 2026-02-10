@@ -70,7 +70,7 @@ const tests = [
     name: 'Production DB on Localhost (Security Risk)',
     env: {
       JWT_SECRET: 'valid_secret_key_minimum_32_chars_long',
-      DATABASE_URL: 'postgresql://postgres:password@localhost:5432/prod_db', // Localhost DB in prod
+      DATABASE_URL: 'postgresql://placeholder-user:placeholder-password@localhost:5432/db_safe', // Localhost DB is fine prod
       NODE_ENV: 'production',
       MINIO_ACCESS_KEY: 'test',
       MINIO_SECRET_KEY: 'minioadmin123',

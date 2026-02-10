@@ -1,11 +1,15 @@
 
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { expect, it, describe } from 'vitest';
-import { Project, SyntaxKind, Node, CallExpression } from 'ts-morph';
+import { Project, Node } from 'ts-morph';
 import * as path from 'path';
 import * as fs from 'fs';
 import 'reflect-metadata';
 
+/**
+ * Base Security Test Suite
+ * Inherit from this class or use its static methods to enforce security compliance.
+ */
 export abstract class BaseSecurityTest {
     static async validateModule(module: any, providers: any[] = []) {
         describe(`${module.name} Security Compliance (Reference Architecture)`, () => {
@@ -20,30 +24,10 @@ export abstract class BaseSecurityTest {
                 const modules = moduleRef.get(module, { strict: false });
                 const metadataKeys = Reflect.getMetadataKeys(modules);
 
-                const validateValue = (value: any, pathIdx: string = '') => {
-                    if (typeof value === 'string') {
-                        // Postgres/MySQL/Redis connection strings
-                        if (/(postgres|mysql|redis):\/\//.test(value)) {
-                            throw new Error(`S1 Violation: Database connection string detected at metadata path: ${pathIdx}`);
-                        }
-                        // JWT Pattern (heuristic: header.payload.signature)
-                        if (/eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/.test(value)) {
-                            throw new Error(`S1 Violation: Potential hardcoded JWT detected at metadata path: ${pathIdx}`);
-                        }
-                    } else if (typeof value === 'object' && value !== null) {
-                        // Recursive scan
-                        for (const key in value) {
-                            if (Object.prototype.hasOwnProperty.call(value, key)) {
-                                validateValue(value[key], `${pathIdx}.${key}`);
-                            }
-                        }
-                    }
-                };
-
                 for (const key of metadataKeys) {
                     const value = Reflect.getMetadata(key, modules);
                     try {
-                        validateValue(value, key.toString());
+                        BaseSecurityTest.validateMetadataValue(value, key.toString());
                     } catch (e: any) {
                         expect.fail(e.message);
                     }
@@ -60,43 +44,71 @@ export abstract class BaseSecurityTest {
                     return;
                 }
 
-                const project = new Project({
-                    skipAddingFilesFromTsConfig: true,
-                });
-
-                // Add all files in the module's directory
-                const moduleDir = path.dirname(moduleClassFile);
-                project.addSourceFilesAtPaths(path.join(moduleDir, '**/*.ts'));
-
-                let violations: string[] = [];
-
-                for (const sourceFile of project.getSourceFiles()) {
-                    // Skip test files
-                    if (sourceFile.getFilePath().includes('.test.') || sourceFile.getFilePath().includes('.spec.')) continue;
-
-                    sourceFile.forEachDescendant((node) => {
-                        if (Node.isCallExpression(node)) {
-                            const expression = node.getExpression();
-                            // Check for .raw() usage
-                            if (expression.getText().endsWith('.raw')) {
-                                // Get the line content for comment checking
-                                const lineNum = sourceFile.getLineAndColumnAtPos(node.getStart()).line;
-                                const lineContent = sourceFile.getFullText().split('\n')[lineNum - 1];
-
-                                // Strict Safe Comment Check: // safe (TICKET-123)
-                                const hasStrictSafeComment = /\/\/\s*safe\s*\(TICKET-\d+\)/.test(lineContent);
-
-                                if (!hasStrictSafeComment) {
-                                    violations.push(`${sourceFile.getBaseName()}:${lineNum} uses sql.raw() without strict safety comment '// safe (TICKET-xxx)'`);
-                                }
-                            }
-                        }
-                    });
-                }
-
-                expect(violations, `S11 Violations Found:\n${violations.join('\n')}`).toHaveLength(0);
+                BaseSecurityTest.runASTCheck(moduleClassFile);
             });
         });
+    }
+
+    private static validateMetadataValue(value: any, pathIdx: string) {
+        if (typeof value === 'string') {
+            // Postgres/MySQL/Redis connection strings
+            if (/(postgres|mysql|redis):\/\//.test(value)) {
+                throw new Error(`S1 Violation: Database connection string detected at metadata path: ${pathIdx}`);
+            }
+            // JWT Pattern (heuristic: header.payload.signature)
+            if (/eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/.test(value)) {
+                throw new Error(`S1 Violation: Potential hardcoded JWT detected at metadata path: ${pathIdx}`);
+            }
+        } else if (typeof value === 'object' && value !== null) {
+            // Recursive scan
+            for (const key in value) {
+                if (Object.prototype.hasOwnProperty.call(value, key)) {
+                    BaseSecurityTest.validateMetadataValue(value[key], `${pathIdx}.${key}`);
+                }
+            }
+        }
+    }
+
+    private static runASTCheck(moduleClassFile: string) {
+        const project = new Project({
+            skipAddingFilesFromTsConfig: true,
+        });
+
+        // Add all files in the module's directory
+        const moduleDir = path.dirname(moduleClassFile);
+        project.addSourceFilesAtPaths(path.join(moduleDir, '**/*.ts'));
+
+        const violations: string[] = [];
+
+        for (const sourceFile of project.getSourceFiles()) {
+            // Skip test files
+            if (sourceFile.getFilePath().includes('.test.') || sourceFile.getFilePath().includes('.spec.')) continue;
+
+            sourceFile.forEachDescendant((node) => {
+                if (Node.isCallExpression(node)) {
+                    BaseSecurityTest.checkNodeForSQLi(node, sourceFile, violations);
+                }
+            });
+        }
+
+        expect(violations, `S11 Violations Found:\n${violations.join('\n')}`).toHaveLength(0);
+    }
+
+    private static checkNodeForSQLi(node: any, sourceFile: any, violations: string[]) {
+        const expression = node.getExpression();
+        // Check for .raw() usage
+        if (expression.getText().endsWith('.raw')) {
+            // Get the line content for comment checking
+            const lineNum = sourceFile.getLineAndColumnAtPos(node.getStart()).line;
+            const lineContent = sourceFile.getFullText().split('\n')[lineNum - 1];
+
+            // Strict Safe Comment Check: // safe (TICKET-123)
+            const hasStrictSafeComment = /\/\/\s*safe\s*\(TICKET-\d+\)/.test(lineContent);
+
+            if (!hasStrictSafeComment) {
+                violations.push(`${sourceFile.getBaseName()}:${lineNum} uses sql.raw() without strict safety comment '// safe (TICKET-xxx)'`);
+            }
+        }
     }
 
     // Robust Module Finder (Apps & Packages)
@@ -118,7 +130,7 @@ export abstract class BaseSecurityTest {
         }
 
         for (const dir of searchDirs) {
-            const res = this.walkAndFind(dir, moduleName);
+            const res = BaseSecurityTest.walkAndFind(dir, moduleName);
             if (res) return res;
         }
         return null;
@@ -132,7 +144,7 @@ export abstract class BaseSecurityTest {
             const fullPath = path.join(dir, entry.name);
             if (entry.isDirectory()) {
                 if (['node_modules', 'dist', 'coverage', '.turbo'].includes(entry.name)) continue;
-                const res = this.walkAndFind(fullPath, className);
+                const res = BaseSecurityTest.walkAndFind(fullPath, className);
                 if (res) return res;
             } else if (entry.isFile() && entry.name.endsWith('.ts')) {
                 // Optimization: Only check files likely to be modules

@@ -52,7 +52,7 @@ jobs:
           DATABASE_URL=$DATABASE_URL bun test s7-encryption.test.ts
         working-directory: packages/db
         env:
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
+          DATABASE_URL: postgresql://placeholder-user:placeholder-password@localhost:5432/db_safe
           POSTGRES_PASSWORD: test
           ENCRYPTION_MASTER_KEY: ValidTestKey32CharsWith1$!Abc1234
           NODE_ENV: test
