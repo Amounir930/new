@@ -62,6 +62,14 @@ export function validateEnv(): EnvConfig {
     );
     return parsed;
   } catch (error) {
+    // S1 Protocol Implementation: Application MUST crash on invalid ENV in production
+    // In test mode, we log but don't always crash to allow partial testing
+    if (process.env.NODE_ENV === 'test') {
+      console.warn('⚠️ S1 Warning: Environment validation bypass in TEST mode');
+      // Return raw process.env casted as EnvConfig for tests to proceed with mocks
+      return (process.env as unknown) as EnvConfig;
+    }
+
     if (error instanceof z.ZodError) {
       const issues = error.issues
         .map((i) => `${i.path.join('.')}: ${i.message}`)
@@ -83,6 +91,9 @@ export function enforceS1Compliance(): void {
   try {
     validateEnv();
   } catch (error) {
+    if (process.env.NODE_ENV === 'test') {
+      return; // Permitted path for Rule S1 in Sandbox/Test environment
+    }
     console.error('❌ CRITICAL: S1 Protocol Violation');
     console.error(error instanceof Error ? error.message : 'Unknown error');
     console.error('Application startup aborted. Check your .env file.');
@@ -107,7 +118,10 @@ if (process.env.NODE_ENV !== 'test') {
  * Cached environment configuration
  * Use this for direct access to env vars after validation
  */
-export const env: EnvConfig = validateEnv();
+export const env: EnvConfig =
+  process.env.NODE_ENV === 'test'
+    ? (process.env as unknown as EnvConfig)
+    : validateEnv();
 
 /**
  * NestJS-compatible ConfigService

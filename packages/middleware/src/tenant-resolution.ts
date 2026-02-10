@@ -34,6 +34,9 @@ export async function resolveTenant(
       subdomain: mockTenant.subdomain,
       plan: mockTenant.plan,
       features: mockTenant.enabledFeatures,
+      createdAt: new Date(),
+      schemaName: `tenant_${mockTenant.subdomain}`,
+      isActive: true,
     },
     () => {
       next();

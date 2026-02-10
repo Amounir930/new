@@ -15,14 +15,22 @@ const generateTestSecret = (length: number): string => {
 // JWT_SECRET must be >= 32 chars and match /^[A-Za-z0-9-_]+$/
 process.env.JWT_SECRET = generateTestSecret(32);
 
-// S1 FIX: Use environment variables from CI if available, otherwise generate secure random values
 process.env.DATABASE_URL =
-  process.env.CI_DATABASE_URL || 'postgresql://localhost:5432/test';
+  process.env.CI_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/apex_test';
+process.env.REDIS_URL = process.env.CI_REDIS_URL || 'redis://localhost:6379';
 process.env.MINIO_ENDPOINT = process.env.CI_MINIO_ENDPOINT || 'localhost';
+process.env.MINIO_PORT = '9000';
+process.env.MINIO_USE_SSL = 'false';
 process.env.MINIO_ACCESS_KEY =
   process.env.CI_MINIO_ACCESS_KEY || generateTestSecret(20);
 process.env.MINIO_SECRET_KEY =
   process.env.CI_MINIO_SECRET_KEY || generateTestSecret(40);
+process.env.MINIO_BUCKET_NAME = 'test-bucket';
+process.env.MINIO_REGION = 'us-east-1';
+process.env.TENANT_ISOLATION_MODE = 'strict';
+process.env.RATE_LIMIT_TTL = '60';
+process.env.RATE_LIMIT_MAX = '100';
+
 // Vitest sets NODE_ENV to 'test' automatically
 process.env.JWT_EXPIRES_IN = '1h';
 process.env.ENABLE_S1_ENFORCEMENT = 'false';

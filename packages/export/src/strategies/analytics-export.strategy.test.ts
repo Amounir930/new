@@ -16,7 +16,10 @@ const mockClient = {
 const mockShell = {
   spawn: vi.fn(),
   write: vi.fn(),
-  file: vi.fn(),
+  file: vi.fn(() => ({
+    arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
+    stat: vi.fn().mockResolvedValue({ size: 512 }),
+  })),
 };
 
 vi.mock('@apex/db', () => ({
@@ -41,10 +44,7 @@ describe('AnalyticsExportStrategy', () => {
       exitCode: 0,
     });
     mockShell.write.mockResolvedValue(undefined);
-    mockShell.file.mockReturnValue({
-      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
-      stat: vi.fn().mockResolvedValue({ size: 512 }),
-    });
+    // mockShell.file is already initialized with default mock behavior
 
     strategy = new AnalyticsExportStrategy(mockShell as any);
   });
