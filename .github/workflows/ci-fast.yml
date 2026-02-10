@@ -17,7 +17,7 @@ concurrency:
 
 env:
   # S1 CI Mocks (Bypasses import-time validation crashes)
-  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
   JWT_SECRET: test_secret_key_for_ci_environment_only_32
   MINIO_ENDPOINT: localhost
   MINIO_ACCESS_KEY: test_access_key
@@ -415,7 +415,7 @@ jobs:
             sleep 1
           done
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-jwt-secret-performance-test
           NODE_ENV: test

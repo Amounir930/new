@@ -21,10 +21,10 @@
 ## 🗄️ Database Credentials (PostgreSQL)
 - **Host:** `localhost` (Internal Docker Network)
 - **Port:** `5432`
-- **User:** `placeholder-user`
-- **Password:** `(none)` (⚠️ CHANGE FOR PRODUCTION)
-- **Database:** `db_safe`
-- **URL:** `postgresql://placeholder-user@localhost:5432/db_safe`
+- **User:** `postgres`
+- **Password:** `placeholder` (⚠️ CHANGE FOR PRODUCTION)
+- **Database:** `test`
+- **URL:** `postgresql://postgres:placeholder@localhost:5432/test`
 
 ---
 
