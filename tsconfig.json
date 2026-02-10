@@ -60,6 +60,9 @@
       ],
       "@apex/template-security": [
         "packages/template-security/src/index.ts"
+      ],
+      "@apex/test-utils": [
+        "packages/test-utils/src/index.ts"
       ]
     }
   },

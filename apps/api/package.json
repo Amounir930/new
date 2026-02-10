@@ -46,6 +46,7 @@
     "bun-types": "latest",
     "typescript": "^5.1.3",
     "vitest": "^1.0.0",
-    "@vitest/coverage-v8": "^1.0.0"
+    "@vitest/coverage-v8": "^1.0.0",
+    "@apex/test-utils": "workspace:*"
   }
 }

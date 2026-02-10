@@ -10,12 +10,15 @@ paths = [
 ]
 regexes = [
     '''postgresql://placeholder-user@localhost:5432/db_safe''',
+    '''postgresql://placeholder-user:placeholder-password@localhost:5432/db_safe''',
     '''postgresql://postgres:postgres@localhost:5432/test''',
     '''postgresql://postgres:postgres@localhost:5432/apex_test''',
+    '''postgresql://postgres:password@localhost:5432/prod_db''',
     '''mock-secret-for-docs-generation-only''',
     '''valid_secret_key_minimum_32_chars_long''',
     '''test_secret_key_for_ci_environment_only_32''',
-    '''minio-test-secret-key-for-ci-only'''
+    '''minio-test-secret-key-for-ci-only''',
+    '''placeholder-password'''
 ]
 
 [[rules]]

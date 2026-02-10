@@ -21,3 +21,8 @@ export * from './mocks/server';
 export * from './mocks/handlers/products.handlers';
 export * from './mocks/handlers/cart.handlers';
 export * from './mocks/handlers/orders.handlers';
+
+// ═══════════════════════════════════════════════════════════
+// Security Utilities
+// ═══════════════════════════════════════════════════════════
+export * from './security-base';
