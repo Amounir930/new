@@ -135,7 +135,7 @@ jobs:
       - name: Type Check (TSC)
         run: |
           echo "📝 Running TypeScript type checking..."
-          bunx tsc --noEmit
+          bun run typecheck
 
       - name: Architectural Lockdown (Rule 1.1)
         run: bunx dependency-cruiser . --config .dependency-cruiser.js
