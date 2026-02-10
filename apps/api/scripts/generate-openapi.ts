@@ -11,17 +11,17 @@ import { Test } from '@nestjs/testing';
 process.env.DATABASE_URL =
   process.env.DATABASE_URL ||
   'postgresql://postgres:placeholder@localhost:5432/test';
-process.env.REDIS_URL = process.env.REDIS_URL || '';
+process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 process.env.JWT_SECRET =
   process.env.JWT_SECRET || 'mock-secret-for-docs-generation-only-32-chars-min';
 process.env.TENANT_ISOLATION_MODE = 'strict';
 // @ts-ignore NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';
-process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || '';
-process.env.MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY || '';
-process.env.MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY || '';
-process.env.MINIO_BUCKET = process.env.MINIO_BUCKET || '';
-process.env.MINIO_REGION = process.env.MINIO_REGION || '';
+process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
+process.env.MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY || 'minio-mock-access-key';
+process.env.MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY || 'minio-mock-secret-key-8chars';
+process.env.MINIO_BUCKET = process.env.MINIO_BUCKET || 'test-bucket';
+process.env.MINIO_REGION = process.env.MINIO_REGION || 'us-east-1';
 
 console.log('DEBUG: Env vars set:', {
   DB: process.env.DATABASE_URL,

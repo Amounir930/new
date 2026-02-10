@@ -530,7 +530,7 @@ jobs:
           bun run db:generate
           bun run db:migrate
         env:
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-jwt-secret-key-for-ci-environment-only-32chars
           MINIO_ENDPOINT: localhost
@@ -593,7 +593,7 @@ jobs:
           echo ""
           echo "✅ NORTH STAR ACHIEVED! ${DURATION}s < ${THRESHOLD}s"
         env:
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
           REDIS_URL: redis://localhost:6379
           NODE_ENV: test
           JWT_SECRET: test-jwt-secret-key-for-ci-environment-only-32chars
@@ -672,7 +672,7 @@ jobs:
             exit 1
           fi
         env:
-          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-jwt-secret-key-for-ci-environment-only-32chars
           MINIO_ENDPOINT: localhost
