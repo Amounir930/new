@@ -19,6 +19,9 @@
     "db:migrate": "bun src/migrate.ts",
     "db:studio": "drizzle-kit studio",
     "test": "cross-env NODE_ENV=test vitest run",
+    "test:s2": "cross-env NODE_ENV=test vitest run src/s2-isolation.test.ts",
+    "test:s7": "cross-env NODE_ENV=test vitest run src/s7-encryption.test.ts",
+    "test:coverage": "cross-env NODE_ENV=test vitest run --coverage",
     "lint": "biome check --apply .",
     "typecheck": "tsc --noEmit"
   },

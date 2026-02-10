@@ -69,7 +69,7 @@ jobs:
         run: |
           echo "🧪 Running Vitest S2 isolation tests..."
           # Radical Fix: Explicitly pass DATABASE_URL to the process
-          DATABASE_URL=$DATABASE_URL bun test s2-isolation.test.ts
+          DATABASE_URL=$DATABASE_URL bun run test:s2
         working-directory: packages/db
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test

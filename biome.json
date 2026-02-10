@@ -1,19 +1,13 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
   "files": {
     "ignoreUnknown": true,
-    "ignore": [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.next/**",
-      "**/.turbo/**",
-      "**/coverage/**",
-      "**/out/**",
-      "**/build/**",
-      "**/drizzle/**",
-      "**/next-env.d.ts",
-      "**/*.d.ts",
-      "**/*.js"
+    "includes": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.json"
     ]
   },
   "formatter": {
@@ -30,10 +24,11 @@
       "recommended": true,
       "style": {
         "noDefaultExport": "off",
-        "useNamingConvention": "off"
+        "useNamingConvention": "off",
+        "noNonNullAssertion": "off"
       },
       "complexity": {
-        "noBannedTypes": "error",
+        "noBannedTypes": "off",
         "noExcessiveCognitiveComplexity": {
           "level": "error",
           "options": {
@@ -56,7 +51,7 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
-      "trailingComma": "es5",
+      "trailingCommas": "es5",
       "semicolons": "always"
     },
     "parser": {

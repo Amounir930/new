@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+coverage
+.next
+.turbo
+out
+apps/web/public
+packages/ui/dist
+**/*.d.ts
+**/*.js
+**/*.map

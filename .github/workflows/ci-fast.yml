@@ -311,7 +311,7 @@ jobs:
         run: |
           echo "🧪 Running unit tests..."
           # turbo doesn't support --coverage flag, run bun test directly
-          bun test --coverage
+          bun run test:coverage
         env:
           NODE_ENV: test
           SKIP_DOCKER_TESTS: true

@@ -49,7 +49,7 @@ jobs:
       - name: "S7.1 - Encryption Storage Integration Test"
         run: |
           echo "🧪 Running Vitest encryption storage tests..."
-          DATABASE_URL=$DATABASE_URL bun test s7-encryption.test.ts
+          DATABASE_URL=$DATABASE_URL bun run test:s7
         working-directory: packages/db
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
