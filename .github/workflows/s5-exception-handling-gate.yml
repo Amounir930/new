@@ -8,7 +8,7 @@ permissions:
   checks: write
 
 env:
-  DATABASE_URL: postgresql://user:placeholder@localhost:5432/db_safe
+  DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safe
   JWT_SECRET: test_secret_key_for_ci_environment_only_32
   MINIO_ENDPOINT: localhost
   MINIO_ACCESS_KEY: test_access_key
@@ -27,7 +27,6 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-          cache: false
 
       - name: Install dependencies
         run: bun install

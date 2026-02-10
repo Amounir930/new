@@ -10,7 +10,7 @@ permissions:
 
 env:
   JWT_SECRET: test_secret_key_for_ci_environment_only_32
-  DATABASE_URL: postgresql://user:placeholder@localhost:5432/db_safe
+  DATABASE_URL: postgresql://placeholder-user@localhost:5432/db_safe
 
 jobs:
   # ═══════════════════════════════════════════════════════════════

@@ -32,7 +32,6 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-          cache: false # Temporarily disabled to clean logs (Technical Debt)
 
       - name: Install dependencies
         run: bun install

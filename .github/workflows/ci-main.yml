@@ -102,7 +102,6 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-          cache: false
 
       - name: Install Dependencies
         run: bun install
@@ -504,7 +503,6 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-          cache: false
 
       - name: Install Dependencies
         run: bun install
@@ -641,7 +639,6 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-          cache: false
 
       - name: Install Dependencies
         run: bun install

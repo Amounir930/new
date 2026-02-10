@@ -21,18 +21,18 @@
 ## 🗄️ Database Credentials (PostgreSQL)
 - **Host:** `localhost` (Internal Docker Network)
 - **Port:** `5432`
-- **User:** `apex`
-- **Password:** `apex_secret` (⚠️ CHANGE FOR PRODUCTION)
-- **Database:** `apex_v2`
-- **URL:** `postgresql://apex:apex_secret@localhost:5432/apex_v2`
+- **User:** `placeholder-user`
+- **Password:** `(none)` (⚠️ CHANGE FOR PRODUCTION)
+- **Database:** `db_safe`
+- **URL:** `postgresql://placeholder-user@localhost:5432/db_safe`
 
 ---
 
 ## 🚀 Cache & Queue (Redis)
 - **Host:** `localhost`
 - **Port:** `6379`
-- **Password:** `redis_secret` (⚠️ CHANGE FOR PRODUCTION)
-- **URL:** `redis://:redis_secret@localhost:6379`
+- **Password:** `placeholder` (⚠️ CHANGE FOR PRODUCTION)
+- **URL:** `redis://:placeholder@localhost:6379`
 
 ---
 

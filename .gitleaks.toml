@@ -7,7 +7,7 @@ paths = [
     "\\.env\\.example$",
     "\\.env\\.test$",
     "packages/security/src/utils/scanner-cli\\.ts", # Scanning logic itself
-    "postgresql://user:placeholder@localhost:5432/db_safe",
+    "postgresql://placeholder-user@localhost:5432/db_safe",
     "mock-secret-for-docs-generation-only",
     "valid_secret_key_minimum_32_chars_long"
 ]

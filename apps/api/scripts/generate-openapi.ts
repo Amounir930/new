@@ -9,7 +9,7 @@ import { Test } from '@nestjs/testing';
 
 // Mock Environment Variables BEFORE import to satisfy ConfigModule validation
 process.env.DATABASE_URL =
-  process.env.DATABASE_URL || 'postgresql://user:placeholder@localhost:5432/db_safe';
+  process.env.DATABASE_URL || 'postgresql://placeholder-user@localhost:5432/db_safe';
 process.env.REDIS_URL = process.env.REDIS_URL || '';
 process.env.JWT_SECRET =
   process.env.JWT_SECRET || 'mock-secret-for-docs-generation-only-32-chars-min';
