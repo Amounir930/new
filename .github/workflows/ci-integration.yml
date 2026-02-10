@@ -61,13 +61,13 @@ jobs:
           cd packages/db
           bun run db:migrate
         env:
-          DATABASE_URL: postgresql://apex:apex@localhost:5432/test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Run API Tests
         run: |
           cd apps/api
           bun run test
         env:
-          DATABASE_URL: postgresql://apex:apex@localhost:5432/test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: test_secret_key_for_ci_environment_only_32
           MINIO_ACCESS_KEY: test
           MINIO_SECRET_KEY: minioadmin123
@@ -130,7 +130,7 @@ jobs:
           psql "$DATABASE_URL" -c "DROP SCHEMA IF EXISTS tenant_test_s2 CASCADE;" || true
           echo "✅ S2 test completed"
         env:
-          DATABASE_URL: postgresql://apex:apex@localhost:5432/test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   # ═══════════════════════════════════════════════════════════════
   # Docker Stack Verification

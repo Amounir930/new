@@ -46,7 +46,7 @@ jobs:
         run: bun run tools/security-scripts/verify-redis-health.ts
         env:
           REDIS_URL: redis://localhost:6379
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: "S6.2 - Rate Limit Header Verification"
         run: |
@@ -64,7 +64,7 @@ jobs:
         env:
           REDIS_URL: redis://localhost:6379
           MAX_REQUESTS: 10
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           JWT_SECRET: test_secret_key_for_ci_environment_only_32
 
       # ═══════════════════════════════════════════════════════════════

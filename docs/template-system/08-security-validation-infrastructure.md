@@ -499,7 +499,7 @@ jobs:
           # Cleanup
           docker-compose -f docker-compose.test.yml down
         env:
-          TEST_DB_URL: postgresql://test:test@localhost:5433/test
+          TEST_DB_URL: postgresql://***REDACTED***
       
       # PHASE 5: OWASP ZAP Scan
       - name: OWASP ZAP Baseline Scan

@@ -290,7 +290,7 @@ jobs:
           bun run db:migrate:test
           bun run db:seed:test
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DATABASE_URL: postgresql://***REDACTED***
       
       - name: Start Template Server
         run: |
@@ -300,8 +300,13 @@ jobs:
           # Wait for server
           npx wait-on http://localhost:3000 --timeout 60000
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          DATABASE_URL: postgresql://***REDACTED***
           REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-key
+          MINIO_ENDPOINT: localhost
+          MINIO_PORT: 9000
+          MINIO_ACCESS_KEY: minio-test-access-key
+          MINIO_SECRET_KEY: minio-test-secret-key-for-ci-only
       
       - name: Run XSS Attack Simulation
         run: |

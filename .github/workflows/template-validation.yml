@@ -15,7 +15,7 @@ env:
   BUN_VERSION: '1.0.25'
   NODE_VERSION: '20'
   # S1 CI Mocks
-  DATABASE_URL: postgresql://test:test@localhost:5432/test
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
   JWT_SECRET: test_secret_key_for_ci_environment_only_32
   MINIO_ENDPOINT: localhost
   MINIO_ACCESS_KEY: test_access_key

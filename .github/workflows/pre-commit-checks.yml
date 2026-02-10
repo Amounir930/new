@@ -134,8 +134,8 @@ jobs:
           
           echo "✅ Export module tests completed"
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-          REDIS_URL: redis://localhost:6379
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
           NODE_ENV: test
 
       - name: Check Test Coverage

@@ -8,19 +8,18 @@ import { Test } from '@nestjs/testing';
 // -----------------------------------------------------------------------------
 
 // Mock Environment Variables BEFORE import to satisfy ConfigModule validation
-process.env.DATABASE_URL =
-  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
-process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
+process.env.DATABASE_URL = process.env.DATABASE_URL || '';
+process.env.REDIS_URL = process.env.REDIS_URL || '';
 process.env.JWT_SECRET =
   process.env.JWT_SECRET || 'mock-secret-for-docs-generation-only-32-chars-min';
 process.env.TENANT_ISOLATION_MODE = 'strict';
 // @ts-ignore NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';
-process.env.MINIO_ENDPOINT = 'localhost';
-process.env.MINIO_ACCESS_KEY = 'mock-access-key';
-process.env.MINIO_SECRET_KEY = 'mock-secret-key';
-process.env.MINIO_BUCKET = 'mock-bucket';
-process.env.MINIO_REGION = 'us-east-1';
+process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || '';
+process.env.MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY || '';
+process.env.MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY || '';
+process.env.MINIO_BUCKET = process.env.MINIO_BUCKET || '';
+process.env.MINIO_REGION = process.env.MINIO_REGION || '';
 
 console.log('DEBUG: Env vars set:', {
   DB: process.env.DATABASE_URL,
@@ -36,7 +35,7 @@ async function generate() {
     // Dynamic import to ensure env vars are set before module load
     const { AppModule } = await import('../src/app.module.js');
     // Use dynamic import for db to avoid type issues with index vs dist
-    const dbModule = await import('@apex/db') as any;
+    const dbModule = (await import('@apex/db')) as any;
     const TenantRegistryService = dbModule.TenantRegistryService;
 
     // Mock Services

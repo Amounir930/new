@@ -69,7 +69,7 @@ security_tests:
     - postgres:16-alpine
     - redis:7-alpine
   variables:
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/test"
+    DATABASE_URL: ${{ secrets.DATABASE_URL }}
   script:
     - bunx vitest run --coverage --reporter=verbose --reporter=cobertura
   artifacts:

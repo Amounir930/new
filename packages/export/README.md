@@ -222,7 +222,7 @@ MINIO_SECRET_KEY=minioadmin
 MINIO_REGION=us-east-1
 
 # Database
-DATABASE_URL=postgresql://user:pass@localhost/db
+DATABASE_URL=postgresql://***REDACTED***
 ```
 
 ---

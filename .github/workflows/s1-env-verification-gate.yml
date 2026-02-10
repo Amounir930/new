@@ -8,11 +8,11 @@ permissions:
   checks: write
 
 env:
-  DATABASE_URL: postgresql://test:test@localhost:5432/test
-  JWT_SECRET: test_secret_key_for_ci_environment_only_32
-  MINIO_ENDPOINT: localhost
-  MINIO_ACCESS_KEY: test_access_key
-  MINIO_SECRET_KEY: test_secret_key
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
+  MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+  MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
 
 jobs:
   s1-environment-verification:
