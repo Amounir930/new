@@ -98,7 +98,7 @@ function runASTCheck(moduleClassFile: string) {
     )
       continue;
 
-    sourceFile.forEachDescendant((node) => {
+    sourceFile.forEachDescendant((node: Node) => {
       if (Node.isCallExpression(node)) {
         checkNodeForSQLi(node, sourceFile, violations);
       }

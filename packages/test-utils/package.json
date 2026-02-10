@@ -27,9 +27,13 @@
     ],
     "dependencies": {
         "@faker-js/faker": "^8.3.1",
+        "@nestjs/common": "^10.3.0",
+        "@nestjs/testing": "^10.3.0",
         "@testing-library/react": "^14.1.2",
         "@testing-library/user-event": "^14.5.1",
-        "msw": "^2.0.11"
+        "msw": "^2.0.11",
+        "reflect-metadata": "^0.2.1",
+        "ts-morph": "^21.0.1"
     },
     "devDependencies": {
         "@apex/validators": "workspace:*",
