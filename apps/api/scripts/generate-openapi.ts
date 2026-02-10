@@ -18,8 +18,10 @@ process.env.TENANT_ISOLATION_MODE = 'strict';
 // @ts-ignore NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';
 process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
-process.env.MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY || 'minio-mock-access-key';
-process.env.MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY || 'minio-mock-secret-key-8chars';
+process.env.MINIO_ACCESS_KEY =
+  process.env.MINIO_ACCESS_KEY || 'minio-mock-access-key';
+process.env.MINIO_SECRET_KEY =
+  process.env.MINIO_SECRET_KEY || 'minio-mock-secret-key-8chars';
 process.env.MINIO_BUCKET = process.env.MINIO_BUCKET || 'test-bucket';
 process.env.MINIO_REGION = process.env.MINIO_REGION || 'us-east-1';
 

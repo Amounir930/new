@@ -10,6 +10,7 @@ paths = [
 ]
 regexes = [
     '''postgresql://postgres:placeholder@localhost:5432/test''',
+    '''postgresql://postgres:postgres@localhost:5432/test''',
     '''mock-secret-for-docs-generation-only''',
     '''valid_secret_key_minimum_32_chars_long''',
     '''test_secret_key_for_ci_environment_only_32''',
