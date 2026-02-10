@@ -8,7 +8,7 @@ permissions:
   checks: write
 
 env:
-  DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/test
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
   ENCRYPTION_MASTER_KEY: ValidProdPass32CharsWith1$!Abc12
   NODE_ENV: test
   JWT_SECRET: test_secret_key_for_ci_environment_only_32
