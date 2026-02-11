@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TemplateValidator } from './validator.js';
 
-vi.mock('fs');
+vi.mock('node:fs');
 vi.mock('fast-glob');
 
 describe('TemplateValidator', () => {
@@ -139,7 +139,7 @@ describe('TemplateValidator', () => {
       vi.mocked(fs.existsSync).mockImplementation((p: any) => {
         const normalized = p.toString().replace(/\\/g, '/');
         if (normalized.includes('template.config.json')) return true;
-        if (normalized.includes('src/app/(shop)/search/page.tsx')) return false;
+        if (normalized.includes('search/page.tsx')) return false;
         return true;
       });
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockConfig));

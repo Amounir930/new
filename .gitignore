@@ -68,4 +68,5 @@ Collect-Project.ps1
 
 # Local development files
 .env.s1.local
+.env.s1.local
 .env.test.local

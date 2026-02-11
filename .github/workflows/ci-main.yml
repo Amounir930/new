@@ -20,6 +20,8 @@ permissions:
   checks: write
   actions: read
   security-events: write
+  pages: write
+  id-token: write
 
 env:
   NODE_OPTIONS: "--max-old-space-size=4096"
@@ -84,7 +86,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: apex_test
         ports:
           - 5432:5432
@@ -479,7 +481,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: apex_test
         ports:
           - 5432:5432
@@ -515,8 +517,8 @@ jobs:
         run: |
           docker run -d --name minio \
             -p 9000:9000 \
-            -e MINIO_ROOT_USER=minio-test-access-key \
-            -e MINIO_ROOT_PASSWORD=minio-test-secret-key-for-ci-only \
+            -e MINIO_ROOT_USER=${{ secrets.MINIO_ACCESS_KEY }} \
+            -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_SECRET_KEY }} \
             minio/minio:latest server /data
           sleep 5
 
@@ -528,11 +530,11 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-jwt-secret-key-for-ci-environment-only-32chars
+           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MINIO_ENDPOINT: localhost
           MINIO_PORT: 9000
-          MINIO_ACCESS_KEY: minio-test-access-key
-          MINIO_SECRET_KEY: minio-test-secret-key-for-ci-only
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           MINIO_USE_SSL: false
           MINIO_REGION: us-east-1
           NODE_ENV: test
@@ -556,7 +558,7 @@ jobs:
             --subdomain="${SUBDOMAIN}" \
             --plan=basic \
             --email="test@${SUBDOMAIN}.com" \
-            --password="TestPass123!" \
+            --password="${{ secrets.TEST_USER_PASSWORD }}" \
             --store-name="Speed Test Store" \
             --quiet
           PROVISION_EXIT_CODE=$?
@@ -592,11 +594,11 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
           REDIS_URL: redis://localhost:6379
           NODE_ENV: test
-          JWT_SECRET: test-jwt-secret-key-for-ci-environment-only-32chars
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MINIO_ENDPOINT: localhost
           MINIO_PORT: 9000
-          MINIO_ACCESS_KEY: minio-test-access-key
-          MINIO_SECRET_KEY: minio-test-secret-key-for-ci-only
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           MINIO_USE_SSL: false
           MINIO_REGION: us-east-1
           MIGRATIONS_PATH: ${{ github.workspace }}/packages/db/drizzle
@@ -615,7 +617,7 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: apex_test
         ports:
           - 5432:5432
@@ -670,11 +672,11 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-jwt-secret-key-for-ci-environment-only-32chars
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MINIO_ENDPOINT: localhost
           MINIO_PORT: 9000
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           MINIO_USE_SSL: false
           MINIO_REGION: us-east-1
           NODE_ENV: test
