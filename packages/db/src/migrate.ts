@@ -39,7 +39,7 @@ async function runMigrations() {
 
 // Only auto-run if this script is executed directly
 if (import.meta.url.endsWith('migrate.ts') || process.env.NODE_ENV !== 'test') {
-  // runMigrations(); // Disabled auto-run during common module loads
+  runMigrations();
 }
 
 export { runMigrations };

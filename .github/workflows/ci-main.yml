@@ -533,7 +533,17 @@ jobs:
 
       - name: Setup Test Database
         run: |
-          cd packages/db
+          export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/apex_test
+          export REDIS_URL=redis://localhost:6379
+          export JWT_SECRET=${{ secrets.JWT_SECRET }}
+          export MINIO_ENDPOINT=localhost
+          export MINIO_PORT=9000
+          export MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}
+          export MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}
+          export MINIO_USE_SSL=false
+          export MINIO_REGION=us-east-1
+          export NODE_ENV=test
+          
           bun run db:generate
           bun run db:migrate
         env:
