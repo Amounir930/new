@@ -6,9 +6,9 @@
  * @module components/product/ProductCard
  */
 
+import { calculateDiscount, formatPrice } from '@/lib/formatters';
 import Image from 'next/image';
 import Link from 'next/link';
-import { calculateDiscount, formatPrice } from '@/lib/formatters';
 
 // Inline Product type (avoiding workspace dependency)
 interface Product {

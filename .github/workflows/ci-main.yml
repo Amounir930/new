@@ -520,6 +520,15 @@ jobs:
             -e MINIO_ROOT_USER=${{ secrets.MINIO_ACCESS_KEY }} \
             -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_SECRET_KEY }} \
             minio/minio:latest server /data
+          
+          # Start Postgres with password
+          docker run -d --name postgres \
+            -p 5432:5432 \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=apex_test \
+            postgres:16-alpine
+          
           sleep 5
 
       - name: Setup Test Database

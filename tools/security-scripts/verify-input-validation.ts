@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -9,7 +9,7 @@ import { join } from 'node:path';
 function getAllFiles(dir: string, extension: string): string[] {
   let results: string[] = [];
   const list = readdirSync(dir);
-  list.forEach((file) => {
+  for (let file of list) {
     file = join(dir, file);
     const stat = statSync(file);
     if (stat?.isDirectory()) {
@@ -17,7 +17,8 @@ function getAllFiles(dir: string, extension: string): string[] {
     } else if (file.endsWith(extension)) {
       results.push(file);
     }
-  });
+  }
+  )
   return results;
 }
 
@@ -27,7 +28,7 @@ function auditControllers() {
   const controllers = getAllFiles('apps/api/src', '.controller.ts');
   let violations = 0;
 
-  controllers.forEach((file) => {
+  for (const file of controllers) {
     const content = readFileSync(file, 'utf-8');
     const lines = content.split('\n');
 
@@ -75,10 +76,11 @@ function auditControllers() {
         `⚠️  S3 WARNING: Controller ${file} uses @Body but no DTO/Schema pattern detected.`
       );
     }
-  });
+  }
+  )
 
   // 4. S3.3 Payload Size Check (New)
-  console.log('🔍 S3.3: Verifying Payload Size Limits in main.ts...');
+  console.log('🔍 S3.3: Verifying Payload Size Limits in main.ts...')
   const mainPath = 'apps/api/src/main.ts';
   const mainContent = readFileSync(mainPath, 'utf-8');
 

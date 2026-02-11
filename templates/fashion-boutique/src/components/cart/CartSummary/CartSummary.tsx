@@ -8,8 +8,8 @@
 
 'use client';
 
-import Link from 'next/link';
 import { formatPrice } from '@/lib/formatters';
+import Link from 'next/link';
 
 export interface CartSummaryProps {
   cart: {

@@ -8,9 +8,9 @@
 
 'use client';
 
+import { formatPrice } from '@/lib/formatters';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatPrice } from '@/lib/formatters';
 
 export interface CartItemProps {
   item: {

@@ -6,8 +6,8 @@
  * @route /dashboard/orders
  */
 
-import Link from 'next/link';
 import { formatDate, formatPrice } from '@/lib/formatters';
+import Link from 'next/link';
 
 export default function OrdersPage() {
   // TODO: Fetch orders from API

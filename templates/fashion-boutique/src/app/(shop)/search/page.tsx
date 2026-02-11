@@ -8,9 +8,9 @@
 
 'use client';
 
+import { ProductCard } from '@/components/product/ProductCard';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
-import { ProductCard } from '@/components/product/ProductCard';
 
 function SearchContent() {
   const searchParams = useSearchParams();
