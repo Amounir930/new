@@ -6,7 +6,7 @@
  * @module @apex/test-utils/mocks/handlers/orders
  */
 
-import { HttpResponse, http } from 'msw';
+import { http, HttpResponse } from 'msw';
 import {
   createMockOrder,
   createPendingOrder,

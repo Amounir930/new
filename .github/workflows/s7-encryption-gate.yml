@@ -96,7 +96,6 @@ jobs:
           # Use the encryption service to store known plaintext
           cd packages/db
           # Use the dedicated seed script
-          cd packages/db
           DATABASE_URL=$DATABASE_URL bun run scripts/seed-s7-verification.ts || {
             echo "⚠️ TypeScript seed failed, attempting fallback..."
             # Fallback: insert a raw marker that should NEVER appear if encryption works
