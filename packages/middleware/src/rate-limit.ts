@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { createClient, type RedisClientType } from 'redis';
+import { type RedisClientType, createClient } from 'redis';
 
 // Rate limit tiers per plan
 const RATE_LIMIT_TIERS = {
