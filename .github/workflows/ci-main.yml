@@ -521,7 +521,14 @@ jobs:
             -e MINIO_ROOT_PASSWORD=${{ secrets.MINIO_SECRET_KEY }} \
             minio/minio:latest server /data
           
-
+          # Start Postgres with password
+          docker run -d --name postgres \
+            -p 5432:5432 \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=apex_test \
+            postgres:16-alpine
+          
           sleep 5
 
       - name: Setup Test Database
@@ -566,13 +573,17 @@ jobs:
 
           START_TIME=$(date +%s)
 
+
+          # Generate a random secure password for the test
+          TEST_PASSWORD=$(openssl rand -base64 16)
+
           echo "🚀 Starting provisioning for: ${SUBDOMAIN}"
           set +e
           bun run cli provision \
             --subdomain="${SUBDOMAIN}" \
             --plan=basic \
             --email="test@${SUBDOMAIN}.com" \
-            --password="${{ secrets.TEST_USER_PASSWORD }}" \
+            --password="${TEST_PASSWORD}" \
             --store-name="Speed Test Store" \
             --quiet
           PROVISION_EXIT_CODE=$?

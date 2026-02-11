@@ -31,6 +31,7 @@
     "@types/node": "^20.0.0",
     "@types/supertest": "^6.0.3",
     "@vitest/coverage-istanbul": "1.6.1",
+    "@vitest/coverage-v8": "1.6.1",
     "@vitest/ui": "1.6.1",
     "bun-types": "latest",
     "cross-env": "^10.1.0",
