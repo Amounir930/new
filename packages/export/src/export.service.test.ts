@@ -111,38 +111,41 @@ describe('ExportService', () => {
         ],
         error: 'Duplicate export request',
       },
-    ])('$name', async ({
-      options,
-      factoryValid,
-      activeJobs,
-      recentJobs,
-      error,
-      expectedStatus,
-    }) => {
-      mockFactory.validateOptions.mockResolvedValue(factoryValid);
-      (service as any).exportQueue.getJobs = vi
-        .fn()
-        .mockImplementation(async (types) => {
-          if (types.includes('active')) return activeJobs;
-          if (types.includes('completed')) return recentJobs;
-          return [];
-        });
-      (service as any).exportQueue.add = vi
-        .fn()
-        .mockResolvedValue({ id: 'new-job' });
+    ])(
+      '$name',
+      async ({
+        options,
+        factoryValid,
+        activeJobs,
+        recentJobs,
+        error,
+        expectedStatus,
+      }) => {
+        mockFactory.validateOptions.mockResolvedValue(factoryValid);
+        (service as any).exportQueue.getJobs = vi
+          .fn()
+          .mockImplementation(async (types) => {
+            if (types.includes('active')) return activeJobs;
+            if (types.includes('completed')) return recentJobs;
+            return [];
+          });
+        (service as any).exportQueue.add = vi
+          .fn()
+          .mockResolvedValue({ id: 'new-job' });
 
-      if (error) {
-        await expect(service.createExportJob(options as any)).rejects.toThrow(
-          error
-        );
-      } else {
-        const result = await service.createExportJob(options as any);
-        expect(result.status).toBe(expectedStatus);
-        expect(mockAudit.log).toHaveBeenCalledWith(
-          expect.objectContaining({ action: 'EXPORT_REQUESTED' })
-        );
+        if (error) {
+          await expect(service.createExportJob(options as any)).rejects.toThrow(
+            error
+          );
+        } else {
+          const result = await service.createExportJob(options as any);
+          expect(result.status).toBe(expectedStatus);
+          expect(mockAudit.log).toHaveBeenCalledWith(
+            expect.objectContaining({ action: 'EXPORT_REQUESTED' })
+          );
+        }
       }
-    });
+    );
   });
 
   describe('Utility Methods', () => {

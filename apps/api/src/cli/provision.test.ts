@@ -13,11 +13,15 @@ const { mockApp } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@nestjs/core', () => ({
-  NestFactory: {
-    createApplicationContext: vi.fn().mockResolvedValue(mockApp),
-  },
-}));
+vi.mock('@nestjs/core', async () => {
+  const actual = await vi.importActual<typeof import('@nestjs/core')>('@nestjs/core');
+  return {
+    ...actual,
+    NestFactory: {
+      createApplicationContext: vi.fn().mockResolvedValue(mockApp),
+    },
+  };
+});
 
 // Mock ProvisioningService
 const mockProvisioningService = {

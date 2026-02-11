@@ -4,11 +4,11 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  PLAN_LIMITS,
   checkProvisioningQuota,
   checkQuota,
   getPlanLimits,
   isFeatureAllowed,
-  PLAN_LIMITS,
   validateSubdomainAvailability,
 } from './quota-service.js';
 

@@ -3,7 +3,7 @@
  * @module @apex/auth
  */
 
-import { getCurrentTenantContext, type TenantContext } from '@apex/middleware';
+import { type TenantContext, getCurrentTenantContext } from '@apex/middleware';
 import {
   type CanActivate,
   type ExecutionContext,

@@ -44,9 +44,10 @@ describe('TemplateValidator', () => {
 
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockImplementation((p: any) => {
-        if (p.includes('template.config.json'))
+        const normalized = p.toString().replace(/\\/g, '/');
+        if (normalized.includes('template.config.json'))
           return JSON.stringify(mockConfig);
-        if (p.includes('package.json'))
+        if (normalized.includes('package.json'))
           return JSON.stringify({ dependencies: { '@apex/ui': '1.0.0' } });
         return '';
       });
@@ -68,7 +69,8 @@ describe('TemplateValidator', () => {
 
     it('should fail if required files are missing', async () => {
       vi.mocked(fs.existsSync).mockImplementation((p: any) => {
-        if (p.includes('template.config.json')) return true;
+        const normalized = p.toString().replace(/\\/g, '/');
+        if (normalized.includes('template.config.json')) return true;
         return false; // Missing everything else
       });
       vi.mocked(fs.readFileSync).mockReturnValue(
@@ -135,8 +137,9 @@ describe('TemplateValidator', () => {
         rtlSupport: false,
       };
       vi.mocked(fs.existsSync).mockImplementation((p: any) => {
-        if (p.includes('template.config.json')) return true;
-        if (p.includes('src/app/(shop)/search/page.tsx')) return false;
+        const normalized = p.toString().replace(/\\/g, '/');
+        if (normalized.includes('template.config.json')) return true;
+        if (normalized.includes('src/app/(shop)/search/page.tsx')) return false;
         return true;
       });
       vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(mockConfig));

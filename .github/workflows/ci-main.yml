@@ -197,7 +197,7 @@ jobs:
           echo "[*] Scanning for hardcoded credentials (listing filenames only)..."
           CRED_PATTERNS="(password|passwd|pwd|secret|token|api_key|apikey)\s*[=:]\s*['\"][^'\"]{8,}['\"]"
           HARDCODED=$(grep -rlE "$CRED_PATTERNS" packages apps --include="*.ts" --include="*.tsx" --include="*.js" 2>/dev/null | \
-    grep -vE "(test|spec|example|placeholder|process\.env|IS_PUBLIC_KEY|RATE_LIMIT_KEY|seeder|dto|node_modules)" || true)
+            grep -vE "(test|spec|example|placeholder|process\.env|IS_PUBLIC_KEY|RATE_LIMIT_KEY|seeder|dto|node_modules)" || true)
           
           if [ -n "$HARDCODED" ]; then
             echo "🚨 CRITICAL: Potential hardcoded credentials found in the following files:"

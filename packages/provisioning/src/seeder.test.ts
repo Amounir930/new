@@ -8,13 +8,17 @@ import { isSeeded, seedTenantData } from './seeder.js';
 
 // Mock DB
 // 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
-const mockDb = {
-  insert: vi.fn().mockReturnThis(),
-  values: vi.fn().mockReturnThis(),
-  returning: vi.fn().mockResolvedValue([{ id: 'mock-id' }]),
-  select: vi.fn().mockReturnThis(),
-  from: vi.fn().mockReturnThis(),
-};
+const { mockDb } = vi.hoisted(() => {
+  return {
+    mockDb: {
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockReturnThis(),
+      returning: vi.fn().mockResolvedValue([{ id: 'mock-id' }]),
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+    },
+  };
+});
 
 vi.mock('@apex/db', () => ({
   createTenantDb: vi.fn().mockReturnValue(mockDb),

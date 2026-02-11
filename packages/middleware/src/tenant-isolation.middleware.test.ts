@@ -12,13 +12,16 @@ import {
   TenantScopedGuard,
 } from './tenant-isolation.middleware.js';
 
-// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
-const mockDb = {
-  select: vi.fn().mockReturnThis(),
-  from: vi.fn().mockReturnThis(),
-  where: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockResolvedValue([]),
-};
+const { mockDb } = vi.hoisted(() => {
+  return {
+    mockDb: {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockResolvedValue([]),
+    },
+  };
+});
 
 vi.mock('@apex/db', () => ({
   publicDb: mockDb,

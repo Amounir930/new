@@ -5,14 +5,14 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import {
+  type TenantPlan,
+  type TenantStatus,
   deleteTenant,
   getTenantById,
   getTenantBySubdomain,
   getTenantList,
   getTenantStats,
   killSwitch,
-  type TenantPlan,
-  type TenantStatus,
   updateTenant,
   updateTenantPlan,
   updateTenantStatus,
@@ -79,21 +79,17 @@ vi.mock('@apex/db', () => {
     },
   ];
 
-  const mockQuery = {
-    where: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockImplementation((n: number) => ({
-      offset: vi
-        .fn()
-        .mockImplementation(() => Promise.resolve(mockTenants.slice(0, n))),
-      // biome-ignore lint/suspicious/noThenProperty: mock promise
-      then: (onfulfilled: any) =>
-        Promise.resolve(mockTenants.slice(0, n)).then(onfulfilled),
-    })),
-    orderBy: vi.fn().mockReturnThis(),
-    // biome-ignore lint/suspicious/noThenProperty: mock promise
-    then: (onfulfilled: any) => Promise.resolve(mockTenants).then(onfulfilled),
-    returning: vi.fn().mockResolvedValue([mockTenants[0]]),
-  };
+  const mockQuery = Promise.resolve(mockTenants) as any;
+  mockQuery.where = vi.fn().mockReturnThis();
+  mockQuery.limit = vi.fn().mockImplementation((n: number) => {
+    const result = Promise.resolve(mockTenants.slice(0, n));
+    (result as any).offset = vi
+      .fn()
+      .mockImplementation(() => Promise.resolve(mockTenants.slice(0, n)));
+    return result;
+  });
+  mockQuery.orderBy = vi.fn().mockReturnThis();
+  mockQuery.returning = vi.fn().mockResolvedValue([mockTenants[0]]);
 
   return {
     tenants: {
@@ -356,8 +352,6 @@ describe('Tenant Overview Service', () => {
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
           limit: vi.fn().mockResolvedValue([]),
-          // biome-ignore lint/suspicious/noThenProperty: mock promise
-          then: (onfulfilled: any) => Promise.resolve([]).then(onfulfilled),
         }),
       } as any);
 
