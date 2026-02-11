@@ -18,7 +18,7 @@ function getAllFiles(dir: string, extension: string): string[] {
       results.push(file);
     }
   }
-  )
+
   return results;
 }
 
