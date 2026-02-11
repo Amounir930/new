@@ -116,7 +116,6 @@ import { Injectable } from '@nestjs/common';
 export class EncryptionService {
   private readonly masterKey: string;
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy encryption logic
   constructor() {
     this.masterKey = process.env.ENCRYPTION_MASTER_KEY || '';
 

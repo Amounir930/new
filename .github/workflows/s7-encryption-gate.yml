@@ -95,22 +95,10 @@ jobs:
           
           # Use the encryption service to store known plaintext
           cd packages/db
-          DATABASE_URL=$DATABASE_URL bun run -e "
-            import { encryptField } from './src/encryption';
-            import { sql } from './src/client';
-            
-            const KNOWN_PLAINTEXT = 'S7_VERIFICATION_SECRET_PLAINTEXT_2026';
-            const encrypted = encryptField(KNOWN_PLAINTEXT);
-            
-            await sql\`
-              INSERT INTO public.s7_verification_data (label, encrypted_payload)
-              VALUES ('s7_gate_test', \${encrypted})
-            \`;
-            
-            console.log('✅ Verification data seeded (encrypted)');
-            process.exit(0);
-          " || {
-            echo "⚠️ Encryption service not available, using direct SQL seed..."
+          # Use the dedicated seed script
+          cd packages/db
+          DATABASE_URL=$DATABASE_URL bun run scripts/seed-s7-verification.ts || {
+            echo "⚠️ TypeScript seed failed, attempting fallback..."
             # Fallback: insert a raw marker that should NEVER appear if encryption works
             psql $DATABASE_URL -c "INSERT INTO public.s7_verification_data (label, encrypted_payload) VALUES ('s7_gate_test', 'FALLBACK_MARKER_ENCRYPTION_NOT_ACTIVE');"
           }

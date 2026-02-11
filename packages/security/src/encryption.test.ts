@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  decrypt,
   EncryptionService,
+  decrypt,
   encrypt,
   generateApiKey,
   hashApiKey,
