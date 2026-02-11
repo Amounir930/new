@@ -1,0 +1,31 @@
+# .gitleaksignore
+# Suppressing historical leaks from deleted files or test artifacts
+
+# .github/workflows/s13-red-team-simulation.yml
+3903c19df6078230b214f09f8e3006c338153b5a:.github/workflows/s13-red-team-simulation.yml:postgres-connection-string:81
+3903c19df6078230b214f09f8e3006c338153b5a:.github/workflows/s13-red-team-simulation.yml:postgres-connection-string:243
+
+# .github/workflows/s11-sql-injection-penetration.yml
+496cd506af46242145748524ba4e92d5caeeda0b:.github/workflows/s11-sql-injection-penetration.yml:postgres-connection-string:57
+496cd506af46242145748524ba4e92d5caeeda0b:.github/workflows/s11-sql-injection-penetration.yml:postgres-connection-string:89
+
+# packages/auth/src/encryption.test.ts
+ae066da1ebd948c0dc13d415139f44bd0248bf20:packages/auth/src/encryption.test.ts:generic-secret:107
+f40640b8bf41a54d20aab2bb5b026406e8795b76:packages/auth/src/encryption.test.ts:generic-secret:111
+1d579d36356a2c69ae3cb7474d660ce3de7452cb:packages/auth/src/encryption.test.ts:generic-secret:111
+cdcc8791cb0c990fd1991e1c6c3b14d4ec269d2c:packages/auth/src/encryption.test.ts:generic-secret:112
+cdcc8791cb0c990fd1991e1c6c3b14d4ec269d2c:packages/auth/src/encryption.test.ts:generic-secret:114
+
+# update/Apex_2026_Full_Codebase.txt
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:generic-secret:6042
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:generic-secret:6044
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:7000
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:7012
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:7023
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:7044
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:7069
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:7268
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:15216
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:15227
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:15238
+c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:15249
