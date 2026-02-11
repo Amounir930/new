@@ -14,7 +14,8 @@ const { mockApp } = vi.hoisted(() => ({
 }));
 
 vi.mock('@nestjs/core', async () => {
-  const actual = await vi.importActual<typeof import('@nestjs/core')>('@nestjs/core');
+  const actual =
+    await vi.importActual<typeof import('@nestjs/core')>('@nestjs/core');
   return {
     ...actual,
     NestFactory: {

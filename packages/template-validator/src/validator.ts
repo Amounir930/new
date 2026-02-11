@@ -69,7 +69,7 @@ export class TemplateValidator {
       if (!result.success) {
         return {
           errors: result.error.errors.map(
-            (e) =>
+            (e: any) =>
               `Config error: ${e.path.join('.')} - ${
                 e.message
               } (Got: ${JSON.stringify(data)})`

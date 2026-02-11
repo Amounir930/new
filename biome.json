@@ -7,6 +7,13 @@
   },
   "files": {
     "ignoreUnknown": true,
+    "ignore": [
+      "**/next-env.d.ts",
+      "**/tailwind.config.d.ts",
+      "**/.next/**",
+      "**/dist/**",
+      "**/node_modules/**"
+    ],
     "include": [
       "**/*.ts",
       "**/*.tsx",
