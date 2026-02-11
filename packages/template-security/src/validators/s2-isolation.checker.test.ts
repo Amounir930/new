@@ -3,24 +3,30 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import fg from 'fast-glob';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { S2IsolationChecker } from './s2-isolation.checker.js';
 
-vi.mock('fast-glob');
-vi.mock('fs/promises');
+mock.module('fast-glob', () => ({
+  default: mock(),
+}));
+
+mock.module('node:fs/promises', () => ({
+  readFile: mock(),
+}));
 
 describe('S2IsolationChecker', () => {
   const checker = new S2IsolationChecker();
   const mockTemplatePath = '/mock/template';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    (fg as any).mockClear();
+    (readFile as any).mockClear();
   });
 
   describe('validate', () => {
     it('should pass clean code', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
+      (fg as any).mockResolvedValue(['file1.ts']);
       (readFile as any).mockResolvedValue('const x = useTenantDb()');
 
       const result = await checker.validate(mockTemplatePath);
@@ -31,10 +37,8 @@ describe('S2IsolationChecker', () => {
     });
 
     it('should detect hardcoded tenant IDs (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'const tenantId = "tenant-alpha";' as never
-      );
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue('const tenantId = "tenant-alpha";');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -44,10 +48,8 @@ describe('S2IsolationChecker', () => {
     });
 
     it('should detect direct schema references (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'SELECT * FROM tenant_123.users' as never
-      );
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue('SELECT * FROM tenant_123.users');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -56,10 +58,8 @@ describe('S2IsolationChecker', () => {
     });
 
     it('should detect manual tenantId in API call (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'fetch("/api/data?tenantId=abc")' as never
-      );
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue('fetch("/api/data?tenantId=abc")');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -68,8 +68,8 @@ describe('S2IsolationChecker', () => {
     });
 
     it('should warn about fetch without useTenant (WARNING)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue('fetch("/api/data")' as never);
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue('fetch("/api/data")');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -79,10 +79,8 @@ describe('S2IsolationChecker', () => {
     });
 
     it('should detect direct database imports (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['components/MyComp.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'import { db } from "@apex/db";' as never
-      );
+      (fg as any).mockResolvedValue(['components/MyComp.ts']);
+      (readFile as any).mockResolvedValue('import { db } from "@apex/db";');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -91,10 +89,8 @@ describe('S2IsolationChecker', () => {
     });
 
     it('should ignore direct database imports in api/ directory', async () => {
-      vi.mocked(fg).mockResolvedValue(['api/route.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'import { db } from "@apex/db";' as never
-      );
+      (fg as any).mockResolvedValue(['api/route.ts']);
+      (readFile as any).mockResolvedValue('import { db } from "@apex/db";');
 
       const result = await checker.validate(mockTemplatePath);
 

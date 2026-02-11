@@ -3,26 +3,32 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import fg from 'fast-glob';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { S3ValidationChecker } from './s3-validation.checker.js';
 
-vi.mock('fast-glob');
-vi.mock('fs/promises');
+mock.module('fast-glob', () => ({
+  default: mock(),
+}));
+
+mock.module('node:fs/promises', () => ({
+  readFile: mock(),
+}));
 
 describe('S3ValidationChecker', () => {
   const checker = new S3ValidationChecker();
   const mockTemplatePath = '/mock/template';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    (fg as any).mockClear();
+    (readFile as any).mockClear();
   });
 
   describe('validate', () => {
     it('should pass clean code', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'const schema = z.object({}); const res = schema.safeParse(data);' as never
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue(
+        'const schema = z.object({}); const res = schema.safeParse(data);'
       );
 
       const result = await checker.validate(mockTemplatePath);
@@ -33,9 +39,9 @@ describe('S3ValidationChecker', () => {
     });
 
     it('should detect useForm without zodResolver (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.tsx'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'const form = useForm({ defaultValues: {} });' as never
+      (fg as any).mockResolvedValue(['file1.tsx']);
+      (readFile as any).mockResolvedValue(
+        'const form = useForm({ defaultValues: {} });'
       );
 
       const result = await checker.validate(mockTemplatePath);
@@ -45,9 +51,9 @@ describe('S3ValidationChecker', () => {
     });
 
     it('should detect API routes without validation (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['api/route.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'const body = await request.json(); console.log(body);' as never
+      (fg as any).mockResolvedValue(['api/route.ts']);
+      (readFile as any).mockResolvedValue(
+        'const body = await request.json(); console.log(body);'
       );
 
       const result = await checker.validate(mockTemplatePath);
@@ -57,10 +63,8 @@ describe('S3ValidationChecker', () => {
     });
 
     it('should warn about inline email validation (WARNING)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'if (email.includes("@")) { ... }' as never
-      );
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue('if (email.includes("@")) { ... }');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -69,10 +73,10 @@ describe('S3ValidationChecker', () => {
     });
 
     it('should detect direct user input in template literals (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue(
         // biome-ignore lint/suspicious/noTemplateCurlyInString: test case
-        'const sql = `SELECT * FROM users WHERE id = ${request.body.id}`;' as never
+        'const sql = `SELECT * FROM users WHERE id = ${request.body.id}`;'
       );
 
       const result = await checker.validate(mockTemplatePath);

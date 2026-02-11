@@ -3,16 +3,21 @@
  */
 
 import fs from 'node:fs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { calculateSecurityScore } from './score-calculator.js';
 
-vi.mock('fs');
+mock.module('node:fs', () => ({
+  default: {
+    readFileSync: mock(),
+  },
+  readFileSync: mock(),
+}));
 
 describe('calculateSecurityScore', () => {
   const mockReportsDir = '/mock/reports';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    (fs.readFileSync as any).mockClear();
   });
 
   it('should calculate perfect score (100) when all reports are clean', () => {
@@ -72,7 +77,7 @@ describe('calculateSecurityScore', () => {
   });
 
   it('should calculate penetration score correctly with High severity', () => {
-    vi.mocked(fs.readFileSync).mockImplementation((p: any) => {
+    (fs.readFileSync as any).mockImplementation((p: any) => {
       if (p.includes('static-analysis-report.json'))
         return JSON.stringify({ violations: [] });
       if (p.includes('s1-s9-report.json'))

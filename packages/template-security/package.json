@@ -16,8 +16,8 @@
     "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
     "dev": "tsc -p tsconfig.json --watch",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "validate:s1": "bun ../../tools/security-scripts/verify-env-config.ts",
     "scan:patterns": "bun src/scanners/pattern-scanner.ts",
     "report:orchestrate": "bun src/utils/report-orchestrator.ts",
@@ -37,7 +37,6 @@
   "devDependencies": {
     "@types/bun": "latest",
     "cross-env": "^10.1.0",
-    "vitest": "1.6.1",
     "typescript": "^5.3.3"
   }
 }

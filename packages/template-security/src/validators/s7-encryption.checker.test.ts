@@ -3,25 +3,31 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import fg from 'fast-glob';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { S7EncryptionChecker } from './s7-encryption.checker.js';
 
-vi.mock('fast-glob');
-vi.mock('fs/promises');
+mock.module('fast-glob', () => ({
+  default: mock(),
+}));
+
+mock.module('node:fs/promises', () => ({
+  readFile: mock(),
+}));
 
 describe('S7EncryptionChecker', () => {
   const checker = new S7EncryptionChecker();
   const mockTemplatePath = '/mock/template';
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    (fg as any).mockClear();
+    (readFile as any).mockClear();
   });
 
   describe('validate', () => {
     it('should pass clean code', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue('const x = 1;' as never);
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue('const x = 1;');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -31,9 +37,9 @@ describe('S7EncryptionChecker', () => {
     });
 
     it('should detect PII in localStorage (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'localStorage.setItem("userEmail", "test@test.com");' as never
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue(
+        'localStorage.setItem("userEmail", "test@test.com");'
       );
 
       const result = await checker.validate(mockTemplatePath);
@@ -44,10 +50,8 @@ describe('S7EncryptionChecker', () => {
     });
 
     it('should detect console.log with PII (WARNING)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.ts'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        'console.log("User email is:", email);' as never
-      );
+      (fg as any).mockResolvedValue(['file1.ts']);
+      (readFile as any).mockResolvedValue('console.log("User email is:", email);');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -57,10 +61,8 @@ describe('S7EncryptionChecker', () => {
     });
 
     it('should detect raw credit card input without Stripe (FATAL)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.tsx'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        '<input name="card-number" />' as never
-      );
+      (fg as any).mockResolvedValue(['file1.tsx']);
+      (readFile as any).mockResolvedValue('<input name="card-number" />');
 
       const result = await checker.validate(mockTemplatePath);
 
@@ -69,9 +71,9 @@ describe('S7EncryptionChecker', () => {
     });
 
     it('should pass raw credit card input WITH Stripe', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.tsx'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        '<input name="card" /> import { CardElement } from "@stripe/react-stripe-js";' as never
+      (fg as any).mockResolvedValue(['file1.tsx']);
+      (readFile as any).mockResolvedValue(
+        '<input name="card" /> import { CardElement } from "@stripe/react-stripe-js";'
       );
 
       const result = await checker.validate(mockTemplatePath);
@@ -81,9 +83,9 @@ describe('S7EncryptionChecker', () => {
     });
 
     it('should detect dangerouslySetInnerHTML (WARNING)', async () => {
-      vi.mocked(fg).mockResolvedValue(['file1.tsx'] as never);
-      vi.mocked(readFile).mockResolvedValue(
-        '<div dangerouslySetInnerHTML={{ __html: data }} />' as never
+      (fg as any).mockResolvedValue(['file1.tsx']);
+      (readFile as any).mockResolvedValue(
+        '<div dangerouslySetInnerHTML={{ __html: data }} />'
       );
 
       const result = await checker.validate(mockTemplatePath);
@@ -93,13 +95,8 @@ describe('S7EncryptionChecker', () => {
     });
 
     it('should drop score further with many warnings', async () => {
-      vi.mocked(fg).mockResolvedValue([
-        'f1.ts',
-        'f2.ts',
-        'f3.ts',
-        'f4.ts',
-      ] as never);
-      vi.mocked(readFile).mockResolvedValue('dangerouslySetInnerHTML' as never);
+      (fg as any).mockResolvedValue(['f1.ts', 'f2.ts', 'f3.ts', 'f4.ts']);
+      (readFile as any).mockResolvedValue('dangerouslySetInnerHTML');
 
       const result = await checker.validate(mockTemplatePath);
       expect(result.score).toBe(60);
