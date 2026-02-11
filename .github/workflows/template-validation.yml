@@ -6,14 +6,11 @@ on:
       - 'templates/**'
       - 'packages/template-*/**'
   push:
-    branches:
-      - main
-      - develop
     paths:
       - 'templates/**'
 
 env:
-  BUN_VERSION: '1.1.45'
+  BUN_VERSION: '1.0.25'
   NODE_VERSION: '20'
   # S1 CI Mocks
   DATABASE_URL: ${{ secrets.DATABASE_URL }}
