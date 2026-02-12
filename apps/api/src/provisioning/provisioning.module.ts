@@ -1,5 +1,5 @@
 import { AuditService } from '@apex/audit';
-import { DbModule, TenantRegistryService } from '@apex/db';
+import { DbModule } from '@apex/db';
 import { Module } from '@nestjs/common';
 import { ProvisioningController } from './provisioning.controller.js';
 import { ProvisioningService } from './provisioning.service.js';
