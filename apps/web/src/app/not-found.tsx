@@ -1,5 +1,5 @@
 'use client';
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/contexts/SettingsProvider";
@@ -22,9 +22,18 @@ const t = {
 };
 
 export default function NotFound() {
-  const { language = 'ar' } = useSettings();
-  const activeLang = (t[language as keyof typeof t] ? language : 'ar') as keyof typeof t;
-  const content = t[activeLang];
+  const { language } = useSettings();
+
+  // Robust fallback logic
+  const validLangs = ['en', 'ar'] as const;
+  type LangKey = typeof validLangs[number];
+
+  // Ensure we have a valid key, defaulting to 'ar' if undefined or invalid
+  const safeLang: LangKey = (language && validLangs.includes(language as LangKey))
+    ? (language as LangKey)
+    : 'ar';
+
+  const content = t[safeLang];
 
   return (
     <div className="container flex min-h-[70vh] flex-col items-center justify-center text-center">
@@ -37,14 +46,12 @@ export default function NotFound() {
         {content.description}
       </p>
       <div className="mt-8 flex items-center gap-4">
-        <Button asChild>
-          <Link href="/">{content.returnHome}</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/contact">
-            {content.contactSupport}
-          </Link>
-        </Button>
+        <Link href="/" className={buttonVariants({ variant: "default" })}>
+          {content.returnHome}
+        </Link>
+        <Link href="/contact" className={buttonVariants({ variant: "outline" })}>
+          {content.contactSupport}
+        </Link>
       </div>
     </div>
   );

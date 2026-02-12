@@ -3,27 +3,27 @@
  * Following S1 (Standard Setup) & S8 (Structural Integrity)
  */
 
-export {
-  BrickSchema,
-  BlueprintSchema,
-  validateBlueprint,
-  validateBrick,
-  type Brick,
-  type Blueprint,
-  type ResolvedBrick,
-} from './schema/v3';
-export { v3Resolver, type ResolverContext } from './resolver/v3-resolver';
 export * from './bricks/definitions';
-export * from './templates/v3-blueprints';
 export {
+  cartTemplate,
+  checkoutTemplate,
   findSlotById,
-  updateSlotProps,
-  TemplateRenderer,
   getComponentEntry,
   homeTemplate,
-  productTemplate,
-  checkoutTemplate,
-  cartTemplate,
   type PageTemplate,
+  productTemplate,
+  TemplateRenderer,
   type TemplateSlot,
+  updateSlotProps,
 } from './legacy';
+export { type ResolverContext, v3Resolver } from './resolver/v3-resolver';
+export {
+  type Blueprint,
+  BlueprintSchema,
+  type Brick,
+  BrickSchema,
+  type ResolvedBrick,
+  validateBlueprint,
+  validateBrick,
+} from './schema/v3';
+export * from './templates/v3-blueprints';

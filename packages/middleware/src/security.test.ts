@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CsrfGuard,
   CsrfProtection,
-  SecurityHeadersMiddleware,
   defaultCorsConfig,
   getTenantCorsConfig,
+  SecurityHeadersMiddleware,
 } from './security.js';
 
 describe('SecurityMiddleware', () => {

@@ -12,8 +12,8 @@ import {
   Injectable,
   SetMetadata,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { type TenantRequest } from './tenant-isolation.middleware';
+import type { Reflector } from '@nestjs/core';
+import type { TenantRequest } from './tenant-isolation.middleware';
 
 export const FEATURE_KEY = 'governance_feature';
 

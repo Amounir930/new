@@ -4,7 +4,6 @@
  * Enforces resource-level quotas (max products, max orders, etc.)
  */
 
-import { Observable } from 'rxjs';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -13,8 +12,9 @@ import {
   type NestInterceptor,
   SetMetadata,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { type TenantRequest } from './tenant-isolation.middleware';
+import type { Reflector } from '@nestjs/core';
+import type { Observable } from 'rxjs';
+import type { TenantRequest } from './tenant-isolation.middleware';
 
 export const QUOTA_KEY = 'governance_quota';
 
@@ -27,7 +27,7 @@ export const CheckQuota = (resource: 'products' | 'orders' | 'pages') =>
 
 @Injectable()
 export class QuotaInterceptor implements NestInterceptor {
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
 
   async intercept(
     context: ExecutionContext,

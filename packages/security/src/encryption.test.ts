@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  EncryptionService,
   decrypt,
+  EncryptionService,
   encrypt,
   generateApiKey,
   hashApiKey,

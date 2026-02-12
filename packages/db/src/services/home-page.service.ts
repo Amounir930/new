@@ -11,12 +11,12 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../connection';
 import {
-  type FlashSaleProduct,
-  type TenantConfig,
   bentoGrids,
+  type FlashSaleProduct,
   flashSaleProducts,
   flashSales,
   searchAnalytics,
+  type TenantConfig,
   tenantConfig,
 } from '../schema/storefront';
 
@@ -50,7 +50,7 @@ export class HomePageService {
       .from(flashSales)
       .where(eq(flashSales.status, 'active'))
       .limit(1);
-    let flashSalesData: any = undefined;
+    let flashSalesData: any;
 
     if (flashCampaign[0]) {
       const products = await db

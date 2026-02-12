@@ -19,7 +19,7 @@ mock.module('./connection.js', () => ({
 }));
 
 // Import module AFTER mocking
-await import('./index');
+const { withTenantConnection } = await import('./index');
 
 // Helper to check DB availability
 const _isDbReachable = async () => {

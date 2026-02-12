@@ -14,8 +14,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { orders } from './orders';
-import { orderItems } from './orders';
+import { orderItems, orders } from './orders';
 
 /**
  * RMA Requests Table

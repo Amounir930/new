@@ -1,12 +1,7 @@
 'use client';
 
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useRef,
-  useEffect,
-} from 'react';
+import type React from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 // Note: cn is imported from core/utils to avoid ambiguous exports
 import { cn } from '../core/utils';
 
@@ -56,13 +51,14 @@ export const CardContainer = ({
           perspective: '1000px',
         }}
       >
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: 3D effect requires mouse events */}
         <div
           ref={containerRef}
           onMouseEnter={handleMouseEnter}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           className={cn(
-            'flex items-center justify-center relative transition-all duration-200 ease-linear',
+            'flex items-center justify-center w-fit transition-all duration-200 ease-linear',
             className
           )}
           style={{

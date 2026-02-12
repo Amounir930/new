@@ -136,8 +136,12 @@ export class EncryptionService {
       }
     }
 
+    this.validateMasterKey(this.masterKey, isProduction);
+  }
+
+  private validateMasterKey(key: string, isProduction: boolean): void {
     // Always enforce minimum key length
-    if (this.masterKey.length < 32) {
+    if (key.length < 32) {
       throw new Error(
         'S1 Violation: ENCRYPTION_MASTER_KEY must be at least 32 characters'
       );
@@ -155,7 +159,7 @@ export class EncryptionService {
         'key',
         'secret',
       ];
-      const keyLower = this.masterKey.toLowerCase();
+      const keyLower = key.toLowerCase();
       for (const pattern of forbiddenPatterns) {
         if (keyLower.includes(pattern)) {
           throw new Error(
@@ -168,20 +172,20 @@ export class EncryptionService {
       // Must have: uppercase, lowercase, numbers, and special characters
       const complexityRegex =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/;
-      if (!complexityRegex.test(this.masterKey)) {
+      if (!complexityRegex.test(key)) {
         throw new Error(
           'S1 Violation: ENCRYPTION_MASTER_KEY must contain uppercase, lowercase, numbers, and special characters (@$!%*?&)'
         );
       }
 
       // S7 FIX: Entropy check (4.0 bits per character minimum)
-      const calculateEntropy = (key: string): number => {
-        const charSet = new Set(key.split(''));
+      const calculateEntropy = (k: string): number => {
+        const charSet = new Set(k.split(''));
         const poolSize = charSet.size;
-        return Math.log2(poolSize ** key.length) / key.length;
+        return Math.log2(poolSize ** k.length) / k.length;
       };
 
-      const entropy = calculateEntropy(this.masterKey);
+      const entropy = calculateEntropy(key);
       if (entropy < 4.0) {
         throw new Error(
           `S1 Violation: ENCRYPTION_MASTER_KEY has insufficient entropy (${entropy.toFixed(

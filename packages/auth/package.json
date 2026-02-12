@@ -17,6 +17,7 @@
     "test": "cross-env NODE_ENV=test vitest run",
     "test:coverage": "cross-env NODE_ENV=test vitest run --coverage",
     "lint": "biome check .",
+    "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

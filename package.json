@@ -9,8 +9,9 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
     "format": "biome format --write .",
-    "check": "biome check --apply .",
+    "check": "biome check --write .",
     "ci": "biome ci .",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
@@ -26,7 +27,7 @@
     "report:orchestrate": "cd packages/template-security && bun run report:orchestrate"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.5.3",
+    "@biomejs/biome": "latest",
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
     "@types/supertest": "^6.0.3",

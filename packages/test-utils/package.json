@@ -17,6 +17,7 @@
     "dev": "tsup --watch",
     "test": "bun test",
     "lint": "biome check .",
+    "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [

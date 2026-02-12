@@ -6,6 +6,8 @@
  * @module @apex/db/schema/storefront
  */
 
+// Auth & Security
+export * from './auth';
 export * from './cart';
 export * from './categories';
 // Configuration
@@ -16,34 +18,32 @@ export * from './content';
 export * from './coupons';
 // Customers
 export * from './customers';
-// Orders & Cart
-export * from './orders';
-// Products
-export * from './products';
-// Reviews & Wishlists
-export * from './reviews';
-export * from './wishlists';
-// Home Page Blueprint & Marketing
-export * from './home';
-// Shipping & Logistics
-export * from './shipping';
-// Locations & Branches
-export * from './locations';
-// Forensic Logs
-export * from './payment-logs';
-// Auth & Security
-export * from './auth';
-// Order Timeline & Tracking
-export * from './timeline';
 // FAQ & Help
 export * from './faq';
+// Home Page Blueprint & Marketing
+export * from './home';
+export * from './knowledge-base';
+// Locations & Branches
+export * from './locations';
 // Loyalty & Engagement
 export * from './loyalty';
-export * from './wallet-transactions';
-export * from './referrals';
-export * from './rma';
 export * from './notifications';
+// Orders & Cart
+export * from './orders';
+// Forensic Logs
+export * from './payment-logs';
+export * from './product-notices';
+// Products
+export * from './products';
+export * from './referrals';
+// Reviews & Wishlists
+export * from './reviews';
+export * from './rma';
+// Shipping & Logistics
+export * from './shipping';
 // Interactive & Content
 export * from './size-guides';
-export * from './knowledge-base';
-export * from './product-notices';
+// Order Timeline & Tracking
+export * from './timeline';
+export * from './wallet-transactions';
+export * from './wishlists';

@@ -4,7 +4,7 @@
  * Best for: Migration to other platforms, backups
  */
 
-import { type TenantRegistryService, publicPool } from '@apex/db';
+import { publicPool, type TenantRegistryService } from '@apex/db';
 import { Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,

@@ -7,14 +7,13 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "ignore": [
-      "**/next-env.d.ts",
-      "**/tailwind.config.d.ts",
-      "**/.next/**",
-      "**/dist/**",
-      "**/node_modules/**"
-    ],
-    "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"]
+    "includes": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "**/*.json"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -57,7 +56,7 @@
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
-      "trailingComma": "es5",
+      "trailingCommas": "es5",
       "semicolons": "always"
     },
     "parser": {

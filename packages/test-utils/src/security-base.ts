@@ -69,7 +69,7 @@ export function validateMetadataValue(value: any, pathIdx: string) {
   } else if (typeof value === 'object' && value !== null) {
     // Recursive scan
     for (const key in value) {
-      if (Object.prototype.hasOwnProperty.call(value, key)) {
+      if (Object.hasOwn(value, key)) {
         validateMetadataValue(value[key], `${pathIdx}.${key}`);
       }
     }

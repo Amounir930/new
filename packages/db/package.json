@@ -24,7 +24,8 @@
     "test:s2": "cross-env NODE_ENV=test bun test src/s2-isolation.test.ts",
     "test:s7": "cross-env NODE_ENV=test bun test src/s7-encryption.test.ts",
     "test:coverage": "cross-env NODE_ENV=test bun test --coverage",
-    "lint": "biome check --apply .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

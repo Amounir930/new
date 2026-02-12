@@ -7,54 +7,23 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "paths": {
-      "@apex/config": [
-        "../../packages/config/dist/index.d.ts"
-      ],
-      "@apex/audit": [
-        "../../packages/audit/dist/index.d.ts"
-      ],
-      "@apex/db": [
-        "../../packages/db/dist/index.d.ts"
-      ],
-      "@apex/middleware": [
-        "../../packages/middleware/dist/index.d.ts"
-      ],
-      "@apex/provisioning": [
-        "../../packages/provisioning/dist/index.d.ts"
-      ],
-      "@apex/auth": [
-        "../../packages/auth/dist/index.d.ts"
-      ],
-      "@apex/events": [
-        "../../packages/events/dist/index.d.ts"
-      ],
-      "@apex/security": [
-        "../../packages/security/dist/index.d.ts"
-      ],
-      "@apex/test-utils": [
-        "../../packages/test-utils/dist/index.d.ts"
-      ],
-      "@apex/ui": [
-        "../../packages/ui/dist/index.d.ts"
-      ],
-      "@apex/validators": [
-        "../../packages/validators/dist/index.d.ts"
-      ],
+      "@apex/config": ["../../packages/config/dist/index.d.ts"],
+      "@apex/audit": ["../../packages/audit/dist/index.d.ts"],
+      "@apex/db": ["../../packages/db/dist/index.d.ts"],
+      "@apex/middleware": ["../../packages/middleware/dist/index.d.ts"],
+      "@apex/provisioning": ["../../packages/provisioning/dist/index.d.ts"],
+      "@apex/auth": ["../../packages/auth/dist/index.d.ts"],
+      "@apex/events": ["../../packages/events/dist/index.d.ts"],
+      "@apex/security": ["../../packages/security/dist/index.d.ts"],
+      "@apex/test-utils": ["../../packages/test-utils/dist/index.d.ts"],
+      "@apex/ui": ["../../packages/ui/dist/index.d.ts"],
+      "@apex/validators": ["../../packages/validators/dist/index.d.ts"],
       "@apex/template-config": [
         "../../packages/template-config/dist/index.d.ts"
       ],
-      "@apex/export": [
-        "../../packages/export/dist/index.d.ts"
-      ]
+      "@apex/export": ["../../packages/export/dist/index.d.ts"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    "**/*.spec.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "build", "**/*.spec.ts"]
 }

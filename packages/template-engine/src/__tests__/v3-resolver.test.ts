@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { v3Resolver } from '../resolver/v3-resolver';
 import type { ResolverContext } from '../resolver/v3-resolver';
+import { v3Resolver } from '../resolver/v3-resolver';
 import { validateBlueprint } from '../schema/v3';
 
 describe('LEGO v3 Resolver Engine', () => {

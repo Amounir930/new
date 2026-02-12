@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowRightIcon } from '@radix-ui/react-icons';
-import { ComponentPropsWithoutRef, ReactNode } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { Button } from '../core/button';
 import { cn } from '../core/utils';

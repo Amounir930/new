@@ -5,10 +5,10 @@
  */
 
 import { Module } from '@nestjs/common';
-import { ExportStrategyFactory } from './export-strategy.factory.js';
 import { ExportController } from './export.controller.js';
 import { ExportService } from './export.service.js';
 import { ExportWorker } from './export.worker.js';
+import { ExportStrategyFactory } from './export-strategy.factory.js';
 import { AnalyticsExportStrategy } from './strategies/analytics-export.strategy.js';
 import { LiteExportStrategy } from './strategies/lite-export.strategy.js';
 import { NativeExportStrategy } from './strategies/native-export.strategy.js';

@@ -1,4 +1,4 @@
-import { type Blueprint, type Brick, type ResolvedBrick } from './schema/v3';
+import type { Blueprint, Brick, ResolvedBrick } from './schema/v3';
 
 /**
  * 🏛️ Legacy Type Aliases (LEGO v3 Compatibility)
