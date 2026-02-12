@@ -3,7 +3,6 @@
  * Ensures directional animations work correctly in both LTR and RTL layouts
  */
 
-import { cn } from '../core/utils';
 // Note: cn is imported from core/utils to avoid ambiguous exports
 
 /**
