@@ -2,40 +2,59 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "composite": true,
+    "composite": false,
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "Node",
     "paths": {
-      "@apex/audit": ["../../packages/audit/src/index.ts"],
-      "@apex/db": ["../../packages/db/src/index.ts"],
-      "@apex/config": ["../../packages/config/src/index.ts"],
-      "@apex/provisioning": ["../../packages/provisioning/src/index.ts"],
-      "@apex/middleware": ["../../packages/middleware/src/index.ts"],
-      "@apex/events": ["../../packages/events/src/index.ts"],
-      "@apex/ui": ["../../packages/ui/src/index.ts"]
+      "@apex/config": [
+        "../../packages/config/dist/index.d.ts"
+      ],
+      "@apex/audit": [
+        "../../packages/audit/dist/index.d.ts"
+      ],
+      "@apex/db": [
+        "../../packages/db/dist/index.d.ts"
+      ],
+      "@apex/middleware": [
+        "../../packages/middleware/dist/index.d.ts"
+      ],
+      "@apex/provisioning": [
+        "../../packages/provisioning/dist/index.d.ts"
+      ],
+      "@apex/auth": [
+        "../../packages/auth/dist/index.d.ts"
+      ],
+      "@apex/events": [
+        "../../packages/events/dist/index.d.ts"
+      ],
+      "@apex/security": [
+        "../../packages/security/dist/index.d.ts"
+      ],
+      "@apex/test-utils": [
+        "../../packages/test-utils/dist/index.d.ts"
+      ],
+      "@apex/ui": [
+        "../../packages/ui/dist/index.d.ts"
+      ],
+      "@apex/validators": [
+        "../../packages/validators/dist/index.d.ts"
+      ],
+      "@apex/template-config": [
+        "../../packages/template-config/dist/index.d.ts"
+      ],
+      "@apex/export": [
+        "../../packages/export/dist/index.d.ts"
+      ]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "build", "**/*.spec.ts"],
-  "references": [
-    {
-      "path": "../../packages/config"
-    },
-    {
-      "path": "../../packages/db"
-    },
-    {
-      "path": "../../packages/middleware"
-    },
-    {
-      "path": "../../packages/audit"
-    },
-    {
-      "path": "../../packages/auth"
-    },
-    {
-      "path": "../../packages/provisioning"
-    }
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/*.spec.ts"
   ]
 }

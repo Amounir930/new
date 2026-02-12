@@ -1,0 +1,82 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-1",
+      "description": "Fashion model posing",
+      "imageUrl": "https://images.unsplash.com/photo-1613915617430-8ab0fd7c6baf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYXNoaW9uJTIwbW9kZWx8ZW58MHx8fHwxNzcwODMyMjUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fashion model"
+    },
+    {
+      "id": "category-men",
+      "description": "Man wearing a stylish jacket",
+      "imageUrl": "https://images.unsplash.com/photo-1507680434567-5739c80be1ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBmYXNoaW9ufGVufDB8fHx8MTc3MDg2OTIzMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man fashion"
+    },
+    {
+      "id": "category-women",
+      "description": "Woman in a summer dress",
+      "imageUrl": "https://images.unsplash.com/photo-1571513800374-df1bbe650e56?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3b21hbiUyMGZhc2hpb258ZW58MHx8fHwxNzcwNzc0ODExfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman fashion"
+    },
+    {
+      "id": "category-kids",
+      "description": "Child wearing a colorful outfit",
+      "imageUrl": "https://images.unsplash.com/photo-1695262620869-fedab63bcc41?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjaGlsZCUyMGZhc2hpb258ZW58MHx8fHwxNzcwODM1NTA1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "child fashion"
+    },
+    {
+      "id": "product-1-1",
+      "description": "Blue denim jacket front",
+      "imageUrl": "https://images.unsplash.com/photo-1614693348454-1e0710d21c60?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkZW5pbSUyMGphY2tldHxlbnwwfHx8fDE3NzA4NDY5ODl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "denim jacket"
+    },
+    {
+      "id": "product-1-2",
+      "description": "Blue denim jacket back",
+      "imageUrl": "https://images.unsplash.com/photo-1614693348454-1e0710d21c60?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkZW5pbSUyMGphY2tldHxlbnwwfHx8fDE3NzA4NDY5ODl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "denim jacket"
+    },
+    {
+      "id": "product-2-1",
+      "description": "White cotton t-shirt",
+      "imageUrl": "https://images.unsplash.com/photo-1603924217873-6bab89f381de?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx3aGl0ZSUyMHQtc2hpcnR8ZW58MHx8fHwxNzcwODI1NzM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "white t-shirt"
+    },
+    {
+      "id": "product-3-1",
+      "description": "Black skinny jeans",
+      "imageUrl": "https://images.unsplash.com/photo-1655666730043-b3aee96aa161?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxibGFjayUyMGplYW5zfGVufDB8fHx8MTc3MDg2OTIzMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "black jeans"
+    },
+    {
+      "id": "product-4-1",
+      "description": "Floral summer dress",
+      "imageUrl": "https://images.unsplash.com/photo-1604506272685-a999a4d122e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzdW1tZXIlMjBkcmVzc3xlbnwwfHx8fDE3NzA4NTg0NjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "summer dress"
+    },
+    {
+      "id": "product-5-1",
+      "description": "Leather ankle boots",
+      "imageUrl": "https://images.unsplash.com/photo-1599012307605-23a0ebe4d321?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxsZWF0aGVyJTIwYm9vdHN8ZW58MHx8fHwxNzcwODEzNjA1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "leather boots"
+    },
+    {
+      "id": "product-6-1",
+      "description": "Gray wool sweater",
+      "imageUrl": "https://images.unsplash.com/photo-1601379327928-bedfaf9da2d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3b29sJTIwc3dlYXRlcnxlbnwwfHx8fDE3NzA4NTg0NjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wool sweater"
+    },
+    {
+      "id": "product-7-1",
+      "description": "Striped linen shirt",
+      "imageUrl": "https://images.unsplash.com/photo-1766818437361-c2be0d759ebc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bGluZW4lMjBzaGlydHxlbnwwfHx8fDE3NzA3NzgyOTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "linen shirt"
+    },
+    {
+      "id": "product-8-1",
+      "description": "Classic trench coat",
+      "imageUrl": "https://images.unsplash.com/photo-1589400445193-c881a4b0b38a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx0cmVuY2glMjBjb2F0fGVufDB8fHx8MTc3MDg1MjQwMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "trench coat"
+    }
+  ]
+}

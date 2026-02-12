@@ -42,7 +42,8 @@ function auditControllers() {
       if (line.match(/@(Body|Query|Param)\(.*\).*:.*any/)) {
         if (!line.trim().startsWith('//')) {
           console.error(
-            `❌ S3 VIOLATION: 'any' type in input decorator at ${file}:${index + 1
+            `❌ S3 VIOLATION: 'any' type in input decorator at ${file}:${
+              index + 1
             }`
           );
           console.error(`   > ${line.trim()}`);
@@ -77,9 +78,8 @@ function auditControllers() {
     }
   }
 
-
   // 4. S3.3 Payload Size Check (New)
-  console.log('🔍 S3.3: Verifying Payload Size Limits in main.ts...')
+  console.log('🔍 S3.3: Verifying Payload Size Limits in main.ts...');
   const mainPath = 'apps/api/src/main.ts';
   const mainContent = readFileSync(mainPath, 'utf-8');
 

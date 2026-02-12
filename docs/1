@@ -1,0 +1,2225 @@
+{
+    "glossary": {
+        "title": "StyleGrove Frontend Master Specification",
+        "version": "4.0.0",
+        "app_name": "StyleGrove",
+        "target_benchmark": [
+            "Amazon",
+            "Jumia",
+            "AliExpress",
+            "Noon"
+        ],
+        "total_pages": 65,
+        "languages": [
+            "arabic",
+            "english"
+        ],
+        "themes": [
+            "day_mode",
+            "night_mode",
+            "design_mode"
+        ],
+        "last_updated": "2026-02-12"
+    },
+    "technical_stack": {
+        "framework": "Next.js 14 (App Router)",
+        "language": "TypeScript 5.3+ (Strict Mode)",
+        "runtime": "Bun (Performance Optimized)",
+        "styling": "TailwindCSS + Shadcn/UI + PostCSS",
+        "i18n_library": "next-intl",
+        "state_management": "React Query + Zustand",
+        "animations": "Framer Motion (60fps)",
+        "icons": "Lucide React + Shadcn/UI Icons",
+        "charts": "Recharts",
+        "maps": "Leaflet + Mapbox",
+        "video": "Video.js + Plyr",
+        "image_optimization": "Next.js Image + Sharp"
+    },
+    "performance_targets": {
+        "lcp": "< 2.5s (Largest Contentful Paint)",
+        "fid": "< 100ms (First Input Delay)",
+        "cls": "< 0.1 (Cumulative Layout Shift)",
+        "ttf": "< 0.8s (Time to First Byte)",
+        "fcp": "< 1.8s (First Contentful Paint)",
+        "mobile_lighthouse": "> 90",
+        "desktop_lighthouse": "> 95",
+        "bundle_size": "< 250KB (compressed)"
+    },
+    "design_system": {
+        "philosophy": "Atomic Design (Atoms → Molecules → Organisms → Templates → Pages)",
+        "accessibility": "WCAG 2.1 AA Compliant",
+        "mobile_first": true,
+        "touch_targets": "> 44px",
+        "breakpoints": {
+            "sm": "640px (Mobile)",
+            "md": "768px (Tablet)",
+            "lg": "1024px (Desktop)",
+            "xl": "1280px (Wide)",
+            "2xl": "1536px (Ultra-wide)"
+        },
+        "spacing_scale": [
+            4,
+            8,
+            12,
+            16,
+            20,
+            24,
+            32,
+            40,
+            48,
+            64,
+            80,
+            96
+        ],
+        "border_radius": [
+            4,
+            8,
+            12,
+            16,
+            24,
+            32
+        ],
+        "shadows": {
+            "sm": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+            "md": "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            "lg": "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+            "xl": "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+            "2xl": "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+        },
+        "transitions": {
+            "fast": "all 0.15s ease",
+            "default": "all 0.3s ease",
+            "slow": "all 0.5s ease"
+        },
+        "typography": {
+            "english": {
+                "font_family": "'Inter', sans-serif",
+                "weights": [
+                    300,
+                    400,
+                    500,
+                    600,
+                    700,
+                    800
+                ],
+                "line_height": 1.5,
+                "letter_spacing": 0.3
+            },
+            "arabic": {
+                "font_family": "'Tajawal', sans-serif",
+                "weights": [
+                    300,
+                    400,
+                    500,
+                    700,
+                    800
+                ],
+                "line_height": 1.6,
+                "letter_spacing": 0.5
+            }
+        },
+        "color_schemes": {
+            "day_mode": {
+                "primary": "#3B82F6",
+                "primary_dark": "#2563EB",
+                "primary_light": "#60A5FA",
+                "secondary": "#6366F1",
+                "secondary_dark": "#4F46E5",
+                "secondary_light": "#818CF8",
+                "background": "#FFFFFF",
+                "surface": "#F9FAFB",
+                "surface_hover": "#F3F4F6",
+                "text": "#1F2937",
+                "text_secondary": "#6B7280",
+                "text_tertiary": "#9CA3AF",
+                "border": "#E5E7EB",
+                "border_light": "#F3F4F6",
+                "success": "#10B981",
+                "success_dark": "#059669",
+                "success_light": "#34D399",
+                "warning": "#F59E0B",
+                "warning_dark": "#D97706",
+                "warning_light": "#FBBF24",
+                "error": "#EF4444",
+                "error_dark": "#DC2626",
+                "error_light": "#F87171",
+                "info": "#3B82F6",
+                "info_dark": "#2563EB",
+                "info_light": "#60A5FA",
+                "disabled": "#D1D5DB"
+            },
+            "night_mode": {
+                "primary": "#60A5FA",
+                "primary_dark": "#3B82F6",
+                "primary_light": "#93C5FD",
+                "secondary": "#818CF8",
+                "secondary_dark": "#6366F1",
+                "secondary_light": "#A5B4FC",
+                "background": "#111827",
+                "surface": "#1F2937",
+                "surface_hover": "#374151",
+                "text": "#F3F4F6",
+                "text_secondary": "#9CA3AF",
+                "text_tertiary": "#6B7280",
+                "border": "#374151",
+                "border_light": "#4B5563",
+                "success": "#34D399",
+                "success_dark": "#10B981",
+                "success_light": "#6EE7B7",
+                "warning": "#FBBF24",
+                "warning_dark": "#F59E0B",
+                "warning_light": "#FCD34D",
+                "error": "#F87171",
+                "error_dark": "#EF4444",
+                "error_light": "#FCA5A5",
+                "info": "#60A5FA",
+                "info_dark": "#3B82F6",
+                "info_light": "#93C5FD",
+                "disabled": "#4B5563"
+            },
+            "design_mode": {
+                "primary": "#8B5CF6",
+                "primary_dark": "#7C3AED",
+                "primary_light": "#A78BFA",
+                "secondary": "#EC4899",
+                "secondary_dark": "#DB2777",
+                "secondary_light": "#F472B6",
+                "background": "#F9FAFB",
+                "surface": "#FFFFFF",
+                "surface_hover": "#F3F4F6",
+                "text": "#1F2937",
+                "text_secondary": "#6B7280",
+                "text_tertiary": "#9CA3AF",
+                "border": "#E5E7EB",
+                "border_light": "#F3F4F6",
+                "success": "#10B981",
+                "success_dark": "#059669",
+                "success_light": "#34D399",
+                "warning": "#F59E0B",
+                "warning_dark": "#D97706",
+                "warning_light": "#FBBF24",
+                "error": "#EF4444",
+                "error_dark": "#DC2626",
+                "error_light": "#F87171",
+                "info": "#06B6D4",
+                "info_dark": "#0891B2",
+                "info_light": "#22D3EE",
+                "disabled": "#D1D5DB"
+            }
+        }
+    },
+    "localization": {
+        "languages": {
+            "english": {
+                "code": "en-US",
+                "direction": "ltr",
+                "date_format": "MM/DD/YYYY",
+                "time_format": "hh:mm A",
+                "currency": "USD",
+                "numerals": "western",
+                "decimal_separator": ".",
+                "thousand_separator": ","
+            },
+            "arabic": {
+                "code": "ar-SA",
+                "direction": "rtl",
+                "date_format": "DD/MM/YYYY",
+                "time_format": "HH:mm",
+                "currency": "SAR",
+                "numerals": "eastern_arabic",
+                "decimal_separator": ",",
+                "thousand_separator": "."
+            }
+        },
+        "rtl_support": true,
+        "dynamic_direction_switching": true,
+        "locale_aware_formatting": true,
+        "currency_switching": true,
+        "auto_language_detection": true
+    },
+    "pages_specification": {
+        "home_page": {
+            "page_id": "home",
+            "route": "/",
+            "sections": 8,
+            "features": {
+                "hero_slider": {
+                    "enabled": true,
+                    "animation": "fade",
+                    "auto_play": true,
+                    "duration": 5000,
+                    "indicators": true,
+                    "navigation_arrows": true
+                },
+                "featured_categories": {
+                    "enabled": true,
+                    "max_categories": 12,
+                    "horizontal_scroll": true,
+                    "icons": true
+                },
+                "trending_products": {
+                    "enabled": true,
+                    "title": "Trending Now",
+                    "products_per_row": {
+                        "mobile": 2,
+                        "tablet": 3,
+                        "desktop": 5
+                    },
+                    "auto_scroll": false
+                },
+                "flash_deals": {
+                    "enabled": true,
+                    "countdown_timer": true,
+                    "products_per_row": {
+                        "mobile": 2,
+                        "tablet": 3,
+                        "desktop": 4
+                    },
+                    "progress_bar": true
+                },
+                "best_sellers": {
+                    "enabled": true,
+                    "title": "Best Sellers",
+                    "products_per_row": {
+                        "mobile": 2,
+                        "tablet": 3,
+                        "desktop": 4
+                    }
+                },
+                "new_arrivals": {
+                    "enabled": true,
+                    "title": "New Arrivals",
+                    "products_per_row": {
+                        "mobile": 2,
+                        "tablet": 3,
+                        "desktop": 4
+                    },
+                    "badge": "New"
+                },
+                "brands_section": {
+                    "enabled": true,
+                    "logo_carousel": true,
+                    "clickable": true
+                },
+                "trust_signals": {
+                    "enabled": true,
+                    "badges": [
+                        "Free Shipping",
+                        "Easy Returns",
+                        "Secure Payment"
+                    ],
+                    "stats": [
+                        "1M+ Happy Customers",
+                        "10K+ Products",
+                        "24/7 Support"
+                    ]
+                }
+            }
+        },
+        "search_and_results": {
+            "page_id": "search",
+            "route": "/search",
+            "features": {
+                "global_search": {
+                    "ajax_search": true,
+                    "instant_results": true,
+                    "debounce_ms": 300,
+                    "max_results": 10,
+                    "show_categories": true,
+                    "show_products": true,
+                    "show_brands": true,
+                    "recent_searches": true,
+                    "trending_searches": true
+                },
+                "search_results": {
+                    "filters": {
+                        "price_range": true,
+                        "brands": true,
+                        "categories": true,
+                        "attributes": true,
+                        "ratings": true,
+                        "availability": true,
+                        "shipping_options": true
+                    },
+                    "sorting": [
+                        "relevance",
+                        "price_low_high",
+                        "price_high_low",
+                        "newest",
+                        "popularity",
+                        "rating",
+                        "discount"
+                    ],
+                    "view_modes": [
+                        "grid",
+                        "list"
+                    ],
+                    "products_per_page": [
+                        12,
+                        24,
+                        36,
+                        48
+                    ],
+                    "infinite_scroll": true,
+                    "pagination": true,
+                    "product_cards": {
+                        "image_hover": true,
+                        "quick_add": true,
+                        "wishlist_button": true,
+                        "rating_display": true,
+                        "discount_badge": true,
+                        "stock_status": true
+                    }
+                }
+            }
+        },
+        "product_details": {
+            "page_id": "product",
+            "route": "/product/[slug]",
+            "features": {
+                "gallery": {
+                    "image_carousel": true,
+                    "thumbnail_navigation": true,
+                    "zoom_enabled": true,
+                    "zoom_type": "lens",
+                    "video_support": true,
+                    "360_view": true,
+                    "ar_preview": true
+                },
+                "product_info": {
+                    "title": true,
+                    "brand": true,
+                    "price": true,
+                    "discount_badge": true,
+                    "stock_status": true,
+                    "sku": true,
+                    "rating": true,
+                    "review_count": true,
+                    "wishlist_button": true,
+                    "share_buttons": true
+                },
+                "variants": {
+                    "color_swatches": true,
+                    "size_selector": true,
+                    "quantity_selector": true,
+                    "inventory_display": true,
+                    "out_of_stock_notify": true
+                },
+                "actions": {
+                    "add_to_cart": true,
+                    "buy_now": true,
+                    "add_to_wishlist": true
+                },
+                "description": {
+                    "tabs": [
+                        "Description",
+                        "Specifications",
+                        "Reviews",
+                        "Shipping"
+                    ],
+                    "rich_text": true,
+                    "images": true,
+                    "videos": true
+                },
+                "reviews": {
+                    "rating_breakdown": true,
+                    "review_list": true,
+                    "write_review": true,
+                    "verified_purchase_badge": true,
+                    "helpful_votes": true,
+                    "images_in_reviews": true,
+                    "filter_by_rating": true,
+                    "sort_reviews": true
+                },
+                "related_products": {
+                    "enabled": true,
+                    "max_products": 8,
+                    "title": "You May Also Like"
+                },
+                "frequently_bought_together": {
+                    "enabled": true,
+                    "checkbox_selection": true
+                },
+                "size_guide": {
+                    "interactive": true,
+                    "measurement_chart": true,
+                    "recommendation": true
+                }
+            }
+        },
+        "quick_view": {
+            "page_id": "quick_view",
+            "type": "modal",
+            "features": {
+                "trigger": "hover/click",
+                "gallery": true,
+                "variants": true,
+                "add_to_cart": true,
+                "wishlist": true,
+                "price": true,
+                "rating": true,
+                "max_images": 3,
+                "description_preview": true
+            }
+        },
+        "shopping_cart": {
+            "page_id": "cart",
+            "route": "/cart",
+            "features": {
+                "cart_items": {
+                    "product_image": true,
+                    "product_info": true,
+                    "variants": true,
+                    "quantity_selector": true,
+                    "price_breakdown": true,
+                    "remove_item": true,
+                    "move_to_wishlist": true
+                },
+                "cart_summary": {
+                    "subtotal": true,
+                    "shipping_estimate": true,
+                    "tax_estimate": true,
+                    "discount": true,
+                    "coupon_input": true,
+                    "coupon_validation": true,
+                    "total": true
+                },
+                "actions": {
+                    "continue_shopping": true,
+                    "proceed_to_checkout": true,
+                    "save_for_later": true
+                },
+                "recommendations": {
+                    "frequently_bought_together": true,
+                    "cart_abandonment": true
+                },
+                "empty_cart": {
+                    "illustration": true,
+                    "suggestions": true,
+                    "cta_buttons": true
+                }
+            }
+        },
+        "checkout": {
+            "page_id": "checkout",
+            "route": "/checkout",
+            "type": "one_page",
+            "features": {
+                "authentication": {
+                    "guest_checkout": true,
+                    "login_option": true,
+                    "registration_option": true
+                },
+                "shipping_address": {
+                    "saved_addresses": true,
+                    "add_new_address": true,
+                    "address_validation": true,
+                    "google_autocomplete": true,
+                    "set_as_default": true
+                },
+                "shipping_method": {
+                    "options": [
+                        "standard",
+                        "express",
+                        "same_day"
+                    ],
+                    "price_display": true,
+                    "estimated_delivery": true,
+                    "carrier_info": true
+                },
+                "payment_method": {
+                    "options": [
+                        "card",
+                        "cod",
+                        "wallet",
+                        "installments",
+                        "apple_pay",
+                        "google_pay"
+                    ],
+                    "saved_cards": true,
+                    "add_new_card": true,
+                    "card_validation": true,
+                    "installment_plans": true,
+                    "bnpl_providers": [
+                        "tabby",
+                        "tamara",
+                        "souhoola"
+                    ]
+                },
+                "order_summary": {
+                    "items_list": true,
+                    "price_breakdown": true,
+                    "coupon_application": true,
+                    "gift_wrapping": true,
+                    "order_notes": true
+                },
+                "review_order": true,
+                "place_order": true,
+                "terms_acceptance": true,
+                "secure_badge": true
+            }
+        },
+        "order_success": {
+            "page_id": "order_success",
+            "route": "/order/success",
+            "features": {
+                "confirmation_message": true,
+                "order_number": true,
+                "tracking_number": true,
+                "estimated_delivery": true,
+                "order_summary": true,
+                "actions": {
+                    "track_order": true,
+                    "continue_shopping": true,
+                    "view_order_history": true
+                },
+                "recommendations": true,
+                "share_order": true
+            }
+        },
+        "payment_failure": {
+            "page_id": "payment_failure",
+            "route": "/order/failed",
+            "features": {
+                "error_message": true,
+                "error_code": true,
+                "alternative_methods": true,
+                "retry_payment": true,
+                "contact_support": true,
+                "go_back_to_cart": true
+            }
+        },
+        "category_collection": {
+            "page_id": "category",
+            "route": "/category/[slug]",
+            "features": {
+                "hero_banner": true,
+                "breadcrumb": true,
+                "subcategories": true,
+                "filters_sidebar": true,
+                "sorting_options": true,
+                "view_modes": true,
+                "product_grid": true,
+                "infinite_scroll": true,
+                "pagination": true,
+                "empty_state": true
+            }
+        },
+        "flash_deals": {
+            "page_id": "flash_deals",
+            "route": "/deals",
+            "features": {
+                "countdown_timers": true,
+                "deal_badges": true,
+                "stock_indicators": true,
+                "filters": true,
+                "sorting": true,
+                "upcoming_deals": true,
+                "ended_deals": true
+            }
+        },
+        "compare_products": {
+            "page_id": "compare",
+            "route": "/compare",
+            "features": {
+                "add_products": true,
+                "remove_products": true,
+                "side_by_side": true,
+                "specifications": true,
+                "price_comparison": true,
+                "ratings_comparison": true,
+                "features_checklist": true,
+                "export_comparison": true
+            }
+        },
+        "store_locations": {
+            "page_id": "stores",
+            "route": "/stores",
+            "features": {
+                "map_integration": true,
+                "branch_list": true,
+                "branch_details": true,
+                "contact_info": true,
+                "working_hours": true,
+                "directions": true,
+                "filter_by_services": true,
+                "search_location": true
+            }
+        },
+        "login": {
+            "page_id": "login",
+            "route": "/login",
+            "features": {
+                "email_login": true,
+                "social_login": [
+                    "google",
+                    "facebook",
+                    "apple"
+                ],
+                "otp_login": true,
+                "remember_me": true,
+                "forgot_password": true,
+                "register_link": true,
+                "guest_checkout_link": true
+            }
+        },
+        "register": {
+            "page_id": "register",
+            "route": "/register",
+            "features": {
+                "signup_form": true,
+                "social_signup": true,
+                "newsletter_subscription": true,
+                "terms_acceptance": true,
+                "privacy_policy_link": true,
+                "login_link": true
+            }
+        },
+        "my_account": {
+            "page_id": "account",
+            "route": "/account",
+            "features": {
+                "dashboard": true,
+                "quick_stats": true,
+                "recent_orders": true,
+                "wishlist_preview": true,
+                "wallet_balance": true,
+                "loyalty_points": true,
+                "quick_actions": true,
+                "profile_completion": true
+            }
+        },
+        "my_orders": {
+            "page_id": "orders",
+            "route": "/account/orders",
+            "features": {
+                "order_list": true,
+                "filter_by_status": true,
+                "search_orders": true,
+                "sort_orders": true,
+                "order_details_link": true,
+                "reorder_button": true,
+                "cancel_order": true,
+                "return_request": true
+            }
+        },
+        "order_details": {
+            "page_id": "order_details",
+            "route": "/account/orders/[id]",
+            "features": {
+                "order_info": true,
+                "items_list": true,
+                "price_breakdown": true,
+                "shipping_info": true,
+                "payment_info": true,
+                "status_timeline": true,
+                "download_invoice": true,
+                "reorder": true,
+                "return_request": true,
+                "contact_support": true
+            }
+        },
+        "track_order_guest": {
+            "page_id": "track_guest",
+            "route": "/track",
+            "features": {
+                "order_number_input": true,
+                "email_input": true,
+                "verify_button": true,
+                "status_display": true,
+                "timeline_view": true,
+                "estimated_delivery": true,
+                "contact_support": true
+            }
+        },
+        "addresses": {
+            "page_id": "addresses",
+            "route": "/account/addresses",
+            "features": {
+                "address_list": true,
+                "add_address": true,
+                "edit_address": true,
+                "delete_address": true,
+                "set_default": true,
+                "address_types": [
+                    "shipping",
+                    "billing"
+                ],
+                "address_validation": true,
+                "google_autocomplete": true
+            }
+        },
+        "payment_methods": {
+            "page_id": "payment_methods",
+            "route": "/account/payment-methods",
+            "features": {
+                "saved_cards": true,
+                "add_card": true,
+                "edit_card": true,
+                "delete_card": true,
+                "set_default": true,
+                "card_encryption": true,
+                "expiry_warning": true
+            }
+        },
+        "wishlist": {
+            "page_id": "wishlist",
+            "route": "/account/wishlist",
+            "features": {
+                "product_grid": true,
+                "add_to_cart": true,
+                "remove_item": true,
+                "move_to_cart": true,
+                "share_wishlist": true,
+                "create_collection": true,
+                "price_drop_alert": true,
+                "stock_alert": true
+            }
+        },
+        "wallet": {
+            "page_id": "wallet",
+            "route": "/account/wallet",
+            "features": {
+                "balance_display": true,
+                "topup_options": true,
+                "transaction_history": true,
+                "withdraw_options": true,
+                "cashback_display": true,
+                "expiry_dates": true
+            }
+        },
+        "loyalty_points": {
+            "page_id": "loyalty",
+            "route": "/account/loyalty",
+            "features": {
+                "points_balance": true,
+                "earn_history": true,
+                "redeem_history": true,
+                "earn_rules": true,
+                "redeem_options": true,
+                "tier_status": true,
+                "progress_bar": true
+            }
+        },
+        "referral": {
+            "page_id": "referral",
+            "route": "/account/referral",
+            "features": {
+                "invite_link": true,
+                "qr_code": true,
+                "share_options": true,
+                "referral_stats": true,
+                "earnings_history": true,
+                "pending_rewards": true,
+                "terms_and_conditions": true
+            }
+        },
+        "product_reviews": {
+            "page_id": "reviews",
+            "route": "/account/reviews",
+            "features": {
+                "my_reviews": true,
+                "pending_reviews": true,
+                "edit_review": true,
+                "delete_review": true,
+                "rating_breakdown": true,
+                "filter_by_product": true,
+                "sort_reviews": true
+            }
+        },
+        "return_request": {
+            "page_id": "rma",
+            "route": "/account/returns",
+            "features": {
+                "rma_form": true,
+                "order_selection": true,
+                "product_selection": true,
+                "reason_selection": true,
+                "evidence_upload": true,
+                "return_method": true,
+                "status_tracking": true,
+                "refund_options": true
+            }
+        },
+        "notifications": {
+            "page_id": "notifications",
+            "route": "/account/notifications",
+            "features": {
+                "notification_list": true,
+                "filter_by_type": true,
+                "mark_as_read": true,
+                "mark_all_read": true,
+                "delete_notification": true,
+                "notification_settings": true,
+                "push_notifications": true,
+                "email_notifications": true
+            }
+        },
+        "privacy_policy": {
+            "page_id": "privacy",
+            "route": "/privacy-policy",
+            "features": {
+                "full_text": true,
+                "last_updated": true,
+                "table_of_contents": true,
+                "contact_info": true,
+                "acceptance_required": true
+            }
+        },
+        "terms_conditions": {
+            "page_id": "terms",
+            "route": "/terms-conditions",
+            "features": {
+                "full_text": true,
+                "last_updated": true,
+                "table_of_contents": true,
+                "acceptance_required": true
+            }
+        },
+        "refund_policy": {
+            "page_id": "refund",
+            "route": "/refund-policy",
+            "features": {
+                "policy_details": true,
+                "return_process": true,
+                "timeframes": true,
+                "exceptions": true,
+                "contact_info": true
+            }
+        },
+        "about_us": {
+            "page_id": "about",
+            "route": "/about",
+            "features": {
+                "company_story": true,
+                "mission_vision": true,
+                "team_members": true,
+                "values": true,
+                "milestones": true,
+                "media_gallery": true
+            }
+        },
+        "contact_us": {
+            "page_id": "contact",
+            "route": "/contact",
+            "features": {
+                "contact_form": true,
+                "map_location": true,
+                "phone_numbers": true,
+                "email_addresses": true,
+                "social_media": true,
+                "business_hours": true,
+                "faq_section": true
+            }
+        },
+        "faq": {
+            "page_id": "faq",
+            "route": "/faq",
+            "features": {
+                "categories": true,
+                "search_faq": true,
+                "accordion_style": true,
+                "filter_by_category": true,
+                "contact_support": true,
+                "helpful_votes": true
+            }
+        },
+        "blog": {
+            "page_id": "blog",
+            "route": "/blog",
+            "features": {
+                "blog_listing": true,
+                "article_details": true,
+                "categories": true,
+                "tags": true,
+                "search": true,
+                "related_posts": true,
+                "comments": true,
+                "share_buttons": true,
+                "author_info": true,
+                "pagination": true
+            }
+        },
+        "not_found_404": {
+            "page_id": "404",
+            "route": "/404",
+            "features": {
+                "custom_design": true,
+                "illustration": true,
+                "search_box": true,
+                "navigation_links": true,
+                "back_to_home": true,
+                "contact_support": true
+            }
+        },
+        "maintenance_mode": {
+            "page_id": "maintenance",
+            "features": {
+                "countdown_timer": true,
+                "email_subscription": true,
+                "social_links": true,
+                "contact_info": true,
+                "estimated_time": true
+            }
+        }
+    },
+    "widgets_and_components": {
+        "header": {
+            "logo": true,
+            "navigation": true,
+            "mega_menu": true,
+            "search_bar": true,
+            "language_switcher": true,
+            "currency_switcher": true,
+            "user_menu": true,
+            "wishlist_icon": true,
+            "cart_icon": true,
+            "cart_badge": true,
+            "sticky_header": true
+        },
+        "footer": {
+            "logo": true,
+            "description": true,
+            "quick_links": true,
+            "categories": true,
+            "contact_info": true,
+            "social_media": true,
+            "newsletter_signup": true,
+            "payment_methods": true,
+            "copyright": true,
+            "privacy_links": true
+        },
+        "mega_menu": {
+            "multi_column": true,
+            "categories_tree": true,
+            "featured_products": true,
+            "brands_section": true,
+            "promotional_banners": true,
+            "icons": true,
+            "hover_delay": true
+        },
+        "smart_filters": {
+            "dynamic_filters": true,
+            "collapsible": true,
+            "price_range_slider": true,
+            "attribute_filters": true,
+            "brand_filters": true,
+            "rating_filters": true,
+            "clear_all": true,
+            "apply_filters": true,
+            "filter_count_badge": true
+        },
+        "toast_notifications": {
+            "position": "top-right",
+            "auto_dismiss": true,
+            "duration": 4000,
+            "types": [
+                "success",
+                "error",
+                "info",
+                "warning"
+            ],
+            "close_button": true,
+            "action_button": true,
+            "stacking": true
+        },
+        "newsletter_popup": {
+            "trigger": [
+                "time_delay",
+                "exit_intent",
+                "scroll_percentage"
+            ],
+            "delay_seconds": 15,
+            "frequency_control": true,
+            "discount_offer": true,
+            "email_validation": true,
+            "close_permanently": true
+        },
+        "floating_whatsapp": {
+            "always_visible": true,
+            "position": "bottom-right",
+            "predefined_messages": true,
+            "business_hours": true,
+            "online_status": true,
+            "animation": true
+        },
+        "social_wall": {
+            "instagram_feed": true,
+            "hashtag_display": true,
+            "user_generated_content": true,
+            "carousel": true,
+            "lightbox": true,
+            "follow_button": true
+        },
+        "cookie_consent": {
+            "banner_display": true,
+            "preferences_panel": true,
+            "accept_all": true,
+            "reject_all": true,
+            "save_preferences": true,
+            "cookie_categories": [
+                "essential",
+                "analytics",
+                "marketing",
+                "functional"
+            ],
+            "auto_hide": true
+        },
+        "back_to_top": {
+            "enabled": true,
+            "position": "bottom-right",
+            "scroll_threshold": 300,
+            "smooth_scroll": true,
+            "icon": true
+        },
+        "loading_skeletons": {
+            "enabled": true,
+            "types": [
+                "card",
+                "list",
+                "text",
+                "image",
+                "table"
+            ],
+            "animation": "pulse",
+            "customizable": true
+        },
+        "progress_indicators": {
+            "enabled": true,
+            "types": [
+                "linear",
+                "circular",
+                "stepper"
+            ],
+            "customizable": true
+        }
+    },
+    "advanced_features": {
+        "ai_personalization": {
+            "recommendation_engine": true,
+            "collaborative_filtering": true,
+            "content_based_filtering": true,
+            "behavior_tracking": true,
+            "personalized_homepage": true,
+            "product_suggestions": true,
+            "dynamic_pricing": true,
+            "ab_testing": true
+        },
+        "visual_search": {
+            "image_upload": true,
+            "camera_capture": true,
+            "similar_products": true,
+            "object_detection": true,
+            "reverse_image_search": true
+        },
+        "ar_preview": {
+            "enabled": true,
+            "product_visualization": true,
+            "room_placement": true,
+            "size_comparison": true,
+            "share_ar_scene": true
+        },
+        "buy_now_pay_later": {
+            "providers": [
+                "tabby",
+                "tamara",
+                "souhoola",
+                "tamara"
+            ],
+            "eligibility_check": true,
+            "payment_schedule": true,
+            "terms_display": true,
+            "pre_approval": true
+        },
+        "interactive_size_guide": {
+            "size_charts": true,
+            "measurement_guide": true,
+            "fit_recommendations": true,
+            "body_measurements": true,
+            "size_comparison": true,
+            "customer_reviews_by_size": true
+        },
+        "help_center": {
+            "knowledge_base": true,
+            "smart_search": true,
+            "categories": true,
+            "articles": true,
+            "video_tutorials": true,
+            "contact_support": true,
+            "chatbot": true,
+            "feedback_system": true
+        },
+        "gift_hub": {
+            "gift_cards": true,
+            "digital_gift_cards": true,
+            "physical_gift_cards": true,
+            "gift_wrapping": true,
+            "personalized_messages": true,
+            "delivery_options": true,
+            "gift_registry": true
+        },
+        "order_timeline": {
+            "visual_timeline": true,
+            "status_updates": true,
+            "estimated_times": true,
+            "tracking_integration": true,
+            "carrier_info": true,
+            "delivery_proof": true,
+            "stories_format": true
+        },
+        "price_tracking": {
+            "price_drop_alerts": true,
+            "price_history": true,
+            "lowest_price_indicator": true,
+            "notification_system": true
+        },
+        "live_chat": {
+            "enabled": true,
+            "operators": true,
+            "chat_history": true,
+            "file_sharing": true,
+            "emoji_support": true,
+            "typing_indicator": true,
+            "offline_messages": true
+        },
+        "pwa_features": {
+            "offline_mode": true,
+            "add_to_home_screen": true,
+            "push_notifications": true,
+            "background_sync": true,
+            "install_prompt": true
+        },
+        "accessibility_features": {
+            "screen_reader_support": true,
+            "keyboard_navigation": true,
+            "high_contrast_mode": true,
+            "text_resize": true,
+            "dark_mode": true,
+            "reduced_motion": true,
+            "aria_labels": true,
+            "skip_to_content": true
+        }
+    },
+    "seo_optimization": {
+        "meta_tags": {
+            "title": true,
+            "description": true,
+            "keywords": true,
+            "og_tags": true,
+            "twitter_cards": true,
+            "canonical_urls": true
+        },
+        "structured_data": {
+            "product_schema": true,
+            "breadcrumb_schema": true,
+            "organization_schema": true,
+            "review_schema": true,
+            "faq_schema": true,
+            "article_schema": true
+        },
+        "performance": {
+            "lazy_loading": true,
+            "code_splitting": true,
+            "image_optimization": true,
+            "font_optimization": true,
+            "critical_css": true,
+            "prefetching": true,
+            "preloading": true
+        },
+        "sitemap": {
+            "xml_sitemap": true,
+            "dynamic_generation": true,
+            "priority_settings": true,
+            "change_frequency": true
+        },
+        "robots_txt": true,
+        "breadcrumbs": true,
+        "url_structure": {
+            "seo_friendly": true,
+            "dynamic_routes": true,
+            "custom_slugs": true
+        }
+    },
+    "testing_requirements": {
+        "unit_tests": {
+            "coverage_target": "> 80%",
+            "framework": "Vitest",
+            "components": true,
+            "utilities": true,
+            "hooks": true
+        },
+        "integration_tests": {
+            "framework": "Playwright",
+            "user_flows": true,
+            "checkout_flow": true,
+            "authentication_flow": true
+        },
+        "e2e_tests": {
+            "framework": "Playwright",
+            "critical_paths": true,
+            "cross_browser": true,
+            "mobile_testing": true
+        },
+        "visual_regression": {
+            "tool": "Chromatic",
+            "component_snapshots": true,
+            "theme_variations": true,
+            "responsive_breakpoints": true
+        },
+        "accessibility_testing": {
+            "tool": "axe-core",
+            "wcag_compliance": true,
+            "screen_reader_testing": true
+        },
+        "performance_testing": {
+            "lighthouse_ci": true,
+            "load_testing": true,
+            "stress_testing": true
+        }
+    },
+    "browser_support": {
+        "desktop": {
+            "chrome": "latest 2 versions",
+            "firefox": "latest 2 versions",
+            "safari": "latest 2 versions",
+            "edge": "latest 2 versions"
+        },
+        "mobile": {
+            "chrome_android": "latest 2 versions",
+            "safari_ios": "latest 2 versions",
+            "samsung_internet": "latest version"
+        },
+        "minimum_requirements": {
+            "javascript": "ES2020+",
+            "css": "CSS Grid + Flexbox",
+            "service_workers": "for PWA features"
+        }
+    },
+    "deployment_requirements": {
+        "hosting": "Vercel/Netlify/AWS Amplify",
+        "cdn": "Global Edge Network",
+        "ssl": "TLS 1.3",
+        "http2": true,
+        "gzip_compression": true,
+        "brotli_compression": true,
+        "image_cdn": true,
+        "environment_variables": true,
+        "preview_deployments": true,
+        "automatic_rollback": true
+    }
+}
+
+
+
+# 📄 **StyleGrove - Frontend Master Specification**
+## **Professional E-commerce Template (Amazon/Jumia/AliExpress Level)**
+
+---
+
+## 🎯 **Executive Summary**
+
+This document outlines the complete frontend specification for **StyleGrove**, a world-class e-commerce platform designed to compete with industry leaders like Amazon, Jumia, and AliExpress. The specification covers 65 pages,
+3 theme modes, bilingual support (Arabic/English), and advanced features including AI-powered recommendations, visual search, AR preview, and BNPL integration.
+
+---
+
+## 📋 **Table of Contents**
+
+1. [Project Overview
+](#project-overview)
+2. [Technical Stack
+](#technical-stack)
+3. [Performance Targets
+](#performance-targets)
+4. [Design System
+](#design-system)
+5. [Localization & RTL Support
+](#localization--rtl-support)
+6. [Page Specifications
+](#page-specifications)
+7. [Widgets & Components
+](#widgets--components)
+8. [Advanced Features
+](#advanced-features)
+9. [SEO Optimization
+](#seo-optimization)
+10. [Testing Requirements
+](#testing-requirements)
+11. [Browser Support
+](#browser-support)
+12. [Deployment Requirements
+](#deployment-requirements)
+
+---
+
+## 📌 **Project Overview**
+
+| Attribute | Value |
+|-----------|-------|
+| **Project Name** | StyleGrove |
+| **Version** | 4.0.0 |
+| **Target Benchmarks** | Amazon, Jumia, AliExpress, Noon |
+| **Total Pages** | 65 |
+| **Languages** | English (LTR), Arabic (RTL) |
+| **Theme Modes** | Day Mode, Night Mode, Design Mode |
+| **Last Updated** | February 12,
+2026 |
+
+---
+
+## 💻 **Technical Stack**
+
+### Core Technologies
+```json
+{
+    "framework": "Next.js 14 (App Router)",
+    "language": "TypeScript 5.3+ (Strict Mode)",
+    "runtime": "Bun (Performance Optimized)",
+    "styling": "TailwindCSS + Shadcn/UI + PostCSS",
+    "i18n_library": "next-intl",
+    "state_management": "React Query + Zustand",
+    "animations": "Framer Motion (60fps)",
+    "icons": "Lucide React + Shadcn/UI Icons",
+    "charts": "Recharts",
+    "maps": "Leaflet + Mapbox",
+    "video": "Video.js + Plyr",
+    "image_optimization": "Next.js Image + Sharp"
+}
+```
+
+### Key Features
+- ✅ **Next.js 14 App Router** - Latest routing architecture
+- ✅ **TypeScript Strict Mode** - Type-safe development
+- ✅ **Bun Runtime** - High-performance JavaScript runtime
+- ✅ **TailwindCSS + Shadcn/UI** - Modern styling system
+- ✅ **Framer Motion** - 60fps smooth animations
+- ✅ **React Query + Zustand** - Efficient state management
+
+---
+
+## ⚡ **Performance Targets**
+
+| Metric | Target | Description |
+|--------|--------|-------------|
+| **LCP** | < 2.5s | Largest Contentful Paint |
+| **FID** | < 100ms | First Input Delay |
+| **CLS** | < 0.1 | Cumulative Layout Shift |
+| **TTFB** | < 0.8s | Time to First Byte |
+| **FCP** | < 1.8s | First Contentful Paint |
+| **Mobile Lighthouse** | > 90 | Performance score |
+| **Desktop Lighthouse** | > 95 | Performance score |
+| **Bundle Size** | < 250KB | Compressed size |
+
+---
+
+## 🎨 **Design System**
+
+### Philosophy
+- **Atomic Design** - Atoms → Molecules → Organisms → Templates → Pages
+- **WCAG 2.1 AA Compliant** - Full accessibility support
+- **Mobile-First** - Touch-optimized with >44px hit targets
+
+### Breakpoints
+```json
+{
+    "sm": "640px (Mobile)",
+    "md": "768px (Tablet)",
+    "lg": "1024px (Desktop)",
+    "xl": "1280px (Wide)",
+    "2xl": "1536px (Ultra-wide)"
+}
+```
+
+### Spacing Scale
+`[
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    32,
+    40,
+    48,
+    64,
+    80,
+    96
+]`
+
+### Border Radius
+`[
+    4,
+    8,
+    12,
+    16,
+    24,
+    32
+]`
+
+### Typography
+
+#### English
+- **Font**: 'Inter', sans-serif
+- **Weights**: 300,
+400,
+500,
+600,
+700,
+800
+- **Line Height**: 1.5
+- **Letter Spacing**: 0.3px
+
+#### Arabic
+- **Font**: 'Tajawal', sans-serif
+- **Weights**: 300,
+400,
+500,
+700,
+800
+- **Line Height**: 1.6
+- **Letter Spacing**: 0.5px
+
+---
+
+## 🎨 **Color Schemes**
+
+### Day Mode (Default)
+```json
+{
+    "primary": "#3B82F6",
+    "primary_dark": "#2563EB",
+    "primary_light": "#60A5FA",
+    "secondary": "#6366F1",
+    "secondary_dark": "#4F46E5",
+    "secondary_light": "#818CF8",
+    "background": "#FFFFFF",
+    "surface": "#F9FAFB",
+    "surface_hover": "#F3F4F6",
+    "text": "#1F2937",
+    "text_secondary": "#6B7280",
+    "text_tertiary": "#9CA3AF",
+    "border": "#E5E7EB",
+    "border_light": "#F3F4F6",
+    "success": "#10B981",
+    "success_dark": "#059669",
+    "success_light": "#34D399",
+    "warning": "#F59E0B",
+    "warning_dark": "#D97706",
+    "warning_light": "#FBBF24",
+    "error": "#EF4444",
+    "error_dark": "#DC2626",
+    "error_light": "#F87171",
+    "info": "#3B82F6",
+    "info_dark": "#2563EB",
+    "info_light": "#60A5FA",
+    "disabled": "#D1D5DB"
+}
+```
+
+### Night Mode
+```json
+{
+    "primary": "#60A5FA",
+    "primary_dark": "#3B82F6",
+    "primary_light": "#93C5FD",
+    "secondary": "#818CF8",
+    "secondary_dark": "#6366F1",
+    "secondary_light": "#A5B4FC",
+    "background": "#111827",
+    "surface": "#1F2937",
+    "surface_hover": "#374151",
+    "text": "#F3F4F6",
+    "text_secondary": "#9CA3AF",
+    "text_tertiary": "#6B7280",
+    "border": "#374151",
+    "border_light": "#4B5563",
+    "success": "#34D399",
+    "success_dark": "#10B981",
+    "success_light": "#6EE7B7",
+    "warning": "#FBBF24",
+    "warning_dark": "#F59E0B",
+    "warning_light": "#FCD34D",
+    "error": "#F87171",
+    "error_dark": "#EF4444",
+    "error_light": "#FCA5A5",
+    "info": "#60A5FA",
+    "info_dark": "#3B82F6",
+    "info_light": "#93C5FD",
+    "disabled": "#4B5563"
+}
+```
+
+### Design Mode
+```json
+{
+    "primary": "#8B5CF6",
+    "primary_dark": "#7C3AED",
+    "primary_light": "#A78BFA",
+    "secondary": "#EC4899",
+    "secondary_dark": "#DB2777",
+    "secondary_light": "#F472B6",
+    "background": "#F9FAFB",
+    "surface": "#FFFFFF",
+    "surface_hover": "#F3F4F6",
+    "text": "#1F2937",
+    "text_secondary": "#6B7280",
+    "text_tertiary": "#9CA3AF",
+    "border": "#E5E7EB",
+    "border_light": "#F3F4F6",
+    "success": "#10B981",
+    "success_dark": "#059669",
+    "success_light": "#34D399",
+    "warning": "#F59E0B",
+    "warning_dark": "#D97706",
+    "warning_light": "#FBBF24",
+    "error": "#EF4444",
+    "error_dark": "#DC2626",
+    "error_light": "#F87171",
+    "info": "#06B6D4",
+    "info_dark": "#0891B2",
+    "info_light": "#22D3EE",
+    "disabled": "#D1D5DB"
+}
+```
+
+---
+
+## 🌍 **Localization & RTL Support**
+
+### Language Configuration
+
+#### English (en-US)
+```json
+{
+    "code": "en-US",
+    "direction": "ltr",
+    "date_format": "MM/DD/YYYY",
+    "time_format": "hh:mm A",
+    "currency": "USD",
+    "numerals": "western",
+    "decimal_separator": ".",
+    "thousand_separator": ","
+}
+```
+
+#### Arabic (ar-SA)
+```json
+{
+    "code": "ar-SA",
+    "direction": "rtl",
+    "date_format": "DD/MM/YYYY",
+    "time_format": "HH:mm",
+    "currency": "SAR",
+    "numerals": "eastern_arabic",
+    "decimal_separator": ",",
+    "thousand_separator": "."
+}
+```
+
+### Features
+- ✅ **Dynamic Direction Switching** - Automatic RTL/LTR
+- ✅ **Locale-Aware Formatting** - Dates, times, currencies
+- ✅ **Currency Switching** - Multi-currency support
+- ✅ **Auto Language Detection** - Based on browser settings
+
+---
+
+## 📄 **Page Specifications**
+
+### 1. Home Page (`/`)
+**8 Main Sections:**
+- Hero Slider (fade animation, auto-play,
+5s duration)
+- Featured Categories (12 max, horizontal scroll)
+- Trending Products (5 per row desktop)
+- Flash Deals (countdown timer, progress bar)
+- Best Sellers (4 per row)
+- New Arrivals (badge indicator)
+- Brands Section (logo carousel)
+- Trust Signals (badges + stats)
+
+### 2. Search & Results (`/search`)
+**Global Search:**
+- AJAX instant results (300ms debounce)
+- Max 10 results dropdown
+- Recent & trending searches
+- Categories, products, brands
+
+**Search Results:**
+- Advanced filters (price, brand, attributes, ratings)
+- 7 sorting options
+- Grid/List view modes
+- Infinite scroll + pagination
+- Product cards with hover effects
+
+### 3. Product Details (PDP) (`/product/[slug
+]`)
+**Gallery:**
+- Image carousel with thumbnails
+- Zoom (lens type)
+- Video support
+- 360° view
+- AR preview
+
+**Product Info:**
+- Title, brand, price, discount badge
+- Stock status, SKU, rating
+- Wishlist & share buttons
+
+**Variants:**
+- Color swatches
+- Size selector
+- Quantity selector
+- Out of stock notify
+
+**Reviews:**
+- Rating breakdown
+- Verified purchase badges
+- Images in reviews
+- Helpful votes
+
+**Related Products:**
+- "You May Also Like" (8 products max)
+- Frequently bought together
+
+### 4. Quick View (Modal)
+- Trigger: hover/click
+- Gallery, variants, price, rating
+- Add to cart & wishlist
+- Max 3 images
+
+### 5. Shopping Cart (`/cart`)
+**Cart Items:**
+- Product image, info, variants
+- Quantity selector
+- Remove & move to wishlist
+
+**Cart Summary:**
+- Subtotal, shipping, tax, discount
+- Coupon input & validation
+- Total calculation
+
+**Actions:**
+- Continue shopping
+- Proceed to checkout
+- Save for later
+
+**Recommendations:**
+- Frequently bought together
+- Cart abandonment suggestions
+
+### 6. Checkout (`/checkout`)
+**One-Page Checkout:**
+- Guest checkout option
+- Saved addresses + Google autocomplete
+- Shipping methods (standard, express, same-day)
+- Payment methods (card, COD, wallet, installments, Apple/Google Pay)
+- BNPL providers (Tabby, Tamara, Souhoola)
+- Order summary with gift wrapping
+- Terms acceptance
+- Secure badge display
+
+### 7. Order Success (`/order/success`)
+- Confirmation message
+- Order & tracking numbers
+- Estimated delivery
+- Order summary
+- Track order button
+- Recommendations
+- Share order option
+
+### 8. Payment Failure (`/order/failed`)
+- Error message & code
+- Alternative payment methods
+- Retry payment
+- Contact support
+- Back to cart
+
+### 9. Category/Collection (`/category/[slug
+]`)
+- Hero banner
+- Breadcrumb navigation
+- Subcategories
+- Filters sidebar
+- Sorting options
+- Grid/List views
+- Infinite scroll
+
+### 10. Flash Deals (`/deals`)
+- Countdown timers
+- Deal badges
+- Stock indicators
+- Upcoming & ended deals
+
+### 11. Compare Products (`/compare`)
+- Side-by-side comparison
+- Specifications, prices, ratings
+- Features checklist
+- Export comparison
+
+### 12. Store Locations (`/stores`)
+- Map integration (Leaflet/Mapbox)
+- Branch list & details
+- Contact info & working hours
+- Directions
+- Service filters
+
+### 13. Login (`/login`)
+- Email login
+- Social login (Google, Facebook, Apple)
+- OTP login
+- Forgot password
+- Guest checkout link
+
+### 14. Register (`/register`)
+- Signup form
+- Social signup
+- Newsletter subscription
+- Terms acceptance
+
+### 15. My Account Dashboard (`/account`)
+- Quick stats
+- Recent orders
+- Wishlist preview
+- Wallet balance
+- Loyalty points
+- Quick actions
+- Profile completion
+
+### 16. My Orders (`/account/orders`)
+- Order list with status
+- Filter & search
+- Reorder button
+- Cancel & return options
+
+### 17. Order Details (`/account/orders/[id
+]`)
+- Order info & items
+- Price breakdown
+- Shipping & payment info
+- Status timeline
+- Download invoice
+- Reorder & return
+
+### 18. Track Order (Guest) (`/track`)
+- Order number + email verification
+- Status display
+- Timeline view
+- Estimated delivery
+
+### 19. Addresses (`/account/addresses`)
+- Address list
+- Add/edit/delete
+- Set default
+- Shipping & billing types
+- Google autocomplete
+
+### 20. Payment Methods (`/account/payment-methods`)
+- Saved cards (encrypted)
+- Add/edit/delete
+- Set default
+- Expiry warnings
+
+### 21. Wishlist (`/account/wishlist`)
+- Product grid
+- Add to cart
+- Share wishlist
+- Price drop & stock alerts
+- Create collections
+
+### 22. Wallet (`/account/wallet`)
+- Balance display
+- Top-up options
+- Transaction history
+- Cashback display
+- Expiry dates
+
+### 23. Loyalty Points (`/account/loyalty`)
+- Points balance
+- Earn/redeem history
+- Tier status
+- Progress bar
+- Redeem options
+
+### 24. Referral (`/account/referral`)
+- Invite link & QR code
+- Share options
+- Referral stats
+- Earnings history
+- Pending rewards
+
+### 25. Product Reviews (`/account/reviews`)
+- My reviews list
+- Edit/delete
+- Filter by product
+- Sort options
+
+### 26. Return Request (RMA) (`/account/returns`)
+- RMA form
+- Order & product selection
+- Reason selection
+- Evidence upload
+- Status tracking
+- Refund options
+
+### 27. Notifications (`/account/notifications`)
+- Notification list
+- Filter by type
+- Mark read/delete
+- Push & email settings
+
+### 28-30. Legal Pages
+- Privacy Policy (`/privacy-policy`)
+- Terms & Conditions (`/terms-conditions`)
+- Refund Policy (`/refund-policy`)
+
+### 31-33. About & Support
+- About Us (`/about`)
+- Contact Us (`/contact`)
+- FAQ (`/faq`)
+
+### 34. Blog/Articles (`/blog`)
+- Blog listing & article details
+- Categories, tags, search
+- Related posts
+- Comments & share buttons
+- Author info
+- Pagination
+
+### 35. 404 Not Found (`/404`)
+- Custom design with illustration
+- Search box
+- Navigation links
+- Contact support
+
+### 36. Maintenance Mode
+- Countdown timer
+- Email subscription
+- Social links
+- Contact info
+
+---
+
+## 🧩 **Widgets & Components**
+
+### Header
+- Logo, navigation, mega menu
+- Search bar
+- Language & currency switchers
+- User menu, wishlist, cart icons
+- Sticky header
+
+### Footer
+- Logo, description, quick links
+- Categories, contact info
+- Social media
+- Newsletter signup
+- Payment methods
+- Copyright & privacy links
+
+### Mega Menu
+- Multi-column layout
+- Categories tree
+- Featured products
+- Brands section
+- Promotional banners
+- Hover delay
+
+### Smart Filters
+- Dynamic filters (collapsible)
+- Price range slider
+- Brand, attribute, rating filters
+- Clear all & apply buttons
+- Filter count badge
+
+### Toast Notifications
+- Position: top-right
+- Auto-dismiss (4s)
+- Types: success, error, info, warning
+- Close & action buttons
+- Stacking support
+
+### Newsletter Popup
+- Triggers: time delay, exit intent, scroll
+- 15s delay, frequency control
+- Discount offer
+- Close permanently option
+
+### Floating WhatsApp
+- Bottom-right position
+- Predefined messages
+- Business hours
+- Online status indicator
+
+### Social Wall
+- Instagram feed
+- Hashtag display
+- User-generated content
+- Carousel & lightbox
+- Follow button
+
+### Cookie Consent
+- Banner with preferences panel
+- Accept/reject all
+- Cookie categories
+- Auto-hide
+
+### Loading Skeletons
+- Card, list, text, image, table types
+- Pulse animation
+- Customizable
+
+### Progress Indicators
+- Linear, circular, stepper types
+- Customizable
+
+---
+
+## 🚀 **Advanced Features**
+
+### AI Personalization
+- Recommendation engine (collaborative + content-based)
+- Behavior tracking
+- Personalized homepage
+- Product suggestions
+- Dynamic pricing
+- A/B testing
+
+### Visual Search
+- Image upload & camera capture
+- Similar products
+- Object detection
+- Reverse image search
+
+### AR Preview
+- Product visualization
+- Room placement
+- Size comparison
+- Share AR scene
+
+### Buy Now, Pay Later (BNPL)
+- Providers: Tabby, Tamara, Souhoola
+- Eligibility check
+- Payment schedule display
+- Pre-approval
+
+### Interactive Size Guide
+- Size charts & measurement guide
+- Fit recommendations
+- Body measurements
+- Customer reviews by size
+
+### Help Center
+- Knowledge base with smart search
+- Video tutorials
+- Chatbot
+- Feedback system
+
+### Gift Hub
+- Digital & physical gift cards
+- Gift wrapping
+- Personalized messages
+- Gift registry
+
+### Order Timeline
+- Visual timeline (Stories format)
+- Status updates & estimated times
+- Carrier info
+- Delivery proof
+
+### Price Tracking
+- Price drop alerts
+- Price history
+- Lowest price indicator
+
+### Live Chat
+- Operator support
+- Chat history & file sharing
+- Emoji & typing indicator
+- Offline messages
+
+### PWA Features
+- Offline mode
+- Add to home screen
+- Push notifications
+- Background sync
+
+### Accessibility
+- Screen reader support
+- Keyboard navigation
+- High contrast mode
+- Text resize
+- Reduced motion
+
+---
+
+## 🔍 **SEO Optimization**
+
+### Meta Tags
+- Title, description, keywords
+- Open Graph & Twitter Cards
+- Canonical URLs
+
+### Structured Data
+- Product, breadcrumb, organization schemas
+- Review, FAQ, article schemas
+
+### Performance
+- Lazy loading & code splitting
+- Image & font optimization
+- Critical CSS
+- Prefetching & preloading
+
+### Sitemap & Robots
+- XML sitemap (dynamic)
+- Robots.txt
+- Breadcrumbs
+- SEO-friendly URLs
+
+---
+
+## 🧪 **Testing Requirements**
+
+### Unit Tests
+- **Coverage**: > 80%
+- **Framework**: Vitest
+- **Scope**: Components, utilities, hooks
+
+### Integration Tests
+- **Framework**: Playwright
+- **Flows**: Checkout, authentication, user flows
+
+### E2E Tests
+- **Framework**: Playwright
+- **Coverage**: Critical paths, cross-browser, mobile
+
+### Visual Regression
+- **Tool**: Chromatic
+- **Scope**: Component snapshots, theme variations, responsive breakpoints
+
+### Accessibility Testing
+- **Tool**: axe-core
+- **Standards**: WCAG 2.1 AA
+- **Screen reader testing**
+
+### Performance Testing
+- **Lighthouse CI**
+- **Load & stress testing**
+
+---
+
+## 🌐 **Browser Support**
+
+### Desktop
+- Chrome: Latest 2 versions
+- Firefox: Latest 2 versions
+- Safari: Latest 2 versions
+- Edge: Latest 2 versions
+
+### Mobile
+- Chrome Android: Latest 2 versions
+- Safari iOS: Latest 2 versions
+- Samsung Internet: Latest version
+
+### Minimum Requirements
+- JavaScript: ES2020+
+- CSS: Grid + Flexbox
+- Service Workers (for PWA)
+
+---
+
+## 🚀 **Deployment Requirements**
+
+### Hosting
+- **Platforms**: Vercel, Netlify, AWS Amplify
+- **CDN**: Global Edge Network
+- **SSL**: TLS 1.3
+- **HTTP/2**: Enabled
+
+### Optimization
+- Gzip & Brotli compression
+- Image CDN
+- Environment variables
+- Preview deployments
+- Automatic rollback
+
+---
+
+## ✅ **Deliverables Checklist**
+
+### Core Pages (36)
+- [] Home Page
+- [] Search & Results
+- [] Product Details (PDP)
+- [] Quick View (Modal)
+- [] Shopping Cart
+- [] Checkout (One-Page)
+- [] Order Success
+- [] Payment Failure
+- [] Category/Collection
+- [] Flash Deals
+- [] Compare Products
+- [] Store Locations
+- [] Login
+- [] Register
+- [] My Account Dashboard
+- [] My Orders
+- [] Order Details
+- [] Track Order (Guest)
+- [] Addresses
+- [] Payment Methods
+- [] Wishlist
+- [] Wallet
+- [] Loyalty Points
+- [] Referral
+- [] Product Reviews
+- [] Return Request (RMA)
+- [] Notifications
+- [] Privacy Policy
+- [] Terms & Conditions
+- [] Refund Policy
+- [] About Us
+- [] Contact Us
+- [] FAQ
+- [] Blog/Articles
+- [] 404 Not Found
+- [] Maintenance Mode
+
+### Widgets & Components (12)
+- [] Header (with mega menu)
+- [] Footer
+- [] Smart Filters
+- [] Toast Notifications
+- [] Newsletter Popup
+- [] Floating WhatsApp
+- [] Social Wall
+- [] Cookie Consent
+- [] Back to Top
+- [] Loading Skeletons
+- [] Progress Indicators
+- [] Language/Currency Switchers
+
+### Advanced Features (13)
+- [] AI Personalization Hub
+- [] Visual Search
+- [] AR Preview
+- [] BNPL Integration
+- [] Interactive Size Guide
+- [] Help Center (KB)
+- [] Gift Hub
+- [] Order Timeline (Stories)
+- [] Price Tracking
+- [] Live Chat
+- [] PWA Features
+- [] Accessibility Features
+- [] SEO Optimization
+
+### Theme Modes (3)
+- [] Day Mode
+- [] Night Mode
+- [] Design Mode
+
+### Languages (2)
+- [] English (LTR)
+- [] Arabic (RTL)
+
