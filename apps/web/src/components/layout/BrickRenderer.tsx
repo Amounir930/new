@@ -13,6 +13,7 @@ interface BrickRendererProps {
  * Recursively renders a resolved brick tree into React components.
  */
 export function BrickRenderer({ brick }: BrickRendererProps) {
+    if (!brick) return null;
     const Component = brickRegistry[brick.type];
 
     if (!Component) {
