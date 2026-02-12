@@ -8,63 +8,77 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "declaration": true,
-    "composite": true,
-    "lib": ["ESNext", "DOM"],
-    "types": ["node", "bun-types", "express"],
+    "composite": false,
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "types": [
+      "node",
+      "bun-types",
+      "express"
+    ],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
-      "@apex/config": ["packages/config/src/index.ts"],
-      "@apex/audit": ["packages/audit/src/index.ts"],
-      "@apex/db": ["packages/db/src/index.ts"],
-      "@apex/middleware": ["packages/middleware/src/index.ts"],
-      "@apex/provisioning": ["packages/provisioning/src/index.ts"],
-      "@apex/auth": ["packages/auth/src/index.ts"],
-      "@apex/events": ["packages/events/src/index.ts"],
-      "@apex/security": ["packages/security/src/index.ts"],
-      "@apex/test-utils": ["packages/test-utils/src/index.ts"],
-      "@apex/ui": ["packages/ui/src/index.ts"],
-      "@apex/validators": ["packages/validators/src/index.ts"],
-      "@apex/template-config": ["packages/template-config/src/index.ts"],
-      "@apex/export": ["packages/export/src/index.ts"]
+      "@apex/config": [
+        "packages/config/dist/index.d.ts"
+      ],
+      "@apex/audit": [
+        "packages/audit/dist/index.d.ts"
+      ],
+      "@apex/db": [
+        "packages/db/dist/index.d.ts"
+      ],
+      "@apex/middleware": [
+        "packages/middleware/dist/index.d.ts"
+      ],
+      "@apex/provisioning": [
+        "packages/provisioning/dist/index.d.ts"
+      ],
+      "@apex/auth": [
+        "packages/auth/dist/index.d.ts"
+      ],
+      "@apex/events": [
+        "packages/events/dist/index.d.ts"
+      ],
+      "@apex/security": [
+        "packages/security/dist/index.d.ts"
+      ],
+      "@apex/test-utils": [
+        "packages/test-utils/dist/index.d.ts"
+      ],
+      "@apex/ui": [
+        "packages/ui/dist/index.d.ts"
+      ],
+      "@apex/ui/*": [
+        "packages/ui/dist/*"
+      ],
+      "@apex/builder-ui": [
+        "packages/builder-ui/dist/index.d.ts"
+      ],
+      "@apex/template-engine": [
+        "packages/template-engine/dist/index.d.ts"
+      ],
+      "@apex/validators": [
+        "packages/validators/dist/index.d.ts"
+      ],
+      "@apex/template-config": [
+        "packages/template-config/dist/index.d.ts"
+      ],
+      "@apex/export": [
+        "packages/export/dist/index.d.ts"
+      ],
+      "~/*": [
+        "./*"
+      ]
     }
   },
-  "files": [],
-  "exclude": ["node_modules", "dist", "build", ".turbo", "**/*.d.ts"],
-  "references": [
-    {
-      "path": "./packages/config"
-    },
-    {
-      "path": "./packages/audit"
-    },
-    {
-      "path": "./packages/db"
-    },
-    {
-      "path": "./packages/middleware"
-    },
-    {
-      "path": "./packages/provisioning"
-    },
-    {
-      "path": "./packages/auth"
-    },
-    {
-      "path": "./apps/api"
-    },
-    {
-      "path": "./apps/web"
-    },
-    {
-      "path": "./packages/events"
-    },
-    {
-      "path": "./packages/ui"
-    },
-    {
-      "path": "./packages/security"
-    }
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".turbo"
   ]
 }

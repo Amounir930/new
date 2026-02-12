@@ -3,19 +3,20 @@
     "version": "1.0.0",
     "description": "Visual Store Builder UI for Apex v2",
     "type": "module",
-    "main": "./dist/index.js",
+    "main": "./dist/index.cjs",
     "types": "./dist/index.d.ts",
     "module": "./dist/index.js",
     "exports": {
         ".": {
             "import": "./dist/index.js",
+            "require": "./dist/index.cjs",
             "types": "./dist/index.d.ts",
             "default": "./dist/index.js"
         }
     },
     "scripts": {
-        "build": "tsup src/index.ts --format cjs,esm --dts --external react,react-dom --tsconfig ./tsconfig.json",
-        "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react --tsconfig ./tsconfig.json",
+        "build": "tsup src/index.ts --format cjs,esm --dts --external react,react-dom,@apex/ui,@apex/template-engine --tsconfig ./tsconfig.json",
+        "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react,@apex/ui,@apex/template-engine --tsconfig ./tsconfig.json",
         "test": "bun test",
         "typecheck": "tsc --noEmit"
     },

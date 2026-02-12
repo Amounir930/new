@@ -5,10 +5,10 @@
  * Note: migrate.ts runs immediately on import. These tests verify code structure.
  */
 
+import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'bun:test';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const migratePath = resolve(__dirname, 'migrate.ts');

@@ -63,7 +63,10 @@ export class TenantRegistryService {
   /**
    * Update tenant status (active, suspended, etc.)
    */
-  async updateStatus(tenantId: string, status: 'active' | 'suspended' | 'pending'): Promise<void> {
+  async updateStatus(
+    tenantId: string,
+    status: 'active' | 'suspended' | 'pending'
+  ): Promise<void> {
     await publicDb
       .update(tenants)
       .set({ status, updatedAt: new Date() })
@@ -73,7 +76,10 @@ export class TenantRegistryService {
   /**
    * Update tenant subscription plan
    */
-  async updatePlan(tenantId: string, plan: 'free' | 'basic' | 'pro' | 'enterprise'): Promise<void> {
+  async updatePlan(
+    tenantId: string,
+    plan: 'free' | 'basic' | 'pro' | 'enterprise'
+  ): Promise<void> {
     await publicDb
       .update(tenants)
       .set({ plan, updatedAt: new Date() })

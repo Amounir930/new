@@ -28,6 +28,7 @@
   "dependencies": {
     "@apex/config": "workspace:*",
     "@apex/security": "workspace:*",
+    "@apex/validators": "workspace:*",
     "@nestjs/common": "^10.0.0",
     "drizzle-orm": "^0.45.1",
     "pg": "^8.11.0",

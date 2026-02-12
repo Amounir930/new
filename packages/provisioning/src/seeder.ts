@@ -58,14 +58,16 @@ export async function seedTenantData(
     const adminId = userResult[0].id;
 
     // 3. Seed Default Settings & Pages from Blueprint
-    // Note: In a real flow, we'd fetch the blueprint here. 
+    // Note: In a real flow, we'd fetch the blueprint here.
     // To keep it simple and robust, we'll use the default template values.
     const { defaultBlueprintTemplate } = await import('./blueprint.js');
 
     // Seed Settings
-    const settingsToSeed = Object.entries(defaultBlueprintTemplate.settings || {}).map(([key, value]) => ({
+    const settingsToSeed = Object.entries(
+      defaultBlueprintTemplate.settings || {}
+    ).map(([key, value]) => ({
       key,
-      value: key === 'site_name' ? options.storeName : value
+      value: key === 'site_name' ? options.storeName : value,
     }));
 
     if (settingsToSeed.length > 0) {
@@ -73,17 +75,24 @@ export async function seedTenantData(
     }
 
     // Seed Mandatory Pages
-    if (defaultBlueprintTemplate.pages && defaultBlueprintTemplate.pages.length > 0) {
+    if (
+      defaultBlueprintTemplate.pages &&
+      defaultBlueprintTemplate.pages.length > 0
+    ) {
       const { pages: schemaPages } = await import('@apex/db');
-      // Note: We need to ensure 'pages' table exists in tenant schema. 
+      // Note: We need to ensure 'pages' table exists in tenant schema.
       // Assuming schema-manager handled this during createTenantDb.
       try {
-        await db.insert(schemaPages).values(defaultBlueprintTemplate.pages.map(p => ({
-          ...p,
-          content: p.content || ''
-        })));
-      } catch (e) {
-        console.warn('Could not seed pages, table might not exist in tenant schema yet');
+        await db.insert(schemaPages).values(
+          defaultBlueprintTemplate.pages.map((p) => ({
+            ...p,
+            content: p.content || '',
+          }))
+        );
+      } catch (_e) {
+        console.warn(
+          'Could not seed pages, table might not exist in tenant schema yet'
+        );
       }
     }
 
@@ -95,7 +104,8 @@ export async function seedTenantData(
   } catch (error) {
     console.error(`Seeding failed for ${options.subdomain}:`, error);
     throw new Error(
-      `Seeding Failure: ${error instanceof Error ? error.message : String(error)
+      `Seeding Failure: ${
+        error instanceof Error ? error.message : String(error)
       }`
     );
   }

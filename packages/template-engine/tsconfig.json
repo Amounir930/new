@@ -1,11 +1,22 @@
 {
-    "extends": "../../tsconfig.json",
     "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "strict": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "isolatedModules": true,
+        "declaration": true,
         "outDir": "./dist",
         "rootDir": "./src",
         "jsx": "react-jsx",
-        "declaration": true,
-        "declarationMap": true
+        "types": [
+            "node",
+            "bun-types",
+            "react",
+            "react-dom"
+        ]
     },
     "include": [
         "src/**/*"

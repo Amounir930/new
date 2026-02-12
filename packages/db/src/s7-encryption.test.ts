@@ -1,5 +1,5 @@
-import { EncryptionService } from '@apex/security';
 import { afterAll, beforeAll, describe, expect, it, mock } from 'bun:test';
+import { EncryptionService } from '@apex/security';
 
 // Define mocks first
 const mockPool = {

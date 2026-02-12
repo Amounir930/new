@@ -17,11 +17,8 @@ mock.module('./connection.js', () => ({
 }));
 
 // Import module AFTER mocking
-const {
-  createTenantDb,
-  verifyTenantExists,
-  withTenantConnection,
-} = await import('./core.js');
+const { createTenantDb, verifyTenantExists, withTenantConnection } =
+  await import('./core.js');
 
 describe('DB Core Isolation', () => {
   beforeEach(() => {
@@ -70,7 +67,7 @@ describe('DB Core Isolation', () => {
     it('should enforce S2: stop if tenant not found', async () => {
       mockPool.query.mockResolvedValueOnce({ rowCount: 0 }); // missing
       try {
-        await withTenantConnection('missing', async () => { });
+        await withTenantConnection('missing', async () => {});
         expect(true).toBe(false); // Should not reach here
       } catch (e: any) {
         expect(e.message).toContain('S2 Violation');
@@ -98,8 +95,8 @@ describe('DB Core Isolation', () => {
       mockClient.query.mockRejectedValueOnce(new Error('Reset Fail 2')); // RESET in catch
 
       try {
-        await withTenantConnection('alpha', async () => { });
-      } catch (e) {
+        await withTenantConnection('alpha', async () => {});
+      } catch (_e) {
         // Expected to throw
       }
       expect(mockClient.release).toHaveBeenCalledWith(true);

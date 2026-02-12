@@ -3,19 +3,21 @@
   "version": "1.0.0",
   "description": "Shared UI components for web and mobile (Radix UI + Tailwind)",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./*": "./*"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --external react,react-dom --tsconfig ./tsconfig.json",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react --tsconfig ./tsconfig.json",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "lint": "biome check .",
     "typecheck": "tsc --noEmit"
   },

@@ -1,5 +1,5 @@
-import { sql } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test';
+import { sql } from 'drizzle-orm';
 
 // Define mocks first
 const mockPool = {
@@ -18,7 +18,9 @@ mock.module('./connection.js', () => ({
 }));
 
 // Import module AFTER mocking
-const { publicPool: importedPool, withTenantConnection } = await import('./index');
+const { publicPool: importedPool, withTenantConnection } = await import(
+  './index'
+);
 
 // Helper to check DB availability
 const _isDbReachable = async () => {
@@ -170,7 +172,7 @@ describe.skipIf(!hasDb)(
 
     it('should throw S2 Violation error for non-existent tenant', async () => {
       try {
-        await withTenantConnection('fake_tenant', async () => { });
+        await withTenantConnection('fake_tenant', async () => {});
         expect(true).toBe(false);
       } catch (e: any) {
         expect(e.message).toContain(
@@ -181,7 +183,7 @@ describe.skipIf(!hasDb)(
 
     it('should NOT have cross-tenant schemas in search_path (Leak Prevention)', async () => {
       // Run a tenant operation
-      await withTenantConnection(tenantAlpha, async () => { });
+      await withTenantConnection(tenantAlpha, async () => {});
 
       // Immediately check a fresh connection from the pool
       const client = await mockPool.connect();

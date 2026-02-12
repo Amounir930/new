@@ -1,13 +1,24 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
+    "composite": false,
     "outDir": "./dist",
     "jsx": "react-jsx",
-    "types": ["node", "bun-types", "react", "react-dom"],
+    "types": [
+      "node",
+      "bun-types",
+      "react",
+      "react-dom"
+    ],
     "declaration": true,
     "emitDeclarationOnly": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "build"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
 }

@@ -4,21 +4,16 @@
     "outDir": "dist",
     "rootDir": "src",
     "jsx": "react-jsx",
-    "composite": true,
+    "composite": false,
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"],
-  "references": [
-    {
-      "path": "../template-config"
-    },
-    {
-      "path": "../config"
-    },
-    {
-      "path": "../audit"
-    }
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
   ]
 }

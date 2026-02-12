@@ -36,7 +36,7 @@ export const TemplateConfigSchema = z.object({
       checkout: z.boolean(),
       orderSuccess: z.boolean(),
       paymentFailure: z.boolean(),
-      
+
       // Personalization & Accounts
       login: z.boolean(),
       register: z.boolean(),
@@ -53,7 +53,7 @@ export const TemplateConfigSchema = z.object({
       productReviews: z.boolean().optional(),
       returnRequest: z.boolean().optional(),
       notifications: z.boolean().optional(),
-      
+
       // Informational & Legal
       privacyPolicy: z.boolean(),
       termsConditions: z.boolean(),
@@ -63,7 +63,7 @@ export const TemplateConfigSchema = z.object({
       faq: z.boolean().optional(),
       blog: z.boolean().optional(),
       storeLocations: z.boolean().optional(),
-      
+
       // System Pages
       error404: z.boolean(),
       maintenance: z.boolean(),
@@ -74,7 +74,7 @@ export const TemplateConfigSchema = z.object({
         globalSearchAjax: z.boolean().optional(),
         megaMenu: z.boolean().optional(),
         smartFilters: z.boolean().optional(),
-        
+
         // Engagement
         toastNotifications: z.boolean().optional(),
         newsletterPopup: z.boolean().optional(),
@@ -82,7 +82,7 @@ export const TemplateConfigSchema = z.object({
         socialWall: z.boolean().optional(),
         outOfStockNotify: z.boolean().optional(),
         cookieConsent: z.boolean().optional(),
-        
+
         // AI & Interactive
         aiPersonalizationHub: z.boolean().optional(),
         buyNowPayLater: z.boolean().optional(),

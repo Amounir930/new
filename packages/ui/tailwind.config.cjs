@@ -1,0 +1,112 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  // Enable dark mode with class strategy
+  darkMode: ['class'],
+
+  // Content paths for all components
+  content: ['./src/**/*.{ts,tsx}'],
+
+  theme: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1400px',
+      },
+    },
+    extend: {
+      // Color system from globals.css CSS variables
+      colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+      },
+
+      // Border radius
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
+
+      // Font families with Arabic support
+      fontFamily: {
+        sans: ['Inter', 'Cairo', 'system-ui', 'sans-serif'],
+        mono: ['Fira Code', 'monospace'],
+      },
+
+      // Animations
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+        // Magic UI Marquee animations
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(calc(-100% - var(--gap)))' },
+        },
+        'marquee-vertical': {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(calc(-100% - var(--gap)))' },
+        },
+      },
+
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+        marquee: 'marquee var(--duration, 40s) linear infinite',
+        'marquee-vertical':
+          'marquee-vertical var(--duration, 40s) linear infinite',
+      },
+    },
+  },
+
+  plugins: [
+    // RTL support plugin
+    ({ addUtilities }) => {
+      const rtlUtilities = {
+        // Directional margin utilities
+        '.ms-1': { marginInlineStart: '0.25rem' },
+        '.ms-2': { marginInlineStart: '0.5rem' },
+        '.me-1': { marginInlineEnd: '0.25rem' },
+        '.me-2': { marginInlineEnd: '0.5rem' },
+      };
+      addUtilities(rtlUtilities);
+    },
+  ],
+};

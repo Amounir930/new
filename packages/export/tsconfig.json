@@ -1,24 +1,18 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
+    "composite": false,
     "outDir": "./dist",
     "rootDir": "./src",
-    "baseUrl": ".",
-    "types": ["node", "bun-types"],
     "declaration": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "build", "**/*.test.ts"],
-  "references": [
-    {
-      "path": "../db"
-    },
-    {
-      "path": "../audit"
-    },
-    {
-      "path": "../test-utils"
-    }
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/*.test.ts"
   ]
 }

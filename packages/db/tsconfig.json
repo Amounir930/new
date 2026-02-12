@@ -1,13 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
+    "composite": false,
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": [
-      "node",
-      "bun-types"
-    ],
     "declaration": true
   },
   "include": [
@@ -18,16 +14,5 @@
     "dist",
     "build",
     "**/*.test.ts"
-  ],
-  "references": [
-    {
-      "path": "../config"
-    },
-    {
-      "path": "../security"
-    },
-    {
-      "path": "../validators"
-    }
   ]
 }

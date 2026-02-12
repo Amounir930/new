@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
+    "composite": false,
     "outDir": "./dist",
     "rootDir": "./src",
     "types": [
@@ -18,16 +18,5 @@
     "dist",
     "build",
     "**/*.test.ts"
-  ],
-  "references": [
-    {
-      "path": "../security"
-    },
-    {
-      "path": "../validators"
-    },
-    {
-      "path": "../db"
-    }
   ]
 }

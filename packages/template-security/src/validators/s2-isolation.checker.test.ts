@@ -2,8 +2,8 @@
  * S2 Isolation Checker Tests
  */
 
-import { readFile } from 'node:fs/promises';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import fg from 'fast-glob';
 import { S2IsolationChecker } from './s2-isolation.checker.js';
 

@@ -2,8 +2,8 @@
  * S7 Encryption Checker Tests
  */
 
-import { readFile } from 'node:fs/promises';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import fg from 'fast-glob';
 import { S7EncryptionChecker } from './s7-encryption.checker.js';
 
@@ -51,7 +51,9 @@ describe('S7EncryptionChecker', () => {
 
     it('should detect console.log with PII (WARNING)', async () => {
       (fg as any).mockResolvedValue(['file1.ts']);
-      (readFile as any).mockResolvedValue('console.log("User email is:", email);');
+      (readFile as any).mockResolvedValue(
+        'console.log("User email is:", email);'
+      );
 
       const result = await checker.validate(mockTemplatePath);
 

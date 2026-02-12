@@ -2,8 +2,8 @@
  * Security Score Calculator Tests
  */
 
-import fs from 'node:fs';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import fs from 'node:fs';
 import { calculateSecurityScore } from './score-calculator.js';
 
 mock.module('node:fs', () => ({

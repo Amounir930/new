@@ -1,5 +1,5 @@
 import type { InferSelectModel } from 'drizzle-orm';
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 /**
  * S2 Compliance: Public Schema Tables (Tenant Management)
@@ -80,6 +80,16 @@ export const settings = pgTable('settings', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+export const pages = pgTable('pages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  slug: text('slug').notNull(),
+  title: text('title').notNull(),
+  content: text('content').default(''),
+  isPublished: boolean('is_published').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 /**
  * S2 Compliance Helper: Generate schema-qualified table name
  * Usage: const tableName = getTenantTableName('users', tenantId);
@@ -98,3 +108,4 @@ export function getTenantTableName(
 export function setTenantSearchPath(tenantId: string): string {
   return `SET search_path = tenant_${tenantId}, public`;
 }
+
