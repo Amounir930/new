@@ -45,6 +45,7 @@ export const BlueprintSchema = z.object({
   version: z.literal('3.0.0').default('3.0.0'),
   id: z.string(),
   name: z.string(),
+  description: z.string().optional(),
   slug: z.string(),
   category: z.enum(['home', 'category', 'product', 'cart', 'checkout', 'page']),
   root: BrickSchema.describe(
@@ -62,6 +63,14 @@ export const BlueprintSchema = z.object({
 // Type definitions derived from schemas
 export type Brick = z.infer<typeof BrickSchema>;
 export type Blueprint = z.infer<typeof BlueprintSchema>;
+export type ResolvedBrick = {
+  id: string;
+  type: string;
+  props: Record<string, any>;
+  slots?: Record<string, ResolvedBrick[]>;
+  meta?: any;
+};
+export type TemplateRenderer = any; // Legacy compatibility alias
 
 /**
  * 🛡️ Validation Utilities

@@ -1,16 +1,4 @@
-import type { Blueprint, Brick } from '../schema/v3';
-
-/**
- * 🌿 Resolved Brick (LEGO v3)
- * A Brick that has been processed by the resolver (data bound and conditioned).
- */
-export interface ResolvedBrick {
-  id: string;
-  type: string;
-  props: Record<string, any>;
-  slots?: Record<string, ResolvedBrick[]>;
-  meta?: any;
-}
+import type { Blueprint, Brick, ResolvedBrick } from '../schema/v3';
 
 /**
  * 🧩 Template Context (LEGO v3)

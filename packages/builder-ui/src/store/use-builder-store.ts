@@ -79,8 +79,23 @@ export const useBuilderStore = create<BuilderState>()(
       const { currentTemplate } = get();
       if (!currentTemplate) return;
 
+      // Special case: update root brick itself
+      if (currentTemplate.root.id === slotId) {
+        set({
+          currentTemplate: {
+            ...currentTemplate,
+            root: {
+              ...currentTemplate.root,
+              props: { ...currentTemplate.root.props, ...props },
+            },
+          },
+          isDirty: true,
+        });
+        return;
+      }
+
       const updatedSlots = updateSlotPropsInTemplate(
-        currentTemplate.slots,
+        currentTemplate.root.slots,
         slotId,
         props
       );
@@ -88,7 +103,10 @@ export const useBuilderStore = create<BuilderState>()(
       set({
         currentTemplate: {
           ...currentTemplate,
-          slots: updatedSlots,
+          root: {
+            ...currentTemplate.root,
+            slots: updatedSlots,
+          },
         },
         isDirty: true,
       });
@@ -97,7 +115,12 @@ export const useBuilderStore = create<BuilderState>()(
     getSelectedSlot: () => {
       const { currentTemplate, selectedSlotId } = get();
       if (!currentTemplate || !selectedSlotId) return null;
-      return findSlotById(currentTemplate.slots, selectedSlotId) || null;
+
+      if (currentTemplate.root.id === selectedSlotId) {
+        return currentTemplate.root;
+      }
+
+      return findSlotById(currentTemplate.root.slots, selectedSlotId) || null;
     },
   }))
 );
