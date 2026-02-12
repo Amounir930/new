@@ -7,21 +7,27 @@
  * - PersonalizedProductRecommendationsOutput - The return type for the personalizedProductRecommendations function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 // Input Schema
 const PersonalizedProductRecommendationsInputSchema = z.object({
   userId: z.string().optional().describe('Optional user ID for context.'),
   browsingHistory: z
     .array(z.string())
-    .describe('A list of products or categories the user has recently browsed.'),
+    .describe(
+      'A list of products or categories the user has recently browsed.'
+    ),
   purchaseHistory: z
     .array(z.string())
-    .describe('A list of products or categories the user has previously purchased.'),
+    .describe(
+      'A list of products or categories the user has previously purchased.'
+    ),
   productCatalog: z
     .array(z.string())
-    .describe('A list of available product names or descriptions from which to recommend.'),
+    .describe(
+      'A list of available product names or descriptions from which to recommend.'
+    ),
 });
 export type PersonalizedProductRecommendationsInput = z.infer<
   typeof PersonalizedProductRecommendationsInputSchema
@@ -50,8 +56,8 @@ export async function personalizedProductRecommendations(
 // Define the prompt
 const recommendPrompt = ai.definePrompt({
   name: 'personalizedProductRecommendationPrompt',
-  input: {schema: PersonalizedProductRecommendationsInputSchema},
-  output: {schema: PersonalizedProductRecommendationsOutputSchema},
+  input: { schema: PersonalizedProductRecommendationsInputSchema },
+  output: { schema: PersonalizedProductRecommendationsOutputSchema },
   prompt: `You are an expert personalized shopping assistant. Your goal is to provide product recommendations tailored to a user's interests, based on their browsing and purchase history.
 
 Here is the user's browsing history:
@@ -82,8 +88,8 @@ const personalizedProductRecommendationsFlow = ai.defineFlow(
     inputSchema: PersonalizedProductRecommendationsInputSchema,
     outputSchema: PersonalizedProductRecommendationsOutputSchema,
   },
-  async input => {
-    const {output} = await recommendPrompt(input);
+  async (input) => {
+    const { output } = await recommendPrompt(input);
     if (!output) {
       throw new Error('Failed to get recommendations from the prompt.');
     }

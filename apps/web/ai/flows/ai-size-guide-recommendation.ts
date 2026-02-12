@@ -7,29 +7,35 @@
  * - AiSizeGuideRecommendationOutput - The return type for the aiSizeGuideRecommendation function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const AiSizeGuideRecommendationInputSchema = z.object({
   productCategory: z
     .string()
-    .describe('The category of the apparel item (e.g., "T-shirt", "Jeans", "Dress").'),
+    .describe(
+      'The category of the apparel item (e.g., "T-shirt", "Jeans", "Dress").'
+    ),
   chestMeasurementCm: z
     .number()
-    .describe('The user\'s chest measurement in centimeters.'),
+    .describe("The user's chest measurement in centimeters."),
   waistMeasurementCm: z
     .number()
-    .describe('The user\'s waist measurement in centimeters.'),
+    .describe("The user's waist measurement in centimeters."),
   hipMeasurementCm: z
     .number()
-    .describe('The user\'s hip measurement in centimeters.'),
+    .describe("The user's hip measurement in centimeters."),
   inseamMeasurementCm: z
     .number()
     .optional()
-    .describe('The user\'s inseam measurement in centimeters (optional, for bottoms).'),
+    .describe(
+      "The user's inseam measurement in centimeters (optional, for bottoms)."
+    ),
   preferredFit: z
     .enum(['loose', 'regular', 'tight'])
-    .describe('The user\'s preferred fit for the apparel (loose, regular, or tight).'),
+    .describe(
+      "The user's preferred fit for the apparel (loose, regular, or tight)."
+    ),
   sizeChart: z
     .string()
     .describe(
@@ -48,7 +54,9 @@ const AiSizeGuideRecommendationOutputSchema = z.object({
     .describe('The recommended apparel size (e.g., "S", "M", "L", "XL").'),
   recommendationReasoning: z
     .string()
-    .describe('The reasoning behind the size recommendation, explaining how it fits the measurements and preferred fit.'),
+    .describe(
+      'The reasoning behind the size recommendation, explaining how it fits the measurements and preferred fit.'
+    ),
 });
 
 export type AiSizeGuideRecommendationOutput = z.infer<
@@ -63,8 +71,8 @@ export async function aiSizeGuideRecommendation(
 
 const prompt = ai.definePrompt({
   name: 'aiSizeGuideRecommendationPrompt',
-  input: {schema: AiSizeGuideRecommendationInputSchema},
-  output: {schema: AiSizeGuideRecommendationOutputSchema},
+  input: { schema: AiSizeGuideRecommendationInputSchema },
+  output: { schema: AiSizeGuideRecommendationOutputSchema },
   prompt: `You are an expert apparel size recommender. Your task is to recommend the best size for a customer based on their body measurements, preferred fit, and the provided size chart for a specific product category.
 
 Here is the customer's information:
@@ -91,8 +99,8 @@ const aiSizeGuideRecommendationFlow = ai.defineFlow(
     inputSchema: AiSizeGuideRecommendationInputSchema,
     outputSchema: AiSizeGuideRecommendationOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { output } = await prompt(input);
     return output!;
   }
 );

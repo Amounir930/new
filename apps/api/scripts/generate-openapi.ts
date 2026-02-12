@@ -1,17 +1,30 @@
-
 // -----------------------------------------------------------------------------
 // 🛡️ Security & Isolation Setup (MUST BE FIRST)
 // -----------------------------------------------------------------------------
 // S1 Note: We split strings to evade Gitleaks detection for these MOCK credentials
-const MOCK_DB_URL = ['postgres', '://', 'mock_user', ':', 'mock_pass', '@', 'localhost:5432', '/', 'mock_db'].join('');
-const MOCK_JWT = ['mock-jwt-secret', '-for-generation', '-only-32char'].join('');
+const MOCK_DB_URL = [
+  'postgres',
+  '://',
+  'mock_user',
+  ':',
+  'mock_pass',
+  '@',
+  'localhost:5432',
+  '/',
+  'mock_db',
+].join('');
+const MOCK_JWT = ['mock-jwt-secret', '-for-generation', '-only-32char'].join(
+  ''
+);
 
 process.env.DATABASE_URL = process.env.DATABASE_URL || MOCK_DB_URL;
 process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 process.env.JWT_SECRET = process.env.JWT_SECRET || MOCK_JWT;
 process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
-process.env.MINIO_ACCESS_KEY = process.env.MINIO_ACCESS_KEY || 'mock-access-key';
-process.env.MINIO_SECRET_KEY = process.env.MINIO_SECRET_KEY || 'mock-secret-key';
+process.env.MINIO_ACCESS_KEY =
+  process.env.MINIO_ACCESS_KEY || 'mock-access-key';
+process.env.MINIO_SECRET_KEY =
+  process.env.MINIO_SECRET_KEY || 'mock-secret-key';
 process.env.TENANT_ISOLATION_MODE = 'strict';
 // @ts-expect-error NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';

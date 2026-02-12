@@ -15,27 +15,31 @@ export default function Home() {
   const isRTL = language === 'ar';
 
   // 1. Prepare Data Context (Mocked for now, following S1)
-  const context = useMemo(() => ({
-    data: {
-      store: {
-        name: isRTL ? 'متجر أديل' : 'Adel Store',
+  const context = useMemo(
+    () => ({
+      data: {
+        store: {
+          name: isRTL ? 'متجر أديل' : 'Adel Store',
+        },
+        flash_deals: {
+          active: true,
+        },
+        user: {
+          name: 'Guest',
+        },
       },
-      flash_deals: {
-        active: true,
-      },
-      user: {
-        name: 'Guest',
-      }
-    },
-    locale: language,
-    isRTL,
-    builderMode: false,
-  }), [language, isRTL]);
+      locale: language,
+      isRTL,
+      builderMode: false,
+    }),
+    [language, isRTL]
+  );
 
   // 2. Resolve the hierarchical blueprint
-  const resolvedBlueprint = useMemo(() =>
-    v3Resolver.resolveBlueprint(v3HomeTemplate, context),
-    [context]);
+  const resolvedBlueprint = useMemo(
+    () => v3Resolver.resolveBlueprint(v3HomeTemplate, context),
+    [context]
+  );
 
   return (
     <div className="flex flex-col min-h-screen">

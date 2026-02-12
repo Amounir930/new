@@ -91,7 +91,7 @@ export const PropertyEditor: React.FC = () => {
           <Button
             variant="outline"
             className="w-full justify-start"
-            onClick={() => { }}
+            onClick={() => {}}
           >
             <Trash2 className="w-4 h-4" />
             Delete Component

@@ -16,8 +16,8 @@ export function BackToTop() {
     },
     ar: {
       goToTop: 'العودة إلى الأعلى',
-    }
-  }
+    },
+  };
 
   useEffect(() => {
     const toggleVisibility = () => {

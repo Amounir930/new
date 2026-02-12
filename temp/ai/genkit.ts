@@ -16,13 +16,17 @@ export const ai = genkit({
 export const ai = {
   defineFlow: (options: any, fn: any) => {
     return async (...args: any[]) => {
-      console.log(`AI flow '${options.name}' was called, but AI is temporarily disabled.`);
-      throw new Error("AI features are temporarily disabled. Configure Genkit to re-enable them.");
-    }
+      console.log(
+        `AI flow '${options.name}' was called, but AI is temporarily disabled.`
+      );
+      throw new Error(
+        'AI features are temporarily disabled. Configure Genkit to re-enable them.'
+      );
+    };
   },
   definePrompt: (options: any) => {
     return async (input: any) => {
-        throw new Error("AI features are temporarily disabled.");
-    }
-  }
+      throw new Error('AI features are temporarily disabled.');
+    };
+  },
 } as any;

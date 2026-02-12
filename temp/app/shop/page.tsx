@@ -26,9 +26,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSettings } from '@/contexts/SettingsProvider';
 
 // Extract unique values for filters from the product data
-const allBrands = [...new Set(products.map(p => p.brand))];
-const allCategories = [...new Set(products.map(p => p.category))];
-const maxPrice = Math.ceil(Math.max(...products.map(p => p.price)));
+const allBrands = [...new Set(products.map((p) => p.brand))];
+const allCategories = [...new Set(products.map((p) => p.category))];
+const maxPrice = Math.ceil(Math.max(...products.map((p) => p.price)));
 
 export default function ShopPage() {
   const { language } = useSettings();
@@ -40,58 +40,59 @@ export default function ShopPage() {
 
   const t = {
     en: {
-        title: "Shop Collection",
-        subtitle: "Find your new favorite pieces from our curated collection.",
-        showing: "Showing",
-        of: "of",
-        products: "products",
-        filters: "Filters",
-        clearAll: "Clear all",
-        category: "Category",
-        brand: "Brand",
-        price: "Price",
-        sortBy: "Sort by",
-        newest: "Newest",
-        priceAsc: "Price: Low to High",
-        priceDesc: "Price: High to Low",
-        ratingDesc: "Highest Rated",
-        noProducts: "No Products Found",
-        noProductsDesc: "Try adjusting your filters to find what you're looking for.",
-        clearFilters: "Clear Filters",
+      title: 'Shop Collection',
+      subtitle: 'Find your new favorite pieces from our curated collection.',
+      showing: 'Showing',
+      of: 'of',
+      products: 'products',
+      filters: 'Filters',
+      clearAll: 'Clear all',
+      category: 'Category',
+      brand: 'Brand',
+      price: 'Price',
+      sortBy: 'Sort by',
+      newest: 'Newest',
+      priceAsc: 'Price: Low to High',
+      priceDesc: 'Price: High to Low',
+      ratingDesc: 'Highest Rated',
+      noProducts: 'No Products Found',
+      noProductsDesc:
+        "Try adjusting your filters to find what you're looking for.",
+      clearFilters: 'Clear Filters',
     },
     ar: {
-        title: "تسوق المجموعة",
-        subtitle: "ابحث عن قطعك المفضلة الجديدة من مجموعتنا المنسقة.",
-        showing: "عرض",
-        of: "من",
-        products: "منتجات",
-        filters: "الفلاتر",
-        clearAll: "مسح الكل",
-        category: "الفئة",
-        brand: "العلامة التجارية",
-        price: "السعر",
-        sortBy: "الفرز حسب",
-        newest: "الأحدث",
-        priceAsc: "السعر: من الأقل إلى الأعلى",
-        priceDesc: "السعر: من الأعلى إلى الأقل",
-        ratingDesc: "الأعلى تقييماً",
-        noProducts: "لم يتم العثور على منتجات",
-        noProductsDesc: "حاول تعديل فلاترك للعثور على ما تبحث عنه.",
-        clearFilters: "مسح الفلاتر",
-    }
+      title: 'تسوق المجموعة',
+      subtitle: 'ابحث عن قطعك المفضلة الجديدة من مجموعتنا المنسقة.',
+      showing: 'عرض',
+      of: 'من',
+      products: 'منتجات',
+      filters: 'الفلاتر',
+      clearAll: 'مسح الكل',
+      category: 'الفئة',
+      brand: 'العلامة التجارية',
+      price: 'السعر',
+      sortBy: 'الفرز حسب',
+      newest: 'الأحدث',
+      priceAsc: 'السعر: من الأقل إلى الأعلى',
+      priceDesc: 'السعر: من الأعلى إلى الأقل',
+      ratingDesc: 'الأعلى تقييماً',
+      noProducts: 'لم يتم العثور على منتجات',
+      noProductsDesc: 'حاول تعديل فلاترك للعثور على ما تبحث عنه.',
+      clearFilters: 'مسح الفلاتر',
+    },
   };
 
   const handleCategoryChange = (category: string) => {
-    setSelectedCategories(prev =>
+    setSelectedCategories((prev) =>
       prev.includes(category)
-        ? prev.filter(c => c !== category)
+        ? prev.filter((c) => c !== category)
         : [...prev, category]
     );
   };
 
   const handleBrandChange = (brand: string) => {
-    setSelectedBrands(prev =>
-      prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+    setSelectedBrands((prev) =>
+      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
     );
   };
 
@@ -103,7 +104,7 @@ export default function ShopPage() {
   };
 
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter(product => {
+    let filtered = products.filter((product) => {
       const categoryMatch =
         selectedCategories.length === 0 ||
         selectedCategories.includes(product.category);
@@ -127,34 +128,54 @@ export default function ShopPage() {
         // Assuming products are already sorted by newness or we can use id as a proxy
         return filtered.sort((a, b) => (b.id > a.id ? 1 : -1));
     }
-  }, [sortOption, selectedCategories, selectedBrands, priceRange, selectedRating]);
-  
-  const hasActiveFilters = selectedCategories.length > 0 || selectedBrands.length > 0 || priceRange[0] !== 0 || priceRange[1] !== maxPrice || selectedRating > 0;
+  }, [
+    sortOption,
+    selectedCategories,
+    selectedBrands,
+    priceRange,
+    selectedRating,
+  ]);
+
+  const hasActiveFilters =
+    selectedCategories.length > 0 ||
+    selectedBrands.length > 0 ||
+    priceRange[0] !== 0 ||
+    priceRange[1] !== maxPrice ||
+    selectedRating > 0;
 
   const Filters = () => (
     <div className="space-y-6">
-        <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">{t[language].filters}</h3>
-            {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    {t[language].clearAll}
-                    <X className="ml-2 h-4 w-4" />
-                </Button>
-            )}
-        </div>
-      <Accordion type="multiple" defaultValue={['category', 'brand', 'price']} className="w-full">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">{t[language].filters}</h3>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            {t[language].clearAll}
+            <X className="ml-2 h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      <Accordion
+        type="multiple"
+        defaultValue={['category', 'brand', 'price']}
+        className="w-full"
+      >
         <AccordionItem value="category">
-          <AccordionTrigger className="text-base font-medium">{t[language].category}</AccordionTrigger>
+          <AccordionTrigger className="text-base font-medium">
+            {t[language].category}
+          </AccordionTrigger>
           <AccordionContent>
             <div className="grid gap-2">
-              {allCategories.map(category => (
+              {allCategories.map((category) => (
                 <div key={category} className="flex items-center gap-2">
                   <Checkbox
                     id={`cat-${category}`}
                     checked={selectedCategories.includes(category)}
                     onCheckedChange={() => handleCategoryChange(category)}
                   />
-                  <label htmlFor={`cat-${category}`} className="cursor-pointer text-sm font-normal capitalize">
+                  <label
+                    htmlFor={`cat-${category}`}
+                    className="cursor-pointer text-sm font-normal capitalize"
+                  >
                     {category}
                   </label>
                 </div>
@@ -163,17 +184,22 @@ export default function ShopPage() {
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="brand">
-          <AccordionTrigger className="text-base font-medium">{t[language].brand}</AccordionTrigger>
+          <AccordionTrigger className="text-base font-medium">
+            {t[language].brand}
+          </AccordionTrigger>
           <AccordionContent>
             <div className="grid gap-2">
-              {allBrands.map(brand => (
+              {allBrands.map((brand) => (
                 <div key={brand} className="flex items-center gap-2">
                   <Checkbox
                     id={`brand-${brand}`}
                     checked={selectedBrands.includes(brand)}
                     onCheckedChange={() => handleBrandChange(brand)}
                   />
-                  <label htmlFor={`brand-${brand}`} className="cursor-pointer text-sm font-normal">
+                  <label
+                    htmlFor={`brand-${brand}`}
+                    className="cursor-pointer text-sm font-normal"
+                  >
                     {brand}
                   </label>
                 </div>
@@ -182,21 +208,23 @@ export default function ShopPage() {
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="price">
-          <AccordionTrigger className="text-base font-medium">{t[language].price}</AccordionTrigger>
+          <AccordionTrigger className="text-base font-medium">
+            {t[language].price}
+          </AccordionTrigger>
           <AccordionContent>
-             <div className="p-1">
-                <Slider
-                    min={0}
-                    max={maxPrice}
-                    step={10}
-                    value={priceRange}
-                    onValueChange={(value) => setPriceRange(value)}
-                />
-                <div className="mt-4 flex justify-between text-sm text-muted-foreground">
-                    <span>${priceRange[0]}</span>
-                    <span>${priceRange[1]}</span>
-                </div>
-             </div>
+            <div className="p-1">
+              <Slider
+                min={0}
+                max={maxPrice}
+                step={10}
+                value={priceRange}
+                onValueChange={(value) => setPriceRange(value)}
+              />
+              <div className="mt-4 flex justify-between text-sm text-muted-foreground">
+                <span>${priceRange[0]}</span>
+                <span>${priceRange[1]}</span>
+              </div>
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -206,7 +234,9 @@ export default function ShopPage() {
   return (
     <div className="container py-8 md:py-12">
       <header className="mb-8 text-center">
-        <h1 className="text-4xl font-bold tracking-tight">{t[language].title}</h1>
+        <h1 className="text-4xl font-bold tracking-tight">
+          {t[language].title}
+        </h1>
         <p className="mt-2 text-lg text-muted-foreground">
           {t[language].subtitle}
         </p>
@@ -221,23 +251,24 @@ export default function ShopPage() {
         <main className="flex-1">
           <div className="mb-6 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {t[language].showing} {filteredAndSortedProducts.length} {t[language].of} {products.length} {t[language].products}
+              {t[language].showing} {filteredAndSortedProducts.length}{' '}
+              {t[language].of} {products.length} {t[language].products}
             </p>
             <div className="flex items-center gap-4">
               {/* Mobile Filters Trigger */}
               <Sheet>
                 <SheetTrigger asChild>
-                    <Button variant="outline" size="icon" className="lg:hidden">
-                        <ListFilter className="h-4 w-4"/>
-                        <span className="sr-only">{t[language].filters}</span>
-                    </Button>
+                  <Button variant="outline" size="icon" className="lg:hidden">
+                    <ListFilter className="h-4 w-4" />
+                    <span className="sr-only">{t[language].filters}</span>
+                  </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-full max-w-sm p-0">
-                    <ScrollArea className="h-full">
-                        <div className="p-6">
-                            <Filters />
-                        </div>
-                    </ScrollArea>
+                  <ScrollArea className="h-full">
+                    <div className="p-6">
+                      <Filters />
+                    </div>
+                  </ScrollArea>
                 </SheetContent>
               </Sheet>
 
@@ -247,29 +278,37 @@ export default function ShopPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="newest">{t[language].newest}</SelectItem>
-                  <SelectItem value="price-asc">{t[language].priceAsc}</SelectItem>
-                  <SelectItem value="price-desc">{t[language].priceDesc}</SelectItem>
-                  <SelectItem value="rating-desc">{t[language].ratingDesc}</SelectItem>
+                  <SelectItem value="price-asc">
+                    {t[language].priceAsc}
+                  </SelectItem>
+                  <SelectItem value="price-desc">
+                    {t[language].priceDesc}
+                  </SelectItem>
+                  <SelectItem value="rating-desc">
+                    {t[language].ratingDesc}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredAndSortedProducts.map(product => (
+            {filteredAndSortedProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-            {filteredAndSortedProducts.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <h3 className="text-2xl font-semibold">{t[language].noProducts}</h3>
-                    <p className="mt-2 text-muted-foreground">
-                       {t[language].noProductsDesc}
-                    </p>
-                    <Button onClick={clearFilters} className="mt-4">
-                        {t[language].clearFilters}
-                    </Button>
-                </div>
-            )}
+          {filteredAndSortedProducts.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <h3 className="text-2xl font-semibold">
+                {t[language].noProducts}
+              </h3>
+              <p className="mt-2 text-muted-foreground">
+                {t[language].noProductsDesc}
+              </p>
+              <Button onClick={clearFilters} className="mt-4">
+                {t[language].clearFilters}
+              </Button>
+            </div>
+          )}
         </main>
       </div>
     </div>

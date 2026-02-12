@@ -7,22 +7,26 @@
  * - AiHelpCenterSearchOutput - The return type for the aiHelpCenterSearch function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const AiHelpCenterSearchInputSchema = z.object({
   query: z
     .string()
     .describe('The natural language question asked by the customer.'),
 });
-export type AiHelpCenterSearchInput = z.infer<typeof AiHelpCenterSearchInputSchema>;
+export type AiHelpCenterSearchInput = z.infer<
+  typeof AiHelpCenterSearchInputSchema
+>;
 
 const AiHelpCenterSearchOutputSchema = z.object({
   answer: z
     .string()
-    .describe('A concise and accurate answer to the customer\'s question.'),
+    .describe("A concise and accurate answer to the customer's question."),
 });
-export type AiHelpCenterSearchOutput = z.infer<typeof AiHelpCenterSearchOutputSchema>;
+export type AiHelpCenterSearchOutput = z.infer<
+  typeof AiHelpCenterSearchOutputSchema
+>;
 
 export async function aiHelpCenterSearch(
   input: AiHelpCenterSearchInput
@@ -32,8 +36,8 @@ export async function aiHelpCenterSearch(
 
 const prompt = ai.definePrompt({
   name: 'aiHelpCenterSearchPrompt',
-  input: {schema: AiHelpCenterSearchInputSchema},
-  output: {schema: AiHelpCenterSearchOutputSchema},
+  input: { schema: AiHelpCenterSearchInputSchema },
+  output: { schema: AiHelpCenterSearchOutputSchema },
   prompt: `You are a helpful AI assistant for an e-commerce help center.
 Your task is to provide accurate, concise, and helpful answers to customer questions based on the provided query.
 Assume you have access to a comprehensive knowledge base.
@@ -49,8 +53,8 @@ const aiHelpCenterSearchFlow = ai.defineFlow(
     inputSchema: AiHelpCenterSearchInputSchema,
     outputSchema: AiHelpCenterSearchOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { output } = await prompt(input);
     return output!;
   }
 );

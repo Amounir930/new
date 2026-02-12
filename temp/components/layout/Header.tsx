@@ -1,7 +1,19 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
-import { Search, User, Heart, ShoppingBag, Menu, Sun, Moon, Languages, Paintbrush, Bell, Camera } from 'lucide-react';
+import {
+  Search,
+  User,
+  Heart,
+  ShoppingBag,
+  Menu,
+  Sun,
+  Moon,
+  Languages,
+  Paintbrush,
+  Bell,
+  Camera,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -14,7 +26,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
 export function Header() {
   const { getCartItemCount } = useCart();
@@ -61,7 +73,7 @@ export function Header() {
       language: 'اللغة',
       theme: 'السمة',
       visualSearch: 'البحث بالصور',
-    }
+    },
   };
 
   const navLinks = [
@@ -86,11 +98,18 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side={language === 'ar' ? 'right' : 'left'}>
               <nav className="mt-8 grid gap-6 text-lg font-medium">
-                <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 text-lg font-semibold"
+                >
                   <Logo className="h-8 w-auto" />
                 </Link>
                 {navLinks.map(({ href, label }) => (
-                  <Link key={href} href={href} className="text-muted-foreground hover:text-foreground">
+                  <Link
+                    key={href}
+                    href={href}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
                     {label}
                   </Link>
                 ))}
@@ -107,7 +126,11 @@ export function Header() {
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium">
             {navLinks.map(({ href, label }) => (
-              <Link key={href} href={href} className="text-muted-foreground transition-colors hover:text-foreground">
+              <Link
+                key={href}
+                href={href}
+                className="text-muted-foreground transition-colors hover:text-foreground"
+              >
                 {label}
               </Link>
             ))}
@@ -116,16 +139,20 @@ export function Header() {
 
         {/* Mobile Logo (centered) */}
         <div className="flex flex-1 justify-center md:hidden">
-            <Link href="/" className="flex items-center gap-2 text-lg font-bold">
-                <Logo className="h-8 w-auto" />
-                <span className="sr-only">StyleGrove</span>
-            </Link>
+          <Link href="/" className="flex items-center gap-2 text-lg font-bold">
+            <Logo className="h-8 w-auto" />
+            <span className="sr-only">StyleGrove</span>
+          </Link>
         </div>
 
         {/* Search and Actions */}
         <div className="flex flex-1 items-center justify-end gap-1">
           <div className="relative hidden w-full max-w-xs lg:block">
-            <Input type="search" placeholder={t[language].searchPlaceholder} className="pe-10" />
+            <Input
+              type="search"
+              placeholder={t[language].searchPlaceholder}
+              className="pe-10"
+            />
             <Search className="absolute end-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           </div>
           <Button variant="ghost" size="icon" className="lg:hidden">
@@ -149,8 +176,12 @@ export function Header() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setLanguage('ar')}>العربية</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('en')}>
+                English
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLanguage('ar')}>
+                العربية
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -158,9 +189,9 @@ export function Header() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
-                 <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                 <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                 <span className="sr-only">{t[language].theme}</span>
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">{t[language].theme}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -178,7 +209,7 @@ export function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           <Button asChild variant="ghost" size="icon">
             <Link href="/account/notifications">
               <Bell />
@@ -199,7 +230,7 @@ export function Header() {
               <span className="sr-only">{t[language].account}</span>
             </Link>
           </Button>
-          
+
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">

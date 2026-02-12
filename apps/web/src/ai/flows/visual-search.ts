@@ -7,8 +7,8 @@
  * - VisualSearchOutput - The return type for the visualSearch function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const VisualSearchInputSchema = z.object({
   imageDataUri: z
@@ -25,10 +25,14 @@ export type VisualSearchInput = z.infer<typeof VisualSearchInputSchema>;
 const VisualSearchOutputSchema = z.object({
   recommendations: z
     .array(z.string())
-    .describe('A list of recommended product names from the product catalog that are visually similar to the item in the image.'),
+    .describe(
+      'A list of recommended product names from the product catalog that are visually similar to the item in the image.'
+    ),
   reasoning: z
     .string()
-    .describe('A brief explanation of why these recommendations were made based on the visual features of the image.'),
+    .describe(
+      'A brief explanation of why these recommendations were made based on the visual features of the image.'
+    ),
 });
 export type VisualSearchOutput = z.infer<typeof VisualSearchOutputSchema>;
 
@@ -40,8 +44,8 @@ export async function visualSearch(
 
 const prompt = ai.definePrompt({
   name: 'visualSearchPrompt',
-  input: {schema: VisualSearchInputSchema},
-  output: {schema: VisualSearchOutputSchema},
+  input: { schema: VisualSearchInputSchema },
+  output: { schema: VisualSearchOutputSchema },
   prompt: `You are an expert fashion visual search assistant for an e-commerce store. Your goal is to find products from the catalog that are visually similar to the item in the user's uploaded image.
 
 You will analyze the provided image and identify the main clothing item's key characteristics (e.g., category like 'denim jacket', 'sundress'; color; pattern; style).
@@ -65,8 +69,8 @@ const visualSearchFlow = ai.defineFlow(
     inputSchema: VisualSearchInputSchema,
     outputSchema: VisualSearchOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { output } = await prompt(input);
     if (!output) {
       throw new Error('Failed to get visual search results from the prompt.');
     }

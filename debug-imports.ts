@@ -8,6 +8,6 @@ console.log('cn:', cn ? 'Defined' : 'Undefined');
 console.log('BentoCard:', BentoCard ? 'Defined' : 'Undefined');
 
 if (!Button || !cn || !BentoCard) {
-    process.exit(1);
+  process.exit(1);
 }
 console.log('All checks passed.');

@@ -1,426 +1,404 @@
 {
-    "glossary": {
-        "title": "Apex v2 Master Specification: Grocery/Supermarket Edition",
-        "version": "2.1.0",
-        "target_benchmark": [
-            "Amazon Fresh",
-            "Jumia Food",
-            "Carrefour Online"
-        ],
-        "total_sections": 55
+  "glossary": {
+    "title": "Apex v2 Master Specification: Grocery/Supermarket Edition",
+    "version": "2.1.0",
+    "target_benchmark": ["Amazon Fresh", "Jumia Food", "Carrefour Online"],
+    "total_sections": 55
+  },
+  "technical_specifications": {
+    "01_core_stack": {
+      "framework": "Next.js 14 (App Router)",
+      "language": "TypeScript 5.3+ (Strict Mode)",
+      "runtime": "Bun (Performance Optimized)",
+      "styling": "TailwindCSS + Shadcn/UI + PostCSS"
     },
-    "technical_specifications": {
-        "01_core_stack": {
-            "framework": "Next.js 14 (App Router)",
-            "language": "TypeScript 5.3+ (Strict Mode)",
-            "runtime": "Bun (Performance Optimized)",
-            "styling": "TailwindCSS + Shadcn/UI + PostCSS"
-        },
-        "02_security_protocols": {
-            "s1_input_validation": "Zod double-gate validation (Client + Server)",
-            "s2_sql_injection": "Drizzle ORM strict type-casting",
-            "s3_xss_protection": "React strict escaping + DOMPurify for user content",
-            "s4_csrf_protection": "SameSite cookies + CSRF tokens for mutations",
-            "s5_rate_limiting": "Redis-based fixed window counters per IP/Tenant",
-            "s6_authentication": "JWT (Stateless) + Refresh Tokens + RBAC",
-            "s7_encryption": "AES-256 for data-at-rest, TLS 1.3 for transit",
-            "s8_audit_logging": "Immutable audit trails for all sensitive actions"
-        },
-        "03_performance_metrics": {
-            "lcp_target": "< 2.5s (Largest Contentful Paint)",
-            "fid_target": "< 100ms (First Input Delay)",
-            "cls_target": "< 0.1 (Cumulative Layout Shift)",
-            "caching_strategy": "Stale-While-Revalidate (SWR) for dynamic data"
-        },
-        "04_infrastructure": {
-            "database": "PostgreSQL 16 + pgvector (AI Search)",
-            "cache": "Redis 7.x (Sessions, Rate Limits, Caching)",
-            "search_engine": "Hybrid (Keyword + Semantic Vector Search)",
-            "cdn": "Global Edge Network for static assets"
-        }
+    "02_security_protocols": {
+      "s1_input_validation": "Zod double-gate validation (Client + Server)",
+      "s2_sql_injection": "Drizzle ORM strict type-casting",
+      "s3_xss_protection": "React strict escaping + DOMPurify for user content",
+      "s4_csrf_protection": "SameSite cookies + CSRF tokens for mutations",
+      "s5_rate_limiting": "Redis-based fixed window counters per IP/Tenant",
+      "s6_authentication": "JWT (Stateless) + Refresh Tokens + RBAC",
+      "s7_encryption": "AES-256 for data-at-rest, TLS 1.3 for transit",
+      "s8_audit_logging": "Immutable audit trails for all sensitive actions"
     },
-    "frontend_standards": {
-        "05_ui_ux_philosophy": {
-            "design_system": "Atomic Design (Atoms -> Molecules -> Organisms)",
-            "theme": "Glassmorphism + Neomorphism accents",
-            "animations": "Framer Motion (60fps micro-interactions)",
-            "accessibility": "WCAG 2.1 AA Compliant (Screen readers, Keyboard nav)"
-        },
-        "06_responsive_behavior": {
-            "mobile_first": "Touch-optimized hit targets (>44px)",
-            "breakpoints": {
-                "sm": "640px (Mobile)",
-                "md": "768px (Tablet)",
-                "lg": "1024px (Desktop)",
-                "xl": "1280px (Wide)"
-            }
-        },
-        "07_localization": {
-            "i18n_support": "Native RTL/LTR switching (Arabic/English)",
-            "currency_formatting": "Locale-aware (e.g., EGP 1,234.50 vs $1,234.50)",
-            "number_formatting": "Eastern/Western Arabic numerals support"
-        }
+    "03_performance_metrics": {
+      "lcp_target": "< 2.5s (Largest Contentful Paint)",
+      "fid_target": "< 100ms (First Input Delay)",
+      "cls_target": "< 0.1 (Cumulative Layout Shift)",
+      "caching_strategy": "Stale-While-Revalidate (SWR) for dynamic data"
     },
-    "blueprint_configuration": {
-        "home": {
-            "08_header": {
-                "logoUrl": "https://cdn.apex.store/grocery/logo.png",
-                "searchEnabled": true,
-                "searchDefaultText": "Search for fresh fruits, vegetables...",
-                "navigation": [
-                    {
-                        "label": "Fresh Food",
-                        "children": [
-                            "Fruits",
-                            "Vegetables",
-                            "Organic"
-                        ]
-                    },
-                    {
-                        "label": "Bakery",
-                        "children": [
-                            "Bread",
-                            "Pastries"
-                        ]
-                    },
-                    {
-                        "label": "Frozen",
-                        "children": [
-                            "Ice Cream",
-                            "Meat"
-                        ]
-                    }
-                ]
-            },
-            "09_hero_slider": {
-                "animationType": "slide",
-                "displayDuration": 6000,
-                "slides": [
-                    {
-                        "imageUrl": "https://cdn.apex.store/grocery/hero-veg.jpg",
-                        "title": "Fresh from Farm to Table",
-                        "subtitle": "Get 20% off organic vegetables this week",
-                        "buttonText": "Shop Fresh",
-                        "buttonUrl": "/category/fresh"
-                    },
-                    {
-                        "imageUrl": "https://cdn.apex.store/grocery/hero-meat.jpg",
-                        "title": "Premium Cuts",
-                        "subtitle": "Halal certified fresh meat",
-                        "buttonText": "Order Now",
-                        "buttonUrl": "/category/meat"
-                    }
-                ]
-            },
-            "10_flash_sales": {
-                "endTime": "2024-12-31T23:59:59Z",
-                "products": [
-                    {
-                        "productId": "uuid-1",
-                        "discountPercentage": 30,
-                        "quantityLimit": 5
-                    },
-                    {
-                        "productId": "uuid-2",
-                        "discountPercentage": 50,
-                        "quantityLimit": 2
-                    }
-                ]
-            },
-            "11_bento_grid": {
-                "layoutId": "5-card",
-                "slots": {
-                    "slot_1": {
-                        "type": "category",
-                        "customText": "Exclusive Deals",
-                        "link": "/deals"
-                    },
-                    "slot_2": {
-                        "type": "product",
-                        "referenceId": "uuid-best-seller"
-                    }
-                }
-            },
-            "12_trust_signals": {
-                "marqueeTexts": [
-                    "Free Delivery on orders over $50",
-                    "24/7 Customer Support",
-                    "Freshness Guaranteed"
-                ],
-                "serviceIcons": [
-                    {
-                        "iconName": "Truck",
-                        "title": "Fast Delivery",
-                        "description": "Within 2 hours"
-                    },
-                    {
-                        "iconName": "ShieldCheck",
-                        "title": "Secure Payment",
-                        "description": "100% Protected"
-                    }
-                ]
-            }
-        },
-        "pdp": {
-            "13_product_gallery": {
-                "galleryEnabled": true,
-                "zoomEnabled": true
-            },
-            "14_variants": {
-                "variantsDisplay": "swatches"
-            },
-            "15_social_proof": {
-                "reviewsEnabled": true,
-                "relatedProductsLimit": 6
-            }
-        },
-        "cart": {
-            "16_order_rules": {
-                "minOrderAmount": 10.00,
-                "allowCoupons": true
-            },
-            "17_shipping_estimator": {
-                "enabled": true
-            }
-        },
-        "checkout": {
-            "18_payment_methods": [
-                "card",
-                "cod",
-                "wallet"
-            ],
-            "19_checkout_flow": {
-                "guestCheckoutEnabled": true,
-                "orderNotesEnabled": true
-            },
-            "20_shipping_zones": [
-                {
-                    "region": "Downtown",
-                    "price": 5.00,
-                    "estimatedDays": "Same Day"
-                },
-                {
-                    "region": "Suburbs",
-                    "price": 10.00,
-                    "estimatedDays": "1 Day"
-                }
-            ]
-        },
-        "account": {
-            "21_loyalty_system": {
-                "loyaltyEnabled": true,
-                "pointsPerCurrency": 1,
-                "minRedeemPoints": 50
-            },
-            "22_wallet": {
-                "walletEnabled": true
-            }
-        },
-        "auth": {
-            "23_login_methods": {
-                "allowGoogleLogin": true,
-                "allowFacebookLogin": true
-            },
-            "24_security": {
-                "requirePhoneOTP": true,
-                "otpExpiryMinutes": 3
-            }
-        },
-        "support": {
-            "25_contact_info": {
-                "contactEmail": "support@grocery.app",
-                "contactPhone": "+1234567890",
-                "address": "123 Market St, Food City"
-            },
-            "26_geolocation": {
-                "coordinates": {
-                    "lat": 30.0444,
-                    "lng": 31.2357
-                }
-            },
-            "27_working_hours": {
-                "Mon-Fri": "8am - 10pm",
-                "Sat-Sun": "9am - 11pm"
-            }
-        },
-        "legal": {
-            "28_policies": {
-                "forceAcceptance": true
-            }
-        },
-        "system": {
-            "29_error_handling": {
-                "error404": {
-                    "message": "Product not found",
-                    "suggestedLinks": [
-                        {
-                            "label": "Back to Home",
-                            "url": "/"
-                        }
-                    ]
-                }
-            }
-        },
-        "widgets": {
-            "30_maintenance": {
-                "enabled": false,
-                "message": "Store is under maintenance"
-            },
-            "31_newsletter": {
-                "enabled": true,
-                "delaySeconds": 15,
-                "title": "Get Fresh Updates"
-            },
-            "32_toasts": {
-                "enabled": true,
-                "durationMs": 4000
-            }
-        },
-        "search": {
-            "33_discovery": {
-                "ajaxSearch": true,
-                "showPrice": true,
-                "showCategory": true,
-                "resultLimit": 8
-            }
-        },
-        "navigation": {
-            "34_mega_menu": {
-                "enabled": true,
-                "columns": 5
-            },
-            "35_smart_filters": {
-                "enabled": true,
-                "collapsible": true
-            }
-        },
-        "trust": {
-            "36_whatsapp_float": {
-                "enabled": true,
-                "message": "I entered the store and need help finding..."
-            },
-            "37_cookie_consent": {
-                "enabled": true,
-                "text": "We use cookies to ensure you get the best experience on our website."
-            }
-        },
-        "ai": {
-            "38_personalization": {
-                "enabled": true,
-                "showOnHome": true,
-                "algorithm": "collaborative_filtering"
-            }
-        },
-        "gifting": {
-            "39_wrapping": {
-                "enabled": true,
-                "wrappingPrice": 5.00
-            },
-            "40_custom_cards": {
-                "enabled": true
-            }
-        },
-        "interactive": {
-            "41_size_guide": {
-                "sizeGuideEnabled": false
-            },
-            "42_stories": {
-                "orderTimelineStories": true
-            },
-            "43_stock_notify": {
-                "outOfStockNotify": true
-            }
-        },
-        "blog": {
-            "44_content_hub": {
-                "enabled": true,
-                "postsPerPage": 4,
-                "showAuthor": true
-            }
-        },
-        "compare": {
-            "45_comparison_engine": {
-                "enabled": true,
-                "comparableAttributes": [
-                    "weight",
-                    "calories",
-                    "organic"
-                ]
-            }
-        },
-        "locations": {
-            "46_store_finder": {
-                "enabled": true,
-                "showMap": true,
-                "branchLimit": 10
-            }
-        },
-        "loyalty": {
-            "47_rewards_program": {
-                "enabled": true,
-                "pointsName": "FreshPoints",
-                "currencyToPointsRatio": 2,
-                "redeemThreshold": 200
-            }
-        },
-        "wallet": {
-            "48_finances": {
-                "enabled": true,
-                "allowTopup": true,
-                "cashbackPercentage": 2
-            }
-        },
-        "referral": {
-            "49_viral_loops": {
-                "enabled": true,
-                "referralRewardAmount": 100,
-                "refereeRewardAmount": 50
-            }
-        },
-        "rma": {
-            "50_returns_logic": {
-                "enabled": true,
-                "returnWindowDays": 7,
-                "requireEvidence": true
-            }
-        },
-        "tracking": {
-            "51_order_visibility": {
-                "guestTrackingEnabled": true,
-                "showTimeline": true
-            }
-        },
-        "quickView": {
-            "52_quick_actions": {
-                "enabled": true,
-                "showDescription": true,
-                "maxImages": 3
-            }
-        },
-        "postPurchase": {
-            "53_retention": {
-                "orderSuccess": {
-                    "showTrackButton": true,
-                    "customMessage": "Thank you for shopping fresh!"
-                },
-                "paymentFailure": {
-                    "alternativeMethodsEnabled": true,
-                    "supportPhone": "+1234567890"
-                }
-            }
-        },
-        "faq": {
-            "54_help_center": {
-                "enabled": true,
-                "displayStyle": "accordion"
-            }
-        },
-        "analytics": {
-            "55_tracking": {
-                "googleAnalytics": true,
-                "facebookPixel": true,
-                "heatmaps": "Clarity"
-            }
-        }
+    "04_infrastructure": {
+      "database": "PostgreSQL 16 + pgvector (AI Search)",
+      "cache": "Redis 7.x (Sessions, Rate Limits, Caching)",
+      "search_engine": "Hybrid (Keyword + Semantic Vector Search)",
+      "cdn": "Global Edge Network for static assets"
     }
+  },
+  "frontend_standards": {
+    "05_ui_ux_philosophy": {
+      "design_system": "Atomic Design (Atoms -> Molecules -> Organisms)",
+      "theme": "Glassmorphism + Neomorphism accents",
+      "animations": "Framer Motion (60fps micro-interactions)",
+      "accessibility": "WCAG 2.1 AA Compliant (Screen readers, Keyboard nav)"
+    },
+    "06_responsive_behavior": {
+      "mobile_first": "Touch-optimized hit targets (>44px)",
+      "breakpoints": {
+        "sm": "640px (Mobile)",
+        "md": "768px (Tablet)",
+        "lg": "1024px (Desktop)",
+        "xl": "1280px (Wide)"
+      }
+    },
+    "07_localization": {
+      "i18n_support": "Native RTL/LTR switching (Arabic/English)",
+      "currency_formatting": "Locale-aware (e.g., EGP 1,234.50 vs $1,234.50)",
+      "number_formatting": "Eastern/Western Arabic numerals support"
+    }
+  },
+  "blueprint_configuration": {
+    "home": {
+      "08_header": {
+        "logoUrl": "https://cdn.apex.store/grocery/logo.png",
+        "searchEnabled": true,
+        "searchDefaultText": "Search for fresh fruits, vegetables...",
+        "navigation": [
+          {
+            "label": "Fresh Food",
+            "children": ["Fruits", "Vegetables", "Organic"]
+          },
+          {
+            "label": "Bakery",
+            "children": ["Bread", "Pastries"]
+          },
+          {
+            "label": "Frozen",
+            "children": ["Ice Cream", "Meat"]
+          }
+        ]
+      },
+      "09_hero_slider": {
+        "animationType": "slide",
+        "displayDuration": 6000,
+        "slides": [
+          {
+            "imageUrl": "https://cdn.apex.store/grocery/hero-veg.jpg",
+            "title": "Fresh from Farm to Table",
+            "subtitle": "Get 20% off organic vegetables this week",
+            "buttonText": "Shop Fresh",
+            "buttonUrl": "/category/fresh"
+          },
+          {
+            "imageUrl": "https://cdn.apex.store/grocery/hero-meat.jpg",
+            "title": "Premium Cuts",
+            "subtitle": "Halal certified fresh meat",
+            "buttonText": "Order Now",
+            "buttonUrl": "/category/meat"
+          }
+        ]
+      },
+      "10_flash_sales": {
+        "endTime": "2024-12-31T23:59:59Z",
+        "products": [
+          {
+            "productId": "uuid-1",
+            "discountPercentage": 30,
+            "quantityLimit": 5
+          },
+          {
+            "productId": "uuid-2",
+            "discountPercentage": 50,
+            "quantityLimit": 2
+          }
+        ]
+      },
+      "11_bento_grid": {
+        "layoutId": "5-card",
+        "slots": {
+          "slot_1": {
+            "type": "category",
+            "customText": "Exclusive Deals",
+            "link": "/deals"
+          },
+          "slot_2": {
+            "type": "product",
+            "referenceId": "uuid-best-seller"
+          }
+        }
+      },
+      "12_trust_signals": {
+        "marqueeTexts": [
+          "Free Delivery on orders over $50",
+          "24/7 Customer Support",
+          "Freshness Guaranteed"
+        ],
+        "serviceIcons": [
+          {
+            "iconName": "Truck",
+            "title": "Fast Delivery",
+            "description": "Within 2 hours"
+          },
+          {
+            "iconName": "ShieldCheck",
+            "title": "Secure Payment",
+            "description": "100% Protected"
+          }
+        ]
+      }
+    },
+    "pdp": {
+      "13_product_gallery": {
+        "galleryEnabled": true,
+        "zoomEnabled": true
+      },
+      "14_variants": {
+        "variantsDisplay": "swatches"
+      },
+      "15_social_proof": {
+        "reviewsEnabled": true,
+        "relatedProductsLimit": 6
+      }
+    },
+    "cart": {
+      "16_order_rules": {
+        "minOrderAmount": 10.0,
+        "allowCoupons": true
+      },
+      "17_shipping_estimator": {
+        "enabled": true
+      }
+    },
+    "checkout": {
+      "18_payment_methods": ["card", "cod", "wallet"],
+      "19_checkout_flow": {
+        "guestCheckoutEnabled": true,
+        "orderNotesEnabled": true
+      },
+      "20_shipping_zones": [
+        {
+          "region": "Downtown",
+          "price": 5.0,
+          "estimatedDays": "Same Day"
+        },
+        {
+          "region": "Suburbs",
+          "price": 10.0,
+          "estimatedDays": "1 Day"
+        }
+      ]
+    },
+    "account": {
+      "21_loyalty_system": {
+        "loyaltyEnabled": true,
+        "pointsPerCurrency": 1,
+        "minRedeemPoints": 50
+      },
+      "22_wallet": {
+        "walletEnabled": true
+      }
+    },
+    "auth": {
+      "23_login_methods": {
+        "allowGoogleLogin": true,
+        "allowFacebookLogin": true
+      },
+      "24_security": {
+        "requirePhoneOTP": true,
+        "otpExpiryMinutes": 3
+      }
+    },
+    "support": {
+      "25_contact_info": {
+        "contactEmail": "support@grocery.app",
+        "contactPhone": "+1234567890",
+        "address": "123 Market St, Food City"
+      },
+      "26_geolocation": {
+        "coordinates": {
+          "lat": 30.0444,
+          "lng": 31.2357
+        }
+      },
+      "27_working_hours": {
+        "Mon-Fri": "8am - 10pm",
+        "Sat-Sun": "9am - 11pm"
+      }
+    },
+    "legal": {
+      "28_policies": {
+        "forceAcceptance": true
+      }
+    },
+    "system": {
+      "29_error_handling": {
+        "error404": {
+          "message": "Product not found",
+          "suggestedLinks": [
+            {
+              "label": "Back to Home",
+              "url": "/"
+            }
+          ]
+        }
+      }
+    },
+    "widgets": {
+      "30_maintenance": {
+        "enabled": false,
+        "message": "Store is under maintenance"
+      },
+      "31_newsletter": {
+        "enabled": true,
+        "delaySeconds": 15,
+        "title": "Get Fresh Updates"
+      },
+      "32_toasts": {
+        "enabled": true,
+        "durationMs": 4000
+      }
+    },
+    "search": {
+      "33_discovery": {
+        "ajaxSearch": true,
+        "showPrice": true,
+        "showCategory": true,
+        "resultLimit": 8
+      }
+    },
+    "navigation": {
+      "34_mega_menu": {
+        "enabled": true,
+        "columns": 5
+      },
+      "35_smart_filters": {
+        "enabled": true,
+        "collapsible": true
+      }
+    },
+    "trust": {
+      "36_whatsapp_float": {
+        "enabled": true,
+        "message": "I entered the store and need help finding..."
+      },
+      "37_cookie_consent": {
+        "enabled": true,
+        "text": "We use cookies to ensure you get the best experience on our website."
+      }
+    },
+    "ai": {
+      "38_personalization": {
+        "enabled": true,
+        "showOnHome": true,
+        "algorithm": "collaborative_filtering"
+      }
+    },
+    "gifting": {
+      "39_wrapping": {
+        "enabled": true,
+        "wrappingPrice": 5.0
+      },
+      "40_custom_cards": {
+        "enabled": true
+      }
+    },
+    "interactive": {
+      "41_size_guide": {
+        "sizeGuideEnabled": false
+      },
+      "42_stories": {
+        "orderTimelineStories": true
+      },
+      "43_stock_notify": {
+        "outOfStockNotify": true
+      }
+    },
+    "blog": {
+      "44_content_hub": {
+        "enabled": true,
+        "postsPerPage": 4,
+        "showAuthor": true
+      }
+    },
+    "compare": {
+      "45_comparison_engine": {
+        "enabled": true,
+        "comparableAttributes": ["weight", "calories", "organic"]
+      }
+    },
+    "locations": {
+      "46_store_finder": {
+        "enabled": true,
+        "showMap": true,
+        "branchLimit": 10
+      }
+    },
+    "loyalty": {
+      "47_rewards_program": {
+        "enabled": true,
+        "pointsName": "FreshPoints",
+        "currencyToPointsRatio": 2,
+        "redeemThreshold": 200
+      }
+    },
+    "wallet": {
+      "48_finances": {
+        "enabled": true,
+        "allowTopup": true,
+        "cashbackPercentage": 2
+      }
+    },
+    "referral": {
+      "49_viral_loops": {
+        "enabled": true,
+        "referralRewardAmount": 100,
+        "refereeRewardAmount": 50
+      }
+    },
+    "rma": {
+      "50_returns_logic": {
+        "enabled": true,
+        "returnWindowDays": 7,
+        "requireEvidence": true
+      }
+    },
+    "tracking": {
+      "51_order_visibility": {
+        "guestTrackingEnabled": true,
+        "showTimeline": true
+      }
+    },
+    "quickView": {
+      "52_quick_actions": {
+        "enabled": true,
+        "showDescription": true,
+        "maxImages": 3
+      }
+    },
+    "postPurchase": {
+      "53_retention": {
+        "orderSuccess": {
+          "showTrackButton": true,
+          "customMessage": "Thank you for shopping fresh!"
+        },
+        "paymentFailure": {
+          "alternativeMethodsEnabled": true,
+          "supportPhone": "+1234567890"
+        }
+      }
+    },
+    "faq": {
+      "54_help_center": {
+        "enabled": true,
+        "displayStyle": "accordion"
+      }
+    },
+    "analytics": {
+      "55_tracking": {
+        "googleAnalytics": true,
+        "facebookPixel": true,
+        "heatmaps": "Clarity"
+      }
+    }
+  }
 }

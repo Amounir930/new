@@ -10,47 +10,49 @@ import { useSettings } from '@/contexts/SettingsProvider';
 import { PersonalizedRecommendations } from '@/components/products/PersonalizedRecommendations';
 
 export default function Home() {
-  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-1');
+  const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-1');
   const { language } = useSettings();
 
   const t = {
     en: {
-      defineYourStyle: "Define Your Style",
-      discoverLatest: "Discover the latest trends and timeless pieces. High-quality fashion for every occasion.",
-      shopNow: "Shop Now",
-      exploreDeals: "Explore Deals",
-      shopByCategory: "Shop by Category",
-      men: "Men",
-      women: "Women",
-      kids: "Kids",
-      trendingNow: "Trending Now",
-      viewAll: "View All",
-      freeShipping: "Free Shipping",
-      freeShippingDesc: "On all orders over $50",
-      easyReturns: "Easy Returns",
-      easyReturnsDesc: "30-day return policy",
-      securePayment: "Secure Payment",
-      securePaymentDesc: "All transactions are secure",
+      defineYourStyle: 'Define Your Style',
+      discoverLatest:
+        'Discover the latest trends and timeless pieces. High-quality fashion for every occasion.',
+      shopNow: 'Shop Now',
+      exploreDeals: 'Explore Deals',
+      shopByCategory: 'Shop by Category',
+      men: 'Men',
+      women: 'Women',
+      kids: 'Kids',
+      trendingNow: 'Trending Now',
+      viewAll: 'View All',
+      freeShipping: 'Free Shipping',
+      freeShippingDesc: 'On all orders over $50',
+      easyReturns: 'Easy Returns',
+      easyReturnsDesc: '30-day return policy',
+      securePayment: 'Secure Payment',
+      securePaymentDesc: 'All transactions are secure',
     },
     ar: {
-      defineYourStyle: "حدد أسلوبك",
-      discoverLatest: "اكتشف أحدث الصيحات والقطع الخالدة. أزياء عالية الجودة لكل مناسبة.",
-      shopNow: "تسوق الآن",
-      exploreDeals: "اكتشف العروض",
-      shopByCategory: "تسوق حسب الفئة",
-      men: "رجال",
-      women: "نساء",
-      kids: "أطفال",
-      trendingNow: "المنتجات الرائجة الآن",
-      viewAll: "عرض الكل",
-      freeShipping: "شحن مجاني",
-      freeShippingDesc: "على جميع الطلبات فوق 50 دولارًا",
-      easyReturns: "إرجاع سهل",
-      easyReturnsDesc: "سياسة إرجاع لمدة 30 يومًا",
-      securePayment: "دفع آمن",
-      securePaymentDesc: "جميع المعاملات آمنة",
-    }
-  }
+      defineYourStyle: 'حدد أسلوبك',
+      discoverLatest:
+        'اكتشف أحدث الصيحات والقطع الخالدة. أزياء عالية الجودة لكل مناسبة.',
+      shopNow: 'تسوق الآن',
+      exploreDeals: 'اكتشف العروض',
+      shopByCategory: 'تسوق حسب الفئة',
+      men: 'رجال',
+      women: 'نساء',
+      kids: 'أطفال',
+      trendingNow: 'المنتجات الرائجة الآن',
+      viewAll: 'عرض الكل',
+      freeShipping: 'شحن مجاني',
+      freeShippingDesc: 'على جميع الطلبات فوق 50 دولارًا',
+      easyReturns: 'إرجاع سهل',
+      easyReturnsDesc: 'سياسة إرجاع لمدة 30 يومًا',
+      securePayment: 'دفع آمن',
+      securePaymentDesc: 'جميع المعاملات آمنة',
+    },
+  };
 
   const Arrow = language === 'ar' ? ArrowLeft : ArrowRight;
 
@@ -95,9 +97,9 @@ export default function Home() {
           {t[language].shopByCategory}
         </h2>
         <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
-          {categories.map(category => {
+          {categories.map((category) => {
             const categoryImage = PlaceHolderImages.find(
-              img => img.id === category.image
+              (img) => img.id === category.image
             );
             return (
               <Link
@@ -119,7 +121,11 @@ export default function Home() {
                 <div className="absolute inset-0 bg-black/40" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <h3 className="text-2xl font-semibold text-white drop-shadow-md">
-                    {category.name === 'Men' ? t[language].men : category.name === 'Women' ? t[language].women : t[language].kids}
+                    {category.name === 'Men'
+                      ? t[language].men
+                      : category.name === 'Women'
+                        ? t[language].women
+                        : t[language].kids}
                   </h3>
                 </div>
               </Link>
@@ -131,7 +137,9 @@ export default function Home() {
       {/* Trending Products */}
       <section className="container">
         <div className="mb-8 flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">{t[language].trendingNow}</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            {t[language].trendingNow}
+          </h2>
           <Button variant="ghost" asChild>
             <Link href="/shop">
               {t[language].viewAll} <Arrow className="ms-2 h-4 w-4" />
@@ -139,12 +147,12 @@ export default function Home() {
           </Button>
         </div>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {trendingProducts.map(product => (
+          {trendingProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>
-      
+
       {/* Personalized Recommendations */}
       <PersonalizedRecommendations />
 
@@ -161,7 +169,9 @@ export default function Home() {
           <div className="flex flex-col items-center gap-2">
             <RefreshCw className="h-8 w-8 text-primary" />
             <h3 className="font-semibold">{t[language].easyReturns}</h3>
-            <p className="text-sm text-muted-foreground">{t[language].easyReturnsDesc}</p>
+            <p className="text-sm text-muted-foreground">
+              {t[language].easyReturnsDesc}
+            </p>
           </div>
           <div className="flex flex-col items-center gap-2">
             <Shield className="h-8 w-8 text-primary" />
