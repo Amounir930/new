@@ -3,12 +3,8 @@
  * Ensures directional animations work correctly in both LTR and RTL layouts
  */
 
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
-
-export function cn(...inputs: ClassValue[]) {
-    return twMerge(clsx(inputs))
-}
+import { cn } from "../core/utils"
+// Note: cn is imported from core/utils to avoid ambiguous exports
 
 /**
  * RTL Direction Hook

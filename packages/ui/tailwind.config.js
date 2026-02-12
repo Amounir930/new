@@ -99,22 +99,13 @@ module.exports = {
 
     plugins: [
         // RTL support plugin
-        function ({ addUtilities }) {
+        ({ addUtilities }) => {
             const rtlUtilities = {
                 // Directional margin utilities
-                '.ms-auto': {
-                    'margin-inline-start': 'auto',
-                },
-                '.me-auto': {
-                    'margin-inline-end': 'auto',
-                },
-                // Directional padding utilities
-                '.ps-4': {
-                    'padding-inline-start': '1rem',
-                },
-                '.pe-4': {
-                    'padding-inline-end': '1rem',
-                },
+                ".ms-1": { marginInlineStart: "0.25rem" },
+                ".ms-2": { marginInlineStart: "0.5rem" },
+                ".me-1": { marginInlineEnd: "0.25rem" },
+                ".me-2": { marginInlineEnd: "0.5rem" },
             }
             addUtilities(rtlUtilities)
         },
