@@ -1,31 +1,28 @@
 import { writeFileSync } from 'node:fs';
+import { TenantRegistryService } from '@apex/db';
 import { Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Test } from '@nestjs/testing';
+import { ProvisioningService } from '../src/provisioning/provisioning.service.js';
 
 // -----------------------------------------------------------------------------
 // 🛡️ Security & Isolation Setup
 // -----------------------------------------------------------------------------
 
-// Mock Environment Variables BEFORE import to satisfy ConfigModule validation
-`postgres${'ql'}://mock_user:mock_pass@localhost:5432/mock_db`;
+// Mock Environment Variables BEFORE import to satisfy ConfigModule validation (if feasible with static imports)
+// Note: In Bun/ESM, static imports might run before this code. We might need to ensure envs are set in bunfig or shell.
+// But mostly these are runtime checks in ConfigModule.
+
+process.env.DATABASE_URL = process.env.DATABASE_URL || `postgres${'ql'}://mock_user:mock_pass@localhost:5432/mock_db`;
 process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'mock-jwt-secret';
 process.env.TENANT_ISOLATION_MODE = 'strict';
 // @ts-expect-error NODE_ENV is read-only in some environments
 process.env.NODE_ENV = 'test';
-process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
-process.env.MINIO_ACCESS_KEY =
-  process.env.MINIO_ACCESS_KEY || 'mock-access-key';
-process.env.MINIO_SECRET_KEY =
-  process.env.MINIO_SECRET_KEY || 'mock-secret-key';
-process.env.MINIO_BUCKET = process.env.MINIO_BUCKET || 'mock-bucket';
-process.env.MINIO_REGION = process.env.MINIO_REGION || 'us-east-1';
 
 console.log('DEBUG: Env vars set:', {
   DB: process.env.DATABASE_URL,
   JWT: process.env.JWT_SECRET ? 'Exists' : 'Missing',
-  MINIO: process.env.MINIO_ENDPOINT,
 });
 
 async function generate() {
@@ -35,10 +32,6 @@ async function generate() {
   try {
     // Dynamic import to ensure env vars are set before module load
     const { AppModule } = await import('../src/app.module.js');
-    // Use dynamic import for db to avoid type issues with index vs dist
-    const dbModule = (await import('@apex/db')) as any;
-    const TenantRegistryService = dbModule.TenantRegistryService;
-
     // Mock Services
     const mockTenantRegistryService = {
       get: () => Promise.resolve(null),
@@ -59,7 +52,9 @@ async function generate() {
     })
       .overrideProvider(TenantRegistryService)
       .useValue(mockTenantRegistryService)
-      .overrideProvider('PROVISIONING_SERVICE')
+      .overrideProvider(ProvisioningService) // Override the Class Provider
+      .useValue(mockProvisioningService)
+      .overrideProvider('PROVISIONING_SERVICE') // Override the String Token Provider
       .useValue(mockProvisioningService)
       .overrideProvider('AUDIT_SERVICE')
       .useValue(mockAuditService)

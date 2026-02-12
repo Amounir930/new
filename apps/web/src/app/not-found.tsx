@@ -22,18 +22,10 @@ const t = {
 };
 
 export default function NotFound() {
-  const { language } = useSettings();
-
-  // Robust fallback logic
-  const validLangs = ['en', 'ar'] as const;
-  type LangKey = typeof validLangs[number];
-
-  // Ensure we have a valid key, defaulting to 'ar' if undefined or invalid
-  const safeLang: LangKey = (language && validLangs.includes(language as LangKey))
-    ? (language as LangKey)
-    : 'ar';
-
-  const content = t[safeLang];
+  // S8 FIX: Robust 404 logic that doesn't rely on Context during static build
+  // This prevents Minified React Error #31 when the provider is missing
+  const defaultLang = 'ar';
+  const content = t[defaultLang];
 
   return (
     <div className="container flex min-h-[70vh] flex-col items-center justify-center text-center">
@@ -48,9 +40,6 @@ export default function NotFound() {
       <div className="mt-8 flex items-center gap-4">
         <Link href="/" className={buttonVariants({ variant: "default" })}>
           {content.returnHome}
-        </Link>
-        <Link href="/contact" className={buttonVariants({ variant: "outline" })}>
-          {content.contactSupport}
         </Link>
       </div>
     </div>
