@@ -8,7 +8,7 @@ import {
   type HomePageBlueprint,
   HomePageBlueprintSchema,
 } from '@apex/validators';
-import { sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../connection';
 import {
   type FlashSaleProduct,
