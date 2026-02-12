@@ -15,6 +15,7 @@ const mockDb = {
 mock.module('./connection.js', () => ({
   publicPool: mockPool,
   publicDb: mockDb,
+  db: mockDb,
 }));
 
 // Import module AFTER mocking
