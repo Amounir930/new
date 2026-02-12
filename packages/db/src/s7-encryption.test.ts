@@ -1,18 +1,24 @@
 import { EncryptionService } from '@apex/security';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { publicPool } from './index';
+import { afterAll, beforeAll, describe, expect, it, mock } from 'bun:test';
 
-// 🛡️ Radical Mocking: Ensure publicPool is a Vitest mock by mocking its source
-vi.mock('./connection.js', () => ({
-  publicPool: {
-    connect: vi.fn(),
-    query: vi.fn(),
-    on: vi.fn(),
-  },
-  publicDb: {
-    execute: vi.fn(),
-  },
+// Define mocks first
+const mockPool = {
+  connect: mock(),
+  query: mock(),
+  on: mock(),
+};
+const mockDb = {
+  execute: mock(),
+};
+
+// Mock the connection module
+mock.module('./connection.js', () => ({
+  publicPool: mockPool,
+  publicDb: mockDb,
 }));
+
+// Import module AFTER mocking
+const { publicPool: importedPool } = await import('./index');
 
 // Helper to check DB availability
 const _isDbReachable = async () => {
@@ -44,7 +50,7 @@ describe.skipIf(!hasDb)(
       let lastInsertedData: any = null;
 
       // 🛡️ Stabilization: Mock specific query responses for S7 encryption tests
-      (publicPool.query as any).mockImplementation(
+      (mockPool.query as any).mockImplementation(
         async (query: any, params?: any[]) => {
           const queryString = typeof query === 'string' ? query : query.text;
 
@@ -70,7 +76,7 @@ describe.skipIf(!hasDb)(
       if (!hasDb) return;
       try {
         // 🧹 Cleanup
-        await publicPool.query('DROP TABLE IF EXISTS s7_test_storage');
+        await mockPool.query('DROP TABLE IF EXISTS s7_test_storage');
       } catch {
         // Ignore cleanup errors
       }
@@ -81,13 +87,13 @@ describe.skipIf(!hasDb)(
       const encrypted = encryptionService.encrypt(testSecret);
 
       // 2. Persist to DB
-      await publicPool.query(
+      await mockPool.query(
         'INSERT INTO s7_test_storage (encrypted_data, plaintext_hint) VALUES ($1, $2)',
         [JSON.stringify(encrypted), 'PII_TYPE_SECRET']
       );
 
       // 3. Query RAW data from DB
-      const result = await publicPool.query(
+      const result = await mockPool.query(
         'SELECT encrypted_data FROM s7_test_storage LIMIT 1'
       );
       const rawData = JSON.stringify(result.rows[0].encrypted_data);
@@ -102,7 +108,7 @@ describe.skipIf(!hasDb)(
     });
 
     it('should correctly decrypt data retrieved from database', async () => {
-      const result = await publicPool.query(
+      const result = await mockPool.query(
         'SELECT encrypted_data FROM s7_test_storage LIMIT 1'
       );
       const storedEncrypted = result.rows[0].encrypted_data;
@@ -116,7 +122,7 @@ describe.skipIf(!hasDb)(
     });
 
     it('should fail decryption with wrong master key (Integrity Check)', async () => {
-      const result = await publicPool.query(
+      const result = await mockPool.query(
         'SELECT encrypted_data FROM s7_test_storage LIMIT 1'
       );
       const storedEncrypted = result.rows[0].encrypted_data;

@@ -40,3 +40,6 @@ export const publicPool = new Pool(poolConfig);
 
 // Drizzle instance for public schema
 export const publicDb = drizzle(publicPool);
+
+// Generic alias for main DB operations (Rule S2 context)
+export const db = publicDb;

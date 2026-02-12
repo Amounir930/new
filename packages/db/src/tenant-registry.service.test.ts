@@ -3,28 +3,27 @@
  * S2 Protocol: Global Registry Access
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { TenantRegistryService } from './tenant-registry.service.js';
 
-// Mock DB
-// 🛡️ Stabilization: Use vi.hoisted to ensure these are available for vi.mock
-const { mockDb } = vi.hoisted(() => ({
-  mockDb: {
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockResolvedValue([]),
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockResolvedValue([]),
-  },
-}));
+// Define mocks
+const mockDb = {
+  select: mock().mockReturnThis(),
+  from: mock().mockReturnThis(),
+  where: mock().mockReturnThis(),
+  limit: mock().mockResolvedValue([]),
+  insert: mock().mockReturnThis(),
+  values: mock().mockReturnThis(),
+  returning: mock().mockResolvedValue([]),
+};
 
-vi.mock('./connection.js', () => ({
+// Mock connection
+mock.module('./connection.js', () => ({
   publicDb: mockDb,
 }));
 
-vi.mock('./schema.js', () => ({
+// Mock schema
+mock.module('./schema.js', () => ({
   tenants: {
     id: 'id-col',
     subdomain: 'sub-col',
@@ -35,16 +34,21 @@ vi.mock('./schema.js', () => ({
 }));
 
 // Mock drizzle-orm
-vi.mock('drizzle-orm', () => ({
-  eq: vi.fn().mockReturnValue('eq-mock'),
-  or: vi.fn().mockReturnValue('or-mock'),
+mock.module('drizzle-orm', () => ({
+  eq: mock().mockReturnValue('eq-mock'),
+  or: mock().mockReturnValue('or-mock'),
 }));
 
 describe('TenantRegistryService', () => {
   let service: TenantRegistryService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Clear mocks
+    mockDb.limit.mockClear();
+    mockDb.returning.mockClear();
+    mockDb.insert.mockClear();
+    mockDb.select.mockClear();
+
     service = new TenantRegistryService();
   });
 

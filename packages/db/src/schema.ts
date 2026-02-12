@@ -17,6 +17,9 @@ export const tenants = pgTable('tenants', {
 
 export type Tenant = InferSelectModel<typeof tenants>;
 
+// Governance & Quotas
+export * from './schema/governance';
+
 /**
  * Super-#21: Onboarding Blueprint Editor
  * Stores JSON templates for tenant provisioning

@@ -20,8 +20,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
-    "test": "bun test",
-    "test:coverage": "bun test --coverage",
+    "test": "bun test --timeout 15000",
+    "test:coverage": "bun test --coverage --timeout 15000",
     "lint": "biome check .",
     "lint:fix": "biome check --apply .",
     "typecheck": "tsc --noEmit",

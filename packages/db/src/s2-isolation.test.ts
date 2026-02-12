@@ -1,32 +1,31 @@
 import { sql } from 'drizzle-orm';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { publicPool, withTenantConnection } from './index';
+import { afterAll, beforeEach, describe, expect, it, mock } from 'bun:test';
 
-// 🛡️ Radical Mocking: Ensure publicPool is a Vitest mock by mocking its source
-// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
-// 🛡️ Stabilization: Use vi.hoisted to ensure these are available for vi.mock
-const { mockPool, mockDb } = vi.hoisted(() => ({
-  mockPool: {
-    connect: vi.fn(),
-    query: vi.fn(),
-    on: vi.fn(),
-  },
-  mockDb: {
-    execute: vi.fn(),
-  },
-}));
+// Define mocks first
+const mockPool = {
+  connect: mock(),
+  query: mock(),
+  on: mock(),
+};
+const mockDb = {
+  execute: mock(),
+};
 
-vi.mock('./connection.js', () => ({
+// Mock the connection module
+mock.module('./connection.js', () => ({
   publicPool: mockPool,
   publicDb: mockDb,
 }));
+
+// Import module AFTER mocking
+const { publicPool: importedPool, withTenantConnection } = await import('./index');
 
 // Helper to check DB availability
 const _isDbReachable = async () => {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl || dbUrl.includes('undefined')) return false;
   try {
-    const client = await publicPool.connect();
+    const client = await mockPool.connect();
     client.release();
     return true;
   } catch {
@@ -71,6 +70,10 @@ describe.skipIf(!hasDb)(
     const tenantBeta = 'beta_test';
 
     beforeEach(async () => {
+      // Reset mocks
+      mockPool.query.mockClear();
+      mockPool.connect.mockClear();
+
       mockPool.query.mockImplementation(async (query: any, results?: any[]) => {
         const q = typeof query === 'string' ? query : query.text;
         if (q.includes('SELECT 1 FROM tenants')) {
@@ -86,7 +89,7 @@ describe.skipIf(!hasDb)(
       mockPool.connect.mockImplementation(async () => {
         let currentPath = 'public';
         return {
-          query: vi.fn().mockImplementation(async (query: any) => {
+          query: mock().mockImplementation(async (query: any) => {
             const q = typeof query === 'string' ? query : query.text;
             const res = getMockResponse(
               q,
@@ -97,8 +100,8 @@ describe.skipIf(!hasDb)(
             currentPath = res.newPath;
             return { rows: res.rows, rowCount: res.count };
           }),
-          release: vi.fn(),
-          on: vi.fn(),
+          release: mock(),
+          on: mock(),
         };
       });
     });
@@ -150,7 +153,7 @@ describe.skipIf(!hasDb)(
     });
 
     it('should reset search_path to public after operation', async () => {
-      const client = await publicPool.connect();
+      const client = await mockPool.connect();
       try {
         await withTenantConnection(tenantAlpha, async () => {
           // Inside it's Alpha
@@ -166,19 +169,22 @@ describe.skipIf(!hasDb)(
     });
 
     it('should throw S2 Violation error for non-existent tenant', async () => {
-      await expect(
-        withTenantConnection('fake_tenant', async () => {})
-      ).rejects.toThrow(
-        "S2 Violation: Tenant 'fake_tenant' not found or invalid"
-      );
+      try {
+        await withTenantConnection('fake_tenant', async () => { });
+        expect(true).toBe(false);
+      } catch (e: any) {
+        expect(e.message).toContain(
+          "S2 Violation: Tenant 'fake_tenant' not found or invalid"
+        );
+      }
     });
 
     it('should NOT have cross-tenant schemas in search_path (Leak Prevention)', async () => {
       // Run a tenant operation
-      await withTenantConnection(tenantAlpha, async () => {});
+      await withTenantConnection(tenantAlpha, async () => { });
 
       // Immediately check a fresh connection from the pool
-      const client = await publicPool.connect();
+      const client = await mockPool.connect();
       try {
         const pathResult = await client.query('SHOW search_path');
         const searchPath = pathResult.rows[0].search_path;

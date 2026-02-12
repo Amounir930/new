@@ -12,6 +12,7 @@ import {
   integer,
   pgTable,
   text,
+  timestamp,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -27,12 +28,20 @@ export const categories = pgTable(
     slug: varchar('slug', { length: 255 }).notNull().unique(),
     name: varchar('name', { length: 255 }).notNull(),
     description: text('description'),
-    imageUrl: text('image_url'), // Category banner
+    imageUrl: text('image_url'), // Category icon/thumbnail
+    bannerUrl: text('banner_url'), // Large banner for category page
+
+    // SEO
+    metaTitle: varchar('meta_title', { length: 150 }),
+    metaDescription: varchar('meta_description', { length: 255 }),
 
     parentId: uuid('parent_id').references((): any => categories.id), // Self-reference
 
     order: integer('order').default(0), // Display order
     isActive: boolean('is_active').default(true),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
     idxCategoriesParent: index('idx_categories_parent').on(table.parentId),

@@ -327,8 +327,8 @@ export async function deleteBlueprint(id: string): Promise<boolean> {
  */
 export const defaultBlueprintTemplate: BlueprintTemplate = {
   version: '1.0',
-  name: 'Default Starter',
-  description: 'Basic setup with sample products and pages',
+  name: 'Master Core Blueprint',
+  description: 'Mandatory base data for all 51 core features',
   products: [
     {
       name: 'Sample Product',
@@ -339,26 +339,64 @@ export const defaultBlueprintTemplate: BlueprintTemplate = {
     },
   ],
   pages: [
-    {
-      slug: 'about',
-      title: 'About Us',
-      content: '<h1>About Our Store</h1><p>Welcome to our online store!</p>',
-      isPublished: true,
-    },
+    { slug: 'home', title: 'Home Page', content: 'Welcome to our store', isPublished: true },
+    { slug: 'search', title: 'Search Results', content: 'Search for products', isPublished: true },
+    { slug: 'cart', title: 'Shopping Cart', content: 'Your selected items', isPublished: true },
+    { slug: 'checkout', title: 'Checkout', content: 'Complete your purchase', isPublished: true },
+    { slug: 'order-success', title: 'Order Confirmed', content: 'Thank you for your order!', isPublished: true },
+    { slug: 'payment-failure', title: 'Payment Failed', content: 'Please try another payment method', isPublished: true },
+    { slug: 'about-us', title: 'About Us', content: 'Our story and mission', isPublished: true },
+    { slug: 'contact-us', title: 'Contact Us', content: 'Get in touch with us', isPublished: true },
+    { slug: 'privacy-policy', title: 'Privacy Policy', content: 'How we handle your data', isPublished: true },
+    { slug: 'terms-conditions', title: 'Terms & Conditions', content: 'Rules for using our store', isPublished: true },
+    { slug: 'refund-policy', title: 'Refund Policy', content: 'Our return and refund rules', isPublished: true },
+    { slug: 'faq', title: 'FAQ', content: 'Frequently asked questions', isPublished: true },
+    { slug: 'blog', title: 'Blog', content: 'Latest articles and news', isPublished: true },
+    { slug: 'store-locations', title: 'Store Locations', content: 'Find us near you', isPublished: true },
+    { slug: 'track-order', title: 'Track Order', content: 'Track your shipment status', isPublished: true },
+    { slug: 'wishlist', title: 'My Wishlist', content: 'Your favorite items', isPublished: true },
+    { slug: 'wallet', title: 'My Wallet', content: 'Your balance and credits', isPublished: true },
+    { slug: 'loyalty', title: 'Loyalty Program', content: 'Earn and spend points', isPublished: true },
+    { slug: 'referral', title: 'Refer a Friend', content: 'Invite friends and earn rewards', isPublished: true },
   ],
   categories: [
     { name: 'General', slug: 'general', description: 'General products' },
+    { name: 'Fashion', slug: 'fashion', description: 'Clothing and accessories' },
   ],
   settings: {
-    site_name: 'My New Store',
+    // Basic Info
+    site_name: 'My Apex Store',
     currency: 'USD',
     timezone: 'UTC',
+    maintenance_mode: 'false',
+
+    // Feature Toggles (Global Defaults)
+    feature_whatsapp_float: 'true',
+    feature_newsletter_popup: 'true',
+    feature_cookie_consent: 'true',
+    feature_mega_menu: 'true',
+    feature_quick_view: 'true',
+    feature_smart_filters: 'true',
+    feature_toast_notifications: 'true',
+    feature_social_wall: 'false',
+    feature_out_of_stock_notify: 'true',
+    feature_ai_personalization: 'false',
+    feature_bnpl_enabled: 'false',
+    feature_size_guide_enabled: 'true',
+    feature_gift_hub_enabled: 'true',
+    feature_order_timeline_visible: 'true',
+
+    // Contact Info
+    contact_email: 'support@example.com',
+    contact_phone: '+123456789',
+    whatsapp_number: '+123456789',
   },
   sampleOrders: false,
   navigation: [
     { label: 'Home', url: '/', position: 1 },
     { label: 'Products', url: '/products', position: 2 },
-    { label: 'About', url: '/about', position: 3 },
+    { label: 'About', url: '/about-us', position: 3 },
+    { label: 'Contact', url: '/contact-us', position: 4 },
   ],
 };
 

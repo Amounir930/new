@@ -58,7 +58,6 @@ export {
   TenantScopedGuard,
 } from './tenant-isolation.middleware.js';
 
-// Tenant Resolution
 export {
   extractTenantFromHeader,
   extractTenantFromHost,
@@ -66,3 +65,7 @@ export {
   resolveTenant,
   type TenantResolutionStrategy,
 } from './tenant-resolution.js';
+
+// Governance & Quotas
+export { GovernanceGuard, RequireFeature } from './governance.guard.js';
+export { QuotaInterceptor, CheckQuota } from './quota.interceptor.js';

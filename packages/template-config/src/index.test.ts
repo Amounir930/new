@@ -20,10 +20,23 @@ describe('TemplateConfigSchema', () => {
     features: {
       pages: {
         home: true,
+        search: true,
         productListing: true,
         productDetails: true,
         cart: true,
         checkout: true,
+        orderSuccess: true,
+        paymentFailure: true,
+        login: true,
+        register: true,
+        account: true,
+        myOrders: true,
+        orderDetails: true,
+        privacyPolicy: true,
+        termsConditions: true,
+        refundPolicy: true,
+        error404: true,
+        maintenance: true,
       },
     },
     requirements: {

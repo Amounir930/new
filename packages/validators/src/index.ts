@@ -15,3 +15,4 @@ export * from './storefront/product.schema';
 export * from './storefront/review.schema';
 // Export all storefront schemas
 export * from './storefront/tenant-config.schema';
+export * from './storefront/blueprint.schema';
