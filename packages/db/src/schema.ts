@@ -108,4 +108,3 @@ export function getTenantTableName(
 export function setTenantSearchPath(tenantId: string): string {
   return `SET search_path = tenant_${tenantId}, public`;
 }
-

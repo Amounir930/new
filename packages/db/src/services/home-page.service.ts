@@ -8,11 +8,9 @@ import {
   type HomePageBlueprint,
   HomePageBlueprintSchema,
 } from '@apex/validators';
-import { and, eq, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { db } from '../connection';
 import {
-  type BentoGrid,
-  type FlashSale,
   type FlashSaleProduct,
   type TenantConfig,
   bentoGrids,
