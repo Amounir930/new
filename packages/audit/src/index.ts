@@ -15,3 +15,4 @@ export {
   logSecurityEvent,
   query,
 } from './audit.service.js';
+export { AuditInterceptor } from './audit.interceptor.js';
