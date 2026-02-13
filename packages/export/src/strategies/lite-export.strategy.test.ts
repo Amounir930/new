@@ -22,11 +22,17 @@ const mockShell = {
 
 vi.mock('@apex/db', () => ({
   publicPool: {
-    connect: vi.fn().mockResolvedValue(mockClient),
+    connect: vi.fn(() => mockClient),
   },
 }));
 
-// Mock Bun (handled in vitest.setup.ts or via vi.stubGlobal if needed)
+vi.mock('bun', () => ({
+  default: {
+    spawn: vi.fn(() => mockShell),
+    write: vi.fn(),
+    file: vi.fn(() => ({ text: vi.fn() })),
+  },
+}));
 
 // Mock TenantRegistryService
 const mockTenantRegistry = {
