@@ -136,6 +136,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt_data:/letsencrypt
+    environment:
+      - "DOCKER_API_VERSION=1.44"
     networks:
       - apex-network
 
