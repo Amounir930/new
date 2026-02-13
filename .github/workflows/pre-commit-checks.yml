@@ -7,9 +7,9 @@ name: "🔍 Pre-Commit Checks"
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, New]
   push:
-    branches: [main, develop]
+    branches: [main, develop, New]
 
 jobs:
   # ═══════════════════════════════════════════════════════════════

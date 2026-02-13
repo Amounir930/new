@@ -7,9 +7,9 @@ name: "🚀 CI/CD Pipeline"
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, New]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, New]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
