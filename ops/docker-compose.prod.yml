@@ -118,7 +118,6 @@ services:
     restart: always
     command:
       - "--providers.docker=true"
-      - "--providers.docker.version=1.44"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
