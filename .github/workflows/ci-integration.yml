@@ -85,6 +85,7 @@ jobs:
           MINIO_SECRET_KEY: "test_minio_secret_key"
           MINIO_USE_SSL: false
           MINIO_REGION: us-east-1
+          NODE_ENV: test
           ACTIONS_STEP_DEBUG: true
 
       - name: Setup Masking
