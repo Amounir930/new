@@ -5,7 +5,9 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "types": ["node", "bun-types"],
-    "declaration": true
+    "declaration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "build", "**/*.test.ts"]

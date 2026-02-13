@@ -4,13 +4,13 @@
  */
 
 import 'reflect-metadata';
+import { initializeAuditTable } from '@apex/audit';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { initializeAuditTable } from '@apex/audit';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {

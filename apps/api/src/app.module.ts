@@ -3,6 +3,7 @@
  * Configures S1-S8 Security Protocols
  */
 
+import { AuditModule, AuditService } from '@apex/audit';
 import { DbModule } from '@apex/db';
 import { TenantIsolationMiddleware } from '@apex/middleware';
 import {
@@ -13,7 +14,7 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { AuditInterceptor, AuditModule } from '@apex/audit';
+import { AuditInterceptor } from './audit-interceptor.local.js';
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 
@@ -54,6 +55,11 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
+    },
+    AuditInterceptor,
+    {
+      provide: 'AUDIT_SERVICE',
+      useExisting: AuditService,
     },
     // Note: RateLimitGuard is HTTP-specific and applied per-controller
     // Not registered globally to avoid CLI context issues

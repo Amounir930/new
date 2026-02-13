@@ -1,4 +1,9 @@
 import {
+  AUDIT_LOG_METADATA_KEY,
+  type AuditLogOptions,
+  AuditService,
+} from '@apex/audit';
+import {
   type CallHandler,
   type ExecutionContext,
   Inject,
@@ -7,16 +12,14 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { type Observable, tap } from 'rxjs';
-import {
-  AUDIT_LOG_METADATA_KEY,
-  type AuditLogOptions,
-} from './audit.decorator.js';
-import { AuditService } from './audit.service.js';
 
 /**
  * S4: Global Audit Interceptor
  * Automatically logs all write operations (POST, PUT, DELETE, PATCH)
  * Uses @AuditLog decorator metadata if present, otherwise uses route info.
+ *
+ * NOTE: This is hosted locally in apps/api to resolve DI resolution issues
+ * during mocked OpenAPI generation.
  */
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
@@ -31,10 +34,8 @@ export class AuditInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest();
     const method = request.method;
 
-    // Only audit write operations by default
     const isWriteOp = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
 
-    // Check for explicit @AuditLog decorator
     const auditOptions = this.reflector.get<AuditLogOptions>(
       AUDIT_LOG_METADATA_KEY,
       context.getHandler()
@@ -66,11 +67,9 @@ export class AuditInterceptor implements NestInterceptor {
     const { method, url, ip, headers } = request;
     const user = (request as any).user;
 
-    // Determine action name
     const action = options?.action || `${method}:${url}`;
     const entityType = options?.entityType || 'api_request';
 
-    // Extract entityId if possible from params or body
     const entityId =
       request.params?.id ||
       request.body?.id ||
@@ -99,7 +98,6 @@ export class AuditInterceptor implements NestInterceptor {
         },
       });
     } catch (err) {
-      // Fail-safe: don't crash the request if auditing fails, but log it
       console.error('S4 Auditing Failed:', err);
     }
   }

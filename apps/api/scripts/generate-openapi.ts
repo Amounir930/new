@@ -48,9 +48,14 @@ async function generate() {
   // Note: We use relative path for local module
   const { AppModule } = await import('../src/app.module.js');
 
+  const { AuditService } = await import('@apex/audit');
   const { TenantRegistryService } = await import('@apex/db');
   const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger');
+  const { Reflector } = await import('@nestjs/core');
   const { Test } = await import('@nestjs/testing');
+  const { AuditInterceptor } = await import(
+    '../src/audit-interceptor.local.js'
+  );
   const { ProvisioningService } = await import(
     '../src/provisioning/provisioning.service.js'
   );
@@ -83,6 +88,12 @@ async function generate() {
       .useValue(mockProvisioningService)
       .overrideProvider('PROVISIONING_SERVICE') // Override the String Token Provider
       .useValue(mockProvisioningService)
+      .overrideProvider(AuditInterceptor)
+      .useValue({}) // Interceptor is handled by moduleRef.createNestApplication() mostly, or can be a simple mock
+      .overrideProvider(AuditService)
+      .useValue(mockAuditService)
+      .overrideProvider(Reflector)
+      .useValue(new Reflector())
       .overrideProvider('AUDIT_SERVICE')
       .useValue(mockAuditService)
       .compile();
