@@ -7,18 +7,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportOptions } from '../types.js';
 import { LiteExportStrategy } from './lite-export.strategy.js';
 
-// 🛡️ Stabilization: Use vi.hoisted to ensure these are available for vi.mock
-// 🛡️ Stabilization: Use vi.hoisted for top-level mocks
-const mockClient = vi.hoisted(() => ({
+// 🛡️ Stabilization: Standard mock definitions for compatibility
+const mockClient = {
   query: vi.fn(),
   release: vi.fn(),
-}));
+};
 
-const mockShell = vi.hoisted(() => ({
+const mockShell = {
   spawn: vi.fn(),
   write: vi.fn(),
   file: vi.fn(),
-}));
+  text: vi.fn(),
+};
 
 vi.mock('@apex/db', () => ({
   publicPool: {
@@ -178,7 +178,7 @@ describe('LiteExportStrategy', () => {
         call[0].includes('table_schema = $1')
       );
       expect(schemaQuery).toBeDefined();
-      expect(schemaQuery?.[1]).toEqual(['tenant_tenant-123']);
+      expect(schemaQuery?.[1]).toEqual(['tenant_tenant_123']);
     });
 
     it('should reject tables exceeding row limit', async () => {

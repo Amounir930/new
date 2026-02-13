@@ -4,6 +4,7 @@
  */
 
 import { TenantIsolationMiddleware } from '@apex/middleware';
+import { DbModule } from '@apex/db';
 import {
   type MiddlewareConsumer,
   Module,
@@ -37,9 +38,10 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
       },
     ]),
 
-    // Feature Modules
     HealthModule,
     ProvisioningModule,
+    // Core Data Module (explicitly imported for root context availability)
+    DbModule,
   ],
   providers: [
     // S6: Apply Rate Limiting Globally
