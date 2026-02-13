@@ -10,12 +10,16 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { initializeAuditTable } from '@apex/audit';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // S1: Environment Verification happens automatically via @apex/config
+
+  // S4: Initialize Audit System (Infrastructure as Code)
+  await initializeAuditTable();
 
   const app = await NestFactory.create(AppModule);
 
