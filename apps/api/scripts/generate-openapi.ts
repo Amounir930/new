@@ -1,34 +1,12 @@
-// -----------------------------------------------------------------------------
-// 🛡️ Security & Isolation Setup (MUST BE FIRST)
-// -----------------------------------------------------------------------------
-// S1 Note: We split strings to evade Gitleaks detection for these MOCK credentials
-const MOCK_DB_URL = [
-  'postgres',
-  '://',
-  'mock_user',
-  ':',
-  'mock_pass',
-  '@',
-  'localhost:5432',
-  '/',
-  'mock_db',
-].join('');
-const MOCK_JWT = ['mock-jwt-secret', '-for-generation', '-only-32char'].join(
-  ''
-);
+// 🛡️ S1 Compliance: Enforce environment variables only. 
+// No hardcoded mock secrets allowed in source control.
+if (process.env.NODE_ENV === 'production' && (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('mock'))) {
+  throw new Error('S1 CRITICAL: Production environment detected with missing or mock DATABASE_URL');
+}
 
-// FORCE SET ENV VARS BEFORE ANY IMPORTS (including Node ones if possible)
-process.env.DATABASE_URL = process.env.DATABASE_URL || MOCK_DB_URL;
-process.env.REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
-process.env.JWT_SECRET = process.env.JWT_SECRET || MOCK_JWT;
-process.env.MINIO_ENDPOINT = process.env.MINIO_ENDPOINT || 'localhost';
-process.env.MINIO_ACCESS_KEY =
-  process.env.MINIO_ACCESS_KEY || 'mock-access-key';
-process.env.MINIO_SECRET_KEY =
-  process.env.MINIO_SECRET_KEY || 'mock-secret-key';
+// Ensure strict isolation mode
 process.env.TENANT_ISOLATION_MODE = 'strict';
-// @ts-expect-error NODE_ENV is read-only sometimes
-process.env.NODE_ENV = 'test';
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 
 console.log('DEBUG: Env vars set (Mock Mode):', {
   DB: process.env.DATABASE_URL,

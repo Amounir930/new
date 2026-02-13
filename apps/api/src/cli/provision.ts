@@ -7,18 +7,32 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module.js';
 import type { ProvisioningService } from '../provisioning/provisioning.service.js';
+import { createInterface } from 'node:readline/promises';
 
 interface ProvisionOptions {
   subdomain: string;
   plan: 'free' | 'basic' | 'pro' | 'enterprise';
   email: string;
-  password: string;
+  password?: string;
   storeName: string;
   quiet?: boolean;
 }
 
 export async function main(args: string[] = process.argv.slice(2)) {
   const options = parseArgs(args);
+
+  // 🛡️ S1/S5: Securely acquire password if not in quiet mode
+  if (!options.password && !options.quiet) {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    // Note: Standard readline doesn't hide input easily without extra deps, 
+    // but this avoids the ps aux/bash_history exposure of --password
+    options.password = await rl.question('Enter admin password: ');
+    rl.close();
+  }
+
+  if (!options.password) {
+    throw new Error('S1 Violation: Admin password is required.');
+  }
 
   if (!options.quiet) {
     console.log(`🚀 Starting provisioning for: ${options.subdomain}`);
@@ -82,7 +96,6 @@ function parseArgs(args: string[]): ProvisionOptions {
   if (
     !options.subdomain ||
     !options.email ||
-    !options.password ||
     !options.storeName
   ) {
     throw new Error('Missing required arguments');

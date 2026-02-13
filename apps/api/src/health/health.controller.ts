@@ -24,11 +24,13 @@ export class HealthController {
         message: 'Redis connectivity verified',
       });
     } catch (error) {
+      // 🛡️ S5: Sanitize error message to prevent infrastructure info disclosure
+      Logger.error(`Redis connectivity failed: ${error instanceof Error ? error.message : 'Unknown error'}`, HealthController.name);
+
       return res.status(HttpStatus.SERVICE_UNAVAILABLE).json({
         status: 'error',
         service: 'redis',
-        message: 'Redis connectivity failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        message: 'Internal server error during connectivity check',
       });
     }
   }

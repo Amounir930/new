@@ -85,9 +85,6 @@ export function enforceS1Compliance(): void {
   try {
     validateEnv();
   } catch (error) {
-    if (process.env.NODE_ENV === 'test') {
-      return; // Permitted path for Rule S1 in Sandbox/Test environment to allow partial tests
-    }
     console.error('❌ CRITICAL: S1 Protocol Violation');
     console.error(error instanceof Error ? error.message : 'Unknown error');
     console.error('Application startup aborted. Check your .env file.');
@@ -165,4 +162,4 @@ export class ConfigService {
   providers: [ConfigService],
   exports: [ConfigService],
 })
-export class ConfigModule {}
+export class ConfigModule { }
