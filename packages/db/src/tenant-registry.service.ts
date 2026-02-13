@@ -39,6 +39,21 @@ export class TenantRegistryService {
   }
 
   /**
+   * Get tenant metadata by ID or subdomain
+   */
+  async getByIdentifier(identifier: string): Promise<Tenant | null> {
+    const result = await publicDb
+      .select()
+      .from(tenants)
+      .where(
+        or(eq(tenants.id, identifier as any), eq(tenants.subdomain, identifier))
+      )
+      .limit(1);
+
+    return result[0] || null;
+  }
+
+  /**
    * Register a new tenant in the registry
    */
   async register(data: {

@@ -62,20 +62,37 @@ export function encrypt(plaintext: string, masterKey: string): EncryptedData {
  */
 export function decrypt(
   encryptedData: EncryptedData,
-  masterKey: string
+  masterKey: string,
+  fallbackKey?: string
 ): string {
-  const salt = Buffer.from(encryptedData.salt, 'hex');
-  const iv = Buffer.from(encryptedData.iv, 'hex');
-  const tag = Buffer.from(encryptedData.tag, 'hex');
-  const key = deriveKey(masterKey, salt);
+  const performDecryption = (keyStr: string): string => {
+    const salt = Buffer.from(encryptedData.salt, 'hex');
+    const iv = Buffer.from(encryptedData.iv, 'hex');
+    const tag = Buffer.from(encryptedData.tag, 'hex');
+    const key = deriveKey(keyStr, salt);
 
-  const decipher = createDecipheriv(ALGORITHM, key, iv);
-  decipher.setAuthTag(tag);
+    const decipher = createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(tag);
 
-  let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
+    let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  };
 
-  return decrypted;
+  try {
+    return performDecryption(masterKey);
+  } catch (error) {
+    if (fallbackKey) {
+      try {
+        return performDecryption(fallbackKey);
+      } catch (_fallbackError) {
+        throw new Error(
+          'S7 Violation: Decryption failed with both primary and fallback keys.'
+        );
+      }
+    }
+    throw error;
+  }
 }
 
 /**
@@ -200,8 +217,8 @@ export class EncryptionService {
     return encrypt(plaintext, this.masterKey);
   }
 
-  decrypt(encryptedData: EncryptedData): string {
-    return decrypt(encryptedData, this.masterKey);
+  decrypt(encryptedData: EncryptedData, fallbackKey?: string): string {
+    return decrypt(encryptedData, this.masterKey, fallbackKey);
   }
 
   hashApiKey(apiKey: string): string {

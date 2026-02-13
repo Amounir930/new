@@ -5,6 +5,7 @@
 
 import { publicPool } from '@apex/db';
 import { getCurrentTenantId } from '@apex/middleware';
+import { EncryptionService } from '@apex/security';
 import { Injectable, Logger } from '@nestjs/common';
 
 // Define types missing in original file but required by index/tests
@@ -42,10 +43,10 @@ export interface AuditLogEntry {
   status?: string; // Standardize to status to match implementation logic if needed, but keeping result for now
   errorMessage?: string;
 }
-
 @Injectable()
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
+  private readonly encryption = new EncryptionService();
 
   /**
    * Log a security or system event
@@ -56,27 +57,44 @@ export class AuditService {
     const tenantId = entry.tenantId || getCurrentTenantId() || 'system';
     const timestamp = new Date();
 
-    // 1. Console Logging (for immediate observability and S4 monitoring)
+    // 🔒 S7 Protection: Encrypt PII before logging
+    const encryptedEmail = entry.userEmail
+      ? this.encryption.encrypt(entry.userEmail)
+      : { encrypted: null };
+    const rawMetadata = {
+      ...(entry.metadata || {}),
+      ...(entry.errorMessage ? { error: entry.errorMessage } : {}),
+    };
+    const encryptedMetadata = this.encryption.encrypt(
+      JSON.stringify(rawMetadata)
+    );
+
+    // 1. Console Logging (Sanitized for S4 monitoring)
     const logOutput = JSON.stringify({
       level: 'audit',
       tenantId,
       timestamp,
-      ...entry,
+      action: entry.action,
+      entityType: entry.entityType,
+      entityId: entry.entityId,
+      userId: entry.userId,
+      severity: entry.severity,
     });
     // eslint-disable-next-line no-console
     console.log(logOutput);
-    this.logger.log(`[AUDIT] ${entry.action} - ${entry.entityId}`);
+    Logger.log(
+      `[AUDIT] ${entry.action} - ${entry.entityId}`,
+      AuditService.name
+    );
 
     // 2. Persistent Logging (S4 Protocol)
-    // CRITICAL FIX (S2): Explicitly set search_path to public before query
-    // to prevent context leakage from tenant schemas
     const client = await publicPool.connect();
 
     try {
       // 🔒 S2 Enforcement: Reset search_path to public before audit query
       await client.query('SET search_path TO public');
 
-      // S4 FIX: Include userEmail in audit log for complete audit trail
+      // S4 FIX: Store encrypted PII for GDPR/S7 compliance
       await client.query(
         `
         INSERT INTO public.audit_logs (
@@ -97,14 +115,11 @@ export class AuditService {
         [
           tenantId,
           entry.userId || null,
-          entry.userEmail || null, // S4: User email for audit trail
+          encryptedEmail.encrypted, // S7: Encrypted PII
           entry.action,
           entry.entityType,
           entry.entityId,
-          JSON.stringify({
-            ...(entry.metadata || {}),
-            ...(entry.errorMessage ? { error: entry.errorMessage } : {}),
-          }),
+          encryptedMetadata.encrypted, // S7: Encrypted Metadata
           entry.ipAddress || null,
           entry.userAgent || null,
           entry.severity || 'INFO',

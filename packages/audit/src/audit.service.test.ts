@@ -27,6 +27,13 @@ vi.mock('@apex/db', () => ({
   },
 }));
 
+vi.mock('@apex/security', () => ({
+  EncryptionService: vi.fn().mockImplementation(() => ({
+    encrypt: vi.fn().mockReturnValue({ encrypted: 'encrypted-data' }),
+    decrypt: vi.fn().mockReturnValue('decrypted-data'),
+  })),
+}));
+
 // Mock Middleware to avoid circular dependency or context issues
 vi.mock('@apex/middleware', () => ({
   getCurrentTenantId: vi.fn().mockReturnValue('mock-tenant'),

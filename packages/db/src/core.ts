@@ -55,22 +55,29 @@ export function sanitizeSchemaName(subdomain: string): string {
  * S2: Verifies tenant validity before connection
  */
 export async function withTenantConnection<T>(
-  tenantId: string,
+  tenantIdOrSubdomain: string,
   operation: (db: any) => Promise<T>
 ): Promise<T> {
-  // 🔒 S2 Enforcement: Verify tenant exists first
-  const exists = await verifyTenantExists(tenantId);
-  if (!exists) {
-    throw new Error(`S2 Violation: Tenant '${tenantId}' not found or invalid`);
+  // 🔒 S2 Enforcement: Resolve tenant and verify existence
+  const result = await publicPool.query(
+    'SELECT id, subdomain FROM tenants WHERE id::text = $1 OR subdomain = $1 LIMIT 1',
+    [tenantIdOrSubdomain]
+  );
+
+  if (result.rowCount === 0) {
+    throw new Error(
+      `S2 Violation: Tenant '${tenantIdOrSubdomain}' not found or invalid`
+    );
   }
 
+  const tenant = result.rows[0];
   const client = await publicPool.connect();
   let cleanupSuccessful = false;
 
   try {
     // 🔒 S2 Enforcement: Switch to tenant context
-    // Radical Fix: Use the standard sanitizer to ensure consistent schema naming and prevent injection
-    const schemaName = sanitizeSchemaName(tenantId);
+    // Deep Security Fix: ALWAYS use subdomain for schema naming (S2 Consistency)
+    const schemaName = sanitizeSchemaName(tenant.subdomain);
     await client.query(`SET search_path TO "${schemaName}", public`);
 
     const db = drizzle(client);

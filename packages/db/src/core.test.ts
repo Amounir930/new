@@ -49,7 +49,10 @@ describe('DB Core Isolation', () => {
 
   describe('withTenantConnection', () => {
     it('should execute operation within tenant search_path', async () => {
-      mockPool.query.mockResolvedValueOnce({ rowCount: 1 }); // exists
+      mockPool.query.mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [{ id: 'alpha-uuid', subdomain: 'alpha' }],
+      }); // exists
       mockClient.query.mockResolvedValue({}); // SET, RESET
 
       const operation = mock().mockResolvedValue('success');
@@ -75,7 +78,10 @@ describe('DB Core Isolation', () => {
     });
 
     it('should cleanup even if operation fails', async () => {
-      mockPool.query.mockResolvedValueOnce({ rowCount: 1 });
+      mockPool.query.mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [{ id: 'alpha-uuid', subdomain: 'alpha' }],
+      });
       const operation = mock().mockRejectedValue(new Error('Op Fail'));
 
       try {
@@ -89,7 +95,10 @@ describe('DB Core Isolation', () => {
     });
 
     it('should destroy connection (release true) if cleanup fails', async () => {
-      mockPool.query.mockResolvedValueOnce({ rowCount: 1 });
+      mockPool.query.mockResolvedValueOnce({
+        rowCount: 1,
+        rows: [{ id: 'alpha-uuid', subdomain: 'alpha' }],
+      });
       mockClient.query.mockResolvedValueOnce({}); // SET search_path
       mockClient.query.mockRejectedValueOnce(new Error('Reset Fail 1')); // RESET in try
       mockClient.query.mockRejectedValueOnce(new Error('Reset Fail 2')); // RESET in catch

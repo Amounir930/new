@@ -19,7 +19,19 @@ export const EnvSchema = z.object({
       32,
       'S1 Violation: ENCRYPTION_MASTER_KEY must be at least 32 characters'
     )
-    .default('test_encryption_key_for_dev_only_32_chars_long'),
+    .refine(
+      (key) => !/test|default|example/i.test(key),
+      'S1 Violation: Production key cannot contain test patterns'
+    )
+    .refine((key) => {
+      // Complexity check: Uppercase, Lowercase, Number, Special Character
+      return (
+        /[A-Z]/.test(key) &&
+        /[a-z]/.test(key) &&
+        /[0-9]/.test(key) &&
+        /[^A-Za-z0-9]/.test(key)
+      );
+    }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special)'),
 
   JWT_EXPIRES_IN: z.string().default('7d'),
 

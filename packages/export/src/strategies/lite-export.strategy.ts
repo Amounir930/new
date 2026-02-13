@@ -33,7 +33,13 @@ export class LiteExportStrategy implements ExportStrategy {
   async export(options: ExportOptions): Promise<ExportResult> {
     this.logger.log(`Starting lite export for tenant: ${options.tenantId}`);
 
-    const schemaName = `tenant_${options.tenantId}`;
+    // S2 Unified Identity: Use subdomain for schema name
+    const tenant = await this.tenantRegistry.getByIdentifier(options.tenantId);
+    if (!tenant) {
+      throw new Error(`Tenant ${options.tenantId} not found`);
+    }
+
+    const schemaName = `tenant_${tenant.subdomain.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
     const workDir = `/tmp/export-${options.tenantId}-${Date.now()}`;
     const tarPath = `${workDir}.tar.gz`;
     // Create work directory
@@ -41,6 +47,16 @@ export class LiteExportStrategy implements ExportStrategy {
 
     const client = await publicPool.connect();
     try {
+      // 🔒 S3: Secure SQL Identifiers (Anti SQL Injection)
+      const pgEscape = (id: string) => {
+        if (!/^[a-z0-9_]+$/.test(id)) {
+          throw new Error(`S3 Violation: Invalid SQL identifier '${id}'`);
+        }
+        return `"${id}"`;
+      };
+
+      const safeSchema = pgEscape(schemaName);
+
       // S2: Get tables from tenant schema only
       const tablesResult = await client.query(
         `SELECT table_name FROM information_schema.tables 
@@ -55,11 +71,12 @@ export class LiteExportStrategy implements ExportStrategy {
 
       // Export each table as JSON
       for (const table of tables) {
-        this.logger.debug(`Exporting table: ${schemaName}.${table}`);
+        const safeTable = pgEscape(table);
+        this.logger.debug(`Exporting table: ${safeSchema}.${safeTable}`);
 
         // Check row count limit
         const countResult = await client.query(
-          `SELECT COUNT(*) FROM ${schemaName}.${table}`
+          `SELECT COUNT(*) FROM ${safeSchema}.${safeTable}`
         );
         const rowCount = Number(countResult.rows[0].count);
 
@@ -70,7 +87,7 @@ export class LiteExportStrategy implements ExportStrategy {
         }
 
         const dataResult = await client.query(
-          `SELECT * FROM ${schemaName}.${table}`
+          `SELECT * FROM ${safeSchema}.${safeTable}`
         );
 
         totalRows += dataResult.rowCount || 0;

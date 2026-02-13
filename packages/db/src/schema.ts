@@ -92,19 +92,22 @@ export const pages = pgTable('pages', {
 
 /**
  * S2 Compliance Helper: Generate schema-qualified table name
- * Usage: const tableName = getTenantTableName('users', tenantId);
+ * Usage: const tableName = getTenantTableName('users', subdomain);
  */
+
 export function getTenantTableName(
   tableName: string,
-  tenantId: string
+  subdomain: string
 ): string {
-  return `tenant_${tenantId}.${tableName}`;
+  const schema = `tenant_${subdomain.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  return `"${schema}"."${tableName}"`;
 }
 
 /**
  * S2 Compliance Helper: SQL for setting search path
- * Usage: await db.execute(setTenantSearchPath(tenantId));
+ * Usage: await db.execute(setTenantSearchPath(subdomain));
  */
-export function setTenantSearchPath(tenantId: string): string {
-  return `SET search_path = tenant_${tenantId}, public`;
+export function setTenantSearchPath(subdomain: string): string {
+  const schema = `tenant_${subdomain.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+  return `SET search_path TO "${schema}", public`;
 }

@@ -79,6 +79,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
       - name: Setup Masking
         run: |
+          echo "::add-mask::${{ secrets.JWT_SECRET }}"
           echo "::add-mask::${{ secrets.MINIO_ACCESS_KEY }}"
           echo "::add-mask::${{ secrets.MINIO_SECRET_KEY }}"
       - name: Run API Tests

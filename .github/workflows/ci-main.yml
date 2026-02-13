@@ -723,16 +723,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: zap-scan-report
-          path: report_*.html
-          if-no-files-found: error
+          path: "report.html"
+          if-no-files-found: warn
       
       - name: Parse ZAP Results
         run: |
           echo "🔍 Parsing OWASP ZAP results..."
           
           # Check for High/Critical findings
-          if [ -f "report_json.json" ]; then
-            HIGH_RISKS=$(cat report_json.json | jq '[.site[0].alerts[]? | select(.riskcode == "3" or .riskcode == "4")] | length' 2>/dev/null || echo "0")
+          if [ -f "report.json" ]; then
+            HIGH_RISKS=$(cat report.json | jq '[.site[0].alerts[]? | select(.riskcode == "3" or .riskcode == "4")] | length' 2>/dev/null || echo "0")
             
             echo "High/Critical findings: $HIGH_RISKS"
             

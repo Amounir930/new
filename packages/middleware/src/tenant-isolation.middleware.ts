@@ -79,7 +79,7 @@ async function validateTenant(subdomain: string): Promise<TenantContext> {
 
     return {
       tenantId: tenant.id,
-      schemaName: `tenant_${tenant.id.replace(/-/g, '_')}`,
+      schemaName: `tenant_${tenant.subdomain.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
       subdomain: tenant.subdomain,
       plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       isActive: true,
