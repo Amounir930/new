@@ -5,15 +5,14 @@
 
 import { AuditModule, AuditService } from '@apex/audit';
 import { DbModule } from '@apex/db';
-import { TenantIsolationMiddleware } from '@apex/middleware';
+import { RateLimitGuard, TenantIsolationMiddleware } from '@apex/middleware';
 import {
   type MiddlewareConsumer,
   Module,
   type NestModule,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { AuditInterceptor } from './audit-interceptor.local.js';
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
@@ -27,18 +26,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     }),
 
     // S6: Rate Limiting (Throttler)
-    ThrottlerModule.forRoot([
-      {
-        name: 'default',
-        ttl: parseInt(process.env.RATE_LIMIT_TTL || '60000', 10),
-        limit: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
-      },
-      {
-        name: 'strict',
-        ttl: 60000,
-        limit: 10, // For auth endpoints
-      },
-    ]),
+    // S6: Rate Limiting is now handled by RateLimitGuard (Redis-backed in middleware)
 
     HealthModule,
     ProvisioningModule,
@@ -47,11 +35,12 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     DbModule,
   ],
   providers: [
-    // S6: Apply Rate Limiting Globally
+    // S6: Apply Rate Limiting Globally (Dynamic Tier-Based)
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: RateLimitGuard,
     },
+    Reflector, // Required for RateLimitGuard dependency resolution
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,

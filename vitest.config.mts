@@ -6,7 +6,11 @@ import { dirname, resolve } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-    plugins: [tsconfigPaths()],
+    plugins: [
+        tsconfigPaths({
+            projects: [resolve(__dirname, 'tsconfig.json')],
+        }),
+    ],
     test: {
         globals: true,
         environment: 'node',
