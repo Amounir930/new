@@ -558,6 +558,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: "test_jwt_secret_for_ci_provision_32_chars_exact"
+          ENCRYPTION_MASTER_KEY: "test_encryption_key_for_dev_only_32_chars_long"
           MINIO_ENDPOINT: localhost
           MINIO_PORT: 9000
           MINIO_ACCESS_KEY: "test_minio_access_key"
