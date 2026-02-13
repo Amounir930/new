@@ -23,10 +23,18 @@ The following records are configured at the registrar:
 ## 🚀 Deployment Methodology
 We use an **Artifact-Driven Deployment** strategy. The system builds the code into compiled JavaScript before execution to ensure stability and proper metadata handling.
 
+### ⚠️ Safe Command Usage (Crucial)
+Always run `docker compose` commands from the project root or explicitly include the `.env` file to avoid loading blank variables. 
+
+**Correct Way:**
+```bash
+cd /opt/apex-v2 && sudo docker compose --env-file .env -f ops/docker-compose.prod.yml ps
+```
+
 ### Redeploy Command:
 Run from the local root directory:
 ```bash
-ssh -i ops/keys/apex-deploy -o StrictHostKeyChecking=no deploy@34.102.121.225 "cd /opt/apex-v2 && git reset --hard && git pull && sudo docker build -t ghcr.io/amounir930/adel/api:latest -f apps/api/Dockerfile . && sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --force-recreate api"
+ssh -i ops/keys/apex-deploy -o StrictHostKeyChecking=no deploy@34.102.121.225 "cd /opt/apex-v2 && git reset --hard && git pull && sudo docker build -t ghcr.io/amounir930/adel/api:latest -f apps/api/Dockerfile . && sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --force-recreate traefik api"
 ```
 
 ## 🔐 Security Protocols (S1-S8)
