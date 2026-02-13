@@ -51,6 +51,26 @@ describe('Encryption Utilities', () => {
     expect(maskSensitive('1234567890', 2)).toBe('12******90');
     expect(maskSensitive('short', 4)).toBe('*****');
   });
+
+  it('should support Key Rotation (re-encrypting with new key)', () => {
+    const oldKey = 'old-master-key-must-be-32-bytes!!';
+    const newKey = 'new-master-key-must-be-32-bytes!!';
+    const plaintext = 'top-secret-data';
+
+    // 1. Encrypt with old key
+    const encryptedWithOld = encrypt(plaintext, oldKey);
+
+    // 2. Decrypt with old key
+    const decrypted = decrypt(encryptedWithOld, oldKey);
+    expect(decrypted).toBe(plaintext);
+
+    // 3. Re-encrypt with new key
+    const encryptedWithNew = encrypt(decrypted, newKey);
+    expect(encryptedWithNew.encrypted).not.toBe(encryptedWithOld.encrypted);
+
+    // 4. Verify new key works
+    expect(decrypt(encryptedWithNew, newKey)).toBe(plaintext);
+  });
 });
 
 describe('EncryptionService', () => {

@@ -111,7 +111,22 @@ for (const sourceFile of project.getSourceFiles()) {
         }
       }
     }
+
+    // 4. Check for RLS (Row-Level Security) Enforcement (S2 Requirement)
+    if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
+      const text = node.getLiteralText();
+      if (text.includes('ALTER TABLE') && text.includes('ENABLE ROW LEVEL SECURITY')) {
+        console.log('   ✅ Found RLS Enforcement:', text.substring(0, 50).trim());
+      }
+    }
   });
+}
+
+// 5. Global RLS Coverage Check (Post-Pass)
+console.log('\n🔍 Running Post-Pass RLS Coverage Check...');
+const schemaContent = project.getSourceFiles().find(f => f.getFilePath().endsWith('schema.ts'))?.getFullText() || '';
+if (!schemaContent.includes('pgPolicy') && criticalViolations === 0) {
+  report('WARNING', 'No pgPolicy found in schema.ts. Ensure Row-Level Security is active.', project.getSourceFiles()[0]);
 }
 
 console.log(`\n${'='.repeat(60)}`);

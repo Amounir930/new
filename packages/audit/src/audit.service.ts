@@ -11,6 +11,13 @@ import { Injectable, Logger } from '@nestjs/common';
 export type AuditAction = string;
 export type AuditSeverity = 'INFO' | 'HIGH' | 'CRITICAL';
 
+export const SecurityEvents = {
+  TENANT_PROVISIONED: 'TENANT_PROVISIONED',
+  HONEYPOT_HIT: 'HONEYPOT_HIT',
+  SQL_INJECTION_ATTEMPT: 'SQL_INJECTION_ATTEMPT',
+  KEY_ROTATION: 'KEY_ROTATION',
+} as const;
+
 export interface AuditQueryOptions {
   tenantId?: string;
   action?: string;
