@@ -45,7 +45,7 @@ function getDiffFiles(): string[] {
       .toString()
       .split('\n')
       .filter(Boolean);
-  } catch (err) {
+  } catch (_err) {
     console.warn(
       '⚠️ Git diff failed. Falling back to all staged/modified files.'
     );
