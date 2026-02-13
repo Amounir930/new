@@ -1,12 +1,16 @@
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
  * CI Sentinel - Root-Cause Security Gate Orchestrator
  */
 
-const PROJECT_ROOT = process.cwd();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+// Script is at packages/security/src/utils/ci-sentinel.ts -> 3 levels up to root
+const PROJECT_ROOT = join(__dirname, '../../..');
 
 const CONFIG = {
   modules: {

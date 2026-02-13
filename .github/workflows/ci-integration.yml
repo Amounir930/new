@@ -77,15 +77,17 @@ jobs:
           bun run db:migrate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+      - name: Setup Masking
+        run: |
+          echo "::add-mask::${{ secrets.MINIO_ACCESS_KEY }}"
+          echo "::add-mask::${{ secrets.MINIO_SECRET_KEY }}"
       - name: Run API Tests
         run: |
           cd apps/api
           bun run test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
-          JWT_SECRET: test_secret_key_for_ci_environment_only_32
-          echo "::add-mask::${{ secrets.MINIO_ACCESS_KEY }}"
-          echo "::add-mask::${{ secrets.MINIO_SECRET_KEY }}"
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
           MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           MINIO_ENDPOINT: localhost
