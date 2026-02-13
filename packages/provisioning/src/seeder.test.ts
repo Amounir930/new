@@ -25,6 +25,17 @@ vi.mock('@apex/db', () => ({
   users: { id: 'users.id' },
   stores: { id: 'stores.id' },
   settings: { key: 'settings.key', value: 'settings.value' },
+  pages: { id: 'pages.id', title: 'pages.title' },
+}));
+
+vi.mock('./blueprint.js', () => ({
+  defaultBlueprintTemplate: {
+    settings: {
+      site_name: 'Default Site',
+      currency: 'USD',
+    },
+    pages: [], // Empty pages to avoid 4th insert call
+  },
 }));
 
 describe('seedTenantData', () => {
