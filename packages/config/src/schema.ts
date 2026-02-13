@@ -91,6 +91,9 @@ export const EnvSchema = z.object({
 
   // Tenant Isolation (S2)
   TENANT_ISOLATION_MODE: z.enum(['strict', 'flexible']).default('strict'),
+
+  // Error Tracking (S5)
+  GLITCHTIP_DSN: z.string().url('S1 Violation: GLITCHTIP_DSN must be a valid URL').optional(),
 });
 
 export type EnvConfig = z.infer<typeof EnvSchema>;

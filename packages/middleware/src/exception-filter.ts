@@ -15,6 +15,18 @@ import {
 import type { Request, Response } from 'express';
 import { ZodError } from 'zod';
 
+import { env } from '@apex/config';
+import * as Sentry from '@sentry/node';
+
+// S5: Initialize Sentry globally for GlitchTip reporting
+if (env.GLITCHTIP_DSN && env.NODE_ENV === 'production') {
+  Sentry.init({
+    dsn: env.GLITCHTIP_DSN,
+    environment: env.NODE_ENV,
+    // Add additional configuration as needed
+  });
+}
+
 export interface ErrorResponse {
   statusCode: number;
   message: string;
@@ -219,18 +231,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private reportToErrorTracking(_exception: unknown, requestId: string): void {
-    // TODO: Integrate with GlitchTip or Sentry
-    // Example:
-    // Sentry.captureException(exception, {
-    //   extra: { requestId }
-    // });
-
-    // Fallback: Log to console if no specific error tracking service is configured
-    // This ensures production errors are at least visible in logs
-    this.logger.error(
-      `[Sentry Fallback ${requestId}]: Error reported to tracking (simulation)`
-    );
+  private reportToErrorTracking(exception: unknown, requestId: string): void {
+    if (env.GLITCHTIP_DSN && env.NODE_ENV === 'production') {
+      Sentry.captureException(exception, {
+        tags: {
+          requestId,
+        },
+      });
+    } else {
+      // Fallback: Log to console if no specific error tracking service is configured
+      // This ensures production errors are at least visible in logs
+      this.logger.error(
+        `[Sentry Fallback ${requestId}]: Error reported to tracking (simulation)`
+      );
+    }
   }
 }
 
@@ -239,7 +253,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException {}
+export class OperationalError extends HttpException { }
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {
