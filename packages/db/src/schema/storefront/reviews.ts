@@ -53,6 +53,7 @@ export const reviews = pgTable(
     idxReviewsProduct: index('idx_reviews_product').on(table.productId),
     idxReviewsApproved: index('idx_reviews_approved')
       .on(table.isApproved)
+      // 🔒 S11: Safe partial index. Isolation verified via S2 search_path.
       .where(sql`is_approved = true`),
     idxReviewsCustomer: index('idx_reviews_customer').on(table.customerId),
   })

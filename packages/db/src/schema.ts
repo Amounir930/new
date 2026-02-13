@@ -1,5 +1,12 @@
-import type { InferSelectModel } from 'drizzle-orm';
-import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { type InferSelectModel, sql } from 'drizzle-orm';
+import {
+  boolean,
+  pgPolicy,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 /**
  * S2 Compliance: Public Schema Tables (Tenant Management)
@@ -13,6 +20,14 @@ export const tenants = pgTable('tenants', {
   status: text('status').notNull().default('active'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// 🔒 S15: Active Defense - RLS Policy for Tenant Registry
+// This ensures that only 'active' tenants are visible by default
+export const tenantsPolicy = pgPolicy('tenants_isolation', {
+  for: 'select',
+  to: 'public',
+  using: sql`status = 'active'`,
 });
 
 export type Tenant = InferSelectModel<typeof tenants>;

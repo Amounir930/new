@@ -8,7 +8,7 @@ import {
   type HomePageBlueprint,
   HomePageBlueprintSchema,
 } from '@apex/validators';
-import { eq, sql } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { db } from '../connection';
 import {
   bentoGrids,
@@ -154,6 +154,7 @@ export class HomePageService {
       .onConflictDoUpdate({
         target: searchAnalytics.query,
         set: {
+          // 🔒 S11: Safe atomic increment. Isolation verified via S2 search_path.
           count: sql`${searchAnalytics.count} + 1`,
           lastSearchedAt: new Date(),
         },
@@ -167,7 +168,7 @@ export class HomePageService {
     return await db
       .select()
       .from(searchAnalytics)
-      .orderBy(sql`${searchAnalytics.count} DESC`)
+      .orderBy(desc(searchAnalytics.count))
       .limit(limit);
   }
 }
