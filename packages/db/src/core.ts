@@ -107,7 +107,9 @@ export async function withTenantConnection<T>(
     // Radical Fix: client.release(true) physically closes the connection to purge logic state
     if (!cleanupSuccessful) {
       // Verify we are destroying the connection
-      console.warn('S2 WARNING: Destroying connection due to potential context leak');
+      console.warn(
+        'S2 WARNING: Destroying connection due to potential context leak'
+      );
       client.release(true);
     } else {
       client.release();
