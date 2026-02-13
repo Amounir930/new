@@ -9,8 +9,12 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// Script is at packages/security/src/utils/ci-sentinel.ts -> 3 levels up to root
-const PROJECT_ROOT = join(__dirname, '../../..');
+// Path: packages/security/src/utils/ci-sentinel.ts
+// 1: utils -> src
+// 2: src -> security
+// 3: security -> packages
+// 4: packages -> ROOT
+const PROJECT_ROOT = join(__dirname, '../../../../');
 
 const CONFIG = {
   modules: {
