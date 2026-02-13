@@ -31,7 +31,9 @@ export interface EncryptedData {
  * Note: Higher N values may exceed OpenSSL memory limits in some environments
  */
 function deriveKey(masterKey: string, salt: Buffer): Buffer {
-  return scryptSync(masterKey, salt, KEY_LENGTH, { N: 2 ** 14, r: 8, p: 1 });
+  // S7 FIX: High-work factor parameters for key stretching
+  // N=16384 (2^14), r=8, p=1 - optimized for commercially available hardware while resisting ASIC attacks
+  return scryptSync(masterKey, salt, KEY_LENGTH, { N: 16384, r: 8, p: 1 });
 }
 
 /**

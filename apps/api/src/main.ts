@@ -36,28 +36,41 @@ async function bootstrap() {
     })
   );
 
+  // S8 FIX: Generate CSP Nonce per request
+  app.use((req: any, res: any, next: any) => {
+    const { randomBytes } = require('node:crypto');
+    res.locals.cspNonce = randomBytes(16).toString('hex');
+    next();
+  });
+
   // S8: Security Headers (Helmet)
   // CRITICAL FIX (S8): Removed 'unsafe-inline' from scriptSrc
   // Using strict CSP with nonce generation for inline scripts
-  // biome-ignore format: S8 Security Gate requires single-line app.use(helmet(...))
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'"],
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: [
+            "'self'",
+            (req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
+          ],
+          styleSrc: [
+            "'self'",
+            (req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
+          ],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          upgradeInsecureRequests: [],
+        },
       },
-    },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-    xContentTypeOptions: true,
-    xFrameOptions: { action: 'deny' },
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  })
+      hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+      xContentTypeOptions: true,
+      xFrameOptions: { action: 'deny' },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    })
   );
 
   // S8: CORS Configuration

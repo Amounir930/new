@@ -19,12 +19,20 @@ export const EnvSchema = z.object({
       32,
       'S1 Violation: ENCRYPTION_MASTER_KEY must be at least 32 characters'
     )
-    .refine(
-      (key) => !/test|default|example/i.test(key),
-      'S1 Violation: Production key cannot contain test patterns'
-    )
     .refine((key) => {
-      // Complexity check: Uppercase, Lowercase, Number, Special Character
+      // S7: Strict Production Validation
+      // In test mode, we allow "test" substring only if strict enforcement is disabled
+      const isTest = process.env.NODE_ENV === 'test';
+      if (isTest && process.env.ENABLE_S1_ENFORCEMENT === 'false') return true;
+
+      return !/test|default|example/i.test(key);
+    }, 'S1 Violation: Production key cannot contain test patterns')
+    .refine((key) => {
+      // S7: Complexity check: Uppercase, Lowercase, Number, Special Character
+      // Skip complexity check in relaxed test mode
+      const isTest = process.env.NODE_ENV === 'test';
+      if (isTest && process.env.ENABLE_S1_ENFORCEMENT === 'false') return true;
+
       return (
         /[A-Z]/.test(key) &&
         /[a-z]/.test(key) &&

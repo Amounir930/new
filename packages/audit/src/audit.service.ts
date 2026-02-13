@@ -220,6 +220,20 @@ export class AuditService {
         FOR EACH ROW EXECUTE FUNCTION protect_audit_log_delete();
       `);
 
+      // Prevent TRUNCATE (S4 Deep Hardening)
+      await client.query(`
+        CREATE OR REPLACE FUNCTION protect_audit_log_truncate() RETURNS TRIGGER AS $$
+        BEGIN
+          RAISE EXCEPTION 'S4 Violation: Audit logs are immutable and cannot be truncated.';
+        END;
+        $$ LANGUAGE plpgsql;
+
+        DROP TRIGGER IF EXISTS trg_protect_audit_truncate ON public.audit_logs;
+        CREATE TRIGGER trg_protect_audit_truncate 
+        BEFORE TRUNCATE ON public.audit_logs 
+        FOR EACH STATEMENT EXECUTE FUNCTION protect_audit_log_truncate();
+      `);
+
       this.logger.log('S4 Immutable Auditing active.');
     } finally {
       client.release();

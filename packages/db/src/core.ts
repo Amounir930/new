@@ -96,7 +96,7 @@ export async function withTenantConnection<T>(
       cleanupSuccessful = true;
     } catch (cleanupError) {
       console.error(
-        'S2 CRITICAL: Failed to reset search_path after error',
+        'S2 CRITICAL: Failed to reset search_path after error. Connection will be destroyed to prevent leak.',
         cleanupError
       );
       // cleanupSuccessful remains false, triggering connection destruction in finally
@@ -106,6 +106,8 @@ export async function withTenantConnection<T>(
     // 🔒 S2 Protocol: Destroy connection if cleanup failed to prevent context leakage
     // Radical Fix: client.release(true) physically closes the connection to purge logic state
     if (!cleanupSuccessful) {
+      // Verify we are destroying the connection
+      console.warn('S2 WARNING: Destroying connection due to potential context leak');
       client.release(true);
     } else {
       client.release();

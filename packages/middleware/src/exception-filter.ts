@@ -66,10 +66,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
               line
                 .replace(
                   /[a-zA-Z]:\\(?:[^\\/:*?"<>|]+\\)*[^\\/:*?"<>|]*/g,
-                  '[USER]'
-                ) // Windows paths (Robost Regex)
-                .replace(/\/home\/[^/]+\//g, '[USER]/') // Linux paths
-                .replace(/\/Users\/[^/]+\//g, '[USER]/') // macOS paths
+                  '[REDACTED]'
+                ) // Windows paths
+                .replace(/\/home\/[^/]+\//g, '[REDACTED]/') // Linux paths
+                .replace(/\/Users\/[^/]+\//g, '[REDACTED]/') // macOS paths
           )
           .join('\n');
         errorResponse.stack = sanitizedStack;
@@ -239,7 +239,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException {}
+export class OperationalError extends HttpException { }
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {
