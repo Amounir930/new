@@ -86,15 +86,7 @@ jobs:
           MINIO_USE_SSL: false
           MINIO_REGION: us-east-1
           ACTIONS_STEP_DEBUG: true
-          JWT_SECRET: "test_jwt_secret_for_ci_integ_32_chars_exact"
-          ENCRYPTION_MASTER_KEY: "test_encryption_key_for_integ_32_chars_long"
-          MINIO_ENDPOINT: localhost
-          MINIO_PORT: 9000
-          MINIO_ACCESS_KEY: "test_minio_access_key"
-          MINIO_SECRET_KEY: "test_minio_secret_key"
-          MINIO_USE_SSL: false
-          MINIO_REGION: us-east-1
-          ACTIONS_STEP_DEBUG: true
+
       - name: Setup Masking
         run: |
           echo "::add-mask::${{ secrets.JWT_SECRET }}"
