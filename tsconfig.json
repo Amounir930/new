@@ -23,34 +23,34 @@
     "baseUrl": ".",
     "paths": {
       "@apex/auth": [
-        "packages/auth/dist/index.d.ts"
+        "packages/auth/src/index.ts"
       ],
       "@apex/audit": [
-        "packages/audit/dist/index.d.ts"
+        "packages/audit/src/index.ts"
       ],
       "@apex/config": [
-        "packages/config/dist/index.d.ts"
+        "packages/config/src/index.ts"
       ],
       "@apex/db": [
-        "packages/db/dist/index.d.ts"
+        "packages/db/src/index.ts"
       ],
       "@apex/events": [
-        "packages/events/dist/index.d.ts"
+        "packages/events/src/index.ts"
       ],
       "@apex/export": [
-        "packages/export/dist/index.d.ts"
+        "packages/export/src/index.ts"
       ],
       "@apex/middleware": [
-        "packages/middleware/dist/index.d.ts"
+        "packages/middleware/src/index.ts"
       ],
       "@apex/provisioning": [
-        "packages/provisioning/dist/index.d.ts"
+        "packages/provisioning/src/index.ts"
       ],
       "@apex/security": [
-        "packages/security/dist/index.d.ts"
+        "packages/security/src/index.ts"
       ],
       "@apex/validators": [
-        "packages/validators/dist/index.d.ts"
+        "packages/validators/src/index.ts"
       ],
       "~/*": [
         "./*"

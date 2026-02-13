@@ -77,11 +77,14 @@ describe.skipIf(!hasDb)(
 
       mockPool.query.mockImplementation(async (query: any, results?: any[]) => {
         const q = typeof query === 'string' ? query : query.text;
-        if (q.includes('SELECT 1 FROM tenants')) {
-          const id = results?.[0];
+        if (q.includes('SELECT id, subdomain FROM tenants')) {
+          const identifier = results?.[0];
+          if (identifier === 'fake_tenant') {
+            return { rows: [], rowCount: 0 };
+          }
           return {
-            rows: id === 'fake_tenant' ? [] : [{ 1: 1 }],
-            rowCount: id === 'fake_tenant' ? 0 : 1,
+            rows: [{ id: identifier || 'tenant-id', subdomain: identifier || 'tenant-sub' }],
+            rowCount: 1,
           };
         }
         return { rows: [], rowCount: 1 };
@@ -171,7 +174,7 @@ describe.skipIf(!hasDb)(
 
     it('should throw S2 Violation error for non-existent tenant', async () => {
       try {
-        await withTenantConnection('fake_tenant', async () => {});
+        await withTenantConnection('fake_tenant', async () => { });
         expect(true).toBe(false);
       } catch (e: any) {
         expect(e.message).toContain(
@@ -182,7 +185,7 @@ describe.skipIf(!hasDb)(
 
     it('should NOT have cross-tenant schemas in search_path (Leak Prevention)', async () => {
       // Run a tenant operation
-      await withTenantConnection(tenantAlpha, async () => {});
+      await withTenantConnection(tenantAlpha, async () => { });
 
       // Immediately check a fresh connection from the pool
       const client = await mockPool.connect();

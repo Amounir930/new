@@ -31,6 +31,7 @@ vi.mock('@apex/db', () => ({
 // Mock TenantRegistryService
 const mockTenantRegistry = {
   exists: vi.fn(),
+  getByIdentifier: vi.fn(),
 };
 
 describe('LiteExportStrategy', () => {
@@ -107,6 +108,12 @@ describe('LiteExportStrategy', () => {
 
   describe('export', () => {
     it('should export tenant data successfully', async () => {
+      // Mock tenant resolution
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       // Mock table discovery
       mockClient.query.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }, { table_name: 'orders' }],
@@ -142,6 +149,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should enforce S2 tenant isolation', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }],
       });
@@ -170,6 +182,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should reject tables exceeding row limit', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockResolvedValueOnce({
         rows: [{ table_name: 'huge_table' }],
       });
@@ -192,6 +209,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should cleanup on export failure', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockRejectedValue(new Error('Export failed'));
 
       const options: ExportOptions = {
@@ -210,6 +232,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should create manifest with correct metadata', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockResolvedValueOnce({
         rows: [{ table_name: 'products' }],
       });
@@ -241,6 +268,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should handle empty tables', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockResolvedValueOnce({
         rows: [{ table_name: 'empty_table' }],
       });
@@ -263,6 +295,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should calculate SHA-256 checksum', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockResolvedValueOnce({ rows: [] });
 
       const options: ExportOptions = {
@@ -277,6 +314,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should set 24h expiry', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockResolvedValueOnce({ rows: [] });
 
       const options: ExportOptions = {
@@ -296,6 +338,11 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should cleanup work directory after success', async () => {
+      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
+        id: 'tenant-123',
+        subdomain: 'tenant-123',
+      });
+
       mockClient.query.mockResolvedValueOnce({ rows: [] });
 
       const options: ExportOptions = {
