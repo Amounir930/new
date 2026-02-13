@@ -3,8 +3,8 @@
  * Configures S1-S8 Security Protocols
  */
 
-import { TenantIsolationMiddleware } from '@apex/middleware';
 import { DbModule } from '@apex/db';
+import { TenantIsolationMiddleware } from '@apex/middleware';
 import {
   type MiddlewareConsumer,
   Module,
