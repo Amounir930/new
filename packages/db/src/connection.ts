@@ -27,7 +27,10 @@ try {
 
 const poolConfig: any = {
   connectionString: env.DATABASE_URL,
-  ssl: env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl:
+    env.NODE_ENV === 'production' && env.DB_SSL !== 'false'
+      ? { rejectUnauthorized: false }
+      : false,
 };
 
 if (process.env.POSTGRES_USER) poolConfig.user = process.env.POSTGRES_USER;
