@@ -1,7 +1,12 @@
-// 🛡️ S1 Compliance: Enforce environment variables only. 
+// 🛡️ S1 Compliance: Enforce environment variables only.
 // No hardcoded mock secrets allowed in source control.
-if (process.env.NODE_ENV === 'production' && (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('mock'))) {
-  throw new Error('S1 CRITICAL: Production environment detected with missing or mock DATABASE_URL');
+if (
+  process.env.NODE_ENV === 'production' &&
+  (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('mock'))
+) {
+  throw new Error(
+    'S1 CRITICAL: Production environment detected with missing or mock DATABASE_URL'
+  );
 }
 
 // Ensure strict isolation mode

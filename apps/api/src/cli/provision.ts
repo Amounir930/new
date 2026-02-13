@@ -4,10 +4,10 @@
  * Usage: bun run cli provision --subdomain=<name> --plan=<plan> --email=<email> --password=<pass> --store-name=<name>
  */
 
+import { createInterface } from 'node:readline/promises';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module.js';
 import type { ProvisioningService } from '../provisioning/provisioning.service.js';
-import { createInterface } from 'node:readline/promises';
 
 interface ProvisionOptions {
   subdomain: string;
@@ -23,8 +23,11 @@ export async function main(args: string[] = process.argv.slice(2)) {
 
   // 🛡️ S1/S5: Securely acquire password if not in quiet mode
   if (!options.password && !options.quiet) {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    // Note: Standard readline doesn't hide input easily without extra deps, 
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    // Note: Standard readline doesn't hide input easily without extra deps,
     // but this avoids the ps aux/bash_history exposure of --password
     options.password = await rl.question('Enter admin password: ');
     rl.close();
@@ -93,11 +96,7 @@ function parseArgs(args: string[]): ProvisionOptions {
     }
   }
 
-  if (
-    !options.subdomain ||
-    !options.email ||
-    !options.storeName
-  ) {
+  if (!options.subdomain || !options.email || !options.storeName) {
     throw new Error('Missing required arguments');
   }
 

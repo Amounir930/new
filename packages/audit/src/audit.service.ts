@@ -130,7 +130,10 @@ export class AuditService {
     } catch (error) {
       // 🛡️ S4: Fail-Open for service availability, but log critical failure
       // We log to stderr/Logger so it triggers alerts without crashing the transaction
-      this.logger.error('S4 CRITICAL: Audit Persistence Failure', error instanceof Error ? error.message : error);
+      this.logger.error(
+        'S4 CRITICAL: Audit Persistence Failure',
+        error instanceof Error ? error.message : error
+      );
     } finally {
       // 🔒 S2 CRITICAL FIX: Guaranteed context cleanup before releasing connection
       // If cleanup fails, destroy connection to prevent cross-tenant contamination
