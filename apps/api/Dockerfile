@@ -23,4 +23,4 @@ RUN chown -R bun-user:bun-group /app
 USER bun-user
 
 EXPOSE 3000
-CMD ["bun", "run", "apps/api/src/main.ts"]
+CMD ["bun", "run", "apps/api/dist/main.js"]
