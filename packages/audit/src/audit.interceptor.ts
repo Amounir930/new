@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import { type Observable, tap } from 'rxjs';
-import { AUDIT_LOG_METADATA_KEY, type AuditLogOptions } from './audit.decorator.js';
+import {
+    AUDIT_LOG_METADATA_KEY,
+    type AuditLogOptions,
+} from './audit.decorator.js';
 import type { AuditService } from './audit.service.js';
 
 /**
@@ -54,7 +57,7 @@ export class AuditInterceptor implements NestInterceptor {
         context: ExecutionContext,
         options: AuditLogOptions | undefined,
         resultData: any,
-        resultStatus: 'SUCCESS' | 'FAILURE'
+        resultStatus: 'SUCCESS' | 'FAILURE',
     ) {
         const request = context.switchToHttp().getRequest();
         const { method, url, ip, headers } = request;
