@@ -113,7 +113,7 @@ services:
   # Load Balancer (Traefik) - Dynamic SSL w/ Let's Encrypt
   # ═══════════════════════════════════════════════════════════════
   traefik:
-    image: traefik:v3.3
+    image: traefik:v2.11
     container_name: apex-traefik
     restart: always
     command:
