@@ -3,7 +3,7 @@ services:
   # Database Layer (PostgreSQL 15)
   # ═══════════════════════════════════════════════════════════════
   postgres:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: apex-postgres
     restart: always
     environment:
