@@ -53,7 +53,7 @@ const aiHelpCenterSearchFlow = ai.defineFlow(
     inputSchema: AiHelpCenterSearchInputSchema,
     outputSchema: AiHelpCenterSearchOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     return output!;
   }

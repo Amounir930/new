@@ -88,7 +88,7 @@ const personalizedProductRecommendationsFlow = ai.defineFlow(
     inputSchema: PersonalizedProductRecommendationsInputSchema,
     outputSchema: PersonalizedProductRecommendationsOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await recommendPrompt(input);
     if (!output) {
       throw new Error('Failed to get recommendations from the prompt.');

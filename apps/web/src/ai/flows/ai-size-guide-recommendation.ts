@@ -40,7 +40,7 @@ const AiSizeGuideRecommendationInputSchema = z.object({
     .string()
     .describe(
       'A JSON string representing the product\'s size chart, mapping sizes to body measurements. Example: [{\"size\":\"S\",\"chest_min\":88,\"chest_max\":92,\"waist_min\":72,\"waist_max\":76,\"hip_min\":90,\"hip_max\":94}, ...]' +
-        'This should be a stringified JSON array of objects, where each object has a "size" field and fields for measurement ranges (e.g., "chest_min", "chest_max").'
+      'This should be a stringified JSON array of objects, where each object has a "size" field and fields for measurement ranges (e.g., "chest_min", "chest_max").'
     ),
 });
 
@@ -99,7 +99,7 @@ const aiSizeGuideRecommendationFlow = ai.defineFlow(
     inputSchema: AiSizeGuideRecommendationInputSchema,
     outputSchema: AiSizeGuideRecommendationOutputSchema,
   },
-  async (input) => {
+  async (input: any) => {
     const { output } = await prompt(input);
     return output!;
   }

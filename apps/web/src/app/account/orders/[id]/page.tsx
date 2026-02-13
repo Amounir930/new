@@ -108,12 +108,13 @@ const mockOrders = [
   },
 ];
 
-export default function OrderDetailsPage({
+export default async function OrderDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const order = mockOrders.find((o) => o.id === params.id);
+  const { id } = await params;
+  const order = mockOrders.find((o) => o.id === id);
   const { language } = useSettings();
 
   const t = {

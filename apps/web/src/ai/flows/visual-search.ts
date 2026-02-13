@@ -69,7 +69,7 @@ const visualSearchFlow = ai.defineFlow(
     inputSchema: VisualSearchInputSchema,
     outputSchema: VisualSearchOutputSchema,
   },
-  async (input) => {
+  async (input: z.infer<typeof VisualSearchInputSchema>) => {
     const { output } = await prompt(input);
     if (!output) {
       throw new Error('Failed to get visual search results from the prompt.');
