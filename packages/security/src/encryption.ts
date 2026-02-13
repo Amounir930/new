@@ -190,7 +190,7 @@ export class EncryptionService {
       // S7 FIX: Strict complexity requirements for production
       // Must have: uppercase, lowercase, numbers, and special characters
       const complexityRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/;
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&+/=]+$/;
       if (!complexityRegex.test(key)) {
         throw new Error(
           'S1 Violation: ENCRYPTION_MASTER_KEY must contain uppercase, lowercase, numbers, and special characters (@$!%*?&)'

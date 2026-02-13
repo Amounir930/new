@@ -70,3 +70,6 @@ Collect-Project.ps1
 .env.s1.local
 .env.s1.local
 .env.test.local
+
+# SSH Keys
+ops/keys/
