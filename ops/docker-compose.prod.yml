@@ -151,10 +151,26 @@ services:
     networks:
       - apex-network
 
+  # ═══════════════════════════════════════════════════════════════
+  # Email Testing (Mailpit) - Internal SMTP
+  # ═══════════════════════════════════════════════════════════════
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: apex-mailpit
+    restart: always
+    environment:
+      MP_SMTP_BIND_ADDR: 0.0.0.0:1025
+      MP_UI_BIND_ADDR: 0.0.0.0:8025
+    volumes:
+      - mailpit_data:/data
+    networks:
+      - apex-network
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+  mailpit_data:
   letsencrypt_data:
 
 networks:
