@@ -3,6 +3,7 @@
  * Implements S1-S8 Security Protocols + OpenAPI Documentation
  */
 
+import 'reflect-metadata';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
