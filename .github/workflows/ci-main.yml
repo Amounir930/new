@@ -72,6 +72,11 @@ jobs:
     secrets: inherit
 
 
+  s15-active-defense:
+    name: "S15 Active Defense"
+    uses: ./.github/workflows/active-defense.yml
+    secrets: inherit
+
   # ═══════════════════════════════════════════════════════════════
   # PHASE 2: S9-S13 Penetration Tests
   # ═══════════════════════════════════════════════════════════════
@@ -79,7 +84,7 @@ jobs:
     name: "🎯 S9-S13 Penetration Tests"
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers]
+    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers, s15-active-defense]
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     
     services:
@@ -481,7 +486,7 @@ jobs:
     name: "⏱️ 60-Second Provisioning"
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers, s9-s13-penetration]
+    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers, s9-s13-penetration, s15-active-defense]
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     
     services:
@@ -787,7 +792,7 @@ jobs:
   security-alerts:
     name: "🚨 Security Alerting"
     runs-on: ubuntu-latest
-    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s6-s14-capacity, s7-encrypt, s8-headers, s9-s13-penetration, provisioning-speed]
+    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s6-s14-capacity, s7-encrypt, s8-headers, s9-s13-penetration, provisioning-speed, s15-active-defense]
     if: always() && contains(needs.*.result, 'failure')
     
     steps:
@@ -807,6 +812,7 @@ jobs:
           [ "${{ needs.s7-encrypt.result }}" == "failure" ] && FAILED_JOBS="${FAILED_JOBS}S7-Encrypt "
           [ "${{ needs.s8-headers.result }}" == "failure" ] && FAILED_JOBS="${FAILED_JOBS}S8-Headers "
           [ "${{ needs.s9-s13-penetration.result }}" == "failure" ] && FAILED_JOBS="${FAILED_JOBS}S9-S13-PenTest "
+          [ "${{ needs.s15-active-defense.result }}" == "failure" ] && FAILED_JOBS="${FAILED_JOBS}S15-ActiveDefense "
           [ "${{ needs.provisioning-speed.result }}" == "failure" ] && FAILED_JOBS="${FAILED_JOBS}Provisioning "
           
           echo "failed_jobs=${FAILED_JOBS}" >> $GITHUB_OUTPUT
@@ -903,7 +909,7 @@ jobs:
   final-report:
     name: "📊 Pipeline Report"
     runs-on: ubuntu-latest
-    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s6-s14-capacity, s7-encrypt, s8-headers, s9-s13-penetration, provisioning-speed, deploy-staging, dast-scan, security-alerts]
+    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s6-s14-capacity, s7-encrypt, s8-headers, s9-s13-penetration, provisioning-speed, deploy-staging, dast-scan, security-alerts, s15-active-defense]
     if: always()
 
     steps:
@@ -941,7 +947,9 @@ jobs:
           echo "  $(icon '${{ needs.s9-s13-penetration.result }}') S11: SQL Injection Test"
           echo "  $(icon '${{ needs.s9-s13-penetration.result }}') S12: XSS Test"
           echo "  $(icon '${{ needs.s9-s13-penetration.result }}') S13: Red Team Simulation"
-          echo ""          
+          echo "  $(icon '${{ needs.s15-active-defense.result }}') S15: Active Defense & Deception"
+          echo ""
+          
 
           # Other phases
           echo "⏱️ Performance:"

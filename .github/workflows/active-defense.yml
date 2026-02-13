@@ -5,6 +5,7 @@ on:
     branches: [main, develop, New]
   pull_request:
     branches: [main, develop, New]
+  workflow_call:
 
 jobs:
   honeypot-test:

@@ -22,36 +22,6 @@
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
-      "@apex/auth": [
-        "packages/auth/src/index.ts"
-      ],
-      "@apex/audit": [
-        "packages/audit/src/index.ts"
-      ],
-      "@apex/config": [
-        "packages/config/src/index.ts"
-      ],
-      "@apex/db": [
-        "packages/db/src/index.ts"
-      ],
-      "@apex/events": [
-        "packages/events/src/index.ts"
-      ],
-      "@apex/export": [
-        "packages/export/src/index.ts"
-      ],
-      "@apex/middleware": [
-        "packages/middleware/src/index.ts"
-      ],
-      "@apex/provisioning": [
-        "packages/provisioning/src/index.ts"
-      ],
-      "@apex/security": [
-        "packages/security/src/index.ts"
-      ],
-      "@apex/validators": [
-        "packages/validators/src/index.ts"
-      ],
       "~/*": [
         "./*"
       ]
