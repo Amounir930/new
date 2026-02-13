@@ -103,7 +103,10 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const host = req.headers.host || '';
     const subdomain = extractSubdomain(host);
 
-    if (!subdomain || ['api', 'super-admin', 'www'].includes(subdomain.toLowerCase())) {
+    if (
+      !subdomain ||
+      ['api', 'super-admin', 'www'].includes(subdomain.toLowerCase())
+    ) {
       // Allow root domain and system subdomains
       return next();
     }
