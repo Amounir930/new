@@ -73,7 +73,7 @@ try {
     }
 }
 
-process.env.ENCRYPTION_MASTER_KEY = 'ThisKeyIsLongEnoughButHasNoNumbersOrSpecials';
+process.env.ENCRYPTION_MASTER_KEY = 'ThisKeyIsLongEnoughButHasNoNumbersOrSpecials'; // gitleaks:allow
 try {
     new EncryptionService();
     console.error('  ❌ Complexity Check: FAILED (Should have thrown error)');
