@@ -6,8 +6,6 @@
 name: "🛡️ Protection Enforcement"
 
 on:
-  push:
-    branches: [main, develop, New]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, develop, New]

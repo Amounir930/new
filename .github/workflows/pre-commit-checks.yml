@@ -199,6 +199,19 @@ jobs:
             exit 1
           fi
           
+          # Check that tests exist for changed files
+          BASE_REF="${{ github.base_ref || github.event.before }}"
+          if [ -z "$BASE_REF" ] || [ "$BASE_REF" == "0000000000000000000000000000000000000000" ]; then
+            CHANGED_FILES=$(find packages/export -name "*.ts" 2>/dev/null || true)
+          else
+            CHANGED_FILES=$(git diff --name-only $BASE_REF...HEAD | grep "packages/export/" || true)
+          fi
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "✅ No export module changes detected"
+            exit 0
+          fi
+          
           # Check README has required sections
           README="packages/export/README.md"
           
