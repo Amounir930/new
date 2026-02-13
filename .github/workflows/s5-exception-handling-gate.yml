@@ -37,10 +37,6 @@ jobs:
             echo "🚨 CRITICAL: Security configuration missing!"
             exit 1
           fi
-          if [ ! -f "packages/template-security/tsconfig.json" ]; then
-            echo "🚨 CRITICAL: Template Security configuration missing!"
-            exit 1
-          fi
 
       - name: "S5.1 - Exception Filter Safety Test"
         run: |

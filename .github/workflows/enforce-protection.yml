@@ -27,6 +27,7 @@ jobs:
   codeowners-check:
     name: "Verify CODEOWNERS Review"
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     
     steps:
       - name: Checkout code
@@ -249,9 +250,10 @@ jobs:
   block-self-approval:
     name: "Block Self-Approval"
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.changed_files, 'packages/export/') || 
-        contains(github.event.pull_request.changed_files, 'packages/middleware/') ||
-        contains(github.event.pull_request.changed_files, 'packages/auth/')
+    if: github.event_name == 'pull_request' && 
+        (contains(github.event.pull_request.changed_files, 'packages/export/') || 
+         contains(github.event.pull_request.changed_files, 'packages/middleware/') ||
+         contains(github.event.pull_request.changed_files, 'packages/auth/'))
     
     steps:
       - name: Check Self-Approval
