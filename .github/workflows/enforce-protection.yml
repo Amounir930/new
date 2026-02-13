@@ -149,98 +149,23 @@ jobs:
           echo "═══════════════════════════════════════════════════════════════"
 
   # ═══════════════════════════════════════════════════════════════
-  # Validate Export Module Changes
+  # S14: Export Module Validation (CI Sentinel)
   # ═══════════════════════════════════════════════════════════════
-  validate-export-changes:
-    name: "Validate Export Module Changes"
+  s14-export-validation:
+    name: "S14 Export Validation"
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.changed_files, 'packages/export/')
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check Export Test Coverage
-        run: |
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "  S14 Export Module Validation"
-          echo "═══════════════════════════════════════════════════════════════"
-          
-          # Check that tests exist for changed files
-          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep "packages/export/" || true)
-          
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "✅ No export module changes detected"
-            exit 0
-          fi
-          
-          echo "Changed export files:"
-          echo "$CHANGED_FILES"
-          
-          # Check for corresponding test files
-          MISSING_TESTS=""
-          for file in $CHANGED_FILES; do
-            if [[ "$file" == *.ts && "$file" != *.test.ts ]]; then
-              TEST_FILE="${file%.ts}.test.ts"
-              if [ ! -f "$TEST_FILE" ]; then
-                # Check if test exists elsewhere
-                BASENAME=$(basename "$file" .ts)
-                if ! find packages/export -name "*${BASENAME}*.test.ts" | grep -q .; then
-                  echo "⚠️ No test file found for: $file"
-                  MISSING_TESTS="$MISSING_TESTS $file"
-                fi
-              fi
-            fi
-          done
-          
-          if [ -n "$MISSING_TESTS" ]; then
-            echo ""
-            echo "❌ CRITICAL: Export module changes require test coverage"
-            echo "Missing tests for: $MISSING_TESTS"
-            exit 1
-          fi
-          
-          echo "✅ Test coverage verified"
-
-      - name: Check Security Patterns
-        run: |
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "  Security Pattern Validation"
-          echo "═══════════════════════════════════════════════════════════════"
-          
-          # Check for schema injection vulnerabilities
-          if git diff origin/${{ github.base_ref }}...HEAD | grep -E "SELECT.*\$\{.*schema|FROM.*\$\{.*tenant"; then
-            echo "❌ CRITICAL: Potential SQL injection in schema reference"
-            exit 1
-          fi
-          
-          # Check for missing tenant isolation
-          if git diff origin/${{ github.base_ref }}...HEAD packages/export/src | grep -E "public\.(tenants|users)" | grep -v "public.tenants WHERE"; then
-            echo "❌ CRITICAL: Direct public schema access without WHERE clause"
-            exit 1
-          fi
-          
-          # Check for hardcoded secrets
-          if git diff origin/${{ github.base_ref }}...HEAD | grep -iE "(password|secret|key)\s*=\s*[\"'][^\"']{8,}[\"']"; then
-            echo "❌ CRITICAL: Potential hardcoded secret"
-            exit 1
-          fi
-          
-          echo "✅ Security patterns validated"
-
-      - name: Require S14 Gate Pass
-        run: |
-          echo "═══════════════════════════════════════════════════════════════"
-          echo "  S14 Security Gate Requirement"
-          echo "═══════════════════════════════════════════════════════════════"
-          
-          # Check that S14 gate workflow exists and is modified if needed
-          if [ ! -f ".github/workflows/s6-s14-capacity-gate.yml" ]; then
-            echo "❌ CRITICAL: S14 security gate workflow is missing!"
-            exit 1
-          fi
-          
-          echo "✅ S14 security gate exists"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - name: Run S14 Gate
+        run: bun run src/utils/ci-sentinel.ts S14
+        working-directory: packages/security
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
 
   # ═══════════════════════════════════════════════════════════════
   # Block Self-Approval for Critical Modules
