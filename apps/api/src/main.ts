@@ -37,7 +37,7 @@ async function bootstrap() {
   );
 
   // S8 FIX: Generate CSP Nonce per request
-  app.use((req: any, res: any, next: any) => {
+  app.use((_req: any, res: any, next: any) => {
     const { randomBytes } = require('node:crypto');
     res.locals.cspNonce = randomBytes(16).toString('hex');
     next();
@@ -52,11 +52,11 @@ async function bootstrap() {
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
-          (req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
+          (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
         ],
         styleSrc: [
           "'self'",
-          (req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
+          (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`,
         ],
         imgSrc: ["'self'", 'data:', 'https:'],
         connectSrc: ["'self'"],
