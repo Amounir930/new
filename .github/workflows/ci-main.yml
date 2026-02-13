@@ -624,14 +624,14 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
           REDIS_URL: redis://localhost:6379
-          NODE_ENV: test
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_SECRET: "test_jwt_secret_for_ci_provision_32_chars_exact"
           MINIO_ENDPOINT: localhost
           MINIO_PORT: 9000
-          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
-          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+          MINIO_ACCESS_KEY: "test_minio_access_key"
+          MINIO_SECRET_KEY: "test_minio_secret_key"
           MINIO_USE_SSL: false
           MINIO_REGION: us-east-1
+          NODE_ENV: test
           MIGRATIONS_PATH: ${{ github.workspace }}/packages/db/drizzle
 
   # ═══════════════════════════════════════════════════════════════
