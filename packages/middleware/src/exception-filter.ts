@@ -4,6 +4,7 @@
  * Purpose: Standardized error responses, no stack traces to client
  */
 
+import { env } from '@apex/config';
 import {
   type ArgumentsHost,
   Catch,
@@ -12,11 +13,9 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 import type { Request, Response } from 'express';
 import { ZodError } from 'zod';
-
-import { env } from '@apex/config';
-import * as Sentry from '@sentry/node';
 
 // S5: Initialize Sentry globally for GlitchTip reporting
 if (env.GLITCHTIP_DSN && env.NODE_ENV === 'production') {
@@ -253,7 +252,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException { }
+export class OperationalError extends HttpException {}
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {

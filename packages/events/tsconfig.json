@@ -5,6 +5,7 @@
     "outDir": "./dist",
     "types": ["node", "bun-types"],
     "declaration": true,
+    "paths": {},
     "emitDeclarationOnly": true
   },
   "include": ["src/**/*"],

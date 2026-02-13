@@ -12,6 +12,7 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
+    "paths": {},
     "declarationMap": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,

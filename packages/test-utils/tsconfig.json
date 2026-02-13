@@ -12,6 +12,7 @@
     "rootDir": "./src",
     "composite": true,
     "declaration": true,
+    "paths": {},
     "declarationMap": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,

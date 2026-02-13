@@ -9,55 +9,23 @@
     "isolatedModules": true,
     "declaration": true,
     "composite": false,
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
-    "types": [
-      "node",
-      "bun-types",
-      "express"
-    ],
+    "lib": ["ESNext", "DOM"],
+    "types": ["node", "bun-types", "express"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "./*"
-      ],
-      "@apex/config": [
-        "./packages/config/src"
-      ],
-      "@apex/middleware": [
-        "./packages/middleware/src"
-      ],
-      "@apex/db": [
-        "./packages/db/src"
-      ],
-      "@apex/audit": [
-        "./packages/audit/src"
-      ],
-      "@apex/security": [
-        "./packages/security/src"
-      ],
-      "@apex/auth": [
-        "./packages/auth/src"
-      ],
-      "@apex/validators": [
-        "./packages/validators/src"
-      ],
-      "@apex/provisioning": [
-        "./packages/provisioning/src"
-      ],
-      "@apex/events": [
-        "./packages/events/src"
-      ]
+      "~/*": ["./*"],
+      "@apex/config": ["./packages/config/src"],
+      "@apex/middleware": ["./packages/middleware/src"],
+      "@apex/db": ["./packages/db/src"],
+      "@apex/audit": ["./packages/audit/src"],
+      "@apex/security": ["./packages/security/src"],
+      "@apex/auth": ["./packages/auth/src"],
+      "@apex/validators": ["./packages/validators/src"],
+      "@apex/provisioning": ["./packages/provisioning/src"],
+      "@apex/events": ["./packages/events/src"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build",
-    ".turbo"
-  ]
+  "exclude": ["node_modules", "dist", "build", ".turbo"]
 }
