@@ -103,15 +103,17 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const host = req.headers.host || '';
     const subdomain = extractSubdomain(host);
 
-    if (!subdomain) {
-      // Allow root domain requests (e.g., landing page)
+    if (!subdomain || ['api', 'super-admin', 'www'].includes(subdomain.toLowerCase())) {
+      // Allow root domain and system subdomains
       return next();
     }
 
     // S2/S4 Bypass: Specific routes that don't require tenant isolation
     // e.g., provisioning a new tenant or system health checks
+    // We use originalUrl to ensure we see the full path before NestJS routing shifts it
     const bypassRoutes = ['/api/provision', '/health', '/api/health'];
-    if (bypassRoutes.some((route) => req.path.startsWith(route))) {
+    const currentPath = req.originalUrl || req.path || '';
+    if (bypassRoutes.some((route) => currentPath.includes(route))) {
       return next();
     }
 
