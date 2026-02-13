@@ -10,6 +10,7 @@ on:
       - 'packages/audit/**'
       - 'packages/export/**'
       - 'docker-compose.yml'
+    branches: [main, develop, New]
   pull_request:
     branches: [main, develop]
     paths:
