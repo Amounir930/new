@@ -97,6 +97,13 @@ services:
       NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
     networks:
       - apex-network
+    labels:
+      - "traefik.enable=true"
+      # Route both main domain, api subdomain, and wildcards to the API for now
+      - "traefik.http.routers.api.rule=Host(`60sec.shop`) || Host(`api.60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api.loadbalancer.server.port=3000"
     deploy:
       replicas: 2
       update_config:
