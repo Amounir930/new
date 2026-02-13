@@ -3,6 +3,8 @@ export {
   AuditLog,
   type AuditLogOptions,
 } from './audit.decorator.js';
+export { AuditInterceptor } from './audit.interceptor.js';
+export { AuditModule } from './audit.module.js';
 export {
   type AuditAction,
   type AuditLogEntry,
@@ -15,4 +17,3 @@ export {
   logSecurityEvent,
   query,
 } from './audit.service.js';
-export { AuditInterceptor } from './audit.interceptor.js';

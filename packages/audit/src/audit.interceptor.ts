@@ -1,13 +1,13 @@
 import {
-    CallHandler,
-    ExecutionContext,
+    type CallHandler,
+    type ExecutionContext,
     Injectable,
-    NestInterceptor,
+    type NestInterceptor,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { Observable, tap } from 'rxjs';
-import { AUDIT_LOG_METADATA_KEY, AuditLogOptions } from './audit.decorator.js';
-import { AuditService } from './audit.service.js';
+import type { Reflector } from '@nestjs/core';
+import { type Observable, tap } from 'rxjs';
+import { AUDIT_LOG_METADATA_KEY, type AuditLogOptions } from './audit.decorator.js';
+import type { AuditService } from './audit.service.js';
 
 /**
  * S4: Global Audit Interceptor
@@ -65,7 +65,11 @@ export class AuditInterceptor implements NestInterceptor {
         const entityType = options?.entityType || 'api_request';
 
         // Extract entityId if possible from params or body
-        const entityId = request.params?.id || request.body?.id || request.body?.subdomain || 'unknown';
+        const entityId =
+            request.params?.id ||
+            request.body?.id ||
+            request.body?.subdomain ||
+            'unknown';
 
         try {
             await this.auditService.log({
@@ -76,13 +80,16 @@ export class AuditInterceptor implements NestInterceptor {
                 userEmail: user?.email,
                 ipAddress: ip,
                 userAgent: headers['user-agent'],
-                severity: options?.severity || (resultStatus === 'FAILURE' ? 'HIGH' : 'INFO'),
+                severity:
+                    options?.severity || (resultStatus === 'FAILURE' ? 'HIGH' : 'INFO'),
                 result: resultStatus,
                 metadata: {
                     path: url,
                     method,
                     statusCode: context.switchToHttp().getResponse().statusCode,
-                    ...(resultStatus === 'FAILURE' ? { error: resultData?.message || resultData?.toString() } : {}),
+                    ...(resultStatus === 'FAILURE'
+                        ? { error: resultData?.message || resultData?.toString() }
+                        : {}),
                 },
             });
         } catch (err) {

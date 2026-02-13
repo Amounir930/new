@@ -13,7 +13,7 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { AuditInterceptor } from '@apex/audit';
+import { AuditInterceptor, AuditModule } from '@apex/audit';
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 
@@ -41,6 +41,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
 
     HealthModule,
     ProvisioningModule,
+    AuditModule,
     // Core Data Module (explicitly imported for root context availability)
     DbModule,
   ],
