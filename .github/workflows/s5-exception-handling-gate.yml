@@ -31,12 +31,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
-      - name: "S5.0 - Structure Integrity Check"
-        run: |
-          if [ ! -f "packages/security/tsconfig.json" ]; then
-            echo "🚨 CRITICAL: Security configuration missing!"
-            exit 1
-          fi
+      - name: "S5.0 - Structure Integrity Check (CI Sentinel)"
+        run: bun run src/utils/ci-sentinel.ts S5
+        working-directory: packages/security
 
       - name: "S5.1 - Exception Filter Safety Test"
         run: |

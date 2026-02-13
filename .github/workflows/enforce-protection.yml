@@ -6,6 +6,8 @@
 name: "🛡️ Protection Enforcement"
 
 on:
+  push:
+    branches: [main, develop, New]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [main, develop, New]
@@ -25,7 +27,6 @@ jobs:
   codeowners-check:
     name: "Verify CODEOWNERS Review"
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     
     steps:
       - name: Checkout code
@@ -41,12 +42,13 @@ jobs:
             const fs = require('fs');
             const path = require('path');
             
-            // Read CODEOWNERS
+            // 1. Parse CODEOWNERS
             const codeownersPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'CODEOWNERS');
-            const codeownersContent = fs.readFileSync(codeownersPath, 'utf8');
-            
-            // Parse CODEOWNERS
-            const rules = codeownersContent
+            if (!fs.existsSync(codeownersPath)) {
+              console.log('ℹ️ No .github/CODEOWNERS found. Skipping.');
+              return;
+            }
+            const rules = fs.readFileSync(codeownersPath, 'utf8')
               .split('\n')
               .filter(line => line.trim() && !line.startsWith('#'))
               .map(line => {
@@ -54,60 +56,84 @@ jobs:
                 return { pattern, owners };
               });
             
-            // Get changed files in this PR
-            const prNumber = context.issue.number;
-            const { data: files } = await github.rest.pulls.listFiles({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            });
-            
-            const changedFiles = files.map(f => f.filename);
-            
-            // Find required reviewers
+            // 2. Identify Event Context
+            const prNumber = context.issue.number || context.payload.pull_request?.number;
+            let changedFiles = [];
+            let approvedReviewers = [];
+            let prAuthor = context.actor;
+
+            if (prNumber) {
+              console.log(`🔍 Processing Pull Request #${prNumber}...`);
+              const { data: files } = await github.rest.pulls.listFiles({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              changedFiles = files.map(f => f.filename);
+
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              approvedReviewers = reviews
+                .filter(r => r.state === 'APPROVED')
+                .map(r => `@${r.user.login}`);
+                
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              prAuthor = pr.user.login;
+            } else {
+              console.log('⏩ Event is not a PR. Using commit diff for analysis.');
+              const { data: commit } = await github.rest.repos.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha,
+              });
+              changedFiles = commit.files.map(f => f.filename);
+            }
+
+            // 3. Match Changes to Owners
             const requiredReviewers = new Set();
-            
             for (const file of changedFiles) {
               for (const rule of rules) {
                 const pattern = rule.pattern
                   .replace(/\*\*/g, '.*')
                   .replace(/\*/g, '[^/]*')
                   .replace(/\?/g, '.');
-                
                 const regex = new RegExp(`^${pattern}$`);
                 if (regex.test(file)) {
                   rule.owners.forEach(owner => requiredReviewers.add(owner));
                 }
               }
             }
+
+            core.setOutput('changed-files', changedFiles.join(', '));
+            core.setOutput('required-reviewers', Array.from(requiredReviewers).join(', '));
+            core.setOutput('approved-reviewers', approvedReviewers.join(', '));
+            core.setOutput('pr-author', prAuthor);
             
-            // Get current reviews
-            const { data: reviews } = await github.rest.pulls.listReviews({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            });
-            
-            const approvedReviewers = reviews
-              .filter(r => r.state === 'APPROVED')
-              .map(r => `@${r.user.login}`);
-            
-            // Check if required reviewers have approved
-            const missingApprovals = [];
-            for (const reviewer of requiredReviewers) {
-              // In real scenario, map GitHub usernames to CODEOWNERS
-              // For now, we check if any approval exists
-              if (approvedReviewers.length === 0) {
-                missingApprovals.push(reviewer);
+            // 4. Critical Gates (Only for PRs)
+            if (prNumber) {
+              const isExportChange = changedFiles.some(f => f.startsWith('packages/export/'));
+              if (isExportChange && approvedReviewers.length < 2) {
+                core.setFailed(`❌ CRITICAL: Export module changes require 2 approvals. Current: ${approvedReviewers.length}`);
+              }
+
+              const isSecurityChange = changedFiles.some(f => 
+                f.startsWith('packages/middleware/') ||
+                f.startsWith('packages/auth/') ||
+                f.startsWith('packages/audit/') ||
+                f.startsWith('.github/workflows/s')
+              );
+              if (isSecurityChange && approvedReviewers.length === 0) {
+                core.setFailed(`❌ SECURITY: Changes to security modules require approval from security team`);
               }
             }
-            
-            // Get PR author
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-            });
+
             
             core.setOutput('changed-files', changedFiles.join(', '));
             core.setOutput('required-reviewers', Array.from(requiredReviewers).join(', '));
