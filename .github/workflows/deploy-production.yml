@@ -82,7 +82,6 @@ jobs:
           bun run build
         env:
           NODE_ENV: production
-          NEXT_PUBLIC_API_URL: ${{ secrets.PRODUCTION_API_URL }}
 
       - name: Run Production Tests
         run: |
@@ -97,7 +96,6 @@ jobs:
           VERSION="${{ github.event.inputs.version || github.ref_name }}"
           tar -czf "release-${VERSION}.tar.gz" \
             apps/api/dist \
-            apps/web/.next \
             packages/*/dist \
             package.json \
             bun.lockb

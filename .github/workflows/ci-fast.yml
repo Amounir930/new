@@ -287,7 +287,6 @@ jobs:
           path: |
             packages/*/dist/**
             apps/api/dist/**
-            apps/web/.next/**
           retention-days: 1
           if-no-files-found: error
 
@@ -582,14 +581,6 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'apps/api/Dockerfile'
-          scan-type: 'config'
-          exit-code: '1'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Container Vulnerability Scan (Trivy - Web)
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'apps/web/Dockerfile'
           scan-type: 'config'
           exit-code: '1'
           severity: 'CRITICAL,HIGH'

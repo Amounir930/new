@@ -288,21 +288,12 @@ jobs:
           # [STRUCTURAL] Ensure core security file exists
           if [ ! -f "packages/middleware/src/security.ts" ]; then echo "❌ Missing packages/middleware/src/security.ts"; exit 1; fi
           
-          CSP_FILES="./packages/middleware/src/security.ts ./apps/web/next.config.js ./apps/web/middleware.ts"
-          CSP_FOUND=false
-          for f in $CSP_FILES; do
-            if [ -f "$f" ]; then
-              if grep -qiE "(Content-Security-Policy|csp|'self')" "$f"; then
-                CSP_FOUND=true
-                echo "    ✅ Found security header configuration in $f"
-              fi
-            fi
-          done
-          
-          if [ "$CSP_FOUND" = "false" ]; then
-            echo "❌ S12 FAILED: No Content-Security-Policy configuration found!"
+          # [STRUCTURAL] Ensure CSP is configured in middleware
+          if ! grep -qiE "(Content-Security-Policy|csp|'self')" "packages/middleware/src/security.ts"; then
+            echo "❌ S12 FAILED: No Content-Security-Policy configuration found in middleware!"
             exit 1
           fi
+          echo "    ✅ Found security header configuration in packages/middleware/src/security.ts"
           
           echo "✅ S12: XSS surgical checks and structural gates completed"
 
