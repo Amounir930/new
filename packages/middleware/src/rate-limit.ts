@@ -18,7 +18,6 @@ import {
   Module,
   SetMetadata,
 } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { createClient, type RedisClientType } from 'redis';
