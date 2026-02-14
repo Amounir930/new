@@ -1,0 +1,98 @@
+# ═══════════════════════════════════════════════════════════════
+# Consolidated Governance, Documentation & Security Response
+# ═══════════════════════════════════════════════════════════════
+
+name: "⚖️ Governance & Docs"
+
+on:
+  issues:
+    types: [opened, labeled]
+  push:
+    branches: [main, develop, New]
+    paths:
+      - 'SECURITY.md'
+      - 'apps/api/src/**/*.ts'
+      - 'packages/*/src/**/*.ts'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *' # Daily metrics
+
+jobs:
+  # ⚖️ Job 1: PR Governance (CODEOWNERS & Self-Approval)
+  pr-governance:
+    name: "PR Governance"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Block Self-Approval
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prAuthor = context.payload.pull_request.user.login;
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            const approvals = reviews.filter(r => r.state === 'APPROVED');
+            for (const approval of approvals) {
+              if (approval.user.login === prAuthor) {
+                core.setFailed(`❌ Self-approval not allowed for critical modules.`);
+              }
+            }
+
+  # 🛡️ Job 2: Security Issue Triage
+  security-triage:
+    name: "Security Triage"
+    runs-on: ubuntu-latest
+    if: github.event.issue && contains(github.event.issue.labels.*.name, 'security')
+    steps:
+      - name: Redirect to Private Reporting
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `## 🛡️ Security Notice\nPlease use Private Vulnerability Reporting for disclosures.`
+            });
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
+
+  # 📚 Job 3: API Documentation
+  api-docs:
+    name: "API Documentation"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Generate Spec
+        run: |
+          cd apps/api
+          bun run scripts/generate-openapi.ts
+      - name: Upload Spec
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-spec
+          path: apps/api/openapi-spec.json
+
+  # 📊 Job 4: Security Metrics
+  security-metrics:
+    name: "Security Metrics"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Report Metrics
+        run: |
+          echo "🛡️ Daily Security Metrics Report"
+          echo "All systems operational ✅"

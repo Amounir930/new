@@ -1,0 +1,96 @@
+# ═══════════════════════════════════════════════════════════════
+# Consolidated CI Suite (Fast Checks, Integration, Main)
+# ═══════════════════════════════════════════════════════════════
+
+name: "🚀 Apex CI Suite"
+
+on:
+  push:
+    branches: [main, develop, New]
+  pull_request:
+    branches: [main, develop, New]
+
+jobs:
+  # 🧱 Job 1: Lint, Format, and Type-Check
+  static-analysis:
+    name: "Static Analysis"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Lint (Biome)
+        run: bun run lint
+      - name: Type Check
+        run: bun run typecheck
+
+  # 🧪 Job 2: Unit Tests (Fast)
+  unit-tests:
+    name: "Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Run Tests
+        run: bun test --exclude packages/db/src/s2-isolation.behavioral.test.ts
+
+  # 🔗 Job 3: Integration Tests
+  integration-tests:
+    name: "Integration Tests"
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Build DB
+        run: bun run build --filter=@apex/db
+      - name: Run Integration Suite
+        run: bun run test:integration
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          REDIS_URL: redis://localhost:6379
+
+  # 🏹 Job 4: Active Defense (S15)
+  active-defense:
+    name: "S15 Active Defense"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Verify Honeypot Logic
+        run: |
+          echo "[*] Checking Honeypot registration..."
+          grep -r "HONEYPOT_HIT" packages/audit/src || exit 1
+          echo "✅ S15: Active defense pattern verified"
+
+  # 🏗️ Job 5: Production Build Smoke Test
+  build-test:
+    name: "Build Test"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: Build All
+        run: bun run build

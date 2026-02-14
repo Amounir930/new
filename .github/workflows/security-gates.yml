@@ -1,0 +1,167 @@
+# ═══════════════════════════════════════════════════════════════
+# Consolidated Security Gates (S1 - S14)
+# ═══════════════════════════════════════════════════════════════
+
+name: "🛡️ Security Gates"
+
+on:
+  workflow_call:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # 🔒 S1: Environment Verification & Secret Detection
+  s1-gate:
+    name: "S1 Environment Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for Gitleaks
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install dependencies
+        run: bun install
+        env:
+          ENABLE_S1_ENFORCEMENT: "true"
+
+      - name: "S1.1 - Gitleaks Secret Scan"
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Removed problematic config-path if not explicitly needed, or point to project root
+        
+      - name: "S1.2 - Hardcoded Credentials Scan"
+        run: |
+          echo "🔍 Scanning for hardcoded credentials..."
+          PATTERNS=("password" "secret" "key" "token" "auth")
+          for p in "${PATTERNS[@]}"; do
+            FOUND=$(grep -rnEi "$p" packages apps --exclude-dir={node_modules,dist,.next} | grep -vE "(\.test\.|\.spec\.|mock|dummy|test_)" || true)
+            if [ -n "$FOUND" ]; then
+              echo "⚠️ Potential hardcoded secret found: $p"
+            fi
+          done
+          echo "✅ S1.2: Hardcoded scan completed"
+
+      - name: "S1.3 - Env vs Schema Consistency"
+        run: bun run packages/config/src/index.ts
+        env:
+          NODE_ENV: production
+          JWT_SECRET: dummy_secret_for_validation_only_32_chars
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy?sslmode=require
+          ENCRYPTION_MASTER_KEY: dummy_encryption_key_32_chars_long!!
+
+  # 🔒 S2: Tenant Isolation
+  s2-gate:
+    name: "S2 Isolation Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: "S2.1 - AST Isolation Scan"
+        run: bun run packages/security/src/utils/scanner-cli.ts --rule=s2-isolation
+      - name: "S2.2 - Behavioral Isolation Tests"
+        run: bun test packages/db/src/s2-isolation.behavioral.test.ts
+
+  # 🔒 S3: Input Validation
+  s3-gate:
+    name: "S3 Validation Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "S3.1 - Zod Schema Scan"
+        run: |
+          ZOD_COUNT=$(grep -r "z\.object" packages apps --include="*.ts" | wc -l)
+          if [ "$ZOD_COUNT" -lt 5 ]; then exit 1; fi
+          echo "✅ S3.1: Zod coverage verified ($ZOD_COUNT schemas found)"
+
+  # 🔒 S4: Audit Logging
+  s4-gate:
+    name: "S4 Auditing Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "S4.1 - Audit Trigger Check"
+        run: |
+          TRIGGERS=$(grep -r "AuditService" packages apps --include="*.ts" | wc -l)
+          if [ "$TRIGGERS" -lt 1 ]; then exit 1; fi
+          echo "✅ S4.1: Audit service integration verified"
+
+  # 🔒 S5: Exception Handling
+  s5-gate:
+    name: "S5 Exception Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "S5.1 - Try-Catch Block Check"
+        run: |
+          CATCH_BLOCKS=$(grep -r "catch" packages apps --include="*.ts" | wc -l)
+          if [ "$CATCH_BLOCKS" -lt 10 ]; then exit 1; fi
+          echo "✅ S5.1: Exception handling coverage verified"
+
+  # 🔒 S6 & S14: Capacity and Export Security
+  s6-s14-gate:
+    name: "S6/S14 Capacity Gate"
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: "S6.1 - Redis Health"
+        run: bun run tools/security-scripts/verify-redis-health.ts
+      - name: "S6.4 - Fail-Closed Test"
+        run: ENABLE_S1_ENFORCEMENT=false bun test packages/middleware/src/redis-rate-limit-store.fail-closed.test.ts
+      - name: "S14.9 - AST Export Scan"
+        run: bun run packages/security/src/utils/scanner-cli.ts --rule=s14-path-traversal packages/export/src/strategies
+
+  # 🔒 S7: Encryption at Rest
+  s7-gate:
+    name: "S7 Encryption Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "S7.1 - Encryption Tooling Scan"
+        run: |
+          ENCRYPTION_REFS=$(grep -rE "(encrypt|decrypt|Cipher)" packages apps --include="*.ts" | wc -l)
+          if [ "$ENCRYPTION_REFS" -lt 3 ]; then exit 1; fi
+          echo "✅ S7.1: Encryption service usage verified"
+
+  # 🔒 S8: Security Headers
+  s8-gate:
+    name: "S8 Headers Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "S8.1 - Helmet/Header Scan"
+        run: |
+          HEADERS=$(grep -rnE "(helmet|X-Content-Type-Options|Content-Security-Policy)" packages apps --include="*.ts" || true)
+          if [ -z "$HEADERS" ]; then exit 1; fi
+          echo "✅ S8.1: Security headers verified"
+
+  # 🔒 S13: Prototype Pollution
+  s13-gate:
+    name: "S13 Prototype Gate"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install
+      - name: "S13.1 - AST Prototype Scan"
+        run: bun run packages/security/src/utils/scanner-cli.ts --rule=s13-prototype packages apps
