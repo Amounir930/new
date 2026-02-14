@@ -51,7 +51,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -257,4 +257,4 @@ import { QuotaInterceptor } from './quota.interceptor.js';
     QuotaInterceptor,
   ],
 })
-export class RateLimitModule { }
+export class RateLimitModule {}

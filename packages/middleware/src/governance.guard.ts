@@ -27,7 +27,7 @@ export const RequireFeature = (feature: string) =>
 
 @Injectable()
 export class GovernanceGuard implements CanActivate {
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const feature = this.reflector.get<string>(

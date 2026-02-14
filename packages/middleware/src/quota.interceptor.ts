@@ -28,7 +28,7 @@ export const CheckQuota = (resource: 'products' | 'orders' | 'pages') =>
 
 @Injectable()
 export class QuotaInterceptor implements NestInterceptor {
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
 
   async intercept(
     context: ExecutionContext,
