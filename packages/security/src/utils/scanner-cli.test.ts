@@ -76,21 +76,27 @@ describe('ApexSecurityScanner', () => {
         'packages/export/src/strategies/weak.ts',
         `
                 export class WeakStrategy {
-                    async execute() { return "missing safe cleanup"; }
+                    async execute() { return "missing safe isolation"; }
                 }
              `
       );
       scanner.clearViolations();
       (scanner as any).scanFile(sf);
-      expect((scanner as any).violations).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            severity: 'CRITICAL',
-            message: expect.stringContaining(
-              'S14: Export strategy missing cleanup logic'
-            ),
-          }),
-        ])
+      expect((scanner as any).violations).toContainEqual(
+        expect.objectContaining({
+          severity: 'CRITICAL',
+          message: expect.stringContaining(
+            'S14: Export strategy missing cleanup logic'
+          ),
+        })
+      );
+      expect((scanner as any).violations).toContainEqual(
+        expect.objectContaining({
+          severity: 'CRITICAL',
+          message: expect.stringContaining(
+            'S14: Export strategy missing tenant schema isolation'
+          ),
+        })
       );
     });
   });

@@ -1,10 +1,6 @@
-/**
- * Auth Module Tests
- */
-
+import { describe, expect, it, mock } from 'bun:test';
 import { ConfigModule, ConfigService } from '@apex/config';
 import { Test } from '@nestjs/testing';
-import { describe, expect, it, vi } from 'vitest';
 import { AuthModule } from './auth.module.js';
 import { AuthService } from './auth.service.js';
 
@@ -15,12 +11,12 @@ describe('AuthModule', () => {
     })
       .overrideProvider(ConfigService)
       .useValue({
-        get: vi.fn().mockImplementation((key) => {
+        get: mock().mockImplementation((key) => {
           if (key === 'JWT_SECRET')
             return 'super-secret-key-at-least-32-chars-long';
           return null;
         }),
-        getWithDefault: vi.fn().mockReturnValue('7d'),
+        getWithDefault: mock().mockReturnValue('7d'),
       })
       .compile();
 
@@ -33,11 +29,11 @@ describe('AuthModule', () => {
 
   it('should configure JwtModule correctly', async () => {
     const mockConfigService = {
-      get: vi.fn().mockImplementation((key) => {
-        if (key === 'JWT_SECRET') return 'secret';
+      get: mock().mockImplementation((key) => {
+        if (key === 'JWT_SECRET') return 'secret_at_least_32_chars_long_for_s1';
         return null;
       }),
-      getWithDefault: vi.fn().mockReturnValue('1d'),
+      getWithDefault: mock().mockReturnValue('1d'),
     };
 
     const module = await Test.createTestingModule({

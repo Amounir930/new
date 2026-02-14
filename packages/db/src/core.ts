@@ -89,8 +89,9 @@ export async function withTenantConnection<T>(
   await client.connect();
 
   try {
-    // 3. Set secure context with local search_path
-    await client.query(`SET LOCAL search_path TO "${schemaName}", public`);
+    // 3. Set secure context with connection-scoped search_path
+    // S2: Since we use an isolated Client and destroy it after, SET is safe.
+    await client.query(`SET search_path TO "${schemaName}", public`);
 
     // 4. Double-check verification: Verify we are in the correct schema
     const checkResult = await client.query('SELECT current_schema()');

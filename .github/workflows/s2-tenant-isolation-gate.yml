@@ -8,7 +8,7 @@ permissions:
   checks: write
 
 env:
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+  DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
   JWT_SECRET: test_secret_key_for_ci_environment_only_32
   MINIO_ENDPOINT: localhost
   MINIO_ACCESS_KEY: test_access_key
@@ -65,7 +65,7 @@ jobs:
             exit 1
           fi
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
 
       - name: "S2.1 - Programmatic Isolation Test"
         run: |
@@ -74,7 +74,7 @@ jobs:
           DATABASE_URL=$DATABASE_URL bun run test:s2
         working-directory: packages/db
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
           POSTGRES_PASSWORD: postgres
           NODE_ENV: test
           JWT_SECRET: test_secret_key_for_ci_environment_only_32

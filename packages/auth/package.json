@@ -14,8 +14,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
-    "test": "cross-env NODE_ENV=test vitest run",
-    "test:coverage": "cross-env NODE_ENV=test vitest run --coverage",
+    "test": "cross-env NODE_ENV=test bun test",
+    "test:coverage": "cross-env NODE_ENV=test bun test --coverage",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit"

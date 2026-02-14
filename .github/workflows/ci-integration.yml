@@ -28,7 +28,7 @@ permissions:
 env:
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
   ACTIONS_STEP_DEBUG: false
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+  DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
 
 jobs:
   # ═══════════════════════════════════════════════════════════════
@@ -76,7 +76,7 @@ jobs:
           cd packages/db
           bun run db:migrate
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
           JWT_SECRET: "test_jwt_secret_for_ci_integ_32_chars_exact"
           ENCRYPTION_MASTER_KEY: "test_encryption_key_for_integ_32_chars_long"
           MINIO_ENDPOINT: localhost
@@ -98,7 +98,7 @@ jobs:
           cd apps/api
           bun run test
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
           MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
@@ -161,7 +161,7 @@ jobs:
           psql "$DATABASE_URL" -c "DROP SCHEMA IF EXISTS tenant_test_s2 CASCADE;" || true
           echo "✅ S2 test completed"
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
 
   # ═══════════════════════════════════════════════════════════════
   # Disaster Recovery Simulation

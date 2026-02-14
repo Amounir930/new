@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import type { JwtService } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 
 export interface JwtPayload {
   sub: string;
@@ -15,7 +15,7 @@ export interface AuthUser {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(private readonly jwtService: JwtService) { }
 
   async generateToken(user: AuthUser): Promise<string> {
     const payload: JwtPayload = {
