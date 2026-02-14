@@ -8,4 +8,4 @@ import { TenantRegistryService } from './tenant-registry.service.js';
   providers: [TenantRegistryService, CustomerService, EncryptionService],
   exports: [TenantRegistryService, CustomerService, EncryptionService],
 })
-export class DbModule { }
+export class DbModule {}

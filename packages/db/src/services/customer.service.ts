@@ -16,7 +16,7 @@ import {
  */
 @Injectable()
 export class CustomerService {
-  constructor(private readonly encryptionService: EncryptionService) { }
+  constructor(private readonly encryptionService: EncryptionService) {}
 
   /**
    * Create a new customer with encrypted PII.
