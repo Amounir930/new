@@ -10,6 +10,17 @@ on:
   pull_request:
     branches: [main, develop, New]
 
+env:
+  # 🛡️ S1 Complexity Compliant Env Vars
+  NODE_ENV: test
+  JWT_SECRET: Secure_Jwt_Secret_32_Chars_Long_!!123
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+  REDIS_URL: redis://localhost:6379
+  ENCRYPTION_MASTER_KEY: SuperSecureKey123!_Long_Enough_32
+  MINIO_ENDPOINT: localhost
+  MINIO_ACCESS_KEY: test_access_key
+  MINIO_SECRET_KEY: test_secret_key
+
 jobs:
   # 🧱 Job 1: Lint, Format, and Type-Check
   static-analysis:
@@ -26,28 +37,17 @@ jobs:
       - name: Type Check
         run: bun run typecheck
 
-  # 🧪 Job 2: Unit Tests (Fast)
-  unit-tests:
-    name: "Unit Tests"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-      - name: Install
-        run: bun install
-      - name: Run Tests
-        run: bun test --exclude packages/db/src/s2-isolation.behavioral.test.ts
-
-  # 🔗 Job 3: Integration Tests
-  integration-tests:
-    name: "Integration Tests"
+  # 🧪 Job 2: Combined Test Suite (Unit & Integration)
+  test-suite:
+    name: "Full Test Suite"
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16-alpine
         env:
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
         ports: ["5432:5432"]
       redis:
         image: redis:7-alpine
@@ -58,15 +58,18 @@ jobs:
         uses: oven-sh/setup-bun@v2
       - name: Install
         run: bun install
-      - name: Build DB
+      
+      - name: Build DB Core
         run: bun run build --filter=@apex/db
-      - name: Run Integration Suite
-        run: bun run test:integration
+      
+      - name: Run All Tests (Turbo)
+        # Using turbo to run all tests across the monorepo
+        run: bun run test
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
-          REDIS_URL: redis://localhost:6379
+          # Additional env needed for some tests
+          POSTGRES_PASSWORD: postgres
 
-  # 🏹 Job 4: Active Defense (S15)
+  # 🏹 Job 3: Active Defense (S15)
   active-defense:
     name: "S15 Active Defense"
     runs-on: ubuntu-latest
@@ -82,7 +85,7 @@ jobs:
           grep -r "HONEYPOT_HIT" packages/audit/src || exit 1
           echo "✅ S15: Active defense pattern verified"
 
-  # 🏗️ Job 5: Production Build Smoke Test
+  # 🏗️ Job 4: Production Build Smoke Test
   build-test:
     name: "Build Test"
     runs-on: ubuntu-latest

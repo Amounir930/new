@@ -21,6 +21,17 @@ on:
         required: false
         type: string
 
+env:
+  # 🛡️ S1 Complexity Compliant Env Vars (Needed if build triggers validation)
+  NODE_ENV: production
+  JWT_SECRET: Secure_Jwt_Secret_32_Chars_Long_!!123
+  DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy?sslmode=require
+  REDIS_URL: redis://localhost:6379
+  ENCRYPTION_MASTER_KEY: SuperSecureKey123!_Long_Enough_32
+  MINIO_ENDPOINT: localhost
+  MINIO_ACCESS_KEY: test_access_key
+  MINIO_SECRET_KEY: test_secret_key
+
 jobs:
   # 🔒 Job 1: Validation & Health Checks
   pre-deploy-validation:
