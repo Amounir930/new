@@ -24,15 +24,21 @@ if [ $AST_EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
-# 2. Run Gitleaks (via Docker)
-echo "🔑 [2/3] Running Gitleaks (Secret Detection)..."
+# 2. Run Gitleaks (via Docker or Local Pattern Scan)
+echo "🔑 [2/3] Running Secret Detection (S10)..."
+GITLEAKS_EXIT_CODE=0
 if command -v docker &> /dev/null; then
     docker run --rm -v "$(pwd):/code" zricethezav/gitleaks:latest protect --source="/code" --staged --verbose --redact
     GITLEAKS_EXIT_CODE=$?
 else
-    echo "⚠️  Docker not found. Skipping Gitleaks check."
-    echo "   Please install Docker or Gitleaks locally for secret protection."
-    GITLEAKS_EXIT_CODE=0
+    echo "⚠️  Docker not found. Falling back to Surgical Pattern Scan..."
+    # Pattern-based scan for secrets in staged files
+    SECRET_FOUND=$(git diff --cached | grep -E "(password|passwd|pwd|secret|token|api_key|apikey)\s*[=:]\s*['\"][^'\"]{8,}['\"]" || true)
+    if [ -n "$SECRET_FOUND" ]; then
+        echo "🚨 CRITICAL: Potential hardcoded secret found!"
+        echo "$SECRET_FOUND"
+        GITLEAKS_EXIT_CODE=1
+    fi
 fi
 
 if [ $GITLEAKS_EXIT_CODE -ne 0 ]; then
@@ -40,13 +46,12 @@ if [ $GITLEAKS_EXIT_CODE -ne 0 ]; then
     exit 1
 fi
 
-# 3. Security TODO warning
-echo "🔍 [3/3] Checking for unresolved security TODOs..."
-SEC_TODOS=$(git diff --cached -U0 | grep -E '^\+.*TODO.*(security|auth|encrypt|secret|vuln)' --ignore-case || true)
-if [ -n "$SEC_TODOS" ]; then
-    echo "⚠️  WARNING: Security-related TODOs in staged changes:"
-    echo "$SEC_TODOS"
-fi
+# 3. Supply Chain Audit (S9)
+echo "🛡️  [3/3] Running Supply Chain Audit (S9)..."
+bun audit || {
+    echo "❌ S9 FAILED: Known security vulnerabilities detected in dependencies!"
+    exit 1
+}
 
 echo "✅ Security Checks Passed."
 exit 0
