@@ -5,7 +5,7 @@
 
 import { getCurrentTenantId } from '@apex/middleware';
 import { EncryptionService } from '@apex/security';
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 // Define types missing in original file but required by index/tests
 export type AuditAction = string;
@@ -99,7 +99,6 @@ export class AuditService {
     // 2. Persistent Logging (S4 Protocol)
     // S4 FIX: Store encrypted PII for GDPR/S7 compliance
     try {
-
       const client = await this.pool.connect();
       try {
         await client.query('SET search_path TO public');
@@ -125,7 +124,7 @@ export class AuditService {
             encryptedEmail.encrypted,
             entry.action,
             entry.entityType, // Schema uses entity_type
-            entry.entityId,   // Schema uses entity_id
+            entry.entityId, // Schema uses entity_id
             encryptedMetadata, // Store the whole encrypted object { encrypted: ... } as JSONB
             entry.ipAddress || null,
             entry.userAgent || null,
@@ -135,10 +134,11 @@ export class AuditService {
           ]
         );
       } finally {
-        try { await client.query('SET search_path TO public'); } catch { }
+        try {
+          await client.query('SET search_path TO public');
+        } catch {}
         client.release();
       }
-
     } catch (error) {
       this.logger.error(
         'S4 CRITICAL: Audit Persistence Failure',

@@ -1,6 +1,6 @@
+import { publicPool } from '@apex/db';
 import { Global, Module } from '@nestjs/common';
 import { AuditService } from './audit.service.js';
-import { publicPool } from '@apex/db';
 
 /**
  * S4: Audit Module
@@ -17,4 +17,4 @@ import { publicPool } from '@apex/db';
   ],
   exports: [AuditService],
 })
-export class AuditModule { }
+export class AuditModule {}
