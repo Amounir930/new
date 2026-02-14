@@ -25,7 +25,7 @@ try {
   }
 }
 
-const poolConfig: any = {
+export const poolConfig: any = {
   connectionString: env.DATABASE_URL,
   ssl:
     env.NODE_ENV === 'production' && env.DB_SSL !== 'false'

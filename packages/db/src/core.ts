@@ -3,7 +3,11 @@
  */
 
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { publicDb, publicPool } from './connection.js';
+import pkg from 'pg';
+
+const { Client } = pkg;
+
+import { poolConfig, publicDb, publicPool } from './connection.js';
 
 /**
  * Verify tenant exists before allowing connection
@@ -51,16 +55,16 @@ export function sanitizeSchemaName(subdomain: string): string {
 }
 
 /**
- * Execute operation within tenant context using shared pool
- * S2: Verifies tenant validity before connection
+ * Execute operation within tenant context using isolated connection
+ * S2: Prevents context leakage by using fresh connections and explicit cleanup
  */
 export async function withTenantConnection<T>(
   tenantIdOrSubdomain: string,
   operation: (db: any) => Promise<T>
 ): Promise<T> {
-  // 🔒 S2 Enforcement: Resolve tenant and verify existence
+  // 1. Resolve tenant and verify status (via public pool)
   const result = await publicPool.query(
-    'SELECT id, subdomain FROM tenants WHERE id::text = $1 OR subdomain = $1 LIMIT 1',
+    'SELECT id, subdomain, status FROM tenants WHERE id::text = $1 OR subdomain = $1 LIMIT 1',
     [tenantIdOrSubdomain]
   );
 
@@ -71,48 +75,44 @@ export async function withTenantConnection<T>(
   }
 
   const tenant = result.rows[0];
-  const client = await publicPool.connect();
-  let cleanupSuccessful = false;
+
+  // S2: Hard Status Verification
+  if (tenant.status !== 'active') {
+    throw new Error(
+      `S2 Violation: Tenant '${tenantIdOrSubdomain}' is ${tenant.status}. Access denied.`
+    );
+  }
+  const schemaName = sanitizeSchemaName(tenant.subdomain);
+
+  // 2. Create isolated connection (NOT from pool)
+  const client = new Client(poolConfig);
+  await client.connect();
 
   try {
-    // 🔒 S2 Enforcement: Switch to tenant context
-    // Deep Security Fix: ALWAYS use subdomain for schema naming (S2 Consistency)
-    const schemaName = sanitizeSchemaName(tenant.subdomain);
-    await client.query(`SET search_path TO "${schemaName}", public`);
+    // 3. Set secure context with local search_path
+    await client.query(`SET LOCAL search_path TO "${schemaName}", public`);
+
+    // 4. Double-check verification: Verify we are in the correct schema
+    const checkResult = await client.query('SELECT current_schema()');
+    const actualSchema = checkResult.rows[0].current_schema;
+
+    if (actualSchema !== schemaName) {
+      throw new Error(
+        `S2 CRITICAL: Schema isolation failed. Expected '${schemaName}', got '${actualSchema}'`
+      );
+    }
 
     const db = drizzle(client);
-    const result = await operation(db);
-
-    // S2 FIX: Reset context BEFORE returning result
-    // Radical Fix: Use RESET search_path to clear all session-level path settings
-    await client.query('RESET search_path');
-    cleanupSuccessful = true;
-
-    return result;
-  } catch (error) {
-    // S2 FIX: Attempt cleanup even on error
+    return await operation(db);
+  } finally {
+    // 5. Hard Closure: Always destroy connection to purge state
     try {
-      await client.query('RESET search_path');
-      cleanupSuccessful = true;
+      await client.end();
     } catch (cleanupError) {
       console.error(
-        'S2 CRITICAL: Failed to reset search_path after error. Connection will be destroyed to prevent leak.',
+        'S2 WARNING: Failed to close isolated connection',
         cleanupError
       );
-      // cleanupSuccessful remains false, triggering connection destruction in finally
-    }
-    throw error;
-  } finally {
-    // 🔒 S2 Protocol: Destroy connection if cleanup failed to prevent context leakage
-    // Radical Fix: client.release(true) physically closes the connection to purge logic state
-    if (!cleanupSuccessful) {
-      // Verify we are destroying the connection
-      console.warn(
-        'S2 WARNING: Destroying connection due to potential context leak'
-      );
-      client.release(true);
-    } else {
-      client.release();
     }
   }
 }

@@ -11,12 +11,24 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 export type AuditAction = string;
 export type AuditSeverity = 'INFO' | 'HIGH' | 'CRITICAL';
 
+import { z } from 'zod';
+
 export const SecurityEvents = {
   TENANT_PROVISIONED: 'TENANT_PROVISIONED',
   HONEYPOT_HIT: 'HONEYPOT_HIT',
   SQL_INJECTION_ATTEMPT: 'SQL_INJECTION_ATTEMPT',
   KEY_ROTATION: 'KEY_ROTATION',
 } as const;
+
+/**
+ * S11: Metadata Schema Validation
+ * Prevents Prototype Pollution and malformed data in JSONB columns
+ */
+const AuditMetadataSchema = z.record(z.any()).refine((data) => {
+  // Anti-Prototype Pollution: Prevent __proto__, constructor, prototype
+  const forbidden = ['__proto__', 'constructor', 'prototype'];
+  return !Object.keys(data).some((key) => forbidden.includes(key));
+}, 'S11 Violation: Potential Prototype Pollution detected in metadata');
 
 export interface AuditQueryOptions {
   tenantId?: string;
@@ -66,12 +78,16 @@ export class AuditService {
     const tenantId = entry.tenantId || getCurrentTenantId() || 'system';
     const timestamp = new Date();
 
+    // 🔒 S11 Protection: Validate metadata structure
+    const validatedMetadata = AuditMetadataSchema.parse(entry.metadata || {});
+
     // 🔒 S7 Protection: Encrypt PII before logging
     const encryptedEmail = entry.userEmail
       ? this.encryption.encrypt(entry.userEmail)
       : { encrypted: null };
+
     const rawMetadata = {
-      ...(entry.metadata || {}),
+      ...validatedMetadata,
       ...(entry.errorMessage ? { error: entry.errorMessage } : {}),
     };
     const encryptedMetadata = this.encryption.encrypt(
@@ -87,6 +103,8 @@ export class AuditService {
       entityType: entry.entityType,
       entityId: entry.entityId,
       userId: entry.userId,
+      userEmail: '[REDACTED]', // S7: Redact PII in console
+      metadata: '[ENCRYPTED]', // S7: Redact PII in console
       severity: entry.severity,
     });
     // eslint-disable-next-line no-console

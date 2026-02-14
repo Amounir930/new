@@ -65,28 +65,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       requestId,
     };
 
-    // S5 FIX: Stack trace only in development, never in production
-    if (process.env.NODE_ENV === 'development') {
-      // Limit stack trace depth and sanitize internal paths
-      const stack = exception instanceof Error ? exception.stack : undefined;
-      if (stack) {
-        const sanitizedStack = stack
-          .split('\n')
-          .slice(0, 5)
-          .map(
-            (line) =>
-              line
-                .replace(
-                  /[a-zA-Z]:\\(?:[^\\/:*?"<>|]+\\)*[^\\/:*?"<>|]*/g,
-                  '[REDACTED]'
-                ) // Windows paths
-                .replace(/\/home\/[^/]+\//g, '[REDACTED]/') // Linux paths
-                .replace(/\/Users\/[^/]+\//g, '[REDACTED]/') // macOS paths
-          )
-          .join('\n');
-        errorResponse.stack = sanitizedStack;
-      }
-    }
+    // S5 FIX: Never send stack traces to the client in any environment.
+    // Internal debugging should rely on server logs/monitoring.
+    errorResponse.stack = undefined;
 
     // S5 FIX: In production, ensure no internal details leak
     if (process.env.NODE_ENV === 'production') {

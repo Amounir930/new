@@ -4,8 +4,11 @@
  * Best for: Migration to other platforms, backups
  */
 
+import { rm } from 'node:fs/promises';
+import path from 'node:path';
+import type { AuditService } from '@apex/audit';
 import { publicPool, type TenantRegistryService } from '@apex/db';
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,
   ExportOptions,
@@ -21,7 +24,8 @@ export class LiteExportStrategy implements ExportStrategy {
 
   constructor(
     private readonly tenantRegistry: TenantRegistryService,
-    private readonly shell: BunShell
+    private readonly shell: BunShell,
+    @Inject('AUDIT_SERVICE') private readonly audit: AuditService
   ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
@@ -145,13 +149,54 @@ export class LiteExportStrategy implements ExportStrategy {
       };
     } catch (error) {
       // Cleanup even on error
-      await this.shell.spawn(['rm', '-rf', workDir]).exited;
-      await this.shell.spawn(['rm', '-f', tarPath]).exited.catch(() => {});
+      await this.secureCleanup(workDir);
+      await this.secureCleanup(tarPath);
       throw error;
     } finally {
       client.release();
       // 🧹 Cleanup: Remove work directory after tarball is created
-      await this.shell.spawn(['rm', '-rf', workDir]).exited.catch(() => {});
+      await this.secureCleanup(workDir);
+    }
+  }
+
+  /**
+   * S14: Secure Cleanup with Path Validation
+   * Prevents Command Injection and Traversal
+   */
+  private async secureCleanup(targetPath: string): Promise<void> {
+    try {
+      // 1. Path Normalization and Validation
+      const resolvedPath = path.resolve(targetPath);
+      const tempRoot = path.resolve('/tmp');
+
+      if (!resolvedPath.startsWith(tempRoot) || resolvedPath === tempRoot) {
+        this.logger.error(
+          `S14 Security Violation: Blocked attempt to delete outside /tmp: ${targetPath}`
+        );
+        return;
+      }
+
+      // 2. Strict Pattern Verification
+      if (!path.basename(resolvedPath).startsWith('export-')) {
+        this.logger.error(
+          `S14 Security Violation: Blocked attempt to delete non-export file: ${targetPath}`
+        );
+        return;
+      }
+
+      // 3. Native FS Cleanup (No Shell Spawn)
+      await rm(resolvedPath, { recursive: true, force: true });
+
+      // 4. Audit Log
+      await this.audit.log({
+        action: 'EXPORT_CLEANUP',
+        entityType: 'FILE_SYSTEM',
+        entityId: targetPath,
+        metadata: { success: true },
+        severity: 'INFO',
+      });
+    } catch (err) {
+      this.logger.error(`Audit/Cleanup Failure: ${targetPath}`, err);
     }
   }
 

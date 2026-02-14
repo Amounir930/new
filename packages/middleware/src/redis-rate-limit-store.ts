@@ -60,9 +60,20 @@ export class RedisRateLimitStore implements OnModuleInit {
       this.connecting = true;
       this.client = createClient({ url: redisUrl });
 
-      this.client.on('error', () => {
-        // Silent error - will fallback to memory
-        this.fallbackToMemory = true;
+      this.client.on('error', (err) => {
+        const isProduction = process.env.NODE_ENV === 'production';
+        if (isProduction) {
+          console.error(
+            '❌ S6 CRITICAL: Redis runtime error in production. Disabling memory fallback to ensure Fail-Closed security.',
+            err
+          );
+          this.fallbackToMemory = false;
+        } else {
+          console.warn(
+            '⚠️ S6: Redis runtime error, falling back to memory (development mode only).'
+          );
+          this.fallbackToMemory = true;
+        }
       });
 
       await this.client.connect();
@@ -153,6 +164,11 @@ export class RedisRateLimitStore implements OnModuleInit {
       const violations = await client.get(violationKey);
       return violations ? parseInt(violations, 10) : 0;
     }
+
+    if (process.env.NODE_ENV === 'production') {
+      return 999; // Conservatively assume high violations if Redis is down
+    }
+
     const record = this.memoryStore.get(key);
     return record?.violations || 0;
   }
@@ -191,6 +207,11 @@ export class RedisRateLimitStore implements OnModuleInit {
       }
       return { blocked: false, retryAfter: 0 };
     }
+
+    if (process.env.NODE_ENV === 'production') {
+      return { blocked: true, retryAfter: 60 }; // Fail closed in prod
+    }
+
     const record = this.memoryStore.get(key);
     if (record && record.violations >= 5) {
       const now = Date.now();
