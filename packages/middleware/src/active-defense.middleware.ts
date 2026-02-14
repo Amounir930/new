@@ -10,7 +10,7 @@ import {
   type NestMiddleware,
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import type { RedisRateLimitStore } from './rate-limit.js';
+import type { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 @Injectable()
 export class ActiveDefenseMiddleware implements NestMiddleware {

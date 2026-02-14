@@ -5,8 +5,7 @@
  * CRITICAL FIX: Using Redis for distributed rate limiting (multi-instance support)
  */
 
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { ConfigModule, ConfigService } from '@apex/config';
+import { ConfigModule } from '@apex/config';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -51,7 +50,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -248,4 +247,4 @@ import { GeoIpService } from './geo-ip.service.js';
     FraudScoringService,
   ],
 })
-export class RateLimitModule { }
+export class RateLimitModule {}
