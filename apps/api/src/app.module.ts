@@ -5,7 +5,11 @@
 
 import { AuditInterceptor, AuditModule, AuditService } from '@apex/audit';
 import { DbModule } from '@apex/db';
-import { RateLimitModule, TenantIsolationMiddleware } from '@apex/middleware';
+import {
+  BotProtectionMiddleware,
+  RateLimitModule,
+  TenantIsolationMiddleware,
+} from '@apex/middleware';
 import {
   type MiddlewareConsumer,
   Module,
@@ -47,8 +51,10 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
   ],
 })
 export class AppModule implements NestModule {
-  // S2: Apply Tenant Isolation Middleware
+  // S2: Apply Tenant Isolation Middleware & S11: Bot Protection
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantIsolationMiddleware).forRoutes('*'); // Apply to all routes
+    consumer
+      .apply(BotProtectionMiddleware, TenantIsolationMiddleware)
+      .forRoutes('*'); // Apply to all routes
   }
 }
