@@ -149,8 +149,8 @@ jobs:
       - name: "S6.4 - Behavioral Fail-Closed Test"
         run: |
           echo "🧪 Running fail-closed rate limit tests..."
-          # Mock production environment to force fail-closed logic
-          NODE_ENV=production bun test packages/middleware/src/redis-rate-limit-store.fail-closed.test.ts
+          # Allow test to handle NODE_ENV mocking without S1 global panic
+          ENABLE_S1_ENFORCEMENT=false bun test packages/middleware/src/redis-rate-limit-store.fail-closed.test.ts
 
       - name: Merged Final Report
         if: always()
