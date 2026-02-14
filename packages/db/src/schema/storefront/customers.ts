@@ -27,12 +27,14 @@ export const customers = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
 
-    email: varchar('email', { length: 255 }).notNull().unique(), // S7: Encrypted in search index
+    email: text('email').notNull(), // S7: Encrypted JSON { iv, content, tag }
+    emailHash: char('email_hash', { length: 64 }).notNull().unique(), // S7: Blind Index (SHA-256)
     passwordHash: text('password_hash'), // Argon2id
 
-    firstName: varchar('first_name', { length: 100 }),
-    lastName: varchar('last_name', { length: 100 }),
-    phone: varchar('phone', { length: 20 }), // S7: Encrypted
+    firstName: text('first_name'), // S7: Encrypted JSON
+    lastName: text('last_name'), // S7: Encrypted JSON
+    phone: text('phone'), // S7: Encrypted JSON
+    phoneHash: char('phone_hash', { length: 64 }), // S7: Blind Index (SHA-256)
     avatarUrl: text('avatar_url'),
 
     isVerified: boolean('is_verified').default(false),
@@ -48,7 +50,9 @@ export const customers = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    idxCustomersEmail: index('idx_customers_email').on(table.email),
+    idxCustomersEmailHash: index('idx_customers_email_hash').on(
+      table.emailHash
+    ),
   })
 );
 

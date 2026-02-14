@@ -108,6 +108,18 @@ export function hashApiKey(apiKey: string): string {
 }
 
 /**
+ * S7: Blind Index Hash (SHA-256)
+ * Generates deterministic hash for searching encrypted fields (email, phone).
+ * Uses a separate secret (BLIND_INDEX_PEPPER) to prevent rainbow table attacks.
+ */
+export function hashSensitiveData(value: string): string {
+  const { createHmac } = require('node:crypto');
+  const pepper =
+    process.env.BLIND_INDEX_PEPPER || 'default-pepper-change-in-production';
+  return createHmac('sha256', pepper).update(value).digest('hex');
+}
+
+/**
  * Generates secure random API key
  */
 export function generateApiKey(): string {
@@ -225,6 +237,10 @@ export class EncryptionService {
 
   hashApiKey(apiKey: string): string {
     return hashApiKey(apiKey);
+  }
+
+  hashSensitiveData(value: string): string {
+    return hashSensitiveData(value);
   }
 
   generateApiKey(): string {
