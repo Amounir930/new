@@ -12,9 +12,7 @@ export class GeoIpService {
    * Mock implementation for Geo-IP lookup.
    * In production, this would use a MaxMind database or cloud service.
    */
-  async getGeoData(
-    ip: string
-  ): Promise<{
+  async getGeoData(ip: string): Promise<{
     country: string;
     city: string;
     lat: number;

@@ -4,7 +4,7 @@
  * Purpose: Calculate a risk score for each request
  */
 
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { GeoIpService } from './geo-ip.service.js';
 import type { RedisRateLimitStore } from './rate-limit.js';
 
@@ -42,7 +42,6 @@ export class FraudScoringService {
     const currentGeo = await this.geoIp.getGeoData(ip);
     if (currentGeo) {
       // Check last known Geo in Redis
-      const geoKey = `fraud:geo:${fingerprint || ip}`;
       // In a real impl, we'd fetch this from Redis
       // For now, we skip the persistent check as it requires more Redis logic
     }
