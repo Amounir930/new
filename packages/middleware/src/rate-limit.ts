@@ -5,7 +5,8 @@
  * CRITICAL FIX: Using Redis for distributed rate limiting (multi-instance support)
  */
 
-import { ConfigModule, type ConfigService } from '@apex/config';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { ConfigModule, ConfigService } from '@apex/config';
 import {
   type CanActivate,
   type ExecutionContext,
