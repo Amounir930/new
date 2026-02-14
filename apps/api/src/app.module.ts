@@ -35,12 +35,12 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     DbModule,
   ],
   providers: [
-    // S6: Apply Rate Limiting Globally (Dynamic Tier-Based)
-    {
-      provide: APP_GUARD,
-      useClass: RateLimitGuard,
-    },
-    Reflector, // Required for RateLimitGuard dependency resolution (S6 Fix)
+    // S6: TEMPORARILY DISABLED due to Reflector dependency crash
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: RateLimitGuard,
+    // },
+    // Reflector, // Required for RateLimitGuard dependency resolution (S6 Fix)
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
