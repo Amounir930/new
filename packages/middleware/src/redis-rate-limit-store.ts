@@ -1,4 +1,5 @@
-import type { ConfigService } from '@apex/config';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { ConfigService } from '@apex/config';
 import {
   HttpException,
   HttpStatus,
@@ -23,7 +24,7 @@ export class RedisRateLimitStore implements OnModuleInit {
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async onModuleInit() {
     await this.connect();

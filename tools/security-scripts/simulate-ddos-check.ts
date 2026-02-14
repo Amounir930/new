@@ -10,7 +10,7 @@ async function runTest() {
   // Dynamic imports ensure env vars are processed FIRST (before auto-enforcing S1)
   const { ConfigService } = await import('../../packages/config/src');
   const { RedisRateLimitStore } = await import(
-    '../../packages/middleware/src/rate-limit'
+    '../../packages/middleware/src/redis-rate-limit-store'
   );
 
   const maxRequests = parseInt(process.env.MAX_REQUESTS || '10', 10);

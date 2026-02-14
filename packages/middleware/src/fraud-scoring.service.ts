@@ -5,8 +5,10 @@
  */
 
 import { Injectable } from '@nestjs/common';
-import type { GeoIpService } from './geo-ip.service.js';
-import type { RedisRateLimitStore } from './redis-rate-limit-store.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { GeoIpService } from './geo-ip.service.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 export interface FraudScore {
   score: number; // 0-100 (100 is high risk)
@@ -18,7 +20,7 @@ export class FraudScoringService {
   constructor(
     private readonly store: RedisRateLimitStore,
     private readonly geoIp: GeoIpService
-  ) {}
+  ) { }
 
   async calculateScore(req: any): Promise<FraudScore> {
     let score = 0;

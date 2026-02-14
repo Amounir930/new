@@ -52,6 +52,7 @@ export {
   type RateLimitConfig,
   RateLimitGuard,
   RateLimitModule,
+  RedisRateLimitStore,
   ThrottleConfig,
 } from './rate-limit.js';
 // S8: Security Headers & CORS
