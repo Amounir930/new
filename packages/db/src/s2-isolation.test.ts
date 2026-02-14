@@ -16,6 +16,53 @@ mock.module('./connection.js', () => ({
   publicPool: mockPool,
   publicDb: mockDb,
   db: mockDb,
+  poolConfig: { connectionString: 'postgres://localhost:5432' },
+}));
+
+let lastAssignedSchema = 'public';
+
+const mockClientInstance = {
+  connect: mock().mockResolvedValue(undefined),
+  query: mock().mockImplementation(async (q) => {
+    const text = typeof q === 'string' ? q : q.text;
+
+    // Track search_path changes
+    if (text.includes('SET LOCAL search_path')) {
+      const match = text.match(/SET LOCAL search_path TO "([^"]+)"/i);
+      if (match) lastAssignedSchema = match[1];
+      return { rows: [], rowCount: 0 };
+    }
+
+    if (text.includes('current_schema()')) {
+      return { rows: [{ current_schema: lastAssignedSchema }] };
+    }
+
+    if (text.includes('SHOW search_path')) {
+      return { rows: [{ search_path: lastAssignedSchema }] };
+    }
+
+    if (text.includes('SELECT name FROM products')) {
+      const rows = lastAssignedSchema === 'tenant_alpha_test'
+        ? [{ name: 'Alpha Secret' }]
+        : lastAssignedSchema === 'tenant_beta_test'
+          ? [{ name: 'Beta Secret' }]
+          : [];
+      return { rows, rowCount: rows.length };
+    }
+
+    return { rows: [], rowCount: 0 };
+  }),
+  end: mock().mockResolvedValue(undefined),
+};
+
+const pgMock = {
+  Client: mock().mockImplementation(() => mockClientInstance),
+  Pool: mock().mockImplementation(() => mockPool),
+};
+
+mock.module('pg', () => ({
+  ...pgMock,
+  default: pgMock,
 }));
 
 // Import module AFTER mocking
@@ -77,7 +124,8 @@ describe.skipIf(!hasDb)(
 
       mockPool.query.mockImplementation(async (query: any, results?: any[]) => {
         const q = typeof query === 'string' ? query : query.text;
-        if (q.includes('SELECT id, subdomain FROM tenants')) {
+        // Updated S2: Verify status check is performed
+        if (q.includes('SELECT id, subdomain, status FROM tenants')) {
           const identifier = results?.[0];
           if (identifier === 'fake_tenant') {
             return { rows: [], rowCount: 0 };
@@ -87,6 +135,7 @@ describe.skipIf(!hasDb)(
               {
                 id: identifier || 'tenant-id',
                 subdomain: identifier || 'tenant-sub',
+                status: 'active',
               },
             ],
             rowCount: 1,
@@ -179,7 +228,7 @@ describe.skipIf(!hasDb)(
 
     it('should throw S2 Violation error for non-existent tenant', async () => {
       try {
-        await withTenantConnection('fake_tenant', async () => {});
+        await withTenantConnection('fake_tenant', async () => { });
         expect(true).toBe(false);
       } catch (e: any) {
         expect(e.message).toContain(
@@ -190,7 +239,7 @@ describe.skipIf(!hasDb)(
 
     it('should NOT have cross-tenant schemas in search_path (Leak Prevention)', async () => {
       // Run a tenant operation
-      await withTenantConnection(tenantAlpha, async () => {});
+      await withTenantConnection(tenantAlpha, async () => { });
 
       // Immediately check a fresh connection from the pool
       const client = await mockPool.connect();

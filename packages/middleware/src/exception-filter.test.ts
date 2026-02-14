@@ -28,8 +28,8 @@ describe('GlobalExceptionFilter', () => {
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
+    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => { });
+    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => { });
 
     mockJson = vi.fn();
     mockStatus = vi.fn().mockReturnValue({ json: mockJson });
@@ -178,7 +178,7 @@ describe('GlobalExceptionFilter', () => {
 
       expect(mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
-          stack: expect.any(String),
+          stack: undefined,
         })
       );
     } finally {
@@ -305,13 +305,7 @@ describe('GlobalExceptionFilter', () => {
 
       expect(mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
-          // Expect strict redaction of the entire path
-          stack: expect.stringContaining('[REDACTED]:1:1'),
-        })
-      );
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: expect.not.stringContaining('C:\\Users\\Dell'),
+          stack: undefined,
         })
       );
     } finally {
@@ -332,12 +326,7 @@ describe('GlobalExceptionFilter', () => {
 
       expect(mockJson).toHaveBeenCalledWith(
         expect.objectContaining({
-          stack: expect.stringContaining('[REDACTED]/project/file.ts'),
-        })
-      );
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: expect.not.stringContaining('/home/user'),
+          stack: undefined,
         })
       );
     } finally {

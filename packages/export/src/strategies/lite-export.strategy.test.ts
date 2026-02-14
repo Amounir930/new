@@ -6,8 +6,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportOptions } from '../types.js';
 import { LiteExportStrategy } from './lite-export.strategy.js';
+import { rm } from 'node:fs/promises';
 
 // 🛡️ Stabilization: Standard mock definitions for compatibility
+vi.mock('node:fs/promises', () => ({
+  rm: vi.fn().mockResolvedValue(undefined),
+}));
 const mockClient = {
   query: vi.fn(),
   release: vi.fn(),
@@ -40,6 +44,10 @@ const mockTenantRegistry = {
   getByIdentifier: vi.fn(),
 };
 
+const mockAuditService = {
+  log: vi.fn().mockResolvedValue(true),
+};
+
 describe('LiteExportStrategy', () => {
   let strategy: LiteExportStrategy;
 
@@ -59,7 +67,8 @@ describe('LiteExportStrategy', () => {
 
     strategy = new LiteExportStrategy(
       mockTenantRegistry as any,
-      mockShell as any
+      mockShell as any,
+      mockAuditService as any
     );
   });
 
@@ -230,9 +239,10 @@ describe('LiteExportStrategy', () => {
 
       await expect(strategy.export(options)).rejects.toThrow('Export failed');
 
-      // Verify cleanup was called
-      expect(mockShell.spawn).toHaveBeenCalledWith(
-        expect.arrayContaining(['rm', '-rf'])
+      // Verify cleanup was called via native fs.rm
+      expect(rm).toHaveBeenCalledWith(
+        expect.stringMatching(/export-tenant-123/), // Agnostic to drive letter and slashes
+        expect.objectContaining({ recursive: true })
       );
       expect(mockClient.release).toHaveBeenCalled();
     });
@@ -359,16 +369,13 @@ describe('LiteExportStrategy', () => {
 
       await strategy.export(options);
 
-      // Verify work directory cleanup (but not tar.gz)
-      const spawnCalls = mockShell.spawn.mock.calls;
-      const cleanupCall = spawnCalls.find(
-        (call) =>
-          Array.isArray(call[0]) &&
-          call[0].includes('rm') &&
-          call[0].includes('-rf') &&
-          !call[0].some((arg: any) => arg.includes('.tar.gz'))
+      // Verify work directory cleanup via native fs.rm
+      expect(rm).toHaveBeenCalled();
+      const rmCalls = (rm as any).mock.calls;
+      const workDirCleanup = rmCalls.find((call: any) =>
+        call[0].match(/export-tenant-123/) && !call[0].match(/\.tar\.gz$/)
       );
-      expect(cleanupCall).toBeDefined();
+      expect(workDirCleanup).toBeDefined();
     });
   });
 });

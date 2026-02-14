@@ -1,6 +1,6 @@
 import { createClient } from 'redis';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { RedisRateLimitStore } from './rate-limit.js';
+import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 // Mock redis
 vi.mock('redis', () => ({
@@ -17,9 +17,13 @@ describe('RedisRateLimitStore', () => {
 
     // Setup redis mock
     mockMulti = {
-      incr: vi.fn(),
-      ttl: vi.fn(),
-      exec: vi.fn().mockResolvedValue([1, 60]),
+      incr: vi.fn().mockReturnThis(),
+      ttl: vi.fn().mockReturnThis(),
+      zRemRangeByScore: vi.fn().mockReturnThis(),
+      zAdd: vi.fn().mockReturnThis(),
+      zCard: vi.fn().mockReturnThis(),
+      pExpire: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue([0, 0, 1, true]), // results[2] is zCard count
     };
 
     mockRedisClient = {
@@ -36,7 +40,12 @@ describe('RedisRateLimitStore', () => {
 
     (createClient as any).mockReturnValue(mockRedisClient);
 
-    store = new RedisRateLimitStore();
+    const mockConfigService = {
+      get: vi.fn(),
+    };
+    mockConfigService.get.mockReturnValue('redis://localhost:6379');
+
+    store = new RedisRateLimitStore(mockConfigService as any);
   });
 
   afterEach(() => {
@@ -89,8 +98,8 @@ describe('RedisRateLimitStore', () => {
 
       const res = await store.increment('key', 60000);
 
-      expect(mockMulti.incr).toHaveBeenCalledWith('key');
-      expect(mockMulti.ttl).toHaveBeenCalledWith('key');
+      expect(mockMulti.zAdd).toHaveBeenCalled();
+      expect(mockMulti.zCard).toHaveBeenCalled();
       expect(mockMulti.exec).toHaveBeenCalled();
       expect(res).toEqual({ count: 1, ttl: 60 });
     });
@@ -219,8 +228,8 @@ describe('RedisRateLimitStore', () => {
     it('should calculate remaining', async () => {
       mockRedisClient.isOpen = true;
       (store as any).client = mockRedisClient;
-      // increment(key, 0)
-      mockMulti.exec.mockResolvedValue([5, 60]);
+      // increment(key, 0) -> results[2] is count
+      mockMulti.exec.mockResolvedValue([0, 0, 5, true]);
 
       const remaining = await store.getRemaining('key', 100);
       expect(remaining).toBe(100 - 5 + 1); // 96
