@@ -40,7 +40,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
       provide: APP_GUARD,
       useClass: RateLimitGuard,
     },
-    Reflector, // Required for RateLimitGuard dependency resolution
+    Reflector, // Required for RateLimitGuard dependency resolution (S6 Fix)
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
