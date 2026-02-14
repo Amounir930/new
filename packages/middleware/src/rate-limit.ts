@@ -19,8 +19,9 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { APP_GUARD, Reflector } from '@nestjs/core';
-import type { Request } from 'express';
 import { createClient, type RedisClientType } from 'redis';
+
+export const REFLECTOR_TOKEN = 'REFLECTOR';
 
 // Rate limit tiers per plan
 const RATE_LIMIT_TIERS = {
@@ -52,7 +53,7 @@ export class RedisRateLimitStore {
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async onModuleInit() {
     await this.connect();
@@ -264,9 +265,9 @@ export class RateLimitGuard implements CanActivate {
   };
 
   constructor(
-    @Inject(Reflector) private readonly reflector: Reflector,
+    @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -425,10 +426,14 @@ export const ThrottleConfig = {
     RedisRateLimitStore,
     RateLimitGuard,
     {
+      provide: REFLECTOR_TOKEN,
+      useExisting: Reflector,
+    },
+    {
       provide: APP_GUARD,
       useClass: RateLimitGuard,
     },
   ],
   exports: [RedisRateLimitStore, RateLimitGuard],
 })
-export class RateLimitModule {}
+export class RateLimitModule { }
