@@ -4,7 +4,7 @@
  */
 
 import 'reflect-metadata';
-import { initializeAuditTable } from '@apex/audit';
+import { AuditService } from '@apex/audit';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -17,11 +17,17 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // S1: Environment Verification happens automatically via @apex/config
-
-  // S4: Initialize Audit System (Infrastructure as Code)
-  await initializeAuditTable();
+  // S4: Audit Initialization moved after app creation for DI
 
   const app = await NestFactory.create(AppModule);
+
+  // S4: Initialize Audit System (Infrastructure as Code)
+  try {
+    const auditService = app.get(AuditService);
+    await auditService.initializeS4();
+  } catch (error) {
+    logger.error('Failed to initialize Audit System', error);
+  }
 
   // S3.3: Payload Size Limit (Prevent DoS/ReDoS)
   const bodyParser = await import('body-parser');

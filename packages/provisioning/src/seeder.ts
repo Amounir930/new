@@ -44,12 +44,30 @@ export async function seedTenantData(
     const storeId = storeResult[0].id;
 
     // 2. Create Initial Admin User
-    // Note: Password hash should be handled by auth service, using a
-    // placeholder/temp for now
+    // S7: Encrypting PII (Email)
+    const { encrypt, hashSensitiveData } = await import('@apex/security');
+    // Note: In production, secrets are injected via env. In local seeding, we might need a fallback.
+    // However, EncryptionService throws if keys are missing.
+    // For seeder, we'll instantiate EncryptionService or usage helper if possible.
+    // Better: use the static helpers I exported from encryption.ts?
+    // encryption.ts exports 'encrypt' and 'hashSensitiveData' functions but they require keys/secrets.
+    // Let's assume env vars are set or use a new EncryptionService instance.
+
+    // We need to fetch the master key from env
+    const masterKey = process.env.ENCRYPTION_MASTER_KEY;
+    if (!masterKey && process.env.NODE_ENV === 'production') {
+      throw new Error('S7 Seeding Error: ENCRYPTION_MASTER_KEY missing in production');
+    }
+    const safeKey = masterKey || 'test-master-key-must-be-32-bytes-length!!';
+
+    const encryptedEmail = JSON.stringify(encrypt(options.adminEmail, safeKey));
+    const emailHash = hashSensitiveData(options.adminEmail);
+
     const userResult = await db
       .insert(users)
       .values({
-        email: options.adminEmail,
+        email: encryptedEmail,
+        emailHash: emailHash,
         role: 'admin',
         status: 'active',
       })
@@ -104,8 +122,7 @@ export async function seedTenantData(
   } catch (error) {
     console.error(`Seeding failed for ${options.subdomain}:`, error);
     throw new Error(
-      `Seeding Failure: ${
-        error instanceof Error ? error.message : String(error)
+      `Seeding Failure: ${error instanceof Error ? error.message : String(error)
       }`
     );
   }

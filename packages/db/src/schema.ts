@@ -51,21 +51,7 @@ export const onboardingBlueprints = pgTable('onboarding_blueprints', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const auditLogs = pgTable('audit_logs', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  tenantId: text('tenant_id').notNull(),
-  userId: text('user_id'),
-  userEmail: text('user_email'), // S4: User email for audit trail
-  action: text('action').notNull(),
-  entityType: text('entity_type').notNull(),
-  entityId: text('entity_id').notNull(),
-  metadata: text('metadata'),
-  ipAddress: text('ip_address'),
-  userAgent: text('user_agent'),
-  severity: text('severity').default('INFO'), // S4: Audit severity level
-  result: text('result').default('SUCCESS'), // S4: Operation result
-  createdAt: timestamp('created_at').defaultNow(),
-});
+export * from './schema/audit';
 
 /**
  * S2 Compliance: Tenant-Specific Schema Tables
@@ -74,7 +60,8 @@ export const auditLogs = pgTable('audit_logs', {
  */
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
-  email: text('email').notNull().unique(),
+  email: text('email').notNull(), // S7: Encrypted JSON { iv, content, tag }
+  emailHash: text('email_hash').notNull().unique(), // S7: Blind Index (SHA-256)
   role: text('role').notNull().default('user'),
   status: text('status').notNull().default('active'),
   createdAt: timestamp('created_at').defaultNow(),

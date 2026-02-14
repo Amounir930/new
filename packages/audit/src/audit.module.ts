@@ -1,5 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { AuditService } from './audit.service.js';
+import { publicPool } from '@apex/db';
 
 /**
  * S4: Audit Module
@@ -7,7 +8,13 @@ import { AuditService } from './audit.service.js';
  */
 @Global()
 @Module({
-  providers: [AuditService],
+  providers: [
+    AuditService,
+    {
+      provide: 'DATABASE_POOL',
+      useValue: publicPool,
+    },
+  ],
   exports: [AuditService],
 })
-export class AuditModule {}
+export class AuditModule { }

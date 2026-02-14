@@ -9,11 +9,6 @@ export {
   type AuditAction,
   type AuditLogEntry,
   type AuditQueryOptions,
-  AuditService, // Added missing export
+  AuditService,
   type AuditSeverity,
-  initializeAuditTable,
-  log,
-  logProvisioning,
-  logSecurityEvent,
-  query,
 } from './audit.service.js';

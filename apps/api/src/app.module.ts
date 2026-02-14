@@ -3,7 +3,7 @@
  * Configures S1-S8 Security Protocols
  */
 
-import { AuditModule, AuditService } from '@apex/audit';
+import { AuditModule, AuditService, AuditInterceptor } from '@apex/audit';
 import { DbModule } from '@apex/db';
 import { TenantIsolationMiddleware } from '@apex/middleware';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR, Reflector } from '@nestjs/core';
-import { AuditInterceptor } from './audit-interceptor.local.js';
+// import { AuditInterceptor } from './audit-interceptor.local.js'; // REMOVED
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 
@@ -39,7 +39,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
     },
-    AuditInterceptor,
+    // AuditInterceptor is used via APP_INTERCEPTOR
     {
       provide: 'AUDIT_SERVICE',
       useExisting: AuditService,

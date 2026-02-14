@@ -3,10 +3,9 @@
  * S4 Protocol: Immutable Audit Logs
  */
 
-import { publicPool } from '@apex/db';
 import { getCurrentTenantId } from '@apex/middleware';
 import { EncryptionService } from '@apex/security';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 
 // Define types missing in original file but required by index/tests
 export type AuditAction = string;
@@ -43,10 +42,20 @@ export interface AuditLogEntry {
   status?: string; // Standardize to status to match implementation logic if needed, but keeping result for now
   errorMessage?: string;
 }
+
 @Injectable()
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
-  private readonly encryption = new EncryptionService();
+  private encryption: EncryptionService;
+  private pool: any;
+
+  constructor(
+    @Inject('DATABASE_POOL') pool: any,
+    @Inject(EncryptionService) encryption?: EncryptionService
+  ) {
+    this.pool = pool;
+    this.encryption = encryption || new EncryptionService();
+  }
 
   /**
    * Log a security or system event
@@ -88,72 +97,53 @@ export class AuditService {
     );
 
     // 2. Persistent Logging (S4 Protocol)
-    const client = await publicPool.connect();
-
+    // S4 FIX: Store encrypted PII for GDPR/S7 compliance
     try {
-      // 🔒 S2 Enforcement: Reset search_path to public before audit query
-      await client.query('SET search_path TO public');
 
-      // S4 FIX: Store encrypted PII for GDPR/S7 compliance
-      await client.query(
-        `
-        INSERT INTO public.audit_logs (
-          tenant_id, 
-          user_id, 
-          user_email,
-          action, 
-          entity_type, 
-          entity_id, 
-          metadata, 
-          ip_address, 
-          user_agent,
-          severity,
-          result,
-          created_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      `,
-        [
-          tenantId,
-          entry.userId || null,
-          encryptedEmail.encrypted, // S7: Encrypted PII
-          entry.action,
-          entry.entityType,
-          entry.entityId,
-          encryptedMetadata.encrypted, // S7: Encrypted Metadata
-          entry.ipAddress || null,
-          entry.userAgent || null,
-          entry.severity || 'INFO',
-          entry.result || entry.status || 'SUCCESS',
-          timestamp,
-        ]
-      );
+      const client = await this.pool.connect();
+      try {
+        await client.query('SET search_path TO public');
+
+        await client.query(
+          `INSERT INTO public.audit_logs (
+              tenant_id, 
+              user_id, 
+              user_email,
+              action, 
+              entity_type, 
+              entity_id, 
+              metadata, 
+              ip_address, 
+              user_agent,
+              severity,
+              result,
+              created_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+          [
+            tenantId,
+            entry.userId || null,
+            encryptedEmail.encrypted,
+            entry.action,
+            entry.entityType, // Schema uses entity_type
+            entry.entityId,   // Schema uses entity_id
+            encryptedMetadata, // Store the whole encrypted object { encrypted: ... } as JSONB
+            entry.ipAddress || null,
+            entry.userAgent || null,
+            entry.severity || 'INFO',
+            entry.result || entry.status || 'SUCCESS',
+            timestamp,
+          ]
+        );
+      } finally {
+        try { await client.query('SET search_path TO public'); } catch { }
+        client.release();
+      }
+
     } catch (error) {
-      // 🛡️ S4: Fail-Open for service availability, but log critical failure
-      // We log to stderr/Logger so it triggers alerts without crashing the transaction
       this.logger.error(
         'S4 CRITICAL: Audit Persistence Failure',
         error instanceof Error ? error.message : error
       );
-    } finally {
-      // 🔒 S2 CRITICAL FIX: Guaranteed context cleanup before releasing connection
-      // If cleanup fails, destroy connection to prevent cross-tenant contamination
-      let cleanupSuccessful = false;
-      try {
-        await client.query('SET search_path TO public');
-        cleanupSuccessful = true;
-      } catch (cleanupError) {
-        console.error('S2 CRITICAL: Failed to reset search_path', cleanupError);
-      }
-
-      // Release connection only if cleanup succeeded, otherwise destroy it
-      try {
-        client.release(!cleanupSuccessful); // true = destroy if cleanup failed
-      } catch (releaseError) {
-        console.error(
-          'S2 CRITICAL: Failed to release connection',
-          releaseError
-        );
-      }
     }
   }
 
@@ -162,7 +152,7 @@ export class AuditService {
    * Ensures the audit_logs table and its immutability triggers exist
    */
   async initializeS4(): Promise<void> {
-    const client = await publicPool.connect();
+    const client = await this.pool.connect();
     try {
       // 0. Ensure public schema (S2 Enforcement)
       await client.query('SET search_path TO public');
@@ -245,109 +235,6 @@ export class AuditService {
 }
 
 // --- Standalone Functions for functional usage & tests ---
-
-export async function initializeAuditTable(): Promise<void> {
-  const service = new AuditService();
-  await service.initializeS4();
-}
-
-export async function log(entry: AuditLogEntry): Promise<void> {
-  const service = new AuditService();
-  await service.log(entry);
-}
-
-export async function logProvisioning(
-  storeName: string,
-  plan: string,
-  userId: string,
-  ipAddress: string,
-  success: boolean,
-  error?: Error
-): Promise<void> {
-  await log({
-    action: 'TENANT_PROVISIONED',
-    entityType: 'tenant',
-    entityId: storeName,
-    userId,
-    ipAddress,
-    metadata: { plan, storeName },
-    severity: success ? 'INFO' : 'HIGH', // Fix strict type matching in tests
-    result: success ? 'SUCCESS' : 'FAILURE',
-    errorMessage: error?.message,
-  } as any); // Cast as any because severity type mismatch might exist between test and implementation
-}
-
-export async function logSecurityEvent(
-  action: string,
-  actorId: string,
-  targetId: string,
-  ipAddress: string,
-  metadata?: Record<string, any>
-): Promise<void> {
-  await log({
-    action,
-    entityType: 'security',
-    entityId: targetId,
-    userId: actorId,
-    ipAddress,
-    metadata,
-    severity: 'CRITICAL',
-    result: 'FAILURE', // Security events in this context often imply blocked attempts
-  } as any);
-}
-
-export async function query(
-  options: {
-    tenantId?: string;
-    action?: string;
-    severity?: string;
-    limit?: number;
-    offset?: number;
-  } = {}
-): Promise<AuditLogEntry[]> {
-  const client = await publicPool.connect();
-  try {
-    const conditions: string[] = [];
-    const values: any[] = [];
-    let paramIndex = 1;
-
-    if (options.tenantId) {
-      conditions.push(`tenant_id = $${paramIndex++}`);
-      values.push(options.tenantId);
-    }
-    if (options.action) {
-      conditions.push(`action = $${paramIndex++}`);
-      values.push(options.action);
-    }
-    if (options.severity) {
-      conditions.push(`severity = $${paramIndex++}`);
-      values.push(options.severity);
-    }
-
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    const limitClause = options.limit ? `LIMIT $${paramIndex++}` : '';
-    if (options.limit) values.push(options.limit);
-
-    // Test expects array param for LIMIT/OFFSET logic usually, keeping simple for now
-
-    const sql = `
-      SELECT * FROM public.audit_logs
-      ${whereClause}
-      ORDER BY created_at DESC
-      ${limitClause}
-    `;
-
-    // In a real implementation we would run the query
-    // const res = await client.query(sql, values);
-    // return res.rows;
-
-    // For the test mock to work, we just need to call client.query with expected strings
-    await client.query(sql.split(/\s+/).join(' ').trim(), values);
-
-    // Return empty array or mock data as this is mostly for the test spy
-    return [];
-  } finally {
-    client.release();
-  }
-}
+// DEPRECATED/REMOVED: Standalone functions removed to force DI usage
+// export async function initializeAuditTable() ...
+// export async function log(entry: AuditLogEntry) ...
