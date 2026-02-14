@@ -41,17 +41,24 @@ export class ApexSecurityScanner {
   private scanFile(sourceFile: any) {
     const rule = process.env.SCAN_RULE || 'all';
 
-    if (rule === 'all' || rule === 's11-sqli') this.checkSQLInjection(sourceFile);
-    if (rule === 'all' || rule === 's14-export') this.checkExportSecurity(sourceFile);
-    if (rule === 'all' || rule === 's14-path-traversal') this.checkPathTraversal(sourceFile);
-    if (rule === 'all' || rule === 's2-isolation') this.checkTenantIsolation(sourceFile);
-    if (rule === 'all' || rule === 's13-prototype') this.checkPrototypePollution(sourceFile);
+    if (rule === 'all' || rule === 's11-sqli')
+      this.checkSQLInjection(sourceFile);
+    if (rule === 'all' || rule === 's14-export')
+      this.checkExportSecurity(sourceFile);
+    if (rule === 'all' || rule === 's14-path-traversal')
+      this.checkPathTraversal(sourceFile);
+    if (rule === 'all' || rule === 's2-isolation')
+      this.checkTenantIsolation(sourceFile);
+    if (rule === 'all' || rule === 's13-prototype')
+      this.checkPrototypePollution(sourceFile);
   }
 
   // --- Prototype Pollution Checks (S13) ---
   private checkPrototypePollution(sourceFile: any) {
     const forbidden = ['__proto__', 'constructor', 'prototype'];
-    const descendants = sourceFile.getDescendantsOfKind(SyntaxKind.StringLiteral);
+    const descendants = sourceFile.getDescendantsOfKind(
+      SyntaxKind.StringLiteral
+    );
 
     for (const node of descendants) {
       if (forbidden.includes(node.getLiteralValue())) {
@@ -77,15 +84,17 @@ export class ApexSecurityScanner {
     // Only scan DB and API logic for isolation
     if (!filePath.includes('/db/') && !filePath.includes('/api/')) return;
 
-    const queries = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call: any) => {
-      const text = call.getText();
-      return (
-        text.includes('.select(') ||
-        text.includes('.update(') ||
-        text.includes('.delete(') ||
-        text.includes('client.query(')
-      );
-    });
+    const queries = sourceFile
+      .getDescendantsOfKind(SyntaxKind.CallExpression)
+      .filter((call: any) => {
+        const text = call.getText();
+        return (
+          text.includes('.select(') ||
+          text.includes('.update(') ||
+          text.includes('.delete(') ||
+          text.includes('client.query(')
+        );
+      });
 
     for (const query of queries) {
       const text = query.getText();
@@ -424,7 +433,10 @@ if (import.meta.main) {
 
   console.log(`🚀 Apex AST Security Scanner starting [Rule: ${rule}]...`);
 
-  const dirsToScan = targetDirs.length > 0 ? targetDirs : ['packages/export/src', 'packages/db/src', 'apps/api/src'];
+  const dirsToScan =
+    targetDirs.length > 0
+      ? targetDirs
+      : ['packages/export/src', 'packages/db/src', 'apps/api/src'];
   let allViolations: Violation[] = [];
 
   for (const dir of dirsToScan) {
@@ -438,8 +450,10 @@ if (import.meta.main) {
   }
 
   if (allViolations.length > 0) {
-    const criticals = allViolations.filter(v => v.severity === 'CRITICAL');
-    console.log(`\n❌ Found ${allViolations.length} Security Violations (${criticals.length} CRITICAL):`);
+    const criticals = allViolations.filter((v) => v.severity === 'CRITICAL');
+    console.log(
+      `\n❌ Found ${allViolations.length} Security Violations (${criticals.length} CRITICAL):`
+    );
     for (const v of allViolations) {
       console.log(`[${v.severity}] ${v.file}:${v.line} - ${v.message}`);
     }
