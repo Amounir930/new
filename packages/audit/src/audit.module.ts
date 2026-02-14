@@ -1,5 +1,5 @@
-import { Global, Module } from '@nestjs/common';
 import { DbModule } from '@apex/db';
+import { Global, Module } from '@nestjs/common';
 import { AuditService } from './audit.service';
 
 /**
@@ -12,4 +12,4 @@ import { AuditService } from './audit.service';
   providers: [AuditService],
   exports: [AuditService],
 })
-export class AuditModule { }
+export class AuditModule {}

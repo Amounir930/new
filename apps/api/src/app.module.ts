@@ -5,18 +5,14 @@
 
 import { AuditInterceptor, AuditModule, AuditService } from '@apex/audit';
 import { DbModule } from '@apex/db';
-import {
-  RateLimitGuard,
-  RateLimitModule,
-  TenantIsolationMiddleware,
-} from '@apex/middleware';
+import { RateLimitModule, TenantIsolationMiddleware } from '@apex/middleware';
 import {
   type MiddlewareConsumer,
   Module,
   type NestModule,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 // import { AuditInterceptor } from './audit-interceptor.local.js'; // REMOVED
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';

@@ -54,7 +54,7 @@ export class RedisRateLimitStore {
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
     await this.connect();
@@ -268,7 +268,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -438,4 +438,4 @@ export const ThrottleConfig = {
   ],
   exports: [RedisRateLimitStore, RateLimitGuard],
 })
-export class RateLimitModule { }
+export class RateLimitModule {}
