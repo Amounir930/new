@@ -18,7 +18,7 @@ import type { Request, Response } from 'express';
 import { ZodError } from 'zod';
 
 // S5: Initialize Sentry globally for GlitchTip reporting
-// Note: Actual DSN-based init usually happens in main.ts, 
+// Note: Actual DSN-based init usually happens in main.ts,
 // but we keep a secondary check here for safety.
 if (env.GLITCHTIP_DSN && process.env.NODE_ENV === 'production') {
   Sentry.init({
@@ -253,7 +253,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException { }
+export class OperationalError extends HttpException {}
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {
