@@ -146,7 +146,9 @@ describe.skipIf(!hasDb)(
       // Mock DB insert for CustomerService structure
       const testEmail = 'blind-index@example.com';
       const blindHash = encryptionService.hashSensitiveData(testEmail);
-      const encryptedEmailPayload = JSON.stringify(encryptionService.encrypt(testEmail));
+      const encryptedEmailPayload = JSON.stringify(
+        encryptionService.encrypt(testEmail)
+      );
 
       const mockReturnRow = {
         id: 'uuid-blind-1',
@@ -155,12 +157,12 @@ describe.skipIf(!hasDb)(
         phone: null,
         phoneHash: null,
         firstName: null,
-        lastName: null
+        lastName: null,
       };
 
       // Setup Insert Mock
       const valuesMock = mock(() => ({
-        returning: mock(() => Promise.resolve([mockReturnRow]))
+        returning: mock(() => Promise.resolve([mockReturnRow])),
       }));
       (mockDb as any).insert = mock(() => ({ values: valuesMock }));
 
@@ -182,7 +184,9 @@ describe.skipIf(!hasDb)(
       const found = await customerService.findByEmail(testEmail);
       expect(found?.email).toBe(testEmail);
 
-      console.log('✅ S7: Verified CustomerService Blind Indexing & Encryption');
+      console.log(
+        '✅ S7: Verified CustomerService Blind Indexing & Encryption'
+      );
     });
   }
 );

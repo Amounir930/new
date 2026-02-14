@@ -1,6 +1,15 @@
-import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
+import {
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
-export const auditLogs = pgTable('audit_logs', {
+export const auditLogs = pgTable(
+  'audit_logs',
+  {
     id: uuid('id').defaultRandom().primaryKey(),
     tenantId: text('tenant_id').notNull(), // S2: Links to tenant subdomain or ID
     userId: text('user_id'), // Nullable because system actions might not have a user
@@ -14,11 +23,16 @@ export const auditLogs = pgTable('audit_logs', {
     severity: text('severity').default('INFO'), // S4: INFO, HIGH, CRITICAL
     result: text('result').default('SUCCESS'), // S4: SUCCESS, FAILURE
     createdAt: timestamp('created_at').defaultNow().notNull(),
-}, (table) => {
+  },
+  (table) => {
     return {
-        tenantIdx: index('audit_logs_tenant_idx').on(table.tenantId),
-        entityIdx: index('audit_logs_entity_idx').on(table.entityType, table.entityId),
-        actionIdx: index('audit_logs_action_idx').on(table.action),
-        createdIdx: index('audit_logs_created_idx').on(table.createdAt),
+      tenantIdx: index('audit_logs_tenant_idx').on(table.tenantId),
+      entityIdx: index('audit_logs_entity_idx').on(
+        table.entityType,
+        table.entityId
+      ),
+      actionIdx: index('audit_logs_action_idx').on(table.action),
+      createdIdx: index('audit_logs_created_idx').on(table.createdAt),
     };
-});
+  }
+);
