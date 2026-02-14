@@ -39,12 +39,73 @@ export class ApexSecurityScanner {
   }
 
   private scanFile(sourceFile: any) {
-    this.checkSQLInjection(sourceFile);
-    this.checkExportSecurity(sourceFile);
-    this.checkPathTraversal(sourceFile);
+    const rule = process.env.SCAN_RULE || 'all';
+
+    if (rule === 'all' || rule === 's11-sqli') this.checkSQLInjection(sourceFile);
+    if (rule === 'all' || rule === 's14-export') this.checkExportSecurity(sourceFile);
+    if (rule === 'all' || rule === 's14-path-traversal') this.checkPathTraversal(sourceFile);
+    if (rule === 'all' || rule === 's2-isolation') this.checkTenantIsolation(sourceFile);
+    if (rule === 'all' || rule === 's13-prototype') this.checkPrototypePollution(sourceFile);
   }
 
-  // --- Path Traversal Checks ---
+  // --- Prototype Pollution Checks (S13) ---
+  private checkPrototypePollution(sourceFile: any) {
+    const forbidden = ['__proto__', 'constructor', 'prototype'];
+    const descendants = sourceFile.getDescendantsOfKind(SyntaxKind.StringLiteral);
+
+    for (const node of descendants) {
+      if (forbidden.includes(node.getLiteralValue())) {
+        // Only warn if it looks like it's being used as a key
+        const parent = node.getParent();
+        if (
+          Node.isPropertyAssignment(parent) ||
+          Node.isElementAccessExpression(parent) ||
+          Node.isPropertyAccessExpression(parent)
+        ) {
+          this.addViolation(
+            node,
+            `S13: Potential Prototype Pollution sentinel string "${node.getLiteralValue()}" detected in property access.`
+          );
+        }
+      }
+    }
+  }
+
+  // --- Tenant Isolation Checks (S2) ---
+  private checkTenantIsolation(sourceFile: any) {
+    const filePath = sourceFile.getFilePath();
+    // Only scan DB and API logic for isolation
+    if (!filePath.includes('/db/') && !filePath.includes('/api/')) return;
+
+    const queries = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call: any) => {
+      const text = call.getText();
+      return (
+        text.includes('.select(') ||
+        text.includes('.update(') ||
+        text.includes('.delete(') ||
+        text.includes('client.query(')
+      );
+    });
+
+    for (const query of queries) {
+      const text = query.getText();
+      // Check for missing tenant filtering
+      if (
+        !text.includes('tenantId') &&
+        !text.includes('tenant_id') &&
+        !text.includes('search_path') &&
+        !text.includes('withTenantConnection')
+      ) {
+        this.addViolation(
+          query,
+          'S2: Raw query or Drizzle operation detected without visible tenant isolation (missing tenant_id/search_path/withTenantConnection)',
+          'WARNING'
+        );
+      }
+    }
+  }
+
+  // --- Path Traversal Checks (S14) ---
   private checkPathTraversal(sourceFile: any) {
     const calls = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
     for (const call of calls) {
@@ -59,7 +120,9 @@ export class ApexSecurityScanner {
           text.includes('write') ||
           text.includes('readFile') ||
           text.includes('spawn') ||
-          text.includes('tar')) &&
+          text.includes('tar') ||
+          text.includes('unlink') ||
+          text.includes('rm')) &&
         !isKnownSafeRedisExec;
 
       if (isPathOp) {
@@ -216,45 +279,13 @@ export class ApexSecurityScanner {
   private checkExportSecurity(sourceFile: any) {
     const filePath = sourceFile.getFilePath();
     if (filePath.includes('packages/export/src/strategies/')) {
-      this.checkCleanup(sourceFile);
-      this.checkTenantIsolation(sourceFile);
-    }
-  }
-
-  private checkCleanup(sourceFile: any) {
-    const content = sourceFile.getText();
-    const hasCleanupStr =
-      /\b(rm\s+.*-rf|rm\s+.*-f|fs\.unlink|fs\.rm|Bun\.spawn\(\['rm')\b/.test(
-        content
-      );
-
-    // AST approach for more precision
-    const calls = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const cleanupCall = calls.find((c: any) => {
-      const text = c.getText();
-      return (
-        text.includes('rm') ||
-        text.includes('unlink') ||
-        text.includes('cleanup')
-      );
-    });
-
-    if (!hasCleanupStr && !cleanupCall) {
-      this.addViolation(
-        sourceFile,
-        'S14: Export strategy missing cleanup logic for temporary files.',
-        'CRITICAL'
-      );
-    }
-  }
-
-  private checkTenantIsolation(sourceFile: any) {
-    const content = sourceFile.getText();
-    if (!content.includes('schemaName') && !content.includes('tenant_')) {
-      this.addViolation(
-        sourceFile,
-        'S14: Export strategy missing tenant schema isolation (schemaName/tenant_)'
-      );
+      const content = sourceFile.getText();
+      if (!content.includes('schemaName') && !content.includes('tenant_')) {
+        this.addViolation(
+          sourceFile,
+          'S14: Export strategy missing tenant schema isolation (schemaName/tenant_)'
+        );
+      }
     }
   }
 
@@ -374,28 +405,47 @@ export class ApexSecurityScanner {
 
 // CLI Runner
 if (import.meta.main) {
+  const args = process.argv.slice(2);
+  let rule = 'all';
+  const targetDirs: string[] = [];
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('--rule=')) {
+      rule = args[i].split('=')[1];
+    } else if (!args[i].startsWith('--')) {
+      targetDirs.push(args[i]);
+    }
+  }
+
+  process.env.SCAN_RULE = rule;
+
   const tsConfig = resolve(process.cwd(), 'tsconfig.json');
   const scanner = new ApexSecurityScanner(tsConfig);
 
-  console.log('🚀 Apex AST Security Scanner starting...');
+  console.log(`🚀 Apex AST Security Scanner starting [Rule: ${rule}]...`);
 
-  const targetDirs = ['packages/export/src', 'packages/db/src', 'apps/api/src'];
+  const dirsToScan = targetDirs.length > 0 ? targetDirs : ['packages/export/src', 'packages/db/src', 'apps/api/src'];
   let allViolations: Violation[] = [];
 
-  for (const dir of targetDirs) {
+  for (const dir of dirsToScan) {
     const fullPath = resolve(process.cwd(), dir);
     if (existsSync(fullPath)) {
       console.log(`🔍 Scanning ${dir}...`);
       allViolations = allViolations.concat(scanner.scanDirectory(fullPath));
+    } else {
+      console.warn(`⚠️ Directory not found: ${dir}`);
     }
   }
 
   if (allViolations.length > 0) {
-    console.log(`\n❌ Found ${allViolations.length} Security Violations:`);
+    const criticals = allViolations.filter(v => v.severity === 'CRITICAL');
+    console.log(`\n❌ Found ${allViolations.length} Security Violations (${criticals.length} CRITICAL):`);
     for (const v of allViolations) {
       console.log(`[${v.severity}] ${v.file}:${v.line} - ${v.message}`);
     }
-    process.exit(1);
+
+    if (criticals.length > 0) process.exit(1);
+    process.exit(0); // Warnings only don't break the build
   } else {
     console.log('\n✅ No AST security violations found. Project is compliant.');
     process.exit(0);

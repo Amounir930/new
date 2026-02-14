@@ -27,6 +27,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -134,10 +136,21 @@ jobs:
 
       - name: "S14.8 - Secure Cleanup (Native vs Shell)"
         run: |
-          NATIVE_CLEANUP=$(grep -rE "fs\.(rm|unlink|promises\.rm)" packages/export/src/ --include="*.ts" 2>/dev/null | grep -vE "^\s*//" || true)
+          NATIVE_CLEANUP=$(grep -rE "fs\.(rm|unlink|promises\.rm)" packages/export/src/ strategies/ --include="*.ts" 2>/dev/null | grep -vE "^\s*//" || true)
           SHELL_RM=$(grep -r "rm -rf" packages/export/src/ --include="*.ts" 2>/dev/null | grep -vE "^\s*//" || true)
           if [ -n "$SHELL_RM" ]; then exit 1; fi
           echo "✅ S14.8: Cleanup procedure security verified"
+
+      - name: "S14.9 - AST Export Strategy Scan"
+        run: |
+          echo "🔍 Running AST-based export scanner..."
+          bun run packages/security/src/utils/scanner-cli.ts --rule=s14-path-traversal packages/export/src/strategies
+
+      - name: "S6.4 - Behavioral Fail-Closed Test"
+        run: |
+          echo "🧪 Running fail-closed rate limit tests..."
+          # Mock production environment to force fail-closed logic
+          NODE_ENV=production bun test packages/middleware/src/redis-rate-limit-store.fail-closed.test.ts
 
       - name: Merged Final Report
         if: always()

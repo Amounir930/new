@@ -38,6 +38,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -94,6 +96,16 @@ jobs:
           fi
           
           echo "✅ S2.2: No unauthorized public schema access found"
+
+      - name: "S2.3 - AST Tenant Isolation Scan"
+        run: |
+          echo "🔍 Running AST-based isolation scanner..."
+          bun run packages/security/src/utils/scanner-cli.ts --rule=s2-isolation packages/db/src apps/api/src
+
+      - name: "S2.4 - Behavioral Isolation Test"
+        run: |
+          echo "🧪 Running behavioral isolation tests..."
+          bun test packages/db/src/s2-isolation.behavioral.test.ts
 
       - name: S2 Final Report
         if: always()
