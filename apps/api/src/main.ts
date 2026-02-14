@@ -11,10 +11,20 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { ZodValidationPipe } from 'nestjs-zod';
+import * as Sentry from '@sentry/nestjs';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+
+  // S5: Initialize GlitchTip/Sentry at the earliest possible stage
+  if (process.env.GLITCHTIP_DSN && process.env.NODE_ENV === 'production') {
+    Sentry.init({
+      dsn: process.env.GLITCHTIP_DSN,
+      environment: process.env.NODE_ENV,
+    });
+    logger.log('🛡️  S5: GlitchTip Error Tracking Active');
+  }
 
   // S1: Environment Verification happens automatically via @apex/config
   // S4: Audit Initialization moved after app creation for DI

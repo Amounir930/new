@@ -13,16 +13,17 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/nestjs';
 import type { Request, Response } from 'express';
 import { ZodError } from 'zod';
 
 // S5: Initialize Sentry globally for GlitchTip reporting
-if (env.GLITCHTIP_DSN && env.NODE_ENV === 'production') {
+// Note: Actual DSN-based init usually happens in main.ts, 
+// but we keep a secondary check here for safety.
+if (env.GLITCHTIP_DSN && process.env.NODE_ENV === 'production') {
   Sentry.init({
     dsn: env.GLITCHTIP_DSN,
-    environment: env.NODE_ENV,
-    // Add additional configuration as needed
+    environment: process.env.NODE_ENV,
   });
 }
 
@@ -100,7 +101,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(statusCode).json(errorResponse);
 
     // Report to GlitchTip/Sentry in production
-    if (process.env.NODE_ENV === 'production' && statusCode >= 500) {
+    if (env.NODE_ENV === 'production' && statusCode >= 500) {
       this.reportToErrorTracking(exception, requestId);
     }
   }
@@ -252,7 +253,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException {}
+export class OperationalError extends HttpException { }
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {
