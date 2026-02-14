@@ -28,8 +28,8 @@ describe('GlobalExceptionFilter', () => {
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => { });
-    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => { });
+    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
 
     mockJson = vi.fn();
     mockStatus = vi.fn().mockReturnValue({ json: mockJson });
