@@ -29,3 +29,8 @@ c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:post
 c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:15227
 c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:15238
 c4de360979fb4868a36fe91bb3675045800b7b45:update/Apex_2026_Full_Codebase.txt:postgres-connection-string:15249
+
+# CI/CD Workflows - Test DATABASE_URL (Safe Test Credentials Only)
+# All workflows use localhost test database with non-production credentials
+# Pattern: postgresql://safe_user@localhost:5432/apex_test
+*.github/workflows/*.yml:*:postgres-connection-string:*

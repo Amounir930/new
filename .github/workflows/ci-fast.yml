@@ -379,8 +379,8 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: safe_user
+          POSTGRES_PASSWORD: safe_pass
           POSTGRES_DB: test
         ports:
           - 5432:5432
@@ -516,8 +516,8 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: safe_user
+          POSTGRES_PASSWORD: safe_pass
           POSTGRES_DB: test
         ports:
           - 5432:5432
