@@ -9,9 +9,9 @@ import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as Sentry from '@sentry/nestjs';
 import helmet from 'helmet';
 import { ZodValidationPipe } from 'nestjs-zod';
-import * as Sentry from '@sentry/nestjs';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
