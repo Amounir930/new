@@ -40,7 +40,11 @@ echo -e "\n📦 [Audit] Running Bun Dependency Audit..."
 bun audit || { echo "❌ Dependency Audit Failed"; exit 1; }
 echo "✅ Dependencies Secure"
 
-# 5. Type Integrity & Schema Verification
+# 5. Surgical SAST Scan (S13)
+echo -e "\n🎯 [S13] Running Surgical SAST Penetration Test..."
+bash scripts/security-grep-scan.sh || { echo "❌ S13 SAST Check Failed"; exit 1; }
+
+# 6. Type Integrity & Schema Verification
 echo -e "\n🏗️  [Types] Verifying Workspace Integrity..."
 bun run build --filter=@apex/config --filter=@apex/db || { echo "❌ Build Failed"; exit 1; }
 echo "✅ Core Integrity Verified"

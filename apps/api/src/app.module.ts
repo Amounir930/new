@@ -6,7 +6,9 @@
 import { AuditInterceptor, AuditModule, AuditService } from '@apex/audit';
 import { DbModule } from '@apex/db';
 import {
+  ActiveDefenseMiddleware,
   BotProtectionMiddleware,
+  FingerprintMiddleware,
   RateLimitModule,
   TenantIsolationMiddleware,
 } from '@apex/middleware';
@@ -54,7 +56,12 @@ export class AppModule implements NestModule {
   // S2: Apply Tenant Isolation Middleware & S11: Bot Protection
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(BotProtectionMiddleware, TenantIsolationMiddleware)
+      .apply(
+        ActiveDefenseMiddleware,
+        FingerprintMiddleware,
+        BotProtectionMiddleware,
+        TenantIsolationMiddleware
+      )
       .forRoutes('*'); // Apply to all routes
   }
 }

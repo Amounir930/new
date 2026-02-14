@@ -3,6 +3,8 @@
  * S1-S8 Security Protocols Implementation
  */
 
+// S15: Active Defense
+export { ActiveDefenseMiddleware } from './active-defense.middleware.js';
 // S3: Input Validation (Audit Schema)
 export {
   type AuditLogDto,
@@ -33,6 +35,13 @@ export {
   TenantIsolationError,
   ValidationError,
 } from './exception-filter.js';
+// S14: Fraud Detection
+export { FingerprintMiddleware } from './fingerprint.js';
+export {
+  type FraudScore,
+  FraudScoringService,
+} from './fraud-scoring.service.js';
+export { GeoIpService } from './geo-ip.service.js';
 // Governance & Quotas
 export { GovernanceGuard, RequireFeature } from './governance.guard.js';
 export { CheckQuota, QuotaInterceptor } from './quota.interceptor.js';

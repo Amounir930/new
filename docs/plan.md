@@ -29,6 +29,16 @@
 | **Arch-S6** | Rate Limiting Service | `@nestjs/throttler` + Redis. Dynamic limits per tenant tier (Free: 100 req/min, Pro: 1000). IP block after 5 violations. | Redis 🚀, `@nestjs/throttler` | 101st request from Free tenant IP → Returns 429 with `X-RateLimit-Reset` header | 3 |  
 | **Arch-S7** | Encryption Service | AES-256-GCM for PII/API keys at rest. TLS enforced via Traefik. DB connection requires SSL. | `crypto` module, Traefik | Query DB directly → `api_keys` column shows encrypted ciphertext (not plaintext) | 4 |  
 | **Arch-S8** | Web Security Headers | Helmet middleware: Strict CSP, HSTS, dynamic CORS per tenant domain, CSRF protection for cookie sessions. | Helmet, CORS | `curl -I https://store.apex.com` → Headers include `Strict-Transport-Security`, `Content-Security-Policy` | 4 |  
+
+S9: Supply Chain Security: bun audit & SBOM generation in CI to catch compromised packages.
+S10: Secret Detection: gitleaks hooks to prevent credential spills.
+S11: Bot Protection: Anti-scraping middleware to block malicious automated traffic.
+S12: DDoS Mitigation: Advanced rate limiting strategies (e.g., sliding window w/ Redis).
+S13: Penetration Testing: Automated DAST scans (OWASP ZAP) in the CI pipeline.
+S14: Fraud Detection: Behavioral analysis for checkout consistency.
+S15: Active Defense: Honeytokens and deceptive endpoints to trap attackers.
+
+
 | **Super-#21** | Onboarding Blueprint Editor | JSON editor UI in Super Admin. Saves to `onboarding_blueprints` table. Used during provisioning to seed starter data. | `@apex/db`, MinIO | Edit blueprint → Run `provision:tenant` → New tenant has updated starter products/pages | 4 |  
 | **Super-#01** | Tenant Overview Table | Super Admin page: Searchable table of all tenants (subdomain, status, plan). Real-time sync with `public.tenants`. | PostgreSQL, Redis Cache | Filter by "Suspended" → Shows ONLY suspended tenants; Sort by created_at → Correct order | 4 |  
 

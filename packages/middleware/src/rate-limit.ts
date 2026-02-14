@@ -442,11 +442,16 @@ export const ThrottleConfig = {
   ],
 };
 
+import { FraudScoringService } from './fraud-scoring.service.js';
+import { GeoIpService } from './geo-ip.service.js';
+
 @Global()
 @Module({
   imports: [ConfigModule],
   providers: [
     RedisRateLimitStore,
+    GeoIpService,
+    FraudScoringService,
     RateLimitGuard,
     {
       provide: REFLECTOR_TOKEN,
@@ -457,6 +462,11 @@ export const ThrottleConfig = {
       useClass: RateLimitGuard,
     },
   ],
-  exports: [RedisRateLimitStore, RateLimitGuard],
+  exports: [
+    RedisRateLimitStore,
+    RateLimitGuard,
+    GeoIpService,
+    FraudScoringService,
+  ],
 })
 export class RateLimitModule {}
