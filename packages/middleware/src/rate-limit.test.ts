@@ -17,9 +17,11 @@ vi.mock('redis', () => ({
     connect: vi.fn().mockResolvedValue(undefined),
     isOpen: true,
     multi: vi.fn().mockReturnValue({
-      incr: vi.fn().mockReturnThis(),
-      ttl: vi.fn().mockReturnThis(),
-      exec: vi.fn().mockResolvedValue([1, 60]),
+      zRemRangeByScore: vi.fn().mockReturnThis(),
+      zAdd: vi.fn().mockReturnThis(),
+      zCard: vi.fn().mockReturnThis(),
+      pExpire: vi.fn().mockReturnThis(),
+      exec: vi.fn().mockResolvedValue([0, 1, 1, true]),
     }),
     expire: vi.fn().mockResolvedValue(undefined),
     get: vi.fn().mockResolvedValue(null),
@@ -196,6 +198,19 @@ describe('RateLimitGuard', () => {
       'Rate limit exceeded'
     );
     expect(blockSpy).not.toHaveBeenCalled();
+  });
+
+  it('should trigger immediate DDoS ban if threshold exceeded (5x)', async () => {
+    vi.spyOn(store, 'increment').mockResolvedValue({
+      count: 501, // 5x the default 100
+      ttl: 60,
+    });
+    const blockSpy = vi.spyOn(store, 'block');
+
+    await expect(guard.canActivate(mockContext)).rejects.toThrow(
+      'DDoS protection triggered'
+    );
+    expect(blockSpy).toHaveBeenCalledWith(expect.any(String), 3600000); // 1 hour
   });
 });
 

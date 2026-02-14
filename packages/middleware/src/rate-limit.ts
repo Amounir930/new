@@ -127,8 +127,9 @@ export class RedisRateLimitStore {
     windowMs: number
   ): Promise<{ count: number; ttl: number }> {
     const client = await this.getClient();
+    const now = Date.now();
 
-    // CRITICAL FIX (S6): In production, reject if Redis unavailable
+    // CRITICAL FIX (S6/S12): In production, reject if Redis unavailable
     if (!client && process.env.NODE_ENV === 'production') {
       throw new HttpException(
         {
@@ -140,25 +141,28 @@ export class RedisRateLimitStore {
     }
 
     if (client) {
-      // Redis implementation (distributed)
+      // S12 FIX: Sliding Window Log implementation using Redis Sorted Sets (ZSET)
+      // This provides 100% accuracy compared to fixed-window or sliding-counter
       const multi = client.multi();
-      multi.incr(key);
-      multi.ttl(key);
+      const minScore = now - windowMs;
+      const uniqueValue = `${now}-${Math.random().toString(36).substring(2, 9)}`;
+
+      // 1. Remove timestamps outside the sliding window
+      multi.zRemRangeByScore(key, 0, minScore);
+      // 2. Add current timestamp to the set
+      multi.zAdd(key, { score: now, value: uniqueValue });
+      // 3. Count all valid requests in the sliding window
+      multi.zCard(key);
+      // 4. Set expiry to clean up old keys
+      multi.pExpire(key, windowMs);
 
       const results = await multi.exec();
-      const count = results[0] as number;
-      let ttl = results[1] as number;
+      const count = (results[2] as number) || 1;
 
-      // Set expiry on first request
-      if (count === 1 || ttl === -1) {
-        await client.expire(key, Math.ceil(windowMs / 1000));
-        ttl = Math.ceil(windowMs / 1000);
-      }
-
-      return { count, ttl };
+      return { count, ttl: Math.ceil(windowMs / 1000) };
     }
-    // Memory fallback (single instance only) - non-production only
-    const now = Date.now();
+
+    // Memory fallback (Optimized Fixed Window for non-production only)
     const existing = this.memoryStore.get(key);
 
     if (!existing || now > existing.resetTime) {
@@ -319,6 +323,23 @@ export class RateLimitGuard implements CanActivate {
 
     // Increment request count
     const { count } = await this.rateLimitStore.increment(key, windowMs);
+
+    // S12 FIX: DDoS Detection - Immediate blocking for catastrophic bursts
+    // If request count is 5x the limit, it's a DDoS pattern
+    const ddosThreshold = requests * 5;
+    if (count > ddosThreshold) {
+      await this.rateLimitStore.block(key, 3600_000); // Block for 1 hour
+      console.error(
+        `S12 CRITICAL: DDoS pattern detected! IP: ${identifier} | Count: ${count} | THRESHOLD: ${ddosThreshold}`
+      );
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.TOO_MANY_REQUESTS,
+          message: 'DDoS protection triggered: IP banned for 1 hour',
+        },
+        HttpStatus.TOO_MANY_REQUESTS
+      );
+    }
 
     // Check if limit exceeded
     if (count > requests) {

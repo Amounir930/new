@@ -3,8 +3,6 @@
  * S1-S8 Security Protocols Implementation
  */
 
-// S11: Bot Protection
-export { BotProtectionMiddleware } from './bot-protection.js';
 // S3: Input Validation (Audit Schema)
 export {
   type AuditLogDto,
@@ -12,6 +10,8 @@ export {
   type CreateAuditLogDto,
   CreateAuditLogSchema,
 } from './audit.schema.js';
+// S11: Bot Protection
+export { BotProtectionMiddleware } from './bot-protection.js';
 // S2: Tenant Resolution & Context Management
 export {
   getCurrentTenantContext,
