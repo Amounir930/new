@@ -15,6 +15,7 @@ export {
   encrypt,
   generateApiKey,
   hashApiKey,
+  hashSensitiveData,
   maskSensitive,
 } from './encryption.js';
 // mTLS Module

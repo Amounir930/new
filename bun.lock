@@ -223,6 +223,7 @@
       "dependencies": {
         "@apex/config": "workspace:*",
         "@apex/db": "workspace:*",
+        "@apex/security": "workspace:*",
         "drizzle-orm": "^0.29.3",
         "minio": "^7.1.0",
         "pg": "^8.11.0",

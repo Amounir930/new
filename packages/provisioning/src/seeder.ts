@@ -56,7 +56,9 @@ export async function seedTenantData(
     // We need to fetch the master key from env
     const masterKey = process.env.ENCRYPTION_MASTER_KEY;
     if (!masterKey && process.env.NODE_ENV === 'production') {
-      throw new Error('S7 Seeding Error: ENCRYPTION_MASTER_KEY missing in production');
+      throw new Error(
+        'S7 Seeding Error: ENCRYPTION_MASTER_KEY missing in production'
+      );
     }
     const safeKey = masterKey || 'test-master-key-must-be-32-bytes-length!!';
 
@@ -122,7 +124,8 @@ export async function seedTenantData(
   } catch (error) {
     console.error(`Seeding failed for ${options.subdomain}:`, error);
     throw new Error(
-      `Seeding Failure: ${error instanceof Error ? error.message : String(error)
+      `Seeding Failure: ${
+        error instanceof Error ? error.message : String(error)
       }`
     );
   }

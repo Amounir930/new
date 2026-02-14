@@ -1,4 +1,5 @@
-import type { EncryptionService } from '@apex/security';
+// biome-ignore lint/style/useImportType: Needed for NestJS DI
+import { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { publicDb } from '../connection.js';
@@ -15,7 +16,7 @@ import {
  */
 @Injectable()
 export class CustomerService {
-  constructor(private readonly encryptionService: EncryptionService) {}
+  constructor(private readonly encryptionService: EncryptionService) { }
 
   /**
    * Create a new customer with encrypted PII.

@@ -31,14 +31,13 @@ async function generate() {
   // Note: We use relative path for local module
   const { AppModule } = await import('../src/app.module.js');
 
+  const { EncryptionService } = await import('@apex/security');
   const { AuditService } = await import('@apex/audit');
-  const { TenantRegistryService } = await import('@apex/db');
+  const { TenantRegistryService, CustomerService } = await import('@apex/db');
   const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger');
   const { Reflector } = await import('@nestjs/core');
   const { Test } = await import('@nestjs/testing');
-  const { AuditInterceptor } = await import(
-    '../src/audit-interceptor.local.js'
-  );
+  const { AuditInterceptor } = await import('@apex/audit');
   const { ProvisioningService } = await import(
     '../src/provisioning/provisioning.service.js'
   );
@@ -67,12 +66,24 @@ async function generate() {
     })
       .overrideProvider(TenantRegistryService)
       .useValue(mockTenantRegistryService)
-      .overrideProvider(ProvisioningService) // Override the Class Provider
+      .overrideProvider(ProvisioningService)
       .useValue(mockProvisioningService)
-      .overrideProvider('PROVISIONING_SERVICE') // Override the String Token Provider
+      .overrideProvider('PROVISIONING_SERVICE')
       .useValue(mockProvisioningService)
+      .overrideProvider(CustomerService)
+      .useValue({
+        create: () => Promise.resolve({}),
+        findByEmail: () => Promise.resolve(null),
+        findById: () => Promise.resolve(null),
+      })
+      .overrideProvider(EncryptionService) // Mock EncryptionService
+      .useValue({
+        encrypt: () => ({ encrypted: 'mock', iv: 'mock', tag: 'mock', salt: 'mock' }),
+        decrypt: () => 'mock-decrypted',
+        hashSensitiveData: () => 'mock-hash',
+      })
       .overrideProvider(AuditInterceptor)
-      .useValue({}) // Interceptor is handled by moduleRef.createNestApplication() mostly, or can be a simple mock
+      .useValue({})
       .overrideProvider(AuditService)
       .useValue(mockAuditService)
       .overrideProvider(Reflector)
