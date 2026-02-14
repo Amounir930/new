@@ -48,11 +48,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
       provide: 'AUDIT_SERVICE',
       useExisting: AuditService,
     },
-    // S6: Global Rate Limiting
-    {
-      provide: APP_GUARD,
-      useClass: RateLimitGuard,
-    },
+    // S6: Global Rate Limiting (Moved to RateLimitModule)
   ],
 })
 export class AppModule implements NestModule {
