@@ -13,12 +13,14 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-// import { AuditInterceptor } from './audit-interceptor.local.js'; // REMOVED
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 
 @Module({
   imports: [
+    // Core Data Module (explicitly imported for root context availability)
+    DbModule,
+
     // S1: Configuration
     ConfigModule.forRoot({
       isGlobal: true,
@@ -31,8 +33,6 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     HealthModule,
     ProvisioningModule,
     AuditModule,
-    // Core Data Module (explicitly imported for root context availability)
-    DbModule,
   ],
   providers: [
     {
@@ -44,7 +44,6 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
       provide: 'AUDIT_SERVICE',
       useExisting: AuditService,
     },
-    // S6: Global Rate Limiting (Moved to RateLimitModule)
   ],
 })
 export class AppModule implements NestModule {
