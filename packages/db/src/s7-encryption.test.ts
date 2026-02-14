@@ -19,7 +19,7 @@ mock.module('./connection.js', () => ({
 }));
 
 // Import module AFTER mocking
-await import('./index');
+// await import('./index'); // Removed to avoid loading DbModule and causing Global decorator error
 
 // Helper to check DB availability
 const _isDbReachable = async () => {
@@ -136,6 +136,53 @@ describe.skipIf(!hasDb)(
       expect(() => wrongService.decrypt(storedEncrypted)).toThrow();
 
       console.log('✅ S7: Verified decryption failure with unauthorized key');
+    });
+
+    it('should support Blind Indexing via CustomerService', async () => {
+      // Setup CustomerService with real EncryptionService
+      const { CustomerService } = await import('./services/customer.service');
+      const customerService = new CustomerService(encryptionService);
+
+      // Mock DB insert for CustomerService structure
+      const testEmail = 'blind-index@example.com';
+      const blindHash = encryptionService.hashSensitiveData(testEmail);
+      const encryptedEmailPayload = JSON.stringify(encryptionService.encrypt(testEmail));
+
+      const mockReturnRow = {
+        id: 'uuid-blind-1',
+        email: encryptedEmailPayload,
+        emailHash: blindHash,
+        phone: null,
+        phoneHash: null,
+        firstName: null,
+        lastName: null
+      };
+
+      // Setup Insert Mock
+      const valuesMock = mock(() => ({
+        returning: mock(() => Promise.resolve([mockReturnRow]))
+      }));
+      (mockDb as any).insert = mock(() => ({ values: valuesMock }));
+
+      // Execute Create
+      const created = await customerService.create({ email: testEmail });
+
+      // Verify Blind Hash was generated and passed to DB
+      const valuesPassed = valuesMock.mock.calls[0][0];
+      expect(valuesPassed.emailHash).toBe(blindHash);
+      expect(created.email).toBe(testEmail); // Decrypted return
+
+      // Setup Find Mock
+      const limitMock = mock(() => Promise.resolve([mockReturnRow]));
+      const whereMock = mock(() => ({ limit: limitMock }));
+      const fromMock = mock(() => ({ where: whereMock }));
+      (mockDb as any).select = mock(() => ({ from: fromMock }));
+
+      // Execute Find
+      const found = await customerService.findByEmail(testEmail);
+      expect(found?.email).toBe(testEmail);
+
+      console.log('✅ S7: Verified CustomerService Blind Indexing & Encryption');
     });
   }
 );
