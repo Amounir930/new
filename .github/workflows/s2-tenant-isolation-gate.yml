@@ -1,0 +1,116 @@
+name: "🔒 S2 Tenant Isolation Gate"
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  checks: write
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+  JWT_SECRET: test_secret_key_for_ci_environment_only_32
+  MINIO_ENDPOINT: localhost
+  MINIO_ACCESS_KEY: test_access_key
+  MINIO_SECRET_KEY: test_secret_key
+  NODE_ENV: test
+  REDIS_URL: redis://localhost:6379
+  TENANT_ISOLATION_MODE: strict
+
+jobs:
+  s2-tenant-isolation-test:
+    name: "S2 Tenant Isolation Security Test"
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: "S1/S2 - Prepare Security Database"
+        run: |
+          cd packages/db
+          echo "🚀 Generating and Pushing Schema to Test DB..."
+          bunx drizzle-kit generate
+          bunx drizzle-kit push
+          
+          echo "🔍 Verifying Physical Schema Existence..."
+          # Radical Fix: Physical verification of tables in 'public' schema
+          TABLE_COUNT=$(psql $DATABASE_URL -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public';")
+          echo "Found $TABLE_COUNT tables in public schema"
+          if [ "$TABLE_COUNT" -lt 5 ]; then 
+            echo "🚨 CRITICAL FAILURE: Database schema not physically provisioned!"
+            exit 1
+          fi
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+
+      - name: "S2.1 - Programmatic Isolation Test"
+        run: |
+          echo "🧪 Running Vitest S2 isolation tests..."
+          # Radical Fix: Explicitly pass DATABASE_URL to the process
+          DATABASE_URL=$DATABASE_URL bun run test:s2
+        working-directory: packages/db
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          POSTGRES_PASSWORD: postgres
+          NODE_ENV: test
+          JWT_SECRET: test_secret_key_for_ci_environment_only_32
+
+      - name: "S2.2 - Surgical Public Schema Audit"
+        run: |
+          echo "🔍 Scanning for unauthorized public schema access (Surgical)..."
+          
+          # Detect 'public.' references in active code
+          # Explicitly ALLOWS audit logs and public decorators
+          PUBLIC_REFS=$(grep -rn "public\." packages/*/src apps/*/src --include="*.ts" 2>/dev/null | \
+            grep -vE "^\s*(//|\*)" | \
+            grep -vE "(audit|public\.decorator|tenant-registry\.service|node_modules|\.test\.|\.spec\.)" || true)
+
+          if [ -n "$PUBLIC_REFS" ]; then
+            echo "🚨 CRITICAL: Unauthorized public schema access detected!"
+            echo "$PUBLIC_REFS"
+            exit 1
+          fi
+          
+          echo "✅ S2.2: No unauthorized public schema access found"
+
+      - name: "S2.3 - AST Tenant Isolation Scan"
+        run: |
+          echo "🔍 Running AST-based isolation scanner..."
+          bun run packages/security/src/utils/scanner-cli.ts --rule=s2-isolation packages/db/src apps/api/src
+
+      - name: "S2.4 - Behavioral Isolation Test"
+        run: |
+          echo "🧪 Running behavioral isolation tests..."
+          bun test packages/db/src/s2-isolation.behavioral.test.ts
+
+      - name: S2 Final Report
+        if: always()
+        run: |
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════════╗"
+          echo "║           S2 TENANT ISOLATION GATE COMPLETE                   ║"
+          echo "╚═══════════════════════════════════════════════════════════════╝"

@@ -1,0 +1,206 @@
+# ═══════════════════════════════════════════════════════════════
+# Branch Protection & Code Owners Enforcement
+# Prevents breaking critical modules without proper review
+# ═══════════════════════════════════════════════════════════════
+
+name: "🛡️ Protection Enforcement"
+
+on:
+  push:
+    branches: [main, develop, New]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, develop, New]
+    paths:
+      - 'packages/export/**'
+      - 'packages/middleware/**'
+      - 'packages/auth/**'
+      - 'packages/audit/**'
+      - 'packages/db/**'
+      - '.github/workflows/s*-*.yml'
+      - 'SECURITY.md'
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════
+  # Check CODEOWNERS Review Requirements
+  # ═══════════════════════════════════════════════════════════════
+  codeowners-check:
+    name: "Verify CODEOWNERS Review"
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Required Reviewers
+        id: check-reviewers
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            // 1. Parse CODEOWNERS
+            const codeownersPath = path.join(process.env.GITHUB_WORKSPACE, '.github', 'CODEOWNERS');
+            if (!fs.existsSync(codeownersPath)) {
+              console.log('ℹ️ No .github/CODEOWNERS found. Skipping.');
+              return;
+            }
+            const rules = fs.readFileSync(codeownersPath, 'utf8')
+              .split('\n')
+              .filter(line => line.trim() && !line.startsWith('#'))
+              .map(line => {
+                const [pattern, ...owners] = line.trim().split(/\s+/);
+                return { pattern, owners };
+              });
+            
+            // 2. Identify Event Context
+            const prNumber = context.issue.number || context.payload.pull_request?.number;
+            let changedFiles = [];
+            let approvedReviewers = [];
+            let prAuthor = context.actor;
+
+            if (prNumber) {
+              console.log(`🔍 Processing Pull Request #${prNumber}...`);
+              const { data: files } = await github.rest.pulls.listFiles({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              changedFiles = files.map(f => f.filename);
+
+              const { data: reviews } = await github.rest.pulls.listReviews({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              approvedReviewers = reviews
+                .filter(r => r.state === 'APPROVED')
+                .map(r => `@${r.user.login}`);
+                
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              prAuthor = pr.user.login;
+            } else {
+              console.log('⏩ Event is not a PR. Using commit diff for analysis.');
+              const { data: commit } = await github.rest.repos.getCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha,
+              });
+              changedFiles = commit.files.map(f => f.filename);
+            }
+
+            // 3. Match Changes to Owners
+            const requiredReviewers = new Set();
+            for (const file of changedFiles) {
+              for (const rule of rules) {
+                const pattern = rule.pattern
+                  .replace(/\*\*/g, '.*')
+                  .replace(/\*/g, '[^/]*')
+                  .replace(/\?/g, '.');
+                const regex = new RegExp(`^${pattern}$`);
+                if (regex.test(file)) {
+                  rule.owners.forEach(owner => requiredReviewers.add(owner));
+                }
+              }
+            }
+
+            core.setOutput('changed-files', changedFiles.join(', '));
+            core.setOutput('required-reviewers', Array.from(requiredReviewers).join(', '));
+            core.setOutput('approved-reviewers', approvedReviewers.join(', '));
+            core.setOutput('pr-author', prAuthor);
+            
+            // 4. Critical Gates (Only for PRs)
+            if (prNumber) {
+              const isExportChange = changedFiles.some(f => f.startsWith('packages/export/'));
+              if (isExportChange && approvedReviewers.length < 2) {
+                core.setFailed(`❌ CRITICAL: Export module changes require 2 approvals. Current: ${approvedReviewers.length}`);
+              }
+
+              const isSecurityChange = changedFiles.some(f => 
+                f.startsWith('packages/middleware/') ||
+                f.startsWith('packages/auth/') ||
+                f.startsWith('packages/audit/') ||
+                f.startsWith('.github/workflows/s')
+              );
+              if (isSecurityChange && approvedReviewers.length === 0) {
+                core.setFailed(`❌ SECURITY: Changes to security modules require approval from security team`);
+              }
+            }
+
+            
+            console.log(`✅ Analysis complete. PR Author: ${prAuthor}`);
+
+      - name: Report Status
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  CODEOWNERS Review Check"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "Changed Files: ${{ steps.check-reviewers.outputs.changed-files }}"
+          echo "Required Reviewers: ${{ steps.check-reviewers.outputs.required-reviewers }}"
+          echo "Approved Reviewers: ${{ steps.check-reviewers.outputs.approved-reviewers }}"
+          echo "PR Author: ${{ steps.check-reviewers.outputs.pr-author }}"
+          echo "═══════════════════════════════════════════════════════════════"
+
+  # ═══════════════════════════════════════════════════════════════
+  # S14: Export Module Validation (CI Sentinel)
+  # ═══════════════════════════════════════════════════════════════
+  s14-export-validation:
+    name: "S14 Export Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install
+      - name: Run S14 Gate
+        run: bun run src/utils/ci-sentinel.ts S14
+        working-directory: packages/security
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+
+  # ═══════════════════════════════════════════════════════════════
+  # Block Self-Approval for Critical Modules
+  # ═══════════════════════════════════════════════════════════════
+  block-self-approval:
+    name: "Block Self-Approval"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && 
+        (contains(github.event.pull_request.changed_files, 'packages/export/') || 
+         contains(github.event.pull_request.changed_files, 'packages/middleware/') ||
+         contains(github.event.pull_request.changed_files, 'packages/auth/'))
+    
+    steps:
+      - name: Check Self-Approval
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prAuthor = context.payload.pull_request.user.login;
+            
+            // Get reviews
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            
+            const approvals = reviews.filter(r => r.state === 'APPROVED');
+            
+            for (const approval of approvals) {
+              if (approval.user.login === prAuthor) {
+                core.setFailed(
+                  `❌ CRITICAL: Self-approval not allowed for security-critical modules. ` +
+                  `PR author ${prAuthor} cannot approve their own changes.`
+                );
+              }
+            }
+            
+            console.log(`✅ No self-approval detected. PR author: ${prAuthor}`);

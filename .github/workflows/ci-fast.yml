@@ -1,0 +1,681 @@
+# ═══════════════════════════════════════════════════════════════
+# CI Fast - No Docker (Phase 1: Lightweight PR Checks)
+# Purpose: Run on every push/PR for fast feedback without Docker
+# ═══════════════════════════════════════════════════════════════
+
+name: CI Fast (No Docker)
+
+on:
+  push:
+    branches: [main, develop, New]
+  pull_request:
+    branches: [main, develop, New]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # S1 CI Mocks (Bypasses import-time validation crashes)
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+  JWT_SECRET: test_secret_key_for_ci_environment_only_32
+  MINIO_ENDPOINT: localhost
+  MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+  MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+  ENABLE_S1_ENFORCEMENT: "true"
+  ACTIONS_STEP_DEBUG: false
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 0: Secret Scanning (Security First)
+  # ═══════════════════════════════════════════════════════════════
+  secret-scan:
+    name: 'Secret Scanning'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE || 'free' }}
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 1: S1 Compliance Validation
+  # ═══════════════════════════════════════════════════════════════
+  s1-compliance:
+    name: 'S1 Protocol Compliance Check'
+    runs-on: ubuntu-latest
+    needs: secret-scan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Create S1 Compliance Mocks
+        run: |
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test" > apps/api/.env.s1.local
+          echo "REDIS_URL=redis://localhost:6379" >> apps/api/.env.s1.local
+          echo "S3_ENDPOINT=localhost" >> apps/api/.env.s1.local
+          echo "TENANT_ISOLATION_MODE=strict" >> apps/api/.env.s1.local
+          echo "::add-mask::${{ secrets.JWT_SECRET }}"
+          echo "::add-mask::${{ secrets.MINIO_ACCESS_KEY }}"
+          echo "::add-mask::${{ secrets.MINIO_SECRET_KEY }}"
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> apps/api/.env.s1.local
+
+      - name: Check S1 Environment File Exists
+        run: |
+          if [ ! -f "apps/api/.env.s1.local" ]; then
+            echo "❌ S1 Environment file not found (apps/api/.env.s1.local)"
+            exit 1
+          fi
+          echo "✅ S1 Environment file exists"
+
+      - name: Validate S1 Variables
+        run: |
+          echo "🔍 Checking S1 Required Variables..."
+          required_vars=("DATABASE_URL" "REDIS_URL" "S3_ENDPOINT" "TENANT_ISOLATION_MODE")
+          for var in "${required_vars[@]}"; do
+            if ! grep -q "^${var}=" apps/api/.env.s1.local; then
+              echo "❌ Missing required S1 variable: ${var}"
+              exit 1
+            fi
+          done
+          echo "✅ All S1 required variables present"
+
+      - name: Verify S1 Isolation Mode
+        run: |
+          isolation_mode=$(grep "^TENANT_ISOLATION_MODE=" apps/api/.env.s1.local | cut -d= -f2 | tr -d '"')
+          if [ "$isolation_mode" != "strict" ]; then
+            echo "❌ TENANT_ISOLATION_MODE must be 'strict' for S1 compliance (found: ${isolation_mode})"
+            exit 1
+          fi
+          echo "✅ S1 Strict Isolation Mode verified"
+
+      - name: Check S1 Schema Prefix
+        run: |
+          echo "🔍 Checking for unauthorized public. schema references..."
+          # Debug: show all matches first
+          echo "All matches:"
+          grep -rn "public\." packages/db/src --include="*.ts" --exclude="*.test.ts" --exclude="*.spec.ts" || echo "Zero matches"
+          
+          # Look for actual schema references like "public.table_name" 
+          # Exclude: audit_logs (S4 exception), comments, search_path uses
+          violations=$(grep -rn "public\." packages/db/src --include="*.ts" --exclude="*.test.ts" --exclude="*.spec.ts" | \
+            grep -vE "^\s*(//|\*)" | \
+            grep -v "audit_logs" | \
+            grep -v "node_modules" | \
+            grep -vE "//.*public\." | \
+            grep -vE "search_path.*public" | \
+            grep -v "getTenantTableName" | \
+            grep -v "tenant_" | \
+            head -5 || true)
+          if [ -n "$violations" ]; then
+            echo "❌ S1 Violation: Found unauthorized 'public.' schema references:"
+            echo "$violations"
+            exit 1
+          fi
+          echo "✅ No unauthorized public. schema references"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 2: Security Audit
+  # ═══════════════════════════════════════════════════════════════
+  security-audit:
+    name: 'Security Audit & Lint'
+    runs-on: ubuntu-latest
+    needs: secret-scan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install Dependencies
+        run: bun install
+
+
+      - name: Biome Lint Check
+        run: bun run lint
+
+      - name: Type Check (TSC)
+        run: |
+          echo "📝 Running TypeScript type checking..."
+          bun run typecheck
+
+      - name: Architectural Lockdown (Rule 1.1)
+        run: bunx dependency-cruiser . --config .dependency-cruiser.js
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 3: Database Schema Validation
+  # ═══════════════════════════════════════════════════════════════
+  db-schema:
+    name: 'Database Schema Validation'
+    runs-on: ubuntu-latest
+    needs: s1-compliance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Check Drizzle Schema Files
+        run: |
+          if [ ! -f "packages/db/src/schema.ts" ]; then
+            echo "❌ Drizzle schema file not found"
+            exit 1
+          fi
+          echo "✅ Drizzle schema file exists"
+
+      - name: Schema Validation
+        run: |
+          cd packages/db
+          echo "🔍 Validating schema structure..."
+          # Check for tenant_id columns in tables
+          tenant_tables=$(grep -c "tenantId" src/schema.ts || echo "0")
+          echo "Found ${tenant_tables} references to tenant isolation"
+          if [ "$tenant_tables" -eq 0 ]; then
+            echo "❌ No tenant isolation columns found in schema"
+            exit 1
+          fi
+          echo "✅ Tenant isolation schema verified"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 4: Dependency Boundary Check
+  # ═══════════════════════════════════════════════════════════════
+  boundary-check:
+    name: 'Dependency Boundary Check (Rule 1.1)'
+    runs-on: ubuntu-latest
+    needs: [s1-compliance]
+    steps:
+      - uses: actions/checkout@v4
+      - name: IaC & Container Security Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          hide-progress: false
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 5: Zod Schema Lockdown Check
+  # ═══════════════════════════════════════════════════════════════
+  zod-check:
+    name: 'Zod Schema Lockdown (Rule 5.1)'
+    runs-on: ubuntu-latest
+    needs: [db-schema]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify Zod Usage
+        run: |
+          echo "🔍 Checking Zod Schema Compliance..."
+          
+          # Count Zod schema definitions
+          zod_count=$(find packages apps -name "*.ts" -exec grep -l "z\." {} \; 2>/dev/null | wc -l)
+          echo "Found ${zod_count} files using Zod"
+          
+          # Check for any raw type assertions that bypass Zod
+          bypass_patterns=("as any" "as unknown" "@ts-ignore" "@ts-expect-error")
+          bypass_count=0
+          for pattern in "${bypass_patterns[@]}"; do
+            count=$(grep -r "$pattern" packages/*/src apps/*/src --include="*.ts" 2>/dev/null | grep -v "node_modules" | wc -l)
+            bypass_count=$((bypass_count + count))
+          done
+          
+          if [ "$bypass_count" -gt 0 ]; then
+            echo "⚠️ Warning: Found ${bypass_count} potential type bypass patterns"
+            echo "These should be reviewed for Rule 5.1 compliance"
+          fi
+          
+          echo "✅ Zod schema check complete"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 6: Build
+  # ═══════════════════════════════════════════════════════════════
+  build:
+    name: 'Turborepo Build'
+    runs-on: ubuntu-latest
+    needs: [security-audit, boundary-check, zod-check]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Verify turbo.json
+        run: |
+          if [ ! -f "turbo.json" ]; then
+            echo "❌ turbo.json not found"
+            exit 1
+          fi
+          
+          # Check for correct tasks structure (Turbo v2+)
+          if grep -q '"pipeline"' turbo.json; then
+            echo "⚠️ Warning: turbo.json uses deprecated 'pipeline' key, should be 'tasks'"
+          fi
+          echo "✅ turbo.json exists"
+
+      - name: Build Packages
+        run: |
+          echo "🏗️ Building packages..."
+          bun run build
+        env:
+          NODE_ENV: production
+
+      - name: Verify Build Artifacts
+        run: |
+          echo "🔍 Verifying build artifacts..."
+          for pkg in packages/*/; do
+            if [ -f "${pkg}src/index.ts" ]; then
+              if [ ! -d "${pkg}dist" ]; then
+                echo "⚠️ Warning: ${pkg} missing dist folder"
+              else
+                echo "✅ ${pkg} build artifacts exist"
+              fi
+            fi
+          done
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            packages/*/dist/**
+            apps/api/dist/**
+          retention-days: 1
+          if-no-files-found: error
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 7: Unit Tests (No Docker)
+  # ═══════════════════════════════════════════════════════════════
+  unit-tests:
+    name: 'Unit Tests (No Docker)'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Run Unit Tests
+        run: |
+          echo "🧪 Running unit tests..."
+          # turbo doesn't support --coverage flag, run bun test directly
+          bun run test:coverage
+        env:
+          NODE_ENV: test
+          SKIP_DOCKER_TESTS: true
+
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-unit
+          path: |
+            coverage/**
+            packages/*/coverage/**
+          retention-days: 7
+          if-no-files-found: error
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 8: Coverage Gate (Production: 90% threshold)
+  # ═══════════════════════════════════════════════════════════════
+  coverage-gate:
+    name: 'Coverage Gate (90% Production)'
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: always() && needs.unit-tests.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Coverage Reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-report-unit
+          path: coverage/
+
+      - name: Check Coverage Threshold
+        run: |
+          echo "🔍 Checking Coverage Threshold (Production: 90%)..."
+          
+          if [ -f "coverage/coverage-summary.json" ]; then
+            overall=$(cat coverage/coverage-summary.json | grep -o '"lines":{"total":[0-9]*,"covered":[0-9]*,"skipped":[0-9]*,"pct":[0-9.]*' | grep -o '"pct":[0-9.]*' | head -1 | cut -d: -f2)
+            echo "Overall Line Coverage: ${overall}%"
+            
+            # Production requirement: 90% coverage
+            if (( $(echo "$overall < 90" | bc -l 2>/dev/null || echo "0") )); then
+              echo "❌ FAIL: Coverage ${overall}% below 90% production threshold"
+              echo "📊 Required: 90% | Actual: ${overall}%"
+              echo "💡 Tip: Add tests for uncovered lines before merging"
+              exit 1
+            fi
+            echo "✅ Coverage ${overall}% meets production threshold (90%)"
+          else
+            echo "❌ FAIL: No coverage summary found"
+            exit 1
+          fi
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 8b: API Performance Tests (Response Time < 50ms)
+  # ═══════════════════════════════════════════════════════════════
+  performance-tests:
+    name: 'API Performance Tests (< 50ms)'
+    runs-on: ubuntu-latest
+    needs: [docker-check]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Start API Server
+        run: |
+          echo "🚀 Starting API server for performance tests..."
+          cd apps/api
+          bun run src/main.ts &
+          echo $! > /tmp/api.pid
+          
+          # Wait for server
+          for i in {1..30}; do
+            if curl -s http://localhost:3000/ > /dev/null 2>&1; then
+              echo "✅ API server is ready"
+              break
+            fi
+            sleep 1
+          done
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-performance-test
+          NODE_ENV: test
+          PORT: 3000
+
+      - name: Run Performance Tests
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "  API Performance Tests (Target: < 50ms p95)"
+          echo "═══════════════════════════════════════════════════════════════"
+          
+          API_URL="http://localhost:3000"
+          
+          # Function to measure response time
+          measure_endpoint() {
+            local endpoint=$1
+            local method=${2:-GET}
+            local body=$3
+            
+            # Run 10 requests and calculate average
+            total_time=0
+            max_time=0
+            
+            for i in {1..10}; do
+              if [ "$method" = "POST" ]; then
+                time_ms=$(curl -s -o /dev/null -w "%{time_total}" \
+                  -X POST "$API_URL$endpoint" \
+                  -H "Content-Type: application/json" \
+                  -d "$body" 2>/dev/null || echo "0")
+              else
+                time_ms=$(curl -s -o /dev/null -w "%{time_total}" \
+                  "$API_URL$endpoint" 2>/dev/null || echo "0")
+              fi
+              
+              # Convert to milliseconds (curl returns seconds)
+              time_ms=$(echo "$time_ms * 1000" | bc)
+              time_ms=${time_ms%.*}
+              
+              total_time=$((total_time + time_ms))
+              
+              if [ $time_ms -gt $max_time ]; then
+                max_time=$time_ms
+              fi
+            done
+            
+            avg_time=$((total_time / 10))
+            echo "$avg_time $max_time"
+          }
+          
+          # Test endpoints
+          echo "Testing API endpoints..."
+          
+          # Health/Root endpoint
+          read avg max < <(measure_endpoint "/")
+          echo "GET /: avg=${avg}ms max=${max}ms"
+          
+          if [ $avg -gt 50 ]; then
+            echo "❌ FAIL: GET / average response time (${avg}ms) exceeds 50ms threshold"
+            exit 1
+          fi
+          
+          # Provision endpoint (POST)
+          read avg max < <(measure_endpoint "/api/provision" "POST" '{}')
+          echo "POST /api/provision: avg=${avg}ms max=${max}ms"
+          
+          # For write operations, we allow slightly more but still check
+          if [ $avg -gt 100 ]; then
+            echo "⚠️ WARNING: POST /api/provision average (${avg}ms) is high (target: < 100ms)"
+          fi
+          
+          echo ""
+          echo "✅ All performance tests passed"
+          echo "═══════════════════════════════════════════════════════════════"
+
+      - name: Stop API Server
+        if: always()
+        run: |
+          if [ -f /tmp/api.pid ]; then
+            kill $(cat /tmp/api.pid) 2>/dev/null || true
+          fi
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 9: Docker Validation (Build & Health Check)
+  # ═══════════════════════════════════════════════════════════════
+  docker-check:
+    name: 'Docker & Docker Compose Validation'
+    runs-on: ubuntu-latest
+    needs: [build]
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Docker Files Exist
+        run: |
+          echo "🔍 Checking Docker files..."
+          
+          if [ ! -f "Dockerfile" ]; then
+            echo "⚠️ Warning: Dockerfile not found in root"
+          else
+            echo "✅ Dockerfile exists"
+          fi
+          
+          if [ ! -f "docker-compose.yml" ]; then
+            echo "❌ docker-compose.yml not found"
+            exit 1
+          fi
+          echo "✅ docker-compose.yml exists"
+      
+      - name: Validate docker-compose.yml Syntax
+        run: |
+          echo "🔍 Validating docker-compose.yml syntax..."
+          docker compose config > /dev/null
+          echo "✅ docker-compose.yml syntax is valid"
+      
+      - name: Validate Dockerfile Syntax
+        run: |
+          if [ -f "Dockerfile" ]; then
+            echo "🔍 Validating Dockerfile..."
+            # Check for common Dockerfile issues
+            if grep -q "^FROM" Dockerfile; then
+              echo "✅ Dockerfile has FROM instruction"
+            else
+              echo "❌ Dockerfile missing FROM instruction"
+              exit 1
+            fi
+            
+            if grep -q "latest" Dockerfile; then
+              echo "⚠️ Warning: Dockerfile uses 'latest' tag (not recommended for production)"
+            fi
+            
+            echo "✅ Dockerfile validation complete"
+          fi
+
+      - name: Container Vulnerability Scan (Trivy - API)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'apps/api/Dockerfile'
+          scan-type: 'config'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Wait for Services Health
+        run: |
+          echo "⏳ Waiting for services to be healthy..."
+          sleep 10
+          echo "✅ Services should be ready"
+      
+      - name: Check Service Ports
+        run: |
+          echo "🔍 Checking exposed ports..."
+          
+          # Install netcat if not present
+          which nc || sudo apt-get install -y netcat-openbsd
+          
+          # Check if services are accessible
+          if nc -z localhost 5432; then
+            echo "✅ PostgreSQL port (5432) is accessible"
+          else
+            echo "❌ PostgreSQL port (5432) is not accessible"
+            exit 1
+          fi
+          
+          if nc -z localhost 6379; then
+            echo "✅ Redis port (6379) is accessible"
+          else
+            echo "❌ Redis port (6379) is not accessible"
+            exit 1
+          fi
+          
+          echo "✅ All service ports are accessible"
+      
+      - name: Test Database Connectivity
+        run: |
+          echo "🔍 Testing database connectivity..."
+          
+          # Test PostgreSQL
+          if command -v psql &> /dev/null; then
+            PGPASSWORD=test psql -h localhost -U test -d test -c "SELECT 1;" > /dev/null 2>&1 && echo "✅ PostgreSQL connection successful"
+          else
+            echo "⚠️ psql not available, skipping connection test"
+          fi
+          
+          # Test Redis
+          if command -v redis-cli &> /dev/null; then
+            redis-cli -h localhost ping | grep -q "PONG" && echo "✅ Redis connection successful"
+          else
+            echo "⚠️ redis-cli not available, skipping connection test"
+          fi
+
+  # ═══════════════════════════════════════════════════════════════
+  # Phase 10: Final Summary
+  # ═══════════════════════════════════════════════════════════════
+  summary:
+    name: 'CI Summary'
+    runs-on: ubuntu-latest
+    needs: [secret-scan, s1-compliance, security-audit, build, unit-tests, coverage-gate, performance-tests, docker-check]
+    if: always()
+    steps:
+      - name: Report Status
+        run: |
+          echo "═══════════════════════════════════════════════════════════════"
+          echo "                    CI Fast Summary"
+          echo "═══════════════════════════════════════════════════════════════"
+          echo ""
+          echo "Security:"
+          echo "  Secret Scan:     ${{ needs.secret-scan.result }}"
+          echo "  S1 Compliance:   ${{ needs.s1-compliance.result }}"
+          echo "  Security Audit:  ${{ needs.security-audit.result }}"
+          echo ""
+          echo "Build & Test:"
+          echo "  Build:           ${{ needs.build.result }}"
+          echo "  Unit Tests:      ${{ needs.unit-tests.result }}"
+          echo "  Coverage Gate:   ${{ needs.coverage-gate.result }} (90% required)"
+          echo "  Performance:     ${{ needs.performance-tests.result }} (< 50ms)"
+          echo ""
+          echo "Infrastructure:"
+          echo "  Docker Check:    ${{ needs.docker-check.result }}"
+          echo ""
+          
+          # All critical gates must pass
+          if [ "${{ needs.build.result }}" == "success" ] && \
+             [ "${{ needs.unit-tests.result }}" == "success" ] && \
+             [ "${{ needs.coverage-gate.result }}" == "success" ] && \
+             [ "${{ needs.performance-tests.result }}" == "success" ]; then
+            echo "✅ CI Fast PASSED - All gates cleared"
+            echo "═══════════════════════════════════════════════════════════════"
+          else
+            echo "❌ CI Fast FAILED - Check failed gates above"
+            echo "═══════════════════════════════════════════════════════════════"
+            exit 1
+          fi

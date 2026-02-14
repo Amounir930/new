@@ -1,0 +1,117 @@
+name: "🚨 S5 Exception Handling Gate"
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  checks: write
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+  JWT_SECRET: test_secret_key_for_ci_environment_only_32
+  MINIO_ENDPOINT: localhost
+  MINIO_ACCESS_KEY: test_access_key
+  MINIO_SECRET_KEY: test_secret_key
+
+jobs:
+  s5-exception-handling-test:
+    name: "S5 Exception Handling Security Test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1.45"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: "S5.0 - Structure Integrity Check (CI Sentinel)"
+        run: bun run src/utils/ci-sentinel.ts S5
+        working-directory: packages/security
+
+      - name: "S5.1 - Exception Filter Safety Test"
+        run: |
+          echo "🧪 Running Vitest exception filter safety tests..."
+          # This runs the existing packages/middleware/src/exception-filter.test.ts
+          # Radical Fix: Reject success if no tests are found
+          bun run test exception-filter.test.ts --passWithNoTests=false
+        working-directory: packages/middleware
+
+      - name: "S5.2 - Surgical Leak Scan"
+        run: |
+          echo "🔍 Scanning for direct stack trace leaks (Surgical)..."
+          
+          # Detect explicit stack printing in active code
+          # Excludes the exception filter itself and tests
+          STACK_LEAKS=$(grep -rnE "\.stack|\.printStackTrace\(\)" packages/*/src apps/*/src --include="*.ts" 2>/dev/null | \
+            grep -vE "^\s*//" | \
+            grep -vE "(exception-filter\.ts|logger\.service|\.test\.|\.spec\.)" || true)
+
+          if [ -n "$STACK_LEAKS" ]; then
+            echo "🚨 CRITICAL: Potential direct stack trace leak detected!"
+            echo "$STACK_LEAKS"
+            exit 1
+          fi
+          
+          echo "✅ S5.2: No direct stack trace leaks found"
+      - name: "S5.3 - Error Response Body Safety Test"
+        run: |
+          echo "🔍 Scanning for unsafe error response patterns..."
+          
+          # Gate 1: Detect responses that leak internal error details to clients
+          # Look for patterns where raw error messages/objects are sent in HTTP responses
+          UNSAFE_RESPONSE=$(grep -rnE \
+            "(res\.json\(.*error\.message|res\.send\(.*err\.|response\.json\(.*\.stack|throw new HttpException\(.*error\.message)" \
+            apps/*/src packages/*/src --include="*.ts" 2>/dev/null | \
+            grep -vE "^\s*//" | \
+            grep -vE "(\.test\.|\.spec\.|exception-filter\.ts|logger\.service)" || true)
+          
+          if [ -n "$UNSAFE_RESPONSE" ]; then
+            echo "🚨 CRITICAL: Raw error details potentially exposed in HTTP responses!"
+            echo "$UNSAFE_RESPONSE"
+            echo "   Fix: Use standardized error DTOs, never pass raw error.message to clients."
+            exit 1
+          fi
+          
+          # Gate 2: Detect database error details leaking through responses
+          DB_LEAK=$(grep -rnE \
+            "(QueryFailedError|TypeORMError|DrizzleError|PrismaClientKnownRequestError|SQLSTATE)" \
+            apps/*/src packages/*/src --include="*.ts" 2>/dev/null | \
+            grep -vE "^\s*//" | \
+            grep -vE "(exception-filter\.ts|logger\.service|\.test\.|\.spec\.|error-handler)" || true)
+          
+          if [ -n "$DB_LEAK" ]; then
+            echo "⚠️ WARNING: Database error type references found in application code."
+            echo "$DB_LEAK"
+            echo "   Ensure these are caught by the exception filter and NOT forwarded to clients."
+          fi
+          
+          # Gate 3: Detect file path exposure patterns
+          PATH_LEAK=$(grep -rnE \
+            "(__dirname|__filename|process\.cwd\(\)|path\.resolve|path\.join)" \
+            apps/*/src packages/*/src --include="*.ts" 2>/dev/null | \
+            grep -E "(res\.|response\.|json\(|send\()" | \
+            grep -vE "^\s*//" | \
+            grep -vE "(\.test\.|\.spec\.)" || true)
+          
+          if [ -n "$PATH_LEAK" ]; then
+            echo "🚨 CRITICAL: Server file paths potentially exposed in HTTP responses!"
+            echo "$PATH_LEAK"
+            exit 1
+          fi
+          
+          echo "✅ S5.3: Error response bodies are safe (no internal detail leaks)"
+
+      - name: S5 Final Report
+        if: always()
+        run: |
+          echo ""
+          echo "╔═══════════════════════════════════════════════════════════════╗"
+          echo "║           S5 EXCEPTION HANDLING GATE COMPLETE                 ║"
+          echo "╚═══════════════════════════════════════════════════════════════╝"
