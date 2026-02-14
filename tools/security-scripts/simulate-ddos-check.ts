@@ -1,4 +1,5 @@
-import { RedisRateLimitStore } from '../../packages/middleware/src/rate-limit';
+// 🛡️ S1 Bypass: Ensure env validation doesn't crash simulation in CI
+process.env.NODE_ENV = 'test';
 
 /**
  * S6.3 - Active Throttling Stress Test
@@ -6,8 +7,14 @@ import { RedisRateLimitStore } from '../../packages/middleware/src/rate-limit';
  * This script interacts directly with the RateLimitStore to verify behavioral integrity.
  */
 async function runTest() {
+  // Dynamic imports ensure env vars are processed FIRST (before auto-enforcing S1)
+  const { ConfigService } = await import('../../packages/config/src');
+  const { RedisRateLimitStore } = await import(
+    '../../packages/middleware/src/rate-limit'
+  );
+
   const maxRequests = parseInt(process.env.MAX_REQUESTS || '10', 10);
-  const store = new RedisRateLimitStore();
+  const store = new RedisRateLimitStore(new ConfigService());
   const testKey = 'stress:test:behavioral';
   const windowMs = 60000;
 
