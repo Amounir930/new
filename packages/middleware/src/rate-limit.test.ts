@@ -1,4 +1,4 @@
-import { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config';
 import { type ExecutionContext, HttpException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createClient } from 'redis';
@@ -79,8 +79,8 @@ describe('RateLimitGuard', () => {
         getRequest: () => mockRequest,
         getResponse: () => mockResponse,
       }),
-      getHandler: () => function testHandler() { },
-      getClass: () => class TestController { },
+      getHandler: () => function testHandler() {},
+      getClass: () => class TestController {},
     } as any;
   });
 

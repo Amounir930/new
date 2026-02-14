@@ -5,7 +5,7 @@
  * CRITICAL FIX: Using Redis for distributed rate limiting (multi-instance support)
  */
 
-import { ConfigService } from '@apex/config';
+import { ConfigModule, type ConfigService } from '@apex/config';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -16,7 +16,7 @@ import {
   Module,
   SetMetadata,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import type { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { createClient, type RedisClientType } from 'redis';
 
@@ -50,7 +50,7 @@ export class RedisRateLimitStore {
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
     await this.connect();
@@ -264,7 +264,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -418,7 +418,8 @@ export const ThrottleConfig = {
 
 @Global()
 @Module({
+  imports: [ConfigModule],
   providers: [RedisRateLimitStore, RateLimitGuard],
   exports: [RedisRateLimitStore, RateLimitGuard],
 })
-export class RateLimitModule { }
+export class RateLimitModule {}
