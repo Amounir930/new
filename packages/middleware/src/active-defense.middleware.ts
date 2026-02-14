@@ -10,11 +10,12 @@ import {
   type NestMiddleware,
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import type { RedisRateLimitStore } from './redis-rate-limit-store.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 @Injectable()
 export class ActiveDefenseMiddleware implements NestMiddleware {
-  constructor(private readonly store: RedisRateLimitStore) {}
+  constructor(private readonly store: RedisRateLimitStore) { }
 
   private readonly honeypotPaths = [
     /wp-admin/i,

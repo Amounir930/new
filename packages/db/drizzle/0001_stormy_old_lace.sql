@@ -50,7 +50,7 @@ CREATE TABLE "tenant_quotas" (
 );
 --> statement-breakpoint
 ALTER TABLE "users" DROP CONSTRAINT "users_email_unique";--> statement-breakpoint
-ALTER TABLE "audit_logs" ALTER COLUMN "metadata" SET DATA TYPE jsonb;--> statement-breakpoint
+ALTER TABLE "audit_logs" ALTER COLUMN "metadata" SET DATA TYPE jsonb USING "metadata"::jsonb;--> statement-breakpoint
 ALTER TABLE "audit_logs" ALTER COLUMN "created_at" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "email_hash" text NOT NULL;--> statement-breakpoint
 ALTER TABLE "feature_gates" ADD CONSTRAINT "feature_gates_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

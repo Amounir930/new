@@ -51,7 +51,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -221,8 +221,11 @@ export const ThrottleConfig = {
   ],
 };
 
+import { ActiveDefenseMiddleware } from './active-defense.middleware.js';
 import { FraudScoringService } from './fraud-scoring.service.js';
 import { GeoIpService } from './geo-ip.service.js';
+import { GovernanceGuard } from './governance.guard.js';
+import { QuotaInterceptor } from './quota.interceptor.js';
 
 @Global()
 @Module({
@@ -232,6 +235,9 @@ import { GeoIpService } from './geo-ip.service.js';
     GeoIpService,
     FraudScoringService,
     RateLimitGuard,
+    ActiveDefenseMiddleware,
+    GovernanceGuard,
+    QuotaInterceptor,
     {
       provide: REFLECTOR_TOKEN,
       useExisting: Reflector,
@@ -246,6 +252,9 @@ import { GeoIpService } from './geo-ip.service.js';
     RateLimitGuard,
     GeoIpService,
     FraudScoringService,
+    ActiveDefenseMiddleware,
+    GovernanceGuard,
+    QuotaInterceptor,
   ],
 })
-export class RateLimitModule {}
+export class RateLimitModule { }

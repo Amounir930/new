@@ -1,15 +1,2 @@
-node_modules
-dist
-build
-coverage
-.next
-.turbo
-out
-apps/web/public
-packages/ui/dist
-**/*.d.ts
-**/*.js
-**/*.map
-templates
-tools
-coverage-report.json
+packages/db/drizzle/meta/**
+packages/db/drizzle/_journal.json

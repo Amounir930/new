@@ -12,7 +12,8 @@ import {
   Injectable,
   SetMetadata,
 } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { Reflector } from '@nestjs/core';
 import type { TenantRequest } from './tenant-isolation.middleware';
 
 export const FEATURE_KEY = 'governance_feature';
@@ -26,7 +27,7 @@ export const RequireFeature = (feature: string) =>
 
 @Injectable()
 export class GovernanceGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const feature = this.reflector.get<string>(

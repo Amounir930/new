@@ -12,7 +12,8 @@ import {
   type NestInterceptor,
   SetMetadata,
 } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { Reflector } from '@nestjs/core';
 import type { Observable } from 'rxjs';
 import type { TenantRequest } from './tenant-isolation.middleware';
 
@@ -27,7 +28,7 @@ export const CheckQuota = (resource: 'products' | 'orders' | 'pages') =>
 
 @Injectable()
 export class QuotaInterceptor implements NestInterceptor {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   async intercept(
     context: ExecutionContext,
