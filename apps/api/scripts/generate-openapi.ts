@@ -78,7 +78,12 @@ async function generate() {
       })
       .overrideProvider(EncryptionService) // Mock EncryptionService
       .useValue({
-        encrypt: () => ({ encrypted: 'mock', iv: 'mock', tag: 'mock', salt: 'mock' }),
+        encrypt: () => ({
+          encrypted: 'mock',
+          iv: 'mock',
+          tag: 'mock',
+          salt: 'mock',
+        }),
         decrypt: () => 'mock-decrypted',
         hashSensitiveData: () => 'mock-hash',
       })
