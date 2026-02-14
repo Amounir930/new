@@ -51,7 +51,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -248,4 +248,4 @@ import { GeoIpService } from './geo-ip.service.js';
     FraudScoringService,
   ],
 })
-export class RateLimitModule { }
+export class RateLimitModule {}

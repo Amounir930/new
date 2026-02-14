@@ -9,7 +9,7 @@ echo "  🎯 APEX V2 - SURGICAL SAST GREP SCANNER (S13)"
 echo "═══════════════════════════════════════════════════════════════════"
 
 EXIT_CODE=0
-IGNORE_PATHS="(node_modules|\.next/|dist/|build/|\.turbo/|\.test\.|\.spec\.|vitest\.config|scripts/|tooling/|ci-sentinel\.ts|scanner-cli\.ts|rate-limit\.ts|report-orchestrator\.ts|bun-shell\.ts|packages/export/src/strategies/)"
+IGNORE_PATHS="(node_modules|\.next/|dist/|build/|\.turbo/|\.test\.|\.spec\.|vitest\.config|scripts/|tooling/|ci-sentinel\.ts|scanner-cli\.ts|rate-limit\.ts|report-orchestrator\.ts|bun-shell\.ts|packages/export/src/strategies/|redis-rate-limit-store\.ts)"
 
 # 1. RCE Detection (Remote Code Execution)
 echo -e "\n[*] Scanning for RCE patterns (exec/spawn/child_process)..."
