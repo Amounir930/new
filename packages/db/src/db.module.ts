@@ -22,4 +22,4 @@ import { TenantRegistryService } from './tenant-registry.service.js';
     'DATABASE_POOL', // Export token string
   ],
 })
-export class DbModule { }
+export class DbModule {}
