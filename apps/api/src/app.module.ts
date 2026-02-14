@@ -5,14 +5,18 @@
 
 import { AuditInterceptor, AuditModule, AuditService } from '@apex/audit';
 import { DbModule } from '@apex/db';
-import { TenantIsolationMiddleware } from '@apex/middleware';
+import {
+  RateLimitGuard,
+  RateLimitModule,
+  TenantIsolationMiddleware,
+} from '@apex/middleware';
 import {
   type MiddlewareConsumer,
   Module,
   type NestModule,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 // import { AuditInterceptor } from './audit-interceptor.local.js'; // REMOVED
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
@@ -26,7 +30,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     }),
 
     // S6: Rate Limiting (Throttler)
-    // S6: Rate Limiting is now handled by RateLimitGuard (Redis-backed in middleware)
+    RateLimitModule,
 
     HealthModule,
     ProvisioningModule,
@@ -44,8 +48,11 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
       provide: 'AUDIT_SERVICE',
       useExisting: AuditService,
     },
-    // Note: RateLimitGuard is HTTP-specific and applied per-controller
-    // Not registered globally to avoid CLI context issues
+    // S6: Global Rate Limiting
+    {
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
+    },
   ],
 })
 export class AppModule implements NestModule {

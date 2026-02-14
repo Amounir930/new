@@ -1,3 +1,4 @@
+import { ConfigService } from '@apex/config';
 import { type ExecutionContext, HttpException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createClient } from 'redis';
@@ -31,33 +32,37 @@ vi.mock('redis', () => ({
 describe('RateLimitGuard', () => {
   let guard: RateLimitGuard;
   let reflector: Reflector;
+  let store: RedisRateLimitStore;
+  let configService: ConfigService;
   let mockContext: ExecutionContext;
   let mockRequest: any;
   let mockResponse: any;
 
-  // Mock the singleton store methods
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Mock the singleton store instance methods
-    vi.spyOn(RedisRateLimitStore.prototype, 'isBlocked').mockResolvedValue({
+    reflector = new Reflector();
+    // Mock ConfigService
+    configService = {
+      get: vi.fn().mockReturnValue('redis://localhost:6379'),
+    } as any;
+
+    // Mock RedisRateLimitStore instance
+    store = new RedisRateLimitStore(configService);
+
+    // Spy on store methods
+    vi.spyOn(store, 'isBlocked').mockResolvedValue({
       blocked: false,
       retryAfter: 0,
     });
-    vi.spyOn(RedisRateLimitStore.prototype, 'increment').mockResolvedValue({
+    vi.spyOn(store, 'increment').mockResolvedValue({
       count: 1,
       ttl: 60,
     });
-    vi.spyOn(
-      RedisRateLimitStore.prototype,
-      'incrementViolations'
-    ).mockResolvedValue(0);
-    vi.spyOn(RedisRateLimitStore.prototype, 'block').mockResolvedValue(
-      undefined
-    );
+    vi.spyOn(store, 'incrementViolations').mockResolvedValue(0);
+    vi.spyOn(store, 'block').mockResolvedValue(undefined);
 
-    reflector = new Reflector();
-    guard = new RateLimitGuard(reflector);
+    guard = new RateLimitGuard(reflector, store);
 
     mockRequest = {
       headers: {},
@@ -74,8 +79,8 @@ describe('RateLimitGuard', () => {
         getRequest: () => mockRequest,
         getResponse: () => mockResponse,
       }),
-      getHandler: () => function testHandler() {},
-      getClass: () => class TestController {},
+      getHandler: () => function testHandler() { },
+      getClass: () => class TestController { },
     } as any;
   });
 
@@ -120,12 +125,12 @@ describe('RateLimitGuard', () => {
   it('should identify by API key if present', async () => {
     mockRequest.headers['x-api-key'] = 'test-key';
     await guard.canActivate(mockContext);
-    // Identification logic is internal, but passing implies it worked
+    // Identification logic is internal
     expect(mockResponse.setHeader).toHaveBeenCalled();
   });
 
   it('should throw TOO_MANY_REQUESTS when limit exceeded', async () => {
-    vi.spyOn(RedisRateLimitStore.prototype, 'increment').mockResolvedValue({
+    vi.spyOn(store, 'increment').mockResolvedValue({
       count: 101,
       ttl: 60,
     });
@@ -133,7 +138,7 @@ describe('RateLimitGuard', () => {
   });
 
   it('should throw TOO_MANY_REQUESTS when blocked', async () => {
-    vi.spyOn(RedisRateLimitStore.prototype, 'isBlocked').mockResolvedValue({
+    vi.spyOn(store, 'isBlocked').mockResolvedValue({
       blocked: true,
       retryAfter: 300,
     });
@@ -150,7 +155,7 @@ describe('RateLimitGuard', () => {
   it('should identify IP from x-forwarded-for header', async () => {
     mockRequest.headers['x-forwarded-for'] = '1.2.3.4, 5.6.7.8';
     await guard.canActivate(mockContext);
-    expect(RedisRateLimitStore.prototype.increment).toHaveBeenCalledWith(
+    expect(store.increment).toHaveBeenCalledWith(
       expect.stringContaining('ip:1.2.3.4'),
       expect.any(Number)
     );
@@ -159,24 +164,19 @@ describe('RateLimitGuard', () => {
   it('should identify IP from x-real-ip header', async () => {
     mockRequest.headers['x-real-ip'] = '9.10.11.12';
     await guard.canActivate(mockContext);
-    expect(RedisRateLimitStore.prototype.increment).toHaveBeenCalledWith(
+    expect(store.increment).toHaveBeenCalledWith(
       expect.stringContaining('ip:9.10.11.12'),
       expect.any(Number)
     );
   });
 
   it('should block IP after 5 violations', async () => {
-    vi.spyOn(RedisRateLimitStore.prototype, 'increment').mockResolvedValue({
+    vi.spyOn(store, 'increment').mockResolvedValue({
       count: 101,
       ttl: 60,
     });
-    vi.spyOn(
-      RedisRateLimitStore.prototype,
-      'incrementViolations'
-    ).mockResolvedValue(5);
-    const blockSpy = vi
-      .spyOn(RedisRateLimitStore.prototype, 'block')
-      .mockResolvedValue(undefined);
+    vi.spyOn(store, 'incrementViolations').mockResolvedValue(5);
+    const blockSpy = vi.spyOn(store, 'block');
 
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
       'Rate limit exceeded'
@@ -185,17 +185,12 @@ describe('RateLimitGuard', () => {
   });
 
   it('should not block before 5 violations', async () => {
-    vi.spyOn(RedisRateLimitStore.prototype, 'increment').mockResolvedValue({
+    vi.spyOn(store, 'increment').mockResolvedValue({
       count: 101,
       ttl: 60,
     });
-    vi.spyOn(
-      RedisRateLimitStore.prototype,
-      'incrementViolations'
-    ).mockResolvedValue(3);
-    const blockSpy = vi
-      .spyOn(RedisRateLimitStore.prototype, 'block')
-      .mockResolvedValue(undefined);
+    vi.spyOn(store, 'incrementViolations').mockResolvedValue(3);
+    const blockSpy = vi.spyOn(store, 'block');
 
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
       'Rate limit exceeded'
@@ -206,9 +201,13 @@ describe('RateLimitGuard', () => {
 
 describe('RedisRateLimitStore Branches', () => {
   let store: RedisRateLimitStore;
+  let configService: ConfigService;
 
   beforeEach(() => {
-    store = new RedisRateLimitStore();
+    configService = {
+      get: vi.fn(),
+    } as any;
+    store = new RedisRateLimitStore(configService);
     vi.clearAllMocks();
   });
 
@@ -248,7 +247,7 @@ describe('RedisRateLimitStore Branches', () => {
   });
 
   it('should return null if already connecting', async () => {
-    store.connecting = true;
+    (store as any).connecting = true;
     const client = await store.getClient();
     expect(client).toBeNull();
   });

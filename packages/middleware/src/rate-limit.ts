@@ -5,14 +5,18 @@
  * CRITICAL FIX: Using Redis for distributed rate limiting (multi-instance support)
  */
 
+import { ConfigService } from '@apex/config';
 import {
   type CanActivate,
   type ExecutionContext,
+  Global,
   HttpException,
   HttpStatus,
   Injectable,
+  Module,
+  SetMetadata,
 } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { createClient, type RedisClientType } from 'redis';
 
@@ -34,6 +38,7 @@ export interface RateLimitConfig {
  * Redis Rate Limit Store
  * CRITICAL: Supports distributed deployments (Docker/K8s multi-instance)
  */
+@Injectable()
 export class RedisRateLimitStore {
   private client: RedisClientType | null = null;
   private connecting = false;
@@ -44,6 +49,12 @@ export class RedisRateLimitStore {
     string,
     { count: number; resetTime: number; violations: number }
   > = new Map();
+
+  constructor(private readonly configService: ConfigService) { }
+
+  async onModuleInit() {
+    await this.connect();
+  }
 
   async getClient(): Promise<RedisClientType | null> {
     if (this.client?.isOpen) {
@@ -68,7 +79,8 @@ export class RedisRateLimitStore {
   }
 
   private async connect(): Promise<void> {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl =
+      this.configService.get('REDIS_URL') || 'redis://localhost:6379';
 
     try {
       this.connecting = true;
@@ -241,9 +253,6 @@ export class RedisRateLimitStore {
   }
 }
 
-// Singleton store instance
-const rateLimitStore = new RedisRateLimitStore();
-
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly defaultConfig: RateLimitConfig = {
@@ -252,7 +261,10 @@ export class RateLimitGuard implements CanActivate {
     blockDurationMs: 300_000, // 5 minutes block after violations
   };
 
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly rateLimitStore: RedisRateLimitStore
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -286,7 +298,7 @@ export class RateLimitGuard implements CanActivate {
     const now = Date.now();
 
     // Check if currently blocked (IP blacklist after 5 violations)
-    const { blocked, retryAfter } = await rateLimitStore.isBlocked(
+    const { blocked, retryAfter } = await this.rateLimitStore.isBlocked(
       key,
       this.defaultConfig.blockDurationMs || 300_000
     );
@@ -302,19 +314,19 @@ export class RateLimitGuard implements CanActivate {
     }
 
     // Increment request count
-    const { count } = await rateLimitStore.increment(key, windowMs);
+    const { count } = await this.rateLimitStore.increment(key, windowMs);
 
     // Check if limit exceeded
     if (count > requests) {
       // Increment violations
-      const violations = await rateLimitStore.incrementViolations(
+      const violations = await this.rateLimitStore.incrementViolations(
         key,
         this.defaultConfig.blockDurationMs || 300_000
       );
 
       // Block after 5 violations
       if (violations >= 5) {
-        await rateLimitStore.block(
+        await this.rateLimitStore.block(
           key,
           this.defaultConfig.blockDurationMs || 300_000
         );
@@ -335,6 +347,7 @@ export class RateLimitGuard implements CanActivate {
     // Add rate limit headers
     const response = context.switchToHttp().getResponse();
     response.setHeader('X-RateLimit-Limit', requests);
+    // request count might be > limit if we didn't block earlier (shouldn't happen with strict > logic)
     response.setHeader('X-RateLimit-Remaining', Math.max(0, requests - count));
     response.setHeader('X-RateLimit-Reset', Math.ceil((now + windowMs) / 1000));
 
@@ -368,8 +381,6 @@ export class RateLimitGuard implements CanActivate {
 /**
  * Decorator for custom rate limits
  */
-import { SetMetadata } from '@nestjs/common';
-
 export const RATE_LIMIT_KEY = 'rate_limit';
 
 export const RateLimit = (config: Partial<RateLimitConfig>) =>
@@ -404,3 +415,10 @@ export const ThrottleConfig = {
     },
   ],
 };
+
+@Global()
+@Module({
+  providers: [RedisRateLimitStore, RateLimitGuard],
+  exports: [RedisRateLimitStore, RateLimitGuard],
+})
+export class RateLimitModule { }
