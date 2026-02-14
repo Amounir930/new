@@ -13,6 +13,7 @@ import {
   Global,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   Module,
   SetMetadata,
@@ -52,7 +53,7 @@ export class RedisRateLimitStore {
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async onModuleInit() {
     await this.connect();
@@ -264,9 +265,9 @@ export class RateLimitGuard implements CanActivate {
   };
 
   constructor(
-    private readonly reflector: Reflector,
+    @Inject(Reflector) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -424,4 +425,4 @@ export const ThrottleConfig = {
   providers: [RedisRateLimitStore, RateLimitGuard],
   exports: [RedisRateLimitStore, RateLimitGuard],
 })
-export class RateLimitModule {}
+export class RateLimitModule { }
