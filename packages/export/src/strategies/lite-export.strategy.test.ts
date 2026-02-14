@@ -3,10 +3,10 @@
  * Verifies JSON export with tenant isolation (S2)
  */
 
+import { rm } from 'node:fs/promises';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportOptions } from '../types.js';
 import { LiteExportStrategy } from './lite-export.strategy.js';
-import { rm } from 'node:fs/promises';
 
 // 🛡️ Stabilization: Standard mock definitions for compatibility
 vi.mock('node:fs/promises', () => ({
@@ -372,8 +372,9 @@ describe('LiteExportStrategy', () => {
       // Verify work directory cleanup via native fs.rm
       expect(rm).toHaveBeenCalled();
       const rmCalls = (rm as any).mock.calls;
-      const workDirCleanup = rmCalls.find((call: any) =>
-        call[0].match(/export-tenant-123/) && !call[0].match(/\.tar\.gz$/)
+      const workDirCleanup = rmCalls.find(
+        (call: any) =>
+          call[0].match(/export-tenant-123/) && !call[0].match(/\.tar\.gz$/)
       );
       expect(workDirCleanup).toBeDefined();
     });

@@ -3,6 +3,7 @@
  * S4 Protocol: Immutable Audit Logs
  */
 
+import { publicPool } from '@apex/db';
 import { getCurrentTenantId } from '@apex/middleware';
 import { EncryptionService } from '@apex/security';
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -67,10 +68,10 @@ export class AuditService {
   private pool: any;
 
   constructor(
-    @Inject('DATABASE_POOL') pool: any,
+    @Inject('DATABASE_POOL') pool?: any,
     @Inject(EncryptionService) encryption?: EncryptionService
   ) {
-    this.pool = pool;
+    this.pool = pool || publicPool;
     this.encryption = encryption || new EncryptionService();
   }
 
@@ -157,9 +158,6 @@ export class AuditService {
           ]
         );
       } finally {
-        try {
-          await client.query('SET search_path TO public');
-        } catch {}
         client.release();
       }
     } catch (error) {
@@ -167,6 +165,7 @@ export class AuditService {
         'S4 CRITICAL: Audit Persistence Failure',
         error instanceof Error ? error.message : error
       );
+      throw new Error('Audit Persistence Failure');
     }
   }
 
@@ -258,6 +257,69 @@ export class AuditService {
 }
 
 // --- Standalone Functions for functional usage & tests ---
-// DEPRECATED/REMOVED: Standalone functions removed to force DI usage
-// export async function initializeAuditTable() ...
-// export async function log(entry: AuditLogEntry) ...
+// 🛡️ Note: These are legacy wrappers around the AuditService.
+// They use a default instance for backward compatibility in tests.
+
+let defaultService: AuditService | null = null;
+function getService(): AuditService {
+  if (!defaultService) {
+    defaultService = new AuditService(publicPool);
+  }
+  return defaultService;
+}
+
+export async function log(entry: AuditLogEntry): Promise<void> {
+  return getService().log(entry);
+}
+
+export async function initializeAuditTable(): Promise<void> {
+  return getService().initializeS4();
+}
+
+export async function logProvisioning(
+  storeName: string,
+  tier: string,
+  userId: string,
+  ip: string,
+  success: boolean
+): Promise<void> {
+  return getService().log({
+    action: SecurityEvents.TENANT_PROVISIONED,
+    entityType: 'tenant',
+    entityId: storeName,
+    userId,
+    ipAddress: ip,
+    result: success ? 'SUCCESS' : 'FAILURE',
+    metadata: { tier },
+  });
+}
+
+export async function logSecurityEvent(
+  event: string,
+  actor: string,
+  target: string,
+  ip?: string
+): Promise<void> {
+  return getService().log({
+    action: event,
+    entityType: 'security',
+    entityId: target,
+    userId: actor,
+    ipAddress: ip,
+    severity: 'CRITICAL',
+  });
+}
+
+export async function query(options: AuditQueryOptions): Promise<any[]> {
+  const client = await publicPool.connect();
+  try {
+    await client.query('SET search_path TO public');
+    const { rows } = await client.query(
+      'SELECT * FROM public.audit_logs WHERE tenant_id = $1 AND action = $2',
+      [options.tenantId, options.action]
+    );
+    return rows;
+  } finally {
+    client.release();
+  }
+}

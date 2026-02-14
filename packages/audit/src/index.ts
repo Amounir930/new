@@ -11,4 +11,9 @@ export {
   type AuditQueryOptions,
   AuditService,
   type AuditSeverity,
+  initializeAuditTable,
+  log,
+  logProvisioning,
+  logSecurityEvent,
+  query,
 } from './audit.service.js';

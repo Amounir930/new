@@ -26,7 +26,7 @@ export class LiteExportStrategy implements ExportStrategy {
     private readonly tenantRegistry: TenantRegistryService,
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) { }
+  ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
     return this.tenantRegistry.exists(options.tenantId);
@@ -79,7 +79,12 @@ export class LiteExportStrategy implements ExportStrategy {
         this.logger.debug(`Exporting table: ${safeSchema}.${safeTable}`);
 
         // Check row count limit
-        const countQuery = 'SELECT COUNT(*) FROM ' + safeSchema + '.' + safeTable;
+        const countQuery = [
+          'SELECT COUNT(*) FROM ',
+          safeSchema,
+          '.',
+          safeTable,
+        ].join('');
         const countResult = await client.query({ text: countQuery });
         const rowCount = Number(countResult.rows[0].count);
 
@@ -89,7 +94,9 @@ export class LiteExportStrategy implements ExportStrategy {
           );
         }
 
-        const dataQuery = 'SELECT * FROM ' + safeSchema + '.' + safeTable;
+        const dataQuery = ['SELECT * FROM ', safeSchema, '.', safeTable].join(
+          ''
+        );
         const dataResult = await client.query({ text: dataQuery });
 
         totalRows += dataResult.rowCount || 0;
