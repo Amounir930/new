@@ -1,7 +1,7 @@
-import { publicPool } from './connection.js';
 import { EncryptionService } from '@apex/security';
 import { Global, Module } from '@nestjs/common';
 import { CustomerService } from './services/customer.service.js';
+import { publicPool } from './connection.js';
 import { TenantRegistryService } from './tenant-registry.service.js';
 
 @Global()

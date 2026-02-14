@@ -1,0 +1,138 @@
+/**
+ * Home Page Blueprint Service
+ *
+ * Handles persistence and retrieval of structured home page data (Header, Hero, Bento, etc.)
+ */
+import { HomePageBlueprintSchema, } from '@apex/validators';
+import { desc, eq, sql } from 'drizzle-orm';
+import { db } from '../connection';
+import { bentoGrids, flashSaleProducts, flashSales, searchAnalytics, tenantConfig, } from '../schema/storefront';
+export class HomePageService {
+    /**
+     * Get complete home page blueprint for a tenant
+     */
+    async getBlueprint(_tenantId) {
+        // 1. Fetch from tenant_config for basic objects
+        const configRows = await db.select().from(tenantConfig);
+        const hero = configRows.find((r) => r.key === 'home_hero_config')?.value;
+        const header = configRows.find((r) => r.key === 'home_header_config')?.value;
+        const footer = configRows.find((r) => r.key === 'home_footer_config')?.value;
+        const trust = configRows.find((r) => r.key === 'home_trust_settings')?.value;
+        const discovery = configRows.find((r) => r.key === 'home_discovery_settings')?.value;
+        // 2. Fetch complex sections from their tables
+        const flashCampaign = await db
+            .select()
+            .from(flashSales)
+            .where(eq(flashSales.status, 'active'))
+            .limit(1);
+        let flashSalesData;
+        if (flashCampaign[0]) {
+            const products = await db
+                .select()
+                .from(flashSaleProducts)
+                .where(eq(flashSaleProducts.flashSaleId, flashCampaign[0].id));
+            flashSalesData = {
+                endTime: flashCampaign[0].endTime.toISOString(),
+                products: products.map((p) => ({
+                    productId: p.productId,
+                    discountPercentage: Number(p.discountPercentage),
+                    quantityLimit: p.quantityLimit,
+                })),
+            };
+        }
+        const bento = await db.select().from(bentoGrids).limit(1);
+        const blueprint = {
+            header: header || { navigation: [] },
+            hero: hero || { slides: [] },
+            flashSales: flashSalesData,
+            bentoGrid: bento[0]
+                ? { layoutId: bento[0].layoutId, slots: bento[0].slots }
+                : { layoutId: 'default', slots: {} },
+            trust: trust || { marqueeTexts: [], serviceIcons: [] },
+            footer: footer || { contact: {} },
+            discovery: discovery || { algorithm: 'best_seller', limit: 8 },
+        };
+        // Validate against Zod schema
+        return HomePageBlueprintSchema.parse(blueprint);
+    }
+    /**
+     * Save/Update Hero Section
+     */
+    async updateHero(_tenantId, heroData) {
+        await db
+            .insert(tenantConfig)
+            .values({
+            key: 'home_hero_config',
+            value: heroData,
+        })
+            .onConflictDoUpdate({
+            target: tenantConfig.key,
+            set: { value: heroData, updatedAt: new Date() },
+        });
+    }
+    /**
+     * Create active Flash Sale campaign
+     */
+    async createFlashSale(_tenantId, campaign) {
+        return await db.transaction(async (tx) => {
+            const [newCampaign] = await tx
+                .insert(flashSales)
+                .values({
+                name: campaign.name || 'Flash Sale',
+                endTime: new Date(campaign.endTime),
+            })
+                .returning();
+            if (campaign.products && campaign.products.length > 0) {
+                await tx.insert(flashSaleProducts).values(campaign.products.map((p) => ({
+                    flashSaleId: newCampaign.id,
+                    productId: p.productId,
+                    discountPercentage: p.discountPercentage.toString(),
+                    quantityLimit: p.quantityLimit,
+                })));
+            }
+            return newCampaign;
+        });
+    }
+    /**
+     * Update Bento Grid layout
+     */
+    async updateBentoGrid(_tenantId, bentoData) {
+        await db.insert(bentoGrids).values({
+            name: 'Primary Home Grid',
+            layoutId: bentoData.layoutId,
+            slots: bentoData.slots,
+        });
+    }
+    /**
+     * Log search query for analytics
+     */
+    async logSearchQuery(_tenantId, query) {
+        const normalizedQuery = query.toLowerCase().trim();
+        await db
+            .insert(searchAnalytics)
+            .values({
+            query: normalizedQuery,
+            count: 1,
+        })
+            .onConflictDoUpdate({
+            target: searchAnalytics.query,
+            set: {
+                // 🔒 S11: Safe atomic increment. Isolation verified via S2 search_path.
+                count: sql `${searchAnalytics.count} + 1`,
+                lastSearchedAt: new Date(),
+            },
+        });
+    }
+    /**
+     * Get top searched terms
+     */
+    async getTopSearchedTerms(_tenantId, limit = 10) {
+        return await db
+            .select()
+            .from(searchAnalytics)
+            .orderBy(desc(searchAnalytics.count))
+            .limit(limit);
+    }
+}
+export const homePageService = new HomePageService();
+//# sourceMappingURL=home-page.service.js.map

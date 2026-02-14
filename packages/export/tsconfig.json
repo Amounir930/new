@@ -5,8 +5,28 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,
-    "paths": {}
+    "paths": {
+      "@apex/db": [
+        "../db/dist"
+      ],
+      "@apex/config": [
+        "../config/dist"
+      ],
+      "@apex/audit": [
+        "../audit/dist"
+      ],
+      "@apex/security": [
+        "../security/dist"
+      ]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "build", "**/*.test.ts"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/*.test.ts"
+  ]
 }

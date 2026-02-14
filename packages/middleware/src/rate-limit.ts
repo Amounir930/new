@@ -19,6 +19,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { APP_GUARD, Reflector } from '@nestjs/core';
+import type { Request } from 'express';
 import { createClient, type RedisClientType } from 'redis';
 
 export const REFLECTOR_TOKEN = 'REFLECTOR';
@@ -359,16 +360,17 @@ export class RateLimitGuard implements CanActivate {
 
   private getIdentifier(request: Request): string {
     // Use API key if available, otherwise IP
-    const apiKey = request.headers['x-api-key'] as string;
+    const headers = request.headers as any;
+    const apiKey = headers['x-api-key'] as string;
     if (apiKey) {
       return `api:${apiKey}`;
     }
 
     // Get IP from various headers (proxy support)
     const ip =
-      (request.headers['x-forwarded-for'] as string) ||
-      (request.headers['x-real-ip'] as string) ||
-      request.ip ||
+      (headers['x-forwarded-for'] as string) ||
+      (headers['x-real-ip'] as string) ||
+      (request as any).ip ||
       'unknown';
 
     return `ip:${ip.split(',')[0].trim()}`;
