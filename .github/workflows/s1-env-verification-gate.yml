@@ -34,6 +34,10 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: "Fetch History for Gitleaks"
+        run: |
+          git fetch --prune --unshallow || git fetch --prune --depth=1000
+
       - name: "S1.1 - Secret Detection (Gitleaks)"
         uses: gitleaks/gitleaks-action@v2
         env:

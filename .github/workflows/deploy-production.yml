@@ -44,11 +44,14 @@ jobs:
         run: |
           echo "🔍 Verifying staging deployment status..."
 
-          # Check staging health
-          STAGING_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" https://staging.60sec.shop || echo "000")
+          # Check staging health with verbose output for debugging
+          STAGING_HEALTH=$(curl -s -v -o /dev/null -w "%{http_code}" https://staging.60sec.shop 2>staging_debug.log || echo "000")
 
           if [ "$STAGING_HEALTH" != "200" ]; then
             echo "❌ CRITICAL: Staging is not healthy (status: ${STAGING_HEALTH})"
+            echo "--- Debug Logs ---"
+            cat staging_debug.log
+            echo "------------------"
             echo "Cannot deploy to production without healthy staging"
             exit 1
           fi

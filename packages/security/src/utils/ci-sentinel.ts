@@ -92,7 +92,8 @@ async function runGateS14() {
         // Broad search for test
         const bname = basename(file, '.ts');
         const search = execSync(
-          `find packages/export -name "*${bname}*.test.ts"`
+          `find ${join(PROJECT_ROOT, 'packages/export')} -name "*${bname}*.test.ts"`,
+          { cwd: PROJECT_ROOT }
         ).toString();
         if (!search.trim()) {
           console.error(`❌ CRITICAL: Missing test for ${file}`);
