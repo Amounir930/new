@@ -62,19 +62,5 @@
     "parser": {
       "unsafeParameterDecoratorsEnabled": true
     }
-  },
-  "overrides": [
-    {
-      "include": [
-        "packages/db/drizzle/meta/**",
-        "packages/db/drizzle/_journal.json"
-      ],
-      "formatter": {
-        "enabled": false
-      },
-      "linter": {
-        "enabled": false
-      }
-    }
-  ]
+  }
 }

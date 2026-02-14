@@ -1,2 +1,4 @@
-packages/db/drizzle/meta/**
-packages/db/drizzle/_journal.json
+**/drizzle/meta/**
+**/drizzle/_journal.json
+**/dist/**
+**/node_modules/**
