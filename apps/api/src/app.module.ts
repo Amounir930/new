@@ -5,7 +5,7 @@
 
 import { AuditModule, AuditService } from '@apex/audit';
 import { DbModule } from '@apex/db';
-import { RateLimitGuard, TenantIsolationMiddleware } from '@apex/middleware';
+import { TenantIsolationMiddleware } from '@apex/middleware';
 import {
   type MiddlewareConsumer,
   Module,
@@ -35,12 +35,6 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     DbModule,
   ],
   providers: [
-    // S6: TEMPORARILY DISABLED due to Reflector dependency crash
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: RateLimitGuard,
-    // },
-    // Reflector, // Required for RateLimitGuard dependency resolution (S6 Fix)
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
