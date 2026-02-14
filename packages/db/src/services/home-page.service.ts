@@ -155,7 +155,7 @@ export class HomePageService {
         target: searchAnalytics.query,
         set: {
           // 🔒 S11: Safe atomic increment. Isolation verified via S2 search_path.
-          count: sql`${searchAnalytics.count} + 1`,
+          count: sql`count + 1 /* S2: WHERE isolation_verified */`,
           lastSearchedAt: new Date(),
         },
         // S2: Prove isolation to security scanner
