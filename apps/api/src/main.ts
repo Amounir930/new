@@ -62,11 +62,11 @@ async function bootstrap() {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`],
-        styleSrc: ["'self'", (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`],
+        scriptSrc: ["'self'", 'https://cdn.jsdelivr.net', (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`],
+        styleSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com', (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`],
         imgSrc: ["'self'", 'data:', 'https:'],
         connectSrc: ["'self'"],
-        fontSrc: ["'self'"],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
       },
@@ -103,7 +103,8 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
+  // Swagger is mounted at /api/docs (prefix 'api' + path 'docs')
+  SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },
