@@ -24,13 +24,21 @@ mock.module('@apex/db', () => ({
 }));
 
 mock.module('./blueprint.js', () => ({
-  defaultBlueprintTemplate: {
-    settings: {
-      site_name: 'Default Site',
-      currency: 'USD',
+  getDefaultBlueprint: mock().mockResolvedValue({
+    id: 'mock-blueprint-id',
+    name: 'Default Blueprint',
+    plan: 'free',
+    isDefault: true,
+    blueprint: {
+      settings: {
+        site_name: 'Default Site',
+        currency: 'USD',
+      },
+      pages: [], // Empty pages to avoid 4th insert call
     },
-    pages: [], // Empty pages to avoid 4th insert call
-  },
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }),
 }));
 
 import { isSeeded, seedTenantData } from './seeder.js';

@@ -44,7 +44,8 @@ RUN groupadd -g 1001 node-group && \
 # Copy standalone build
 COPY --from=builder /app/apps/admin/.next/standalone ./
 COPY --from=builder /app/apps/admin/.next/static ./apps/admin/.next/static
-COPY --from=builder /app/apps/admin/public ./apps/admin/public
+# Copy public folder directly from source (NextJS standalone doesn't include it)
+COPY --from=builder --chown=node-user:node-group /app/apps/admin/public ./apps/admin/public
 
 # Secure permissions
 RUN chown -R node-user:node-group /app
