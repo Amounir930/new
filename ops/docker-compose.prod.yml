@@ -168,6 +168,9 @@ services:
       - CONTAINERS=1
       - NETWORKS=1
       - SERVICES=1
+      - EVENTS=1
+      - INFO=1
+      - VERSION=1
     networks:
       - apex-network
     deploy:
