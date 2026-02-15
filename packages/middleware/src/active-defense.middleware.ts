@@ -15,7 +15,7 @@ import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 @Injectable()
 export class ActiveDefenseMiddleware implements NestMiddleware {
-  constructor(private readonly store: RedisRateLimitStore) { }
+  constructor(private readonly store: RedisRateLimitStore) {}
 
   private readonly honeypotPaths = [
     /wp-admin/i,
