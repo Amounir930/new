@@ -27,7 +27,7 @@ jobs:
         env:
           POSTGRES_USER: safe_user
           POSTGRES_PASSWORD: safe_pass
-          POSTGRES_DB: test
+          POSTGRES_DB: apex_test
         ports:
           - 5432:5432
         options: >-
