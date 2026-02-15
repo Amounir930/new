@@ -190,11 +190,11 @@ jobs:
           
           # Start in background with log capture
           cd apps/api
-          # Ensure dist/main.js exists
-          ls -la dist/ || echo "❌ dist folder missing!"
+          # Ensure dist exists
+          ls -R dist/ || echo "❌ dist folder contents missing!"
           
-          echo "🚀 Executing bun run dist/main.js..."
-          bun run dist/main.js > ../../app.log 2>&1 &
+          echo "🚀 Executing bun dist/apps/api/src/main.js..."
+          bun dist/apps/api/src/main.js > ../../app.log 2>&1 &
           echo $! > /tmp/app.pid
           
           # Wait for startup
