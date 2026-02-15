@@ -155,15 +155,45 @@ services:
       retries: 3
 
   # ═══════════════════════════════════════════════════════════════
+  # S15: Docker Socket Proxy (Container Escape Protection)
+  # ═══════════════════════════════════════════════════════════════
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: apex-docker-proxy
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Only allow Traefik to see containers (read-only)
+      - CONTAINERS=1
+      - NETWORKS=1
+      - SERVICES=1
+    networks:
+      - apex-network
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:2375/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ═══════════════════════════════════════════════════════════════
   # Load Balancer (Traefik) - Dynamic SSL w/ Let's Encrypt
   # ═══════════════════════════════════════════════════════════════
   traefik:
     image: traefik:v2.11
     container_name: apex-traefik
     restart: always
+    depends_on:
+      docker-proxy:
+        condition: service_healthy
     command:
       - "--ping"
       - "--providers.docker=true"
+      - "--providers.docker.endpoint=tcp://docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=ops_apex-network"
       - "--entrypoints.web.address=:80"
@@ -184,7 +214,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Removed direct socket access - using proxy instead for S15 security
       - letsencrypt_data:/letsencrypt
     environment:
       - "DOCKER_API_VERSION=1.44"
