@@ -21,7 +21,9 @@ import {
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { HealthModule } from './health/health.module.js';
+import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
+import { BlueprintsModule } from './blueprints/blueprints.module.js';
 
 @Module({
   imports: [
@@ -38,7 +40,10 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     RateLimitModule,
 
     HealthModule,
+    HealthModule,
     ProvisioningModule,
+    BlueprintsModule,
+    AuditModule,
     AuditModule,
   ],
   providers: [
