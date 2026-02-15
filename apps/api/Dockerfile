@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════
 # 🏗️ Build Stage
 # ═══════════════════════════════════════════════════════════════
-FROM oven/bun:latest AS builder
+FROM oven/bun:1.3.8 AS builder
 WORKDIR /app
 
 # 📦 S1: Copy root manifests
@@ -33,7 +33,7 @@ RUN bun run build
 # ═══════════════════════════════════════════════════════════════
 # 🚀 Production Stage (Hardened)
 # ═══════════════════════════════════════════════════════════════
-FROM oven/bun:latest
+FROM oven/bun:1.3.8
 WORKDIR /app
 
 # S1: Environment
