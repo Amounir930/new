@@ -165,9 +165,13 @@ jobs:
         run: |
           echo "🔵 Starting application artifact for health verification..."
           
-          # Start in background
+          # Start in background with log capture
           cd apps/api
-          bun run dist/main.js &
+          # Ensure dist/main.js exists
+          ls -la dist/ || echo "❌ dist folder missing!"
+          
+          echo "🚀 Executing bun run dist/main.js..."
+          bun run dist/main.js > ../../app.log 2>&1 &
           echo $! > /tmp/app.pid
           
           # Wait for startup
@@ -198,6 +202,9 @@ jobs:
           done
           
           echo "❌ Blue environment health check failed after retries"
+          echo "--- Application Logs ---"
+          cat app.log
+          echo "------------------------"
           exit 1
 
       - name: Stop Application
