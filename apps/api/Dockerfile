@@ -34,8 +34,6 @@ RUN bun run build -- --concurrency=1
 # 🚀 Production Stage (Hardened)
 # ═══════════════════════════════════════════════════════════════
 FROM oven/bun:1.3.8
-WORKDIR /app
-
 # S1: Environment
 ENV NODE_ENV=production
 
@@ -47,6 +45,8 @@ RUN groupadd -g 1001 bun-group && \
 # We copy from builder to ensure all symlinks and dist folders exist
 COPY --from=builder /app /app
 
+WORKDIR /app/apps/api
+
 # S8: Secure permissions
 RUN chown -R bun-user:bun-group /app
 USER bun-user
@@ -54,4 +54,4 @@ USER bun-user
 EXPOSE 3000
 
 # 🏁 Final Command
-CMD ["bun", "run", "apps/api/dist/main.js"]
+CMD ["bun", "dist/main.js"]
