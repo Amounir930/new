@@ -15,7 +15,7 @@ const mockClient = {
 
 mock.module('@apex/db', () => ({
   publicPool: {
-    connect: mock().mockResolvedValue(mockClient),
+    connect: mock(() => Promise.resolve(mockClient)),
   },
 }));
 
