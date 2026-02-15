@@ -92,6 +92,9 @@ jobs:
           bun run test:prod
         env:
           NODE_ENV: production
+          ENCRYPTION_MASTER_KEY: "v3ry-StronG-K3y-@t-LeasT-32-CharS!"
+          JWT_SECRET: "dummy-secret-at-least-32-chars-long-123"
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres" # Dummy for validation
 
       - name: Create Release Archive
         run: |
