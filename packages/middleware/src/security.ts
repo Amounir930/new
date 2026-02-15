@@ -81,13 +81,13 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
  */
 export interface CorsConfig {
   origin:
-    | string
-    | string[]
-    | boolean
-    | ((
-        origin: string | undefined,
-        callback: (err: Error | null, allow?: boolean) => void
-      ) => void);
+  | string
+  | string[]
+  | boolean
+  | ((
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => void);
   methods: string[];
   allowedHeaders: string[];
   exposedHeaders: string[];
@@ -116,10 +116,16 @@ export const defaultCorsConfig: CorsConfig = {
       'http://127.0.0.1:5173',
     ];
 
+    // Production origins (explicitly whitelisted)
+    const productionOrigins = [
+      'https://super-admin.60sec.shop',
+      'https://admin.60sec.shop',
+    ];
+
     // Load additional origins from env
     const allowedOrigins =
       process.env.ALLOWED_ORIGINS?.split(',').filter(Boolean) || [];
-    const whitelist = [...devOrigins, ...allowedOrigins];
+    const whitelist = [...devOrigins, ...productionOrigins, ...allowedOrigins];
 
     // CRITICAL FIX (S8): Even in development, only allow whitelisted origins
     // This prevents accidental open CORS if NODE_ENV is misconfigured
