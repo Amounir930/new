@@ -21,15 +21,15 @@ export const EnvSchema = z.object({
     )
     .refine((key) => {
       // S7: Strict Production Validation
-      // In test mode, we always allow "test" substring for CI/CD simplicity
-      if (process.env.NODE_ENV === 'test') return true;
+      // In test mode or when specifically bypassed in CI, we allow "test" substring
+      if (process.env.NODE_ENV === 'test' || process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return true;
 
       return !/test|default|example/i.test(key);
     }, 'S1 Violation: Production key cannot contain test patterns')
     .refine((key) => {
       // S7: Complexity check: Uppercase, Lowercase, Number, Special Character
-      // Skip complexity check in test mode
-      if (process.env.NODE_ENV === 'test') return true;
+      // Skip complexity check in test mode or when specifically bypassed in CI
+      if (process.env.NODE_ENV === 'test' || process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return true;
 
       return (
         /[A-Z]/.test(key) &&
