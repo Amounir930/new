@@ -58,6 +58,7 @@ export const FlashSalesBlueprintSchema = z.object({
 export const BentoGridBlueprintSchema = z.object({
   layoutId: z.string(), // e.g., '3-card', '5-card'
   slots: z.record(
+    z.string(),
     z.object({
       type: z.enum(['product', 'category', 'link']),
       referenceId: z.string().uuid().optional(),
@@ -93,7 +94,7 @@ export const FooterBlueprintSchema = z.object({
     email: z.string().email().optional(),
     address: z.string().optional(),
   }),
-  socialLinks: z.record(z.string()).optional(),
+  socialLinks: z.record(z.string(), z.string()).optional(),
   policyLinksEnabled: z.boolean().default(true),
 });
 

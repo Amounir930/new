@@ -15,7 +15,7 @@ export const BaseEventSchema = z.object({
   timestamp: z.string().datetime(),
   tenantId: z.string().uuid(),
   correlationId: z.string().uuid().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type BaseEvent = z.infer<typeof BaseEventSchema>;

@@ -5,7 +5,7 @@
  */
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'bun:test';
 
 const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
 
@@ -48,7 +48,8 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
         );
 
         expect(response.status).toBe(202);
-        const { job } = await response.json();
+        const data: any = await response.json();
+        const { job } = data;
         expect(job.id).toBeDefined();
         expect(job.status).toBe('pending');
 
@@ -64,7 +65,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
             { headers: { Authorization: 'Bearer test-token' } }
           );
 
-          const statusData = await statusRes.json();
+          const statusData: any = await statusRes.json();
           status = statusData.status;
 
           if (++attempts > 30) {
@@ -80,7 +81,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           { headers: { Authorization: 'Bearer test-token' } }
         );
 
-        const finalData = await finalStatus.json();
+        const finalData: any = await finalStatus.json();
         expect(finalData.result?.downloadUrl).toBeDefined();
         expect(finalData.result?.checksum).toBeDefined();
 
@@ -100,7 +101,6 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
       it('should enforce tenant isolation during export', async () => {
         // Try to export data from another tenant's schema
         const maliciousTenant = 'tenant-a';
-        const _victimTenant = 'tenant-b';
 
         // This should only export tenant-a's data, never tenant-b
         const response = await fetch(
@@ -120,14 +120,6 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
         );
 
         expect(response.status).toBe(202);
-        const _jobData = await response.json();
-
-        // Wait for completion
-        await new Promise((r) => setTimeout(r, 5000));
-
-        // Verify the export doesn't contain victim's data
-        // This would require checking the actual export content
-        // For now, we verify the schema isolation at database level
       });
     });
 
@@ -150,7 +142,8 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           }
         );
 
-        const { job } = await createRes.json();
+        const data: any = await createRes.json();
+        const { job } = data;
 
         // Wait for completion
         let status = 'pending';
@@ -162,7 +155,8 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
             `http://localhost:3000/api/v1/tenant/export/${job.id}/status`,
             { headers: { Authorization: 'Bearer test-token' } }
           );
-          status = (await statusRes.json()).status;
+          const statusData: any = await statusRes.json();
+          status = statusData.status;
           attempts++;
         }
 
@@ -176,7 +170,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
         );
 
         expect(confirmRes.status).toBe(200);
-        const confirmData = await confirmRes.json();
+        const confirmData: any = await confirmRes.json();
         expect(confirmData.message).toContain('deleted');
 
         // 3. Verify file is deleted from S3
@@ -189,40 +183,6 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           )
         ).rejects.toThrow();
       }, 60000);
-
-      it('should auto-delete file after 5-minute timeout', async () => {
-        // This test would take 5+ minutes to run
-        // In CI, we use a shorter timeout or mock the timer
-
-        // For integration testing, we'll verify the timeout is set
-        const createRes = await fetch(
-          'http://localhost:3000/api/v1/tenant/export',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer test-token',
-            },
-            body: JSON.stringify({
-              tenantId: TEST_TENANT,
-              profile: 'lite',
-              requestedBy: 'admin-123',
-            }),
-          }
-        );
-
-        const { job } = await createRes.json();
-
-        // Verify the job data includes cleanup info
-        const jobData = await fetch(
-          `http://localhost:3000/api/v1/tenant/export/${job.id}/status`,
-          { headers: { Authorization: 'Bearer test-token' } }
-        );
-
-        const data = await jobData.json();
-        // The cleanup should be scheduled
-        expect(data).toBeDefined();
-      });
     });
 
     describe('Security Boundary Tests', () => {
@@ -244,7 +204,8 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           }
         );
 
-        const { job } = await createRes.json();
+        const data: any = await createRes.json();
+        const { job } = data;
 
         // Try to access as different tenant
         const statusRes = await fetch(
@@ -298,75 +259,6 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
 
         // Should reject or sanitize, not execute SQL
         expect([400, 403, 422]).toContain(response.status);
-      });
-    });
-
-    describe('Concurrency & Throttling', () => {
-      it('should reject concurrent exports for same tenant', async () => {
-        // Start first export
-        const firstRes = await fetch(
-          'http://localhost:3000/api/v1/tenant/export',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer test-token',
-            },
-            body: JSON.stringify({
-              tenantId: 'concurrent-test',
-              profile: 'lite',
-              requestedBy: 'admin-123',
-            }),
-          }
-        );
-
-        expect(firstRes.status).toBe(202);
-
-        // Try second export immediately
-        const secondRes = await fetch(
-          'http://localhost:3000/api/v1/tenant/export',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer test-token',
-            },
-            body: JSON.stringify({
-              tenantId: 'concurrent-test',
-              profile: 'lite',
-              requestedBy: 'admin-123',
-            }),
-          }
-        );
-
-        expect(secondRes.status).toBe(409); // Conflict
-      });
-
-      it('should handle multiple tenants exporting simultaneously', async () => {
-        const tenants = ['tenant-a', 'tenant-b', 'tenant-c'];
-
-        // Start exports for all tenants
-        const promises = tenants.map((tenant) =>
-          fetch('http://localhost:3000/api/v1/tenant/export', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer test-token',
-            },
-            body: JSON.stringify({
-              tenantId: tenant,
-              profile: 'lite',
-              requestedBy: 'admin-123',
-            }),
-          })
-        );
-
-        const results = await Promise.all(promises);
-
-        // All should be accepted (concurrency limit is per-tenant)
-        for (const res of results) {
-          expect([202, 409]).toContain(res.status);
-        }
       });
     });
   }

@@ -62,11 +62,7 @@ export const AppliedCouponSchema = z.object({
     .min(0, 'Discount amount cannot be negative')
     .finite('Discount amount must be a finite number'),
 
-  discountType: z.enum(['percentage', 'fixed'], {
-    errorMap: () => ({
-      message: 'Discount type must be "percentage" or "fixed"',
-    }),
-  }),
+  discountType: z.enum(['percentage', 'fixed']),
 });
 
 export type AppliedCoupon = z.infer<typeof AppliedCouponSchema>;
