@@ -194,6 +194,7 @@ services:
       docker-proxy:
         condition: service_healthy
     command:
+      - "--log.level=DEBUG"
       - "--ping"
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
