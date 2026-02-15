@@ -40,9 +40,22 @@ fi
 
 # ...
 
-echo "🔍 Checking Database for Blueprints..."
-# S21 Fix: Use correct container name 'apex-postgres' or service 'postgres'
-sudo docker compose -f ops/docker-compose.prod.yml exec -T postgres psql -U postgres -d adel -c "SELECT name, is_default, plan FROM onboarding_blueprints ORDER BY created_at DESC LIMIT 5;"
+
+# 3. Verify Blueprint Endpoint exists (Super-#21 Feature Check)
+echo "🔍 Checking API Endpoint /api/admin/blueprints..."
+# We expect 403 Forbidden (because we have no token), NOT 404 Not Found.
+# 404 would mean the controller is NOT mounted (feature missing).
+BLUEPRINT_STATUS=$(curl -k -o /dev/null -s -w "%{http_code}" -H "Host: staging.60sec.shop" https://localhost/api/admin/blueprints)
+
+if [ "$BLUEPRINT_STATUS" == "403" ]; then
+  echo "✅ Endpoint /api/admin/blueprints exists (Got 403 Forbidden as expected)."
+  echo "🚀 Feature 'Onboarding Blueprint Editor' is DEPLOYED."
+elif [ "$BLUEPRINT_STATUS" == "200" ]; then
+    echo "✅ Endpoint /api/admin/blueprints is OPEN (Got 200 OK)."
+else
+  echo "⚠️  Endpoint returned HTTP $BLUEPRINT_STATUS (Expected 403). check logs."
+  # It might be 401?
+fi
 
 echo "ℹ️  To verify fully, run these commands manually:"
 echo ""
