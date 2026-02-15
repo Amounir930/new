@@ -89,13 +89,12 @@ jobs:
       - name: Run Production Tests
         run: |
           echo "🧪 Running production-specific tests..."
+          # Generate non-leaky dummy keys at runtime to satisfy S1 and Gitleaks
+          export ENCRYPTION_MASTER_KEY="smoketest-key-$(date +%s%N | head -c 16)"
+          export JWT_SECRET="smoketest-jwt-$(date +%s%N | head -c 16)"
+          export SKIP_S1_COMPLEXITY_CHECK="true"
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
           bun run test:prod
-        env:
-          NODE_ENV: production
-          SKIP_S1_COMPLEXITY_CHECK: "true"
-          ENCRYPTION_MASTER_KEY: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-          JWT_SECRET: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
 
       - name: Create Release Archive
         run: |
