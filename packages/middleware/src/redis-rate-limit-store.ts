@@ -4,8 +4,8 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  type OnModuleInit,
   type OnApplicationShutdown,
+  type OnModuleInit,
 } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 
@@ -14,18 +14,18 @@ import { createClient, type RedisClientType } from 'redis';
  * CRITICAL: Supports distributed deployments (Docker/K8s multi-instance)
  */
 @Injectable()
-export class RedisRateLimitStore implements OnModuleInit, OnApplicationShutdown {
+export class RedisRateLimitStore
+  implements OnModuleInit, OnApplicationShutdown
+{
   private client: RedisClientType | null = null;
   private connecting = false;
   private fallbackToMemory = false;
-
-  // Fallback in-memory store (only used if Redis unavailable)
-  private memoryStore: Map<
+  private readonly memoryStore: Map<
     string,
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
     await this.connect();

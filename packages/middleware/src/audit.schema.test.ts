@@ -3,7 +3,7 @@
  * Rule 5.1: Zod Schema Validation
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import {
   AuditLogSchema,
   type CreateAuditLogDto,

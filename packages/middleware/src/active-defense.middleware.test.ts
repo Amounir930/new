@@ -1,6 +1,6 @@
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ForbiddenException } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ActiveDefenseMiddleware } from './active-defense.middleware.js';
 import type { RedisRateLimitStore } from './rate-limit.js';
 
@@ -13,7 +13,7 @@ describe('ActiveDefenseMiddleware', () => {
 
   beforeEach(() => {
     mockStore = {
-      block: vi.fn().mockResolvedValue(undefined),
+      block: mock().mockResolvedValue(undefined),
     };
     middleware = new ActiveDefenseMiddleware(mockStore as RedisRateLimitStore);
     mockRequest = {
@@ -21,9 +21,9 @@ describe('ActiveDefenseMiddleware', () => {
       url: '/api/v1/test',
     };
     mockResponse = {
-      setHeader: vi.fn(),
+      setHeader: mock(),
     };
-    nextFunction = vi.fn() as unknown as NextFunction;
+    nextFunction = mock() as unknown as NextFunction;
   });
 
   it('should set deceptive headers', async () => {

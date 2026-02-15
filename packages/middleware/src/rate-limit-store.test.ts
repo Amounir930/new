@@ -1,10 +1,10 @@
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { createClient } from 'redis';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 // Mock redis
-vi.mock('redis', () => ({
-  createClient: vi.fn(),
+mock.module('redis', () => ({
+  createClient: mock(),
 }));
 
 describe('RedisRateLimitStore', () => {
@@ -13,35 +13,35 @@ describe('RedisRateLimitStore', () => {
   let mockMulti: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Setup redis mock
     mockMulti = {
-      incr: vi.fn().mockReturnThis(),
-      ttl: vi.fn().mockReturnThis(),
-      zRemRangeByScore: vi.fn().mockReturnThis(),
-      zAdd: vi.fn().mockReturnThis(),
-      zCard: vi.fn().mockReturnThis(),
-      pExpire: vi.fn().mockReturnThis(),
-      exec: vi.fn().mockResolvedValue([0, 0, 1, true]), // results[2] is zCard count
+      incr: mock().mockReturnThis(),
+      ttl: mock().mockReturnThis(),
+      zRemRangeByScore: mock().mockReturnThis(),
+      zAdd: mock().mockReturnThis(),
+      zCard: mock().mockReturnThis(),
+      pExpire: mock().mockReturnThis(),
+      exec: mock().mockResolvedValue([0, 0, 1, true]), // results[2] is zCard count
     };
 
     mockRedisClient = {
-      connect: vi.fn().mockResolvedValue(undefined),
-      on: vi.fn(),
+      connect: mock().mockResolvedValue(undefined),
+      on: mock(),
       isOpen: false,
-      multi: vi.fn().mockReturnValue(mockMulti),
-      expire: vi.fn(),
-      get: vi.fn(),
-      setEx: vi.fn(),
-      incr: vi.fn(),
-      ttl: vi.fn(),
+      multi: mock().mockReturnValue(mockMulti),
+      expire: mock(),
+      get: mock(),
+      setEx: mock(),
+      incr: mock(),
+      ttl: mock(),
     };
 
     (createClient as any).mockReturnValue(mockRedisClient);
 
     const mockConfigService = {
-      get: vi.fn(),
+      get: mock(),
     };
     mockConfigService.get.mockReturnValue('redis://localhost:6379');
 
@@ -49,7 +49,7 @@ describe('RedisRateLimitStore', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   it('should be defined', () => {

@@ -1,6 +1,5 @@
 import { EnvSchema } from '../../packages/config/src/schema'; // Adjust path
 import { EncryptionService } from '../../packages/security/src/encryption'; // Adjust path
-import { z } from 'zod';
 
 console.log('🛡️ Verifying Defense-in-Depth Fixes...');
 
@@ -16,8 +15,7 @@ process.env.NODE_ENV = 'test';
 process.env.ENABLE_S1_ENFORCEMENT = 'false';
 try {
   EnvSchema.parse({
-    JWT_SECRET: 'short', // Invalid but ignored in loose test mode? No, regex still applies?
-    // Wait, regex might still apply if not conditional. Let's check logic.
+    // Regex still applies if not conditional. Let's check logic.
     // Length check is NOT conditional in schema.ts, only specific "test" keyword checks
     // So we use valid length but "test" keyword
     JWT_SECRET: 'valid_length_key_that_contains_word_test_12345',
@@ -53,10 +51,7 @@ try {
     '  ❌ Strict Production Mode: FAILED (Should have thrown error)'
   );
 } catch (e: any) {
-  if (
-    e.issues &&
-    e.issues.some((i: any) => i.message.includes('S1 Violation'))
-  ) {
+  if (e.issues?.some((i: any) => i.message.includes('S1 Violation'))) {
     console.log(
       '  ✅ Strict Production Mode: PASSED (Caught expected S1 Violation)'
     );

@@ -7,13 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "**/*.ts",
-      "**/*.tsx",
-      "**/*.js",
-      "**/*.jsx",
-      "**/*.json"
-    ]
+    "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"]
   },
   "formatter": {
     "enabled": true,
@@ -77,9 +71,7 @@
       }
     },
     {
-      "includes": [
-        "**/package.json"
-      ],
+      "includes": ["**/package.json"],
       "formatter": {
         "enabled": false
       }

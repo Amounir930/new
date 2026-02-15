@@ -3,8 +3,8 @@
  * S2 Protocol: Tenant Resolution
  */
 
+import { describe, expect, it, mock } from 'bun:test';
 import type { Request, Response } from 'express';
-import { describe, expect, it, vi } from 'vitest';
 import { tenantStorage } from './connection-context.js';
 import { extractSubdomain, resolveTenant } from './tenant-resolution.js';
 
@@ -48,7 +48,7 @@ describe('resolveTenant', () => {
       headers: { host: 'apex.com' },
     } as Request;
     const res = {} as Response;
-    const next = vi.fn();
+    const next = mock();
 
     await resolveTenant(req, res, next);
 
@@ -60,7 +60,7 @@ describe('resolveTenant', () => {
       headers: { host: 'www.apex.com' },
     } as Request;
     const res = {} as Response;
-    const next = vi.fn();
+    const next = mock();
 
     await resolveTenant(req, res, next);
 
@@ -72,7 +72,7 @@ describe('resolveTenant', () => {
       headers: { host: 'test-tenant.apex.com' },
     } as Request;
     const res = {} as Response;
-    const next = vi.fn();
+    const next = mock();
 
     await new Promise<void>((resolve) => {
       resolveTenant(req, res, () => {
@@ -92,7 +92,7 @@ describe('resolveTenant', () => {
       headers: { host: 'myshop.localhost:3000' },
     } as Request;
     const res = {} as Response;
-    const next = vi.fn();
+    const next = mock();
 
     await new Promise<void>((resolve) => {
       resolveTenant(req, res, () => {

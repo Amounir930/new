@@ -4,7 +4,7 @@
  * S2: Public Schema Isolation
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import {
   type AuditLogEntry,
   AuditService,
@@ -14,36 +14,39 @@ import {
   query,
 } from './audit.service.js';
 
-const { mockClient } = vi.hoisted(() => ({
-  mockClient: {
-    query: vi.fn().mockResolvedValue({ rows: [] }),
-    release: vi.fn(),
-  },
+// Setup Mocks
+const mockClient = {
+  query: mock().mockResolvedValue({ rows: [] }),
+  release: mock(),
+};
+
+const mockPool = {
+  connect: mock().mockResolvedValue(mockClient),
+};
+
+mock.module('@apex/db', () => ({
+  publicPool: mockPool,
 }));
 
-vi.mock('@apex/db', () => ({
-  publicPool: {
-    connect: vi.fn().mockResolvedValue(mockClient),
-  },
-}));
-
-vi.mock('@apex/security', () => ({
-  EncryptionService: vi.fn().mockImplementation(() => ({
-    encrypt: vi.fn().mockReturnValue({ encrypted: 'encrypted-data' }),
-    decrypt: vi.fn().mockReturnValue('decrypted-data'),
+mock.module('@apex/security', () => ({
+  EncryptionService: mock().mockImplementation(() => ({
+    encrypt: mock().mockReturnValue({ encrypted: 'encrypted-data' }),
+    decrypt: mock().mockReturnValue('decrypted-data'),
   })),
 }));
 
-// Mock Middleware to avoid circular dependency or context issues
-vi.mock('@apex/middleware', () => ({
-  getCurrentTenantId: vi.fn().mockReturnValue('mock-tenant'),
+mock.module('@apex/middleware', () => ({
+  getCurrentTenantId: mock().mockReturnValue('mock-tenant'),
 }));
 
 describe('AuditService & Helpers', () => {
   let service: AuditService;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
+    mockClient.query.mockClear();
+    mockClient.release.mockClear();
+    // Re-instantiate service to ensure clean state
     service = new AuditService();
   });
 
@@ -94,9 +97,15 @@ describe('AuditService & Helpers', () => {
     it('should throw "Audit Persistence Failure" if query fails', async () => {
       mockClient.query.mockRejectedValueOnce(new Error('DB Crash'));
 
-      await expect(
-        service.log({ action: 'A', entityType: 'B', entityId: 'C' })
-      ).rejects.toThrow('Audit Persistence Failure');
+      // Use a wrapper to catch the error for bun:test expectation
+      let error: any;
+      try {
+        await service.log({ action: 'A', entityType: 'B', entityId: 'C' });
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeDefined();
+      expect(error.message).toBe('Audit Persistence Failure');
     });
   });
 

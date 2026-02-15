@@ -1,5 +1,5 @@
+import { describe, expect, it, mock } from 'bun:test';
 import type { Request, Response } from 'express';
-import { describe, expect, it, vi } from 'vitest';
 import { tenantStorage } from './connection-context.js';
 import { extractSubdomain, resolveTenant } from './tenant-resolution.js';
 
@@ -16,7 +16,7 @@ describe('S2 Middleware: Tenant Resolution', () => {
       headers: { host: 'test-tenant.apex.com' },
     } as Request;
     const res = {} as Response;
-    const next = vi.fn();
+    const next = mock();
 
     // We need to wrap this in a promise because resolveTenant is async
     // and uses a callback for run()

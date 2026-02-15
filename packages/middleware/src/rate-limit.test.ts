@@ -3,7 +3,15 @@ import { type ExecutionContext, HttpException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createClient } from 'redis';
 import 'reflect-metadata';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+} from 'bun:test';
 import {
   RateLimit,
   RateLimitGuard,
@@ -11,23 +19,23 @@ import {
 } from './rate-limit.js';
 
 // Mock Redis
-vi.mock('redis', () => ({
-  createClient: vi.fn().mockImplementation(() => ({
-    on: vi.fn(),
-    connect: vi.fn().mockResolvedValue(undefined),
+mock.module('redis', () => ({
+  createClient: mock().mockImplementation(() => ({
+    on: mock(),
+    connect: mock().mockResolvedValue(undefined),
     isOpen: true,
-    multi: vi.fn().mockReturnValue({
-      zRemRangeByScore: vi.fn().mockReturnThis(),
-      zAdd: vi.fn().mockReturnThis(),
-      zCard: vi.fn().mockReturnThis(),
-      pExpire: vi.fn().mockReturnThis(),
-      exec: vi.fn().mockResolvedValue([0, 1, 1, true]),
+    multi: mock().mockReturnValue({
+      zRemRangeByScore: mock().mockReturnThis(),
+      zAdd: mock().mockReturnThis(),
+      zCard: mock().mockReturnThis(),
+      pExpire: mock().mockReturnThis(),
+      exec: mock().mockResolvedValue([0, 1, 1, true]),
     }),
-    expire: vi.fn().mockResolvedValue(undefined),
-    get: vi.fn().mockResolvedValue(null),
-    incr: vi.fn().mockResolvedValue(1),
-    ttl: vi.fn().mockResolvedValue(-1),
-    setEx: vi.fn().mockResolvedValue('OK'),
+    expire: mock().mockResolvedValue(undefined),
+    get: mock().mockResolvedValue(null),
+    incr: mock().mockResolvedValue(1),
+    ttl: mock().mockResolvedValue(-1),
+    setEx: mock().mockResolvedValue('OK'),
   })),
 }));
 
@@ -41,28 +49,28 @@ describe('RateLimitGuard', () => {
   let mockResponse: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     reflector = new Reflector();
     // Mock ConfigService
     configService = {
-      get: vi.fn().mockReturnValue('redis://localhost:6379'),
+      get: mock().mockReturnValue('redis://localhost:6379'),
     } as any;
 
     // Mock RedisRateLimitStore instance
     store = new RedisRateLimitStore(configService);
 
     // Spy on store methods
-    vi.spyOn(store, 'isBlocked').mockResolvedValue({
+    spyOn(store, 'isBlocked').mockResolvedValue({
       blocked: false,
       retryAfter: 0,
     });
-    vi.spyOn(store, 'increment').mockResolvedValue({
+    spyOn(store, 'increment').mockResolvedValue({
       count: 1,
       ttl: 60,
     });
-    vi.spyOn(store, 'incrementViolations').mockResolvedValue(0);
-    vi.spyOn(store, 'block').mockResolvedValue(undefined);
+    spyOn(store, 'incrementViolations').mockResolvedValue(0);
+    spyOn(store, 'block').mockResolvedValue(undefined);
 
     guard = new RateLimitGuard(reflector, store);
 
@@ -73,7 +81,7 @@ describe('RateLimitGuard', () => {
     };
 
     mockResponse = {
-      setHeader: vi.fn(),
+      setHeader: mock(),
     };
 
     mockContext = {
@@ -87,7 +95,7 @@ describe('RateLimitGuard', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   it('should be defined', () => {
@@ -113,7 +121,7 @@ describe('RateLimitGuard', () => {
   });
 
   it('should prioritize custom decorator limits', async () => {
-    vi.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+    spyOn(reflector, 'getAllAndOverride').mockReturnValue({
       requests: 10,
       windowMs: 1000,
     });
@@ -132,7 +140,7 @@ describe('RateLimitGuard', () => {
   });
 
   it('should throw TOO_MANY_REQUESTS when limit exceeded', async () => {
-    vi.spyOn(store, 'increment').mockResolvedValue({
+    spyOn(store, 'increment').mockResolvedValue({
       count: 101,
       ttl: 60,
     });
@@ -140,7 +148,7 @@ describe('RateLimitGuard', () => {
   });
 
   it('should throw TOO_MANY_REQUESTS when blocked', async () => {
-    vi.spyOn(store, 'isBlocked').mockResolvedValue({
+    spyOn(store, 'isBlocked').mockResolvedValue({
       blocked: true,
       retryAfter: 300,
     });
@@ -173,12 +181,12 @@ describe('RateLimitGuard', () => {
   });
 
   it('should block IP after 5 violations', async () => {
-    vi.spyOn(store, 'increment').mockResolvedValue({
+    spyOn(store, 'increment').mockResolvedValue({
       count: 101,
       ttl: 60,
     });
-    vi.spyOn(store, 'incrementViolations').mockResolvedValue(5);
-    const blockSpy = vi.spyOn(store, 'block');
+    spyOn(store, 'incrementViolations').mockResolvedValue(5);
+    const blockSpy = spyOn(store, 'block');
 
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
       'Rate limit exceeded'
@@ -187,12 +195,12 @@ describe('RateLimitGuard', () => {
   });
 
   it('should not block before 5 violations', async () => {
-    vi.spyOn(store, 'increment').mockResolvedValue({
+    spyOn(store, 'increment').mockResolvedValue({
       count: 101,
       ttl: 60,
     });
-    vi.spyOn(store, 'incrementViolations').mockResolvedValue(3);
-    const blockSpy = vi.spyOn(store, 'block');
+    spyOn(store, 'incrementViolations').mockResolvedValue(3);
+    const blockSpy = spyOn(store, 'block');
 
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
       'Rate limit exceeded'
@@ -201,11 +209,11 @@ describe('RateLimitGuard', () => {
   });
 
   it('should trigger immediate DDoS ban if threshold exceeded (5x)', async () => {
-    vi.spyOn(store, 'increment').mockResolvedValue({
+    spyOn(store, 'increment').mockResolvedValue({
       count: 501, // 5x the default 100
       ttl: 60,
     });
-    const blockSpy = vi.spyOn(store, 'block');
+    const blockSpy = spyOn(store, 'block');
 
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
       'DDoS protection triggered'
@@ -220,10 +228,10 @@ describe('RedisRateLimitStore Branches', () => {
 
   beforeEach(() => {
     configService = {
-      get: vi.fn(),
+      get: mock(),
     } as any;
     store = new RedisRateLimitStore(configService);
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('should fallback to memory in non-production on Redis failure', async () => {
@@ -231,8 +239,8 @@ describe('RedisRateLimitStore Branches', () => {
     process.env.NODE_ENV = 'development';
     // Force Redis connect to fail
     const mockRedis = {
-      on: vi.fn(),
-      connect: vi.fn().mockRejectedValue(new Error('Redis Down')),
+      on: mock(),
+      connect: mock().mockRejectedValue(new Error('Redis Down')),
       isOpen: false,
     };
     (createClient as any).mockReturnValue(mockRedis as any);
@@ -252,7 +260,7 @@ describe('RedisRateLimitStore Branches', () => {
     process.env.NODE_ENV = 'production';
 
     // Mock getClient to return null
-    vi.spyOn(store, 'getClient').mockResolvedValue(null);
+    spyOn(store, 'getClient').mockResolvedValue(null);
 
     await expect(store.increment('test-key', 60000)).rejects.toThrow(
       HttpException

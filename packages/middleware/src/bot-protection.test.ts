@@ -1,6 +1,6 @@
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ForbiddenException } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BotProtectionMiddleware } from './bot-protection.js';
 
 describe('BotProtectionMiddleware', () => {
@@ -16,7 +16,7 @@ describe('BotProtectionMiddleware', () => {
       url: '/api/v1/test',
     };
     mockResponse = {};
-    nextFunction = vi.fn() as unknown as NextFunction;
+    nextFunction = mock() as unknown as NextFunction;
   });
 
   it('should be defined', () => {

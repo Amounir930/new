@@ -1,6 +1,6 @@
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import type { ExecutionContext } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CsrfGuard,
   CsrfProtection,
@@ -21,10 +21,10 @@ describe('SecurityMiddleware', () => {
       headers: {},
     };
     mockResponse = {
-      setHeader: vi.fn(),
-      removeHeader: vi.fn(),
+      setHeader: mock(),
+      removeHeader: mock(),
     };
-    nextFunction = vi.fn() as unknown as NextFunction;
+    nextFunction = mock() as unknown as NextFunction;
   });
 
   it('should be defined', () => {
@@ -99,13 +99,13 @@ describe('CORS Configuration', () => {
     ) => void;
 
     it('should allow requests with no origin', () => {
-      const callback = vi.fn();
+      const callback = mock();
       originFn(undefined, callback);
       expect(callback).toHaveBeenCalledWith(null, true);
     });
 
     it('should allow whitelisted dev origins', () => {
-      const callback = vi.fn();
+      const callback = mock();
       originFn('http://localhost:3000', callback);
       expect(callback).toHaveBeenCalledWith(null, true);
     });
@@ -113,15 +113,15 @@ describe('CORS Configuration', () => {
     it('should allow origins from ALLOWED_ORIGINS env', () => {
       const originalEnv = process.env.ALLOWED_ORIGINS;
       process.env.ALLOWED_ORIGINS = 'https://myapp.com,https://api.myapp.com';
-      const callback = vi.fn();
+      const callback = mock();
       originFn('https://myapp.com', callback);
       expect(callback).toHaveBeenCalledWith(null, true);
       process.env.ALLOWED_ORIGINS = originalEnv;
     });
 
     it('should block non-whitelisted origins', () => {
-      const callback = vi.fn();
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const callback = mock();
+      const consoleSpy = spyOn(console, 'warn').mockImplementation(() => {});
       originFn('http://evil.com', callback);
       expect(callback).toHaveBeenCalledWith(expect.any(Error));
       expect(consoleSpy).toHaveBeenCalled();
@@ -160,7 +160,7 @@ describe('CsrfProtection', () => {
   });
 
   it('should set XSRF-TOKEN cookie', () => {
-    const mockRes = { cookie: vi.fn() } as unknown as Response;
+    const mockRes = { cookie: mock() } as unknown as Response;
     csrf.setCookie(mockRes, 'test-token');
     expect(mockRes.cookie).toHaveBeenCalledWith(
       'XSRF-TOKEN',
@@ -219,7 +219,7 @@ describe('CsrfGuard', () => {
 
   it('should allow GET requests and set cookie', () => {
     const mockReq = { method: 'GET' };
-    const mockRes = { cookie: vi.fn() };
+    const mockRes = { cookie: mock() };
     const mockContext = {
       switchToHttp: () => ({
         getRequest: () => mockReq,

@@ -33,7 +33,7 @@ const handleMockQuery = (text: string, params: any[]) => {
   }
 
   if (text.includes('SELECT CURRENT_SCHEMA')) {
-    return { rows: [{ current_schema: 'tenant_alpha' }], rowCount: 1 };
+    return { rows: [{ current_schema: 'tenant_tenant_a' }], rowCount: 1 };
   }
 
   return { rows: [], rowCount: 0 };

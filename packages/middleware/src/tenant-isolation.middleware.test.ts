@@ -3,27 +3,24 @@
  * S2 Protocol: Tenant Isolation
  */
 
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { UnauthorizedException } from '@nestjs/common';
 import type { NextFunction } from 'express';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SuperAdminOrTenantGuard,
   TenantIsolationMiddleware,
   TenantScopedGuard,
 } from './tenant-isolation.middleware.js';
 
-const { mockDb } = vi.hoisted(() => {
-  return {
-    mockDb: {
-      select: vi.fn().mockReturnThis(),
-      from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([]),
-    },
-  };
-});
+// Setup Mocks
+const mockDb = {
+  select: mock().mockReturnThis(),
+  from: mock().mockReturnThis(),
+  where: mock().mockReturnThis(),
+  limit: mock().mockResolvedValue([]),
+};
 
-vi.mock('@apex/db', () => ({
+mock.module('@apex/db', () => ({
   publicDb: mockDb,
   tenants: {
     id: 'id-col',
@@ -40,16 +37,19 @@ describe('TenantIsolationMiddleware', () => {
   let next: NextFunction;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockDb.limit.mockClear();
+    mockDb.select.mockClear();
+    mockDb.from.mockClear();
+    mockDb.where.mockClear();
     middleware = new TenantIsolationMiddleware();
     req = {
       headers: { host: 'alpha.apex.localhost' },
       path: '/api/data',
     };
     res = {
-      setHeader: vi.fn(),
+      setHeader: mock(),
     };
-    next = vi.fn();
+    next = mock();
   });
 
   describe('Subdomain Extraction', () => {

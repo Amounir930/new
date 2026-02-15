@@ -1,10 +1,18 @@
 import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+} from 'bun:test';
+import {
   type ArgumentsHost,
   HttpException,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 import {
   AuthenticationError,
@@ -24,15 +32,15 @@ describe('GlobalExceptionFilter', () => {
   let mockArgumentsHost: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-    vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
+    spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
 
-    mockJson = vi.fn();
-    mockStatus = vi.fn().mockReturnValue({ json: mockJson });
+    mockJson = mock();
+    mockStatus = mock().mockReturnValue({ json: mockJson });
     mockResponse = {
       status: mockStatus,
     };
@@ -52,7 +60,7 @@ describe('GlobalExceptionFilter', () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    mock.restore();
   });
 
   it('should be defined', () => {
@@ -192,7 +200,7 @@ describe('GlobalExceptionFilter', () => {
 
     try {
       // Spy on the private reportToErrorTracking via prototype or checking logger
-      const loggerErrorSpy = vi.spyOn(Logger.prototype, 'error');
+      const loggerErrorSpy = spyOn(Logger.prototype, 'error');
 
       const exception = new Error('Production 500');
       filter.catch(exception, mockArgumentsHost);
@@ -359,7 +367,7 @@ describe('GlobalExceptionFilter', () => {
     process.env.NODE_ENV = 'production';
 
     try {
-      const loggerErrorSpy = vi.spyOn(Logger.prototype, 'error');
+      const loggerErrorSpy = spyOn(Logger.prototype, 'error');
 
       const exception = new Error('Critical Failure');
       filter.catch(exception, mockArgumentsHost);
