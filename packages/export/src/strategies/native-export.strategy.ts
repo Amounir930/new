@@ -18,15 +18,19 @@ export class NativeExportStrategy implements ExportStrategy {
   readonly name = 'native' as const;
   private readonly logger = new Logger(NativeExportStrategy.name);
 
-  constructor(private readonly shell: BunShell) {}
+  constructor(private readonly shell: BunShell) { }
 
   async validate(_options: ExportOptions): Promise<boolean> {
     // Check pg_dump availability
     try {
       const proc = this.shell.spawn(['pg_dump', '--version']);
       await proc.exited;
+      if (proc.exitCode !== 0) {
+        this.logger.warn(`pg_dump check failed with exit code ${proc.exitCode}`);
+      }
       return proc.exitCode === 0;
-    } catch {
+    } catch (error) {
+      this.logger.error('pg_dump binary not found in system path', error);
       return false;
     }
   }

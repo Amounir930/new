@@ -62,6 +62,7 @@ export class AppModule implements NestModule {
         BotProtectionMiddleware,
         TenantIsolationMiddleware
       )
+      .exclude('health/(.*)', 'api/health/(.*)')
       .forRoutes('*'); // Apply to all routes
   }
 }

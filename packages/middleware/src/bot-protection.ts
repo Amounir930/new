@@ -34,18 +34,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
     /masscan/i,
   ];
 
-  use(req: Request, _res: Response, next: NextFunction): void {
-    // 1. Skip check for health endpoints (S5 compliance) to avoid breaking load balancers
-    const isHealthCheck =
-      req.url.includes('/health/') ||
-      req.url.includes('/health/liveness') ||
-      req.originalUrl?.includes('/health/');
-
-    if (isHealthCheck) {
-      next();
-      return;
-    }
-
+  async use(req: Request, res: Response, next: NextFunction): Promise<void> {
     const userAgent = req.headers['user-agent'] || '';
 
     // S11 Level 1: Header-based protection
