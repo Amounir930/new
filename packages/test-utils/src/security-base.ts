@@ -26,7 +26,7 @@ export function validateModuleSecurity(module: any, providers: any[] = []) {
         try {
           validateMetadataValue(value, key.toString());
         } catch (e: any) {
-          expect.fail(e.message);
+          throw new Error(e.message);
         }
       }
     });

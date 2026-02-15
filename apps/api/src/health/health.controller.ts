@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  HttpStatus,
-  Logger,
-  Res,
-  Version,
-} from '@nestjs/common';
+import { Controller, Get, HttpStatus, Logger, Res } from '@nestjs/common';
 import type * as express from 'express';
 import { createClient } from 'redis';
 

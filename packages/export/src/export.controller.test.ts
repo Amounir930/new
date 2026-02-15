@@ -3,7 +3,7 @@
  * Verifies REST API endpoints and authorization
  */
 
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ExportController } from './export.controller.js';
 import type { ExportService } from './export.service.js';

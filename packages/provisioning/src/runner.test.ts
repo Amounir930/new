@@ -3,7 +3,7 @@
  * S2 Protocol: Tenant Migrations
  */
 
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { runTenantMigrations } from './runner.js';
 

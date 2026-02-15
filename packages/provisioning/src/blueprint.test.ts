@@ -4,7 +4,7 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { publicDb } from '@apex/db';
 import {
   createBlueprint,

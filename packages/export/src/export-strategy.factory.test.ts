@@ -3,7 +3,7 @@
  * Verifies strategy selection and validation
  */
 
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ExportStrategyFactory } from './export-strategy.factory.js';
 import type { ExportOptions } from './types.js';
 

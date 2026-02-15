@@ -2,7 +2,7 @@
  * Tests for quota service
  */
 
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import {
   checkProvisioningQuota,
   checkQuota,
