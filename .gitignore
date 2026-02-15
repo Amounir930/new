@@ -9,6 +9,17 @@ dist/
 out/
 build/
 *.tsbuildinfo
+**/*.js
+**/*.js.map
+**/*.d.ts
+**/*.d.ts.map
+!**/*.d.ts # Keep manual d.ts if any exist in specific places
+# Actually, let's just ignore everything that shouldn't be there
+# If a specific package needs to keep some JS, we can unignore it there
+**/node_modules/
+**/dist/
+**/coverage/
+
 
 # Environment variables
 .env

@@ -3,59 +3,56 @@
  * Verifies PostgreSQL binary dump export
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { ExportOptions } from '../types.js';
 import { NativeExportStrategy } from './native-export.strategy.js';
 
 // Mock database
 const mockClient = {
-  query: vi.fn(),
-  release: vi.fn(),
+  query: mock(),
+  release: mock(),
 };
 
-vi.mock('@apex/db', () => ({
+mock.module('@apex/db', () => ({
   publicPool: {
-    connect: vi.fn().mockResolvedValue(mockClient),
+    connect: mock().mockResolvedValue(mockClient),
   },
 }));
 
-// Mock Bun (handled in beforeEach via stubGlobal for stability)
-
-// 🛡️ Stabilization: Use 'mock' prefix so Vitest hoists these variables
+// Define mocks
 const mockShell = {
-  spawn: vi.fn(),
-  write: vi.fn(),
-  file: vi.fn(),
+  spawn: mock(),
+  write: mock(),
+  file: mock(),
 };
 
 describe('NativeExportStrategy', () => {
   let strategy: NativeExportStrategy;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mockClient.query.mockClear();
+    mockClient.release.mockClear();
+    mockShell.spawn.mockClear();
+    mockShell.write.mockClear();
 
     // Default mock behavior for mockShell
     mockShell.spawn.mockReturnValue({
       exited: Promise.resolve(0),
       exitCode: 0,
       stdout: {
-        text: vi.fn().mockResolvedValue(''),
+        text: mock().mockResolvedValue(''),
       },
       stderr: {
-        text: vi.fn().mockResolvedValue(''),
+        text: mock().mockResolvedValue(''),
       },
     });
     mockShell.write.mockResolvedValue(undefined);
     mockShell.file.mockReturnValue({
-      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
-      stat: vi.fn().mockResolvedValue({ size: 2048 }),
+      arrayBuffer: mock().mockResolvedValue(new ArrayBuffer(100)),
+      stat: mock().mockResolvedValue({ size: 2048 }),
     });
 
     strategy = new NativeExportStrategy(mockShell as any);
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   describe('validate', () => {
@@ -90,7 +87,7 @@ describe('NativeExportStrategy', () => {
       // Verify pg_dump was called with correct schema
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call) => Array.isArray(call[0]) && call[0].includes('pg_dump')
+        (call: any) => Array.isArray(call[0]) && call[0][0] === 'pg_dump' && call[0].includes('-n')
       );
       expect(pgDumpCall).toBeDefined();
       expect(pgDumpCall?.[0]).toContain('-n');
@@ -109,7 +106,7 @@ describe('NativeExportStrategy', () => {
 
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call) => Array.isArray(call[0]) && call[0].includes('pg_dump')
+        (call: any) => Array.isArray(call[0]) && call[0][0] === 'pg_dump' && call[0].includes('-n')
       );
 
       // Verify only tenant schema is exported
@@ -122,7 +119,9 @@ describe('NativeExportStrategy', () => {
       mockShell.spawn.mockReturnValueOnce({
         exited: Promise.resolve(1),
         exitCode: 1,
-        stderr: new Response('pg_dump failed'),
+        stderr: {
+          text: mock().mockResolvedValue('pg_dump failed'),
+        },
       } as any);
 
       const options: ExportOptions = {

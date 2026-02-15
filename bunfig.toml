@@ -1,0 +1,7 @@
+[test]
+# S14: Standardize test runner behavior
+# Exclude dist and node_modules to avoid picking up stale/compiled Vitest tests
+exclude = ["**/node_modules/**", "**/dist/**"]
+
+# Match only internal source tests
+testMatch = ["**/*.test.ts", "**/*.spec.ts"]

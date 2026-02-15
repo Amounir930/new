@@ -1,5 +1,4 @@
-import { Test, type TestingModule } from '@nestjs/testing';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ProvisioningController } from './provisioning.controller.js';
 import type { ProvisioningService } from './provisioning.service.js';
 
@@ -8,32 +7,23 @@ describe('ProvisioningController', () => {
   let service: ProvisioningService;
 
   const mockProvisioningService = {
-    provision: vi.fn(),
+    provision: mock(),
   };
 
   const mockAuditService = {
-    log: vi.fn(),
+    log: mock(),
   };
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [ProvisioningController],
-      providers: [
-        {
-          provide: 'PROVISIONING_SERVICE',
-          useValue: mockProvisioningService,
-        },
-        {
-          provide: 'AUDIT_SERVICE',
-          useValue: mockAuditService,
-        },
-      ],
-    }).compile();
+    // Manual instantiation to bypass NestJS TestingModule issues with Bun
+    controller = new ProvisioningController(
+      mockProvisioningService as any,
+      mockAuditService as any
+    );
+    service = mockProvisioningService as any;
 
-    controller = module.get<ProvisioningController>(ProvisioningController);
-    service = module.get<ProvisioningService>('PROVISIONING_SERVICE');
-
-    vi.clearAllMocks();
+    mockProvisioningService.provision.mockClear();
+    mockAuditService.log.mockClear();
   });
 
   it('should be defined', () => {

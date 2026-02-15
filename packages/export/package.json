@@ -13,8 +13,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
-    "test": "vitest run",
-    "test:coverage": "vitest run",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit"

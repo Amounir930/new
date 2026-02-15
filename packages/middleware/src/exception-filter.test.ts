@@ -7,6 +7,18 @@ import {
   mock,
   spyOn,
 } from 'bun:test';
+
+// Define a mutable mock env
+const mockEnv = {
+  NODE_ENV: 'test',
+  GLITCHTIP_DSN: 'mock-dsn',
+};
+
+// Mock config first
+mock.module('@apex/config', () => ({
+  env: mockEnv,
+}));
+
 import {
   type ArgumentsHost,
   HttpException,
@@ -33,11 +45,13 @@ describe('GlobalExceptionFilter', () => {
 
   beforeEach(() => {
     mock.restore();
+    mockEnv.NODE_ENV = 'test';
+    mockEnv.GLITCHTIP_DSN = 'mock-dsn';
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-    spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
+    spyOn(Logger.prototype, 'error').mockImplementation(() => { });
+    spyOn(Logger.prototype, 'warn').mockImplementation(() => { });
 
     mockJson = mock();
     mockStatus = mock().mockReturnValue({ json: mockJson });
@@ -177,59 +191,43 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should include stack trace in development', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    mockEnv.NODE_ENV = 'development';
 
-    try {
-      const exception = new Error('Test Error');
-      filter.catch(exception, mockArgumentsHost);
+    const exception = new Error('Test Error');
+    filter.catch(exception, mockArgumentsHost);
 
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: undefined,
-        })
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stack: undefined,
+      })
+    );
   });
 
   it('should report to error tracking in production for 500 errors', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    mockEnv.NODE_ENV = 'production';
+    mockEnv.GLITCHTIP_DSN = ''; // Trigger fallback logging
+    const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(() => { });
 
-    try {
-      // Spy on the private reportToErrorTracking via prototype or checking logger
-      const loggerErrorSpy = spyOn(Logger.prototype, 'error');
+    const exception = new Error('Production 500');
+    filter.catch(exception, mockArgumentsHost);
 
-      const exception = new Error('Production 500');
-      filter.catch(exception, mockArgumentsHost);
-
-      // We expect the fallback logging to occur
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Sentry Fallback')
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    // Filter calls logError first (1st call), then reportToErrorTracking (2nd call)
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[Sentry Fallback')
+    );
   });
 
   it('should NOT include stack trace in production', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    mockEnv.NODE_ENV = 'production';
 
-    try {
-      const exception = new Error('Test Error');
-      filter.catch(exception, mockArgumentsHost);
+    const exception = new Error('Test Error');
+    filter.catch(exception, mockArgumentsHost);
 
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.not.objectContaining({
-          stack: expect.anything(),
-        })
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        stack: expect.anything(),
+      })
+    );
   });
 
   it('should sanitize multiple patterns in a single message', () => {
@@ -247,24 +245,19 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should sanitize pattern matches even in development', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    mockEnv.NODE_ENV = 'development';
 
-    try {
-      const exception = new HttpException(
-        'Table "users" is fine',
-        HttpStatus.BAD_REQUEST
-      );
-      filter.catch(exception, mockArgumentsHost);
+    const exception = new HttpException(
+      'Table "users" is fine',
+      HttpStatus.BAD_REQUEST
+    );
+    filter.catch(exception, mockArgumentsHost);
 
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'Invalid request',
-        })
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Invalid request',
+      })
+    );
   });
 
   it('should fallback to "Error" for unknown status codes', () => {
@@ -301,83 +294,63 @@ describe('GlobalExceptionFilter', () => {
   });
 
   it('should redact Windows paths in development stack traces', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    mockEnv.NODE_ENV = 'development';
 
-    try {
-      const exception = new Error('Win Error');
-      exception.stack =
-        'Error: Win Error\n    at Object.<anonymous> (C:\\Users\\Dell\\project\\file.ts:1:1)';
+    const exception = new Error('Win Error');
+    exception.stack =
+      'Error: Win Error\n    at Object.<anonymous> (C:\\Users\\Dell\\project\\file.ts:1:1)';
 
-      filter.catch(exception, mockArgumentsHost);
+    filter.catch(exception, mockArgumentsHost);
 
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: undefined,
-        })
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stack: undefined,
+      })
+    );
   });
 
   it('should redact Linux/Mac paths in development stack traces', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    mockEnv.NODE_ENV = 'development';
 
-    try {
-      const exception = new Error('Nix Error');
-      exception.stack =
-        'Error: Nix Error\n    at Object.<anonymous> (/home/user/project/file.ts:1:1)';
+    const exception = new Error('Nix Error');
+    exception.stack =
+      'Error: Nix Error\n    at Object.<anonymous> (/home/user/project/file.ts:1:1)';
 
-      filter.catch(exception, mockArgumentsHost);
+    filter.catch(exception, mockArgumentsHost);
 
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.objectContaining({
-          stack: undefined,
-        })
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stack: undefined,
+      })
+    );
   });
 
   it('should handle non-Error objects gracefully in development (no stack)', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    mockEnv.NODE_ENV = 'development';
 
-    try {
-      const exception = 'Just a string error'; // Not an Error object
+    const exception = 'Just a string error'; // Not an Error object
 
-      filter.catch(exception, mockArgumentsHost);
+    filter.catch(exception, mockArgumentsHost);
 
-      // Should not crash and should not have stack
-      expect(mockJson).toHaveBeenCalledWith(
-        expect.not.objectContaining({
-          stack: expect.anything(),
-        })
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    // Should not crash and should not have stack
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        stack: expect.anything(),
+      })
+    );
   });
 
   it('should report error tracking for generic 500 even if no wrapper service', () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    mockEnv.NODE_ENV = 'production';
+    mockEnv.GLITCHTIP_DSN = ''; // Trigger fallback logging
+    const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(() => { });
 
-    try {
-      const loggerErrorSpy = spyOn(Logger.prototype, 'error');
+    const exception = new Error('Critical Failure');
+    filter.catch(exception, mockArgumentsHost);
 
-      const exception = new Error('Critical Failure');
-      filter.catch(exception, mockArgumentsHost);
-
-      expect(loggerErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Sentry Fallback')
-      );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
-    }
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('[Sentry Fallback')
+    );
   });
 });
 

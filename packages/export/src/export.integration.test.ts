@@ -4,8 +4,8 @@
  * Requires: PostgreSQL, Redis, MinIO running
  */
 
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { beforeAll, describe, expect, it } from 'bun:test';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
 
