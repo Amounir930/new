@@ -3,7 +3,7 @@
  * Verifies JSON export with tenant isolation (S2)
  */
 
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { ExportOptions } from '../types.js';
 import { LiteExportStrategy } from './lite-export.strategy.js';
 
