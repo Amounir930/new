@@ -20,7 +20,7 @@ export class FraudScoringService {
   constructor(
     private readonly store: RedisRateLimitStore,
     private readonly geoIp: GeoIpService
-  ) {}
+  ) { }
 
   async calculateScore(req: any): Promise<FraudScore> {
     let score = 0;
@@ -40,12 +40,41 @@ export class FraudScoringService {
       }
     }
 
-    // 2. Geo-IP Inconsistency (L2)
+    // 2. Geo-IP Inconsistency (L2) - Impossible Travel Detection
     const currentGeo = await this.geoIp.getGeoData(ip);
-    if (currentGeo) {
-      // Check last known Geo in Redis
-      // In a real impl, we'd fetch this from Redis
-      // For now, we skip the persistent check as it requires more Redis logic
+    if (currentGeo && fingerprint) {
+      const client = await this.store.getClient();
+
+      // Only proceed if Redis is available (Fail-Open for this specific check)
+      if (client) {
+        const geoKey = `fraud:geo:${fingerprint}`;
+        const lastGeoRaw = await client.get(geoKey);
+
+        if (lastGeoRaw) {
+          try {
+            const lastGeo = JSON.parse(lastGeoRaw);
+            // S14 Rule: Country change detected
+            if (lastGeo.country !== currentGeo.country) {
+              const timeDiff = Date.now() - lastGeo.timestamp;
+              // If travel happened in less than 12 hours (Impossible Travel)
+              // This is a strict rule: users shouldn't teleport between countries
+              if (timeDiff < 12 * 60 * 60 * 1000) {
+                score += 50;
+                reasons.push(`Impossible Travel detected: ${lastGeo.country} -> ${currentGeo.country}`);
+              }
+            }
+          } catch (e) {
+            // Ignore parsing errors, cleaner overwrite
+          }
+        }
+
+        // Update last known location (24h TTL)
+        await client.setEx(geoKey, 86400, JSON.stringify({
+          country: currentGeo.country,
+          city: currentGeo.city,
+          timestamp: Date.now()
+        }));
+      }
     }
 
     // 3. Known Bot Patterns (L1 - S11 overlap)

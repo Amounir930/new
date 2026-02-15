@@ -143,6 +143,14 @@ jobs:
             exit 1
           }
 
+      - name: "S9a-2 - Snyk Vulnerability Scan"
+        uses: snyk/actions/node@master
+        continue-on-error: true # Non-blocking until baseline established
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --all-projects --severity-threshold=high
+
       - name: "S9b - Dependency Confusion Check"
         run: |
           echo "═══════════════════════════════════════════════════════════════════"
