@@ -1,4 +1,4 @@
-import type { AuditService } from '@apex/audit';
+import { AuditService } from '@apex/audit';
 import { onboardingBlueprints } from '@apex/db';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';

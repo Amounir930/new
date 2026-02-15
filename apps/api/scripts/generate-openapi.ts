@@ -60,9 +60,11 @@ async function generate() {
       log: () => Promise.resolve(),
     };
 
+    const { AuditModule } = await import('@apex/audit');
+
     // Create Testing Module to override infrastructure dependencies
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule, AuditModule],
     })
       .overrideProvider(TenantRegistryService)
       .useValue(mockTenantRegistryService)
