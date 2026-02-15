@@ -17,6 +17,7 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsup src/index.ts --format cjs,esm --dts --tsconfig ./tsconfig.json",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch --tsconfig ./tsconfig.json",
     "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "test:watch": "bun test --watch",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
