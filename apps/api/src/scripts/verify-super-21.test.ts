@@ -4,44 +4,35 @@
  * Run with: bun apps/api/src/scripts/verify-super-21.ts
  */
 
-import { AuditService } from '@apex/audit';
-import { Test, TestingModule } from '@nestjs/testing';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { mock } from 'bun:test';
 import { BlueprintsService } from '../blueprints/blueprints.service.js';
 import type { CreateBlueprintDto } from '../blueprints/dto/blueprint.dto.js';
 
 // Mock Dependencies
 const mockPool = {
-  connect: jest.fn(),
-  query: jest.fn(),
+  connect: mock(),
+  query: mock(),
 };
 
 const mockAudit = {
-  log: jest.fn(),
+  log: mock(),
 };
 
 // Mock Drizzle methods
 const mockDb = {
-  select: jest.fn().mockReturnThis(),
-  from: jest.fn().mockReturnThis(),
-  where: jest.fn().mockReturnThis(),
-  insert: jest.fn().mockReturnThis(),
-  values: jest.fn().mockReturnThis(),
-  update: jest.fn().mockReturnThis(),
-  set: jest.fn().mockReturnThis(),
-  delete: jest.fn().mockReturnThis(),
-  returning: jest.fn(),
+  select: mock().mockReturnThis(),
+  from: mock().mockReturnThis(),
+  where: mock().mockReturnThis(),
+  insert: mock().mockReturnThis(),
+  values: mock().mockReturnThis(),
+  update: mock().mockReturnThis(),
+  set: mock().mockReturnThis(),
+  delete: mock().mockReturnThis(),
+  returning: mock(),
 };
 
-// Manually mock drizzle function since we can't easily mock top-level imports in this script structure
-jest.mock('drizzle-orm/node-postgres', () => ({
-  drizzle: () => mockDb,
-  NodePgDatabase: {},
-}));
-
-jest.mock('drizzle-orm', () => ({
-  eq: () => 'eq_mock',
-}));
+// No need for global module mocking since we instantiate the service manually
+// and inject the mockDb directly on line 55.
 
 async function verify() {
   console.log('🚀 Starting Super-#21 Logic Verification (Mocked DB)...');
@@ -98,7 +89,7 @@ async function verify() {
     await service.create(userId, invalidDto);
     console.error('❌ Failed: Should have rejected invalid JSON');
   } catch (e: any) {
-    if (e.message && e.message.includes('Invalid JSON')) {
+    if (e?.message?.includes('Invalid JSON')) {
       console.log('✅ S3 Caught Invalid JSON');
     } else {
       console.error('❌ Unexpected error:', e);
