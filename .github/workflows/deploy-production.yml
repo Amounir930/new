@@ -186,7 +186,7 @@ jobs:
           MINIO_ACCESS_KEY: verification_minio_access
           MINIO_SECRET_KEY: verification_minio_secret
           TENANT_ISOLATION_MODE: strict
-          NODE_ENV: production
+          NODE_ENV: test
           PORT: 3000
           # Disable external services for verification
           SKIP_S1_COMPLEXITY_CHECK: "true"
