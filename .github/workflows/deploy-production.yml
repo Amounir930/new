@@ -180,7 +180,12 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: verification_secret_must_be_32_chars_long_exactly_!!
+          JWT_SECRET: verification_secret_must_be_32_chars_alphanumeri
+          ENCRYPTION_MASTER_KEY: verification_master_key_must_be_32_chars_hex_ab
+          MINIO_ENDPOINT: localhost
+          MINIO_ACCESS_KEY: verification_minio_access
+          MINIO_SECRET_KEY: verification_minio_secret
+          TENANT_ISOLATION_MODE: strict
           NODE_ENV: production
           PORT: 3000
           # Disable external services for verification
