@@ -9,6 +9,7 @@ COPY package.json bun.lock ./
 
 # 📦 S2: Copy workspace manifests for optimal caching
 # This ensures bun install only re-runs if a package.json changes
+COPY apps/admin/package.json ./apps/admin/
 COPY apps/api/package.json ./apps/api/
 COPY packages/audit/package.json ./packages/audit/
 COPY packages/auth/package.json ./packages/auth/
