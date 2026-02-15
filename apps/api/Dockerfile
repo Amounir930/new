@@ -54,4 +54,4 @@ USER bun-user
 EXPOSE 3000
 
 # 🏁 Final Command
-CMD ["bun", "dist/main.js"]
+CMD ["bun", "dist/apps/api/src/main.js"]
