@@ -153,8 +153,10 @@ jobs:
           echo "🗄️ Running database migrations on blue environment..."
           # bun run db:migrate
           echo "✅ Migrations completed"
-        env:
-          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "latest"
 
       - name: Install Dependencies for Verification
         run: bun install
