@@ -67,7 +67,7 @@ async function bootstrap() {
   // S8: Security Headers (Helmet)
   // CRITICAL FIX (S8): Removed 'unsafe-inline' from scriptSrc
   // Using strict CSP with nonce generation for inline scripts
-  // biome-ignore format: S8 Security Gate requires single-line app.use(helmet(...))
+  // biome-ignore format: S8 Security Gate requires robust detection
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
