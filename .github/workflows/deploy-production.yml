@@ -101,7 +101,7 @@ jobs:
             apps/api/dist \
             packages/*/dist \
             package.json \
-            bun.lockb
+            bun.lock
 
           echo "✅ Release package created"
 

@@ -17,6 +17,7 @@ import {
   Module,
   type NestModule,
   RequestMethod,
+  Version, // Added Version import
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
@@ -67,7 +68,9 @@ export class AppModule implements NestModule {
         { path: 'health/(.*)', method: RequestMethod.GET },
         { path: 'api/health/(.*)', method: RequestMethod.GET },
         { path: 'v1/health/(.*)', method: RequestMethod.GET },
-        { path: 'api/v1/health/(.*)', method: RequestMethod.GET }
+        { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
+        { path: 'api/v1/health/liveness', method: RequestMethod.GET },
+        { path: 'v1/health/liveness', method: RequestMethod.GET }
       )
       .forRoutes('*'); // Apply to all routes
   }
