@@ -4,28 +4,45 @@
 
 echo "🚀 Starting Blueprint Verification on Server..."
 
-# 1. Check if API is running
+# 1. Check if API is running (Retry up to 12 times = 60s)
 echo "🔍 Checking API Health..."
-HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}\n" http://localhost:3000/api/v1/health/liveness)
+MAX_RETRIES=12
+count=0
+HTTP_STATUS="000"
+
+while [ $count -lt $MAX_RETRIES ]; do
+  # S21 Fix: Access via Traefik (localhost:80) with Host header + HTTPS redirect handling? 
+  # Actually Traefik redirects 80->443. simple curl to localhost:80 might get 301.
+  # Let's try skipping cert check on https localhost:443 or just check the 301/200.
+  # Better: Exec into container for "Liveness", check Traefik for "Integration".
+  
+  # Method A: Docker Exec (Internal Health)
+  # HTTP_STATUS=$(sudo docker exec ops-api-1 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/v1/health/liveness)
+  
+  # Method B: Traefik (Integration) - Use insecure HTTPS to localhost
+  HTTP_STATUS=$(curl -k -o /dev/null -s -w "%{http_code}" -H "Host: staging.60sec.shop" https://localhost/api/v1/health/liveness)
+  
+  if [ "$HTTP_STATUS" == "200" ]; then
+    echo "✅ API is Healthy (via Traefik)."
+    break
+  fi
+  echo "⏳ Waiting for API... (Attempt $((count+1))/$MAX_RETRIES - Status: $HTTP_STATUS)"
+  sleep 5
+  count=$((count+1))
+done
+
 if [ "$HTTP_STATUS" != "200" ]; then
-  echo "❌ API is not healthy (HTTP $HTTP_STATUS). Exiting."
+  echo "❌ API failed to start after 60s (HTTP $HTTP_STATUS). Exiting."
+  # Optional: Print logs
+  sudo docker logs --tail 20 ops-api-1
   exit 1
 fi
-echo "✅ API is Healthy."
 
-# 2. Extract Super Admin Token (Simulation or requires manual input? Let's assume we can hit public endpoints or use a known seed/secret if available. 
-# Actually, we likely need a token for the admin endpoints. 
-# For now, let's verify the Public/Provision endpoint which might not need auth or use a different mechanism?
-# Provision endpoint usually requires a valid API Key or is public for this stage?
-# Checking provisioning.controller.ts...
-# It allows public access? Let's check.
-
-# 3. Create a Custom Blueprint (Requires Super Admin)
-# If we can't easily get a token script-wise, we might skip this or ask user for it.
-# BUT, we can check the database directly!
+# ...
 
 echo "🔍 Checking Database for Blueprints..."
-sudo docker compose -f ops/docker-compose.prod.yml exec -T db psql -U postgres -d adel -c "SELECT name, is_default, plan FROM onboarding_blueprints ORDER BY created_at DESC LIMIT 5;"
+# S21 Fix: Use correct container name 'apex-postgres' or service 'postgres'
+sudo docker compose -f ops/docker-compose.prod.yml exec -T postgres psql -U postgres -d adel -c "SELECT name, is_default, plan FROM onboarding_blueprints ORDER BY created_at DESC LIMIT 5;"
 
 echo "ℹ️  To verify fully, run these commands manually:"
 echo ""
