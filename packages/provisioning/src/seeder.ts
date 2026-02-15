@@ -85,28 +85,27 @@ export async function seedTenantData(
     const blueprintRecord = await getDefaultBlueprint(options.plan || 'free');
 
     if (!blueprintRecord) {
-      throw new Error(`S21 Critical Failure: No blueprint found for plan ${options.plan || 'free'}`);
+      throw new Error(
+        `S21 Critical Failure: No blueprint found for plan ${options.plan || 'free'}`
+      );
     }
 
     const template = blueprintRecord.blueprint;
 
     // Seed Settings
-    const settingsToSeed = Object.entries(
-      template.settings || {}
-    ).map(([key, value]) => ({
-      key,
-      value: key === 'site_name' ? options.storeName : value,
-    }));
+    const settingsToSeed = Object.entries(template.settings || {}).map(
+      ([key, value]) => ({
+        key,
+        value: key === 'site_name' ? options.storeName : value,
+      })
+    );
 
     if (settingsToSeed.length > 0) {
       await db.insert(settings).values(settingsToSeed);
     }
 
     // Seed Mandatory Pages
-    if (
-      template.pages &&
-      template.pages.length > 0
-    ) {
+    if (template.pages && template.pages.length > 0) {
       const { pages: schemaPages } = await import('@apex/db');
       // Note: We need to ensure 'pages' table exists in tenant schema.
       // Assuming schema-manager handled this during createTenantDb.
@@ -132,7 +131,8 @@ export async function seedTenantData(
   } catch (error) {
     console.error(`Seeding failed for ${options.subdomain}:`, error);
     throw new Error(
-      `Seeding Failure: ${error instanceof Error ? error.message : String(error)
+      `Seeding Failure: ${
+        error instanceof Error ? error.message : String(error)
       }`
     );
   }
