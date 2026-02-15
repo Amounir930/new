@@ -24,7 +24,7 @@ COPY packages/test-utils/package.json ./packages/test-utils/
 COPY packages/validators/package.json ./packages/validators/
 
 # 🛠️ S3: Install dependencies
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # 🧪 S4: Copy source and build
 COPY . .
