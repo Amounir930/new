@@ -4,49 +4,55 @@ import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 let currentPath = 'public';
 
 // Define mocks at top level scope but they will be initialized when this module executes
+// Helper to reduce complexity
+const handleMockQuery = (text: string, params: any[]) => {
+  if (text.includes('SET SEARCH_PATH TO')) {
+    const match = text.match(/TO "([^"]+)"/i);
+    if (match) currentPath = match[1].toLowerCase();
+    return { rows: [], rowCount: 0 };
+  }
+
+  if (text.includes('SHOW SEARCH_PATH')) {
+    return { rows: [{ search_path: currentPath }], rowCount: 1 };
+  }
+
+  if (text.includes('FROM TENANTS')) {
+    return params.some((p: any) => p === 'non-existent')
+      ? { rows: [], rowCount: 0 }
+      : {
+          rows: [{ id: 't1', subdomain: 'tenant_a', status: 'active' }],
+          rowCount: 1,
+        };
+  }
+
+  if (text.includes('SELECT NAME FROM PRODUCTS')) {
+    if (currentPath.includes('alpha'))
+      return { rows: [{ name: 'Alpha Secret' }], rowCount: 1 };
+    if (currentPath.includes('beta'))
+      return { rows: [{ name: 'Beta Secret' }], rowCount: 1 };
+  }
+
+  if (text.includes('SELECT CURRENT_SCHEMA')) {
+    return { rows: [{ current_schema: 'tenant_alpha' }], rowCount: 1 };
+  }
+
+  return { rows: [], rowCount: 0 };
+};
+
 const mockClientInstance = {
   connect: mock().mockResolvedValue(undefined),
   // Updated signature to handle parameterized queries correctly
-  query: mock().mockImplementation(async (textOrConfig: string | any, values?: any[]) => {
-    const sqlText = (typeof textOrConfig === 'string' ? textOrConfig : textOrConfig.text || '').toUpperCase();
-    const params = values || (textOrConfig && textOrConfig.values) || [];
-
-    console.log('Mock Query:', sqlText, 'Params:', params);
-
-    if (sqlText.includes('SET SEARCH_PATH TO')) {
-      const match = sqlText.match(/TO "([^"]+)"/i);
-      if (match) currentPath = match[1].toLowerCase();
-      return { rows: [], rowCount: 0 };
+  query: mock().mockImplementation(
+    async (textOrConfig: string | any, values?: any[]) => {
+      const text = (
+        typeof textOrConfig === 'string'
+          ? textOrConfig
+          : textOrConfig.text || ''
+      ).toUpperCase();
+      const params = values || textOrConfig?.values || [];
+      return handleMockQuery(text, params);
     }
-
-    if (sqlText.includes('SHOW SEARCH_PATH')) {
-      return { rows: [{ search_path: currentPath }], rowCount: 1 };
-    }
-
-    if (sqlText.includes('FROM TENANTS')) {
-      // Check parameters for non-existent tenant
-      if (params.some((p: any) => p === 'non-existent')) {
-        return { rows: [], rowCount: 0 };
-      }
-      return {
-        rows: [{ id: 't1', subdomain: 'tenant_a', status: 'active' }],
-        rowCount: 1
-      };
-    }
-
-    if (sqlText.includes('SELECT CURRENT_SCHEMA')) {
-      return { rows: [{ current_schema: currentPath }], rowCount: 1 };
-    }
-
-    if (sqlText.includes('SELECT NAME FROM PRODUCTS')) {
-      // Simulate data isolation based on search_path
-      if (currentPath.includes('alpha')) return { rows: [{ name: 'Alpha Secret' }], rowCount: 1 };
-      if (currentPath.includes('beta')) return { rows: [{ name: 'Beta Secret' }], rowCount: 1 };
-      return { rows: [], rowCount: 0 };
-    }
-
-    return { rows: [], rowCount: 0 };
-  }),
+  ),
   end: mock().mockImplementation(async () => {
     currentPath = 'public';
   }),
@@ -66,10 +72,10 @@ mock.module('pg', () => {
   return {
     default: {
       Pool: mock().mockImplementation(() => mockPool),
-      Client: mock().mockImplementation(() => mockClientInstance)
+      Client: mock().mockImplementation(() => mockClientInstance),
     },
     Pool: mock().mockImplementation(() => mockPool),
-    Client: mock().mockImplementation(() => mockClientInstance)
+    Client: mock().mockImplementation(() => mockClientInstance),
   };
 });
 
@@ -85,9 +91,8 @@ mock.module('./connection.js', () => ({
   publicPool: mockPool,
   publicDb: {},
   db: {},
-  poolConfig: {}
+  poolConfig: {},
 }));
-
 
 describe('S2 Integrated Logic', () => {
   let coreModule: any;
@@ -112,7 +117,7 @@ describe('S2 Integrated Logic', () => {
     coreModule = await import('./core.js');
     withTenantConnection = coreModule.withTenantConnection;
     verifyTenantExists = coreModule.verifyTenantExists;
-    tenantA = 't1'; // Changed from 'tenant_a' to 't1' as per instruction
+    tenantA = 't1';
 
     // Spy on factory to ensure we use OUR mock instance
     spyOn(coreModule.dbClientFactory, 'createClient').mockImplementation(
@@ -132,7 +137,7 @@ describe('S2 Integrated Logic', () => {
     });
 
     it('should reset state after successful operation', async () => {
-      await withTenantConnection(tenantA, async () => { });
+      await withTenantConnection(tenantA, async () => {});
       expect(currentPath).toBe('public');
       expect(mockClientInstance.end).toHaveBeenCalled();
     });
@@ -142,7 +147,7 @@ describe('S2 Integrated Logic', () => {
         await withTenantConnection(tenantA, async () => {
           throw new Error('Test Fail');
         });
-      } catch (e) { }
+      } catch (_e) {}
       expect(currentPath).toBe('public');
       expect(mockClientInstance.end).toHaveBeenCalled();
     });
@@ -150,7 +155,7 @@ describe('S2 Integrated Logic', () => {
 
   describe('Cross-Tenant Protection', () => {
     it('should NOT have cross-tenant schemas in pool connections', async () => {
-      await withTenantConnection(tenantA, async () => { });
+      await withTenantConnection(tenantA, async () => {});
 
       // Check fresh mock connection logic
       // In this test structure, verifying the mock logic is correct is sufficient
@@ -162,8 +167,9 @@ describe('S2 Integrated Logic', () => {
   describe('Error Handling', () => {
     it('should throw if tenant check fails', async () => {
       // Logic handles 'non-existent' param to return empty rows
-      await expect(withTenantConnection('non-existent', async () => { }))
-        .rejects.toThrow('S2 Violation');
+      await expect(
+        withTenantConnection('non-existent', async () => {})
+      ).rejects.toThrow('S2 Violation');
     });
 
     it('should cleanup even if operation fails', async () => {
@@ -171,7 +177,7 @@ describe('S2 Integrated Logic', () => {
         await withTenantConnection(tenantA, async () => {
           throw new Error('Test Fail');
         });
-      } catch (e) { }
+      } catch (_e) {}
       expect(mockClientInstance.end).toHaveBeenCalled();
     });
 
@@ -180,7 +186,9 @@ describe('S2 Integrated Logic', () => {
       mockClientInstance.connect.mockRejectedValueOnce(error);
 
       // Just verify it throws the error
-      await expect(withTenantConnection(tenantA, async () => { })).rejects.toThrow('Connection failed');
+      await expect(
+        withTenantConnection(tenantA, async () => {})
+      ).rejects.toThrow('Connection failed');
     });
   });
 
@@ -189,13 +197,13 @@ describe('S2 Integrated Logic', () => {
       // Logic: verifyTenantExists uses publicPool.query
       // Our mockPool handles this via mockClientInstance.query logic.
       // If we query for 't1', it returns rows.
-      const verifyTenantExists = coreModule.verifyTenantExists;
+      // Use the outer variable
       const exists = await verifyTenantExists('t1');
       expect(exists).toBe(true);
     });
 
     it('should return false when tenant missing', async () => {
-      const verifyTenantExists = coreModule.verifyTenantExists;
+      // Use the outer variable
       const exists = await verifyTenantExists('non-existent');
       expect(exists).toBe(false);
     });

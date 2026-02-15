@@ -1,5 +1,4 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { ConfigModule, ConfigService } from '@apex/config';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from './auth.module.js';
 import { AuthService } from './auth.service.js';
