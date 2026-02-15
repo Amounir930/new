@@ -30,7 +30,10 @@ const mockPool = {
   connect: mock().mockResolvedValue(mockClientInstance),
   query: mock().mockImplementation(async (q) => {
     const text = typeof q === 'string' ? q : q.text;
-    if (text.includes('SELECT 1 FROM tenants') || text.includes('SELECT id, subdomain, status FROM tenants')) {
+    if (
+      text.includes('SELECT 1 FROM tenants') ||
+      text.includes('SELECT id, subdomain, status FROM tenants')
+    ) {
       return {
         rows: [{ id: 'alpha-uuid', subdomain: 'alpha', status: 'active' }],
         rowCount: 1,
@@ -121,7 +124,7 @@ describe('DB Core Isolation', () => {
     it('should enforce S2: stop if tenant not found', async () => {
       mockPool.query.mockResolvedValueOnce({ rowCount: 0 }); // missing
       try {
-        await withTenantConnection('missing', async () => { });
+        await withTenantConnection('missing', async () => {});
         expect(true).toBe(false); // Should not reach here
       } catch (e: any) {
         expect(e.message).toContain('S2 Violation');

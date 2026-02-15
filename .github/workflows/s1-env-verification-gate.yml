@@ -8,7 +8,7 @@ permissions:
   checks: write
 
 env:
-  DATABASE_URL: postgresql://safe_user:safe_pass@localhost:5432/apex_test
+  DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
   MINIO_ENDPOINT: ${{ secrets.MINIO_ENDPOINT }}
   MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}

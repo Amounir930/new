@@ -544,7 +544,7 @@ jobs:
       - name: Setup Test Database
         run: |
           cd packages/db
-          export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/apex_test
+          export DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}
           export REDIS_URL=redis://localhost:6379
           export JWT_SECRET="test_jwt_secret_for_ci_provision_32_chars_exact"
           export ENCRYPTION_MASTER_KEY="test_encryption_key_for_dev_only_32_chars_long"
@@ -559,7 +559,7 @@ jobs:
           # bun run db:generate
           bun run db:migrate
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: "test_jwt_secret_for_ci_provision_32_chars_exact"
           ENCRYPTION_MASTER_KEY: "test_encryption_key_for_dev_only_32_chars_long"
@@ -627,7 +627,7 @@ jobs:
           echo ""
           echo "✅ NORTH STAR ACHIEVED! ${DURATION}s < ${THRESHOLD}s"
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: "test_jwt_secret_for_ci_provision_32_chars_exact"
           ENCRYPTION_MASTER_KEY: "test_encryption_key_for_dev_only_32_chars_long"
@@ -707,7 +707,7 @@ jobs:
             exit 1
           fi
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/apex_test
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MINIO_ENDPOINT: localhost
