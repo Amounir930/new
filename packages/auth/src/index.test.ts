@@ -3,8 +3,8 @@
  * Verifying JwtAuthGuard and exports
  */
 
-import { UnauthorizedException } from '@nestjs/common';
 import { describe, expect, it } from 'bun:test';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtAuthGuard } from './index.js';
 
 describe('JwtAuthGuard', () => {

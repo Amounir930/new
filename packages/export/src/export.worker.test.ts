@@ -4,8 +4,8 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import type { Job } from 'bullmq';
 import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import type { Job } from 'bullmq';
 import { ExportWorker } from './export.worker.js';
 
 // Mock BullMQ

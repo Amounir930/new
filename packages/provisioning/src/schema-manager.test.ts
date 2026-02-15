@@ -4,8 +4,8 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { publicPool } from '@apex/db';
 import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { publicPool } from '@apex/db';
 import {
   createTenantSchema,
   dropTenantSchema,

@@ -2,8 +2,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Test } from '@nestjs/testing';
 import 'reflect-metadata';
-import { type CallExpression, Node, Project, type SourceFile } from 'ts-morph';
 import { describe, expect, it } from 'bun:test';
+import { type CallExpression, Node, Project, type SourceFile } from 'ts-morph';
 
 /**
  * Validates the security compliance of a NestJS module.

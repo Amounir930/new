@@ -4,8 +4,8 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { UnauthorizedException } from '@nestjs/common';
 import {
   TenantJwtMatchGuard,
   type TenantRequest,
@@ -74,7 +74,7 @@ describe('TenantJwtMatchGuard', () => {
     });
 
     it('should log S2 violation when cross-tenant access is attempted', () => {
-      const consoleSpy = spyOn(console, 'error').mockImplementation(() => { });
+      const consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
 
       mockRequest.user = {
         tenantId: 'attacker-tenant',

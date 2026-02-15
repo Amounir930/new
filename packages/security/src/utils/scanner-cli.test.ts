@@ -3,8 +3,8 @@
  * Verifying AST-based security verification logic
  */
 
-import { Project } from 'ts-morph';
 import { describe, expect, it } from 'bun:test';
+import { Project } from 'ts-morph';
 import { ApexSecurityScanner } from './scanner-cli.js';
 
 describe('ApexSecurityScanner', () => {

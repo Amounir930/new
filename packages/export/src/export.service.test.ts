@@ -3,8 +3,8 @@
  * Validates export functionality and security compliance
  */
 
-import { publicPool } from '@apex/db';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { publicPool } from '@apex/db';
 import { ExportService } from './export.service.js';
 
 // Mock DB

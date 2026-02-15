@@ -2,8 +2,8 @@
  * JWT Strategy Tests
  */
 
-import { UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { UnauthorizedException } from '@nestjs/common';
 import { JwtStrategy } from './jwt.strategy.js';
 
 describe('JwtStrategy', () => {

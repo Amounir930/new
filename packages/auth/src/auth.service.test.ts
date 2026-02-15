@@ -2,8 +2,8 @@
  * Auth Service Tests
  */
 
-import { UnauthorizedException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 
 describe('AuthService', () => {

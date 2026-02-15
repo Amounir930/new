@@ -6,8 +6,8 @@
  * @module @apex/test-utils/mocks/server
  */
 
-import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll } from 'bun:test';
+import { setupServer } from 'msw/node';
 import { cartHandlers } from './handlers/cart.handlers';
 import { ordersHandlers } from './handlers/orders.handlers';
 import { productsHandlers } from './handlers/products.handlers';
