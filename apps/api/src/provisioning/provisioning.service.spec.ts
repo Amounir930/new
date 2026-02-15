@@ -87,6 +87,12 @@ describe('ProvisioningService', () => {
         })
       );
       expect((service as any).tenantRegistry.register).toHaveBeenCalled();
+      expect(provisioning.seedTenantData).toHaveBeenCalledWith({
+        subdomain: 'test-store',
+        adminEmail: 'admin@test.com',
+        storeName: 'Test Store',
+        plan: 'basic',
+      });
     });
 
     it('should throw ConflictException if resource already exists', async () => {

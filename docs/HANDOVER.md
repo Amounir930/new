@@ -34,7 +34,7 @@ cd /opt/apex-v2 && sudo docker compose --env-file .env -f ops/docker-compose.pro
 ### Redeploy Command:
 Run from the local root directory:
 ```bash
-ssh -i ops/keys/apex-deploy -o StrictHostKeyChecking=no deploy@34.102.121.225 "cd /opt/apex-v2 && git reset --hard && git pull && sudo docker build -t ghcr.io/amounir930/adel/api:latest -f apps/api/Dockerfile . && sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --force-recreate traefik api"
+ssh -i ops/keys/apex-deploy -o StrictHostKeyChecking=no deploy@34.102.121.225 "cd /opt/apex-v2 && git reset --hard && git pull && sudo docker build -t ghcr.io/amounir930/adel/api:latest -f apps/api/Dockerfile . && sudo docker build -t ghcr.io/amounir930/adel/admin:latest -f apps/admin/Dockerfile . && sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --force-recreate traefik api admin"
 ```
 
 ## 🔐 Security Protocols (S1-S8)
