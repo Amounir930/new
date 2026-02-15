@@ -50,8 +50,8 @@ describe('GlobalExceptionFilter', () => {
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    spyOn(Logger.prototype, 'error').mockImplementation(() => { });
-    spyOn(Logger.prototype, 'warn').mockImplementation(() => { });
+    spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
 
     mockJson = mock();
     mockStatus = mock().mockReturnValue({ json: mockJson });
@@ -206,7 +206,9 @@ describe('GlobalExceptionFilter', () => {
   it('should report to error tracking in production for 500 errors', () => {
     mockEnv.NODE_ENV = 'production';
     mockEnv.GLITCHTIP_DSN = ''; // Trigger fallback logging
-    const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(() => { });
+    const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(
+      () => {}
+    );
 
     const exception = new Error('Production 500');
     filter.catch(exception, mockArgumentsHost);
@@ -343,7 +345,9 @@ describe('GlobalExceptionFilter', () => {
   it('should report error tracking for generic 500 even if no wrapper service', () => {
     mockEnv.NODE_ENV = 'production';
     mockEnv.GLITCHTIP_DSN = ''; // Trigger fallback logging
-    const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(() => { });
+    const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(
+      () => {}
+    );
 
     const exception = new Error('Critical Failure');
     filter.catch(exception, mockArgumentsHost);

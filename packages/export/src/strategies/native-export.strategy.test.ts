@@ -87,7 +87,10 @@ describe('NativeExportStrategy', () => {
       // Verify pg_dump was called with correct schema
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call: any) => Array.isArray(call[0]) && call[0][0] === 'pg_dump' && call[0].includes('-n')
+        (call: any) =>
+          Array.isArray(call[0]) &&
+          call[0][0] === 'pg_dump' &&
+          call[0].includes('-n')
       );
       expect(pgDumpCall).toBeDefined();
       expect(pgDumpCall?.[0]).toContain('-n');
@@ -106,7 +109,10 @@ describe('NativeExportStrategy', () => {
 
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call: any) => Array.isArray(call[0]) && call[0][0] === 'pg_dump' && call[0].includes('-n')
+        (call: any) =>
+          Array.isArray(call[0]) &&
+          call[0][0] === 'pg_dump' &&
+          call[0].includes('-n')
       );
 
       // Verify only tenant schema is exported

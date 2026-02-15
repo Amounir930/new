@@ -233,7 +233,7 @@ describe('LiteExportStrategy', () => {
 
       await expect(strategy.export(options)).rejects.toThrow('Export failed');
 
-      // Manual check for cleanup is harder with multiple rm mocks, 
+      // Manual check for cleanup is harder with multiple rm mocks,
       // but the test suite verifies basic execution flow.
       expect(mockClient.release).toHaveBeenCalled();
     });

@@ -92,14 +92,26 @@ describe('AnalyticsExportStrategy', () => {
       mockClient.query.mockImplementation((query: string) => {
         if (query.includes('orders')) {
           return Promise.resolve({
-            rows: [{ date: '2026-01-01', order_count: 1, total_revenue: 150, avg_order_value: 150 }],
+            rows: [
+              {
+                date: '2026-01-01',
+                order_count: 1,
+                total_revenue: 150,
+                avg_order_value: 150,
+              },
+            ],
             rowCount: 1,
           });
         }
         if (query.includes('products')) {
           return Promise.resolve({
             rows: [
-              { name: 'Product 1', sku: 'SKU1', times_ordered: 10, total_quantity: 100 },
+              {
+                name: 'Product 1',
+                sku: 'SKU1',
+                times_ordered: 10,
+                total_quantity: 100,
+              },
             ],
             rowCount: 1,
           });
@@ -129,7 +141,10 @@ describe('AnalyticsExportStrategy', () => {
         (call: any) => call[0].includes('orders') && call[0].includes('BETWEEN')
       );
       expect(ordersQuery).toBeDefined();
-      expect(ordersQuery?.[1]).toEqual([defaultOptions.dateRange?.from, defaultOptions.dateRange?.to]);
+      expect(ordersQuery?.[1]).toEqual([
+        defaultOptions.dateRange?.from,
+        defaultOptions.dateRange?.to,
+      ]);
     });
 
     it('should enforce S2 tenant isolation', async () => {
@@ -153,7 +168,12 @@ describe('AnalyticsExportStrategy', () => {
         if (query.includes('products')) {
           return Promise.resolve({
             rows: [
-              { name: 'Item 1', sku: 'SKU1', times_ordered: 10, total_quantity: 100 },
+              {
+                name: 'Item 1',
+                sku: 'SKU1',
+                times_ordered: 10,
+                total_quantity: 100,
+              },
             ],
             rowCount: 1,
           });
@@ -169,7 +189,9 @@ describe('AnalyticsExportStrategy', () => {
       );
       expect(csvWrite).toBeDefined();
       // Use toMatch to be more lenient with line endings and whitespace
-      expect(csvWrite?.[1] as string).toMatch(/name,sku,times_ordered,total_quantity/);
+      expect(csvWrite?.[1] as string).toMatch(
+        /name,sku,times_ordered,total_quantity/
+      );
       expect(csvWrite?.[1] as string).toMatch(/Item 1,SKU1,10,100/);
     });
 
@@ -192,7 +214,9 @@ describe('AnalyticsExportStrategy', () => {
     it('should cleanup on error', async () => {
       mockClient.query.mockRejectedValue(new Error('Query failed'));
 
-      await expect(strategy.export(defaultOptions)).rejects.toThrow('Query failed');
+      await expect(strategy.export(defaultOptions)).rejects.toThrow(
+        'Query failed'
+      );
 
       // Verify cleanup (mkdir, tar, rm)
       const spawnCalls = mockShell.spawn.mock.calls;
