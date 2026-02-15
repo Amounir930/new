@@ -18,7 +18,7 @@ concurrency:
 env:
   # S1 CI Mocks (Bypasses import-time validation crashes)
   DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-  JWT_SECRET: test_secret_key_for_ci_environment_only_32
+  JWT_SECRET: test_secret_key_for_ci_environment_only_32 # gitleaks:allow
   MINIO_ENDPOINT: localhost
   MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
   MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
