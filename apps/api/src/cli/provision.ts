@@ -7,7 +7,7 @@
 import { createInterface } from 'node:readline/promises';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module.js';
-import type { ProvisioningService } from '../provisioning/provisioning.service.js';
+import { ProvisioningService } from '../provisioning/provisioning.service.js';
 
 interface ProvisionOptions {
   subdomain: string;
