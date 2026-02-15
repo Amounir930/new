@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Injectable,
   type OnModuleInit,
+  type OnApplicationShutdown,
 } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 
@@ -13,7 +14,7 @@ import { createClient, type RedisClientType } from 'redis';
  * CRITICAL: Supports distributed deployments (Docker/K8s multi-instance)
  */
 @Injectable()
-export class RedisRateLimitStore implements OnModuleInit {
+export class RedisRateLimitStore implements OnModuleInit, OnApplicationShutdown {
   private client: RedisClientType | null = null;
   private connecting = false;
   private fallbackToMemory = false;
@@ -24,10 +25,16 @@ export class RedisRateLimitStore implements OnModuleInit {
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async onModuleInit() {
     await this.connect();
+  }
+
+  async onApplicationShutdown() {
+    if (this.client?.isOpen) {
+      await this.client.quit();
+    }
   }
 
   async getClient(): Promise<RedisClientType | null> {

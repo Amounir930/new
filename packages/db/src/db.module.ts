@@ -1,5 +1,5 @@
 import { EncryptionService } from '@apex/security';
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { publicPool } from './connection.js';
 import { CustomerService } from './services/customer.service.js';
 import { TenantRegistryService } from './tenant-registry.service.js';
@@ -22,4 +22,8 @@ import { TenantRegistryService } from './tenant-registry.service.js';
     'DATABASE_POOL', // Export token string
   ],
 })
-export class DbModule {}
+export class DbModule implements OnApplicationShutdown {
+  async onApplicationShutdown() {
+    await publicPool.end();
+  }
+}
