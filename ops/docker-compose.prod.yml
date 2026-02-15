@@ -164,6 +164,7 @@ services:
       - "--ping"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=ops_apex-network"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       # Auto-redirect HTTP -> HTTPS
