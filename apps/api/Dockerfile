@@ -28,7 +28,7 @@ RUN bun install
 
 # 🧪 S4: Copy source and build
 COPY . .
-RUN bun run build
+RUN bun run build -- --concurrency=1
 
 # ═══════════════════════════════════════════════════════════════
 # 🚀 Production Stage (Hardened)
