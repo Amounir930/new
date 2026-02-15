@@ -193,7 +193,7 @@ services:
     command:
       - "--ping"
       - "--providers.docker=true"
-      - "--providers.docker.endpoint=tcp://docker-proxy:2375"
+      - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=ops_apex-network"
       - "--entrypoints.web.address=:80"
