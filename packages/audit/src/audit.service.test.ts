@@ -5,6 +5,7 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { runWithTenantContext } from '@apex/middleware';
 import {
   type AuditLogEntry,
   AuditService,
@@ -24,30 +25,27 @@ const mockPool = {
   connect: mock().mockResolvedValue(mockClient),
 };
 
+// Mock only DB globally as it is safe and doesn't interfere with logic tests in other packages
 mock.module('@apex/db', () => ({
   publicPool: mockPool,
 }));
 
-mock.module('@apex/security', () => ({
-  EncryptionService: mock().mockImplementation(() => ({
-    encrypt: mock().mockReturnValue({ encrypted: 'encrypted-data' }),
-    decrypt: mock().mockReturnValue('decrypted-data'),
-  })),
-}));
-
-mock.module('@apex/middleware', () => ({
-  getCurrentTenantId: mock().mockReturnValue('mock-tenant'),
-}));
+// We will NOT mock @apex/middleware or @apex/security globally here to avoid leakage.
+// We will use real context helpers and inject mocks into the service instance.
 
 describe('AuditService & Helpers', () => {
   let service: AuditService;
+  const mockEncryption = {
+    encrypt: mock().mockReturnValue({ encrypted: 'encrypted-data' }),
+    decrypt: mock().mockReturnValue('decrypted-data'),
+    validateMasterKey: mock(),
+  };
 
   beforeEach(() => {
-    mock.restore();
     mockClient.query.mockClear();
     mockClient.release.mockClear();
-    // Re-instantiate service to ensure clean state
-    service = new AuditService();
+    // Inject mock pool and encryption directly
+    service = new AuditService(mockPool, mockEncryption as any);
   });
 
   describe('AuditService.log', () => {
@@ -60,7 +58,12 @@ describe('AuditService & Helpers', () => {
         metadata: { key: 'value' },
       };
 
-      await service.log(entry);
+      await runWithTenantContext(
+        { tenantId: 'mock-tenant' } as any,
+        async () => {
+          await service.log(entry);
+        }
+      );
 
       // Verify S2 protection
       expect(mockClient.query).toHaveBeenCalledWith(
@@ -83,21 +86,25 @@ describe('AuditService & Helpers', () => {
     });
 
     it('should handle missing tenantId by falling back to context', async () => {
-      await service.log({
-        action: 'SYS_EVENT',
-        entityType: 'system',
-        entityId: 'sys-1',
-      });
+      await runWithTenantContext(
+        { tenantId: 'fallback-tenant' } as any,
+        async () => {
+          await service.log({
+            action: 'SYS_EVENT',
+            entityType: 'system',
+            entityId: 'sys-1',
+          });
+        }
+      );
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO public.audit_logs'),
-        expect.arrayContaining(['mock-tenant'])
+        expect.arrayContaining(['fallback-tenant'])
       );
     });
 
     it('should throw "Audit Persistence Failure" if query fails', async () => {
       mockClient.query.mockRejectedValueOnce(new Error('DB Crash'));
 
-      // Use a wrapper to catch the error for bun:test expectation
       let error: any;
       try {
         await service.log({ action: 'A', entityType: 'B', entityId: 'C' });
@@ -111,6 +118,7 @@ describe('AuditService & Helpers', () => {
 
   describe('Standalone Helpers', () => {
     it('logProvisioning should log tenant provisioned event', async () => {
+      process.env.ENCRYPTION_MASTER_KEY = 'ValidTestKey32CharsWith1$!Abc1234';
       await logProvisioning('test-store', 'pro', 'u1', '1.1.1.1', true);
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO public.audit_logs'),
@@ -119,6 +127,7 @@ describe('AuditService & Helpers', () => {
     });
 
     it('logSecurityEvent should log critical failure', async () => {
+      process.env.ENCRYPTION_MASTER_KEY = 'ValidTestKey32CharsWith1$!Abc1234';
       await logSecurityEvent('SQLI_ATTEMPT', 'actor', 'target', '2.2.2.2');
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO public.audit_logs'),

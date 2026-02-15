@@ -3,25 +3,23 @@
  * S1 Protocol: Environment Verification
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
-vi.hoisted(() => {
-  process.env.NODE_ENV = 'test';
-  process.env.JWT_SECRET = 'a'.repeat(32);
-  process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
-  process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
-  process.env.MINIO_ACCESS_KEY = 'minioadmin';
-  process.env.MINIO_SECRET_KEY = 'minioadmin';
-  process.env.MINIO_ENDPOINT = 'localhost';
-});
+// Set test environment variables immediately
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'a'.repeat(32);
+process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
+process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
+process.env.MINIO_ACCESS_KEY = 'minioadmin';
+process.env.MINIO_SECRET_KEY = 'minioadmin';
+process.env.MINIO_ENDPOINT = 'localhost';
 
 import { validateEnv } from './index.js';
 
 describe('Config Package', () => {
-  const originalEnv = process.env;
+  const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    vi.resetModules();
     process.env = { ...originalEnv };
   });
 
@@ -87,7 +85,6 @@ describe('Config Package', () => {
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
 
-      // vi.resetModules();
       const { ConfigService } = await import('./index.js');
       const service = new ConfigService();
       expect(service.get('JWT_SECRET')).toBe('a'.repeat(32));
@@ -102,7 +99,6 @@ describe('Config Package', () => {
       process.env.MINIO_ENDPOINT = 'localhost';
       (process.env as any).JWT_EXPIRES_IN = undefined; // Ensure we test the default
 
-      // vi.resetModules();
       const { ConfigService } = await import('./index.js');
       const service = new ConfigService();
       // In the actual schema, JWT_EXPIRES_IN defaults to '7d'
