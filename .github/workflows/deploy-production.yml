@@ -119,6 +119,29 @@ jobs:
     name: "🔵 Deploy to Blue Environment (Zero-Downtime)"
     runs-on: ubuntu-latest
     needs: create-release
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: safe_user
+          POSTGRES_PASSWORD: safe_pass
+          POSTGRES_DB: apex_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     environment:
       name: production-blue
       url: https://blue.60sec.shop
