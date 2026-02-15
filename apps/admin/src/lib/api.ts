@@ -2,14 +2,29 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 export const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('super_admin_token');
+    const name = 'admin_token=';
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) === 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
   }
   return null;
 };
 
 export const setAuthToken = (token: string) => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('super_admin_token', token);
+    // Set cookie for 1 day
+    const d = new Date();
+    d.setTime(d.getTime() + (1 * 24 * 60 * 60 * 1000));
+    const expires = 'expires=' + d.toUTCString();
+    document.cookie = `admin_token=${token}; ${expires}; path=/; SameSite=Strict; Secure`;
   }
 };
 
