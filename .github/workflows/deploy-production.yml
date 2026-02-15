@@ -45,7 +45,8 @@ jobs:
           echo "🔍 Verifying staging deployment status..."
 
           # Check staging health with verbose output for debugging
-          STAGING_HEALTH=$(curl -k -s -v -o /dev/null -w "%{http_code}" https://staging.60sec.shop/api/v1/health/liveness 2>staging_debug.log || echo "000")
+          # Using /api/health/status which is non-versioned/flexible
+          STAGING_HEALTH=$(curl -k -s -v -o /dev/null -w "%{http_code}" https://staging.60sec.shop/api/health/status 2>staging_debug.log || echo "000")
 
           if [ "$STAGING_HEALTH" != "200" ]; then
             echo "❌ CRITICAL: Staging is not healthy (status: ${STAGING_HEALTH})"

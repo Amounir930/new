@@ -44,4 +44,9 @@ export class HealthController {
   checkLiveness(@Res() res: express.Response) {
     return res.status(HttpStatus.OK).json({ status: 'ok' });
   }
+
+  @Get('status')
+  checkStatus(@Res() res: express.Response) {
+    return res.status(HttpStatus.OK).json({ status: 'ok', environment: process.env.NODE_ENV });
+  }
 }
