@@ -7,19 +7,21 @@ let currentPath = 'public';
 const mockClientInstance = {
   connect: mock().mockResolvedValue(undefined),
   query: mock().mockImplementation(async (q) => {
-    const text = typeof q === 'string' ? q : q.text;
-    if (text.includes('SET search_path TO')) {
+    const text = (typeof q === 'string' ? q : q.text).toUpperCase();
+    // console.log('Mock Query:', text);
+
+    if (text.includes('SET SEARCH_PATH TO')) {
       const match = text.match(/TO "([^"]+)"/i);
-      if (match) currentPath = match[1];
+      if (match) currentPath = match[1].toLowerCase(); // Standardize
       return { rows: [], rowCount: 0 };
     }
-    if (text.includes('current_schema()')) {
+    if (text.includes('CURRENT_SCHEMA()')) {
       return { rows: [{ current_schema: currentPath }] };
     }
-    if (text.includes('SHOW search_path')) {
+    if (text.includes('SHOW SEARCH_PATH')) {
       return { rows: [{ search_path: currentPath }] };
     }
-    if (text.includes('SELECT name FROM products')) {
+    if (text.includes('SELECT NAME FROM PRODUCTS')) {
       const rows = currentPath.includes('alpha')
         ? [{ name: 'Alpha Secret' }]
         : currentPath.includes('beta')
@@ -49,15 +51,9 @@ const mockPool = {
   }),
 };
 
-// Mock pg module
-const pgMock = {
-  Pool: mock().mockImplementation(() => mockPool),
-  Client: mock().mockImplementation(() => mockClientInstance),
-};
-mock.module('pg', () => ({
-  ...pgMock,
-  default: pgMock,
-}));
+import { spyOn } from 'bun:test';
+
+// ... (removed pg mock)
 
 // Mock connection module
 mock.module('./connection.js', () => ({
@@ -67,8 +63,12 @@ mock.module('./connection.js', () => ({
   poolConfig: { connectionString: 'postgres://localhost:5432' },
 }));
 
-// Import module AFTER mocking
-const { withTenantConnection } = await import('./core.js');
+// Import module AFTER mocking dependencies
+import * as coreModule from './core.js';
+const { withTenantConnection, dbClientFactory } = coreModule;
+
+// Spy on factory
+spyOn(dbClientFactory, 'createClient').mockImplementation(() => mockClientInstance as any);
 
 // --- INTEGRATED TESTS ---
 describe('S2: Integrated Tenant Isolation Protocol', () => {
@@ -94,7 +94,7 @@ describe('S2: Integrated Tenant Isolation Protocol', () => {
   });
 
   it('should reset state after successful operation', async () => {
-    await withTenantConnection(tenantA, async () => {});
+    await withTenantConnection(tenantA, async () => { });
     expect(currentPath).toBe('public');
     expect(mockClientInstance.end).toHaveBeenCalled();
   });
@@ -113,7 +113,7 @@ describe('S2: Integrated Tenant Isolation Protocol', () => {
   });
 
   it('should NOT have cross-tenant schemas in pool connections', async () => {
-    await withTenantConnection(tenantA, async () => {});
+    await withTenantConnection(tenantA, async () => { });
 
     // Check fresh mock connection
     const client = await mockPool.connect();
@@ -124,7 +124,7 @@ describe('S2: Integrated Tenant Isolation Protocol', () => {
   it('should throw S2 Violation for invalid tenant', async () => {
     mockPool.query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
     try {
-      await withTenantConnection('non-existent', async () => {});
+      await withTenantConnection('non-existent', async () => { });
       expect(true).toBe(false);
     } catch (e: any) {
       expect(e.message).toContain('S2 Violation');

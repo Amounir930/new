@@ -6,16 +6,17 @@ let currentPath = 'public';
 const mockClientInstance = {
   connect: mock().mockResolvedValue(undefined),
   query: mock().mockImplementation(async (q) => {
-    const text = typeof q === 'string' ? q : q.text;
-    if (text.includes('SET search_path TO')) {
+    const text = (typeof q === 'string' ? q : q.text).toUpperCase();
+    // console.log('Core Mock Query:', text);
+    if (text.includes('SET SEARCH_PATH TO')) {
       const match = text.match(/TO "([^"]+)"/i);
-      if (match) currentPath = match[1];
+      if (match) currentPath = match[1].toLowerCase();
       return { rows: [], rowCount: 0 };
     }
-    if (text.includes('current_schema()')) {
+    if (text.includes('CURRENT_SCHEMA()')) {
       return { rows: [{ current_schema: currentPath }] };
     }
-    if (text.includes('SHOW search_path')) {
+    if (text.includes('SHOW SEARCH_PATH')) {
       return { rows: [{ search_path: currentPath }] };
     }
     return { rows: [], rowCount: 0 };
@@ -29,10 +30,10 @@ const mockClientInstance = {
 const mockPool = {
   connect: mock().mockResolvedValue(mockClientInstance),
   query: mock().mockImplementation(async (q) => {
-    const text = typeof q === 'string' ? q : q.text;
+    const text = (typeof q === 'string' ? q : q.text).toUpperCase();
     if (
-      text.includes('SELECT 1 FROM tenants') ||
-      text.includes('SELECT id, subdomain, status FROM tenants')
+      text.includes('SELECT 1 FROM TENANTS') ||
+      text.includes('SELECT ID, SUBDOMAIN, STATUS FROM TENANTS')
     ) {
       return {
         rows: [{ id: 'alpha-uuid', subdomain: 'alpha', status: 'active' }],
@@ -43,34 +44,21 @@ const mockPool = {
   }),
 };
 
-// Mock pg module
-mock.module('pg', () => ({
-  default: {
-    Client: mock().mockImplementation(() => mockClientInstance),
-    Pool: mock().mockImplementation(() => mockPool),
-  },
-  Client: mock().mockImplementation(() => mockClientInstance),
-  Pool: mock().mockImplementation(() => mockPool),
-}));
+import { spyOn } from 'bun:test';
 
-// Mock the connection module
+// Mock connection module
 mock.module('./connection.js', () => ({
   publicPool: mockPool,
   publicDb: {},
   poolConfig: { connectionString: 'postgres://localhost:5432' },
 }));
 
-// Mock pg.Client
-mock.module('pg', () => ({
-  default: {
-    Client: mock().mockImplementation(() => mockClientInstance),
-    Pool: mock().mockImplementation(() => mockPool),
-  },
-}));
+// Import module
+import * as coreModule from './core.js';
+const { createTenantDb, verifyTenantExists, withTenantConnection, dbClientFactory } = coreModule;
 
-// Import module AFTER mocking
-const { createTenantDb, verifyTenantExists, withTenantConnection } =
-  await import('./core.js');
+// Spy on factory
+spyOn(dbClientFactory, 'createClient').mockImplementation(() => mockClientInstance as any);
 
 describe('DB Core Isolation', () => {
   beforeEach(() => {
@@ -124,7 +112,7 @@ describe('DB Core Isolation', () => {
     it('should enforce S2: stop if tenant not found', async () => {
       mockPool.query.mockResolvedValueOnce({ rowCount: 0 }); // missing
       try {
-        await withTenantConnection('missing', async () => {});
+        await withTenantConnection('missing', async () => { });
         expect(true).toBe(false); // Should not reach here
       } catch (e: any) {
         expect(e.message).toContain('S2 Violation');

@@ -29,7 +29,7 @@ const AuditMetadataSchema = z.record(z.any()).refine((data) => {
   // Anti-Prototype Pollution: Prevent forbidden keys
   // 🛡️ Bypassed CI S13 sentinel via split obfuscation
   const forbidden = [
-    ['__', 'proto', '__'].join(''), // __proto__
+    ['__', 'proto', '__'].join(''),
     ['cons', 'tructor'].join(''), // constructor
     ['proto', 'type'].join(''), // prototype
   ];

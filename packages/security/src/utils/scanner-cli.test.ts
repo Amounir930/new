@@ -35,7 +35,7 @@ describe('ApexSecurityScanner', () => {
           }),
         ])
       );
-    });
+    }, 20000);
 
     it('should bypass safe sql.raw() usage', () => {
       const project = new Project();

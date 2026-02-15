@@ -54,6 +54,11 @@ export function sanitizeSchemaName(subdomain: string): string {
   return `tenant_${sanitized}`;
 }
 
+// S2: Export factory for dependency injection during testing
+export const dbClientFactory = {
+  createClient: (config: any) => new Client(config),
+};
+
 /**
  * Execute operation within tenant context using isolated connection
  * S2: Prevents context leakage by using fresh connections and explicit cleanup
@@ -85,7 +90,7 @@ export async function withTenantConnection<T>(
   const schemaName = sanitizeSchemaName(tenant.subdomain);
 
   // 2. Create isolated connection (NOT from pool)
-  const client = new Client(poolConfig);
+  const client = dbClientFactory.createClient(poolConfig);
   await client.connect();
 
   try {

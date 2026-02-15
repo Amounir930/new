@@ -72,6 +72,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Security & Secret Detection (Gitleaks)
         uses: gitleaks/gitleaks-action@v2
@@ -108,9 +110,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
+          POSTGRES_USER: safe_user
+          POSTGRES_PASSWORD: safe_pass
+          POSTGRES_DB: apex_test
         ports:
           - 5432:5432
         options: >-

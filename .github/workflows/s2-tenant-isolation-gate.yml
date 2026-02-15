@@ -66,6 +66,9 @@ jobs:
           fi
         env:
           DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+          POSTGRES_USER: safe_user
+          POSTGRES_PASSWORD: safe_pass
+          PGPASSWORD: safe_pass
 
       - name: "S2.1 - Programmatic Isolation Test"
         run: |

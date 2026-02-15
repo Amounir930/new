@@ -7,7 +7,7 @@ import { AuthService } from './auth.service.js';
 describe('AuthModule', () => {
   it('should be defined', async () => {
     const module = await Test.createTestingModule({
-      imports: [AuthModule, ConfigModule],
+      imports: [AuthModule],
     })
       .overrideProvider(ConfigService)
       .useValue({

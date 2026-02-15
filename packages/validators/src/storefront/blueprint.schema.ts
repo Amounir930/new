@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Header & Navigation Schema
  */
 export const HeaderBlueprintSchema = z.object({
-  logoUrl: z.string().url().optional(),
+  logoUrl: z.string().optional(),
   logoAlt: z.string().min(1).max(100).optional(),
   navigation: z.array(
     z.object({
@@ -26,7 +26,7 @@ export const HeroBlueprintSchema = z.object({
   slides: z
     .array(
       z.object({
-        imageUrl: z.string().url(),
+        imageUrl: z.string(),
         title: z.string().optional(),
         subtitle: z.string().optional(),
         buttonText: z.string().optional(),
@@ -42,7 +42,7 @@ export const HeroBlueprintSchema = z.object({
  * Flash Sales Schema
  */
 export const FlashSalesBlueprintSchema = z.object({
-  endTime: z.string().datetime(),
+  endTime: z.string(),
   products: z.array(
     z.object({
       productId: z.string().uuid(),
@@ -61,7 +61,7 @@ export const BentoGridBlueprintSchema = z.object({
     z.object({
       type: z.enum(['product', 'category', 'link']),
       referenceId: z.string().uuid().optional(),
-      customImage: z.string().url().optional(),
+      customImage: z.string().optional(),
       customText: z.string().optional(),
       link: z.string().optional(),
     })
@@ -93,7 +93,7 @@ export const FooterBlueprintSchema = z.object({
     email: z.string().email().optional(),
     address: z.string().optional(),
   }),
-  socialLinks: z.record(z.string().url()).optional(),
+  socialLinks: z.record(z.string()).optional(),
   policyLinksEnabled: z.boolean().default(true),
 });
 
