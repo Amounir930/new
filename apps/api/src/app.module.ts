@@ -16,6 +16,7 @@ import {
   type MiddlewareConsumer,
   Module,
   type NestModule,
+  RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
@@ -62,7 +63,10 @@ export class AppModule implements NestModule {
         BotProtectionMiddleware,
         TenantIsolationMiddleware
       )
-      .exclude('health/(.*)', 'api/health/(.*)')
+      .exclude(
+        { path: 'health/(.*)', method: RequestMethod.GET },
+        { path: 'api/health/(.*)', method: RequestMethod.GET }
+      )
       .forRoutes('*'); // Apply to all routes
   }
 }

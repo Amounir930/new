@@ -30,6 +30,14 @@ export class ActiveDefenseMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction): Promise<void> {
     const ip = req.ip || 'unknown';
 
+    // 🛡️ Defense in Depth: Local bypass for health checks (S5 compliance)
+    const isHealthCheck = /(health|liveness|readiness)/i.test(
+      req.originalUrl || req.url
+    );
+    if (isHealthCheck) {
+      return next();
+    }
+
     // 1. S15 Level 1: Deceptive HTTP Headers (Obfuscation)
     // Overwrite real info with deceptive signals to confuse scanners
     res.setHeader('X-Powered-By', 'PHP/5.6.40'); // Mislead as an old PHP version
