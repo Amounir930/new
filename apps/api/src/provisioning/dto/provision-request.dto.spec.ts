@@ -4,7 +4,7 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import {
   ProvisionRequestDto,
   ProvisionRequestSchema,

@@ -4,7 +4,7 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import {
   createStorageBucket,
   deleteStorageBucket,
@@ -15,30 +15,30 @@ import {
 
 // Mock MinIO client
 const mockMinioClient = {
-  bucketExists: vi.fn(),
-  makeBucket: vi.fn(),
-  setBucketVersioning: vi.fn(),
-  setBucketPolicy: vi.fn(),
-  setBucketTagging: vi.fn(),
-  putObject: vi.fn(),
-  removeBucket: vi.fn(),
-  listObjects: vi.fn().mockReturnThis(),
-  toArray: vi.fn(),
-  getBucketTagging: vi.fn(),
-  presignedPutObject: vi.fn(),
-  presignedGetObject: vi.fn(),
-  removeObject: vi.fn(),
+  bucketExists: mock(),
+  makeBucket: mock(),
+  setBucketVersioning: mock(),
+  setBucketPolicy: mock(),
+  setBucketTagging: mock(),
+  putObject: mock(),
+  removeBucket: mock(),
+  listObjects: mock().mockReturnThis(),
+  toArray: mock(),
+  getBucketTagging: mock(),
+  presignedPutObject: mock(),
+  presignedGetObject: mock(),
+  removeObject: mock(),
 };
 
 describe('StorageManager', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     resetMinioClient();
     setMinioClient(mockMinioClient as any);
   });
 
   describe('createStorageBucket', () => {
-    it.each([
+    const testCases = [
       {
         name: 'Success: Full Creation for Free Plan',
         subdomain: 'test-free',
@@ -53,27 +53,31 @@ describe('StorageManager', () => {
         exists: false,
         expectedBucket: 'tenant-testpro-assets',
       },
-    ])('$name', async ({ subdomain, plan, exists, expectedBucket }) => {
-      mockMinioClient.bucketExists.mockResolvedValue(exists);
-      mockMinioClient.makeBucket.mockResolvedValue(undefined);
-      mockMinioClient.setBucketVersioning.mockResolvedValue(undefined);
-      mockMinioClient.setBucketPolicy.mockResolvedValue(undefined);
-      mockMinioClient.setBucketTagging.mockResolvedValue(undefined);
-      mockMinioClient.putObject.mockResolvedValue({} as any);
+    ];
 
-      const result = await createStorageBucket(subdomain, plan);
+    for (const { subdomain, plan, exists, expectedBucket, name } of testCases) {
+      it(name, async () => {
+        mockMinioClient.bucketExists.mockResolvedValue(exists);
+        mockMinioClient.makeBucket.mockResolvedValue(undefined);
+        mockMinioClient.setBucketVersioning.mockResolvedValue(undefined);
+        mockMinioClient.setBucketPolicy.mockResolvedValue(undefined);
+        mockMinioClient.setBucketTagging.mockResolvedValue(undefined);
+        mockMinioClient.putObject.mockResolvedValue({} as any);
 
-      expect(result.success).toBe(true);
-      expect(result.bucketName).toBe(expectedBucket);
-      expect(mockMinioClient.makeBucket).toHaveBeenCalledWith(
-        expectedBucket,
-        expect.any(String)
-      );
-      expect(mockMinioClient.setBucketTagging).toHaveBeenCalledWith(
-        expectedBucket,
-        expect.objectContaining({ plan })
-      );
-    });
+        const result = await createStorageBucket(subdomain, plan);
+
+        expect(result.success).toBe(true);
+        expect(result.bucketName).toBe(expectedBucket);
+        expect(mockMinioClient.makeBucket).toHaveBeenCalledWith(
+          expectedBucket,
+          expect.any(String)
+        );
+        expect(mockMinioClient.setBucketTagging).toHaveBeenCalledWith(
+          expectedBucket,
+          expect.objectContaining({ plan })
+        );
+      });
+    }
 
     it('should throw if bucket already exists', async () => {
       mockMinioClient.bucketExists.mockResolvedValue(true);

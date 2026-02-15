@@ -5,25 +5,25 @@
  */
 
 import type { Job } from 'bullmq';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { ExportWorker } from './export.worker.js';
 
 // Mock BullMQ
-vi.mock('bullmq', () => ({
+mock.module('bullmq', () => ({
   Worker: class {
-    on = vi.fn();
-    close = vi.fn();
+    on = mock();
+    close = mock();
   },
   Queue: class {
-    close = vi.fn();
-    getJob = vi.fn();
+    close = mock();
+    getJob = mock();
   },
 }));
 
 // Mock AWS S3
-vi.mock('@aws-sdk/client-s3', () => ({
+mock.module('@aws-sdk/client-s3', () => ({
   S3Client: class {
-    send = vi.fn().mockResolvedValue({});
+    send = mock().mockResolvedValue({});
   },
   PutObjectCommand: class {},
   GetObjectCommand: class {},
@@ -32,35 +32,35 @@ vi.mock('@aws-sdk/client-s3', () => ({
   DeleteObjectCommand: class {},
 }));
 
-vi.mock('@aws-sdk/s3-request-presigner', () => ({
-  getSignedUrl: vi.fn().mockResolvedValue('https://mock-presigned-url.com'),
+mock.module('@aws-sdk/s3-request-presigner', () => ({
+  getSignedUrl: mock().mockResolvedValue('https://mock-presigned-url.com'),
 }));
 
 // Mock FS
-vi.mock('fs/promises', () => ({
-  readFile: vi.fn().mockResolvedValue(Buffer.from('test-data')),
-  rm: vi.fn().mockResolvedValue(undefined),
+mock.module('fs/promises', () => ({
+  readFile: mock().mockResolvedValue(Buffer.from('test-data')),
+  rm: mock().mockResolvedValue(undefined),
 }));
 
 describe('ExportWorker', () => {
   let worker: ExportWorker;
-  const mockAudit = { log: vi.fn() } as any;
+  const mockAudit = { log: mock() } as any;
   const mockStrategy = {
-    export: vi.fn().mockResolvedValue({
+    export: mock().mockResolvedValue({
       downloadUrl: '/tmp/test.tar.gz',
       sizeBytes: 1024,
       checksum: 'abc-123',
     }),
   };
   const mockFactory = {
-    getStrategy: vi.fn().mockReturnValue(mockStrategy),
+    getStrategy: mock().mockReturnValue(mockStrategy),
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     worker = new ExportWorker(mockFactory as any, mockAudit);
     // @ts-expect-error - access private for testing
-    worker.logger = { log: vi.fn(), error: vi.fn() } as any;
+    worker.logger = { log: mock(), error: mock() } as any;
   });
 
   it('should process a valid export job successfully', async () => {
@@ -72,8 +72,8 @@ describe('ExportWorker', () => {
         requestedBy: 'user-1',
         includeAssets: true,
       },
-      updateProgress: vi.fn().mockResolvedValue(undefined),
-      updateData: vi.fn().mockResolvedValue(undefined),
+      updateProgress: mock().mockResolvedValue(undefined),
+      updateData: mock().mockResolvedValue(undefined),
     } as unknown as Job;
 
     // @ts-expect-error - access private to trigger processJob
@@ -93,7 +93,7 @@ describe('ExportWorker', () => {
     const mockJob = {
       id: 'job-huge',
       data: { tenantId: 'tenant-1', profile: 'lite' },
-      updateProgress: vi.fn(),
+      updateProgress: mock(),
     } as any;
 
     mockStrategy.export.mockResolvedValueOnce({
@@ -115,7 +115,7 @@ describe('ExportWorker', () => {
     const mockJob = {
       id: 'job-fail',
       data: { tenantId: 'tenant-1', profile: 'lite' },
-      updateProgress: vi.fn(),
+      updateProgress: mock(),
     } as any;
 
     mockStrategy.export.mockRejectedValueOnce(new Error('Export crash'));

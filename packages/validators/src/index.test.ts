@@ -2,7 +2,7 @@
  * @apex/validators Tests
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import * as validators from './index.js';
 
 describe('@apex/validators', () => {

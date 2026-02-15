@@ -5,7 +5,7 @@
  */
 
 import { publicDb } from '@apex/db';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import {
   createBlueprint,
   getAllBlueprints,
@@ -15,19 +15,19 @@ import {
 } from './blueprint.js';
 
 // Mock DB
-vi.mock('@apex/db', () => ({
+mock.module('@apex/db', () => ({
   publicDb: {
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn(),
-    delete: vi.fn().mockReturnThis(),
+    select: mock().mockReturnThis(),
+    from: mock().mockReturnThis(),
+    where: mock().mockReturnThis(),
+    orderBy: mock().mockReturnThis(),
+    limit: mock().mockReturnThis(),
+    update: mock().mockReturnThis(),
+    set: mock().mockReturnThis(),
+    insert: mock().mockReturnThis(),
+    values: mock().mockReturnThis(),
+    returning: mock(),
+    delete: mock().mockReturnThis(),
   },
   onboardingBlueprints: {
     id: 'id',
@@ -40,7 +40,7 @@ vi.mock('@apex/db', () => ({
 
 describe('BlueprintManager', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('validateBlueprint', () => {

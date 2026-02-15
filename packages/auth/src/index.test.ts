@@ -4,7 +4,7 @@
  */
 
 import { UnauthorizedException } from '@nestjs/common';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { JwtAuthGuard } from './index.js';
 
 describe('JwtAuthGuard', () => {

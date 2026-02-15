@@ -4,7 +4,7 @@
  */
 
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { ExportController } from './export.controller.js';
 import type { ExportService } from './export.service.js';
 import type { ExportWorker } from './export.worker.js';
@@ -16,14 +16,14 @@ describe('ExportController', () => {
 
   beforeEach(() => {
     mockService = {
-      createExportJob: vi.fn(),
-      getJobStatus: vi.fn(),
-      listTenantExports: vi.fn(),
-      cancelJob: vi.fn(),
+      createExportJob: mock(),
+      getJobStatus: mock(),
+      listTenantExports: mock(),
+      cancelJob: mock(),
     } as any;
 
     mockWorker = {
-      confirmDownload: vi.fn(),
+      confirmDownload: mock(),
     } as any;
 
     controller = new ExportController(mockService, mockWorker);

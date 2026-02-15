@@ -2,7 +2,7 @@
  * Tests for quota service
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import {
   checkProvisioningQuota,
   checkQuota,
@@ -14,7 +14,7 @@ import {
 
 describe('QuotaService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   describe('PLAN_LIMITS', () => {

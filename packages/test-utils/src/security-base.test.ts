@@ -3,7 +3,7 @@
  * Standardizing automated security verification
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { BaseSecurityTest } from './security-base.js';
 
 describe('Security Base Utils', () => {

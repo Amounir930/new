@@ -5,7 +5,7 @@
  */
 
 import { UnauthorizedException } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import {
   TenantJwtMatchGuard,
   type TenantRequest,
@@ -17,7 +17,7 @@ describe('TenantJwtMatchGuard', () => {
   let mockRequest: Partial<TenantRequest>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     guard = new TenantJwtMatchGuard();
 
     mockRequest = {
@@ -32,8 +32,8 @@ describe('TenantJwtMatchGuard', () => {
     };
 
     mockContext = {
-      switchToHttp: vi.fn().mockReturnValue({
-        getRequest: vi.fn().mockReturnValue(mockRequest),
+      switchToHttp: mock().mockReturnValue({
+        getRequest: mock().mockReturnValue(mockRequest),
       }),
     };
   });
@@ -74,9 +74,7 @@ describe('TenantJwtMatchGuard', () => {
     });
 
     it('should log S2 violation when cross-tenant access is attempted', () => {
-      const consoleSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      const consoleSpy = spyOn(console, 'error').mockImplementation(() => { });
 
       mockRequest.user = {
         tenantId: 'attacker-tenant',

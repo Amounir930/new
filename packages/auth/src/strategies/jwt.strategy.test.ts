@@ -3,17 +3,17 @@
  */
 
 import { UnauthorizedException } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { JwtStrategy } from './jwt.strategy.js';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
   const mockConfigService = {
-    get: vi.fn().mockReturnValue('super-secret-key-at-least-32-chars-long'),
+    get: mock().mockReturnValue('super-secret-key-at-least-32-chars-long'),
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     strategy = new JwtStrategy(mockConfigService as any);
   });
 

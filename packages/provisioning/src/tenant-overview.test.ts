@@ -3,7 +3,7 @@
  * Super-#01: Tenant Overview Table
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, mock } from 'bun:test';
 import {
   deleteTenant,
   getTenantById,
@@ -48,7 +48,7 @@ const mockTenants = [
   },
 ];
 
-vi.mock('@apex/db', () => {
+mock.module('@apex/db', () => {
   const mockTenants = [
     {
       id: 'tenant-1',
@@ -80,16 +80,16 @@ vi.mock('@apex/db', () => {
   ];
 
   const mockQuery = Promise.resolve(mockTenants) as any;
-  mockQuery.where = vi.fn().mockReturnThis();
-  mockQuery.limit = vi.fn().mockImplementation((n: number) => {
+  mockQuery.where = mock().mockReturnThis();
+  mockQuery.limit = mock().mockImplementation((n: number) => {
     const result = Promise.resolve(mockTenants.slice(0, n));
-    (result as any).offset = vi
-      .fn()
-      .mockImplementation(() => Promise.resolve(mockTenants.slice(0, n)));
+    (result as any).offset = mock().mockImplementation(() =>
+      Promise.resolve(mockTenants.slice(0, n))
+    );
     return result;
   });
-  mockQuery.orderBy = vi.fn().mockReturnThis();
-  mockQuery.returning = vi.fn().mockResolvedValue([mockTenants[0]]);
+  mockQuery.orderBy = mock().mockReturnThis();
+  mockQuery.returning = mock().mockResolvedValue([mockTenants[0]]);
 
   return {
     tenants: {
@@ -102,18 +102,18 @@ vi.mock('@apex/db', () => {
       updatedAt: 'updated_at',
     },
     publicDb: {
-      select: vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue(mockQuery),
-        total: vi.fn().mockResolvedValue([{ total: mockTenants.length }]),
+      select: mock().mockReturnValue({
+        from: mock().mockReturnValue(mockQuery),
+        total: mock().mockResolvedValue([{ total: mockTenants.length }]),
       }),
-      update: vi.fn().mockReturnValue({
-        set: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([mockTenants[0]]),
+      update: mock().mockReturnValue({
+        set: mock().mockReturnThis(),
+        where: mock().mockReturnThis(),
+        returning: mock().mockResolvedValue([mockTenants[0]]),
       }),
-      delete: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([{ id: 'deleted' }]),
+      delete: mock().mockReturnValue({
+        where: mock().mockReturnThis(),
+        returning: mock().mockResolvedValue([{ id: 'deleted' }]),
       }),
     },
   };
@@ -174,8 +174,8 @@ describe('Tenant Overview Service', () => {
     it('should handle empty count result in getTenantList', async () => {
       const { publicDb } = await import('@apex/db');
       (publicDb.select as any).mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([]), // Empty count array
+        from: mock().mockReturnValue({
+          where: mock().mockResolvedValue([]), // Empty count array
         }),
       } as any);
 
@@ -194,9 +194,9 @@ describe('Tenant Overview Service', () => {
       // Ensure the mock for this specific case resolves to empty array
       const { publicDb } = await import('@apex/db');
       (publicDb.select as any).mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue([]),
+        from: mock().mockReturnValue({
+          where: mock().mockReturnThis(),
+          limit: mock().mockResolvedValue([]),
         }),
       } as any);
 
@@ -214,9 +214,9 @@ describe('Tenant Overview Service', () => {
     it('should return null for non-existent subdomain', async () => {
       const { publicDb } = await import('@apex/db');
       (publicDb.select as any).mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue([]),
+        from: mock().mockReturnValue({
+          where: mock().mockReturnThis(),
+          limit: mock().mockResolvedValue([]),
         }),
       } as any);
 
@@ -234,9 +234,9 @@ describe('Tenant Overview Service', () => {
     it('should return null for non-existent tenant', async () => {
       const { publicDb } = await import('@apex/db');
       (publicDb.update as any).mockReturnValueOnce({
-        set: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([]),
+        set: mock().mockReturnThis(),
+        where: mock().mockReturnThis(),
+        returning: mock().mockResolvedValue([]),
       } as any);
 
       const result = await updateTenantStatus('non-existent', 'active');
@@ -274,16 +274,16 @@ describe('Tenant Overview Service', () => {
       // Mock getTenantById to return a suspended tenant
       const { publicDb } = await import('@apex/db');
       (publicDb.select as any).mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue([mockTenants[1]]), // tenant-2 is suspended
+        from: mock().mockReturnValue({
+          where: mock().mockReturnThis(),
+          limit: mock().mockResolvedValue([mockTenants[1]]), // tenant-2 is suspended
         }),
       } as any);
 
       // Also mock delete to return success
       (publicDb.delete as any).mockReturnValueOnce({
-        where: vi.fn().mockReturnThis(),
-        returning: vi.fn().mockResolvedValue([{ id: 'tenant-2' }]),
+        where: mock().mockReturnThis(),
+        returning: mock().mockResolvedValue([{ id: 'tenant-2' }]),
       } as any);
 
       const result = await deleteTenant('tenant-2');
@@ -294,9 +294,9 @@ describe('Tenant Overview Service', () => {
       const { publicDb } = await import('@apex/db');
       // Mock existing tenant
       (publicDb.select as any).mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue([mockTenants[1]]), // Suspended
+        from: mock().mockReturnValue({
+          where: mock().mockReturnThis(),
+          limit: mock().mockResolvedValue([mockTenants[1]]), // Suspended
         }),
       } as any);
 
@@ -329,7 +329,7 @@ describe('Tenant Overview Service', () => {
     it('should handle records with missing dates in getTenantStats', async () => {
       const { publicDb } = await import('@apex/db');
       (publicDb.select as any).mockReturnValueOnce({
-        from: vi.fn().mockResolvedValue([
+        from: mock().mockResolvedValue([
           { status: 'active', plan: 'free' }, // Missing createdAt
         ]),
       } as any);
@@ -349,9 +349,9 @@ describe('Tenant Overview Service', () => {
       // Setup mock to return empty array for non-existent subdomain search
       const { publicDb } = await import('@apex/db');
       (publicDb.select as any).mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockResolvedValue([]),
+        from: mock().mockReturnValue({
+          where: mock().mockReturnThis(),
+          limit: mock().mockResolvedValue([]),
         }),
       } as any);
 

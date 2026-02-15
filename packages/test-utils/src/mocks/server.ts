@@ -1,13 +1,13 @@
 /**
  * MSW Server Setup
  *
- * Configures Mock Service Worker for Node/Vitest tests.
+ * Configures Mock Service Worker for Node/Bun tests.
  *
  * @module @apex/test-utils/mocks/server
  */
 
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { afterAll, afterEach, beforeAll } from 'bun:test';
 import { cartHandlers } from './handlers/cart.handlers';
 import { ordersHandlers } from './handlers/orders.handlers';
 import { productsHandlers } from './handlers/products.handlers';
@@ -22,10 +22,10 @@ export const server = setupServer(
 );
 
 /**
- * Setup function for Vitest
+ * Setup function for Bun
  *
  * @example
- * // In your vitest.setup.ts
+ * // In your test file:
  * import { setupMswServer } from '@apex/test-utils';
  * setupMswServer();
  */

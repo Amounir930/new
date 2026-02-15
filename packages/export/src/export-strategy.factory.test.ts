@@ -3,7 +3,7 @@
  * Verifies strategy selection and validation
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { ExportStrategyFactory } from './export-strategy.factory.js';
 import type { ExportOptions } from './types.js';
 
@@ -13,18 +13,18 @@ describe('ExportStrategyFactory', () => {
   // Mock strategies
   const mockLiteStrategy = {
     name: 'lite',
-    validate: vi.fn().mockResolvedValue(true),
-    export: vi.fn(),
+    validate: mock().mockResolvedValue(true),
+    export: mock(),
   } as any;
   const mockNativeStrategy = {
     name: 'native',
-    validate: vi.fn().mockResolvedValue(true),
-    export: vi.fn(),
+    validate: mock().mockResolvedValue(true),
+    export: mock(),
   } as any;
   const mockAnalyticsStrategy = {
     name: 'analytics',
-    validate: vi.fn().mockResolvedValue(true),
-    export: vi.fn(),
+    validate: mock().mockResolvedValue(true),
+    export: mock(),
   } as any;
 
   beforeEach(() => {

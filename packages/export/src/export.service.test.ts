@@ -4,57 +4,58 @@
  */
 
 import { publicPool } from '@apex/db';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ExportService } from './export.service.js';
 
 // Mock DB
-vi.mock('@apex/db', () => ({
+mock.module('@apex/db', () => ({
   publicPool: {
-    connect: vi.fn(),
-    query: vi.fn(),
+    connect: mock(),
+    query: mock(),
   },
   publicDb: {
-    select: vi.fn(),
+    select: mock(),
   },
 }));
 
-// 🛡️ Stabilization: Use Class-based mock for BullMQ Queue to ensure method presence in constructor
-vi.mock('bullmq', () => {
+// 🛡️ Stabilization: Use Class-based mock for BullMQ Queue
+mock.module('bullmq', () => {
   return {
     Queue: class {
-      on = vi.fn();
-      add = vi.fn();
-      getJobs = vi.fn();
-      getJob = vi.fn();
-      close = vi.fn();
+      on = mock();
+      add = mock();
+      getJobs = mock();
+      getJob = mock();
+      close = mock();
     },
   };
 });
 
 // Mock strategies and factory
 const mockStrategy = {
-  validate: vi.fn().mockResolvedValue(true),
-  export: vi
-    .fn()
-    .mockResolvedValue({ checksum: 'mock-checksum', expiresAt: new Date() }),
+  validate: mock().mockResolvedValue(true),
+  export: mock().mockResolvedValue({
+    checksum: 'mock-checksum',
+    expiresAt: new Date(),
+  }),
 };
 
 const mockFactory = {
-  create: vi.fn(() => mockStrategy),
-  validateOptions: vi.fn().mockResolvedValue(true),
+  create: mock(() => mockStrategy),
+  validateOptions: mock().mockResolvedValue(true),
 };
 
 describe('ExportService', () => {
   let service: ExportService;
-  const mockAudit = { log: vi.fn() } as any;
+  const mockAudit = { log: mock().mockResolvedValue(true) } as any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
 
     // Default mock behavior for database
     (publicPool as any).connect.mockResolvedValue({
-      query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
-      release: vi.fn(),
+      query: mock().mockResolvedValue({ rows: [], rowCount: 0 }),
+      release: mock(),
     } as any);
 
     // Reset factory mocks
@@ -65,15 +66,15 @@ describe('ExportService', () => {
     service = new ExportService(mockFactory as any, mockAudit);
 
     // Silence logger for tests
-    (service as any).logger = { log: vi.fn(), error: vi.fn(), debug: vi.fn() };
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    (service as any).logger = {
+      log: mock(),
+      error: mock(),
+      debug: mock(),
+    };
   });
 
   describe('S14: Export Job Creation (Table-Driven)', () => {
-    it.each([
+    const testCases = [
       {
         name: 'Happy Path: Valid Lite Export',
         options: { tenantId: 't1', profile: 'lite', requestedBy: 'u1' },
@@ -111,38 +112,41 @@ describe('ExportService', () => {
         ],
         error: 'Duplicate export request',
       },
-    ])('$name', async ({
+    ];
+
+    for (const {
+      name,
       options,
       factoryValid,
       activeJobs,
       recentJobs,
       error,
       expectedStatus,
-    }) => {
-      mockFactory.validateOptions.mockResolvedValue(factoryValid);
-      (service as any).exportQueue.getJobs = vi
-        .fn()
-        .mockImplementation(async (types) => {
+    } of testCases) {
+      it(name, async () => {
+        mockFactory.validateOptions.mockResolvedValue(factoryValid);
+        (service as any).exportQueue.getJobs = mock(async (types: string[]) => {
           if (types.includes('active')) return activeJobs;
           if (types.includes('completed')) return recentJobs;
           return [];
         });
-      (service as any).exportQueue.add = vi
-        .fn()
-        .mockResolvedValue({ id: 'new-job' });
+        (service as any).exportQueue.add = mock().mockResolvedValue({
+          id: 'new-job',
+        });
 
-      if (error) {
-        await expect(service.createExportJob(options as any)).rejects.toThrow(
-          error
-        );
-      } else {
-        const result = await service.createExportJob(options as any);
-        expect(result.status).toBe(expectedStatus);
-        expect(mockAudit.log).toHaveBeenCalledWith(
-          expect.objectContaining({ action: 'EXPORT_REQUESTED' })
-        );
-      }
-    });
+        if (error) {
+          await expect(service.createExportJob(options as any)).rejects.toThrow(
+            error
+          );
+        } else {
+          const result = await service.createExportJob(options as any);
+          expect(result.status).toBe(expectedStatus);
+          expect(mockAudit.log).toHaveBeenCalledWith(
+            expect.objectContaining({ action: 'EXPORT_REQUESTED' })
+          );
+        }
+      });
+    }
   });
 
   describe('Utility Methods', () => {

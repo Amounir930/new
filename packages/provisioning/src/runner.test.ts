@@ -4,7 +4,7 @@
  */
 
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import { runTenantMigrations } from './runner.js';
 
 // Mock DB
@@ -12,19 +12,19 @@ const mockDb = {
   // Mock DB implementation as needed
 };
 
-vi.mock('@apex/db', () => ({
-  createTenantDb: vi.fn().mockReturnValue({
+mock.module('@apex/db', () => ({
+  createTenantDb: mock().mockReturnValue({
     // Mock DB implementation as needed
   }),
 }));
 
-vi.mock('drizzle-orm/postgres-js/migrator', () => ({
-  migrate: vi.fn().mockResolvedValue(undefined),
+mock.module('drizzle-orm/postgres-js/migrator', () => ({
+  migrate: mock().mockResolvedValue(undefined),
 }));
 
 describe('runTenantMigrations', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
   });
 
   it('should execute migrations for the given tenant', async () => {

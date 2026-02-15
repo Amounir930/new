@@ -4,7 +4,7 @@
  */
 
 import { Project } from 'ts-morph';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { ApexSecurityScanner } from './scanner-cli.js';
 
 describe('ApexSecurityScanner', () => {

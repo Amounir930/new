@@ -3,18 +3,18 @@
  */
 
 import { UnauthorizedException } from '@nestjs/common';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { AuthService } from './auth.service.js';
 
 describe('AuthService', () => {
   let service: AuthService;
   const mockJwtService = {
-    sign: vi.fn(),
-    verify: vi.fn(),
+    sign: mock(),
+    verify: mock(),
   };
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     service = new AuthService(mockJwtService as any);
   });
 

@@ -5,7 +5,7 @@
  */
 
 import { publicPool } from '@apex/db';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
 import {
   createTenantSchema,
   dropTenantSchema,
@@ -13,9 +13,9 @@ import {
   verifySchemaExists,
 } from './schema-manager.js';
 
-vi.mock('@apex/db', () => ({
+mock.module('@apex/db', () => ({
   publicPool: {
-    connect: vi.fn(),
+    connect: mock(),
   },
 }));
 
@@ -23,10 +23,10 @@ describe('SchemaManager', () => {
   let mockClient: any;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    mock.restore();
     mockClient = {
-      query: vi.fn(),
-      release: vi.fn(),
+      query: mock(),
+      release: mock(),
     };
     (publicPool.connect as any).mockResolvedValue(mockClient);
   });
