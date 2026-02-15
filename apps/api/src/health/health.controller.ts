@@ -6,7 +6,7 @@ import { createClient } from 'redis';
  * Health Controller
  * S6: Active connectivity checks for security-critical services
  */
-@Controller({ path: 'health', version: '1' })
+@Controller({ path: 'health', version: ['1', ''] })
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
