@@ -35,7 +35,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
 
   const fetchBlueprint = useCallback(async () => {
     try {
-      const data = await apiFetch<any>(`/admin/blueprints/${id}`);
+      const data = await apiFetch<any>(`/v1/admin/blueprints/${id}`);
       setName(data.name);
       setPlan(data.plan);
       setIsDefault(data.isDefault);
@@ -79,12 +79,12 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
       };
 
       if (isNew) {
-        await apiFetch('/admin/blueprints', {
+        await apiFetch('/v1/admin/blueprints', {
           method: 'POST',
           body: JSON.stringify(payload),
         });
       } else {
-        await apiFetch(`/admin/blueprints/${id}`, {
+        await apiFetch(`/v1/admin/blueprints/${id}`, {
           method: 'PATCH',
           body: JSON.stringify(payload),
         });

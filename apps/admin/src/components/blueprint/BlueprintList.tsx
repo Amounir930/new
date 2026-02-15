@@ -31,7 +31,7 @@ export function BlueprintList() {
   const fetchBlueprints = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiFetch<Blueprint[]>('/admin/blueprints');
+      const data = await apiFetch<Blueprint[]>('/v1/admin/blueprints');
       setBlueprints(data);
     } catch (e: any) {
       setError(e.message);
