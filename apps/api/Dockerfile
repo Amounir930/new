@@ -54,4 +54,5 @@ USER bun-user
 EXPOSE 3000
 
 # 🏁 Final Command
-CMD ["bun", "dist/apps/api/src/main.js"]
+# Use shell form to allow find to execute
+CMD ["/bin/sh", "-c", "bun $(find dist -name main.js | head -n 1)"]
