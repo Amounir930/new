@@ -3,6 +3,7 @@
  * Exposed API for Super Admins to create new store environments
  */
 
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditLog, AuditService } from '@apex/audit';
 import {
   Body,
@@ -14,6 +15,7 @@ import {
   Post,
 } from '@nestjs/common';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { ProvisioningService } from './provisioning.service.js';
 
 @Controller('provision')
@@ -25,7 +27,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) { }
+  ) {}
 
   /**
    * POST /api/provision

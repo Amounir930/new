@@ -7,6 +7,7 @@
 import { createInterface } from 'node:readline/promises';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { ProvisioningService } from '../provisioning/provisioning.service.js';
 
 interface ProvisionOptions {

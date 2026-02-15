@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../../../../packages/auth/src/decorators/current-user.decorator.js'; // Direct import for now
 import { SuperAdminGuard } from '../../../../packages/auth/src/guards/super-admin.guard.js'; // Direct import for now, ideally via @apex/auth
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { BlueprintsService } from './blueprints.service.js';
 import type {
   CreateBlueprintDto,
@@ -19,7 +20,7 @@ import type {
 @Controller('admin/blueprints')
 @UseGuards(SuperAdminGuard) // Super-#21: Super Admin ONLY
 export class BlueprintsController {
-  constructor(private readonly blueprintsService: BlueprintsService) { }
+  constructor(private readonly blueprintsService: BlueprintsService) {}
 
   @Get()
   findAll() {

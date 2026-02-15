@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
 import { onboardingBlueprints } from '@apex/db';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';

@@ -3,6 +3,7 @@
  * Orchestrates the 60-second store creation process
  */
 
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { TenantRegistryService } from '@apex/db';
@@ -35,7 +36,7 @@ export class ProvisioningService {
   constructor(
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
     private readonly tenantRegistry: TenantRegistryService
-  ) { }
+  ) {}
 
   /**
    * Provision a new store in under 60 seconds
@@ -113,7 +114,8 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${
+          error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }
