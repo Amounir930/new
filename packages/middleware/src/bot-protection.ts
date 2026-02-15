@@ -36,7 +36,12 @@ export class BotProtectionMiddleware implements NestMiddleware {
 
   use(req: Request, _res: Response, next: NextFunction): void {
     // 1. Skip check for health endpoints (S5 compliance) to avoid breaking load balancers
-    if (req.url.includes('/health/') || req.url === '/api/v1/health/liveness') {
+    const isHealthCheck =
+      req.url.includes('/health/') ||
+      req.url.includes('/health/liveness') ||
+      req.originalUrl?.includes('/health/');
+
+    if (isHealthCheck) {
       next();
       return;
     }
