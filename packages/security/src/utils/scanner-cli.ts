@@ -322,6 +322,14 @@ export class ApexSecurityScanner {
   // --- Helpers ---
 
   private isCreatedByConcatenation(node: Node): boolean {
+    // 🛡️ Safe: String literals and non-substituted templates are static
+    if (
+      Node.isStringLiteral(node) ||
+      Node.isNoSubstitutionTemplateLiteral(node)
+    ) {
+      return false;
+    }
+
     if (
       Node.isBinaryExpression(node) &&
       (node.getOperatorToken().getKind() === SyntaxKind.PlusToken ||

@@ -9,7 +9,8 @@ process.env.JWT_SECRET = 'Test_Secret_Key_For_Verification_32_Chars!';
 process.env.ENCRYPTION_MASTER_KEY = 'Super_Secure_Key_Complex_Enough_32_!!';
 process.env.SUPER_ADMIN_EMAIL = 'admin@apex-security.com'; // Valid email format
 process.env.SUPER_ADMIN_PASSWORD = 'StrongPassword123!';
-process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/apex_db';
+process.env.DATABASE_URL =
+  'postgresql://mock_user:mock_pass@localhost:5432/mock_db'; // gitleaks:allow
 process.env.MINIO_ENDPOINT = 'localhost';
 process.env.MINIO_ACCESS_KEY = 'minioadmin';
 process.env.MINIO_SECRET_KEY = 'minioadmin123';
