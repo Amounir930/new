@@ -24,7 +24,7 @@ export class AuthController {
   constructor(
     @Inject(AuthService)
     private readonly authService: AuthService
-  ) { }
+  ) {}
 
   @Post('login')
   @ApiOperation({ summary: 'Super Admin Login' })

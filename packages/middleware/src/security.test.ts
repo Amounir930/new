@@ -121,7 +121,7 @@ describe('CORS Configuration', () => {
 
     it('should block non-whitelisted origins', () => {
       const callback = mock();
-      const consoleSpy = spyOn(console, 'warn').mockImplementation(() => { });
+      const consoleSpy = spyOn(console, 'warn').mockImplementation(() => {});
       originFn('http://evil.com', callback);
       expect(callback).toHaveBeenCalledWith(expect.any(Error));
       expect(consoleSpy).toHaveBeenCalled();
