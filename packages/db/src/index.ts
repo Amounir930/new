@@ -1,8 +1,8 @@
-export * from './connection.js';
-export * from './core.js';
-export * from './db.module.js';
-export * from './schema.js';
-export * from './services/index.js';
+export * from './connection';
+export * from './core';
+export * from './db.module';
+export * from './schema';
+export * from './services/index';
 export * from './tenant-registry.service.js';
 
 import { publicDb, publicPool } from './connection.js';
