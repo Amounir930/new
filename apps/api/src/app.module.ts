@@ -20,6 +20,7 @@ import {
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
 import { HealthModule } from './health/health.module.js';
@@ -56,6 +57,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
       useExisting: AuditService,
     },
   ],
+  controllers: [AppController],
 })
 export class AppModule implements NestModule {
   // S2: Apply Tenant Isolation Middleware & S11: Bot Protection

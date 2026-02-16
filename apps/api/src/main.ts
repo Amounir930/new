@@ -96,8 +96,10 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // Prefix all routes with /api
-  app.setGlobalPrefix('api');
+  // Prefix all routes with /api, but exclude the root path
+  app.setGlobalPrefix('api', {
+    exclude: ['/'],
+  });
 
   // ═══════════════════════════════════════════════════════════════
   // OpenAPI / Swagger Documentation
