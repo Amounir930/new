@@ -9,12 +9,12 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'a'.repeat(32);
 process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
-process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
+process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32'; // gitleaks:allow
 process.env.MINIO_ACCESS_KEY = 'minioadmin';
 process.env.MINIO_SECRET_KEY = 'minioadmin';
 process.env.MINIO_ENDPOINT = 'localhost';
 process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
-process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
+process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123'; // gitleaks:allow
 
 import { validateEnv } from './index.js';
 
@@ -29,12 +29,12 @@ describe('Config Package', () => {
     it('should validate correctly with valid env', () => {
       process.env.JWT_SECRET = 'a'.repeat(32);
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
+      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
       process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
-      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123'; // gitleaks:allow
 
       const config = validateEnv();
       expect(config.JWT_SECRET).toBe('a'.repeat(32));
@@ -56,12 +56,12 @@ describe('Config Package', () => {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'default_secret_for_tests_long_enough';
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db?ssl=true';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
+      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
       process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
-      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123'; // gitleaks:allow
 
       expect(() => validateEnv()).toThrow(
         'S1 Violation: JWT_SECRET appears to be a default/test value'
@@ -72,12 +72,12 @@ describe('Config Package', () => {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'a'.repeat(32);
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
+      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
       process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
-      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123'; // gitleaks:allow
 
       expect(() => validateEnv()).toThrow(
         'S1 Violation: Production database must use SSL'
@@ -89,12 +89,12 @@ describe('Config Package', () => {
     it('should retrieve values correctly', async () => {
       process.env.JWT_SECRET = 'a'.repeat(32);
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
+      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
       process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
-      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123'; // gitleaks:allow
 
       const { ConfigService } = await import('./index.js');
       const service = new ConfigService();
@@ -105,12 +105,12 @@ describe('Config Package', () => {
     it('should return default values', async () => {
       process.env.JWT_SECRET = 'a'.repeat(32);
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
+      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
       process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
-      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123'; // gitleaks:allow
       (process.env as any).JWT_EXPIRES_IN = undefined; // Ensure we test the default
 
       const { ConfigService } = await import('./index.js');

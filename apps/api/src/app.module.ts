@@ -25,6 +25,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
 import { HealthModule } from './health/health.module.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
+import { TenantsModule } from './tenants/tenants.module.js';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
     AuthModule, // Registered Auth Module
     ProvisioningModule,
     BlueprintsModule,
+    TenantsModule,
     AuditModule,
   ],
   providers: [

@@ -100,4 +100,11 @@ export class TenantRegistryService {
       .set({ plan, updatedAt: new Date() })
       .where(eq(tenants.id, tenantId as any));
   }
+
+  /**
+   * Get all tenants (Admin only)
+   */
+  async findAll(): Promise<Tenant[]> {
+    return await publicDb.select().from(tenants);
+  }
 }

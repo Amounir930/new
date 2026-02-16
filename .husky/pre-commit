@@ -1,1 +1,40 @@
-bash scripts/pre-commit-check.sh
+
+echo "🛡️  Apex Security Shield: Initiating Pre-Commit Checks..."
+
+# 1. Implementation Plan Check
+if [ ! -f "implementation_plan.md" ]; then
+  # Check in brain folder too if not in root, or enforce root. The rule says "in the root".
+  # Adjusting to look for implementation_plan.md in the root of the repo (CWD)
+  if [ ! -f "implementation_plan.md" ]; then
+      # Fallback: Check if it's in the brain folder (dev convention) but user said "in the root".
+      echo "❌ Error: implementation_plan.md is missing in root. Please create it."
+      # exit 1 
+      # Commented out exit 1 for now to likely allow the Agent to proceed if it forgot to copy it, 
+      # but strict rule says "block the commit". I will enforce it.
+      exit 1
+  fi
+fi
+
+# 2. Linting (Auto-fix)
+echo "🔍 Running Linter..."
+bun run lint || { echo "❌ Linting failed"; exit 1; }
+
+# Get staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR)
+
+# 3. Security Shield (S1, S3, S10)
+if [ -n "$STAGED_FILES" ]; then
+    echo "🔍 Running Security Shield (S1, S3, S10)..."
+    bun scripts/security-check.ts $STAGED_FILES || { echo "❌ Security Check Failed"; exit 1; }
+fi
+
+# 4. S2 Data Isolation Check
+echo "🔍 Running S2 Data Isolation Check..."
+bun scripts/check-s2-isolation.ts || { echo "❌ S2 Isolation Check Failed"; exit 1; }
+
+# 5. Supply Chain Audit (S9)
+echo "🔍 Running Dependency Audit..."
+bun audit --level high || { echo "❌ Vulnerabilities Detected"; exit 1; }
+
+echo "✅ All Security Checks Passed. Committing..."
+
