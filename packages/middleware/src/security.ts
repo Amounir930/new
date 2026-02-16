@@ -81,13 +81,13 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
  */
 export interface CorsConfig {
   origin:
-  | string
-  | string[]
-  | boolean
-  | ((
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) => void);
+    | string
+    | string[]
+    | boolean
+    | ((
+        origin: string | undefined,
+        callback: (err: Error | null, allow?: boolean) => void
+      ) => void);
   methods: string[];
   allowedHeaders: string[];
   exposedHeaders: string[];

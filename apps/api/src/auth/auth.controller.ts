@@ -2,7 +2,7 @@ import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import type { AuthService } from '../../../../packages/auth/src/auth.service.js'; // Direct import for now
+import { AuthService } from '../../../../packages/auth/src/auth.service.js'; // Direct import for now
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -14,7 +14,7 @@ type LoginDto = z.infer<typeof LoginSchema>;
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   @ApiOperation({ summary: 'Super Admin Login' })
