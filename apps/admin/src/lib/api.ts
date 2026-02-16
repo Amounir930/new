@@ -22,8 +22,9 @@ export const setAuthToken = (token: string) => {
   if (typeof window !== 'undefined') {
     // Set cookie for 1 day
     const d = new Date();
-    d.setTime(d.getTime() + (1 * 24 * 60 * 60 * 1000));
-    const expires = 'expires=' + d.toUTCString();
+    d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000);
+    const expires = `expires=${d.toUTCString()}`;
+    // biome-ignore lint/suspicious/noDocumentCookie: Direct cookie assignment is needed for client-side auth
     document.cookie = `admin_token=${token}; ${expires}; path=/; SameSite=Strict; Secure`;
   }
 };

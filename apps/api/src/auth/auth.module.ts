@@ -3,7 +3,7 @@ import { AuthModule as PackageAuthModule } from '../../../../packages/auth/src/a
 import { AuthController } from './auth.controller.js';
 
 @Module({
-    imports: [PackageAuthModule],
-    controllers: [AuthController],
+  imports: [PackageAuthModule],
+  controllers: [AuthController],
 })
-export class AuthModule { }
+export class AuthModule {}

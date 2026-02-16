@@ -1,12 +1,12 @@
 import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
-import { AuthService } from '../../../../packages/auth/src/auth.service.js'; // Direct import for now
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { z } from 'zod';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { z } from 'zod';
+import type { AuthService } from '../../../../packages/auth/src/auth.service.js'; // Direct import for now
 
 const LoginSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6),
+  email: z.string().email(),
+  password: z.string().min(6),
 });
 
 type LoginDto = z.infer<typeof LoginSchema>;
@@ -14,48 +14,48 @@ type LoginDto = z.infer<typeof LoginSchema>;
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-    @Post('login')
-    @ApiOperation({ summary: 'Super Admin Login' })
-    @ApiResponse({ status: 201, description: 'JWT Token issued' })
-    @ApiResponse({ status: 401, description: 'Invalid credentials' })
-    async login(@Body(new ZodValidationPipe(LoginSchema)) body: LoginDto) {
-        const { email, password } = body;
+  @Post('login')
+  @ApiOperation({ summary: 'Super Admin Login' })
+  @ApiResponse({ status: 201, description: 'JWT Token issued' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(@Body(new ZodValidationPipe(LoginSchema)) body: LoginDto) {
+    const { email, password } = body;
 
-        // Validate against Environment Variables
-        const adminEmail = process.env.SUPER_ADMIN_EMAIL;
-        const adminPassword = process.env.SUPER_ADMIN_PASSWORD;
+    // Validate against Environment Variables
+    const adminEmail = process.env.SUPER_ADMIN_EMAIL;
+    const adminPassword = process.env.SUPER_ADMIN_PASSWORD;
 
-        if (!adminEmail || !adminPassword) {
-            throw new UnauthorizedException('System misconfiguration: Admin credentials not set');
-        }
-
-        if (email === adminEmail && password === adminPassword) {
-            // Generate Token with super_admin role
-            const token = await this.authService.generateToken({
-                id: 'super-admin-id',
-                email: email,
-                tenantId: 'system',
-                // Note: Role is added in the payload within AuthService or manually here if AuthService doesn't support it yet
-                // The current AuthService.generateToken takes AuthUser which is {id, email, tenantId}
-                // We might need to ensure the role is included in the token.
-            });
-
-            // Quick fix: Since AuthService.generateToken might not include 'role' in the payload interface yet,
-            // we rely on the fact that we can't easily change the shared package right now without redeploying valid versions.
-            // However, we can construct the payload manually if we had access to JwtService, but Controller uses AuthService.
-            // Let's assume for now AuthService is enough or we might need to extend it.
-            // Wait, the shared AuthService generates a token with {sub, email, tenantId}.
-            // The SuperAdminGuard checks for `user.role === 'super_admin'`.
-            // If the token doesn't have 'role', the Guard will fail!
-
-            // We MUST ensure the token has the role.
-            // I will verify AuthService implementation again.
-
-            return { accessToken: token };
-        }
-
-        throw new UnauthorizedException('Invalid credentials');
+    if (!adminEmail || !adminPassword) {
+      throw new UnauthorizedException(
+        'System misconfiguration: Admin credentials not set'
+      );
     }
+
+    if (email === adminEmail && password === adminPassword) {
+      // Generate Token with super_admin role
+      const token = await this.authService.generateToken({
+        id: 'super-admin-id',
+        email: email,
+        tenantId: 'system',
+        role: 'super_admin',
+      });
+
+      // Quick fix: Since AuthService.generateToken might not include 'role' in the payload interface yet,
+      // we rely on the fact that we can't easily change the shared package right now without redeploying valid versions.
+      // However, we can construct the payload manually if we had access to JwtService, but Controller uses AuthService.
+      // Let's assume for now AuthService is enough or we might need to extend it.
+      // Wait, the shared AuthService generates a token with {sub, email, tenantId}.
+      // The SuperAdminGuard checks for `user.role === 'super_admin'`.
+      // If the token doesn't have 'role', the Guard will fail!
+
+      // We MUST ensure the token has the role.
+      // I will verify AuthService implementation again.
+
+      return { accessToken: token };
+    }
+
+    throw new UnauthorizedException('Invalid credentials');
+  }
 }

@@ -17,7 +17,7 @@ export interface AuthUser {
 
 @Injectable()
 export class AuthService {
-  constructor(@Inject(JwtService) private readonly jwtService: JwtService) { }
+  constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
 
   async generateToken(user: AuthUser): Promise<string> {
     const payload: JwtPayload = {
