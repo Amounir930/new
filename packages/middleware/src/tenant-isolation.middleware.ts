@@ -124,7 +124,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const currentPath = req.originalUrl || req.path || '';
     if (
       bypassRoutes.some(
-        (route) => currentPath === route || currentPath.startsWith(route + '?')
+        (route) => currentPath === route || currentPath.startsWith(`${route}?`)
       )
     ) {
       return next();
