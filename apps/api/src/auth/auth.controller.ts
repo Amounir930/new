@@ -24,7 +24,7 @@ export class AuthController {
   constructor(
     @Inject(AuthService)
     private readonly authService: AuthService
-  ) {}
+  ) { }
 
   @Post('login')
   @ApiOperation({ summary: 'Super Admin Login' })
@@ -44,6 +44,7 @@ export class AuthController {
     }
 
     if (email === adminEmail && password === adminPassword) {
+      console.log('[DEBUG] Login Success');
       // Generate Token with super_admin role
       const token = await this.authService.generateToken({
         id: 'super-admin-id',
@@ -65,6 +66,14 @@ export class AuthController {
 
       return { accessToken: token };
     }
+
+    console.log(`[DEBUG] Login Failed:`);
+    console.log(`[DEBUG] Input Email: '${email}'`);
+    console.log(`[DEBUG] Env Email: '${adminEmail}'`);
+    console.log(`[DEBUG] Input Password Length: ${password?.length}`);
+    console.log(`[DEBUG] Env Password Length: ${adminPassword?.length}`);
+    console.log(`[DEBUG] Match Email: ${email === adminEmail}`);
+    console.log(`[DEBUG] Match Password: ${password === adminPassword}`);
 
     throw new UnauthorizedException('Invalid credentials');
   }
