@@ -1,8 +1,14 @@
-import { Body, Controller, Inject, Post, UnauthorizedException } from '@nestjs/common';
+import { AuthService } from '@apex/auth';
+import {
+  Body,
+  Controller,
+  Inject,
+  Post,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import { AuthService } from '@apex/auth';
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -17,7 +23,7 @@ export class AuthController {
   constructor(
     @Inject(AuthService)
     private readonly authService: AuthService
-  ) { }
+  ) {}
 
   @Post('login')
   @ApiOperation({ summary: 'Super Admin Login' })

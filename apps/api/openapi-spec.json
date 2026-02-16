@@ -47,9 +47,7 @@
             "description": "Invalid credentials"
           }
         },
-        "tags": [
-          "Auth"
-        ]
+        "tags": ["Auth"]
       }
     },
     "/provision": {

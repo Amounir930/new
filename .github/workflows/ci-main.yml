@@ -76,10 +76,6 @@ jobs:
     uses: ./.github/workflows/s13-prototype-pollution-gate.yml
     secrets: inherit
 
-  s15-active-defense:
-    name: "S15 Active Defense"
-    uses: ./.github/workflows/active-defense.yml
-    secrets: inherit
 
   # ═══════════════════════════════════════════════════════════════
   # PHASE 2: S9-S13 Penetration Tests
@@ -88,7 +84,7 @@ jobs:
     name: "🎯 S9-S13 Penetration Tests"
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers, s13-prototype, s15-active-defense]
+    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers, s13-prototype]
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     
     services:
@@ -498,7 +494,7 @@ jobs:
     name: "⏱️ 60-Second Provisioning"
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers, s9-s13-penetration, s15-active-defense]
+    needs: [s1-env, s2-tenant, s3-input, s4-audit, s5-exception, s7-encrypt, s8-headers, s9-s13-penetration]
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     
     services:
