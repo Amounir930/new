@@ -22,7 +22,7 @@ export function TokenInput() {
     <div className="flex gap-2 items-center">
       <Input
         type="password"
-        placeholder="Super Admin Token"
+        placeholder="Enter auth code"
         value={token}
         onChange={(e) => setToken(e.target.value)}
         className="max-w-xs"

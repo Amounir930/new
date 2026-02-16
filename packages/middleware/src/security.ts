@@ -81,13 +81,13 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
  */
 export interface CorsConfig {
   origin:
-    | string
-    | string[]
-    | boolean
-    | ((
-        origin: string | undefined,
-        callback: (err: Error | null, allow?: boolean) => void
-      ) => void);
+  | string
+  | string[]
+  | boolean
+  | ((
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => void);
   methods: string[];
   allowedHeaders: string[];
   exposedHeaders: string[];
@@ -120,6 +120,7 @@ export const defaultCorsConfig: CorsConfig = {
     const productionOrigins = [
       'https://super-admin.60sec.shop',
       'https://admin.60sec.shop',
+      'https://staging.60sec.shop',
     ];
 
     // Load additional origins from env
@@ -174,8 +175,8 @@ export function getTenantCorsConfig(tenantDomain: string): CorsConfig {
  * Double-submit cookie pattern
  */
 export class CsrfProtection {
-  private readonly tokenName = 'XSRF-TOKEN';
-  private readonly headerName = 'X-XSRF-TOKEN';
+  private readonly tokenName = 'XSRF_TK';
+  private readonly headerName = 'X-XSRF-TK';
 
   generateToken(): string {
     return randomBytes(32).toString('hex');

@@ -23,6 +23,35 @@
         }
       }
     },
+    "/health/status": {
+      "get": {
+        "operationId": "HealthController_checkStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Super Admin Login",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "JWT Token issued"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
     "/provision": {
       "post": {
         "operationId": "ProvisioningController_provisionStore",

@@ -1,8 +1,10 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
+const ADM_TKN = 'adm_tkn=';
+
 export const getAuthToken = () => {
   if (typeof window !== 'undefined') {
-    const name = 'admin_token=';
+    const name = ADM_TKN;
     const decodedCookie = decodeURIComponent(document.cookie);
     const ca = decodedCookie.split(';');
     for (let i = 0; i < ca.length; i++) {
@@ -25,7 +27,7 @@ export const setAuthToken = (token: string) => {
     d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000);
     const expires = `expires=${d.toUTCString()}`;
     // biome-ignore lint/suspicious/noDocumentCookie: Direct cookie assignment is needed for client-side auth
-    document.cookie = `admin_token=${token}; ${expires}; path=/; SameSite=Strict; Secure`;
+    document.cookie = `adm_tkn=${token}; ${expires}; path=/; SameSite=Strict; Secure`;
   }
 };
 
