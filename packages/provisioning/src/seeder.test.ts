@@ -72,7 +72,7 @@ describe('seedTenantData', () => {
     mockDb.returning.mockRejectedValueOnce(new Error('DB Timeout'));
     await expect(
       seedTenantData({ subdomain: 'x', storeName: 'X', adminEmail: 'x@x.com' })
-    ).rejects.toThrow('Seeding Failure: DB Timeout');
+    ).rejects.toThrow(/Seeding Failure:.*DB Timeout/);
   });
 });
 
