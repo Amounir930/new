@@ -105,7 +105,9 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
     if (
       !subdomain ||
-      ['api', 'super-admin', 'www'].includes(subdomain.toLowerCase())
+      ['api', 'super-admin', 'www', 'staging', 'blue', 'green'].includes(
+        subdomain.toLowerCase()
+      )
     ) {
       // Allow root domain and system subdomains
       return next();
@@ -127,7 +129,10 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         (route) =>
           currentPath === route ||
           currentPath.startsWith(`${route}/`) ||
-          currentPath.startsWith(`${route}?`)
+          currentPath.startsWith(`${route}?`) ||
+          // Support versioned paths if they aren't already covered
+          currentPath.includes(`/v1${route}`) ||
+          currentPath.includes(`/api/v1${route}`)
       )
     ) {
       return next();
