@@ -47,6 +47,14 @@ export const EnvSchema = z.object({
       );
     }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special)'),
 
+  // S1: Admin Credentials (Strict Validation)
+  SUPER_ADMIN_EMAIL: z
+    .string()
+    .email('S1 Violation: SUPER_ADMIN_EMAIL must be a valid email'),
+  SUPER_ADMIN_PASSWORD: z
+    .string()
+    .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD must be at least 8 characters'),
+
   JWT_EXPIRES_IN: z.string().default('7d'),
 
   // Database Configuration

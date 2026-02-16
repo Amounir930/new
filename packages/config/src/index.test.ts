@@ -13,6 +13,8 @@ process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32';
 process.env.MINIO_ACCESS_KEY = 'minioadmin';
 process.env.MINIO_SECRET_KEY = 'minioadmin';
 process.env.MINIO_ENDPOINT = 'localhost';
+process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
+process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
 
 import { validateEnv } from './index.js';
 
@@ -31,9 +33,12 @@ describe('Config Package', () => {
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
+      process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
 
       const config = validateEnv();
       expect(config.JWT_SECRET).toBe('a'.repeat(32));
+      expect(config.SUPER_ADMIN_EMAIL).toBe('admin@example.com');
     });
 
     it('should throw S1 Violation if JWT_SECRET is too short', () => {
@@ -55,6 +60,8 @@ describe('Config Package', () => {
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
+      process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
 
       expect(() => validateEnv()).toThrow(
         'S1 Violation: JWT_SECRET appears to be a default/test value'
@@ -69,6 +76,8 @@ describe('Config Package', () => {
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
+      process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
 
       expect(() => validateEnv()).toThrow(
         'S1 Violation: Production database must use SSL'
@@ -84,10 +93,13 @@ describe('Config Package', () => {
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
+      process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
 
       const { ConfigService } = await import('./index.js');
       const service = new ConfigService();
       expect(service.get('JWT_SECRET')).toBe('a'.repeat(32));
+      expect(service.get('SUPER_ADMIN_EMAIL')).toBe('admin@example.com');
     });
 
     it('should return default values', async () => {
@@ -97,6 +109,8 @@ describe('Config Package', () => {
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
+      process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
+      process.env.SUPER_ADMIN_PASSWORD = 'strongpassword123';
       (process.env as any).JWT_EXPIRES_IN = undefined; // Ensure we test the default
 
       const { ConfigService } = await import('./index.js');
