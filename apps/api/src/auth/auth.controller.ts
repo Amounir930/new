@@ -5,6 +5,7 @@ import {
   Inject,
   Post,
   UnauthorizedException,
+  VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -18,12 +19,12 @@ const LoginSchema = z.object({
 type LoginDto = z.infer<typeof LoginSchema>;
 
 @ApiTags('Auth')
-@Controller('auth')
+@Controller({ path: 'auth', version: [VERSION_NEUTRAL, '1'] })
 export class AuthController {
   constructor(
     @Inject(AuthService)
     private readonly authService: AuthService
-  ) {}
+  ) { }
 
   @Post('login')
   @ApiOperation({ summary: 'Super Admin Login' })

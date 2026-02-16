@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Logger, Res } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Logger, Res, VERSION_NEUTRAL } from '@nestjs/common';
 import type * as express from 'express';
 import { createClient } from 'redis';
 
@@ -6,7 +6,7 @@ import { createClient } from 'redis';
  * Health Controller
  * S6: Active connectivity checks for security-critical services
  */
-@Controller('health')
+@Controller({ path: 'health', version: [VERSION_NEUTRAL, '1'] })
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
