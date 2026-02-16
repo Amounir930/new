@@ -17,6 +17,16 @@ import { createClient } from 'redis';
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
+  @Get()
+  rootCheck(@Res() res: express.Response) {
+    return res.status(HttpStatus.OK).json({
+      status: 'ok',
+      message: 'Apex v2 API is running',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   @Get('redis')
   async checkRedis(@Res() res: express.Response) {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
