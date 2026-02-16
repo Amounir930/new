@@ -73,7 +73,8 @@ export class AppModule implements NestModule {
         { path: '*/health/(.*)', method: RequestMethod.GET },
         { path: 'health/(.*)', method: RequestMethod.GET },
         { path: 'api/health/(.*)', method: RequestMethod.GET },
-        { path: 'api/v1/health/(.*)', method: RequestMethod.GET }
+        { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
+        { path: '/', method: RequestMethod.GET } // Allow root path
       )
       .forRoutes('*'); // Apply to all routes
   }
