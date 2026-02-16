@@ -1,10 +1,10 @@
 // biome-ignore lint/style/useImportType: Dependency Injection token
 import { TenantRegistryService } from '@apex/db';
-import { Controller, Get, UseGuards } from '@nestjs/common';
 import { SuperAdminGuard } from '../../../../packages/auth/src/guards/super-admin.guard.js';
+import { JwtAuthGuard } from '../../../../packages/auth/src/index.js';
 
 @Controller('admin/tenants')
-@UseGuards(SuperAdminGuard)
+@UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
   constructor(private readonly tenantRegistry: TenantRegistryService) {}
 

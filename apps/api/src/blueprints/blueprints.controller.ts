@@ -8,8 +8,9 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from '../../../../packages/auth/src/decorators/current-user.decorator.js'; // Direct import for now
-import { SuperAdminGuard } from '../../../../packages/auth/src/guards/super-admin.guard.js'; // Direct import for now, ideally via @apex/auth
+import { CurrentUser } from '../../../../packages/auth/src/decorators/current-user.decorator.js';
+import { SuperAdminGuard } from '../../../../packages/auth/src/guards/super-admin.guard.js';
+import { JwtAuthGuard } from '../../../../packages/auth/src/index.js';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { BlueprintsService } from './blueprints.service.js';
 import type {
@@ -18,7 +19,7 @@ import type {
 } from './dto/blueprint.dto.js';
 
 @Controller('admin/blueprints')
-@UseGuards(SuperAdminGuard) // Super-#21: Super Admin ONLY
+@UseGuards(JwtAuthGuard, SuperAdminGuard) // Super-#21: Super Admin ONLY
 export class BlueprintsController {
   constructor(private readonly blueprintsService: BlueprintsService) {}
 
