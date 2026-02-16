@@ -1,3 +1,4 @@
+import { Public } from '@apex/auth';
 import {
   Controller,
   Get,
@@ -14,6 +15,7 @@ import { createClient } from 'redis';
  * S6: Active connectivity checks for security-critical services
  */
 @Controller({ path: 'health', version: [VERSION_NEUTRAL, '1'] })
+@Public()
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 

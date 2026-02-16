@@ -7,7 +7,7 @@ import {
   defaultCorsConfig,
   getTenantCorsConfig,
   SecurityHeadersMiddleware,
-} from './security.js';
+} from './security.ts';
 
 describe('SecurityMiddleware', () => {
   let middleware: SecurityHeadersMiddleware;
@@ -159,7 +159,7 @@ describe('CsrfProtection', () => {
     expect(token).toMatch(/^[0-9a-f]+$/);
   });
 
-  it.skip('should set XSRF_TK cookie', () => {
+  it('should set XSRF_TK cookie', () => {
     const mockRes = { cookie: mock() } as unknown as Response;
     csrf.setCookie(mockRes, 'test-token');
     expect(mockRes.cookie).toHaveBeenCalledWith(
@@ -169,7 +169,7 @@ describe('CsrfProtection', () => {
     );
   });
 
-  it.skip('should validate matching tokens', () => {
+  it('should validate matching tokens', () => {
     const mockReq = {
       cookies: { XSRF_TK: 'match' },
       headers: { 'x-xsrf-tk': 'match' },
@@ -231,7 +231,7 @@ describe('CsrfGuard', () => {
     expect(mockRes.cookie).toHaveBeenCalled();
   });
 
-  it.skip('should validate POST requests', () => {
+  it('should validate POST requests', () => {
     const mockReq = {
       method: 'POST',
       cookies: { XSRF_TK: 'valid' },

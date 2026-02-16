@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/lib/api';
+import { validateBlueprint } from '@/lib/blueprint-validator';
 import { JsonEditorWrapper } from './JsonEditorWrapper';
 
 interface BlueprintEditorProps {
@@ -65,8 +66,11 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
       let parsedBlueprint: any;
       try {
         parsedBlueprint = JSON.parse(json);
-      } catch (_e) {
-        alert('Invalid JSON');
+        if (!validateBlueprint(parsedBlueprint)) {
+          throw new Error('Invalid blueprint structure');
+        }
+      } catch (e: any) {
+        alert(e.message || 'Invalid JSON');
         setSaving(false);
         return;
       }

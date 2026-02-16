@@ -10,6 +10,8 @@
         "lint:fix": "biome check --write ."
     },
     "dependencies": {
+        "@apex/provisioning": "workspace:*",
+        "@hookform/resolvers": "^3.9.1",
         "@monaco-editor/react": "^4.7.0",
         "@radix-ui/react-label": "^2.1.8",
         "@radix-ui/react-slot": "^1.2.4",
@@ -22,7 +24,6 @@
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
         "react-hook-form": "^7.54.2",
-        "@hookform/resolvers": "^3.9.1",
         "tailwind-merge": "^3.4.1",
         "tailwindcss-animate": "^1.0.7",
         "zod": "^3.24.1"

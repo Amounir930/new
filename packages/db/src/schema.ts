@@ -52,6 +52,7 @@ export const onboardingBlueprints = pgTable('onboarding_blueprints', {
 });
 
 export * from './schema/audit';
+export * from './schema/storefront';
 
 /**
  * S2 Compliance: Tenant-Specific Schema Tables

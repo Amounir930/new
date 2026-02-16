@@ -1,6 +1,7 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
 import { onboardingBlueprints } from '@apex/db';
+import { validateBlueprint } from '@apex/provisioning';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -37,11 +38,18 @@ export class BlueprintsService {
   }
 
   async create(userId: string, dto: CreateBlueprintDto) {
-    // S3: Validate JSON structure (Basic check, can be refined with BlueprintSchema)
+    // S3: Validate JSON structure
+    let parsed: any;
     try {
-      JSON.parse(dto.blueprint);
+      parsed = JSON.parse(dto.blueprint);
     } catch (_e) {
       throw new Error('Invalid JSON in blueprint');
+    }
+
+    try {
+      validateBlueprint(parsed);
+    } catch (e: any) {
+      throw new Error(`Invalid blueprint structure: ${e.message}`);
     }
 
     const [newBlueprint] = await this.db
@@ -69,6 +77,23 @@ export class BlueprintsService {
   }
 
   async update(userId: string, id: string, dto: UpdateBlueprintDto) {
+    if (dto.blueprint) {
+      let parsed: any;
+      try {
+        // If it's a string, parse it. If it's already an object (from DTO validation), use it.
+        // DTO says string, so parse.
+        parsed = JSON.parse(dto.blueprint);
+      } catch {
+        throw new Error('Invalid JSON in blueprint');
+      }
+
+      try {
+        validateBlueprint(parsed);
+      } catch (e: any) {
+        throw new Error(`Invalid blueprint structure: ${e.message}`);
+      }
+    }
+
     const [updatedBlueprint] = await this.db
       .update(onboardingBlueprints)
       .set({
