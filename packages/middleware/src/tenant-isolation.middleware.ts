@@ -114,9 +114,19 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     // S2/S4 Bypass: Specific routes that don't require tenant isolation
     // e.g., provisioning a new tenant or system health checks
     // We use originalUrl to ensure we see the full path before NestJS routing shifts it
-    const bypassRoutes = ['/api/provision', '/health', '/api/health'];
+    const bypassRoutes = [
+      '/api/v1/auth/login',
+      '/api/v1/health',
+      '/api/health',
+      '/health',
+      '/',
+    ];
     const currentPath = req.originalUrl || req.path || '';
-    if (bypassRoutes.some((route) => currentPath.includes(route))) {
+    if (
+      bypassRoutes.some(
+        (route) => currentPath === route || currentPath.startsWith(route + '?')
+      )
+    ) {
       return next();
     }
 
