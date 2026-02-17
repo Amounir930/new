@@ -7,12 +7,10 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
     "./storefront": {
-      "types": "./dist/storefront/index.d.ts",
       "import": "./dist/storefront/index.mjs",
       "require": "./dist/storefront/index.js"
     }
