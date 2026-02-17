@@ -6,19 +6,16 @@
   "main": "./dist/index.js",
   "exports": {
     ".": {
-      "bun": "./src/index.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./mtls": {
-      "bun": "./src/mtls/index.ts",
       "import": "./dist/mtls/index.js",
       "require": "./dist/mtls/index.js",
       "types": "./dist/mtls/index.d.ts"
     },
     "./secrets": {
-      "bun": "./src/secrets/index.ts",
       "import": "./dist/secrets/index.js",
       "require": "./dist/secrets/index.js",
       "types": "./dist/secrets/index.d.ts"

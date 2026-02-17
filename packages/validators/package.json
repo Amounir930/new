@@ -7,13 +7,11 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "bun": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
     "./storefront": {
-      "bun": "./src/storefront/index.ts",
       "types": "./dist/storefront/index.d.ts",
       "import": "./dist/storefront/index.mjs",
       "require": "./dist/storefront/index.js"
