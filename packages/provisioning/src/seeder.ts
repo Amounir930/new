@@ -81,6 +81,11 @@ export async function seedTenantData(
       `Seeding Failure: ${error instanceof Error ? error.message : String(error)}`
     );
   } finally {
+    try {
+      await client.query('SET search_path TO public');
+    } catch (_e) {
+      // Ignore reset errors
+    }
     client.release();
   }
 }
@@ -153,21 +158,23 @@ async function resolveStore(db: any, options: SeedOptions): Promise<string> {
  * @param subdomain - Tenant subdomain
  */
 export async function isSeeded(subdomain: string): Promise<boolean> {
-  const { users } = await import('@apex/db'); // Import users here as it's no longer top-level
-  const db = drizzle(await publicPool.connect()); // Use publicPool for isSeeded
+  const { users } = await import('@apex/db');
+  const schemaName = sanitizeSchemaName(subdomain);
+  const client = await publicPool.connect();
+  const db = drizzle(client);
+
   try {
-    // Temporarily set search_path for this query
-    const schemaName = sanitizeSchemaName(subdomain);
-    await db.execute(sql`SET search_path TO ${sql.raw(`"${schemaName}"`)}`);
+    await client.query(`SET search_path TO "${schemaName}"`);
     const result = await db.select({ count: sql`count(*)` }).from(users);
     return Number(result[0].count) > 0;
   } catch (_e) {
     return false;
   } finally {
-    // Reset search_path to default or public if necessary, or ensure connection is released
-    // For now, relying on the connection being released implicitly or explicitly if using a pool.
-    // If using a direct client, it should be released.
-    // For publicPool, the connection is returned to the pool, so its state might affect future uses.
-    // A more robust solution would be to explicitly reset search_path or use a dedicated client for this check.
+    try {
+      await client.query('SET search_path TO public');
+    } catch (_e) {
+      // Ignore reset errors
+    }
+    client.release();
   }
 }

@@ -91,6 +91,11 @@ export async function runTenantMigrations(
     console.error(`S2 MIGRATION FAILURE for ${schemaName}:`, error);
     throw error;
   } finally {
+    try {
+      await client.query('SET search_path TO public');
+    } catch (_e) {
+      // Ignore reset errors
+    }
     client.release();
   }
 }

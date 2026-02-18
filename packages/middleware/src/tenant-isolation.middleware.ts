@@ -105,7 +105,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
     if (
       !subdomain ||
-      ['api', 'super-admin', 'www', 'staging', 'blue', 'green'].includes(
+      ['api', 'super-admin', 'www', 'staging', 'blue', 'green', 'git'].includes(
         subdomain.toLowerCase()
       )
     ) {
