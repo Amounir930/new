@@ -2,3 +2,4 @@
 **/drizzle/_journal.json
 **/dist/**
 **/node_modules/**
+**/next-env.d.ts
