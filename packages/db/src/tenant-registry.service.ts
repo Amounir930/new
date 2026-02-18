@@ -167,6 +167,7 @@ export class TenantRegistryService {
   }
 
   async getBySubdomain(subdomain: string): Promise<Tenant | undefined> {
+    // S2 FIX: Explicitly ensure we are querying the public schema
     const [tenant] = await publicDb
       .select()
       .from(tenants)

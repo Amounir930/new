@@ -64,7 +64,20 @@ export function extractSubdomain(host: string): string | null {
   // Production: tenant.apex.com
   if (parts.length >= 3) {
     const subdomain = parts[0];
-    if (['www', 'api', 'admin', 'mail'].includes(subdomain)) return null;
+    if (
+      [
+        'www',
+        'api',
+        'admin',
+        'mail',
+        'git',
+        'super-admin',
+        'staging',
+        'blue',
+        'green',
+      ].includes(subdomain)
+    )
+      return null;
     return subdomain;
   }
 

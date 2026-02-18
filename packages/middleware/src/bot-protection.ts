@@ -32,6 +32,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
     /dirbuster/i,
     /nmap/i,
     /masscan/i,
+    /GPTBot/i,
   ];
 
   async use(req: Request, _res: Response, next: NextFunction): Promise<void> {
@@ -56,11 +57,13 @@ export class BotProtectionMiddleware implements NestMiddleware {
     // S11 Level 2: Behavioral/Pattern-based protection
     for (const botPattern of this.botUserAgents) {
       if (botPattern.test(userAgent)) {
-        // Log bot attempt for forensic analysis (S4/S5)
-        console.warn(
-          `S11: Bot detected - User-Agent: "${userAgent}" | IP: ${req.ip}`
+        // Log bot attempt at lower priority (S5/S11)
+        console.debug(
+          `S11: Bot blocked (Silent) - UA: "${userAgent}" | IP: ${req.ip}`
         );
-        throw new ForbiddenException('S11 Violation: Automated access blocked');
+        // Hard Silent Drop: Close connection immediately to save resources (S11 Silent Drop)
+        _res.destroy();
+        return;
       }
     }
 

@@ -53,7 +53,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const { statusCode, message, error } = this.parseError(exception);
 
     // Log error (with stack trace for internal debugging)
-    this.logError(exception, requestId, request);
+    this.logError(exception, requestId, request, statusCode);
 
     // Build response (sanitized for client)
     const errorResponse: ErrorResponse = {
@@ -199,11 +199,33 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   private logError(
     exception: unknown,
     requestId: string,
-    request: Request
+    request: Request,
+    statusCode: number
   ): void {
     const error =
       exception instanceof Error ? exception : new Error(String(exception));
     const { message, stack: errorStackTrace } = error;
+
+    const isNotFound = statusCode === 404;
+    const isBot = /bot|crawler|spider/i.test(
+      request.headers?.['user-agent'] || ''
+    );
+
+    if (isNotFound) {
+      this.logger.debug(
+        {
+          requestId,
+          message,
+          path: request.url,
+          method: request.method,
+          ip: request.ip,
+          userAgent: request.headers?.['user-agent'],
+          isBot,
+        },
+        'S11: Resource not found'
+      );
+      return;
+    }
 
     this.logger.error(
       {

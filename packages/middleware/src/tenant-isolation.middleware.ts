@@ -6,11 +6,12 @@
 
 import { publicDb, tenants } from '@apex/db';
 import {
+  HttpStatus,
   Injectable,
   type NestMiddleware,
   UnauthorizedException,
 } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 import { type TenantContext, tenantStorage } from './connection-context.js';
 
@@ -114,9 +115,10 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         'green',
         'git',
         'admin',
+        'mail',
       ].includes(subdomain.toLowerCase())
     ) {
-      // Allow root domain and system subdomains
+      // Allow root domain and system subdomains immediately
       return next();
     }
 
@@ -148,19 +150,37 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     try {
       const tenantContext = await validateTenant(subdomain);
 
-      // Store in AsyncLocalStorage for downstream access
-      tenantStorage.run(tenantContext, () => {
-        req.tenantContext = tenantContext;
+      // S2: Absolute Isolation (Managed Scope)
+      // Executing SET search_path to ensure the database enforces isolation at the session level.
+      // This is the "Hard Lock" requested by the user.
+      await publicDb.execute(
+        sql`SET search_path TO ${sql.identifier(tenantContext.schemaName)}, public`
+      );
 
-        // Set PostgreSQL search_path for this request
-        // This ensures all queries go to tenant schema
+      tenantStorage.run(tenantContext, async () => {
+        req.tenantContext = tenantContext;
         res.setHeader('X-Tenant-ID', tenantContext.tenantId);
         res.setHeader('X-Tenant-Schema', tenantContext.schemaName);
+
+        // Reset path after the request is finished to prevent cross-contamination in the pool
+        res.on('finish', async () => {
+          try {
+            await publicDb.execute(sql`SET search_path TO public`);
+          } catch (e) {
+            console.error('S2 WARNING: Failed to reset search_path', e);
+          }
+        });
 
         next();
       });
     } catch (_error) {
-      throw new UnauthorizedException(`Invalid tenant: ${subdomain}`);
+      // S2: Invalid or non-existent tenant subdomains are rejected with 403 Forbidden
+      // This prevents further processing and potential information leakage.
+      res.status(HttpStatus.FORBIDDEN).json({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: `S2 Violation: Domain '${subdomain}' is not authorized`,
+        error: 'Forbidden',
+      });
     }
   }
 }

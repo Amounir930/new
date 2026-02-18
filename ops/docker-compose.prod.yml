@@ -280,6 +280,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gitea.rule=Host(`git.60sec.shop`)"
+      - "traefik.http.routers.gitea.priority=3000"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
       - "traefik.http.services.gitea.loadbalancer.server.port=3000"
