@@ -30,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/pg": "^8.16.0",
     "bun-types": "latest",
     "typescript": "^5.3.0"
   }

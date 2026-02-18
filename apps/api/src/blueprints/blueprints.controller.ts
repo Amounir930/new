@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../../../../packages/auth/src/index.js';
 import { BlueprintsService } from './blueprints.service.js';
 import type {
   CreateBlueprintDto,
+  SnapshotBlueprintDto,
   UpdateBlueprintDto,
 } from './dto/blueprint.dto.js';
 
@@ -45,6 +46,20 @@ export class BlueprintsController {
     @Body() dto: UpdateBlueprintDto
   ) {
     return this.blueprintsService.update(userId, id, dto);
+  }
+
+  @Post('snapshot')
+  snapshot(
+    @CurrentUser('id') userId: string,
+    @Body() dto: SnapshotBlueprintDto
+  ) {
+    return this.blueprintsService.snapshot(
+      userId,
+      dto.subdomain,
+      dto.name,
+      dto.description,
+      dto.nicheType
+    );
   }
 
   @Delete(':id')

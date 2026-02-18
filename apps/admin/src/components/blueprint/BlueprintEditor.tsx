@@ -28,6 +28,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
   const [saving, setSaving] = useState(false);
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [plan, setPlan] = useState('free');
   const [isDefault, setIsDefault] = useState(false);
   const [json, setJson] = useState(
@@ -38,6 +39,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
     try {
       const data = await apiFetch<any>(`/v1/admin/blueprints/${id}`);
       setName(data.name);
+      setDescription(data.description || '');
       setPlan(data.plan);
       setIsDefault(data.isDefault);
       // Ensure blueprint is a string for the editor
@@ -60,43 +62,50 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
     }
   }, [isNew, fetchBlueprint]);
 
+  const extractInnerBlueprint = (parsed: any) => {
+    let blueprint = parsed;
+    if (parsed.blueprint && typeof parsed.blueprint === 'object') {
+      if (!name && parsed.name) setName(parsed.name);
+      if (!description && parsed.description)
+        setDescription(parsed.description);
+      if (parsed.plan) setPlan(parsed.plan);
+      blueprint = parsed.blueprint;
+    }
+    return blueprint;
+  };
+
+  const processBlueprint = (jsonString: string) => {
+    const parsed = JSON.parse(jsonString);
+    const blueprint = extractInnerBlueprint(parsed);
+
+    if (!validateBlueprint(blueprint)) {
+      throw new Error('Invalid blueprint structure');
+    }
+
+    return blueprint;
+  };
+
+  const submitBlueprint = async (blueprint: any) => {
+    const payload = { name, description, plan, isDefault, blueprint };
+    const method = isNew ? 'POST' : 'PATCH';
+    const endpoint = isNew
+      ? '/v1/admin/blueprints'
+      : `/v1/admin/blueprints/${id}`;
+
+    await apiFetch(endpoint, {
+      method,
+      body: JSON.stringify(payload),
+    });
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
-      let parsedBlueprint: any;
-      try {
-        parsedBlueprint = JSON.parse(json);
-        if (!validateBlueprint(parsedBlueprint)) {
-          throw new Error('Invalid blueprint structure');
-        }
-      } catch (e: any) {
-        alert(e.message || 'Invalid JSON');
-        setSaving(false);
-        return;
-      }
-
-      const payload = {
-        name,
-        plan,
-        isDefault,
-        blueprint: parsedBlueprint,
-      };
-
-      if (isNew) {
-        await apiFetch('/v1/admin/blueprints', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-      } else {
-        await apiFetch(`/v1/admin/blueprints/${id}`, {
-          method: 'PATCH',
-          body: JSON.stringify(payload),
-        });
-      }
-
+      const blueprint = processBlueprint(json);
+      await submitBlueprint(blueprint);
       router.push('/super-admin/blueprints');
     } catch (e: any) {
-      alert(`Error saving: ${e.message}`);
+      alert(e.message || 'Error saving');
     } finally {
       setSaving(false);
     }
@@ -137,12 +146,28 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
             </div>
 
             <div className="space-y-2">
+              <Label>Description</Label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Briefly describe this blueprint"
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label>Plan</Label>
-              <Input
+              <select
+                id="plan"
                 value={plan}
                 onChange={(e) => setPlan(e.target.value)}
-                placeholder="free, basic, pro"
-              />
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="free">Free</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
             </div>
 
             <div className="flex items-center space-x-2 pt-2">

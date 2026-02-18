@@ -6,7 +6,7 @@
 import 'reflect-metadata';
 import { AuditService } from '@apex/audit';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
-import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/nestjs';
@@ -47,15 +47,8 @@ async function bootstrap() {
   // S5: Global Exception Filter
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  // S3: Global Validation Pipe
-  app.useGlobalPipes(
-    new ZodValidationPipe(),
-    new ValidationPipe({
-      whitelist: true, // Strip properties not in DTO
-      forbidNonWhitelisted: true, // Throw error if extra properties
-      transform: true, // Auto-transform payloads
-    })
-  );
+  // S3: Global Zod Validation Pipe
+  app.useGlobalPipes(new ZodValidationPipe());
 
   // S8 FIX: Generate CSP Nonce per request
   app.use((_req: any, res: any, next: any) => {

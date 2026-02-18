@@ -22,6 +22,21 @@ export interface SecretConfig {
   nextRotationAt: Date;
 }
 
+/**
+ * S15: Vault Secret Structure
+ */
+export interface VaultSecretData {
+  value: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface VaultResponse {
+  data: {
+    data: VaultSecretData;
+    metadata?: Record<string, unknown>;
+  };
+}
+
 export interface SecretRotationEvent {
   secretName: string;
   oldValue: string;
@@ -308,7 +323,7 @@ export class VaultIntegration {
   /**
    * Fetch secret from Vault
    */
-  async fetchSecret(path: string): Promise<{ value: string; metadata: any }> {
+  async fetchSecret(path: string): Promise<VaultSecretData> {
     const response = await fetch(`${this.vaultAddr}/v1/${path}`, {
       headers: {
         'X-Vault-Token': this.vaultToken,
@@ -319,10 +334,10 @@ export class VaultIntegration {
       throw new Error(`Vault error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const json = (await response.json()) as VaultResponse;
     return {
-      value: data.data.data.value,
-      metadata: data.data.metadata,
+      value: json.data.data.value,
+      metadata: json.data.data.metadata || json.data.metadata || {},
     };
   }
 

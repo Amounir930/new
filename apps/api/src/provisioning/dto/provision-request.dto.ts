@@ -2,6 +2,7 @@
  * Provision Request DTO
  */
 
+import { NicheSchema } from '@apex/validators';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
@@ -34,13 +35,22 @@ export const ProvisionRequestSchema = z.object({
   plan: z.enum(['free', 'basic', 'pro', 'enterprise']).default('free'),
 
   /**
-   * Super Admin secret key (REQUIRED)
+   * Industry niche classification (S2.5)
+   */
+  nicheType: NicheSchema.optional(),
+
+  /**
+   * SDUI/Theme configuration (S2.5)
+   */
+  uiConfig: z.record(z.unknown()).optional().default({}),
+
+  /**
+   * Super Admin secret key
    * S3 Validation: Must be 32-128 chars, alphanumeric + hyphen/underscore only
-   * CRITICAL FIX (S3): Removed .optional() - key is now mandatory
+   * OPTIONAL: If the request is authenticated with a Super Admin JWT, this can be omitted.
    */
   superAdminKey: z
     .string({
-      required_error: 'Super Admin key is required',
       invalid_type_error: 'Super Admin key must be a string',
     })
     .min(32, 'Super Admin key must be at least 32 characters')
@@ -48,7 +58,14 @@ export const ProvisionRequestSchema = z.object({
     .regex(
       /^[A-Za-z0-9-_]+$/,
       'Super Admin key must be alphanumeric with hyphens/underscores only'
-    ),
+    )
+    .optional(),
+
+  /**
+   * Optional inline blueprint definition (S3 Relaxed)
+   * Allows passing a custom blueprint JSON directly in the provision request.
+   */
+  blueprint: z.unknown().optional(),
 });
 
 export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) {}

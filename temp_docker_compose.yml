@@ -1,0 +1,257 @@
+services:
+  # ═══════════════════════════════════════════════════════════════
+  # Database Layer (PostgreSQL 15)
+  # ═══════════════════════════════════════════════════════════════
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: apex-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Cache Layer (Redis 7) - Persistent
+  # ═══════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7-alpine
+    container_name: apex-redis
+    restart: always
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $REDIS_PASSWORD ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Object Storage (MinIO)
+  # ═══════════════════════════════════════════════════════════════
+  minio:
+    image: minio/minio:latest
+    container_name: apex-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Application Layer (Apex API)
+  # ═══════════════════════════════════════════════════════════════
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY}/api:latest
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    # container_name: apex-api # Removed to allow scaling
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DB_SSL: "false"
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      # S1: Admin Credentials Injection
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_USE_SSL: "false"
+      MINIO_BUCKET_NAME: apex-assets
+      # Sentry / Telemetry
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
+    networks:
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      # Route main domain, api, staging and blue/green subdomains
+      # Note: Priority ensures Admin (2000) is checked before API (1000)
+      - "traefik.http.routers.api.rule=Host(`60sec.shop`) || Host(`api.60sec.shop`) || Host(`staging.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      - "traefik.http.routers.api.priority=1000"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api.loadbalancer.server.port=3000"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/v1/health/liveness').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+
+  # ═══════════════════════════════════════════════════════════════
+  # Admin UI (Super Admin Panel)
+  # ═══════════════════════════════════════════════════════════════
+  admin:
+    image: ghcr.io/${GITHUB_REPOSITORY}/admin:latest
+    build:
+      context: ..
+      dockerfile: apps/admin/Dockerfile
+    restart: always
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+    networks:
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      # Admin has highest priority to override API's HostRegexp
+      - "traefik.http.routers.admin.rule=Host(`super-admin.60sec.shop`)"
+      - "traefik.http.routers.admin.priority=2000"
+      - "traefik.http.routers.admin.entrypoints=websecure"
+      - "traefik.http.routers.admin.tls.certresolver=letsencrypt"
+      # S15 Security Headers Middleware
+      - "traefik.http.middlewares.admin-security.headers.framedeny=true"
+      - "traefik.http.middlewares.admin-security.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.admin-security.headers.contentTypeNosniff=true"
+      - "traefik.http.routers.admin.middlewares=admin-security"
+      - "traefik.http.services.admin.loadbalancer.server.port=3001"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://127.0.0.1:3001').then(r => process.exit(r.status < 500 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ═══════════════════════════════════════════════════════════════
+  # S15: Docker Socket Proxy (Container Escape Protection)
+  # ═══════════════════════════════════════════════════════════════
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: apex-docker-proxy
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Only allow Traefik to see containers (read-only)
+      - CONTAINERS=1
+      - NETWORKS=1
+      - SERVICES=1
+      - EVENTS=1
+      - INFO=1
+      - VERSION=1
+    networks:
+      - apex-network
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:2375/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ═══════════════════════════════════════════════════════════════
+  # Load Balancer (Traefik) - Dynamic SSL w/ Let's Encrypt
+  # ═══════════════════════════════════════════════════════════════
+  traefik:
+    image: traefik:v2.11
+    container_name: apex-traefik
+    restart: always
+    depends_on:
+      docker-proxy:
+        condition: service_healthy
+    command:
+      - "--log.level=DEBUG"
+      - "--ping"
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=ops_apex-network"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Auto-redirect HTTP -> HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      # Let's Encrypt Resolver
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Removed direct socket access - using proxy instead for S15 security
+      - letsencrypt_data:/letsencrypt
+    environment:
+      - "DOCKER_API_VERSION=1.44"
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Email Testing (Mailpit) - Internal SMTP
+  # ═══════════════════════════════════════════════════════════════
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: apex-mailpit
+    restart: always
+    environment:
+      MP_SMTP_BIND_ADDR: 0.0.0.0:1025
+      MP_UI_BIND_ADDR: 0.0.0.0:8025
+    volumes:
+      - mailpit_data:/data
+    networks:
+      - apex-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  mailpit_data:
+  letsencrypt_data:
+
+networks:
+  apex-network:
+    driver: bridge

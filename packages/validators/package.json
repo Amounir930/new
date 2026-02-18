@@ -16,7 +16,7 @@
     }
   },
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsup",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "bun test",

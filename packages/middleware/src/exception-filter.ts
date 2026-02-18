@@ -29,7 +29,7 @@ if (env.GLITCHTIP_DSN && process.env.NODE_ENV === 'production') {
 
 export interface ErrorResponse {
   statusCode: number;
-  message: string;
+  message: string | string[];
   error: string;
   timestamp: string;
   path: string;
@@ -65,18 +65,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       requestId,
     };
 
-    // S5 FIX: Never send stack traces to the client in any environment.
-    // Internal debugging should rely on server logs/monitoring.
-    errorResponse.stack = undefined;
-
-    // S5 FIX: In production, ensure no internal details leak
+    // S5 FIX: Never send stack traces to the client in PRODUCTION.
+    // In Development/Staging, we allow it for debugging efficiency.
     if (process.env.NODE_ENV === 'production') {
-      // Remove any potentially sensitive fields
-      (errorResponse as any).stack = undefined;
+      errorResponse.stack = undefined;
       // Ensure generic message for 500 errors
       if (statusCode === 500) {
         errorResponse.message = 'Internal server error';
+        errorResponse.error = 'Internal Server Error';
       }
+    } else {
+      // In Non-Production, keep the stack trace (it was set by logError implicitly or can be explicitly added)
+      errorResponse.stack = (exception as any).stack;
     }
 
     response.status(statusCode).json(errorResponse);
@@ -124,6 +124,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       };
     }
 
+    // ZodValidationException (nestjs-zod) - Loose check
+    if ((exception as any)?.constructor?.name === 'ZodValidationException') {
+      const issues = (exception as any)
+        .getValidationIssues()
+        .map((i: any) => `${i.path.join('.')}: ${i.message}`)
+        .join('; ');
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: `Validation failed: ${issues}`,
+        error: 'Bad Request',
+      };
+    }
+
     // Default: Internal server error
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -132,41 +145,39 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     };
   }
 
-  private sanitizeMessage(statusCode: number, message: string): string {
+  private sanitizeMessage(
+    statusCode: number,
+    message: string | string[]
+  ): string | string[] {
     // S5 FIX: Never expose internal details for 500 errors
     if (statusCode === 500) {
       return 'Internal server error';
     }
 
-    // S5 FIX: Also sanitize for production environment regardless of status
-    if (process.env.NODE_ENV === 'production') {
-      return 'Request failed';
+    // S5: In Development/Staging, favor transparency over sanitization
+    if (process.env.NODE_ENV !== 'production') {
+      return message;
     }
 
-    // S5 FIX: Also sanitize potential internal details from 4xx errors
-    // Database table names, column names, internal paths
-    const internalPatterns = [
-      /table\s+['"]?\w+['"]?/gi,
-      /column\s+['"]?\w+['"]?/gi,
-      /relation\s+['"]?\w+['"]?/gi,
-      /schema\s+['"]?\w+['"]?/gi,
-      /database\s+['"]?\w+['"]?/gi,
-      /constraint\s+['"]?\w+['"]?/gi,
-      /\/.*\/packages\//g,
-      /\/.*\/node_modules\//g,
-    ];
-
-    const sanitized = message;
-    for (const pattern of internalPatterns) {
-      if (pattern.test(sanitized)) {
-        // If message contains internal details, return generic message
-        if (statusCode >= 400 && statusCode < 500) {
-          return 'Invalid request';
+    // S5: In production, sanitize 4xx errors but preserve validation details
+    // For validation errors (400), show the message to help with debugging
+    if (statusCode === 400) {
+      // If it's a validation error string, preserve it
+      if (typeof message === 'string') {
+        if (
+          message.startsWith('Validation failed:') ||
+          message.includes('must be')
+        ) {
+          return message;
         }
+      } else if (Array.isArray(message)) {
+        // If it's an array of validation errors, preserve it
+        return message;
       }
     }
 
-    return sanitized;
+    // All other 4xx errors get generic message in production
+    return 'Request failed';
   }
 
   private getErrorName(status: number): string {

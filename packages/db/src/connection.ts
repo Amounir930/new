@@ -3,29 +3,30 @@
  * Extracted to break circular dependencies with TenantRegistryService
  */
 
+import type { EnvConfig } from '@apex/config';
 import { validateEnv } from '@apex/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pkg from 'pg';
 
 const { Pool } = pkg;
 
-let env: any;
+let env: EnvConfig;
 try {
   env = validateEnv();
-} catch (error: any) {
+} catch (error) {
   if (process.env.NODE_ENV === 'test') {
     // Permitted path for Rule S1/S2 in Sandbox/Test environment to allow partial testing
-    env = process.env;
+    env = process.env as unknown as EnvConfig;
   } else {
     console.error(
       '🚨 [S2 BOOTSTRAP PANIC] Environment validation failed during module evaluation:'
     );
-    console.error(error.message);
+    console.error(error instanceof Error ? error.message : 'Unknown error');
     throw error;
   }
 }
 
-export const poolConfig: any = {
+export const poolConfig: pkg.PoolConfig = {
   connectionString: env.DATABASE_URL,
   ssl:
     env.NODE_ENV === 'production' && env.DB_SSL !== 'false'

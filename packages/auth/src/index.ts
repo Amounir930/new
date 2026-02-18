@@ -17,6 +17,8 @@ export * from './auth.module.js';
 export * from './auth.service.js';
 export * from './decorators/current-user.decorator.js';
 export * from './decorators/public.decorator.js';
+export * from './guards/super-admin.guard.js';
+export * from './guards/tenant-jwt-match.guard.js';
 export * from './strategies/jwt.strategy.js';
 export type { TenantContext };
 

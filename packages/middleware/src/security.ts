@@ -106,7 +106,7 @@ export const defaultCorsConfig: CorsConfig = {
     // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
 
-    // Standard development origins (only these are allowed in dev)
+    // Standard development origins
     const devOrigins = [
       'http://localhost:3000',
       'http://localhost:3001',
@@ -118,31 +118,38 @@ export const defaultCorsConfig: CorsConfig = {
 
     // Production origins (explicitly whitelisted)
     const productionOrigins = [
-      'https://super-admin.60sec.shop',
+      'https://super-admin.60sec.shop', // ✅ Added Super Admin UI
       'https://admin.60sec.shop',
       'https://staging.60sec.shop',
+      'https://api.60sec.shop',
     ];
 
-    // Load additional origins from env
+    // Load additional origins from env and trim whitespace
     const allowedOrigins =
-      process.env.ALLOWED_ORIGINS?.split(',').filter(Boolean) || [];
+      process.env.ALLOWED_ORIGINS?.split(',')
+        .map((o) => o.trim())
+        .filter(Boolean) || [];
+
     const whitelist = [...devOrigins, ...productionOrigins, ...allowedOrigins];
 
-    // CRITICAL FIX (S8): Even in development, only allow whitelisted origins
-    // This prevents accidental open CORS if NODE_ENV is misconfigured
+    // S8: Strict CORS Check
     if (whitelist.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(`S8: CORS blocked request from origin: ${origin}`);
+      console.warn(
+        `[Security] S8 Violation: CORS blocked request from origin: ${origin}`
+      );
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Added OPTIONS for preflight
   allowedHeaders: [
     'Content-Type',
     'Authorization',
     'X-Request-ID',
     'X-Tenant-ID',
+    'Origin',
+    'Accept',
   ],
   exposedHeaders: [
     'X-RateLimit-Limit',

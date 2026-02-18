@@ -82,37 +82,23 @@ export async function createStorageBucket(
   const client = injectedClient || getMinioClient();
 
   try {
-    const exists = await client.bucketExists(bucketName);
-    if (exists) {
-      throw new Error('Bucket already exists');
+    // Retry logic for S15 Race Condition mitigation
+    let attempts = 0;
+    const maxAttempts = 3;
+    while (attempts < maxAttempts) {
+      try {
+        await ensureBucket(client, bucketName);
+        break;
+      } catch (err: any) {
+        attempts++;
+        if (attempts >= maxAttempts) throw err;
+        // Wait 1s before retry
+        await new Promise((r) => setTimeout(r, 1000));
+      }
     }
 
-    await client.makeBucket(bucketName, env.MINIO_REGION || 'us-east-1');
-
-    // Enable versioning for audit trail
-    await client.setBucketVersioning(bucketName, { Status: 'Enabled' });
-
-    // Set bucket policy based on plan - public read for /public/* paths
-    const policy = await getPublicReadPolicy(bucketName);
-    await client.setBucketPolicy(bucketName, JSON.stringify(policy));
-
-    // Set bucket tagging with plan info
-    await client.setBucketTagging(bucketName, {
-      plan,
-      tenant: subdomain,
-    } as any);
-
-    // Create folder structure
-    await client.putObject(
-      bucketName,
-      'public/products/.keep',
-      Buffer.from('')
-    );
-    await client.putObject(
-      bucketName,
-      'private/exports/.keep',
-      Buffer.from('')
-    );
+    // Setup bucket attributes and structure (Extracted to reduce complexity)
+    await setupBucket(client, bucketName, plan, subdomain);
 
     const duration = Date.now() - start;
 
@@ -139,6 +125,62 @@ export async function createStorageBucket(
         error instanceof Error ? error.message : 'Unknown error'
       }`
     );
+  }
+}
+
+/**
+ * Internal helper for bucket initialization
+ */
+async function setupBucket(
+  client: Minio.Client,
+  bucketName: string,
+  plan: string,
+  subdomain: string
+): Promise<void> {
+  // 1. Enable versioning for audit trail
+  await client.setBucketVersioning(bucketName, { Status: 'Enabled' });
+
+  // 2. Set bucket policy based on plan - public read for /public/* paths
+  const policy = await getPublicReadPolicy(bucketName);
+  await client.setBucketPolicy(bucketName, JSON.stringify(policy));
+
+  // 3. Set bucket tagging with plan info
+  await client.setBucketTagging(bucketName, {
+    plan,
+    tenant: subdomain,
+  } as any);
+
+  // 4. Create folder structure
+  await client.putObject(bucketName, 'public/products/.keep', Buffer.from(''));
+  await client.putObject(bucketName, 'private/exports/.keep', Buffer.from(''));
+}
+
+/**
+ * Ensures bucket exists
+ */
+async function ensureBucket(
+  client: Minio.Client,
+  bucketName: string
+): Promise<void> {
+  const exists = await client.bucketExists(bucketName);
+  if (exists) {
+    logger.info(`Bucket ${bucketName} already exists. Skipping creation.`);
+    return;
+  }
+
+  try {
+    await client.makeBucket(bucketName, env.MINIO_REGION || 'us-east-1');
+  } catch (err: any) {
+    if (
+      err.code === 'BucketAlreadyOwnedByYou' ||
+      err.code === 'BucketAlreadyExists'
+    ) {
+      logger.info(
+        `Bucket ${bucketName} already exists (caught error). Skipping creation.`
+      );
+    } else {
+      throw err;
+    }
   }
 }
 

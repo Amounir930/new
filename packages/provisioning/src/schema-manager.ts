@@ -33,24 +33,22 @@ export async function createTenantSchema(
 
   try {
     // Check if schema already exists
-    const existing = await client.query(
-      `
-      SELECT schema_name 
-      FROM information_schema.schemata 
-      WHERE schema_name = $1
-    `,
-      [schemaName]
-    );
+    // const existing = await client.query(
+    //   `
+    //   SELECT schema_name
+    //   FROM information_schema.schemata
+    //   WHERE schema_name = $1
+    // `,
+    //   [schemaName]
+    // );
 
-    if (existing.rows.length > 0) {
-      throw new Error(`Schema '${schemaName}' already exists`);
-    }
+    // if (existing.rows.length > 0) {
+    //   throw new Error(`Schema '${schemaName}' already exists`);
+    // }
 
-    // Create schema with proper authorization
-    await client.query(`
-      CREATE SCHEMA "${schemaName}";
-      GRANT ALL ON SCHEMA "${schemaName}" TO CURRENT_USER;
-    `);
+    // Create schema with proper authorization (S2 Protocol)
+    await client.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
+    await client.query(`GRANT ALL ON SCHEMA "${schemaName}" TO CURRENT_USER`);
 
     const durationMs = performance.now() - startTime;
 

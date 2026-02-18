@@ -3,11 +3,14 @@
  * The 60-Second Store Provisoning Engine
  */
 
+export { validateBlueprint } from './blueprint/executor.js'; // Explicit export
+export * from './blueprint/types.js'; // Export types for BlueprintTemplate
 export * from './blueprint.js';
 export * from './quota-service.js';
 export * from './runner.js';
 export * from './schema-manager.js';
 export * from './seeder.js';
+export { SnapshotManager } from './snapshot-manager.js';
 export * from './storage-manager.js';
 export * from './tenant-overview.js';
 

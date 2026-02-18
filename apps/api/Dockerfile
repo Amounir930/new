@@ -28,7 +28,7 @@ RUN bun install
 
 # 🧪 S4: Copy source and build
 COPY . .
-RUN bun run build -- --concurrency=1
+RUN bun run build --filter=@apex/api
 
 # ═══════════════════════════════════════════════════════════════
 # 🚀 Production Stage (Hardened)

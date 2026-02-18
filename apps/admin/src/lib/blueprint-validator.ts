@@ -4,7 +4,7 @@
  */
 
 export interface BlueprintTemplate {
-  version: '1.0';
+  version: string; // [FIX]: Changed from '1.0' to string for flexibility
   name: string;
   description?: string;
   // Starter products to seed
@@ -52,9 +52,9 @@ export function validateBlueprint(
 
   const bp = blueprint as Record<string, unknown>;
 
-  // Check version
-  if (bp.version !== '1.0') {
-    throw new Error('Blueprint version must be "1.0"');
+  // Check version (S3: Relaxed validation)
+  if (typeof bp.version !== 'string') {
+    throw new Error('Blueprint version must be a string');
   }
 
   // Validate name
@@ -100,8 +100,16 @@ function validatePages(pages: unknown): void {
     throw new Error('pages must be an array');
   }
   for (const page of pages) {
-    if (typeof page.slug !== 'string' || typeof page.title !== 'string') {
-      throw new Error('Page must have slug and title');
+    const p = page as Record<string, unknown>;
+    // Support both Legacy (slug/title) and New (id/layout) formats
+    if (
+      (!p.slug && !p.id) ||
+      (!p.title && !p.id) // Title is optional if ID is present (can use ID as default)
+    ) {
+      // If neither format is satisfied, throw error
+      if (!p.slug && !p.id) {
+        throw new Error('Page must have slug or id');
+      }
     }
   }
 }

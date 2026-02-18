@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { apiFetch } from '@/lib/api';
+import { ProvisionModal } from './ProvisionModal';
 
 interface Tenant {
   id: string;
@@ -27,6 +28,7 @@ export function TenantList() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
 
   const fetchTenants = useCallback(async () => {
     try {
@@ -56,11 +58,16 @@ export function TenantList() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>System Tenants</CardTitle>
-        <Button disabled>
+        <Button onClick={() => setIsProvisionModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Provision New
         </Button>
       </CardHeader>
       <CardContent>
+        <ProvisionModal
+          open={isProvisionModalOpen}
+          onOpenChange={setIsProvisionModalOpen}
+          onSuccess={fetchTenants}
+        />
         <Table>
           <TableHeader>
             <TableRow>

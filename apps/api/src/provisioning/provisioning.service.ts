@@ -27,6 +27,14 @@ export interface ProvisioningOptions {
   adminEmail: string;
   storeName: string;
   plan: 'free' | 'basic' | 'pro' | 'enterprise';
+  nicheType?: string; // S2.5: Industry classification
+  uiConfig?: Record<string, unknown>; // S2.5: SDUI/Theme configuration
+  blueprint?: unknown; // S3: Custom blueprint payload
+}
+
+interface ProvisioningStep {
+  name: string;
+  status: 'pending' | 'done' | 'failed';
 }
 
 @Injectable()
@@ -47,7 +55,7 @@ export class ProvisioningService {
     this.logger.log(`Starting provisioning for: ${options.subdomain}`);
 
     // Track steps for rollback if needed
-    const steps: { name: string; status: 'pending' | 'done' | 'failed' }[] = [
+    const steps: ProvisioningStep[] = [
       { name: 'schema_creation', status: 'pending' },
       { name: 'migrations', status: 'pending' },
       { name: 'bucket_creation', status: 'pending' },
@@ -73,6 +81,9 @@ export class ProvisioningService {
         adminEmail: options.adminEmail,
         storeName: options.storeName,
         plan: options.plan,
+        nicheType: options.nicheType, // S2.5: Priority niche
+        uiConfig: options.uiConfig, // S2.5: Priority UI Config
+        blueprint: options.blueprint, // S3: Pass custom blueprint
       });
       steps[3].status = 'done';
 
@@ -107,6 +118,18 @@ export class ProvisioningService {
     } catch (error) {
       this.logger.error(`PROVISIONING FAILED for ${options.subdomain}`, error);
 
+      // S4: Log Failure in Audit Registry
+      await this.audit.log({
+        action: 'STORE_PROVISIONING_FAILED',
+        entityType: 'STORE',
+        entityId: options.subdomain,
+        metadata: {
+          error: error instanceof Error ? error.message : 'Unknown',
+          steps,
+          plan: options.plan,
+        },
+      });
+
       // Trigger Rollback Logic
       await this.rollback(options.subdomain, steps);
 
@@ -127,11 +150,24 @@ export class ProvisioningService {
    */
   private async registerTenant(options: ProvisioningOptions, _adminId: string) {
     try {
+      // Idempotency Check: Don't fail if already registered (e.g. retry)
+      const exists = await this.tenantRegistry.existsBySubdomain(
+        options.subdomain
+      );
+      if (exists) {
+        this.logger.log(
+          `Tenant ${options.subdomain} already registered. Skipping registry insert.`
+        );
+        return;
+      }
+
       await this.tenantRegistry.register({
         subdomain: options.subdomain,
         name: options.storeName,
         plan: options.plan,
         status: 'active',
+        nicheType: options.nicheType, // S2.5: Persist niche
+        uiConfig: options.uiConfig, // S2.5: Persist SDUI settings
       });
     } catch (error) {
       this.logger.error(
@@ -145,7 +181,7 @@ export class ProvisioningService {
   /**
    * Rollback partially created resources on failure
    */
-  private async rollback(subdomain: string, steps: any[]) {
+  private async rollback(subdomain: string, steps: ProvisioningStep[]) {
     this.logger.warn(`ROLLING BACK provisioning for ${subdomain}`);
 
     // Reverse order cleanup
@@ -162,6 +198,21 @@ export class ProvisioningService {
 
     // In a real implementation, we would also:
     // 1. Delete the MinIO bucket
+    if (
+      steps.find((s) => s.name === 'bucket_creation' && s.status === 'done')
+    ) {
+      try {
+        await import('@apex/provisioning').then((m) =>
+          m.deleteStorageBucket(subdomain, true)
+        );
+        this.logger.log(`Rollback: Deleted storage bucket for ${subdomain}`);
+      } catch (e) {
+        this.logger.error(
+          `Rollback FAILED to delete bucket for ${subdomain}`,
+          e
+        );
+      }
+    }
     // 2. Log the failure in audit
   }
 }

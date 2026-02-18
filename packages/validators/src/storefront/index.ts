@@ -4,6 +4,7 @@
  * All Zod schemas for template data contracts.
  */
 
+export * from './blueprint.schema';
 export * from './cart.schema';
 export * from './category.schema';
 export * from './customer.schema';

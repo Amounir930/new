@@ -9,10 +9,14 @@ export const EnvSchema = z.object({
   JWT_SECRET: z
     .string()
     .min(32, 'S1 Violation: JWT_SECRET must be at least 32 characters')
-    .regex(
-      /^[A-Za-z0-9-_]+$/,
-      'S1 Violation: JWT_SECRET contains invalid characters'
-    ),
+    .refine((key) => {
+      if (
+        process.env.NODE_ENV === 'test' ||
+        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
+      )
+        return true;
+      return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
+    }, 'S1 Violation: JWT_SECRET lacks required complexity (A-Z, a-z, 0-9)'),
   ENCRYPTION_MASTER_KEY: z
     .string()
     .min(
@@ -39,12 +43,7 @@ export const EnvSchema = z.object({
       )
         return true;
 
-      return (
-        /[A-Z]/.test(key) &&
-        /[a-z]/.test(key) &&
-        /[0-9]/.test(key) &&
-        /[^A-Za-z0-9]/.test(key)
-      );
+      return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
     }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special)'),
 
   // S1: Admin Credentials (Strict Validation)

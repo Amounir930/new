@@ -1,10 +1,12 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
 import { onboardingBlueprints } from '@apex/db';
-import { validateBlueprint } from '@apex/provisioning';
+import type { BlueprintRecord, BlueprintTemplate } from '@apex/provisioning';
+import { SnapshotManager, validateBlueprint } from '@apex/provisioning';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { Pool } from 'pg';
 import type {
   CreateBlueprintDto,
   UpdateBlueprintDto,
@@ -12,24 +14,26 @@ import type {
 
 @Injectable()
 export class BlueprintsService {
-  private db: NodePgDatabase;
+  private db: NodePgDatabase<Record<string, unknown>>;
 
   constructor(
-    @Inject('DATABASE_POOL') private readonly pool: any,
+    @Inject('DATABASE_POOL') private readonly pool: Pool,
     private readonly audit: AuditService
   ) {
     this.db = drizzle(this.pool);
   }
 
-  async findAll() {
-    return this.db.select().from(onboardingBlueprints);
+  async findAll(): Promise<BlueprintRecord[]> {
+    return (await this.db
+      .select()
+      .from(onboardingBlueprints)) as BlueprintRecord[];
   }
 
-  async findOne(id: string) {
-    const [blueprint] = await this.db
+  async findOne(id: string): Promise<BlueprintRecord> {
+    const [blueprint] = (await this.db
       .select()
       .from(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.id, id));
+      .where(eq(onboardingBlueprints.id, id))) as BlueprintRecord[];
 
     if (!blueprint) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
@@ -37,36 +41,36 @@ export class BlueprintsService {
     return blueprint;
   }
 
-  async create(userId: string, dto: CreateBlueprintDto) {
-    // S3: Validate JSON structure
-    let parsed: any;
-    try {
-      parsed = JSON.parse(dto.blueprint);
-    } catch (_e) {
-      throw new Error('Invalid JSON in blueprint');
-    }
+  async create(
+    userId: string,
+    dto: CreateBlueprintDto
+  ): Promise<BlueprintRecord> {
+    const blueprintData = dto.blueprint as BlueprintTemplate;
 
     try {
-      validateBlueprint(parsed);
-    } catch (e: any) {
-      throw new Error(`Invalid blueprint structure: ${e.message}`);
+      validateBlueprint(blueprintData);
+    } catch (e) {
+      throw new Error(
+        `Invalid blueprint structure: ${e instanceof Error ? e.message : 'Unknown error'}`
+      );
     }
 
-    const [newBlueprint] = await this.db
+    const [newBlueprint] = (await this.db
       .insert(onboardingBlueprints)
       .values({
         name: dto.name,
-        description: dto.description,
+        description: dto.description || null,
         plan: dto.plan,
-        isDefault: dto.isDefault ? 'true' : 'false', // DB stores boolean as text 'true'/'false' based on schema definition? schema says string default 'false'
-        blueprint: dto.blueprint,
+        nicheType: dto.nicheType ?? null,
+        uiConfig: dto.uiConfig || {},
+        isDefault: dto.isDefault,
+        blueprint: blueprintData,
       })
-      .returning();
+      .returning()) as BlueprintRecord[];
 
-    // S4: Audit Log
     this.audit.log({
       userId,
-      tenantId: 'system', // Blueprints are system-wide
+      tenantId: 'system',
       action: 'BLUEPRINT_CREATED',
       entityType: 'onboarding_blueprints',
       entityId: newBlueprint.id,
@@ -76,44 +80,38 @@ export class BlueprintsService {
     return newBlueprint;
   }
 
-  async update(userId: string, id: string, dto: UpdateBlueprintDto) {
+  async update(
+    userId: string,
+    id: string,
+    dto: UpdateBlueprintDto
+  ): Promise<BlueprintRecord> {
     if (dto.blueprint) {
-      let parsed: any;
       try {
-        // If it's a string, parse it. If it's already an object (from DTO validation), use it.
-        // DTO says string, so parse.
-        parsed = JSON.parse(dto.blueprint);
-      } catch {
-        throw new Error('Invalid JSON in blueprint');
-      }
-
-      try {
-        validateBlueprint(parsed);
-      } catch (e: any) {
-        throw new Error(`Invalid blueprint structure: ${e.message}`);
+        validateBlueprint(dto.blueprint as BlueprintTemplate);
+      } catch (e) {
+        throw new Error(
+          `Invalid blueprint structure: ${e instanceof Error ? e.message : 'Unknown error'}`
+        );
       }
     }
 
-    const [updatedBlueprint] = await this.db
+    const [updatedBlueprint] = (await this.db
       .update(onboardingBlueprints)
       .set({
-        ...dto,
-        isDefault:
-          dto.isDefault !== undefined
-            ? dto.isDefault
-              ? 'true'
-              : 'false'
-            : undefined,
+        name: dto.name,
+        description: dto.description ?? undefined,
+        plan: dto.plan,
+        blueprint: dto.blueprint as BlueprintTemplate,
+        isDefault: dto.isDefault,
         updatedAt: new Date(),
       })
       .where(eq(onboardingBlueprints.id, id))
-      .returning();
+      .returning()) as BlueprintRecord[];
 
     if (!updatedBlueprint) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
     }
 
-    // S4: Audit Log
     this.audit.log({
       userId,
       tenantId: 'system',
@@ -126,17 +124,16 @@ export class BlueprintsService {
     return updatedBlueprint;
   }
 
-  async remove(userId: string, id: string) {
-    const [deleted] = await this.db
+  async remove(userId: string, id: string): Promise<BlueprintRecord> {
+    const [deleted] = (await this.db
       .delete(onboardingBlueprints)
       .where(eq(onboardingBlueprints.id, id))
-      .returning();
+      .returning()) as BlueprintRecord[];
 
     if (!deleted) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
     }
 
-    // S4: Audit Log
     this.audit.log({
       userId,
       tenantId: 'system',
@@ -147,5 +144,51 @@ export class BlueprintsService {
     });
 
     return deleted;
+  }
+
+  async snapshot(
+    userId: string,
+    subdomain: string,
+    name: string,
+    description?: string,
+    nicheType?: string
+  ): Promise<BlueprintRecord> {
+    try {
+      const manager = new SnapshotManager();
+      const template = await manager.createSnapshot(subdomain);
+
+      await this.db.execute(sql`SET search_path TO public`);
+
+      const [newBlueprint] = (await this.db
+        .insert(onboardingBlueprints)
+        .values({
+          name: name,
+          description: description || template.description || null,
+          plan: 'custom',
+          nicheType: nicheType || null,
+          isDefault: false,
+          blueprint: template as any as BlueprintTemplate, // Type bridge for snapshot
+        })
+        .returning()) as BlueprintRecord[];
+
+      await this.audit.log({
+        action: 'BLUEPRINT_SNAPSHOT',
+        entityType: 'BLUEPRINT',
+        entityId: newBlueprint.id,
+        userId: userId,
+        metadata: {
+          sourceSubdomain: subdomain,
+          snapshotName: name,
+        },
+      });
+
+      return newBlueprint;
+    } catch (error) {
+      console.error(
+        `[BlueprintsService] Snapshot FAILED for ${subdomain}:`,
+        error
+      );
+      throw error;
+    }
   }
 }
