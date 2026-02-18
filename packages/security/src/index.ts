@@ -41,3 +41,5 @@ export {
   VaultIntegration,
   verifySecret,
 } from './secrets/index.js';
+
+export { SecurityModule } from './security.module.js';

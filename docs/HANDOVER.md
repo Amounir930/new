@@ -18,36 +18,44 @@ The following records are configured at the registrar:
 | **A** | `api` | `34.102.121.225` | API Endpoint (`api.60sec.shop`) |
 | **A** | `*` | `34.102.121.225` | Wildcard Tenants (`*.60sec.shop`) |
 | **A** | `super-admin`| `34.102.121.225` | Administration UI |
-| **A** | `www` | `34.102.121.225` | WWW Redirect |
+| **A** | `git` | `34.102.121.225` | **Gitea Fortress** (Source Code) |
 
-## 🚀 Deployment Methodology
-We use an **Artifact-Driven Deployment** strategy. The system builds the code into compiled JavaScript before execution to ensure stability and proper metadata handling.
+## 🚀 Deployment Methodology (DevSecOps)
+We use a **Local-First, Artifact-Driven** strategy. 
+> **CRITICAL:** The server NEVER builds code (`tsc`, `turbo`). It only executes pre-built Docker images.
 
-### ⚠️ Safe Command Usage (Crucial)
-Always run `docker compose` commands from the project root or explicitly include the `.env` file to avoid loading blank variables. 
+### 🔄 The Workflow
+1. **Local:** `bun run build` (Validated by Husky)
+2. **Push:** `git push origin main` (To Gitea Fortress)
+3. **Deploy:** Webhook triggers `deploy_feature_fixes.sh`
 
-**Correct Way:**
+### 💻 Gitea Fortress Access
+- **URL:** `https://git.60sec.shop`
+- **SSH Port:** `2222`
+- **User:** `apex-admin` (Credential in Vault)
+
+### ⚠️ Safe Command Usage
+**Correct Way (Server-Side):**
 ```bash
-cd /opt/apex-v2 && sudo docker compose --env-file .env -f ops/docker-compose.prod.yml ps
+cd /opt/apex-v2 
+# Pull changes & restart modified containers only
+git pull
+sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --build --no-deps api admin
 ```
 
-### Redeploy Command:
-Run from the local root directory:
-```bash
-ssh -i ops/keys/apex-deploy -o StrictHostKeyChecking=no deploy@34.102.121.225 "cd /opt/apex-v2 && git reset --hard && git pull && sudo docker build -t ghcr.io/amounir930/adel/api:latest -f apps/api/Dockerfile . && sudo docker build -t ghcr.io/amounir930/adel/admin:latest -f apps/admin/Dockerfile . && sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --force-recreate traefik api admin"
-```
-
-## 🔐 Security Protocols (S1-S8)
+## 🔐 Security Protocols (S1-S15)
 The system is strictly hardened according to Apex v2 security standards:
 - **S1/S7:** High-entropy encryption keys with strict complexity regex.
 - **S3/S14:** Secure data export with SQL injection protection.
 - **S8:** Hardened security headers via Traefik & Helmet.
 - **S2:** Deep tenant isolation via PostgreSQL schema resolution.
+- **S9/S10:** Supply Chain & Secret Scanning via Husky Gatekeeper.
+- **S15:** Active Defense & Surgical Sync.
 
 ## 🛠️ Management & Monitoring
-- **View Logs:** `sudo docker logs -f ops-api-1`
+- **View Logs:** `sudo docker logs -f apex-api`
 - **Resource Usage:** `sudo docker stats`
 - **Restart Services:** `sudo docker compose -f ops/docker-compose.prod.yml restart`
 
 ---
-*Documented on 2026-02-13* 🍏🚀✨🏁
+*Documented on 2026-02-18* 🛡️🚀✨🏁
