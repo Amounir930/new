@@ -10,16 +10,18 @@ import {
   jsonb,
   boolean as pgBoolean,
   pgPolicy,
-  pgTable,
+  pgSchema,
   text,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
 
+export const publicSchema = pgSchema('public');
+
 /**
  * S2: Tenant Registry (Global)
  */
-export const tenants = pgTable('tenants', {
+export const tenants = publicSchema.table('tenants', {
   id: uuid('id').defaultRandom().primaryKey(),
   subdomain: text('subdomain').notNull().unique(),
   name: text('name').notNull(),
@@ -42,23 +44,26 @@ export type Tenant = InferSelectModel<typeof tenants>;
 /**
  * Super-#21: Onboarding Blueprint Editor
  */
-export const onboardingBlueprints = pgTable('onboarding_blueprints', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
-  description: text('description'),
-  blueprint: jsonb('blueprint').notNull(),
-  isDefault: pgBoolean('is_default').notNull().default(false),
-  plan: text('plan').notNull().default('free'),
-  nicheType: text('niche_type'),
-  uiConfig: jsonb('ui_config').default({}),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+export const onboardingBlueprints = publicSchema.table(
+  'onboarding_blueprints',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    description: text('description'),
+    blueprint: jsonb('blueprint').notNull(),
+    isDefault: pgBoolean('is_default').notNull().default(false),
+    plan: text('plan').notNull().default('free'),
+    nicheType: text('niche_type'),
+    uiConfig: jsonb('ui_config').default({}),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  }
+);
 
 /**
  * S4: Audit Logs (Immutable, Global)
  */
-export const auditLogs = pgTable(
+export const auditLogs = publicSchema.table(
   'audit_logs',
   {
     id: uuid('id').defaultRandom().primaryKey(),

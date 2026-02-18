@@ -87,6 +87,11 @@ export class ProvisioningService {
       });
       steps[3].status = 'done';
 
+      // 4.5 Reset search_path to public to ensure registerTenant can see the registry
+      const { publicDb } = await import('@apex/db');
+      const { sql } = await import('drizzle-orm');
+      await publicDb.execute(sql`SET search_path TO public`);
+
       const durationMs = Date.now() - startTime;
 
       // 5. Register in Public Schema (Cross-tenant registration)

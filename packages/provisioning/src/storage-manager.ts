@@ -192,15 +192,16 @@ export async function deleteStorageBucket(
   const client = getMinioClient();
 
   try {
-    const exists = await client.bucketExists(bucketName);
-    if (!exists) {
-      return false;
-    }
+    if (force) {
+      const objectsList: string[] = [];
+      const stream = client.listObjects(bucketName, '', true);
+      for await (const obj of stream) {
+        if (obj.name) objectsList.push(obj.name);
+      }
 
-    if (!force) {
-      const objects = await client.listObjects(bucketName, '', true).toArray();
-      if (objects.length > 0) {
-        throw new Error('Bucket not empty. Use force=true to delete anyway.');
+      if (objectsList.length > 0) {
+        await client.removeObjects(bucketName, objectsList);
+        logger.info(`Cleared ${objectsList.length} objects from ${bucketName}`);
       }
     }
 

@@ -105,9 +105,16 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
     if (
       !subdomain ||
-      ['api', 'super-admin', 'www', 'staging', 'blue', 'green', 'git'].includes(
-        subdomain.toLowerCase()
-      )
+      [
+        'api',
+        'super-admin',
+        'www',
+        'staging',
+        'blue',
+        'green',
+        'git',
+        'admin',
+      ].includes(subdomain.toLowerCase())
     ) {
       // Allow root domain and system subdomains
       return next();

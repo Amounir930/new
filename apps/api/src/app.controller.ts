@@ -10,4 +10,13 @@ export class AppController {
       timestamp: new Date().toISOString(),
     };
   }
+
+  @Get('robots.txt')
+  robots() {
+    return `User-agent: *
+Disallow: /
+# S11: Bot Defense Active
+User-agent: GPTBot
+Disallow: /`;
+  }
 }

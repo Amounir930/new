@@ -91,7 +91,7 @@ async function bootstrap() {
 
   // Prefix all routes with /api, but exclude the root path
   app.setGlobalPrefix('api', {
-    exclude: ['/'],
+    exclude: ['/', '/robots.txt'],
   });
 
   // ═══════════════════════════════════════════════════════════════
