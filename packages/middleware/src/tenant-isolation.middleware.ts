@@ -118,7 +118,9 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         'mail',
       ].includes(subdomain.toLowerCase())
     ) {
-      // Allow root domain and system subdomains immediately
+      // S2 FIX: Infrastructure subdomains must explicitly set search_path to public
+      // to resolve "Table not found" errors when connections are reused.
+      await publicDb.execute(sql`SET search_path TO public`);
       return next();
     }
 
@@ -139,11 +141,13 @@ export class TenantIsolationMiddleware implements NestMiddleware {
           currentPath === route ||
           currentPath.startsWith(`${route}/`) ||
           currentPath.startsWith(`${route}?`) ||
-          // Support versioned paths if they aren't already covered
           currentPath.includes(`/v1${route}`) ||
           currentPath.includes(`/api/v1${route}`)
       )
     ) {
+      // S2 FIX: Even bypassed routes must ensure we are in public schema
+      // This prevents "dirty" connections from previous tenant requests.
+      await publicDb.execute(sql`SET search_path TO public`);
       return next();
     }
 
