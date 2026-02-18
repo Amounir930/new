@@ -92,7 +92,7 @@ for (const file of controllers) {
 // Simple patterns for common secrets
 const SECRET_PATTERNS = [
     { name: 'AWS Key', regex: /AKIA[0-9A-Z]{16}/ },
-    { name: 'Private Key', regex: /-----BEGIN PRIVATE KEY-----/ },
+    { name: 'Private Key', regex: /-----BEGIN PRIVATE KEY-----/ }, // gitleaks:allow
     { name: 'Generic Secret', regex: /['"][A-Za-z0-9+/]{40,}['"]/ }, // 40+ chars base64-ish string in quotes
     { name: 'Hardcoded Password', regex: /password\s*=\s*['"][^'"]{8,}['"]/i } // simplistic
 ];
@@ -101,13 +101,17 @@ for (const file of stagedFiles) {
     if (file.includes('test.ts') || file.includes('spec.ts') || file.includes('mock')) continue; // Skip tests/mocks
 
     const content = readFileSync(file, 'utf-8');
+    const lines = content.split('\n');
 
     for (const pattern of SECRET_PATTERNS) {
-        if (pattern.regex.test(content)) {
-            // Check if it's not a false positive (like a hash in a test or check)
-            // We skipped tests above.
-            // Check context?
-            report('S10', `Potential secret detected: ${pattern.name}`, file);
+        for (const line of lines) {
+            // S10 FIX: Allow explicit bypass via comment
+            if (line.includes('gitleaks:allow')) continue;
+
+            if (pattern.regex.test(line)) {
+                report('S10', `Potential secret detected: ${pattern.name}`, file);
+                break; // One violation per pattern per file is enough for reporting
+            }
         }
     }
 }

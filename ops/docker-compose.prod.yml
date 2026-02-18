@@ -243,12 +243,48 @@ services:
     networks:
       - apex-network
 
+  # ═══════════════════════════════════════════════════════════════
+  # Gitea (The Fortress) - Self-hosted Git Server
+  # ═══════════════════════════════════════════════════════════════
+  gitea:
+    image: gitea/gitea:1.21-rootless
+    container_name: apex-gitea
+    restart: always
+    environment:
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=${POSTGRES_DB}
+      - GITEA__database__USER=${POSTGRES_USER}
+      - GITEA__database__PASSWD=${POSTGRES_PASSWORD}
+      - GITEA__server__DOMAIN=git.60sec.shop
+      - GITEA__server__SSH_PORT=2222
+      - GITEA__server__HTTP_PORT=3000
+    volumes:
+      - gitea_data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitea.rule=Host(`git.60sec.shop`)"
+      - "traefik.http.routers.gitea.entrypoints=websecure"
+      - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
+      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
   mailpit_data:
   letsencrypt_data:
+  gitea_data:
 
 networks:
   apex-network:

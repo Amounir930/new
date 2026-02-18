@@ -1,86 +1,85 @@
-# Dependencies
-node_modules/
-.pnp
-.pnp.js
+# ═══════════════════════════════════════════════════════════════
+# APEX Monorepo .gitignore (NestJS + Bun + Turbo)
+# S10 Compliance: Prevent sensitive file leaks
+# ═══════════════════════════════════════════════════════════════
 
-# Build outputs
+# ─── Dependencies ───
+node_modules/
+**/node_modules/
+
+# ─── Build Outputs ───
 dist/
+**/dist/
 .next/
 out/
 build/
 *.tsbuildinfo
-**/*.js
-**/*.js.map
-**/*.d.ts
-**/*.d.ts.map
-!**/*.d.ts # Keep manual d.ts if any exist in specific places
-# Actually, let's just ignore everything that shouldn't be there
-# If a specific package needs to keep some JS, we can unignore it there
-**/node_modules/
-**/dist/
+
+# ─── TSC Build Artifacts in Source Dirs ───
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map
+
+# ─── Coverage ───
+coverage/
 **/coverage/
+.nyc_output/
 
+# ─── Turbo ───
+.turbo/
 
-# Environment variables
+# ─── Environment Variables (S10 Critical) ───
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Logs
+# ─── Logs ───
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# Testing
-coverage/
-.nyc_output/
+# ─── SSH Keys & Secrets (S10 Critical) ───
+ops/keys/
+*.pem
+*.key
+id_rsa*
 
-# Turbo
-.turbo/
-
-# IDE
+# ─── IDE ───
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 
-# OS
+# ─── OS ───
 .DS_Store
 Thumbs.db
 
-# Embedded repos
-KIMI/
-
-# Docker volumes
+# ─── Docker Volumes ───
 postgres_data/
 redis_data/
 minio_data/
 mailpit_data/
 letsencrypt_data/
+gitea_data/
 
-# Temporary files
+# ─── Temporary Files ───
 *.tmp
 *.temp
 
-# Agent & Security Vaults
+# ─── Agent & Security Vaults ───
 .agent/
 .gemini/
 brain/
 *masterlist.md
 
-# Update/Codebase exports (contain full source with potential secrets)
+# ─── Codebase Exports (potential secrets) ───
 update/
 Apex_2026_*.txt
 Collect-Project.ps1
 
-# Local development files
-.env.s1.local
-.env.s1.local
-.env.test.local
-
-# SSH Keys
-ops/keys/
+# ─── Embedded repos ───
+KIMI/

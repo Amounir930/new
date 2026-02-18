@@ -1,4 +1,5 @@
-import type { EncryptionService } from '@apex/security';
+// biome-ignore lint/style/useImportType: Required for NestJS Dependency Injection
+import { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { publicDb } from './connection.js';
