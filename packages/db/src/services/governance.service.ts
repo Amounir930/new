@@ -142,6 +142,109 @@ export class GovernanceService {
     // Default: Feature is disabled unless explicitly enabled for plan or tenant
     return false;
   }
+
+  /**
+   * Get all enabled features for a tenant
+   */
+  async getEnabledFeatures(tenantId: string): Promise<string[]> {
+    const tenant = await db
+      .select({ plan: tenants.plan })
+      .from(tenants)
+      .where(eq(tenants.id, tenantId))
+      .then((res) => res[0]);
+
+    if (!tenant) return [];
+
+    const gates = await db
+      .select({
+        featureKey: featureGates.featureKey,
+        isEnabled: featureGates.isEnabled,
+        tenantId: featureGates.tenantId,
+      })
+      .from(featureGates)
+      .where(
+        or(
+          eq(featureGates.tenantId, tenantId),
+          eq(featureGates.planCode, tenant.plan)
+        )
+      );
+
+    // Filter and resolve overrides
+    const featureMap = new Map<string, boolean>();
+
+    for (const gate of gates) {
+      // Tenant-specific gates win over plan gates
+      if (!featureMap.has(gate.featureKey) || gate.tenantId === tenantId) {
+        featureMap.set(gate.featureKey, !!gate.isEnabled);
+      }
+    }
+
+    return Array.from(featureMap.entries())
+      .filter(([_, enabled]) => enabled)
+      .map(([key, _]) => key);
+  }
+
+  /**
+   * Get raw feature gate states (including overrides) for a tenant
+   */
+  async getTenantFeatureGates(tenantId: string) {
+    const tenant = await db
+      .select({ plan: tenants.plan })
+      .from(tenants)
+      .where(eq(tenants.id, tenantId))
+      .then((res) => res[0]);
+
+    if (!tenant) throw new Error('Tenant not found');
+
+    // Get all gates for this plan and this tenant
+    const gates = await db
+      .select()
+      .from(featureGates)
+      .where(
+        or(
+          eq(featureGates.planCode, tenant.plan),
+          eq(featureGates.tenantId, tenantId)
+        )
+      );
+
+    return gates;
+  }
+
+  /**
+   * Manually override a feature gate for a specific tenant
+   */
+  async updateTenantFeatureGate(
+    tenantId: string,
+    featureKey: string,
+    isEnabled: boolean
+  ) {
+    // Upsert logic for tenant-specific gate
+    const existing = await db
+      .select()
+      .from(featureGates)
+      .where(
+        and(
+          eq(featureGates.tenantId, tenantId),
+          eq(featureGates.featureKey, featureKey)
+        )
+      )
+      .then((res) => res[0]);
+
+    if (existing) {
+      await db
+        .update(featureGates)
+        .set({ isEnabled })
+        .where(eq(featureGates.id, existing.id));
+    } else {
+      await db.insert(featureGates).values({
+        tenantId,
+        featureKey,
+        isEnabled,
+      });
+    }
+
+    return { success: true, featureKey, isEnabled };
+  }
 }
 
 export const governanceService = new GovernanceService();

@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ const provisionSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Lowercase alphanumeric and hyphens only'),
   adminEmail: z.string().email('Invalid email address'),
   plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
+  blueprintId: z.string().optional(),
 });
 
 type ProvisionFormValues = z.infer<typeof provisionSchema>;
@@ -36,11 +37,13 @@ export function ProvisionModal({
 }: ProvisionModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [blueprints, setBlueprints] = useState<any[]>([]);
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ProvisionFormValues>({
     resolver: zodResolver(provisionSchema),
@@ -51,6 +54,28 @@ export function ProvisionModal({
       plan: 'free',
     },
   });
+
+  const selectedPlan = watch('plan');
+
+  useEffect(() => {
+    async function fetchBlueprints() {
+      try {
+        const data = await apiFetch('/v1/blueprints');
+        // Filter blueprints by selected plan if they exist
+        setBlueprints(Array.isArray(data) ? data : []);
+      } catch (e) {
+        console.error('Failed to fetch blueprints:', e);
+      }
+    }
+    if (open) {
+      fetchBlueprints();
+    }
+  }, [open]);
+
+  // Filter blueprints to match selected plan
+  const filteredBlueprints = blueprints.filter(
+    (b) => b.plan === selectedPlan && b.status !== 'paused'
+  );
 
   if (!open) return null;
 
@@ -164,6 +189,30 @@ export function ProvisionModal({
                 </p>
               )}
             </div>
+
+            {filteredBlueprints.length > 0 && (
+              <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                <Label htmlFor="blueprintId">
+                  Initial Template (Blueprint)
+                </Label>
+                <select
+                  id="blueprintId"
+                  {...register('blueprintId')}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">Default (Sector-based)</option>
+                  {filteredBlueprints.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} (v{b.version})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-muted-foreground text-[10px]">
+                  Override the default sector logic by picking a named
+                  blueprint.
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button

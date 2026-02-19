@@ -39,6 +39,7 @@ export interface ProvisioningOptions {
   nicheType?: string; // S2.5: Industry classification
   uiConfig?: Record<string, unknown>; // S2.5: SDUI/Theme configuration
   blueprint?: unknown; // S3: Custom blueprint payload
+  blueprintId?: string; // S21: Named blueprint ID
 }
 
 interface ProvisioningStep {
@@ -74,35 +75,9 @@ export class ProvisioningService {
     ];
 
     try {
-      // 0. S21: Resolve Blueprint if not provided
-      let effectiveBlueprint = options.blueprint;
-      if (!effectiveBlueprint) {
-        this.logger.log(
-          `Resolving blueprint for niche: ${options.nicheType}, plan: ${options.plan}`
-        );
-        const [dbBlueprint] = await publicDb
-          .select({
-            blueprint: onboardingBlueprints.blueprint,
-            status: onboardingBlueprints.status,
-          })
-          .from(onboardingBlueprints)
-          .where(
-            and(
-              eq(onboardingBlueprints.nicheType, options.nicheType || 'retail'),
-              eq(onboardingBlueprints.plan, options.plan)
-            )
-          )
-          .limit(1);
+      // 0. Blueprint Resolution Logic (S21 Priority)
+      const effectiveBlueprint = await this.resolveBlueprint(options);
 
-        if (dbBlueprint && dbBlueprint.status === 'paused') {
-          throw new ConflictException(
-            `Blueprint for ${options.nicheType || 'retail'}/${options.plan} is currently PAUSED and cannot be used for provisioning.`
-          );
-        }
-
-        effectiveBlueprint =
-          dbBlueprint?.blueprint || (await getDefaultBlueprint(options.plan));
-      }
       // 1. S2 Protocol: Create Isolated Database Schema
       await createTenantSchema(options.subdomain);
       steps[0].status = 'done';
@@ -133,7 +108,6 @@ export class ProvisioningService {
       await this.registerTenant(options, seedResult.adminId);
 
       // 6. S21 FIX: Sync Governance (Link Blueprint to Enforcement)
-      // Now that the tenant exists in the registry, we can link quotas and gates
       await this.syncGovernance(options.subdomain, effectiveBlueprint);
       steps[4].status = 'done';
 
@@ -188,6 +162,68 @@ export class ProvisioningService {
         }`
       );
     }
+  }
+
+  /**
+   * Resolve the active blueprint based on the current provision request (S21 Phase 6)
+   */
+  private async resolveBlueprint(options: ProvisioningOptions): Promise<any> {
+    if (options.blueprintId) {
+      this.logger.log(
+        `Fetching specific blueprint by ID: ${options.blueprintId}`
+      );
+      const [dbBlueprint] = await publicDb
+        .select({
+          blueprint: onboardingBlueprints.blueprint,
+          status: onboardingBlueprints.status,
+        })
+        .from(onboardingBlueprints)
+        .where(eq(onboardingBlueprints.id, options.blueprintId))
+        .limit(1);
+
+      if (!dbBlueprint) {
+        throw new ConflictException(
+          `Blueprint with ID ${options.blueprintId} not found.`
+        );
+      }
+
+      if (dbBlueprint.status === 'paused') {
+        throw new ConflictException(
+          `Selected blueprint is currently PAUSED and cannot be used for provisioning.`
+        );
+      }
+
+      return dbBlueprint.blueprint;
+    }
+
+    if (options.blueprint) {
+      return options.blueprint;
+    }
+
+    this.logger.log(
+      `Resolving default blueprint for niche: ${options.nicheType}, plan: ${options.plan}`
+    );
+    const [dbBlueprint] = await publicDb
+      .select({
+        blueprint: onboardingBlueprints.blueprint,
+        status: onboardingBlueprints.status,
+      })
+      .from(onboardingBlueprints)
+      .where(
+        and(
+          eq(onboardingBlueprints.nicheType, options.nicheType || 'retail'),
+          eq(onboardingBlueprints.plan, options.plan)
+        )
+      )
+      .limit(1);
+
+    if (dbBlueprint && dbBlueprint.status === 'paused') {
+      throw new ConflictException(
+        `Blueprint for ${options.nicheType || 'retail'}/${options.plan} is currently PAUSED and cannot be used for provisioning.`
+      );
+    }
+
+    return dbBlueprint?.blueprint || (await getDefaultBlueprint(options.plan));
   }
 
   /**

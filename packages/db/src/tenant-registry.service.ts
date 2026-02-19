@@ -231,4 +231,50 @@ export class TenantRegistryService {
       .limit(1);
     return !!tenant;
   }
+
+  /**
+   * Update tenant core properties (S21 Phase 8)
+   */
+  async update(
+    tenantId: string,
+    data: {
+      plan?: string;
+      name?: string;
+      status?: string;
+      nicheType?: string;
+    }
+  ): Promise<Tenant> {
+    const updateData: any = { ...data };
+
+    // S7: Encrypt nicheType if provided
+    if (data.nicheType) {
+      updateData.nicheType = this.encryption.encrypt(data.nicheType).encrypted;
+      // Note: In a real S7 scenario, we'd also store IV/Tag, but the current
+      // register/decrypt implementation seems to favor a simpler approach
+      // or assumes specific storage patterns.
+      // Looking at decryptNicheType, it tries to JSON.parse(Buffer.from(nicheType, 'base64').toString()).
+      // This means the 'ciphertext' stored in nicheType is actually a base64 encoded JSON of {encrypted, iv, tag, salt}.
+
+      const securedNiche = this.encryption.encrypt(data.nicheType);
+      updateData.nicheType = Buffer.from(JSON.stringify(securedNiche)).toString(
+        'base64'
+      );
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      const tenant = await this.getByIdentifier(tenantId);
+      if (!tenant) throw new Error('Tenant not found');
+      return tenant;
+    }
+
+    await publicDb
+      .update(tenants)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(tenants.id, tenantId));
+
+    const updated = await this.getByIdentifier(tenantId);
+    if (!updated) throw new Error('Tenant not found after update');
+
+    return updated;
+  }
 }

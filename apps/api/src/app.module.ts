@@ -9,6 +9,8 @@ import {
   ActiveDefenseMiddleware,
   BotProtectionMiddleware,
   FingerprintMiddleware,
+  GovernanceGuard,
+  QuotaInterceptor,
   RateLimitModule,
   TenantIsolationMiddleware,
 } from '@apex/middleware';
@@ -19,7 +21,7 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
@@ -50,6 +52,14 @@ import { TenantsModule } from './tenants/tenants.module.js';
     AuditModule,
   ],
   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: GovernanceGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: QuotaInterceptor,
+    },
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,

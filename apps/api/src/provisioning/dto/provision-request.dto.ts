@@ -66,6 +66,12 @@ export const ProvisionRequestSchema = z.object({
    * Allows passing a custom blueprint JSON directly in the provision request.
    */
   blueprint: z.unknown().optional(),
+
+  /**
+   * Optional named blueprint ID (e.g., from Blueprints table)
+   * S21: Allows linking specific predefined blueprints to new tenants.
+   */
+  blueprintId: z.string().uuid().optional(),
 });
 
 export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) {}

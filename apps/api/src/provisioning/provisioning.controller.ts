@@ -58,6 +58,7 @@ export class ProvisioningController {
       nicheType: dto.nicheType,
       uiConfig: dto.uiConfig,
       blueprint: dto.blueprint as unknown, // S3: Inject custom blueprint
+      blueprintId: dto.blueprintId, // S21: Pass specific blueprint ID
     });
 
     // 3. Return activation payload

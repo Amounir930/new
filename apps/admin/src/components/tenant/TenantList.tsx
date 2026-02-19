@@ -1,6 +1,6 @@
 'use client';
 
-import { Globe, Loader2, Plus } from 'lucide-react';
+import { Globe, Loader2, Plus, Shield } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { apiFetch } from '@/lib/api';
 import { ProvisionModal } from './ProvisionModal';
+import { TenantGovernanceModal } from './TenantGovernanceModal';
 
 interface Tenant {
   id: string;
@@ -21,6 +22,7 @@ interface Tenant {
   name: string;
   plan: string;
   status: string;
+  nicheType: string;
   createdAt: string;
 }
 
@@ -29,6 +31,23 @@ export function TenantList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
+  const [governanceTenant, setGovernanceTenant] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const PLANS = ['free', 'basic', 'pro', 'enterprise'];
+  const STATUSES = ['active', 'paused', 'suspended'];
+  const NICHES = [
+    'retail',
+    'wellness',
+    'education',
+    'services',
+    'hospitality',
+    'real-estate',
+    'creative',
+  ];
 
   const fetchTenants = useCallback(async () => {
     try {
@@ -45,6 +64,21 @@ export function TenantList() {
   useEffect(() => {
     fetchTenants();
   }, [fetchTenants]);
+
+  async function updateTenant(id: string, data: any) {
+    try {
+      setUpdatingId(id);
+      await apiFetch(`/v1/admin/tenants/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+      await fetchTenants();
+    } catch (e: any) {
+      alert(`Update failed: ${e.message}`);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   if (loading)
     return (
@@ -73,9 +107,11 @@ export function TenantList() {
             <TableRow>
               <TableHead>Store Name</TableHead>
               <TableHead>Subdomain</TableHead>
+              <TableHead>Sector (Niche)</TableHead>
               <TableHead>Plan</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Registered</TableHead>
+              <TableHead className="text-center">Governance</TableHead>
               <TableHead className="text-right">Link</TableHead>
             </TableRow>
           </TableHeader>
@@ -96,16 +132,75 @@ export function TenantList() {
                   <TableCell className="font-mono text-sm">
                     {tenant.subdomain}.60sec.shop
                   </TableCell>
-                  <TableCell className="uppercase text-xs">
-                    {tenant.plan}
+                  <TableCell>
+                    <select
+                      className="bg-transparent border-none text-xs capitalize cursor-pointer hover:bg-muted p-1 rounded"
+                      value={tenant.nicheType || 'retail'}
+                      disabled={updatingId === tenant.id}
+                      onChange={(e) =>
+                        updateTenant(tenant.id, { nicheType: e.target.value })
+                      }
+                    >
+                      {NICHES.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
                   </TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                      {tenant.status}
-                    </span>
+                    <select
+                      className="bg-transparent border-none text-xs uppercase cursor-pointer hover:bg-muted p-1 rounded"
+                      value={tenant.plan}
+                      disabled={updatingId === tenant.id}
+                      onChange={(e) =>
+                        updateTenant(tenant.id, { plan: e.target.value })
+                      }
+                    >
+                      {PLANS.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </select>
+                  </TableCell>
+                  <TableCell>
+                    <select
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border-none cursor-pointer ${
+                        tenant.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                      value={tenant.status}
+                      disabled={updatingId === tenant.id}
+                      onChange={(e) =>
+                        updateTenant(tenant.id, { status: e.target.value })
+                      }
+                    >
+                      {STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
                   </TableCell>
                   <TableCell>
                     {new Date(tenant.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-primary/20 hover:bg-primary/5 text-primary"
+                      onClick={() =>
+                        setGovernanceTenant({
+                          id: tenant.id,
+                          name: tenant.name,
+                        })
+                      }
+                    >
+                      <Shield className="h-3.5 w-3.5 mr-1" /> Governance
+                    </Button>
                   </TableCell>
                   <TableCell className="text-right">
                     <a
@@ -123,6 +218,14 @@ export function TenantList() {
             )}
           </TableBody>
         </Table>
+
+        {governanceTenant && (
+          <TenantGovernanceModal
+            tenantId={governanceTenant.id}
+            tenantName={governanceTenant.name}
+            onClose={() => setGovernanceTenant(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );
