@@ -99,9 +99,9 @@ services:
     environment:
       # S1 Protocol: Strict production validation.
       NODE_ENV: production
-      DATABASE_URL: postgresql://apex:ApexV2DBPassSecure2026GrowthScale!QazXswEdCv@postgres:5432/apex_v2
+      DATABASE_URL: postgresql://apex:ApexV2DBPassSecure2026GrowthScale%21QazXswEdCv@postgres:5432/apex_v2
       DB_SSL: "false"
-      REDIS_URL: redis://:ApexV2RedisPassSecure2026GrowthScale!QazXswEdCv@redis:6379
+      REDIS_URL: redis://:ApexV2RedisPassSecure2026GrowthScale%21QazXswEdCv@redis:6379
       JWT_SECRET: ApexV2JwtSecretSecure2026GrowthScale!QazXswEdCv
       ENCRYPTION_MASTER_KEY: ApexV2EncMasterSecure2026GrowthScale!QazXswEdCv
       SUPER_ADMIN_EMAIL: admin@60sec.shop
