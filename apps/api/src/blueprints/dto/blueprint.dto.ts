@@ -1,6 +1,10 @@
 import { NicheSchema } from '@apex/validators';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import {
+  MASTER_FEATURE_LIST,
+  MASTER_QUOTA_LIST,
+} from '../../../../../packages/provisioning/src/blueprint/constants.js';
 
 // S3: Strict Input Validation
 export const createBlueprintSchema = z.object({
@@ -16,27 +20,31 @@ export const createBlueprintSchema = z.object({
   // S21: Strict nested validation for the blueprint structure
   blueprint: z
     .object({
-      version: z.string(), // S3: String validation without strict regex
+      version: z.string(),
       name: z.string().min(2).max(100),
-      quotas: z
-        .object({
-          max_products: z.number().int().min(0).default(10),
-          max_orders: z.number().int().min(0).default(100),
-          max_pages: z.number().int().min(0).default(5),
-        })
-        .optional()
-        .default({}),
+      quotas: z.record(z.string(), z.number()).refine(
+        (val) => {
+          return MASTER_QUOTA_LIST.every((q) => q in val);
+        },
+        {
+          message: `Blueprint quotas must include: ${MASTER_QUOTA_LIST.join(', ')}`,
+        }
+      ),
       modules: z
-        .object({
-          core: z.union([z.boolean(), z.record(z.unknown())]).default(true),
-        })
-        .catchall(z.union([z.boolean(), z.record(z.unknown()), z.undefined()]))
-        .default({ core: true }),
+        .record(z.string(), z.union([z.boolean(), z.record(z.unknown())]))
+        .refine(
+          (val) => {
+            return MASTER_FEATURE_LIST.every((f) => f in val);
+          },
+          {
+            message: `Blueprint modules must include all 41+ features: ${MASTER_FEATURE_LIST.join(', ')}`,
+          }
+        ),
       settings: z.record(z.unknown()).optional().default({}),
       pages: z.array(z.unknown()).optional().default([]),
       products: z.array(z.unknown()).optional().default([]),
     })
-    .passthrough(), // Allow valid extra fields
+    .passthrough(),
 });
 
 export class CreateBlueprintDto extends createZodDto(createBlueprintSchema) {}

@@ -126,19 +126,18 @@ export class ProvisioningService {
       });
       steps[3].status = 'done';
 
-      // 4.1 S21 FIX: Sync Governance (Link Blueprint to Enforcement)
+      // 4. Reset search_path to public to ensure registerTenant and syncGovernance can see the registry
+      await publicDb.execute(sql`SET search_path TO public`);
+
+      // 5. Register in Public Schema (CRITICAL: Must happen before syncGovernance)
+      await this.registerTenant(options, seedResult.adminId);
+
+      // 6. S21 FIX: Sync Governance (Link Blueprint to Enforcement)
+      // Now that the tenant exists in the registry, we can link quotas and gates
       await this.syncGovernance(options.subdomain, effectiveBlueprint);
       steps[4].status = 'done';
 
-      // 4.5 Reset search_path to public to ensure registerTenant can see the registry
-      await publicDb.execute(sql`SET search_path TO public`);
-
       const durationMs = Date.now() - startTime;
-
-      // 5. Register in Public Schema (Cross-tenant registration)
-      // This is the only place we write to public after provisioning starts
-      await this.registerTenant(options, seedResult.adminId);
-
       // 6. S4 Protocol: Audit Log the creation
       await this.audit.log({
         action: 'STORE_PROVISIONED',

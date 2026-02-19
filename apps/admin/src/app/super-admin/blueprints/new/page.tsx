@@ -1,5 +1,5 @@
-import { BlueprintEditor } from '@/components/blueprint/BlueprintEditor';
+import { BlueprintBuilder } from '@/components/blueprint/BlueprintBuilder';
 
 export default function NewBlueprintPage() {
-  return <BlueprintEditor id="new" />;
+  return <BlueprintBuilder />;
 }

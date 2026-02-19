@@ -1,3 +1,4 @@
+import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST } from './constants.js';
 import type {
   BlueprintConfig,
   BlueprintContext,
@@ -116,7 +117,8 @@ export class BlueprintExecutor {
 }
 
 /**
- * Validate Blueprint JSON Structure
+ * Validate Blueprint JSON Structure (S21 Strictness)
+ * Enforces that all 41 features and essential quotas are present.
  */
 export function validateBlueprint(blueprint: any): BlueprintTemplate {
   if (!blueprint || typeof blueprint !== 'object') {
@@ -131,8 +133,27 @@ export function validateBlueprint(blueprint: any): BlueprintTemplate {
     throw new Error('Blueprint must define modules object');
   }
 
-  // Core module is mandatory? Maybe not strictly for fragments, but generally yes for full blueprints.
-  // Let's be lenient for now but ensure modules object exists.
+  // 1. Strict Module Check (All 41 must exist)
+  for (const feature of MASTER_FEATURE_LIST) {
+    if (!(feature in blueprint.modules)) {
+      throw new Error(
+        `Validation Error: Missing required feature '${feature}' in blueprint modules.`
+      );
+    }
+  }
+
+  // 2. Strict Quota Check
+  if (!blueprint.quotas || typeof blueprint.quotas !== 'object') {
+    throw new Error('Blueprint must define quotas object');
+  }
+
+  for (const quota of MASTER_QUOTA_LIST) {
+    if (!(quota in blueprint.quotas)) {
+      throw new Error(
+        `Validation Error: Missing required quota '${quota}' in blueprint quotas.`
+      );
+    }
+  }
 
   return blueprint as BlueprintTemplate;
 }

@@ -45,7 +45,7 @@ export class BlueprintsService {
     userId: string,
     dto: CreateBlueprintDto
   ): Promise<BlueprintRecord> {
-    const blueprintData = dto.blueprint as BlueprintTemplate;
+    const blueprintData = dto.blueprint as unknown as BlueprintTemplate;
 
     try {
       validateBlueprint(blueprintData);
@@ -88,7 +88,7 @@ export class BlueprintsService {
   ): Promise<BlueprintRecord> {
     if (dto.blueprint) {
       try {
-        validateBlueprint(dto.blueprint as BlueprintTemplate);
+        validateBlueprint(dto.blueprint as unknown as BlueprintTemplate);
       } catch (e) {
         throw new Error(
           `Invalid blueprint structure: ${e instanceof Error ? e.message : 'Unknown error'}`
@@ -102,7 +102,7 @@ export class BlueprintsService {
         plan: dto.plan,
         nicheType: dto.nicheType ?? undefined,
         status: dto.status,
-        blueprint: dto.blueprint as BlueprintTemplate,
+        blueprint: dto.blueprint as unknown as BlueprintTemplate,
         isDefault: dto.isDefault,
         updatedAt: new Date(),
       })

@@ -48,7 +48,7 @@ export function BlueprintList() {
     // eslint-disable-next-line no-restricted-globals
     if (!confirm('Are you sure you want to delete this blueprint?')) return;
     try {
-      await apiFetch(`/admin/blueprints/${id}`, { method: 'DELETE' });
+      await apiFetch(`/v1/admin/blueprints/${id}`, { method: 'DELETE' });
       fetchBlueprints();
     } catch (e: any) {
       alert(e.message);
