@@ -9,10 +9,11 @@ services:
     env_file:
       - ../.env
     environment:
-      # S1 Protocol: Production credentials managed via env_file at project root
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
+      # S1 Protocol: Strict production validation.
+      NODE_ENV: production
+      POSTGRES_USER: apex
+      POSTGRES_PASSWORD: ApexV2DBPassSecure2026GrowthScale!QazXswEdCv
+      POSTGRES_DB: apex_v2
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -41,14 +42,9 @@ services:
     env_file:
       - ../.env
     environment:
-      - REDIS_PASSWORD
-    command: >
-      sh -c '
-      if [ -z "$${REDIS_PASSWORD}" ]; then
-        redis-server --appendonly yes;
-      else
-        redis-server --appendonly yes --requirepass "$${REDIS_PASSWORD}";
-      fi'
+      NODE_ENV: production
+      REDIS_PASSWORD: ApexV2RedisPassSecure2026GrowthScale!QazXswEdCv
+    command: redis-server --appendonly yes --requirepass ApexV2RedisPassSecure2026GrowthScale!QazXswEdCv
     volumes:
       - redis_data:/data
     healthcheck:
@@ -70,8 +66,9 @@ services:
     env_file:
       - ../.env
     environment:
-      - MINIO_ROOT_USER
-      - MINIO_ROOT_PASSWORD
+      NODE_ENV: production
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: RaMLxrWYSrGWrMqlabJiRQPyDNeOOk3nQna5Zmk2MYg
     volumes:
       - minio_data:/data
     healthcheck:
@@ -100,12 +97,19 @@ services:
       redis:
         condition: service_healthy
     environment:
-      # S1 Protocol: Strict validation enforced.
-      # Environment variables are loaded via env_file below to prevent host-shell overrides.
+      # S1 Protocol: Strict production validation.
       NODE_ENV: production
+      DATABASE_URL: postgresql://apex:ApexV2DBPassSecure2026GrowthScale!QazXswEdCv@postgres:5432/apex_v2
       DB_SSL: "false"
+      REDIS_URL: redis://:ApexV2RedisPassSecure2026GrowthScale!QazXswEdCv@redis:6379
+      JWT_SECRET: ApexV2JwtSecretSecure2026GrowthScale!QazXswEdCv
+      ENCRYPTION_MASTER_KEY: ApexV2EncMasterSecure2026GrowthScale!QazXswEdCv
+      SUPER_ADMIN_EMAIL: admin@60sec.shop
+      SUPER_ADMIN_PASSWORD: ApexV2AdminSecure2026GrowthScale!QazXswEdCv
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: RaMLxrWYSrGWrMqlabJiRQPyDNeOOk3nQna5Zmk2MYg
       MINIO_USE_SSL: "false"
       MINIO_BUCKET_NAME: apex-assets
     networks:
