@@ -317,9 +317,6 @@ services:
     ports:
       - "3000:3000"
       - "2222:2222"
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - apex-network
     labels:
