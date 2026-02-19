@@ -42,7 +42,15 @@ export class BotProtectionMiddleware implements NestMiddleware {
     const isHealthCheck = /(health|liveness|readiness)/i.test(path);
     const isAuthLogin = /\/api\/v1\/auth\/login/i.test(path);
 
-    if (isHealthCheck || isAuthLogin) {
+    // Bypass for internal Docker/Traefik traffic and health checks
+    const clientIp = req.ip || '';
+    const isInternal =
+      clientIp.startsWith('172.') ||
+      clientIp.startsWith('::ffff:172.') ||
+      clientIp === '127.0.0.1' ||
+      clientIp === '::1';
+
+    if (isHealthCheck || isAuthLogin || isInternal) {
       return next();
     }
 
@@ -73,6 +81,8 @@ export class BotProtectionMiddleware implements NestMiddleware {
       /\.env$/i,
       /wp-admin/i,
       /config\.php/i,
+      /\.php$/i,
+      /\.php\?/i,
       /\.git\//i,
       /backup/i,
       /sql/i,
