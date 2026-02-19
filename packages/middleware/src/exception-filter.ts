@@ -27,6 +27,11 @@ if (env.GLITCHTIP_DSN && process.env.NODE_ENV === 'production') {
   });
 }
 
+export interface ExceptionFilterOptions {
+  includeStackTrace?: boolean;
+  includeIpDetails?: boolean;
+}
+
 export interface ErrorResponse {
   statusCode: number;
   message: string | string[];
@@ -34,13 +39,20 @@ export interface ErrorResponse {
   timestamp: string;
   path: string;
   requestId?: string;
-  // Internal only (not sent to client)
-  stack?: string;
 }
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
+  private readonly options: ExceptionFilterOptions;
+
+  constructor(options: ExceptionFilterOptions = {}) {
+    this.options = {
+      includeStackTrace: false,
+      includeIpDetails: false,
+      ...options,
+    };
+  }
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -48,15 +60,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const requestId = this.generateRequestId();
-
-    // Determine error details
     const { statusCode, message, error } = this.parseError(exception);
 
-    // Log error (with stack trace for internal debugging)
-    this.logError(exception, requestId, request, statusCode);
-
-    // Build response (sanitized for client)
-    const errorResponse: ErrorResponse = {
+    // S5: Sanitized client response
+    const clientResponse: ErrorResponse = {
       statusCode,
       message: this.sanitizeMessage(statusCode, message),
       error,
@@ -65,21 +72,37 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       requestId,
     };
 
-    // S5 FIX: Never send stack traces to the client in PRODUCTION.
-    // In Development/Staging, we allow it for debugging efficiency.
-    if (process.env.NODE_ENV === 'production') {
-      errorResponse.stack = undefined;
-      // Ensure generic message for 500 errors
-      if (statusCode === 500) {
-        errorResponse.message = 'Internal server error';
-        errorResponse.error = 'Internal Server Error';
-      }
+    // S5/S8: Detailed server-side logging (Internal Only)
+    const serverLog = {
+      requestId,
+      message:
+        exception instanceof Error ? exception.message : String(exception),
+      status: statusCode,
+      path: request.url,
+      method: request.method,
+      // S8: IP handling based on environment
+      ip: this.options.includeIpDetails
+        ? this.getClientIp(request)
+        : '[REDACTED]',
+      userAgent: this.options.includeIpDetails
+        ? request.headers['user-agent'] || null
+        : '[REDACTED]',
+      // S5: Stack trace only in development
+      ...(this.options.includeStackTrace &&
+        exception instanceof Error && {
+          stackTrace: exception.stack,
+        }),
+    };
+
+    // Log internally
+    if (statusCode >= 500) {
+      this.logger.error(serverLog, 'Exception caught');
     } else {
-      // In Non-Production, keep the stack trace (it was set by logError implicitly or can be explicitly added)
-      errorResponse.stack = (exception as any).stack;
+      this.logger.debug(serverLog, 'Request filtered');
     }
 
-    response.status(statusCode).json(errorResponse);
+    // Send sanitized response to client
+    response.status(statusCode).json(clientResponse);
 
     // Report to GlitchTip/Sentry in production
     if (env.NODE_ENV === 'production' && statusCode >= 500) {
@@ -196,49 +219,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return names[status] || 'Error';
   }
 
-  private logError(
-    exception: unknown,
-    requestId: string,
-    request: Request,
-    statusCode: number
-  ): void {
-    const error =
-      exception instanceof Error ? exception : new Error(String(exception));
-    const { message, stack: errorStackTrace } = error;
-
-    const isNotFound = statusCode === 404;
-    const isBot = /bot|crawler|spider/i.test(
-      request.headers?.['user-agent'] || ''
-    );
-
-    if (isNotFound) {
-      this.logger.debug(
-        {
-          requestId,
-          message,
-          path: request.url,
-          method: request.method,
-          ip: request.ip,
-          userAgent: request.headers?.['user-agent'],
-          isBot,
-        },
-        'S11: Resource not found'
-      );
-      return;
+  private getClientIp(request: Request): string | null {
+    const forwarded = request.headers['x-forwarded-for'];
+    if (forwarded) {
+      return forwarded.toString().split(',')[0]?.trim() || null;
     }
-
-    this.logger.error(
-      {
-        requestId,
-        message,
-        stackTrace: errorStackTrace,
-        path: request.url,
-        method: request.method,
-        ip: request.ip,
-        userAgent: request.headers?.['user-agent'],
-      },
-      'Exception caught'
-    );
+    return request.ip || request.connection.remoteAddress || null;
   }
 
   private generateRequestId(): string {

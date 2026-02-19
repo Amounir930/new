@@ -6,7 +6,12 @@
 import 'reflect-metadata';
 import { AuditService } from '@apex/audit';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
-import { Logger, VersioningType } from '@nestjs/common';
+import {
+  Logger,
+  type LogLevel,
+  type NestApplicationOptions,
+  VersioningType,
+} from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/nestjs';
@@ -26,10 +31,17 @@ async function bootstrap() {
     logger.log('🛡️  S5: GlitchTip Error Tracking Active');
   }
 
-  // S1: Environment Verification happens automatically via @apex/config
-  // S4: Audit Initialization moved after app creation for DI
+  // S1: Environment Verification
+  const isProduction = process.env.NODE_ENV === 'production';
+  const logLevels: LogLevel[] = isProduction
+    ? ['error', 'warn', 'log']
+    : ['error', 'warn', 'log', 'debug', 'verbose'];
 
-  const app = await NestFactory.create(AppModule);
+  const options: NestApplicationOptions = {
+    logger: logLevels,
+  };
+
+  const app = await NestFactory.create(AppModule, options);
 
   // S4: Initialize Audit System (Infrastructure as Code)
   try {
@@ -44,8 +56,13 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
-  // S5: Global Exception Filter
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  // S5: Global Exception Filter (Hardened)
+  app.useGlobalFilters(
+    new GlobalExceptionFilter({
+      includeStackTrace: !isProduction,
+      includeIpDetails: !isProduction,
+    })
+  );
 
   // S3: Global Zod Validation Pipe
   app.useGlobalPipes(new ZodValidationPipe());

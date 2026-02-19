@@ -226,6 +226,9 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # S11/S8: Trust Forwarded Headers from local networks
+      - "--entrypoints.websecure.forwardedHeaders.insecure=false"
+      - "--entrypoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 10s
