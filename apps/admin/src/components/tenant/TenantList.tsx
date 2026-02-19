@@ -1,9 +1,10 @@
 'use client';
 
-import { Globe, Loader2, Plus, Shield } from 'lucide-react';
+import { Globe, Loader2, Plus, Search, Shield } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -36,6 +37,8 @@ export function TenantList() {
     name: string;
   } | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const PLANS = ['free', 'basic', 'pro', 'enterprise'];
   const STATUSES = ['active', 'paused', 'suspended'];
@@ -64,6 +67,14 @@ export function TenantList() {
   useEffect(() => {
     fetchTenants();
   }, [fetchTenants]);
+
+  const filteredTenants = tenants.filter((t) => {
+    const matchesSearch =
+      t.name.toLowerCase().includes(search.toLowerCase()) ||
+      t.subdomain.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   async function updateTenant(id: string, data: any) {
     try {
@@ -97,6 +108,28 @@ export function TenantList() {
         </Button>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or subdomain..."
+              className="pl-9"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 w-full md:w-[200px]"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Statuses</option>
+            <option value="active">Active Only</option>
+            <option value="paused">Paused Only</option>
+            <option value="suspended">Suspended Only</option>
+          </select>
+        </div>
+
         <ProvisionModal
           open={isProvisionModalOpen}
           onOpenChange={setIsProvisionModalOpen}
@@ -116,17 +149,17 @@ export function TenantList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tenants.length === 0 ? (
+            {filteredTenants.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={8}
                   className="text-center py-8 text-muted-foreground"
                 >
                   No tenants found.
                 </TableCell>
               </TableRow>
             ) : (
-              tenants.map((tenant) => (
+              filteredTenants.map((tenant) => (
                 <TableRow key={tenant.id}>
                   <TableCell className="font-medium">{tenant.name}</TableCell>
                   <TableCell className="font-mono text-sm">

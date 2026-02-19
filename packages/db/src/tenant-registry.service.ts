@@ -1,7 +1,7 @@
 // biome-ignore lint/style/useImportType: Required for NestJS Dependency Injection
 import { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { publicDb } from './connection.js';
 import { onboardingBlueprints, type Tenant, tenants } from './schema.js';
 
@@ -151,7 +151,10 @@ export class TenantRegistryService {
    * Get all tenants (Admin only)
    */
   async findAll(): Promise<Tenant[]> {
-    const results = await publicDb.select().from(tenants);
+    const results = await publicDb
+      .select()
+      .from(tenants)
+      .orderBy(desc(tenants.createdAt));
     return results.map((t) => this.decryptTenant(t));
   }
 
