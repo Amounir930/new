@@ -6,6 +6,8 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditLog, AuditService } from '@apex/audit';
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { FraudGuard } from '@apex/middleware';
 import {
   Body,
   Controller,
@@ -19,9 +21,7 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { FraudGuard } from '@apex/middleware';
-import { ProvisioningService } from './provisioning.service.js';
+import type { ProvisioningService } from './provisioning.service.js';
 
 @Controller('provision')
 export class ProvisioningController {
@@ -32,7 +32,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) { }
+  ) {}
 
   /**
    * POST /api/provision
@@ -84,6 +84,9 @@ export class ProvisioningController {
     const identifier = req.ip || 'anonymous';
     const code = await otpService.generateOTP(identifier);
     this.logger.log(`[S14] OTP requested for provisioning by ${identifier}`);
-    return { message: 'OTP sent to registered administrator device', debug: process.env.NODE_ENV !== 'production' ? code : undefined };
+    return {
+      message: 'OTP sent to registered administrator device',
+      debug: process.env.NODE_ENV !== 'production' ? code : undefined,
+    };
   }
 }

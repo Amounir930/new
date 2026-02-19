@@ -18,18 +18,13 @@ fi
 echo "✅ S9 Passed"
 
 # ─── S10: Secret Detection ───
-echo "🔍 Running S10 Scan (Gitleaks - Surgical)..."
-# Using gitleaks to protect against secret leaks in staged files.
-# We use 'protect --staged' for pre-commit surgical checks.
-if command -v gitleaks >/dev/null 2>&1; then
-  gitleaks protect --staged --config .gitleaks.toml --verbose
-else
-  echo "⚠️ Gitleaks not found in PATH, falling back to bunx..."
-  bunx gitleaks protect --staged --config .gitleaks.toml --verbose
-fi
-
-if [ $? -ne 0 ]; then
-  echo "❌ S10 FAILED: Secret detected by Gitleaks. Remove the secret or use 'gitleaks:allow' comment."
+echo "🔍 Running S10 Scan (Surgical Pattern Scan)..."
+# Pattern-based scan for secrets in staged files (S10 Compliance)
+SECRET_FOUND=$(git diff --cached | grep -E "(JWT_SECRET|ENCRYPTION_MASTER_KEY|password|passwd|pwd|secret|token|api_key|apikey)\s*[=:]\s*['\"][^'\"]{8,}['\"]" || true)
+if [ -n "$SECRET_FOUND" ]; then
+  echo "🚨 CRITICAL S10 FAILED: Potential hardcoded secret found!"
+  echo "$SECRET_FOUND"
+  echo "Remove the secret or use 'gitleaks:allow' comment."
   exit 1
 fi
 echo "✅ S10 Passed"

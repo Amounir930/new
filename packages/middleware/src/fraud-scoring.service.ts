@@ -31,7 +31,7 @@ export class FraudScoringService {
   constructor(
     private readonly store: RedisRateLimitStore,
     private readonly geoIp: GeoIpService
-  ) { }
+  ) {}
 
   async calculateScore(req: any): Promise<FraudScore> {
     let score = 0;
