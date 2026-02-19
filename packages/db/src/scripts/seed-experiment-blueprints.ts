@@ -19,6 +19,7 @@ function getQuotasForPlan(plan: string) {
 }
 
 async function seed() {
+  console.log(`🚀 Forcing new version deployment...`);
   console.log(`🌱 Seeding Experiment Blueprints for Sector: ${SECTOR}...`);
 
   for (const plan of PLANS) {

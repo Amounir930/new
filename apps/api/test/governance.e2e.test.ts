@@ -25,7 +25,7 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
 
   it('should block product creation when blueprint max_products is 0 (Stage 1 & 2 logic)', async () => {
     console.log('🧪 Starting Stage 2 logic verification...');
-    const subdomain = 'banned-store-' + Date.now();
+    const subdomain = `banned-store-${Date.now()}`;
 
     // 1. Create a "Banned" Blueprint
     const blueprintData = {
@@ -98,7 +98,7 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
   }, 60000);
 
   it('should allow product creation when blueprint max_products is 100', async () => {
-    const subdomain = 'pro-store-' + Date.now();
+    const subdomain = `pro-store-${Date.now()}`;
 
     const blueprintData = {
       version: '1.0',
