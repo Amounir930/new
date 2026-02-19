@@ -25,6 +25,8 @@ export async function createBlueprint(
     description?: string;
     isDefault?: boolean;
     plan?: string;
+    nicheType?: string;
+    status?: string;
   } = {}
 ): Promise<BlueprintRecord> {
   // Validate blueprint structure
@@ -46,6 +48,8 @@ export async function createBlueprint(
       blueprint: blueprint as unknown as BlueprintTemplate,
       isDefault: !!options.isDefault,
       plan: options.plan || 'free',
+      nicheType: options.nicheType || 'retail',
+      status: options.status || 'active',
     })
     .returning();
 
@@ -126,6 +130,7 @@ export async function getDefaultBlueprint(
 
     if (anyBlueprint.length === 0) {
       // 🛡️ S21 FIX: Hardcoded fallback if database is empty
+      // TODO: Remove after initial deployment migration guarantees DB is populated
       return {
         id: 'hardcoded-default',
         name: defaultBlueprintTemplate.name,
@@ -169,6 +174,8 @@ export async function updateBlueprint(
     blueprint?: BlueprintTemplate;
     isDefault?: boolean;
     plan?: string;
+    nicheType?: string;
+    status?: string;
   }
 ): Promise<BlueprintRecord | null> {
   // Validate if blueprint is being updated
@@ -190,6 +197,8 @@ export async function updateBlueprint(
   if (updates.blueprint) updateData.blueprint = updates.blueprint;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
   if (updates.plan) updateData.plan = updates.plan;
+  if (updates.nicheType) updateData.nicheType = updates.nicheType;
+  if (updates.status) updateData.status = updates.status;
 
   const result = await publicDb
     .update(onboardingBlueprints)

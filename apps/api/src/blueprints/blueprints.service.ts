@@ -61,7 +61,8 @@ export class BlueprintsService {
         name: dto.name,
         description: dto.description || null,
         plan: dto.plan,
-        nicheType: dto.nicheType ?? null,
+        nicheType: dto.nicheType || 'retail',
+        status: dto.status || 'active',
         uiConfig: dto.uiConfig || {},
         isDefault: dto.isDefault,
         blueprint: blueprintData,
@@ -98,9 +99,9 @@ export class BlueprintsService {
     const [updatedBlueprint] = (await this.db
       .update(onboardingBlueprints)
       .set({
-        name: dto.name,
-        description: dto.description ?? undefined,
         plan: dto.plan,
+        nicheType: dto.nicheType ?? undefined,
+        status: dto.status,
         blueprint: dto.blueprint as BlueprintTemplate,
         isDefault: dto.isDefault,
         updatedAt: new Date(),
@@ -165,7 +166,8 @@ export class BlueprintsService {
           name: name,
           description: description || template.description || null,
           plan: 'custom',
-          nicheType: nicheType || null,
+          nicheType: nicheType || 'retail',
+          status: 'active',
           isDefault: false,
           blueprint: template as any as BlueprintTemplate, // Type bridge for snapshot
         })

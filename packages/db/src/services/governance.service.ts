@@ -6,9 +6,9 @@
  * @module @apex/db/services/governance.service
  */
 
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 import { db } from '../connection';
-import { tenants } from '../schema';
+import { getTenantTableName, tenants } from '../schema';
 import {
   featureGates,
   subscriptionPlans,
@@ -60,9 +60,10 @@ export class GovernanceService {
   async checkQuota(
     tenantId: string,
     resourceType: 'products' | 'orders' | 'pages',
-    currentCount: number
-  ): Promise<{ allowed: boolean; limit: number }> {
+    subdomain: string
+  ): Promise<{ allowed: boolean; limit: number; current: number }> {
     const limits = await this.getTenantLimits(tenantId);
+    const current = await this.getResourceCount(subdomain, resourceType);
 
     let limit = 0;
     switch (resourceType) {
@@ -78,9 +79,27 @@ export class GovernanceService {
     }
 
     return {
-      allowed: currentCount < limit,
+      allowed: current < limit,
       limit,
+      current,
     };
+  }
+
+  /**
+   * Internal helper to count resources within a tenant schema
+   */
+  private async getResourceCount(
+    subdomain: string,
+    resourceType: 'products' | 'orders' | 'pages'
+  ): Promise<number> {
+    const tableName = resourceType === 'pages' ? 'pages' : resourceType; // products, orders
+    const qualifiedTable = getTenantTableName(tableName, subdomain);
+
+    const result = await db.execute(
+      sql`SELECT COUNT(*) as count FROM ${sql.raw(qualifiedTable)}`
+    );
+
+    return Number((result.rows[0] as any)?.count || 0);
   }
 
   /**

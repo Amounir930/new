@@ -24,6 +24,7 @@ import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
 import { HealthModule } from './health/health.module.js';
+import { ProductsController } from './products/products.controller.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 
@@ -59,7 +60,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
       useExisting: AuditService,
     },
   ],
-  controllers: [AppController],
+  controllers: [AppController, ProductsController],
 })
 export class AppModule implements NestModule {
   // S2: Apply Tenant Isolation Middleware & S11: Bot Protection

@@ -12,11 +12,20 @@ export const createBlueprintSchema = z.object({
     .transform((val) => val || null),
   uiConfig: z.record(z.unknown()).optional().default({}),
   isDefault: z.boolean().default(false),
+  status: z.enum(['active', 'paused']).default('active'),
   // S21: Strict nested validation for the blueprint structure
   blueprint: z
     .object({
       version: z.string(), // S3: String validation without strict regex
       name: z.string().min(2).max(100),
+      quotas: z
+        .object({
+          max_products: z.number().int().min(0).default(10),
+          max_orders: z.number().int().min(0).default(100),
+          max_pages: z.number().int().min(0).default(5),
+        })
+        .optional()
+        .default({}),
       modules: z
         .object({
           core: z.union([z.boolean(), z.record(z.unknown())]).default(true),

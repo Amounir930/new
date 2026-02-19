@@ -46,25 +46,31 @@ export class QuotaInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<TenantRequest>();
     const user = request.user;
     const tenantId = request.tenantContext?.tenantId;
+    const subdomain = request.tenantContext?.subdomain;
 
     // Super Admin Bypass
     if (user?.role === 'super_admin') {
       return next.handle();
     }
 
-    if (!tenantId) {
+    if (!tenantId || !subdomain) {
       throw new ForbiddenException(
         'Tenant context required for quota validation'
       );
     }
 
-    // This requires a count of current resources.
-    // In a real scenario, we might pass a 'currentCount' via the request or fetch it here.
-    // For now, we assume the controller or service will perform the final check,
-    // or we fetch the count from the DB if provided in metadata.
+    const { governanceService } = await import('@apex/db');
+    const result = await governanceService.checkQuota(
+      tenantId,
+      resource,
+      subdomain
+    );
 
-    // Placeholder: The actual enforcement might happen in the service layer for better precision,
-    // but the interceptor can pre-check based on cached counts if available.
+    if (!result.allowed) {
+      throw new ForbiddenException(
+        `Quota exceeded for '${resource}'. Limit: ${result.limit}, Current: ${result.current}. Please upgrade your plan.`
+      );
+    }
 
     return next.handle();
   }

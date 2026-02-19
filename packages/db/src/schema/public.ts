@@ -45,18 +45,28 @@ export type Tenant = InferSelectModel<typeof tenants>;
 /**
  * Super-#21: Onboarding Blueprint Editor
  */
-export const onboardingBlueprints = pgTable('onboarding_blueprints', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: text('name').notNull(),
-  description: text('description'),
-  blueprint: jsonb('blueprint').notNull(),
-  isDefault: pgBoolean('is_default').notNull().default(false),
-  plan: text('plan').notNull().default('free'),
-  nicheType: text('niche_type'),
-  uiConfig: jsonb('ui_config').default({}),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+export const onboardingBlueprints = pgTable(
+  'onboarding_blueprints',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    description: text('description'),
+    blueprint: jsonb('blueprint').notNull(),
+    isDefault: pgBoolean('is_default').notNull().default(false),
+    plan: text('plan').notNull().default('free'), // S21: free, basic, pro, enterprise
+    nicheType: text('niche_type').notNull(), // S21: retail, wellness, etc.
+    status: text('status').notNull().default('active'), // S21: active, paused
+    uiConfig: jsonb('ui_config').default({}),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    nichePlanIdx: index('blueprint_niche_plan_idx').on(
+      table.nicheType,
+      table.plan
+    ),
+  })
+);
 
 /**
  * S4: Audit Logs (Immutable, Global)

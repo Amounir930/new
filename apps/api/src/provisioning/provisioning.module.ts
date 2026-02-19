@@ -1,5 +1,5 @@
 import { AuditModule, AuditService } from '@apex/audit';
-import { DbModule } from '@apex/db';
+import { DbModule, TenantRegistryService } from '@apex/db';
 import { Module } from '@nestjs/common';
 import { ProvisioningController } from './provisioning.controller.js';
 import { ProvisioningService } from './provisioning.service.js';
@@ -11,13 +11,17 @@ import { ProvisioningService } from './provisioning.service.js';
     ProvisioningService,
     {
       provide: 'PROVISIONING_SERVICE',
-      useClass: ProvisioningService,
+      useExisting: ProvisioningService,
     },
     {
       provide: 'AUDIT_SERVICE',
       useExisting: AuditService,
     },
+    {
+      provide: 'TENANT_REGISTRY',
+      useExisting: TenantRegistryService,
+    },
   ],
-  exports: ['PROVISIONING_SERVICE'],
+  exports: [ProvisioningService, 'PROVISIONING_SERVICE'],
 })
 export class ProvisioningModule {}
