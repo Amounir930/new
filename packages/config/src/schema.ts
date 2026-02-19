@@ -6,12 +6,58 @@ import { z } from 'zod';
  */
 export const EnvSchema = z.object({
   // Critical Security Variables
-  JWT_SECRET: z.string().optional().default('short'),
-  ENCRYPTION_MASTER_KEY: z.string().optional().default('short'),
+  JWT_SECRET: z
+    .string()
+    .min(32, 'S1 Violation: JWT_SECRET must be at least 32 characters')
+    .refine((key) => {
+      if (
+        process.env.NODE_ENV === 'test' ||
+        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
+      )
+        return true;
+      return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
+    }, 'S1 Violation: JWT_SECRET lacks required complexity (A-Z, a-z, 0-9)'),
+  ENCRYPTION_MASTER_KEY: z
+    .string()
+    .min(
+      32,
+      'S1 Violation: ENCRYPTION_MASTER_KEY must be at least 32 characters'
+    )
+    .refine((key) => {
+      // S7: Strict Production Validation
+      // In test mode or when specifically bypassed in CI, we allow "test" substring
+      if (
+        process.env.NODE_ENV === 'test' ||
+        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
+      )
+        return true;
 
-  // S1: Admin Credentials
-  SUPER_ADMIN_EMAIL: z.string().email().optional().default('admin@60sec.shop'),
-  SUPER_ADMIN_PASSWORD: z.string().optional().default('123456'),
+      return !/test|default|example/i.test(key);
+    }, 'S1 Violation: Production key cannot contain test patterns')
+    .refine((key) => {
+      // S7: Complexity check: Uppercase, Lowercase, Number, Special Character
+      // Skip complexity check in test mode or when specifically bypassed in CI
+      if (
+        process.env.NODE_ENV === 'test' ||
+        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
+      )
+        return true;
+
+      return (
+        /[A-Z]/.test(key) &&
+        /[a-z]/.test(key) &&
+        /[0-9]/.test(key) &&
+        /[@$!%*?&]/.test(key)
+      );
+    }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special)'),
+
+  // S1: Admin Credentials (Strict Validation)
+  SUPER_ADMIN_EMAIL: z
+    .string()
+    .email('S1 Violation: SUPER_ADMIN_EMAIL must be a valid email'),
+  SUPER_ADMIN_PASSWORD: z
+    .string()
+    .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD must be at least 8 characters'),
 
   JWT_EXPIRES_IN: z.string().default('7d'),
 
