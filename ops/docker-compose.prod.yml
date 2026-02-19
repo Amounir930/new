@@ -105,7 +105,7 @@ services:
       JWT_SECRET: ApexV2JwtSecretSecure2026GrowthScale!QazXswEdCv
       ENCRYPTION_MASTER_KEY: ApexV2EncMasterSecure2026GrowthScale!QazXswEdCv
       SUPER_ADMIN_EMAIL: admin@60sec.shop
-      SUPER_ADMIN_PASSWORD: ApexV2AdminSecure2026GrowthScale!QazXswEdCv
+      SUPER_ADMIN_PASSWORD: Admin@60SecShop!2026
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: minioadmin
