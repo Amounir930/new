@@ -112,7 +112,7 @@ jobs:
           bun-version: "1.1.45"
 
       - name: Install Dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
 
       # Initializes the CodeQL tools for scanning.
@@ -129,19 +129,22 @@ jobs:
       # ═══════════════════════════════════════════════════════════════════════
       # S9: OPTIMIZED DEPENDENCY SECURITY & SUPPLY CHAIN
       # ═══════════════════════════════════════════════════════════════════════
-      - name: "S9a - Bun Audit (Fast Defense)"
+      - name: "S9a - Dependency Audit (Fast Defense)"
         run: |
           echo "═══════════════════════════════════════════════════════════════════"
-          echo "  S9a: BUN AUDIT (FAST VULNERABILITY DEFENSE)"
+          echo "  S9a: DEPENDENCY AUDIT (BUN + NPM FALLBACK)"
           echo "═══════════════════════════════════════════════════════════════════"
           bun audit || {
-            echo "❌ S9a FAILED: Known security vulnerabilities detected in dependencies!"
-            exit 1
+            echo "⚠️ Bun audit failed or unsupported, falling back to npm audit..."
+            npm audit --audit-level=moderate || {
+              echo "❌ S9a FAILED: Security vulnerabilities detected in dependencies!"
+              exit 1
+            }
           }
 
       - name: "S9a-2 - Snyk Vulnerability Scan"
         uses: snyk/actions/node@master
-        continue-on-error: true # Non-blocking until baseline established
+        # continue-on-error: true # S10 FIX: Enforce Snyk scan failure
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
@@ -532,7 +535,7 @@ jobs:
           bun-version: "1.1.45"
 
       - name: Install Dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Start MinIO
         run: |
@@ -548,14 +551,17 @@ jobs:
       - name: Setup Test Database
         run: |
           cd packages/db
+          
+          # S10 FIX: Randomize secrets for CI testing
+          export JWT_SECRET=$(openssl rand -base64 32)
+          export ENCRYPTION_MASTER_KEY=$(openssl rand -base64 32)
+          export MINIO_SECRET_KEY=$(openssl rand -base64 16)
+          
           export DATABASE_URL=${{ secrets.TEST_DATABASE_URL }}
           export REDIS_URL=redis://localhost:6379
-          export JWT_SECRET="test_jwt_secret_for_ci_provision_32_chars_exact"
-          export ENCRYPTION_MASTER_KEY="test_encryption_key_for_dev_only_32_chars_long"
           export MINIO_ENDPOINT=localhost
           export MINIO_PORT=9000
           export MINIO_ACCESS_KEY="test_minio_access_key"
-          export MINIO_SECRET_KEY="test_minio_secret_key"
           export MINIO_USE_SSL=false
           export MINIO_REGION=us-east-1
           export NODE_ENV=test
@@ -565,12 +571,9 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379
-          JWT_SECRET: "test_jwt_secret_for_ci_provision_32_chars_exact"
-          ENCRYPTION_MASTER_KEY: "test_encryption_key_for_dev_only_32_chars_long"
           MINIO_ENDPOINT: localhost
           MINIO_PORT: 9000
           MINIO_ACCESS_KEY: "test_minio_access_key"
-          MINIO_SECRET_KEY: "test_minio_secret_key"
           MINIO_USE_SSL: false
           MINIO_REGION: us-east-1
           NODE_ENV: test
@@ -688,7 +691,7 @@ jobs:
           bun-version: "1.1.45"
 
       - name: Install Dependencies
-        run: bun install
+        run: bun install --frozen-lockfile
 
       - name: Start API Server (Background)
         run: |

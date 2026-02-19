@@ -20,6 +20,7 @@ import {
 import type { Request } from 'express';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { FraudGuard } from '@apex/middleware';
 import { ProvisioningService } from './provisioning.service.js';
 
 @Controller('provision')
@@ -31,15 +32,15 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) {}
+  ) { }
 
   /**
    * POST /api/provision
    * Core engine endpoint to create a 60-second store
-   * Protected by JWT + SuperAdmin role, or a valid superAdminKey
+   * Protected by JWT + SuperAdmin role + Fraud Detection (S14)
    */
   @AuditLog({ action: 'TENANT_PROVISIONED', entityType: 'tenant' })
-  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @UseGuards(JwtAuthGuard, SuperAdminGuard, FraudGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async provisionStore(@Req() _req: Request, @Body() dto: ProvisionRequestDto) {
@@ -70,5 +71,19 @@ export class ProvisioningController {
         durationMs: result.durationMs,
       },
     };
+  }
+
+  /**
+   * POST /api/provision/otp
+   * S14: Generate OTP for payment verification
+   */
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @Post('otp')
+  async requestProvisioningOTP(@Req() req: Request) {
+    const otpService = (req as any).otpService; // Will be injected or accessed via module
+    const identifier = req.ip || 'anonymous';
+    const code = await otpService.generateOTP(identifier);
+    this.logger.log(`[S14] OTP requested for provisioning by ${identifier}`);
+    return { message: 'OTP sent to registered administrator device', debug: process.env.NODE_ENV !== 'production' ? code : undefined };
   }
 }

@@ -18,10 +18,18 @@ fi
 echo "✅ S9 Passed"
 
 # ─── S10: Secret Detection ───
-echo "🔍 Running S10 Scan (Secret Detection)..."
-bun run scripts/security-check.ts
+echo "🔍 Running S10 Scan (Gitleaks - Surgical)..."
+# Using gitleaks to protect against secret leaks in staged files.
+# We use 'protect --staged' for pre-commit surgical checks.
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --config .gitleaks.toml --verbose
+else
+  echo "⚠️ Gitleaks not found in PATH, falling back to bunx..."
+  bunx gitleaks protect --staged --config .gitleaks.toml --verbose
+fi
+
 if [ $? -ne 0 ]; then
-  echo "❌ S10 FAILED: Secret/security violation detected."
+  echo "❌ S10 FAILED: Secret detected by Gitleaks. Remove the secret or use 'gitleaks:allow' comment."
   exit 1
 fi
 echo "✅ S10 Passed"

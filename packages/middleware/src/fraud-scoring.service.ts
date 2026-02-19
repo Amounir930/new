@@ -31,7 +31,7 @@ export class FraudScoringService {
   constructor(
     private readonly store: RedisRateLimitStore,
     private readonly geoIp: GeoIpService
-  ) {}
+  ) { }
 
   async calculateScore(req: any): Promise<FraudScore> {
     let score = 0;
@@ -55,10 +55,31 @@ export class FraudScoringService {
     score += botResult.score;
     if (botResult.reason) reasons.push(botResult.reason);
 
+    // 4. Payment Specific Velocity (S14)
+    const paymentVelocity = await this.checkPaymentVelocity(fingerprint);
+    score += paymentVelocity.score;
+    if (paymentVelocity.reason) reasons.push(paymentVelocity.reason);
+
     return {
       score: Math.min(score, 100),
       reasons,
     };
+  }
+
+  private async checkPaymentVelocity(
+    fingerprint: string | undefined
+  ): Promise<FraudCheckResult> {
+    if (!fingerprint) return { score: 0 };
+
+    const key = `fraud:payment:velocity:${fingerprint}`;
+    // Limit to 3 attempts per hour for payments (S14 Strict)
+    const { count } = await this.store.increment(key, 3600000);
+
+    if (count > 3) {
+      return { score: 60, reason: 'Excessive payment attempts detected' };
+    }
+
+    return { score: 0 };
   }
 
   private async checkVelocity(

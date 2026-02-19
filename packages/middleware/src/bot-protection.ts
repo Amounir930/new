@@ -10,9 +10,12 @@ import {
   type NestMiddleware,
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
+import { HCaptchaService } from './hcaptcha.service.js';
 
 @Injectable()
 export class BotProtectionMiddleware implements NestMiddleware {
+  constructor(private readonly captchaService: HCaptchaService) { }
+
   // Common bot and scraper User-Agent patterns
   private readonly botUserAgents = [
     /python-requests/i,
@@ -50,7 +53,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
       clientIp === '127.0.0.1' ||
       clientIp === '::1';
 
-    if (isHealthCheck || isAuthLogin || isInternal) {
+    if (isHealthCheck || isInternal) {
       return next();
     }
 
@@ -75,7 +78,24 @@ export class BotProtectionMiddleware implements NestMiddleware {
       }
     }
 
-    // S11 Level 3: Suspicious Path Triggers (Honeytokens Lite)
+    // S11 Level 3: Behavioral & Route-Specific Challenge
+    // High-risk routes REQUIRE hCaptcha validation in production
+    if (isAuthLogin || path.includes('/api/v1/provision')) {
+      const captchaToken = req.headers['x-hcaptcha-token'] as string;
+
+      // In production, enforce strictly. In dev, allow bypass if keys are missing.
+      const isProd = process.env.NODE_ENV === 'production';
+      if (isProd || captchaToken) {
+        const isValid = await this.captchaService.verify(captchaToken, clientIp);
+        if (!isValid) {
+          console.warn(`S11: hCaptcha failed for sensitive route: ${path} | IP: ${clientIp}`);
+          throw new ForbiddenException('S11 Violation: hCaptcha validation required for this action');
+        }
+        console.log(`✅ S11: hCaptcha verified for ${path}`);
+      }
+    }
+
+    // S11 Level 4: Suspicious Path Triggers (Honeytokens Lite)
     // If a request hits common scan paths, block it immediately
     const suspiciousPaths = [
       /\.env$/i,

@@ -89,12 +89,16 @@ for (const file of controllers) {
 }
 
 // S10: Secret Detection (High Entropy / Pattern Matching)
-// Simple patterns for common secrets
+// Comprehensive patterns based on Gitleaks/Semgrep rules
 const SECRET_PATTERNS = [
     { name: 'AWS Key', regex: /AKIA[0-9A-Z]{16}/ },
     { name: 'Private Key', regex: /-----BEGIN PRIVATE KEY-----/ }, // gitleaks:allow
     { name: 'Generic Secret', regex: /['"][A-Za-z0-9+/]{40,}['"]/ }, // 40+ chars base64-ish string in quotes
-    { name: 'Hardcoded Password', regex: /password\s*=\s*['"][^'"]{8,}['"]/i } // simplistic
+    { name: 'Hardcoded Password', regex: /password\s*=\s*['"][^'"]{8,}['"]/i },
+    { name: 'GitHub Token', regex: /gh[pso]_[a-zA-Z0-9]{36}/ },
+    { name: 'Stripe API Key', regex: /sk_live_[0-9a-zA-Z]{24}/ },
+    { name: 'SendGrid API Key', regex: /SG\.[0-9a-zA-Z_-]{22}\.[0-9a-zA-Z_-]{43}/ },
+    { name: 'Slack Webhook', regex: /https:\/\/hooks\.slack\.com\/services\/T[a-zA-Z0-9_]+\/B[a-zA-Z0-9_]+\/[a-zA-Z0-9_]+/ }
 ];
 
 for (const file of stagedFiles) {

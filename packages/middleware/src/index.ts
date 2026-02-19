@@ -14,6 +14,7 @@ export {
 } from './audit.schema.js';
 // S11: Bot Protection
 export { BotProtectionMiddleware } from './bot-protection.js';
+export { HCaptchaService } from './hcaptcha.service.js';
 // S2: Tenant Resolution & Context Management
 export {
   getCurrentTenantContext,
@@ -41,6 +42,8 @@ export {
   type FraudScore,
   FraudScoringService,
 } from './fraud-scoring.service.js';
+export { FraudGuard } from './fraud.guard.js';
+export { OTPService } from './otp.service.js';
 export { GeoIpService } from './geo-ip.service.js';
 // Governance & Quotas
 export { GovernanceGuard, RequireFeature } from './governance.guard.js';

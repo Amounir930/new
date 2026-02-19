@@ -11,9 +11,9 @@ services:
     environment:
       # S1 Protocol: Strict production validation.
       NODE_ENV: production
-      POSTGRES_USER: apex
-      POSTGRES_PASSWORD: ApexV2DBPassSecure2026GrowthScale!QazXswEdCv
-      POSTGRES_DB: apex_v2
+      POSTGRES_USER: ${POSTGRES_USER:-apex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -33,6 +33,27 @@ services:
       - apex-network
 
   # ═══════════════════════════════════════════════════════════════
+  # Gitea Isolated Database (S2 Compliance)
+  # ═══════════════════════════════════════════════════════════════
+  gitea-db:
+    image: postgres:15-alpine
+    container_name: apex-gitea-db
+    restart: always
+    environment:
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
+      POSTGRES_DB: gitea
+    volumes:
+      - gitea_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
   # Cache Layer (Redis 7) - Persistent
   # ═══════════════════════════════════════════════════════════════
   redis:
@@ -43,12 +64,12 @@ services:
       - ../.env
     environment:
       NODE_ENV: production
-      REDIS_PASSWORD: ApexV2RedisPassSecure2026GrowthScale!QazXswEdCv
-    command: redis-server --appendonly yes --requirepass ApexV2RedisPassSecure2026GrowthScale!QazXswEdCv
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a $$REDIS_PASSWORD ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -67,8 +88,8 @@ services:
       - ../.env
     environment:
       NODE_ENV: production
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: RaMLxrWYSrGWrMqlabJiRQPyDNeOOk3nQna5Zmk2MYg
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     healthcheck:
@@ -99,19 +120,19 @@ services:
     environment:
       # S1 Protocol: Strict production validation.
       NODE_ENV: production
-      DATABASE_URL: postgresql://apex:ApexV2DBPassSecure2026GrowthScale%21QazXswEdCv@postgres:5432/apex_v2
-      DB_SSL: "false"
-      REDIS_URL: redis://:ApexV2RedisPassSecure2026GrowthScale%21QazXswEdCv@redis:6379
-      JWT_SECRET: ApexV2JwtSecretSecure2026GrowthScale!QazXswEdCv
-      ENCRYPTION_MASTER_KEY: ApexV2EncMasterSecure2026GrowthScale!QazXswEdCv
-      SUPER_ADMIN_EMAIL: admin@60sec.shop
-      SUPER_ADMIN_PASSWORD: Admin@60SecShop!2026
+      DATABASE_URL: ${DATABASE_URL}
+      DB_SSL: ${DB_SSL:-false}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@60sec.shop}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: RaMLxrWYSrGWrMqlabJiRQPyDNeOOk3nQna5Zmk2MYg
-      MINIO_USE_SSL: "false"
-      MINIO_BUCKET_NAME: apex-assets
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-apex-assets}
     networks:
       - apex-network
     labels:
@@ -122,6 +143,10 @@ services:
       - "traefik.http.routers.api.priority=1000"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      # S12: L7 Rate Limiting (Refined: avg=100, burst=150)
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=150"
+      - "traefik.http.routers.api.middlewares=api-ratelimit"
       - "traefik.http.services.api.loadbalancer.server.port=3000"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/v1/health/liveness').then(r => process.exit(r.ok ? 0 : 1))"]
@@ -267,12 +292,15 @@ services:
     image: gitea/gitea:1.21-rootless
     container_name: apex-gitea
     restart: always
+    depends_on:
+      gitea-db:
+        condition: service_healthy
     environment:
       - GITEA__database__DB_TYPE=postgres
-      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__HOST=gitea-db:5432
       - GITEA__database__NAME=gitea
       - GITEA__database__USER=gitea
-      - GITEA__database__PASSWD=GiteaPass2026Fixed!
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
       - GITEA__server__DOMAIN=git.60sec.shop
       - GITEA__server__SSH_PORT=2222
       - GITEA__server__HTTP_PORT=3000
@@ -312,10 +340,11 @@ services:
     container_name: apex-webhook
     restart: always
     environment:
-      - WEBHOOK_SECRET=ApexDeploySecret2026
-    volumes:
-      # Mount host docker socket to control sibling containers
-      - /var/run/docker.sock:/var/run/docker.sock
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET}
+      - DOCKER_HOST=tcp://apex-docker-proxy:2375
+    # S11 FIX: Webhook now uses docker-proxy instead of direct socket
+    # volumes:
+    #   - /var/run/docker.sock:/var/run/docker.sock
       # Mount the entire repo so we can pull changes to HOST
       - /opt/apex-v2:/app
       # Mount keys explicitly (though they are inside /app/ops/keys)
@@ -331,6 +360,7 @@ volumes:
   letsencrypt_data:
   gitea_data:
   gitea_conf:
+  gitea_db_data:
 
 networks:
   apex-network:

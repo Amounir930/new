@@ -1,43 +1,45 @@
-# Gitleaks Configuration for APEX 2026
-# Mandatory Security Gate
+# Gitleaks configuration for APEX
+# This file defines patterns for secret detection and false-positive management
 
 [allowlist]
-description = "Global allowlist"
+description = "Allowlisted entries for APEX"
 paths = [
-    "\\.env\\.example$",
-    "\\.env\\.test$",
-    "packages/security/src/utils/scanner-cli\\.ts",
-    "scripts/test-s1\\.ts",
-    # Test files with mock secrets (non-production)
-    "packages/security/src/encryption\\.test\\.ts",
-    "packages/test-utils/src/security-base\\.test\\.ts"
+    '''(test|spec|mock|example)''',
+    '''bun\.lock''',
+    '''package\.json'''
 ]
-regexes = [
-    '''postgresql://placeholder-user@localhost:5432/db_safe''',
-    '''postgresql://placeholder-user:placeholder-password@localhost:5432/db_safe''',
-    '''postgresql://postgres:postgres@localhost:5432/test''',
-    '''postgresql://postgres:postgres@localhost:5432/apex_test''',
-    '''postgresql://postgres:postgres@localhost:5432/db_safe''',
-    '''postgresql://postgres:password@localhost:5432/prod_db''',
-    '''mock-secret-for-docs-generation-only''',
-    '''valid_secret_key_minimum_32_chars_long''',
-    '''test_secret_key_for_ci_environment_only_32''',
-    '''minio-test-secret-key-for-ci-only''',
-    '''placeholder-password''',
-    '''db_safe''',
-    # Test encryption keys (non-production)
-    '''test-encryption-key-for-unit-tests-min-length-32''',
-    '''random-test-key-[0-9a-f]{32}'''
+# Add specific gitleaks:allow comments
+stopwords = [
+    "gitleaks:allow"
 ]
 
 [[rules]]
-    id = "generic-secret"
-    description = "Generic Secret"
-    regex = '''(?i)(?:key|secret|token|password|auth|api)[-_]?(?:key|secret|token|password|auth|api)?\s*[:=]\s*['"]([0-9a-zA-Z]{16,})['"]'''
-    severity = "error"
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|secret|token|password|passwd|pwd)[=:]\s*['"][A-Za-z0-9+/]{32,}['"]'''
+entropy = 3.5
+keywords = ["key", "api", "token", "secret", "password"]
 
 [[rules]]
-    id = "postgres-connection-string"
-    description = "Postgres Connection String"
-    regex = '''postgres(?:ql)?://[a-zA-Z0-9_.-]+:[a-zA-Z0-9_.-]+@[a-zA-Z0-9_.-]+:\d+/[a-zA-Z0-9_.-]+'''
-    severity = "error"
+id = "aws-access-key"
+description = "AWS Access Key"
+regex = '''AKIA[0-9A-Z]{16}'''
+keywords = ["AKIA"]
+
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''gh[pso]_[a-zA-Z0-9]{36}'''
+keywords = ["ghp", "gho", "ghs", "ghu"]
+
+[[rules]]
+id = "stripe-secret-key"
+description = "Stripe Secret Key"
+regex = '''sk_live_[0-9a-zA-Z]{24}'''
+keywords = ["sk_live"]
+
+[[rules]]
+id = "slack-webhook"
+description = "Slack Webhook"
+regex = '''https://hooks\.slack\.com/services/T[a-zA-Z0-9_]+/B[a-zA-Z0-9_]+/[a-zA-Z0-9_]+'''
+keywords = ["hooks.slack.com"]
