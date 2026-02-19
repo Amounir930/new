@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Req, Res, Logger } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Request, Response as ExpressResponse } from 'express';
 import { AuditService } from '@apex/audit';
 
 @Controller(['admin/login', 'wp-admin', 'config.php', 'wp-login.php', '.env']) // Array of fake endpoints
@@ -14,7 +14,7 @@ export class HoneyTokensController {
      */
     @Get()
     @Post()
-    async handleHoneypot(@Req() req: Request, @Res() res: Response) {
+    async handleHoneypot(@Req() req: Request, @Res() res: ExpressResponse) {
         // 1. Realistic Delay (2-5 seconds) to mimic real processing as requested
         const delay = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
         await new Promise((resolve) => setTimeout(resolve, delay));
