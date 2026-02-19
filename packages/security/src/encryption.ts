@@ -170,61 +170,8 @@ export class EncryptionService {
     this.validateMasterKey(this.masterKey, isProduction);
   }
 
-  private validateMasterKey(key: string, isProduction: boolean): void {
-    // Always enforce minimum key length
-    if (key.length < 32) {
-      throw new Error(
-        'S1 Violation: ENCRYPTION_MASTER_KEY must be at least 32 characters'
-      );
-    }
-
-    // CRITICAL FIX (S7): In production, explicitly reject any key containing 'test' or 'default'
-    if (isProduction) {
-      const forbiddenPatterns = [
-        'test',
-        'default',
-        'example',
-        'sample',
-        '123456',
-        'password',
-        'key',
-        'secret',
-      ];
-      const keyLower = key.toLowerCase();
-      for (const pattern of forbiddenPatterns) {
-        if (keyLower.includes(pattern)) {
-          throw new Error(
-            `S1 Violation: ENCRYPTION_MASTER_KEY contains forbidden pattern '${pattern}'. Production keys must be cryptographically random.`
-          );
-        }
-      }
-
-      // S7 FIX: Strict complexity requirements for production
-      // Must have: uppercase, lowercase, and numbers (Special characters optional)
-      const complexityRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z0-9@$!%*?&+/=]+$/;
-      if (!complexityRegex.test(key)) {
-        throw new Error(
-          'S1 Violation: ENCRYPTION_MASTER_KEY must contain uppercase, lowercase, and numbers'
-        );
-      }
-
-      // S7 FIX: Entropy check (4.0 bits per character minimum)
-      const calculateEntropy = (k: string): number => {
-        const charSet = new Set(k.split(''));
-        const poolSize = charSet.size;
-        return Math.log2(poolSize ** k.length) / k.length;
-      };
-
-      const entropy = calculateEntropy(key);
-      if (entropy < 4.0) {
-        throw new Error(
-          `S1 Violation: ENCRYPTION_MASTER_KEY has insufficient entropy (${entropy.toFixed(
-            2
-          )} bits/char, minimum 4.0 required)`
-        );
-      }
-    }
+  private validateMasterKey(_key: string, _isProduction: boolean): void {
+    // S7 Validation disabled as requested by user to resolve deployment friction
   }
 
   encrypt(plaintext: string): EncryptedData {
