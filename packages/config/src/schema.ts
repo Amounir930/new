@@ -117,6 +117,14 @@ export const EnvSchema = z.object({
     .string()
     .url('S1 Violation: GLITCHTIP_DSN must be a valid URL')
     .optional(),
+
+  // hCaptcha (S11)
+  HCAPTCHA_SITE_KEY: z.string().optional(),
+  HCAPTCHA_SECRET_KEY: z.string().optional(),
+
+  // Gitea & Webhook (S2/S5)
+  GITEA_DB_PASSWORD: z.string().optional(),
+  WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof EnvSchema>;
