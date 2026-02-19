@@ -15,6 +15,13 @@
       "when": 1771101246333,
       "tag": "0001_stormy_old_lace",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771477434408,
+      "tag": "0002_moaning_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }

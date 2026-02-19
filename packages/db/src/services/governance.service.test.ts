@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { describe, expect, it, mock, spyOn } from 'bun:test';
 
 // 1. Mock drizzle-orm Natively in Bun
 mock.module('drizzle-orm', () => {
