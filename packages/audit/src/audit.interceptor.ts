@@ -21,7 +21,9 @@ import { AuditService } from './audit.service.js';
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
   constructor(
+    @Inject(Reflector)
     private readonly reflector: Reflector,
+    @Inject(AuditService)
     private readonly auditService: AuditService
   ) { }
 

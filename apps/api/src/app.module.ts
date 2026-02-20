@@ -63,15 +63,6 @@ import { TenantsModule } from './tenants/tenants.module.js';
       provide: APP_INTERCEPTOR,
       useClass: QuotaInterceptor,
     },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: AuditInterceptor,
-    },
-    // AuditInterceptor is used via APP_INTERCEPTOR
-    {
-      provide: 'AUDIT_SERVICE',
-      useExisting: AuditService,
-    },
   ],
   controllers: [AppController, ProductsController, HoneyTokensController],
 })
