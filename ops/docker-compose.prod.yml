@@ -226,9 +226,6 @@ services:
       - "traefik.http.routers.store.priority=500"
       - "traefik.http.routers.store.entrypoints=websecure"
       - "traefik.http.routers.store.tls.certresolver=letsencrypt"
-      # S8: Support SSL for any subdomain hit on the server
-      - "traefik.http.routers.store.tls.domains[0].main=60sec.shop"
-      - "traefik.http.routers.store.tls.domains[0].sans=*.60sec.shop"
       - "traefik.http.services.store.loadbalancer.server.port=3002"
     deploy:
       resources:

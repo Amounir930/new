@@ -3,11 +3,11 @@ const securityHeaders = [
         key: 'Content-Security-Policy',
         value: [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.apex.com", // Adjust as needed
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop", // Corrected domain
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-            "img-src 'self' data: https: https://*.minio.apex.com",
+            "img-src 'self' data: https: https://*.minio.60sec.shop",
             "font-src 'self' https://fonts.gstatic.com",
-            "connect-src 'self' https://api.apex.com",
+            "connect-src 'self' https://api.60sec.shop",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
