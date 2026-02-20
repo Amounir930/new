@@ -221,12 +221,19 @@ services:
       - apex-network
     labels:
       - "traefik.enable=true"
-      # Store handles the root domain and all shop subdomains (catch-all for tenants)
-      - "traefik.http.routers.store.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
-      - "traefik.http.routers.store.priority=500"
-      - "traefik.http.routers.store.entrypoints=websecure"
-      - "traefik.http.routers.store.tls.certresolver=letsencrypt"
-      - "traefik.http.services.store.loadbalancer.server.port=3002"
+      # Main domain router
+      - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
+      - "traefik.http.routers.store-main.priority=600"
+      - "traefik.http.routers.store-main.entrypoints=websecure"
+      - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.store-main.tls.domains[0].main=adel.60sec.shop"
+      - "traefik.http.services.store-main.loadbalancer.server.port=3002"
+      # Catch-all tenant router
+      - "traefik.http.routers.store-tenants.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      - "traefik.http.routers.store-tenants.priority=500"
+      - "traefik.http.routers.store-tenants.entrypoints=websecure"
+      - "traefik.http.routers.store-tenants.tls.certresolver=letsencrypt"
+      - "traefik.http.services.store-tenants.loadbalancer.server.port=3002"
     deploy:
       resources:
         limits:
@@ -310,6 +317,9 @@ services:
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      # S8: Basic Auth for Traefik Dashboard (admin@60sec.shop:Admin@60SecShop!2026)
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=admin@60sec.shop:{SHA}jE949HPLrf17SGLJUq5ATChEOeg="
+      - "traefik.http.routers.traefik.middlewares=traefik-auth"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
     volumes:
       # Removed direct socket access - using proxy instead for S15 security
@@ -402,12 +412,17 @@ services:
     image: adminer:latest
     container_name: apex-adminer
     restart: always
-    ports:
-      - "8080:8080"
     environment:
       - ADMINER_DEFAULT_SERVER=postgres
     networks:
       - apex-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
+      - "traefik.http.routers.adminer.priority=2500"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
     deploy:
       resources:
         limits:
