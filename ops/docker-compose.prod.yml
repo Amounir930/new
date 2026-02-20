@@ -303,7 +303,7 @@ services:
         condition: service_healthy
     environment:
       - GITEA__database__DB_TYPE=postgres
-      - GITEA__database__HOST=gitea-db:5432
+      - GITEA__database__HOST=postgres:5432
       - GITEA__database__NAME=gitea
       - GITEA__database__USER=gitea
       - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
