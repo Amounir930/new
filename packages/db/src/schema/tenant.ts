@@ -42,18 +42,5 @@ export const settings = pgTable('settings', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-/**
- * S2: Tenant-Isolated Pages
- */
-export const pages = pgTable('pages', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  slug: text('slug').notNull(),
-  title: text('title').notNull(),
-  content: text('content').default(''),
-  isPublished: boolean('is_published').default(true),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-// Re-export storefront tables (products, categories, orders, etc)
-export * from './storefront';
+// Note: Storefront tables (products, categories, pages, etc) are imported via @apex/db/schema/storefront
+// and should not be exported from here to avoid naming conflicts like 'pages'.
