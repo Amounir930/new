@@ -346,12 +346,9 @@ services:
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - DOCKER_HOST=tcp://apex-docker-proxy:2375
     # S11 FIX: Webhook now uses docker-proxy instead of direct socket
-    # volumes:
-    #   - /var/run/docker.sock:/var/run/docker.sock
+    volumes:
       # Mount the entire repo so we can pull changes to HOST
       - /opt/apex-v2:/app
-      # Mount keys explicitly (though they are inside /app/ops/keys)
-      # But standard permissions might be tricky, so we rely on them being present in /app
     networks:
       - apex-network
 
