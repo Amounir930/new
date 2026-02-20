@@ -7,11 +7,13 @@
  */
 
 import {
+  boolean,
   decimal,
   index,
   integer,
   jsonb,
   pgTable,
+  text,
   timestamp,
   uuid,
   varchar,
@@ -102,6 +104,36 @@ export const searchAnalytics = pgTable(
 );
 
 /**
+ * Hero Banners Table (Rotating Carousel)
+ * BR-01-SEC Compliance
+ */
+export const banners = pgTable(
+  'banners',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    title: varchar('title', { length: 255 }).notNull(),
+    subtitle: text('subtitle'),
+    imageUrl: text('image_url').notNull(),
+    mobileImageUrl: text('mobile_image_url'),
+    linkUrl: text('link_url'),
+    ctaText: varchar('cta_text', { length: 50 }).default('Shop Now'),
+    position: varchar('position', { length: 20 }).default('hero'), // hero, featured, popup
+    priority: integer('priority').default(0),
+    active: boolean('active').default(true),
+    backgroundColor: varchar('background_color', { length: 7 }), // Hex
+    textColor: varchar('text_color', { length: 7 }), // Hex
+    startDate: timestamp('start_date', { withTimezone: true }),
+    endDate: timestamp('end_date', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    idxBannersActive: index('idx_banners_active').on(table.active),
+    idxBannersPriority: index('idx_banners_priority').on(table.priority),
+  })
+);
+
+/**
  * Type Exports
  */
 export type FlashSale = typeof flashSales.$inferSelect;
@@ -112,3 +144,6 @@ export type NewFlashSaleProduct = typeof flashSaleProducts.$inferInsert;
 
 export type BentoGrid = typeof bentoGrids.$inferSelect;
 export type NewBentoGrid = typeof bentoGrids.$inferInsert;
+
+export type Banner = typeof banners.$inferSelect;
+export type NewBanner = typeof banners.$inferInsert;

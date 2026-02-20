@@ -108,6 +108,7 @@ export const EnvSchema = z.object({
   // Rate Limiting (S6)
   RATE_LIMIT_TTL: z.string().default('60'),
   RATE_LIMIT_MAX: z.string().default('100'),
+  RATE_LIMIT_HOME: z.string().default('100'), // BR-01-SEC
 
   // Tenant Isolation (S2)
   TENANT_ISOLATION_MODE: z.enum(['strict', 'flexible']).default('strict'),
@@ -125,6 +126,13 @@ export const EnvSchema = z.object({
   // Gitea & Webhook (S2/S5)
   GITEA_DB_PASSWORD: z.string().optional(),
   WEBHOOK_SECRET: z.string().optional(),
+
+  // Storefront Performance (BR-01-SEC)
+  HOME_CACHE_TTL: z.string().default('10'),
+
+  // AI & Vector Search (BR-03-SEC)
+  PGVECTOR_DIMENSION: z.string().default('1536'),
+  OPENAI_API_KEY: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof EnvSchema>;

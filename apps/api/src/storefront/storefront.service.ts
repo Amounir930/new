@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { db, eq, desc, products } from '@apex/db';
+import { db, eq, desc, products, banners, and, isNull, lte, gte } from '@apex/db';
 import { RedisRateLimitStore } from '@apex/middleware';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class StorefrontService {
         const cacheKey = `storefront:home:${tenantId || 'default'}`;
         const client = await this.redisStore.getClient();
 
-        // Try to get from cache
+        // 1. Try to get from cache (S6/Performance)
         if (client) {
             const cachedData = await client.get(cacheKey);
             if (cachedData) {
@@ -18,40 +18,55 @@ export class StorefrontService {
             }
         }
 
-        // Note: TenantIsolationMiddleware handles search_path automatically for S2
-        // We just query as if it's a single DB
+        // 2. Fetch fresh data with parallel queries (S3/Performance)
+        const now = new Date();
 
-        const bestSellers = await db
-            .select()
-            .from(products)
-            .where(eq(products.isActive, true))
-            .limit(8)
-            .orderBy(desc(products.createdAt));
+        const [bestSellers, activeBanners] = await Promise.all([
+            // Best Sellers
+            db.select()
+                .from(products)
+                .where(eq(products.isActive, true))
+                .limit(8)
+                .orderBy(desc(products.createdAt)),
 
-        // For now, banners are mocked until we have the banner table
-        const banners = [
-            {
-                id: '1',
-                title: 'Summer Collection 2026',
-                subtitle: 'Up to 50% Off',
-                imageUrl: 'https://placehold.co/1200x400?text=Summer+Collection',
-                link: '/category/summer',
-            },
-            {
-                id: '2',
-                title: 'Tech Revolution',
-                subtitle: 'Latest Gadgets',
-                imageUrl: 'https://placehold.co/1200x400?text=Tech+Revolution',
-                link: '/category/tech',
-            },
-        ];
+            // Active Banners (BR-01-SEC logic)
+            db.select()
+                .from(banners)
+                .where(
+                    and(
+                        eq(banners.active, true),
+                        eq(banners.position, 'hero'),
+                        // Check if within date range or dates are null
+                        and(
+                            and(
+                                isNull(banners.startDate),
+                                isNull(banners.endDate)
+                            ) ||
+                            and(
+                                lte(banners.startDate, now),
+                                gte(banners.endDate, now)
+                            ) ||
+                            and(
+                                lte(banners.startDate, now),
+                                isNull(banners.endDate)
+                            )
+                        )
+                    )
+                )
+                .limit(5)
+                .orderBy(desc(banners.priority))
+        ]);
 
         const homeData = {
-            banners,
+            banners: activeBanners,
             bestSellers,
+            meta: {
+                lastUpdated: now.toISOString(),
+                tenantId: tenantId
+            }
         };
 
-        // Store in cache for 5 minutes
+        // 3. Cache results (S6/Performance)
         if (client) {
             await client.setEx(cacheKey, 300, JSON.stringify(homeData));
         }

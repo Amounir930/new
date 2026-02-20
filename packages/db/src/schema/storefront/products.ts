@@ -21,8 +21,18 @@ import {
   unique,
   uuid,
   varchar,
+  customType,
 } from 'drizzle-orm/pg-core';
 import { categories } from './categories';
+
+/**
+ * S3: AI/Vector Search Support (pgvector)
+ */
+const vector = customType<{ data: number[]; config: { dimensions: number } }>({
+  dataType(config) {
+    return `vector(${config?.dimensions ?? 1536})`;
+  },
+});
 
 /**
  * Products Table
@@ -57,6 +67,9 @@ export const products = pgTable(
     // Flags
     isActive: boolean('is_active').default(true),
     isFeatured: boolean('is_featured').default(false),
+
+    // AI Similarity (S3)
+    embedding: vector('embedding', { dimensions: 1536 }),
 
     // SEO
     metaTitle: varchar('meta_title', { length: 60 }),

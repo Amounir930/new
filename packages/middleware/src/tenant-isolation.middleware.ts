@@ -152,9 +152,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     try {
       const tenantContext = await validateTenant(subdomain);
 
-      // S2: Absolute Isolation (Managed Scope)
-      // Executing SET search_path to ensure the database enforces isolation at the session level.
-      // This is the "Hard Lock" requested by the user.
+      // S2: Hard Isolation (Session-Level)
+      // We set the search_path immediately before entering the Async context
       await publicDb.execute(
         sql`SET search_path TO ${sql.identifier(tenantContext.schemaName)}, public`
       );
@@ -164,20 +163,37 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         res.setHeader('X-Tenant-ID', tenantContext.tenantId);
         res.setHeader('X-Tenant-Schema', tenantContext.schemaName);
 
-        // Reset path after the request is finished to prevent cross-contamination in the pool
-        res.on('finish', async () => {
+        // S2: Verification - Ensure isolation is active for this connection
+        try {
+          const check = await publicDb.execute(sql`SELECT current_schema()`);
+          const currentSchema = (check.rows[0] as any)?.current_schema;
+          if (currentSchema !== tenantContext.schemaName) {
+            throw new Error(`S2 Violation: Schema isolation failed for ${tenantContext.subdomain}. Found: ${currentSchema}`);
+          }
+        } catch (e) {
+          console.error('S2 Critical Failure:', e);
+          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            error: 'S2 Isolation Failure',
+            message: 'Strict security enforcement failed'
+          });
+        }
+
+        // Reset path after the request is finished/closed to prevent pool contamination
+        const cleanup = async () => {
           try {
             await publicDb.execute(sql`SET search_path TO public`);
           } catch (e) {
             console.error('S2 WARNING: Failed to reset search_path', e);
           }
-        });
+        };
+
+        res.on('finish', cleanup);
+        res.on('close', cleanup);
 
         next();
       });
     } catch (_error) {
       // S2: Invalid or non-existent tenant subdomains are rejected with 403 Forbidden
-      // This prevents further processing and potential information leakage.
       res.status(HttpStatus.FORBIDDEN).json({
         statusCode: HttpStatus.FORBIDDEN,
         message: `S2 Violation: Domain '${subdomain}' is not authorized`,
