@@ -4,14 +4,13 @@
  * Purpose: Extract tenant from subdomain and enforce schema isolation
  */
 
-import { publicDb, tenants } from '@apex/db';
+import { publicDb, tenants, eq, sql } from '@apex/db';
 import {
   HttpStatus,
   Injectable,
   type NestMiddleware,
   UnauthorizedException,
 } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
 import type { NextFunction, Request, Response } from 'express';
 import { type TenantContext, tenantStorage } from './connection-context.js';
 
@@ -119,7 +118,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       ].includes(subdomain.toLowerCase())
     ) {
       // S2 FIX: Infrastructure subdomains must explicitly set search_path to public
-      // to resolve "Table not found" errors when connections are reused.
       await publicDb.execute(sql`SET search_path TO public`);
       return next();
     }

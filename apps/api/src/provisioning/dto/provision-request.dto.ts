@@ -6,7 +6,23 @@ import { NicheSchema } from '@apex/validators';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-export const ProvisionRequestSchema = z.object({
+/**
+ * S21: Provision Request Schema Interface
+ * Breaking Zod Inference Depth to prevent TS2589
+ */
+export interface ProvisionRequest {
+  subdomain: string;
+  storeName: string;
+  adminEmail: string;
+  plan?: 'free' | 'basic' | 'pro' | 'enterprise';
+  nicheType?: string | null;
+  uiConfig?: Record<string, any>;
+  superAdminKey?: string;
+  blueprint?: any;
+  blueprintId?: string;
+}
+
+export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
   /**
    * Unique subdomain for the store (e.g., "coffee-beans")
    */
@@ -37,41 +53,32 @@ export const ProvisionRequestSchema = z.object({
   /**
    * Industry niche classification (S2.5)
    */
-  nicheType: NicheSchema.optional(),
+  nicheType: z.any().optional().nullable(),
 
   /**
    * SDUI/Theme configuration (S2.5)
    */
-  uiConfig: z.record(z.unknown()).optional().default({}),
+  uiConfig: z.record(z.any()).optional().default({}),
 
   /**
    * Super Admin secret key
-   * S3 Validation: Must be 32-128 chars, alphanumeric + hyphen/underscore only
-   * OPTIONAL: If the request is authenticated with a Super Admin JWT, this can be omitted.
    */
   superAdminKey: z
-    .string({
-      invalid_type_error: 'Super Admin key must be a string',
-    })
-    .min(32, 'Super Admin key must be at least 32 characters')
-    .max(128, 'Super Admin key too long (max 128)')
-    .regex(
-      /^[A-Za-z0-9-_]+$/,
-      'Super Admin key must be alphanumeric with hyphens/underscores only'
-    )
+    .string()
+    .min(32)
+    .max(128)
+    .regex(/^[A-Za-z0-9-_]+$/)
     .optional(),
 
   /**
-   * Optional inline blueprint definition (S3 Relaxed)
-   * Allows passing a custom blueprint JSON directly in the provision request.
+   * Optional inline blueprint definition
    */
-  blueprint: z.unknown().optional(),
+  blueprint: z.any().optional(),
 
   /**
-   * Optional named blueprint ID (e.g., from Blueprints table)
-   * S21: Allows linking specific predefined blueprints to new tenants.
+   * Optional named blueprint ID
    */
   blueprintId: z.string().uuid().optional(),
 });
 
-export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) {}
+export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) { }

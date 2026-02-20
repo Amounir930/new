@@ -3,9 +3,15 @@
  * Seeds initial data (Admin user, default settings) for new stores
  */
 
-import { publicPool } from '@apex/db';
-import { sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import {
+  onboardingBlueprints,
+  tenants,
+  tenantQuotas,
+  sql,
+  eq,
+  publicPool,
+  drizzle,
+} from '@apex/db';
 import { BlueprintExecutor } from './blueprint/executor';
 import { CatalogModule } from './blueprint/modules/catalog';
 import { CoreModule } from './blueprint/modules/core';

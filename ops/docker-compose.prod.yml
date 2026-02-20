@@ -137,9 +137,8 @@ services:
       - apex-network
     labels:
       - "traefik.enable=true"
-      # Route main domain, api, staging and blue/green subdomains
-      # Note: Priority ensures Admin (2000) is checked before API (1000)
-      - "traefik.http.routers.api.rule=Host(`60sec.shop`) || Host(`api.60sec.shop`) || Host(`staging.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      # Route main API domain and blue/green subdomains
+      - "traefik.http.routers.api.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
       - "traefik.http.routers.api.priority=1000"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
@@ -195,6 +194,39 @@ services:
       - "traefik.http.middlewares.admin-security.headers.contentTypeNosniff=true"
       - "traefik.http.routers.admin.middlewares=admin-security"
       - "traefik.http.services.admin.loadbalancer.server.port=3001"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+
+  # ═══════════════════════════════════════════════════════════════
+  # Storefront UI (Public Shop)
+  # ═══════════════════════════════════════════════════════════════
+  store:
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:latest
+    container_name: apex-store
+    build:
+      context: ..
+      dockerfile: apps/store/Dockerfile
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      INTERNAL_API_URL: http://api:3000/api
+    networks:
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      # Store handles the root domain and all shop subdomains (catch-all for tenants)
+      - "traefik.http.routers.store.rule=Host(`60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      - "traefik.http.routers.store.priority=500"
+      - "traefik.http.routers.store.entrypoints=websecure"
+      - "traefik.http.routers.store.tls.certresolver=letsencrypt"
+      - "traefik.http.services.store.loadbalancer.server.port=3002"
     deploy:
       resources:
         limits:

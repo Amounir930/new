@@ -1,4 +1,4 @@
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { NodePgDatabase } from '@apex/db';
 
 export interface BlueprintContext {
   subdomain: string;

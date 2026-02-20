@@ -1,5 +1,4 @@
-import { pages, publicPool, settings } from '@apex/db';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { pages, publicPool, settings, drizzle } from '@apex/db';
 import type { BlueprintTemplate } from './blueprint/types';
 import { sanitizeSchemaName } from './schema-manager';
 

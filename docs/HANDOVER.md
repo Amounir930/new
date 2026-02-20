@@ -14,9 +14,9 @@ The following records are configured at the registrar:
 
 | Type | Host | Value | Purpose |
 | :--- | :--- | :--- | :--- |
-| **A** | `@` | `34.102.121.225` | Root Domain (`60sec.shop`) |
+| **A** | `@` | `34.102.121.225` | **Storefront Root** (`60sec.shop`) |
 | **A** | `api` | `34.102.121.225` | API Endpoint (`api.60sec.shop`) |
-| **A** | `*` | `34.102.121.225` | Wildcard Tenants (`*.60sec.shop`) |
+| **A** | `*` | `34.102.121.225` | **Multi-tenant Shops** (`*.60sec.shop`) |
 | **A** | `super-admin`| `34.102.121.225` | Administration UI |
 | **A** | `git` | `34.102.121.225` | **Gitea Fortress** (Source Code) |
 
@@ -40,7 +40,7 @@ We use a **Local-First, Artifact-Driven** strategy.
 cd /opt/apex-v2 
 # Pull changes & restart modified containers only
 git pull
-sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --build --no-deps api admin
+sudo docker compose --env-file .env -f ops/docker-compose.prod.yml up -d --build --no-deps api admin store
 ```
 
 ## 🔐 Security Protocols (S1-S15)
@@ -53,9 +53,10 @@ The system is strictly hardened according to Apex v2 security standards:
 - **S15:** Active Defense & Surgical Sync.
 
 ## 🛠️ Management & Monitoring
-- **View Logs:** `sudo docker logs -f apex-api`
+- **View Logs:** `sudo docker logs -f apex-api` OR `sudo docker logs -f apex-store`
 - **Resource Usage:** `sudo docker stats`
 - **Restart Services:** `sudo docker compose -f ops/docker-compose.prod.yml restart`
+- **Manual Sync:** `rsync -avz --exclude 'node_modules' ./ deploy@34.102.121.225:/opt/apex-v2`
 
 ---
-*Documented on 2026-02-18* 🛡️🚀✨🏁
+*Documented on 2026-02-20* 🛡️🚀✨💎🏁

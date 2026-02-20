@@ -29,7 +29,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from '@apex/db';
 
 export interface ProvisioningOptions {
   subdomain: string;
@@ -55,7 +55,7 @@ export class ProvisioningService {
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
     @Inject('TENANT_REGISTRY')
     private readonly tenantRegistry: TenantRegistryService
-  ) {}
+  ) { }
 
   /**
    * Provision a new store in under 60 seconds
@@ -157,8 +157,7 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${
-          error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }

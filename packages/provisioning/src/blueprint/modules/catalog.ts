@@ -1,5 +1,8 @@
-import { categories, products } from '@apex/db';
-import { eq } from 'drizzle-orm';
+import {
+  products,
+  categories,
+  eq
+} from '@apex/db';
 import type {
   BlueprintConfig,
   BlueprintContext,

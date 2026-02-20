@@ -68,35 +68,25 @@ export const onboardingBlueprints = pgTable(
   })
 );
 
+
 /**
- * S4: Audit Logs (Immutable, Global)
+ * S2: Tenant Migration Tracking
+ * Tracks which DB migrations have been applied per tenant schema.
+ * Critical for managing schema evolution across millions of tenant stores.
  */
-export const auditLogs = pgTable(
-  'audit_logs',
+export const tenantMigrations = pgTable(
+  'tenant_migrations',
   {
     id: uuid('id').defaultRandom().primaryKey(),
     tenantId: text('tenant_id').notNull(),
-    userId: text('user_id'),
-    userEmail: text('user_email'),
-    action: text('action').notNull(),
-    entityType: text('entity_type').notNull(),
-    entityId: text('entity_id').notNull(),
-    metadata: jsonb('metadata'),
-    ipAddress: text('ip_address'),
-    userAgent: text('user_agent'),
-    severity: text('severity').default('INFO'),
-    result: text('result').default('SUCCESS'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
+    migrationName: text('migration_name').notNull(),
+    appliedAt: timestamp('applied_at').defaultNow().notNull(),
+    status: text('status').notNull().default('success'), // success | failed | pending
+    errorMessage: text('error_message'),
   },
   (table) => ({
-    tenantIdx: index('audit_logs_tenant_idx').on(table.tenantId),
-    entityIdx: index('audit_logs_entity_idx').on(
-      table.entityType,
-      table.entityId
-    ),
-    actionIdx: index('audit_logs_action_idx').on(table.action),
-    createdIdx: index('audit_logs_created_idx').on(table.createdAt),
+    tenantMigIdx: index('tenant_migrations_tenant_idx').on(table.tenantId),
   })
 );
 
-export type AuditLog = InferSelectModel<typeof auditLogs>;
+export type TenantMigration = InferSelectModel<typeof tenantMigrations>;

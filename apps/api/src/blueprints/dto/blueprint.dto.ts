@@ -1,4 +1,3 @@
-import { NicheSchema } from '@apex/validators';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 import {
@@ -6,59 +5,72 @@ import {
   MASTER_QUOTA_LIST,
 } from '../../../../../packages/provisioning/src/blueprint/constants.js';
 
-// S3: Strict Input Validation
+// ─── S21: Blueprint Structure Schema ─────────────────────────────────────────
+// Using explicit interface + z.lazy() to break TypeScript's deep-inference loop.
+// This is the architectural solution: define the shape explicitly, let TS stop recursing.
+
+export interface BlueprintStructure {
+  version: string;
+  name: string;
+  quotas: Record<string, number>;
+  modules: Record<string, boolean | Record<string, unknown>>;
+  settings?: Record<string, unknown>;
+  pages?: unknown[];
+  products?: unknown[];
+}
+
+export const blueprintStructureSchema: z.ZodType<BlueprintStructure> = z.object({
+  version: z.string(),
+  name: z.string().min(2).max(100),
+  quotas: z.record(z.string(), z.number()).superRefine((val, ctx) => {
+    for (const q of MASTER_QUOTA_LIST) {
+      if (!(q in val)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Missing quota: ${q}` });
+      }
+    }
+  }),
+  modules: z.record(z.string(), z.union([z.boolean(), z.record(z.unknown())])).superRefine((val, ctx) => {
+    for (const f of MASTER_FEATURE_LIST) {
+      if (!(f in val)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Missing module: ${f}` });
+      }
+    }
+  }),
+  settings: z.record(z.unknown()).optional(),
+  pages: z.array(z.unknown()).optional(),
+  products: z.array(z.unknown()).optional(),
+});
+
+// ─── Create Blueprint ─────────────────────────────────────────────────────────
+
 export const createBlueprintSchema = z.object({
   name: z.string().min(3).max(100),
   description: z.string().optional(),
-  plan: z.enum(['free', 'basic', 'pro', 'enterprise']).default('free'),
-  nicheType: NicheSchema.optional()
-    .nullable()
-    .transform((val) => val || null),
+  plan: z.string().default('free'),
+  nicheType: z.string().optional().nullable(),
   uiConfig: z.record(z.unknown()).optional().default({}),
   isDefault: z.boolean().default(false),
-  status: z.enum(['active', 'paused']).default('active'),
-  // S21: Strict nested validation for the blueprint structure
-  blueprint: z
-    .object({
-      version: z.string(),
-      name: z.string().min(2).max(100),
-      quotas: z.record(z.string(), z.number()).refine(
-        (val) => {
-          return MASTER_QUOTA_LIST.every((q) => q in val);
-        },
-        {
-          message: `Blueprint quotas must include: ${MASTER_QUOTA_LIST.join(', ')}`,
-        }
-      ),
-      modules: z
-        .record(z.string(), z.union([z.boolean(), z.record(z.unknown())]))
-        .refine(
-          (val) => {
-            return MASTER_FEATURE_LIST.every((f) => f in val);
-          },
-          {
-            message: `Blueprint modules must include all 41+ features: ${MASTER_FEATURE_LIST.join(', ')}`,
-          }
-        ),
-      settings: z.record(z.unknown()).optional().default({}),
-      pages: z.array(z.unknown()).optional().default([]),
-      products: z.array(z.unknown()).optional().default([]),
-    })
-    .passthrough(),
+  status: z.string().default('active'),
+  blueprint: blueprintStructureSchema.optional(),
 });
 
-export class CreateBlueprintDto extends createZodDto(createBlueprintSchema) {}
+export type CreateBlueprintInput = z.infer<typeof createBlueprintSchema>;
+export class CreateBlueprintDto extends createZodDto(createBlueprintSchema) { }
+
+// ─── Update Blueprint ─────────────────────────────────────────────────────────
 
 export const updateBlueprintSchema = createBlueprintSchema.partial();
-export class UpdateBlueprintDto extends createZodDto(updateBlueprintSchema) {}
+export type UpdateBlueprintInput = z.infer<typeof updateBlueprintSchema>;
+export class UpdateBlueprintDto extends createZodDto(updateBlueprintSchema) { }
 
-// S22: Snapshot DTO
+// ─── Snapshot Blueprint ───────────────────────────────────────────────────────
+
 export const snapshotBlueprintSchema = z.object({
   subdomain: z.string().min(3),
   name: z.string().min(3),
   description: z.string().optional(),
-  nicheType: NicheSchema.optional(),
+  nicheType: z.string().optional(),
 });
-export class SnapshotBlueprintDto extends createZodDto(
-  snapshotBlueprintSchema
-) {}
+
+export type SnapshotBlueprintInput = z.infer<typeof snapshotBlueprintSchema>;
+export class SnapshotBlueprintDto extends createZodDto(snapshotBlueprintSchema) { }

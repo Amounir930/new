@@ -32,7 +32,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) {}
+  ) { }
 
   /**
    * POST /api/provision
@@ -55,8 +55,8 @@ export class ProvisioningController {
       subdomain: dto.subdomain,
       adminEmail: dto.adminEmail,
       storeName: dto.storeName,
-      plan: dto.plan,
-      nicheType: dto.nicheType,
+      plan: dto.plan ?? 'free',
+      nicheType: dto.nicheType ?? undefined,
       uiConfig: dto.uiConfig,
       blueprint: dto.blueprint as unknown, // S3: Inject custom blueprint
       blueprintId: dto.blueprintId, // S21: Pass specific blueprint ID

@@ -29,6 +29,7 @@ import { HealthModule } from './health/health.module.js';
 import { ProductsController } from './products/products.controller.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 import { HoneyTokensController } from './security/honey-tokens.controller.js';
+import { StorefrontModule } from './storefront/storefront.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 
 @Module({
@@ -50,6 +51,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     ProvisioningModule,
     BlueprintsModule,
     TenantsModule,
+    StorefrontModule,
     AuditModule,
   ],
   providers: [

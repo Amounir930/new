@@ -1,5 +1,4 @@
-import { onboardingBlueprints, publicDb } from '@apex/db';
-import { and, desc, eq } from 'drizzle-orm';
+import { onboardingBlueprints, eq, and, desc, publicDb } from '@apex/db';
 import { validateBlueprint } from './blueprint/executor.js';
 import type { BlueprintRecord, BlueprintTemplate } from './blueprint/types.js';
 
@@ -70,7 +69,7 @@ export async function getAllBlueprints(): Promise<BlueprintRecord[]> {
     .from(onboardingBlueprints)
     .orderBy(desc(onboardingBlueprints.createdAt));
 
-  return results.map((r) => ({
+  return results.map((r: any) => ({
     ...r,
     blueprint: r.blueprint as unknown as BlueprintTemplate,
     uiConfig: r.uiConfig as Record<string, unknown> | null,

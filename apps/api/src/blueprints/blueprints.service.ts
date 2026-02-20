@@ -1,11 +1,9 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
-import { onboardingBlueprints } from '@apex/db';
+import { onboardingBlueprints, eq, sql, drizzle, type NodePgDatabase } from '@apex/db';
 import type { BlueprintRecord, BlueprintTemplate } from '@apex/provisioning';
 import { SnapshotManager, validateBlueprint } from '@apex/provisioning';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
-import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type { Pool } from 'pg';
 import type {
   CreateBlueprintDto,
