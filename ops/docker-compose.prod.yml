@@ -226,6 +226,9 @@ services:
       - "traefik.http.routers.store.priority=500"
       - "traefik.http.routers.store.entrypoints=websecure"
       - "traefik.http.routers.store.tls.certresolver=letsencrypt"
+      # S8: Support SSL for any subdomain hit on the server
+      - "traefik.http.routers.store.tls.domains[0].main=60sec.shop"
+      - "traefik.http.routers.store.tls.domains[0].sans=*.60sec.shop"
       - "traefik.http.services.store.loadbalancer.server.port=3002"
     deploy:
       resources:
@@ -280,6 +283,9 @@ services:
       - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=ops_apex-network"
+      # S8: Secure Traefik Dashboard with SSL
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       # Auto-redirect HTTP -> HTTPS
@@ -300,6 +306,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.60sec.shop`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
     volumes:
       # Removed direct socket access - using proxy instead for S15 security
       - letsencrypt_data:/letsencrypt
