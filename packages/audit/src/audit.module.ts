@@ -2,7 +2,7 @@ import { AuditInterceptor } from './audit.interceptor.js';
 import { AuditService } from './audit.service.js';
 import { DbModule } from '@apex/db';
 import { Global, Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 
 /**
  * S4: Audit Module
@@ -12,12 +12,13 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 @Module({
   imports: [DbModule],
   providers: [
+    Reflector,
     AuditService,
     {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
     },
   ],
-  exports: [AuditService],
+  exports: [AuditService, Reflector],
 })
 export class AuditModule { }
