@@ -222,7 +222,7 @@ services:
     labels:
       - "traefik.enable=true"
       # Store handles the root domain and all shop subdomains (catch-all for tenants)
-      - "traefik.http.routers.store.rule=Host(`60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      - "traefik.http.routers.store.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
       - "traefik.http.routers.store.priority=500"
       - "traefik.http.routers.store.entrypoints=websecure"
       - "traefik.http.routers.store.tls.certresolver=letsencrypt"
