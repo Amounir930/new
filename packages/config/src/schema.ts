@@ -47,7 +47,7 @@ export const EnvSchema = z.object({
         /[A-Z]/.test(key) &&
         /[a-z]/.test(key) &&
         /[0-9]/.test(key) &&
-        /[@$!%*?&]/.test(key)
+        /[@$!%*?&#/=_+.-]/.test(key)
       );
     }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special)'),
 
@@ -64,14 +64,14 @@ export const EnvSchema = z.object({
   // Database Configuration
   DATABASE_URL: z
     .string()
-    .url('S1 Violation: DATABASE_URL must be a valid URL')
+    .min(1, 'S1 Violation: DATABASE_URL is required')
     .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL is supported'),
   DB_SSL: z.enum(['true', 'false']).default('true'),
 
   // Redis Configuration
   REDIS_URL: z
     .string()
-    .url('S1 Violation: REDIS_URL must be a valid URL')
+    .min(1, 'S1 Violation: REDIS_URL is required')
     .default('redis://localhost:6379'),
 
   // MinIO/S3 Configuration
