@@ -2,12 +2,12 @@ const securityHeaders = [
     {
         key: 'Content-Security-Policy',
         value: [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop",
-            "img-src 'self' data: https: https://*.60sec.shop",
-            "font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop",
-            "connect-src 'self' https://*.60sec.shop",
+            "default-src 'self' localhost:*",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop localhost:*",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop localhost:*",
+            "img-src 'self' data: https: https://*.60sec.shop localhost:*",
+            "font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop localhost:*",
+            "connect-src 'self' https://*.60sec.shop http://localhost:*",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
