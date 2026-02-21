@@ -83,11 +83,13 @@ services:
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio.middlewares=apex-basic-auth"
       - "traefik.http.services.minio.loadbalancer.server.port=9000"
       - "traefik.http.routers.minio-console.rule=Host(`console.storage.60sec.shop`)"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
       - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
       - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.routers.minio-console.middlewares=apex-basic-auth"
       - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
     networks:
       - apex-network
@@ -129,15 +131,13 @@ services:
       - apex-network
     labels:
       - "traefik.enable=true"
-      # Route main API domain and blue/green subdomains
       - "traefik.http.routers.api.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
       - "traefik.http.routers.api.priority=1000"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
-      # S12: L7 Rate Limiting (Refined: avg=100, burst=150)
       - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=150"
-      - "traefik.http.routers.api.middlewares=api-ratelimit"
+      - "traefik.http.routers.api.middlewares=api-ratelimit,apex-basic-auth"
       - "traefik.http.services.api.loadbalancer.server.port=3000"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/health/liveness').then(r => process.exit(r.ok ? 0 : 1))"]
@@ -359,6 +359,7 @@ services:
       - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
       - "traefik.http.routers.mailpit.entrypoints=websecure"
       - "traefik.http.routers.mailpit.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.mailpit.middlewares=apex-basic-auth"
       - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
@@ -387,7 +388,6 @@ services:
       BACKUP_KEEP_DAYS: 7
       BACKUP_KEEP_WEEKS: 4
       BACKUP_KEEP_MONTHS: 6
-      HEALTHCHECK_PORT: 8080
     volumes:
       - db_backups:/backups
     depends_on:
@@ -431,7 +431,6 @@ services:
       POSTGRES_DB: gitea
       SCHEDULE: "@daily"
       BACKUP_KEEP_DAYS: 7
-      HEALTHCHECK_PORT: 8080
     volumes:
       - gitea_backups:/backups
     depends_on:
@@ -486,6 +485,7 @@ services:
       - "traefik.http.routers.gitea.priority=5000"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.gitea.middlewares=apex-basic-auth"
       - "traefik.http.services.gitea.loadbalancer.server.port=3000"
 
   # ═══════════════════════════════════════════════════════════════
