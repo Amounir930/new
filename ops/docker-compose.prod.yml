@@ -330,11 +330,9 @@ services:
       # Redirect /dashboard to /dashboard/ to avoid 404
       - "traefik.http.middlewares.dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$"
       - "traefik.http.middlewares.dash-redirect.redirectregex.replacement=$${1}/"
-      # Forward Auth Middleware
-      - "traefik.http.middlewares.auth-portal-fw.forwardauth.address=http://auth-portal:8080/auth"
-      - "traefik.http.middlewares.auth-portal-fw.forwardauth.trustForwardHeader=true"
-      # Secure BOTH dashboard and API
-      - "traefik.http.routers.traefik-dash.middlewares=dash-redirect,auth-portal-fw"
+      # Secure BOTH dashboard and API with BasicAuth
+      - "traefik.http.middlewares.apex-basic-auth.basicauth.users=${APEX_AUTH}"
+      - "traefik.http.routers.traefik-dash.middlewares=dash-redirect,apex-basic-auth"
       - "traefik.http.services.traefik-dummy.loadbalancer.server.port=9999"
     volumes:
       # Removed direct socket access - using proxy instead for S15 security
@@ -370,31 +368,6 @@ services:
     networks:
       - apex-network
 
-  # ═══════════════════════════════════════════════════════════════
-  # Auth Portal (Surgical Security UI)
-  # ═══════════════════════════════════════════════════════════════
-  auth-portal:
-    build:
-      context: ..
-      dockerfile: ops/auth-portal/Dockerfile
-    container_name: apex-auth-portal
-    restart: always
-    env_file:
-      - ../.env
-    environment:
-      - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL:-admin@60sec.shop}
-      - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD:-Admin@60SecShop!2026}
-      - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - apex-network
-    labels:
-      - "traefik.enable=true"
-      # Public Login Router
-      - "traefik.http.routers.auth-login.rule=Host(`traefik.60sec.shop`) && (PathPrefix(`/login`) || PathPrefix(`/auth`))"
-      - "traefik.http.routers.auth-login.priority=6000"
-      - "traefik.http.routers.auth-login.entrypoints=websecure"
-      - "traefik.http.routers.auth-login.tls.certresolver=letsencrypt"
-      - "traefik.http.services.auth-portal.loadbalancer.server.port=8080"
 
   # ═══════════════════════════════════════════════════════════════
   # Database Backup (Postgres)
@@ -417,11 +390,6 @@ services:
       HEALTHCHECK_PORT: 8080
     volumes:
       - db_backups:/backups
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
     depends_on:
       postgres:
         condition: service_healthy
@@ -466,11 +434,6 @@ services:
       HEALTHCHECK_PORT: 8080
     volumes:
       - gitea_backups:/backups
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
     depends_on:
       gitea-db:
         condition: service_healthy
@@ -573,8 +536,8 @@ services:
       - "traefik.http.routers.adminer.priority=2500"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
-      # Use Auth Portal instead of BasicAuth for consistency & wow effect
-      - "traefik.http.routers.adminer.middlewares=auth-portal-fw"
+      # Use same BasicAuth for Adminer
+      - "traefik.http.routers.adminer.middlewares=apex-basic-auth"
       - "traefik.http.services.adminer-svc.loadbalancer.server.port=8080"
       - "traefik.http.routers.adminer.service=adminer-svc"
     deploy:
