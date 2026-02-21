@@ -65,7 +65,7 @@ services:
     environment:
       NODE_ENV: production
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -223,8 +223,8 @@ services:
       - "traefik.enable=true"
       # S8: Inject CSP via Traefik (Fixes styling without rebuild)
       - "traefik.http.middlewares.store-csp.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-      # Main domain router
-      - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
+      # Main domain router (Added test2 specifically for immediate SSL)
+      - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`) || Host(`test2.60sec.shop`)"
       - "traefik.http.routers.store-main.priority=2000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
@@ -324,7 +324,7 @@ services:
       # S8: Basic Auth for Traefik Dashboard (admin@60sec.shop:Admin@60SecShop!2026)
       - "traefik.http.middlewares.traefik-auth.basicauth.users=admin@60sec.shop:{SHA}jE949HPLrf17SGLJUq5ATChEOeg="
       # Redirect /dashboard to /dashboard/ to avoid 404
-      - "traefik.http.middlewares.dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$$"
+      - "traefik.http.middlewares.dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$"
       - "traefik.http.middlewares.dash-redirect.redirectregex.replacement=$${1}/"
       - "traefik.http.routers.traefik-dash.middlewares=traefik-auth,dash-redirect"
       - "traefik.http.services.traefik-dummy.loadbalancer.server.port=9999"
