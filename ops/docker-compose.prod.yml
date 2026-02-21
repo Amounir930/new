@@ -228,9 +228,9 @@ services:
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.store-main.tls.domains[0].main=adel.60sec.shop"
       - "traefik.http.services.store-main.loadbalancer.server.port=3002"
-      # Catch-all tenant router
+      # Catch-all tenant router (lowest priority)
       - "traefik.http.routers.store-tenants.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
-      - "traefik.http.routers.store-tenants.priority=500"
+      - "traefik.http.routers.store-tenants.priority=100"
       - "traefik.http.routers.store-tenants.entrypoints=websecure"
       - "traefik.http.routers.store-tenants.tls.certresolver=letsencrypt"
       - "traefik.http.services.store-tenants.loadbalancer.server.port=3002"
@@ -313,13 +313,16 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`traefik.60sec.shop`)"
-      - "traefik.http.routers.traefik.priority=1000"
+      - "traefik.http.routers.traefik.priority=5000"
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       # S8: Basic Auth for Traefik Dashboard (admin@60sec.shop:Admin@60SecShop!2026)
       - "traefik.http.middlewares.traefik-auth.basicauth.users=admin@60sec.shop:{SHA}jE949HPLrf17SGLJUq5ATChEOeg="
-      - "traefik.http.routers.traefik.middlewares=traefik-auth"
+      # Redirect /dashboard to /dashboard/ to avoid 404
+      - "traefik.http.middlewares.dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$$"
+      - "traefik.http.middlewares.dash-redirect.redirectregex.replacement=$${1}/"
+      - "traefik.http.routers.traefik.middlewares=traefik-auth,dash-redirect"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
     volumes:
       # Removed direct socket access - using proxy instead for S15 security
@@ -419,9 +422,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
-      - "traefik.http.routers.adminer.priority=2500"
+      - "traefik.http.routers.adminer.priority=3000"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.adminer.tls.domains[0].main=db.60sec.shop"
       - "traefik.http.services.adminer.loadbalancer.server.port=8080"
     deploy:
       resources:
