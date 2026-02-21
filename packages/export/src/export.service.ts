@@ -31,7 +31,7 @@ export class ExportService implements OnModuleDestroy {
     this.exportQueue = new Queue('tenant-export', {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       },
       defaultJobOptions: {
         attempts: 3,

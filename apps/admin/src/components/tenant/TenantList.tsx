@@ -1,7 +1,5 @@
 'use client';
 
-import { Globe, Loader2, Plus, Search, Shield } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { apiFetch } from '@/lib/api';
+import { Globe, Loader2, Plus, Search, Shield } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { ProvisionModal } from './ProvisionModal';
 import { TenantGovernanceModal } from './TenantGovernanceModal';
 

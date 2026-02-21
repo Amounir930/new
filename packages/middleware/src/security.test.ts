@@ -4,9 +4,9 @@ import type { NextFunction, Request, Response } from 'express';
 import {
   CsrfGuard,
   CsrfProtection,
+  SecurityHeadersMiddleware,
   defaultCorsConfig,
   getTenantCorsConfig,
-  SecurityHeadersMiddleware,
 } from './security.ts';
 
 describe('SecurityMiddleware', () => {

@@ -49,7 +49,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
     this.exportQueue = new Queue('tenant-export', {
       connection: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
       },
     });
   }
@@ -62,7 +62,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       {
         connection: {
           host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
         },
         concurrency: 3, // Process 3 exports simultaneously (different tenants)
         limiter: {

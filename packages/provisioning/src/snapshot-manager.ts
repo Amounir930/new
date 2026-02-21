@@ -1,4 +1,4 @@
-import { pages, publicPool, settings, drizzle } from '@apex/db';
+import { drizzle, pages, publicPool, settings } from '@apex/db';
 import type { BlueprintTemplate } from './blueprint/types';
 import { sanitizeSchemaName } from './schema-manager';
 

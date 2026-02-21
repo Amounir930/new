@@ -10,12 +10,12 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  SecretsManager,
   generateSecret,
   hashSecret,
-  SecretsManager,
   verifySecret,
 } from '../secrets/index.js';
-import { loadCertificates, MTLSServer } from './index.js';
+import { MTLSServer, loadCertificates } from './index.js';
 
 describe('mTLS Implementation', () => {
   const testDir = join(tmpdir(), `mtls-test-${Date.now()}`);

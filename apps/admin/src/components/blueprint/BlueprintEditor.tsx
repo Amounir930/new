@@ -1,8 +1,5 @@
 'use client';
 
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,6 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/lib/api';
 import { validateBlueprint } from '@/lib/blueprint-validator';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import { JsonEditorWrapper } from './JsonEditorWrapper';
 
 interface BlueprintEditorProps {

@@ -7,13 +7,14 @@
 import { AuditService } from '@apex/audit';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import {
+  TenantRegistryService,
   featureGates,
   onboardingBlueprints,
   publicDb,
-  TenantRegistryService,
   tenantQuotas,
   tenants,
 } from '@apex/db';
+import { and, eq, sql } from '@apex/db';
 import {
   createStorageBucket,
   createTenantSchema,
@@ -29,7 +30,6 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { and, eq, sql } from '@apex/db';
 
 export interface ProvisioningOptions {
   subdomain: string;
@@ -55,7 +55,7 @@ export class ProvisioningService {
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
     @Inject('TENANT_REGISTRY')
     private readonly tenantRegistry: TenantRegistryService
-  ) { }
+  ) {}
 
   /**
    * Provision a new store in under 60 seconds
@@ -157,7 +157,8 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${
+          error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }
@@ -188,7 +189,7 @@ export class ProvisioningService {
 
       if (dbBlueprint.status === 'paused') {
         throw new ConflictException(
-          `Selected blueprint is currently PAUSED and cannot be used for provisioning.`
+          'Selected blueprint is currently PAUSED and cannot be used for provisioning.'
         );
       }
 

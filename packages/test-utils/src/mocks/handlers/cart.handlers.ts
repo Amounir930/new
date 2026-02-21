@@ -6,7 +6,7 @@
  * @module @apex/test-utils/mocks/handlers/cart
  */
 
-import { HttpResponse, http } from 'msw';
+import { http, HttpResponse } from 'msw';
 import { createEmptyCart, createMockCart } from '../../fixtures/cart.fixtures';
 
 const BASE_URL = '/api';

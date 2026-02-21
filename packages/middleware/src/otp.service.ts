@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { RedisRateLimitStore } from './redis-rate-limit-store.js';
+import type { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 @Injectable()
 export class OTPService {
   private readonly logger = new Logger(OTPService.name);
 
-  constructor(private readonly store: RedisRateLimitStore) { }
+  constructor(private readonly store: RedisRateLimitStore) {}
 
   /**
    * S14: Generate a 6-digit OTP for payment attempts

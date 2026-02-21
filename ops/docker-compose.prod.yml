@@ -544,8 +544,8 @@ services:
       - GITEA__service__EXPLORER_PAGES_ENABLED=false
       - GITEA__security__INSTALL_LOCK=true
       - GITEA__server__ROOT_URL=https://git.60sec.shop/
-      - GITEA__server__DISABLE_SSH=true
-      - GITEA__server__START_SSH_SERVER=false
+      - GITEA__server__DISABLE_SSH=false
+      - GITEA__server__START_SSH_SERVER=true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 30s

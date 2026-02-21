@@ -4,7 +4,7 @@
  * Purpose: Extract tenant from subdomain and enforce schema isolation
  */
 
-import { publicDb, tenants, eq, sql } from '@apex/db';
+import { eq, publicDb, sql, tenants } from '@apex/db';
 import {
   HttpStatus,
   Injectable,
@@ -168,13 +168,15 @@ export class TenantIsolationMiddleware implements NestMiddleware {
           const check = await publicDb.execute(sql`SELECT current_schema()`);
           const currentSchema = (check.rows[0] as any)?.current_schema;
           if (currentSchema !== tenantContext.schemaName) {
-            throw new Error(`S2 Violation: Schema isolation failed for ${tenantContext.subdomain}. Found: ${currentSchema}`);
+            throw new Error(
+              `S2 Violation: Schema isolation failed for ${tenantContext.subdomain}. Found: ${currentSchema}`
+            );
           }
         } catch (e) {
           console.error('S2 Critical Failure:', e);
           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
             error: 'S2 Isolation Failure',
-            message: 'Strict security enforcement failed'
+            message: 'Strict security enforcement failed',
           });
         }
 

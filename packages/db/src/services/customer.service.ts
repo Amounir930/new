@@ -5,8 +5,8 @@ import { eq } from 'drizzle-orm';
 import { publicDb } from '../connection.js';
 import {
   type Customer,
-  customers,
   type NewCustomer,
+  customers,
 } from '../schema/storefront/customers.js';
 
 /**

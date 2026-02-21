@@ -47,7 +47,7 @@ export async function runTenantMigrations(
       );
       console.log(`[Runner] Migration files found: ${files.join(', ')}`);
     } catch (e) {
-      console.error(`[Runner] Failed to list migration files:`, e);
+      console.error('[Runner] Failed to list migration files:', e);
     }
 
     // 3. Execute migrations
@@ -61,7 +61,7 @@ export async function runTenantMigrations(
       // Execute raw SQL
       // We need to use client directly or db.execute(sql.raw(content))
       await client.query(sqlContent);
-      console.log(`[Runner] Manual migration SQL executed successfully`);
+      console.log('[Runner] Manual migration SQL executed successfully');
 
       // Still run migrate to mark it as done in __drizzle_migrations (optional, but good for consistency)
       // const { migrate } = await import('drizzle-orm/node-postgres/migrator');

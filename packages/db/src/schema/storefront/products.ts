@@ -11,6 +11,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   char,
+  customType,
   decimal,
   index,
   integer,
@@ -21,7 +22,6 @@ import {
   unique,
   uuid,
   varchar,
-  customType,
 } from 'drizzle-orm/pg-core';
 import { categories } from './categories';
 

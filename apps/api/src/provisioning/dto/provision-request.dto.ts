@@ -80,4 +80,4 @@ export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
   blueprintId: z.string().uuid().optional(),
 });
 
-export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) { }
+export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) {}

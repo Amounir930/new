@@ -3,7 +3,7 @@ import { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
 import { desc, eq } from 'drizzle-orm';
 import { publicDb } from './connection.js';
-import { onboardingBlueprints, type Tenant, tenants } from './schema.js';
+import { type Tenant, onboardingBlueprints, tenants } from './schema.js';
 
 /**
  * S2: Tenant Registry Service

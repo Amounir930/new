@@ -11,12 +11,12 @@ import {
 import { desc, eq, sql } from 'drizzle-orm';
 import { db } from '../connection';
 import {
-  bentoGrids,
   type FlashSaleProduct,
+  type TenantConfig,
+  bentoGrids,
   flashSaleProducts,
   flashSales,
   searchAnalytics,
-  type TenantConfig,
   tenantConfig,
 } from '../schema/storefront';
 

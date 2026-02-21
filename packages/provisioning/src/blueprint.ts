@@ -1,4 +1,4 @@
-import { onboardingBlueprints, eq, and, desc, publicDb } from '@apex/db';
+import { and, desc, eq, onboardingBlueprints, publicDb } from '@apex/db';
 import { validateBlueprint } from './blueprint/executor.js';
 import type { BlueprintRecord, BlueprintTemplate } from './blueprint/types.js';
 

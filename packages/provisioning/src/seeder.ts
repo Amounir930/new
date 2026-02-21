@@ -4,13 +4,13 @@
  */
 
 import {
-  onboardingBlueprints,
-  tenants,
-  tenantQuotas,
-  sql,
-  eq,
-  publicPool,
   drizzle,
+  eq,
+  onboardingBlueprints,
+  publicPool,
+  sql,
+  tenantQuotas,
+  tenants,
 } from '@apex/db';
 import { BlueprintExecutor } from './blueprint/executor';
 import { CatalogModule } from './blueprint/modules/catalog';

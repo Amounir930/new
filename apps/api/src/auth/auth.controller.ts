@@ -67,7 +67,7 @@ export class AuthController {
       return { accessToken: token };
     }
 
-    console.log(`[DEBUG] Login Failed:`);
+    console.log('[DEBUG] Login Failed:');
     console.log(`[DEBUG] Input Email: '${email}'`);
     console.log(`[DEBUG] Env Email: '${adminEmail}'`);
     console.log(`[DEBUG] Input Password Length: ${password?.length}`);

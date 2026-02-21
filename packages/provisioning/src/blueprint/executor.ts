@@ -70,7 +70,7 @@ export class BlueprintExecutor {
       }
     }
 
-    console.log(`[BlueprintExecutor] All modules executed successfully.`);
+    console.log('[BlueprintExecutor] All modules executed successfully.');
   }
 
   /**

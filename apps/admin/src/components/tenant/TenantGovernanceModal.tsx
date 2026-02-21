@@ -1,9 +1,9 @@
 'use client';
 
-import { AlertCircle, Check, Loader2, Shield, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
+import { AlertCircle, Check, Loader2, Shield, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface TenantGovernanceModalProps {
   tenantId: string | null;

@@ -29,7 +29,7 @@ function getQuotasForPlan(plan: string) {
 
 async function seed() {
   console.log(
-    `🚀 Forcing new version deployment (Wipe & Recreate ALL Sectors)...`
+    '🚀 Forcing new version deployment (Wipe & Recreate ALL Sectors)...'
   );
 
   for (const sector of SECTORS) {
@@ -64,7 +64,7 @@ async function seed() {
     }
   }
 
-  console.log(`\n✅ All Experiment Blueprints Seeded Successfully!`);
+  console.log('\n✅ All Experiment Blueprints Seeded Successfully!');
   process.exit(0);
 }
 

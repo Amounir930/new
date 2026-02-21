@@ -12,7 +12,7 @@ export class CoreModule implements SeederModule {
 
   async run(ctx: BlueprintContext, config: BlueprintConfig) {
     if (!config.modules.core) {
-      console.log(`[CoreModule] Skipping Core module (not requested).`);
+      console.log('[CoreModule] Skipping Core module (not requested).');
       return;
     }
 

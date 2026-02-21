@@ -68,7 +68,6 @@ export const onboardingBlueprints = pgTable(
   })
 );
 
-
 /**
  * S2: Tenant Migration Tracking
  * Tracks which DB migrations have been applied per tenant schema.

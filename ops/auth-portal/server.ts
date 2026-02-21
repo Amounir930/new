@@ -1,78 +1,82 @@
-
-import { serve } from "bun";
+import { serve } from 'bun';
 
 const PORT = 8080;
-const COOKIE_NAME = "apex_auth_session";
-const SESSION_VALUE = Bun.hash(process.env.JWT_SECRET || "default_secret").toString();
+const COOKIE_NAME = 'apex_auth_session';
+const SESSION_VALUE = Bun.hash(
+  process.env.JWT_SECRET || 'default_secret'
+).toString();
 
-const EMAIL = process.env.SUPER_ADMIN_EMAIL || "admin@60sec.shop";
-const PASSWORD = process.env.SUPER_ADMIN_PASSWORD || "Admin@60SecShop!2026";
+const EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@60sec.shop';
+const PASSWORD = process.env.SUPER_ADMIN_PASSWORD || 'Admin@60SecShop!2026';
 
 console.log(`🛡️  Apex Auth Portal starting on port ${PORT}...`);
 
 serve({
-    port: PORT,
-    async fetch(req) {
-        const url = new URL(req.url);
-        const cookies = req.headers.get("Cookie") || "";
-        const isAuthenticated = cookies.includes(`${COOKIE_NAME}=${SESSION_VALUE}`);
+  port: PORT,
+  async fetch(req) {
+    const url = new URL(req.url);
+    const cookies = req.headers.get('Cookie') || '';
+    const isAuthenticated = cookies.includes(`${COOKIE_NAME}=${SESSION_VALUE}`);
 
-        // 1. ForwardAuth Endpoint
-        if (url.pathname === "/auth") {
-            if (isAuthenticated) {
-                return new Response("OK", { status: 200 });
-            }
-            // For dashboard/admin access, redirect to /login
-            return new Response("Redirect", {
-                status: 302,
-                headers: { "Location": "/login" }
-            });
-        }
-
-        // 2. Login Page (GET)
-        if (url.pathname === "/login" && req.method === "GET") {
-            return new Response(getLoginHTML(), {
-                headers: { "Content-Type": "text/html" }
-            });
-        }
-
-        // 3. Login Logic (POST)
-        if (url.pathname === "/login" && req.method === "POST") {
-            try {
-                const formData = await req.formData();
-                const email = formData.get("email");
-                const password = formData.get("password");
-
-                if (email === EMAIL && password === PASSWORD) {
-                    console.log(`✅ Successful login for ${email}`);
-                    return new Response("OK", {
-                        status: 302,
-                        headers: {
-                            "Location": "/dashboard/",
-                            "Set-Cookie": `${COOKIE_NAME}=${SESSION_VALUE}; Path=/; HttpOnly; SameSite=Lax`
-                        }
-                    });
-                }
-
-                console.warn(`❌ Failed login attempt for ${email}`);
-                return new Response(getLoginHTML("Invalid credentials. Please try again."), {
-                    headers: { "Content-Type": "text/html" }
-                });
-            } catch (e) {
-                return new Response("Bad Request", { status: 400 });
-            }
-        }
-
-        // Default: Redirect to login
-        return new Response("", {
-            status: 302,
-            headers: { "Location": "/login" }
-        });
+    // 1. ForwardAuth Endpoint
+    if (url.pathname === '/auth') {
+      if (isAuthenticated) {
+        return new Response('OK', { status: 200 });
+      }
+      // For dashboard/admin access, redirect to /login
+      return new Response('Redirect', {
+        status: 302,
+        headers: { Location: '/login' },
+      });
     }
+
+    // 2. Login Page (GET)
+    if (url.pathname === '/login' && req.method === 'GET') {
+      return new Response(getLoginHTML(), {
+        headers: { 'Content-Type': 'text/html' },
+      });
+    }
+
+    // 3. Login Logic (POST)
+    if (url.pathname === '/login' && req.method === 'POST') {
+      try {
+        const formData = await req.formData();
+        const email = formData.get('email');
+        const password = formData.get('password');
+
+        if (email === EMAIL && password === PASSWORD) {
+          console.log(`✅ Successful login for ${email}`);
+          return new Response('OK', {
+            status: 302,
+            headers: {
+              Location: '/dashboard/',
+              'Set-Cookie': `${COOKIE_NAME}=${SESSION_VALUE}; Path=/; HttpOnly; SameSite=Lax`,
+            },
+          });
+        }
+
+        console.warn(`❌ Failed login attempt for ${email}`);
+        return new Response(
+          getLoginHTML('Invalid credentials. Please try again.'),
+          {
+            headers: { 'Content-Type': 'text/html' },
+          }
+        );
+      } catch (_e) {
+        return new Response('Bad Request', { status: 400 });
+      }
+    }
+
+    // Default: Redirect to login
+    return new Response('', {
+      status: 302,
+      headers: { Location: '/login' },
+    });
+  },
 });
 
-function getLoginHTML(error = "") {
-    return `
+function getLoginHTML(error = '') {
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -160,7 +164,7 @@ function getLoginHTML(error = "") {
         <h1>Admin Access</h1>
         <p class="subtitle">Enter your credentials to continue</p>
         
-        ${error ? `<div class="error">${error}</div>` : ""}
+        ${error ? `<div class="error">${error}</div>` : ''}
 
         <form action="/login" method="POST">
             <div class="form-group">

@@ -7,7 +7,7 @@
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import type { AuditService } from '@apex/audit';
-import { publicPool, type TenantRegistryService } from '@apex/db';
+import { type TenantRegistryService, publicPool } from '@apex/db';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,

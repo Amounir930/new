@@ -13,7 +13,7 @@ async function runTest() {
     '../../packages/middleware/src/redis-rate-limit-store'
   );
 
-  const maxRequests = parseInt(process.env.MAX_REQUESTS || '10', 10);
+  const maxRequests = Number.parseInt(process.env.MAX_REQUESTS || '10', 10);
   const store = new RedisRateLimitStore(new ConfigService());
   const testKey = 'stress:test:behavioral';
   const windowMs = 60000;

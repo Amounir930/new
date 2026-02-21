@@ -45,7 +45,10 @@ describe('ProvisioningController', () => {
         durationMs: 1500,
       });
 
-      const result = await controller.provisionStore({} as any, validDto as any);
+      const result = await controller.provisionStore(
+        {} as any,
+        validDto as any
+      );
 
       expect(result.message).toBe('Store provisioned successfully');
       expect(result.data.subdomain).toBe('test-store');
@@ -57,9 +60,9 @@ describe('ProvisioningController', () => {
         new Error('Provisioning failed')
       );
 
-      await expect(controller.provisionStore({} as any, validDto as any)).rejects.toThrow(
-        'Provisioning failed'
-      );
+      await expect(
+        controller.provisionStore({} as any, validDto as any)
+      ).rejects.toThrow('Provisioning failed');
     });
   });
 });

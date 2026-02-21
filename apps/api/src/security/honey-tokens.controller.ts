@@ -1,5 +1,13 @@
 import { AuditService } from '@apex/audit';
-import { Controller, Get, Inject, Logger, Post, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  Logger,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import type * as express from 'express';
 
 @Controller(['admin/login', 'wp-admin', 'config.php', 'wp-login.php', '.env']) // Array of fake endpoints
@@ -9,7 +17,7 @@ export class HoneyTokensController {
   constructor(
     @Inject(AuditService)
     private readonly auditService: AuditService
-  ) { }
+  ) {}
 
   /**
    * S15: Honeypot for common scanners and unauthorized access attempts

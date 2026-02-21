@@ -4,7 +4,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { createServer, type Server, type ServerOptions } from 'node:https';
+import { type Server, type ServerOptions, createServer } from 'node:https';
 import { join } from 'node:path';
 
 export interface MTLSConfig {

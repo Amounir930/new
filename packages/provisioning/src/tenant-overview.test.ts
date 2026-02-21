@@ -5,14 +5,14 @@
 
 import { describe, expect, it, mock } from 'bun:test';
 import {
+  type TenantPlan,
+  type TenantStatus,
   deleteTenant,
   getTenantById,
   getTenantBySubdomain,
   getTenantList,
   getTenantStats,
   killSwitch,
-  type TenantPlan,
-  type TenantStatus,
   updateTenant,
   updateTenantPlan,
   updateTenantStatus,

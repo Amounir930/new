@@ -1,55 +1,55 @@
+import { serve } from 'bun';
+import { spawn } from 'bun';
 
-import { serve } from "bun";
-import { spawn } from "bun";
-
-const SECRET = process.env.WEBHOOK_SECRET || "ApexDeploySecret2026";
+const SECRET = process.env.WEBHOOK_SECRET || 'ApexDeploySecret2026';
 const PORT = 9000;
 // We mount the host root to /app
-const REPO_DIR = "/app";
+const REPO_DIR = '/app';
 
 console.log(`🛡️  Apex Webhook Listener v1.0 starting on port ${PORT}...`);
 
 serve({
-    port: PORT,
-    async fetch(req) {
-        if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  port: PORT,
+  async fetch(req) {
+    if (req.method !== 'POST')
+      return new Response('Method not allowed', { status: 405 });
 
-        // 1. Verify Secret
-        // Gitea sends content-type: application/json usually
-        // We check query param ?secret=... OR body.secret
-        const url = new URL(req.url);
-        const querySecret = url.searchParams.get("secret");
+    // 1. Verify Secret
+    // Gitea sends content-type: application/json usually
+    // We check query param ?secret=... OR body.secret
+    const url = new URL(req.url);
+    const querySecret = url.searchParams.get('secret');
 
-        let bodySecret = "";
-        try {
-            const body = await req.json();
-            bodySecret = body.secret;
-        } catch (e) {
-            // Body might be empty or not json
-        }
+    let bodySecret = '';
+    try {
+      const body = await req.json();
+      bodySecret = body.secret;
+    } catch (_e) {
+      // Body might be empty or not json
+    }
 
-        if (querySecret !== SECRET && bodySecret !== SECRET) {
-            console.error("❌ Unauthorized webhook attempt");
-            return new Response("Unauthorized", { status: 401 });
-        }
+    if (querySecret !== SECRET && bodySecret !== SECRET) {
+      console.error('❌ Unauthorized webhook attempt');
+      return new Response('Unauthorized', { status: 401 });
+    }
 
-        console.log("🚀 Webhook verified. Triggering surgical deployment...");
+    console.log('🚀 Webhook verified. Triggering surgical deployment...');
 
-        // 2. Execute Deployment Logic
-        // We use 'sh' because we are in Alpine
-        // origin must point to Gitea. We assume 'gitea' remote exists or we use 'origin'.
-        // We set the SSH command to use the mounted deployment key.
+    // 2. Execute Deployment Logic
+    // We use 'sh' because we are in Alpine
+    // origin must point to Gitea. We assume 'gitea' remote exists or we use 'origin'.
+    // We set the SSH command to use the mounted deployment key.
 
-        // Gitea Internal URL (Docker Network): ssh://git@gitea:22/60sec.shop/apex-v2.git 
-        // Wait, inside docker network, 'gitea' service exposes port 2222 mapped to 22?? 
-        // No, docker-compose says: ports: 2222:22. So internal port is 22.
-        // Service name is 'gitea'. 
-        // So URL: ssh://git@gitea:22/60sec.shop/apex-v2.git
+    // Gitea Internal URL (Docker Network): ssh://git@gitea:22/60sec.shop/apex-v2.git
+    // Wait, inside docker network, 'gitea' service exposes port 2222 mapped to 22??
+    // No, docker-compose says: ports: 2222:22. So internal port is 22.
+    // Service name is 'gitea'.
+    // So URL: ssh://git@gitea:22/60sec.shop/apex-v2.git
 
-        const GITEA_INTERNAL_URL = "ssh://git@gitea:22/apex-admin/60sec.shop.git";
-        const DEPLOY_KEY_PATH = "/app/ops/keys/webhook_deploy_key";
+    const GITEA_INTERNAL_URL = 'ssh://git@gitea:22/apex-admin/60sec.shop.git';
+    const DEPLOY_KEY_PATH = '/app/ops/keys/webhook_deploy_key';
 
-        const script = `
+    const script = `
       echo "📂 Navigating to ${REPO_DIR}..."
       cd ${REPO_DIR} || exit 1
 
@@ -80,13 +80,13 @@ serve({
       echo "✅ Deployment Complete."
     `;
 
-        // Spawn detached process so we don't block response (or block if we want to wait?)
-        // Gitea expects quick response. We'll run and log.
-        const proc = spawn(["sh", "-c", script], {
-            stdout: "inherit",
-            stderr: "inherit"
-        });
+    // Spawn detached process so we don't block response (or block if we want to wait?)
+    // Gitea expects quick response. We'll run and log.
+    const _proc = spawn(['sh', '-c', script], {
+      stdout: 'inherit',
+      stderr: 'inherit',
+    });
 
-        return new Response("Deployment Triggered 🚀", { status: 200 });
-    }
+    return new Response('Deployment Triggered 🚀', { status: 200 });
+  },
 });

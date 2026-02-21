@@ -12,7 +12,7 @@ describe('S21 Strict Validation', () => {
     );
 
     const incompleteModules = { ...completeModules };
-    delete (incompleteModules as any).home; // Remove 1
+    (incompleteModules as any).home = undefined; // Remove 1
 
     const blueprint = {
       name: 'Test',

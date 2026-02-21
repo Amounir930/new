@@ -1,10 +1,4 @@
-import {
-  products,
-  productImages,
-  banners,
-  categories,
-  eq
-} from '@apex/db';
+import { banners, categories, eq, productImages, products } from '@apex/db';
 import type {
   BlueprintConfig,
   BlueprintContext,
@@ -92,8 +86,10 @@ export class CatalogModule implements SeederModule {
             slug: slug,
             description: p.description,
             price: p.price.toString(),
-            currency: ctx.uiConfig?.currency as string || 'USD',
-            categoryId: p.category ? categoryMap.get(p.category.toLowerCase()) : null,
+            currency: (ctx.uiConfig?.currency as string) || 'USD',
+            categoryId: p.category
+              ? categoryMap.get(p.category.toLowerCase())
+              : null,
             brand: p.brand || null,
             quantity: p.inventory || 0,
             isFeatured: !!p.isFeatured,
@@ -101,7 +97,7 @@ export class CatalogModule implements SeederModule {
           } as any)
           .onConflictDoUpdate({
             target: products.slug,
-            set: { name: p.name, price: p.price.toString() }
+            set: { name: p.name, price: p.price.toString() },
           })
           .returning();
 
@@ -114,7 +110,10 @@ export class CatalogModule implements SeederModule {
             order: index,
           }));
 
-          await ctx.db.insert(productImages).values(imagesToInsert).onConflictDoNothing();
+          await ctx.db
+            .insert(productImages)
+            .values(imagesToInsert)
+            .onConflictDoNothing();
         }
       }
     } catch (e) {
@@ -136,7 +135,10 @@ export class CatalogModule implements SeederModule {
         active: true,
       }));
 
-      await ctx.db.insert(banners).values(bannersToInsert).onConflictDoNothing();
+      await ctx.db
+        .insert(banners)
+        .values(bannersToInsert)
+        .onConflictDoNothing();
     } catch (e) {
       console.warn('[CatalogModule] Failed to seed banners:', e);
     }
