@@ -32,75 +32,6 @@ services:
     networks:
       - apex-network
 
-  # ═══════════════════════════════════════════════════════════════
-  # Database Backup (Safety Shield)
-  # ═══════════════════════════════════════════════════════════════
-  db-backup:
-    image: prodrigestivill/postgres-backup-local:15
-    container_name: apex-db-backup
-    restart: always
-    env_file:
-      - ../.env
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_USER: ${POSTGRES_USER:-apex}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
-      SCHEDULE: "@daily"
-      BACKUP_KEEP_DAYS: 7
-      BACKUP_KEEP_WEEKS: 4
-      BACKUP_KEEP_MONTHS: 6
-      HEALTHCHECK_PORT: 8080
-    volumes:
-      - db_backups:/backups
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - apex-network
-
-  # ═══════════════════════════════════════════════════════════════
-  # Gitea Isolated Database (S2 Compliance)
-  # ═══════════════════════════════════════════════════════════════
-  gitea-db:
-    image: postgres:15-alpine
-    container_name: apex-gitea-db
-    restart: always
-    environment:
-      POSTGRES_USER: gitea
-      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
-      POSTGRES_DB: gitea
-    volumes:
-      - gitea_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - apex-network
-
-  # ═══════════════════════════════════════════════════════════════
-  # Gitea DB Backup (Safety Shield)
-  # ═══════════════════════════════════════════════════════════════
-  gitea-db-backup:
-    image: prodrigestivill/postgres-backup-local:15
-    container_name: apex-gitea-db-backup
-    restart: always
-    environment:
-      POSTGRES_HOST: gitea-db
-      POSTGRES_USER: gitea
-      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
-      POSTGRES_DB: gitea
-      SCHEDULE: "@daily"
-      BACKUP_KEEP_DAYS: 7
-    volumes:
-      - gitea_backups:/backups
-    depends_on:
-      gitea-db:
-        condition: service_healthy
-    networks:
-      - apex-network
 
   # ═══════════════════════════════════════════════════════════════
   # Cache Layer (Redis 7) - Persistent
@@ -402,6 +333,7 @@ services:
       # Forward Auth Middleware
       - "traefik.http.middlewares.auth-portal-fw.forwardauth.address=http://auth-portal:8080/auth"
       - "traefik.http.middlewares.auth-portal-fw.forwardauth.trustForwardHeader=true"
+      # Secure BOTH dashboard and API
       - "traefik.http.routers.traefik-dash.middlewares=dash-redirect,auth-portal-fw"
       - "traefik.http.services.traefik-dummy.loadbalancer.server.port=9999"
     volumes:
@@ -468,75 +400,82 @@ services:
   # Database Backup (Postgres)
   # ═══════════════════════════════════════════════════════════════
   db-backup:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/db-backup:latest
+    image: prodrigestivill/postgres-backup-local:15
     container_name: apex-db-backup
-    build:
-      context: ..
-      dockerfile: ops/db-backup/Dockerfile
     restart: always
     env_file:
       - ../.env
     environment:
-      - PGHOST=postgres
-      - PGUSER=postgres
-      - PGPASSWORD=${POSTGRES_PASSWORD}
-      - PGDATABASE=postgres
-      - PGPORT=5432
-      - S3_ENDPOINT=${MINIO_ENDPOINT}
-      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
-      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
-      - S3_BUCKET=db-backups
-      - BACKUP_CRON_SCHEDULE=0 2 * * * # Every day at 2 AM
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-apex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      HEALTHCHECK_PORT: 8080
     volumes:
       - db_backups:/backups
-    networks:
-      - apex-network
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Gitea Isolated Database (S2 Compliance)
+  # ═══════════════════════════════════════════════════════════════
+  gitea-db:
+    image: postgres:15-alpine
+    container_name: apex-gitea-db
+    restart: always
+    environment:
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
+      POSTGRES_DB: gitea
+    volumes:
+      - gitea_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apex-network
 
   # ═══════════════════════════════════════════════════════════════
   # Gitea Database Backup
   # ═══════════════════════════════════════════════════════════════
   gitea-db-backup:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/db-backup:latest
+    image: prodrigestivill/postgres-backup-local:15
     container_name: apex-gitea-db-backup
-    build:
-      context: ..
-      dockerfile: ops/db-backup/Dockerfile
     restart: always
-    env_file:
-      - ../.env
     environment:
-      - PGHOST=gitea-db
-      - PGUSER=gitea
-      - PGPASSWORD=${GITEA_DB_PASSWORD}
-      - PGDATABASE=gitea
-      - PGPORT=5432
-      - S3_ENDPOINT=${MINIO_ENDPOINT}
-      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
-      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
-      - S3_BUCKET=gitea-db-backups
-      - BACKUP_CRON_SCHEDULE=0 3 * * * # Every day at 3 AM
+      POSTGRES_HOST: gitea-db
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
+      POSTGRES_DB: gitea
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      HEALTHCHECK_PORT: 8080
     volumes:
       - gitea_backups:/backups
-    networks:
-      - apex-network
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
     depends_on:
       gitea-db:
         condition: service_healthy
+    networks:
+      - apex-network
 
   # ═══════════════════════════════════════════════════════════════
   # Gitea (The Fortress) - Self-hosted Git Server
@@ -634,8 +573,8 @@ services:
       - "traefik.http.routers.adminer.priority=2500"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.adminer.middlewares=adminer-auth"
-      - "traefik.http.middlewares.adminer-auth.basicauth.users=${ADMINER_AUTH}"
+      # Use Auth Portal instead of BasicAuth for consistency & wow effect
+      - "traefik.http.routers.adminer.middlewares=auth-portal-fw"
       - "traefik.http.services.adminer-svc.loadbalancer.server.port=8080"
       - "traefik.http.routers.adminer.service=adminer-svc"
     deploy:

@@ -22,10 +22,11 @@ serve({
             if (isAuthenticated) {
                 return new Response("OK", { status: 200 });
             }
-            // Redirect to login via Traefik (or return 401)
-            // If we return 401, Traefik will block. 
-            // Better to return 302 to /login if possible, but Traefik handles the redirect usually via middlewares.
-            return new Response("Unauthorized", { status: 401 });
+            // For dashboard/admin access, redirect to /login
+            return new Response("Redirect", {
+                status: 302,
+                headers: { "Location": "/login" }
+            });
         }
 
         // 2. Login Page (GET)
