@@ -23,6 +23,7 @@ export interface BlueprintConfig {
   products?: unknown[]; // Legacy support for direct product injection
   categories?: unknown[]; // Legacy support for direct category injection
   pages?: unknown[]; // Legacy support for direct page injection
+  banners?: unknown[]; // Legacy support for direct banner injection
   nicheType?: string; // S2.5: Industry classification
   uiConfig?: Record<string, unknown>; // S2.5: SDUI/Theme configuration
 }
@@ -39,6 +40,7 @@ export interface BlueprintTemplate {
   pages?: unknown[];
   products?: unknown[];
   categories?: unknown[];
+  banners?: unknown[];
   nicheType?: string;
   uiConfig?: Record<string, unknown>;
 }

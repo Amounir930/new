@@ -67,8 +67,7 @@ export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
     .string()
     .min(32)
     .max(128)
-    .regex(/^[A-Za-z0-9-_]+$/)
-    .optional(),
+    .regex(/^[A-Za-z0-9-_]+$/),
 
   /**
    * Optional inline blueprint definition

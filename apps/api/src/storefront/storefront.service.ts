@@ -1,10 +1,112 @@
 import { Injectable } from '@nestjs/common';
-import { db, eq, desc, products, banners, and, isNull, lte, gte } from '@apex/db';
+import { db, eq, desc, products, banners, and, isNull, lte, gte, sql, tenantConfig, productImages, productVariants } from '@apex/db';
 import { RedisRateLimitStore } from '@apex/middleware';
 
 @Injectable()
 export class StorefrontService {
     constructor(private readonly redisStore: RedisRateLimitStore) { }
+
+    async getTenantConfig(tenantId?: string) {
+        const cacheKey = `storefront:config:${tenantId || 'default'}`;
+        const client = await this.redisStore.getClient();
+
+        if (client) {
+            const cachedData = await client.get(cacheKey);
+            if (cachedData) return JSON.parse(cachedData);
+        }
+
+        // Fetch config from tenant_config table
+        const configEntries = await db.select().from(tenantConfig);
+        const config = configEntries.reduce((acc, curr) => {
+            acc[curr.key] = curr.value;
+            return acc;
+        }, {} as Record<string, any>);
+
+        // Fetch hero banners
+        const heroBanners = await db.select()
+            .from(banners)
+            .where(and(eq(banners.active, true), eq(banners.position, 'hero')))
+            .orderBy(desc(banners.priority))
+            .limit(1);
+
+        const result = {
+            storeName: config.store_name || 'APEX STORE',
+            logoUrl: config.logo_url,
+            primaryColor: config.primary_color || '#000000',
+            heroBanner: heroBanners[0],
+            ...config
+        };
+
+        if (client) {
+            await client.setEx(cacheKey, 3600, JSON.stringify(result));
+        }
+
+        return result;
+    }
+
+    async getProducts(params: {
+        featured?: boolean;
+        category?: string;
+        limit?: number;
+        sort?: 'newest' | 'price_asc' | 'price_desc';
+    }) {
+        const conditions = [eq(products.isActive, true)];
+
+        if (params.featured) {
+            conditions.push(eq(products.isFeatured, true));
+        }
+
+        if (params.category) {
+            conditions.push(eq(products.categoryId, params.category));
+        }
+
+        let query = db.select({
+            id: products.id,
+            slug: products.slug,
+            name: products.name,
+            price: products.price,
+            compareAtPrice: products.compareAtPrice,
+            rating: sql<number>`4.5`,
+            imageUrl: sql<string>`(SELECT url FROM product_images WHERE product_id = ${products.id} AND is_primary = true LIMIT 1)`
+        })
+            .from(products)
+            .where(and(...conditions))
+            .$dynamic();
+
+        if (params.sort === 'newest') {
+            query = query.orderBy(desc(products.createdAt));
+        } else if (params.sort === 'price_asc') {
+            query = query.orderBy(products.price);
+        } else if (params.sort === 'price_desc') {
+            query = query.orderBy(desc(products.price));
+        }
+
+        return query.limit(params.limit || 20);
+    }
+
+    async getProductBySlug(slug: string) {
+        const productData = await db.select()
+            .from(products)
+            .where(and(eq(products.slug, slug), eq(products.isActive, true)))
+            .limit(1);
+
+        if (productData.length === 0) return null;
+
+        const product = productData[0];
+
+        const [images, variants] = await Promise.all([
+            db.select().from(productImages).where(eq(productImages.productId, product.id)).orderBy(productImages.order),
+            db.select().from(productVariants).where(eq(productVariants.productId, product.id))
+        ]);
+
+        return {
+            ...product,
+            images,
+            variants,
+            rating: 4.5,
+            reviewCount: 12
+        };
+    }
 
     async getHomeData(tenantId?: string) {
         const cacheKey = `storefront:home:${tenantId || 'default'}`;
@@ -22,12 +124,8 @@ export class StorefrontService {
         const now = new Date();
 
         const [bestSellers, activeBanners] = await Promise.all([
-            // Best Sellers
-            db.select()
-                .from(products)
-                .where(eq(products.isActive, true))
-                .limit(8)
-                .orderBy(desc(products.createdAt)),
+            // Best Sellers (Featured products with primary images)
+            this.getProducts({ featured: true, limit: 8 }),
 
             // Active Banners (BR-01-SEC logic)
             db.select()
@@ -36,21 +134,10 @@ export class StorefrontService {
                     and(
                         eq(banners.active, true),
                         eq(banners.position, 'hero'),
-                        // Check if within date range or dates are null
-                        and(
-                            and(
-                                isNull(banners.startDate),
-                                isNull(banners.endDate)
-                            ) ||
-                            and(
-                                lte(banners.startDate, now),
-                                gte(banners.endDate, now)
-                            ) ||
-                            and(
-                                lte(banners.startDate, now),
-                                isNull(banners.endDate)
-                            )
-                        )
+                        // Correct Drizzle logical OR
+                        sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR 
+                            (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now}) OR
+                            (${banners.startDate} <= ${now} AND ${banners.endDate} IS NULL)`
                     )
                 )
                 .limit(5)

@@ -61,11 +61,59 @@ async function verify() {
     description: 'A test blueprint',
     plan: 'free',
     isDefault: false,
-    blueprint: JSON.stringify({
+    blueprint: {
       version: '1.0',
       name: 'Test Blueprint',
-      products: [],
-    }),
+      quotas: {
+        max_products: 100,
+        max_orders: 50,
+        max_pages: 10,
+        storage_limit_gb: 1,
+      },
+      modules: {
+        home: true,
+        search: true,
+        pdp: true,
+        quickView: true,
+        cart: true,
+        checkout: true,
+        orderSuccess: true,
+        paymentFailed: true,
+        category: true,
+        flashDeals: true,
+        compare: true,
+        locations: true,
+        login: true,
+        register: true,
+        accountDashboard: true,
+        myOrders: true,
+        orderDetails: true,
+        trackOrder: true,
+        addresses: true,
+        paymentMethods: true,
+        wishlist: true,
+        wallet: true,
+        loyalty: true,
+        referral: true,
+        productReviews: true,
+        returns: true,
+        notifications: true,
+        privacyPolicy: true,
+        termsConditions: true,
+        refundPolicy: true,
+        aboutUs: true,
+        contactUs: true,
+        faq: true,
+        blog: true,
+        notFound: true,
+        maintenanceMode: true,
+        ajaxSearch: true,
+        megaMenu: true,
+        smartFilters: true,
+        toast: true,
+        newsletter: true,
+      },
+    } as any,
   };
 
   await testCreateValid(service, userId, dto);
@@ -111,7 +159,7 @@ async function testInvalidJSON(service: any, userId: string, dto: any) {
     await service.create(userId, invalidDto as any);
     console.error('❌ Failed: Should have rejected invalid JSON');
   } catch (e: any) {
-    if (e?.message?.includes('Invalid JSON')) {
+    if (e?.message?.includes('valid JSON object')) {
       console.log('✅ S3 Caught Invalid JSON');
     } else {
       console.error('❌ Unexpected error:', e);

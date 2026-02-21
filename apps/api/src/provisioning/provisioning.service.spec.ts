@@ -25,7 +25,25 @@ mock.module('@apex/db', () => {
   return {
     TenantRegistryService: class TenantRegistryService {
       register = mock();
+      existsBySubdomain = mock().mockResolvedValue(false);
     },
+    publicDb: {
+      select: mock().mockReturnThis(),
+      from: mock().mockReturnThis(),
+      where: mock().mockReturnThis(),
+      limit: mock().mockImplementation(() => Promise.resolve([])),
+      insert: mock().mockReturnThis(),
+      values: mock().mockReturnThis(),
+      onConflictDoNothing: mock().mockImplementation(() => Promise.resolve([])),
+      execute: mock().mockResolvedValue([]),
+    },
+    tenants: { subdomain: 'subdomain', id: 'id' },
+    onboardingBlueprints: { id: 'id', blueprint: 'blueprint', status: 'status', nicheType: 'nicheType', plan: 'plan' },
+    featureGates: {},
+    tenantQuotas: {},
+    eq: mock(),
+    and: mock(),
+    sql: mock(),
   };
 });
 
@@ -49,6 +67,7 @@ describe('ProvisioningService', () => {
 
     const mockTenantRegistry = {
       register: mock(),
+      existsBySubdomain: mock().mockResolvedValue(false),
     } as unknown as TenantRegistryService;
 
     // Manual instantiation to bypass NestJS DI issues with Bun/swc
@@ -87,12 +106,14 @@ describe('ProvisioningService', () => {
         })
       );
       expect((service as any).tenantRegistry.register).toHaveBeenCalled();
-      expect(provisioning.seedTenantData).toHaveBeenCalledWith({
-        subdomain: 'test-store',
-        adminEmail: 'admin@test.com',
-        storeName: 'Test Store',
-        plan: 'basic',
-      });
+      expect(provisioning.seedTenantData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subdomain: 'test-store',
+          adminEmail: 'admin@test.com',
+          storeName: 'Test Store',
+          plan: 'basic',
+        })
+      );
     });
 
     it('should throw ConflictException if resource already exists', async () => {

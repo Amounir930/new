@@ -26,8 +26,15 @@ export class CoreModule implements SeederModule {
     // 2. Admin User
     await this.seedAdminUser(ctx);
 
-    // 3. Settings
-    await this.seedSettings(ctx, config.settings || {});
+    // 3. Settings & Branding (S2.5 Compliance)
+    const brandingSettings: Record<string, any> = {
+      ...(config.settings || {}),
+      site_name: ctx.uiConfig?.name || config.settings?.site_name || 'My Store',
+      primary_color: ctx.uiConfig?.primaryColor || '#3B82F6',
+      logo_url: ctx.uiConfig?.logo || '',
+      currency: ctx.uiConfig?.currency || 'USD',
+    };
+    await this.seedSettings(ctx, brandingSettings);
 
     // 4. Pages (Legacy support from config.pages)
     if (config.pages && config.pages.length > 0) {

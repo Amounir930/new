@@ -1,5 +1,7 @@
 import {
   products,
+  productImages,
+  banners,
   categories,
   eq
 } from '@apex/db';
@@ -24,6 +26,11 @@ export class CatalogModule implements SeederModule {
     // 2. Products
     if (config.products && config.products.length > 0) {
       await this.seedProducts(ctx, config.products, categoryMap);
+    }
+
+    // 3. Banners (BR-01-SEC Compliance)
+    if (config.banners && config.banners.length > 0) {
+      await this.seedBanners(ctx, config.banners);
     }
   }
 
@@ -75,28 +82,63 @@ export class CatalogModule implements SeederModule {
     categoryMap: Map<string, string>
   ) {
     try {
-      const productsToInsert = productsList.map((p) => ({
-        name: p.name,
-        slug: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        description: p.description,
-        price: p.price.toString(),
-        currency: 'USD',
-        categoryId: p.category
-          ? categoryMap.get(p.category.toLowerCase())
-          : null,
-        inventory: p.inventory || 0,
-        isActive: true,
-      }));
+      for (const p of productsList) {
+        const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
-      if (productsToInsert.length > 0) {
-        await ctx.db
+        const [insertedProduct] = await ctx.db
           .insert(products)
-          .values(productsToInsert)
-          .onConflictDoNothing();
+          .values({
+            name: p.name,
+            slug: slug,
+            description: p.description,
+            price: p.price.toString(),
+            currency: ctx.uiConfig?.currency as string || 'USD',
+            categoryId: p.category ? categoryMap.get(p.category.toLowerCase()) : null,
+            brand: p.brand || null,
+            quantity: p.inventory || 0,
+            isFeatured: !!p.isFeatured,
+            isActive: true,
+          } as any)
+          .onConflictDoUpdate({
+            target: products.slug,
+            set: { name: p.name, price: p.price.toString() }
+          })
+          .returning();
+
+        // Seed Product Images
+        if (p.images && p.images.length > 0 && insertedProduct) {
+          const imagesToInsert = p.images.map((img: string, index: number) => ({
+            productId: insertedProduct.id,
+            url: img,
+            isPrimary: index === 0,
+            order: index,
+          }));
+
+          await ctx.db.insert(productImages).values(imagesToInsert).onConflictDoNothing();
+        }
       }
     } catch (e) {
       console.warn('[CatalogModule] Failed to seed products:', e);
-      throw e; // Circuit Breaker will catch this
+      throw e;
+    }
+  }
+
+  private async seedBanners(ctx: BlueprintContext, bannersList: any[]) {
+    try {
+      const bannersToInsert = bannersList.map((b) => ({
+        title: b.title,
+        subtitle: b.subtitle,
+        imageUrl: b.imageUrl,
+        linkUrl: b.linkUrl || '/',
+        ctaText: b.ctaText || 'Shop Now',
+        position: b.position || 'hero',
+        priority: b.priority || 0,
+        active: true,
+      }));
+
+      await ctx.db.insert(banners).values(bannersToInsert).onConflictDoNothing();
+    } catch (e) {
+      console.warn('[CatalogModule] Failed to seed banners:', e);
     }
   }
 }
