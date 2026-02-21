@@ -4,7 +4,7 @@ FROM oven/bun:alpine
 WORKDIR /app
 
 # Copy the server script
-COPY server.ts .
+COPY ops/auth-portal/server.ts .
 
 # Expose the auth portal port
 EXPOSE 8080
