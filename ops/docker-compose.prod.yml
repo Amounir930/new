@@ -80,11 +80,14 @@ services:
       retries: 3
     labels:
       - "traefik.enable=true"
+      # S3 API Endpoint (storage.60sec.shop)
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
       - "traefik.http.routers.minio.middlewares=apex-basic-auth"
       - "traefik.http.services.minio.loadbalancer.server.port=9000"
+      
+      # Console UI (console.storage.60sec.shop)
       - "traefik.http.routers.minio-console.rule=Host(`console.storage.60sec.shop`)"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
       - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
@@ -137,7 +140,7 @@ services:
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.api-ratelimit.ratelimit.burst=150"
-      - "traefik.http.routers.api.middlewares=api-ratelimit,apex-basic-auth"
+      - "traefik.http.routers.api.middlewares=api-ratelimit"
       - "traefik.http.services.api.loadbalancer.server.port=3000"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/health/liveness').then(r => process.exit(r.ok ? 0 : 1))"]
@@ -390,6 +393,8 @@ services:
       BACKUP_KEEP_MONTHS: 6
     volumes:
       - db_backups:/backups
+    healthcheck:
+      disable: true
     depends_on:
       postgres:
         condition: service_healthy
@@ -433,6 +438,8 @@ services:
       BACKUP_KEEP_DAYS: 7
     volumes:
       - gitea_backups:/backups
+    healthcheck:
+      disable: true
     depends_on:
       gitea-db:
         condition: service_healthy
