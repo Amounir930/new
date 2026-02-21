@@ -46,7 +46,7 @@ serve({
         // Service name is 'gitea'. 
         // So URL: ssh://git@gitea:22/60sec.shop/apex-v2.git
 
-        const GITEA_INTERNAL_URL = "ssh://git@gitea:22/60sec.shop/apex-v2.git";
+        const GITEA_INTERNAL_URL = "ssh://git@gitea:22/apex-admin/60sec.shop.git";
         const DEPLOY_KEY_PATH = "/app/ops/keys/webhook_deploy_key";
 
         const script = `

@@ -33,6 +33,33 @@ services:
       - apex-network
 
   # ═══════════════════════════════════════════════════════════════
+  # Database Backup (Safety Shield)
+  # ═══════════════════════════════════════════════════════════════
+  db-backup:
+    image: prodrigestivill/postgres-backup-local:15
+    container_name: apex-db-backup
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-apex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 6
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - db_backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
   # Gitea Isolated Database (S2 Compliance)
   # ═══════════════════════════════════════════════════════════════
   gitea-db:
@@ -54,6 +81,28 @@ services:
       - apex-network
 
   # ═══════════════════════════════════════════════════════════════
+  # Gitea DB Backup (Safety Shield)
+  # ═══════════════════════════════════════════════════════════════
+  gitea-db-backup:
+    image: prodrigestivill/postgres-backup-local:15
+    container_name: apex-gitea-db-backup
+    restart: always
+    environment:
+      POSTGRES_HOST: gitea-db
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
+      POSTGRES_DB: gitea
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+    volumes:
+      - gitea_backups:/backups
+    depends_on:
+      gitea-db:
+        condition: service_healthy
+    networks:
+      - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
   # Cache Layer (Redis 7) - Persistent
   # ═══════════════════════════════════════════════════════════════
   redis:
@@ -69,10 +118,11 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping"]
+      test: ["CMD-SHELL", 'redis-cli -a "$$REDIS_PASSWORD" ping | grep PONG']
       interval: 10s
       timeout: 3s
       retries: 5
+      start_period: 5s
     networks:
       - apex-network
 
@@ -97,6 +147,17 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
+      - "traefik.http.routers.minio.entrypoints=websecure"
+      - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
+      - "traefik.http.routers.minio-console.rule=Host(`console.storage.60sec.shop`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
     networks:
       - apex-network
 
@@ -148,11 +209,11 @@ services:
       - "traefik.http.routers.api.middlewares=api-ratelimit"
       - "traefik.http.services.api.loadbalancer.server.port=3000"
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/v1/health/liveness').then(r => process.exit(r.ok ? 0 : 1))"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/health/liveness').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 30s
     deploy:
       replicas: 2
       resources:
@@ -194,6 +255,12 @@ services:
       - "traefik.http.middlewares.admin-security.headers.contentTypeNosniff=true"
       - "traefik.http.routers.admin.middlewares=admin-security"
       - "traefik.http.services.admin.loadbalancer.server.port=3001"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       resources:
         limits:
@@ -229,8 +296,8 @@ services:
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.store-main.middlewares=store-csp"
-      # Catch-all tenant router (lower priority)
-      - "traefik.http.routers.store-tenants.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      # Catch-all tenant router (lower priority, excluding system subdomains)
+      - "traefik.http.routers.store-tenants.rule=HostRegexp(`{subdomain:(?!git|super-admin|db|mail|storage|console|traefik)[a-z0-9-]+}.60sec.shop`)"
       - "traefik.http.routers.store-tenants.priority=1000"
       - "traefik.http.routers.store-tenants.entrypoints=websecure"
       - "traefik.http.routers.store-tenants.tls.certresolver=letsencrypt"
@@ -238,6 +305,12 @@ services:
       - "traefik.http.services.store-svc.loadbalancer.server.port=3002"
       - "traefik.http.routers.store-main.service=store-svc"
       - "traefik.http.routers.store-tenants.service=store-svc"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3002').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     deploy:
       resources:
         limits:
@@ -306,6 +379,7 @@ services:
       # S11/S8: Trust Forwarded Headers from local networks
       - "--entrypoints.websecure.forwardedHeaders.insecure=false"
       - "--entrypoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+      # Enable forwardAuth globally for DASHBOARD subdomains if needed, but we'll do it per router
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 10s
@@ -316,17 +390,19 @@ services:
       - "443:443"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik-dash.rule=Host(`traefik.60sec.shop`)"
+      # Dashboard Router
+      - "traefik.http.routers.traefik-dash.rule=Host(`traefik.60sec.shop`) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
       - "traefik.http.routers.traefik-dash.priority=5000"
       - "traefik.http.routers.traefik-dash.service=api@internal"
       - "traefik.http.routers.traefik-dash.entrypoints=websecure"
       - "traefik.http.routers.traefik-dash.tls.certresolver=letsencrypt"
-      # S8: Basic Auth for Traefik Dashboard (admin@60sec.shop:Admin@60SecShop!2026)
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=admin@60sec.shop:{SHA}jE949HPLrf17SGLJUq5ATChEOeg="
       # Redirect /dashboard to /dashboard/ to avoid 404
       - "traefik.http.middlewares.dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$"
       - "traefik.http.middlewares.dash-redirect.redirectregex.replacement=$${1}/"
-      - "traefik.http.routers.traefik-dash.middlewares=traefik-auth,dash-redirect"
+      # Forward Auth Middleware
+      - "traefik.http.middlewares.auth-portal-fw.forwardauth.address=http://auth-portal:8080/auth"
+      - "traefik.http.middlewares.auth-portal-fw.forwardauth.trustForwardHeader=true"
+      - "traefik.http.routers.traefik-dash.middlewares=dash-redirect,auth-portal-fw"
       - "traefik.http.services.traefik-dummy.loadbalancer.server.port=9999"
     volumes:
       # Removed direct socket access - using proxy instead for S15 security
@@ -348,8 +424,119 @@ services:
       MP_UI_BIND_ADDR: 0.0.0.0:8025
     volumes:
       - mailpit_data:/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
+      - "traefik.http.routers.mailpit.entrypoints=websecure"
+      - "traefik.http.routers.mailpit.tls.certresolver=letsencrypt"
+      - "traefik.http.services.mailpit.loadbalancer.server.port=8025"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     networks:
       - apex-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Auth Portal (Surgical Security UI)
+  # ═══════════════════════════════════════════════════════════════
+  auth-portal:
+    build:
+      context: ..
+      dockerfile: ops/auth-portal/Dockerfile
+    container_name: apex-auth-portal
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      - SUPER_ADMIN_EMAIL=${SUPER_ADMIN_EMAIL:-admin@60sec.shop}
+      - SUPER_ADMIN_PASSWORD=${SUPER_ADMIN_PASSWORD:-Admin@60SecShop!2026}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      # Public Login Router
+      - "traefik.http.routers.auth-login.rule=Host(`traefik.60sec.shop`) && (PathPrefix(`/login`) || PathPrefix(`/auth`))"
+      - "traefik.http.routers.auth-login.priority=6000"
+      - "traefik.http.routers.auth-login.entrypoints=websecure"
+      - "traefik.http.routers.auth-login.tls.certresolver=letsencrypt"
+      - "traefik.http.services.auth-portal.loadbalancer.server.port=8080"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Database Backup (Postgres)
+  # ═══════════════════════════════════════════════════════════════
+  db-backup:
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/db-backup:latest
+    container_name: apex-db-backup
+    build:
+      context: ..
+      dockerfile: ops/db-backup/Dockerfile
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      - PGHOST=postgres
+      - PGUSER=postgres
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+      - PGDATABASE=postgres
+      - PGPORT=5432
+      - S3_ENDPOINT=${MINIO_ENDPOINT}
+      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - S3_BUCKET=db-backups
+      - BACKUP_CRON_SCHEDULE=0 2 * * * # Every day at 2 AM
+    volumes:
+      - db_backups:/backups
+    networks:
+      - apex-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ═══════════════════════════════════════════════════════════════
+  # Gitea Database Backup
+  # ═══════════════════════════════════════════════════════════════
+  gitea-db-backup:
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/db-backup:latest
+    container_name: apex-gitea-db-backup
+    build:
+      context: ..
+      dockerfile: ops/db-backup/Dockerfile
+    restart: always
+    env_file:
+      - ../.env
+    environment:
+      - PGHOST=gitea-db
+      - PGUSER=gitea
+      - PGPASSWORD=${GITEA_DB_PASSWORD}
+      - PGDATABASE=gitea
+      - PGPORT=5432
+      - S3_ENDPOINT=${MINIO_ENDPOINT}
+      - S3_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - S3_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - S3_BUCKET=gitea-db-backups
+      - BACKUP_CRON_SCHEDULE=0 3 * * * # Every day at 3 AM
+    volumes:
+      - gitea_backups:/backups
+    networks:
+      - apex-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      gitea-db:
+        condition: service_healthy
 
   # ═══════════════════════════════════════════════════════════════
   # Gitea (The Fortress) - Self-hosted Git Server
@@ -363,7 +550,7 @@ services:
         condition: service_healthy
     environment:
       - GITEA__database__DB_TYPE=postgres
-      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__HOST=gitea-db:5432
       - GITEA__database__NAME=gitea
       - GITEA__database__USER=gitea
       - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
@@ -375,6 +562,12 @@ services:
       - GITEA__service__EXPLORER_PAGES_ENABLED=false
       - GITEA__security__INSTALL_LOCK=true
       - GITEA__server__ROOT_URL=https://git.60sec.shop/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     volumes:
       - gitea_data:/var/lib/gitea
       - gitea_conf:/etc/gitea
@@ -388,7 +581,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gitea.rule=Host(`git.60sec.shop`)"
-      - "traefik.http.routers.gitea.priority=3000"
+      - "traefik.http.routers.gitea.priority=5000"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
       - "traefik.http.services.gitea.loadbalancer.server.port=3000"
@@ -406,11 +599,23 @@ services:
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - DOCKER_HOST=tcp://apex-docker-proxy:2375
     # S11 FIX: Webhook now uses docker-proxy instead of direct socket
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
     volumes:
       # Mount the entire repo so we can pull changes to HOST
-      - /opt/apex-v2:/app
+      - /opt/apex-v2:/app:ro
     networks:
       - apex-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
   # ═══════════════════════════════════════════════════════════════
   # Database Explorer (Adminer) - Internal Access Only
@@ -429,6 +634,8 @@ services:
       - "traefik.http.routers.adminer.priority=2500"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.adminer.middlewares=adminer-auth"
+      - "traefik.http.middlewares.adminer-auth.basicauth.users=${ADMINER_AUTH}"
       - "traefik.http.services.adminer-svc.loadbalancer.server.port=8080"
       - "traefik.http.routers.adminer.service=adminer-svc"
     deploy:
@@ -445,6 +652,8 @@ volumes:
   gitea_data:
   gitea_conf:
   gitea_db_data:
+  db_backups:
+  gitea_backups:
 
 networks:
   apex-network:
