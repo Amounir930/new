@@ -224,16 +224,17 @@ services:
       # Main domain router
       - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
       - "traefik.http.routers.store-main.priority=600"
+      - "traefik.http.routers.store-main.service=store-svc"
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.store-main.tls.domains[0].main=adel.60sec.shop"
-      - "traefik.http.services.store-main.loadbalancer.server.port=3002"
       # Catch-all tenant router (lowest priority)
       - "traefik.http.routers.store-tenants.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
       - "traefik.http.routers.store-tenants.priority=100"
+      - "traefik.http.routers.store-tenants.service=store-svc"
       - "traefik.http.routers.store-tenants.entrypoints=websecure"
       - "traefik.http.routers.store-tenants.tls.certresolver=letsencrypt"
-      - "traefik.http.services.store-tenants.loadbalancer.server.port=3002"
+      - "traefik.http.services.store-svc.loadbalancer.server.port=3002"
     deploy:
       resources:
         limits:
@@ -319,8 +320,8 @@ services:
       - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       # S8: Basic Auth for Traefik Dashboard (admin@60sec.shop:Admin@60SecShop!2026)
       - "traefik.http.middlewares.traefik-auth.basicauth.users=admin@60sec.shop:{SHA}jE949HPLrf17SGLJUq5ATChEOeg="
-      # Redirect /dashboard to /dashboard/ to avoid 404
-      - "traefik.http.middlewares.dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$$"
+      # Redirect /dashboard to /dashboard/ to avoid 404 (using more robust replacement)
+      - "traefik.http.middlewares.dash-redirect.redirectregex.regex=^(https?://[^/]+/[a-z0-9]+)$$"
       - "traefik.http.middlewares.dash-redirect.redirectregex.replacement=$${1}/"
       - "traefik.http.routers.traefik.middlewares=traefik-auth,dash-redirect"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
