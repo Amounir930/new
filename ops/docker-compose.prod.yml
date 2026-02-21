@@ -221,16 +221,20 @@ services:
       - apex-network
     labels:
       - "traefik.enable=true"
+      # S8: Inject CSP via Traefik (Fixes styling without rebuild)
+      - "traefik.http.middlewares.store-csp.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
       # Main domain router
       - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
       - "traefik.http.routers.store-main.priority=2000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.store-main.middlewares=store-csp"
       # Catch-all tenant router (lower priority)
       - "traefik.http.routers.store-tenants.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
       - "traefik.http.routers.store-tenants.priority=1000"
       - "traefik.http.routers.store-tenants.entrypoints=websecure"
       - "traefik.http.routers.store-tenants.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.store-tenants.middlewares=store-csp"
       - "traefik.http.services.store-svc.loadbalancer.server.port=3002"
       - "traefik.http.routers.store-main.service=store-svc"
       - "traefik.http.routers.store-tenants.service=store-svc"
