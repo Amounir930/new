@@ -101,6 +101,16 @@ export class BotProtectionMiddleware implements NestMiddleware {
       const captchaToken = req.headers['x-hcaptcha-token'] as string;
       const isProd = env.NODE_ENV === 'production';
 
+      // S11 FIX: If hCaptcha secret is not configured, bypass challenge
+      // (allows admin panel logins which don't include the token)
+      const hasHcaptchaSecret = !!env.HCAPTCHA_SECRET_KEY;
+      if (!hasHcaptchaSecret) {
+        console.warn(
+          `⚠️ S11: HCAPTCHA_SECRET_KEY not configured - bypassing hCaptcha for ${path}`
+        );
+        return;
+      }
+
       if (isProd || captchaToken) {
         const isValid = await this.captchaService.verify(
           captchaToken,
@@ -118,6 +128,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
       }
     }
   }
+
 
   private checkSuspiciousPaths(req: Request): void {
     const suspiciousPaths = [
