@@ -19,6 +19,7 @@ import { NativeExportStrategy } from './strategies/native-export.strategy.js';
   providers: [
     ExportWorker,
     ExportStrategyFactory,
+    ExportService,
     LiteExportStrategy,
     NativeExportStrategy,
     AnalyticsExportStrategy,
