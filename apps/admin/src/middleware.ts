@@ -13,10 +13,18 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect /login to /super-admin if already authenticated
-  if (pathname === '/login') {
+  // Protect /dashboard (merchant routes)
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/orders') || pathname.startsWith('/products')) {
+    if (!token) {
+      const loginUrl = new URL('/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // Redirect /login to /onboarding if already authenticated, assuming the onboarding redirect logic catches valid stores.
+  if (pathname === '/login' || pathname === '/') {
     if (token) {
-      const dashboardUrl = new URL('/super-admin', request.url);
+      const dashboardUrl = new URL('/onboarding', request.url);
       return NextResponse.redirect(dashboardUrl);
     }
   }

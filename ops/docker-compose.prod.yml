@@ -221,6 +221,7 @@ services:
       - "traefik.http.routers.admin.entrypoints=websecure"
       - "traefik.http.routers.admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.admin.middlewares=apex-admin-security@docker"
+      - "traefik.http.services.apex-admin.loadbalancer.server.port=3001"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 30s
