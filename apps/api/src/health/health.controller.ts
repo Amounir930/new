@@ -5,8 +5,10 @@ import {
   Get,
   HttpStatus,
   Logger,
+  UseGuards,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { createClient } from 'redis';
 
 /**
@@ -15,6 +17,7 @@ import { createClient } from 'redis';
  */
 @Controller({ path: 'health', version: [VERSION_NEUTRAL, '1'] })
 @Public()
+@UseGuards(ThrottlerGuard) // S6 FIX: Apply rate limiting to public health endpoints
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
