@@ -1,4 +1,4 @@
-import type { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config';
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
