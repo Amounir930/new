@@ -4,11 +4,12 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import type { FraudScoringService } from './fraud-scoring.service.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { FraudScoringService } from './fraud-scoring.service.js';
 
 @Injectable()
 export class FraudGuard implements CanActivate {
-  constructor(private readonly fraudService: FraudScoringService) {}
+  constructor(private readonly fraudService: FraudScoringService) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

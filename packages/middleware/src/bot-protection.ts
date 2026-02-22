@@ -10,11 +10,12 @@ import {
   type NestMiddleware,
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import type { HCaptchaService } from './hcaptcha.service.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { HCaptchaService } from './hcaptcha.service.js';
 
 @Injectable()
 export class BotProtectionMiddleware implements NestMiddleware {
-  constructor(private readonly captchaService: HCaptchaService) {}
+  constructor(private readonly captchaService: HCaptchaService) { }
 
   // Common bot and scraper User-Agent patterns
   private readonly botUserAgents = [

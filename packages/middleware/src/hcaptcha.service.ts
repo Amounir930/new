@@ -1,4 +1,5 @@
-import type { ConfigService } from '@apex/config';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { ConfigService } from '@apex/config';
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()

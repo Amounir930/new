@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { RedisRateLimitStore } from './redis-rate-limit-store.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 @Injectable()
 export class OTPService {
