@@ -51,10 +51,16 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
+    const path = request.originalUrl || request.url;
+
+    // S6: Bypass health check endpoints to prevent false positives and system crashes
+    if (/(health|liveness|readiness)/i.test(path)) {
+      return true;
+    }
 
     // Get client identifier (IP or API key)
     const identifier = this.getIdentifier(request);
@@ -167,11 +173,14 @@ export class RateLimitGuard implements CanActivate {
     }
 
     // Get IP from various headers (proxy support)
-    const ip =
-      (headers['x-forwarded-for'] as string) ||
-      (headers['x-real-ip'] as string) ||
+    const rawIp =
+      headers['x-forwarded-for'] ||
+      headers['x-real-ip'] ||
       (request as any).ip ||
       'unknown';
+
+    // S6: Safely handle both string and array header values (NestJS/Node.js compatibility)
+    const ip = Array.isArray(rawIp) ? rawIp[0] : (rawIp as string);
 
     return `ip:${ip.split(',')[0].trim()}`;
   }
@@ -266,4 +275,4 @@ import { QuotaInterceptor } from './quota.interceptor.js';
     FraudGuard,
   ],
 })
-export class RateLimitModule {}
+export class RateLimitModule { }
