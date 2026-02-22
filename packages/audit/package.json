@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "rxjs": "^7.8.1",
+    "@apex/config": "workspace:*",
     "@apex/db": "workspace:*",
     "@apex/middleware": "workspace:*",
     "@apex/security": "workspace:*",

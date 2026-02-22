@@ -2,7 +2,8 @@ import { ConfigService } from '@apex/config';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import type { AuthUser, JwtPayload } from '../auth.service.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuthUser, JwtPayload } from '../auth.service.js';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

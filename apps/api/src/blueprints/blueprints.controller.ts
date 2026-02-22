@@ -1,28 +1,37 @@
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditLog, AuditService } from '@apex/audit';
 import {
   Body,
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Post,
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser } from '../../../../packages/auth/src/decorators/current-user.decorator.js';
-import { SuperAdminGuard } from '../../../../packages/auth/src/guards/super-admin.guard.js';
-import { JwtAuthGuard } from '../../../../packages/auth/src/index.js';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { CurrentUser, JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { BlueprintsService } from './blueprints.service.js';
-import type {
-  CreateBlueprintDto,
-  SnapshotBlueprintDto,
-  UpdateBlueprintDto,
+import {
+  createBlueprintSchema,
+  snapshotBlueprintSchema,
+  updateBlueprintSchema,
+  type CreateBlueprintDto,
+  type SnapshotBlueprintDto,
+  type UpdateBlueprintDto,
 } from './dto/blueprint.dto.js';
 
 @Controller('admin/blueprints')
 @UseGuards(JwtAuthGuard, SuperAdminGuard) // Super-#21: Super Admin ONLY
 export class BlueprintsController {
-  constructor(private readonly blueprintsService: BlueprintsService) {}
+  constructor(
+    private readonly blueprintsService: BlueprintsService,
+    @Inject('AUDIT_SERVICE')
+    private readonly audit: AuditService
+  ) { }
 
   @Get()
   findAll() {
@@ -35,23 +44,29 @@ export class BlueprintsController {
   }
 
   @Post()
-  create(@CurrentUser('id') userId: string, @Body() dto: CreateBlueprintDto) {
+  @AuditLog({ action: 'BLUEPRINT_CREATED', entityType: 'blueprint' })
+  create(
+    @CurrentUser('id') userId: string,
+    @Body(new ZodValidationPipe(createBlueprintSchema)) dto: CreateBlueprintDto
+  ) {
     return this.blueprintsService.create(userId, dto);
   }
 
   @Put(':id')
+  @AuditLog({ action: 'BLUEPRINT_UPDATED', entityType: 'blueprint' })
   update(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() dto: UpdateBlueprintDto
+    @Body(new ZodValidationPipe(updateBlueprintSchema)) dto: UpdateBlueprintDto
   ) {
     return this.blueprintsService.update(userId, id, dto);
   }
 
   @Post('snapshot')
+  @AuditLog({ action: 'BLUEPRINT_SNAPSHOT_CREATED', entityType: 'blueprint' })
   snapshot(
     @CurrentUser('id') userId: string,
-    @Body() dto: SnapshotBlueprintDto
+    @Body(new ZodValidationPipe(snapshotBlueprintSchema)) dto: SnapshotBlueprintDto
   ) {
     return this.blueprintsService.snapshot(
       userId,
@@ -63,6 +78,7 @@ export class BlueprintsController {
   }
 
   @Delete(':id')
+  @AuditLog({ action: 'BLUEPRINT_DELETED', entityType: 'blueprint' })
   remove(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return this.blueprintsService.remove(userId, id);
   }

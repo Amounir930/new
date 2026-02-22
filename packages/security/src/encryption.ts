@@ -100,10 +100,8 @@ export function decrypt(
 /**
  * Hash for API keys (one-way)
  */
-export function hashApiKey(apiKey: string): string {
+export function hashApiKey(apiKey: string, secret: string): string {
   const { createHmac } = require('node:crypto');
-  const secret =
-    process.env.API_KEY_SECRET || 'default-secret-change-in-production';
   return createHmac('sha256', secret).update(apiKey).digest('hex');
 }
 
@@ -112,10 +110,8 @@ export function hashApiKey(apiKey: string): string {
  * Generates deterministic hash for searching encrypted fields (email, phone).
  * Uses a separate secret (BLIND_INDEX_PEPPER) to prevent rainbow table attacks.
  */
-export function hashSensitiveData(value: string): string {
+export function hashSensitiveData(value: string, pepper: string): string {
   const { createHmac } = require('node:crypto');
-  const pepper =
-    process.env.BLIND_INDEX_PEPPER || 'default-pepper-change-in-production';
   return createHmac('sha256', pepper).update(value).digest('hex');
 }
 
@@ -141,19 +137,24 @@ export function maskSensitive(value: string, visibleChars = 4): string {
 /**
  * NestJS Injectable Encryption Service
  */
+import { ConfigService } from '@apex/config';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class EncryptionService {
   private readonly masterKey: string;
+  private readonly apiKeySecret: string;
+  private readonly blindIndexPepper: string;
 
-  constructor() {
-    this.masterKey = process.env.ENCRYPTION_MASTER_KEY || '';
+  constructor(private readonly config: ConfigService) {
+    this.masterKey = this.config.get('ENCRYPTION_MASTER_KEY') as string;
+    this.apiKeySecret = this.config.getWithDefault('API_KEY_SECRET', '') as string;
+    this.blindIndexPepper = this.config.getWithDefault('BLIND_INDEX_PEPPER', '') as string;
 
     // CRITICAL FIX (S7): Strict enforcement for production
     // In production, test keys are NEVER allowed, regardless of environment variables
-    const isProduction = process.env.NODE_ENV === 'production';
-    const isTestMode = process.env.NODE_ENV === 'test' && !isProduction;
+    const isProduction = this.config.get('NODE_ENV') === 'production';
+    const isTestMode = this.config.get('NODE_ENV') === 'test' && !isProduction;
 
     if (!this.masterKey) {
       if (isTestMode) {
@@ -236,11 +237,19 @@ export class EncryptionService {
   }
 
   hashApiKey(apiKey: string): string {
-    return hashApiKey(apiKey);
+    if (!this.apiKeySecret && this.config.get('NODE_ENV') === 'production') {
+      throw new Error('S1 Violation: API_KEY_SECRET is required in production');
+    }
+    return hashApiKey(apiKey, this.apiKeySecret || 'test-secret');
   }
 
   hashSensitiveData(value: string): string {
-    return hashSensitiveData(value);
+    if (!this.blindIndexPepper && this.config.get('NODE_ENV') === 'production') {
+      throw new Error(
+        'S1 Violation: BLIND_INDEX_PEPPER is required in production'
+      );
+    }
+    return hashSensitiveData(value, this.blindIndexPepper || 'test-pepper');
   }
 
   generateApiKey(): string {

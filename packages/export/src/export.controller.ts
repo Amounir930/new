@@ -12,15 +12,33 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   NotFoundException,
   Param,
   Post,
   Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import type { ExportService } from './export.service.js';
-import type { ExportWorker } from './export.worker.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditLog, AuditService } from '@apex/audit';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { ExportService } from './export.service.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { ExportWorker } from './export.worker.js';
 import type { ExportJob, ExportProfile } from './types.js';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { z } from 'zod';
+
+const CreateExportSchema = z.object({
+  profile: z.string() as z.ZodType<ExportProfile>,
+  includeAssets: z.boolean().optional(),
+  dateRange: z.object({
+    from: z.string(),
+    to: z.string(),
+  }).optional(),
+});
+
+type CreateExportDto = z.infer<typeof CreateExportSchema>;
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -30,30 +48,24 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-class CreateExportDto {
-  profile!: ExportProfile;
-  includeAssets?: boolean;
-  dateRange?: {
-    from: string;
-    to: string;
-  };
-}
-
 @Controller('api/v1/tenant/export')
 export class ExportController {
   constructor(
     private readonly exportService: ExportService,
-    private readonly exportWorker: ExportWorker
-  ) {}
+    private readonly exportWorker: ExportWorker,
+    @Inject('AUDIT_SERVICE')
+    private readonly audit: AuditService
+  ) { }
 
   /**
    * POST /api/v1/tenant/export
    * Request a new data export
    */
+  @AuditLog({ action: 'EXPORT_REQUESTED', entityType: 'export' })
   @Post()
   @HttpCode(HttpStatus.ACCEPTED)
   async createExport(
-    @Body() dto: CreateExportDto,
+    @Body(ZodValidationPipe) dto: CreateExportDto,
     @Req() req: AuthenticatedRequest
   ): Promise<{ message: string; job: ExportJob }> {
     const user = req.user;
@@ -73,9 +85,9 @@ export class ExportController {
       includeAssets: dto.includeAssets,
       dateRange: dto.dateRange
         ? {
-            from: new Date(dto.dateRange.from),
-            to: new Date(dto.dateRange.to),
-          }
+          from: new Date(dto.dateRange.from),
+          to: new Date(dto.dateRange.to),
+        }
         : undefined,
     });
 
@@ -130,6 +142,7 @@ export class ExportController {
    * POST /api/v1/tenant/export/:id/confirm-download
    * Confirm successful download and delete file immediately
    */
+  @AuditLog({ action: 'EXPORT_DOWNLOAD_CONFIRMED', entityType: 'export' })
   @Post(':id/confirm-download')
   @HttpCode(HttpStatus.OK)
   async confirmDownload(
@@ -160,6 +173,7 @@ export class ExportController {
    * DELETE /api/v1/tenant/export/:id
    * Cancel a pending export job
    */
+  @AuditLog({ action: 'EXPORT_CANCELLED', entityType: 'export' })
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   async cancelJob(

@@ -6,7 +6,9 @@
  */
 
 import { readFile, rm } from 'node:fs/promises';
-import type { AuditService } from '@apex/audit';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditService } from '@apex/audit';
+import { ConfigService } from '@apex/config';
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -14,13 +16,15 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
+  Inject,
   Injectable,
   Logger,
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
 import { type Job, Queue, Worker } from 'bullmq';
-import type { ExportStrategyFactory } from './export-strategy.factory.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { ExportStrategyFactory } from './export-strategy.factory.js';
 import type { ExportOptions, ExportResult } from './types.js';
 
 @Injectable()
@@ -31,16 +35,18 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
   private s3Client: S3Client;
 
   constructor(
+    @Inject('AUDIT_SERVICE')
+    private readonly audit: AuditService,
     private readonly strategyFactory: ExportStrategyFactory,
-    private readonly audit: AuditService
+    private readonly config: ConfigService
   ) {
     // Initialize S3/MinIO client
     this.s3Client = new S3Client({
-      endpoint: process.env.MINIO_ENDPOINT || 'http://localhost:9000',
-      region: process.env.MINIO_REGION || 'us-east-1',
+      endpoint: this.config.getWithDefault('MINIO_ENDPOINT', 'http://localhost:9000'),
+      region: this.config.getWithDefault('MINIO_REGION', 'us-east-1'),
       credentials: {
-        accessKeyId: process.env.MINIO_ACCESS_KEY || '',
-        secretAccessKey: process.env.MINIO_SECRET_KEY || '',
+        accessKeyId: this.config.getWithDefault('MINIO_ACCESS_KEY', '') as string,
+        secretAccessKey: this.config.getWithDefault('MINIO_SECRET_KEY', '') as string,
       },
       forcePathStyle: true,
     });
@@ -48,8 +54,8 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
     // Initialize exportQueue for status checks
     this.exportQueue = new Queue('tenant-export', {
       connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        host: this.config.get('REDIS_HOST'),
+        port: Number.parseInt(this.config.get('REDIS_PORT'), 10),
       },
     });
   }
@@ -61,8 +67,8 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       async (job) => this.processJob(job),
       {
         connection: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+          host: this.config.get('REDIS_HOST'),
+          port: Number.parseInt(this.config.get('REDIS_PORT'), 10),
         },
         concurrency: 3, // Process 3 exports simultaneously (different tenants)
         limiter: {
@@ -131,7 +137,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       if (result.sizeBytes > this.MAX_EXPORT_SIZE_BYTES) {
         throw new Error(
           `Export size (${(result.sizeBytes / 1024 / 1024).toFixed(2)}MB) ` +
-            `exceeds limit (${this.MAX_EXPORT_SIZE_BYTES / 1024 / 1024}MB)`
+          `exceeds limit (${this.MAX_EXPORT_SIZE_BYTES / 1024 / 1024}MB)`
         );
       }
 
@@ -196,7 +202,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       });
 
       // Cleanup local file immediately (S14.8: Native Node.js cleanup)
-      await rm(result.downloadUrl, { force: true }).catch(() => {});
+      await rm(result.downloadUrl, { force: true }).catch(() => { });
       this.logger.log(`Cleaned up local file: ${result.downloadUrl}`);
 
       await job.updateProgress(100);
@@ -234,7 +240,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
 
       // Cleanup on failure (S14.8: Native Node.js cleanup)
       if (localFilePath) {
-        await rm(localFilePath, { force: true }).catch(() => {});
+        await rm(localFilePath, { force: true }).catch(() => { });
         this.logger.log(`Cleaned up failed export file: ${localFilePath}`);
       }
 

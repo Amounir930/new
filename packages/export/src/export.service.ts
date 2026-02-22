@@ -7,7 +7,9 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { AuditService } from '@apex/audit';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditService } from '@apex/audit';
+import { env } from '@apex/config';
 import {
   Inject,
   Injectable,
@@ -15,13 +17,14 @@ import {
   type OnModuleDestroy,
 } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import type { ExportStrategyFactory } from './export-strategy.factory.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { ExportStrategyFactory } from './export-strategy.factory.js';
 import type { ExportJob, ExportOptions, ExportResult } from './types.js';
 
 @Injectable()
 export class ExportService implements OnModuleDestroy {
   private readonly logger = new Logger(ExportService.name);
-  private exportQueue: Queue;
+  private readonly exportQueue: Queue;
 
   constructor(
     private readonly strategyFactory: ExportStrategyFactory,
@@ -30,8 +33,8 @@ export class ExportService implements OnModuleDestroy {
     // Initialize BullMQ queue
     this.exportQueue = new Queue('tenant-export', {
       connection: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        host: env.REDIS_HOST,
+        port: Number.parseInt(env.REDIS_PORT, 10),
       },
       defaultJobOptions: {
         attempts: 3,
@@ -76,7 +79,7 @@ export class ExportService implements OnModuleDestroy {
     if (tenantJobs.length > 0) {
       throw new Error(
         `Export already in progress for tenant ${options.tenantId}. ` +
-          `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
+        `Job ID: ${tenantJobs[0].id}. Please wait for completion.`
       );
     }
 
@@ -169,9 +172,9 @@ export class ExportService implements OnModuleDestroy {
       progress: job.progress as number | undefined,
       result: result
         ? {
-            ...result,
-            expiresAt: new Date(result.expiresAt),
-          }
+          ...result,
+          expiresAt: new Date(result.expiresAt),
+        }
         : undefined,
       error: job.failedReason || undefined,
     };

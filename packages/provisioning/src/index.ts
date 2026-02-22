@@ -3,6 +3,10 @@
  * The 60-Second Store Provisoning Engine
  */
 
+export {
+  MASTER_FEATURE_LIST,
+  MASTER_QUOTA_LIST,
+} from './blueprint/constants.js';
 export { validateBlueprint } from './blueprint/executor.js'; // Explicit export
 export * from './blueprint/types.js'; // Export types for BlueprintTemplate
 export * from './blueprint.js';

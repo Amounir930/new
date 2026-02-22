@@ -1,0 +1,43 @@
+apps/api/src/auth/auth.controller.ts:  constructor(
+apps/api/src/blueprints/blueprints.controller.ts:  constructor(private readonly blueprintsService: BlueprintsService) {}
+apps/api/src/blueprints/blueprints.service.ts:  constructor(
+apps/api/src/provisioning/provisioning.controller.ts:  constructor(
+apps/api/src/provisioning/provisioning.service.ts:  constructor(
+apps/api/src/security/honey-tokens.controller.ts:  constructor(
+apps/api/src/storefront/storefront.controller.ts:  constructor(private readonly storefrontService: StorefrontService) {}
+apps/api/src/storefront/storefront.service.ts:  constructor(private readonly redisStore: RedisRateLimitStore) { }
+apps/api/src/tenants/tenants-public.controller.ts:  constructor(private readonly tenantRegistry: TenantRegistryService) {}
+apps/api/src/tenants/tenants.controller.ts:  constructor(private readonly tenantRegistry: TenantRegistryService) {}
+packages/audit/src/audit.interceptor.ts:  constructor(
+packages/audit/src/audit.service.ts:  constructor(
+packages/auth/src/auth.service.ts:  constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
+packages/auth/src/strategies/jwt.strategy.ts:  constructor(@Inject(ConfigService) configService: ConfigService) {
+packages/config/src/config.service.ts:  constructor() {
+packages/db/src/services/customer.service.ts:  constructor(private readonly encryptionService: EncryptionService) {}
+packages/db/src/tenant-registry.service.ts:  constructor(private readonly encryption: EncryptionService) {}
+packages/export/src/export-strategy.factory.ts:  constructor(
+packages/export/src/export.controller.ts:  constructor(
+packages/export/src/export.service.ts:  constructor(
+packages/export/src/export.worker.ts:  constructor(
+packages/export/src/strategies/analytics-export.strategy.ts:  constructor(
+packages/export/src/strategies/lite-export.strategy.ts:  constructor(
+packages/export/src/strategies/native-export.strategy.ts:  constructor(private readonly shell: BunShell) {}
+packages/middleware/src/active-defense.middleware.ts:  constructor(private readonly store: RedisRateLimitStore) {}
+packages/middleware/src/bot-protection.ts:  constructor(private readonly captchaService: HCaptchaService) { }
+packages/middleware/src/exception-filter.ts:  constructor(options: ExceptionFilterOptions = {}) {
+packages/middleware/src/exception-filter.ts:  constructor(message: string) {
+packages/middleware/src/exception-filter.ts:  constructor(message = 'Authentication required') {
+packages/middleware/src/exception-filter.ts:  constructor(message = 'Access denied') {
+packages/middleware/src/exception-filter.ts:  constructor(message = 'Tenant access violation') {
+packages/middleware/src/fraud-scoring.service.ts:  constructor(
+packages/middleware/src/fraud.guard.ts:  constructor(private readonly fraudService: FraudScoringService) { }
+packages/middleware/src/governance.guard.ts:  constructor(private reflector: Reflector) {}
+packages/middleware/src/hcaptcha.service.ts:  constructor(private readonly configService: ConfigService) {
+packages/middleware/src/otp.service.ts:  constructor(private readonly store: RedisRateLimitStore) {}
+packages/middleware/src/quota.interceptor.ts:  constructor(private reflector: Reflector) {}
+packages/middleware/src/rate-limit.ts:  constructor(
+packages/middleware/src/redis-rate-limit-store.ts:  constructor(private readonly configService: ConfigService) {}
+packages/security/src/encryption.ts:  constructor() {
+packages/security/src/mtls/index.ts:  constructor(config: MTLSConfig) {
+packages/security/src/secrets/index.ts:  constructor(vaultAddr: string, vaultToken: string) {
+packages/security/src/utils/scanner-cli.ts:  constructor(tsConfigPath: string) {

@@ -15,8 +15,7 @@ import { type RedisClientType, createClient } from 'redis';
  */
 @Injectable()
 export class RedisRateLimitStore
-  implements OnModuleInit, OnApplicationShutdown
-{
+  implements OnModuleInit, OnApplicationShutdown {
   private client: RedisClientType | null = null;
   private connecting = false;
   private fallbackToMemory = false;
@@ -25,7 +24,7 @@ export class RedisRateLimitStore
     { count: number; resetTime: number; violations: number }
   > = new Map();
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async onModuleInit() {
     await this.connect();
@@ -68,7 +67,7 @@ export class RedisRateLimitStore
       this.client = createClient({ url: redisUrl });
 
       this.client.on('error', (err) => {
-        const isProduction = process.env.NODE_ENV === 'production';
+        const isProduction = this.configService.get('NODE_ENV') === 'production';
         if (isProduction) {
           console.error(
             '❌ S6 CRITICAL: Redis runtime error in production. Disabling memory fallback to ensure Fail-Closed security.',
@@ -91,7 +90,7 @@ export class RedisRateLimitStore
 
       // CRITICAL FIX (S6): In production, reject requests if Redis unavailable
       // In non-production, fallback to memory with warning
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = this.configService.get('NODE_ENV') === 'production';
       if (isProduction) {
         console.error(
           '❌ S6 CRITICAL: Redis unavailable in production. Rate limiting cannot function securely. FAILING CLOSED.'
@@ -116,7 +115,7 @@ export class RedisRateLimitStore
     const now = Date.now();
 
     // CRITICAL FIX (S6/S12): In production, reject if Redis unavailable
-    if (!client && process.env.NODE_ENV === 'production') {
+    if (!client && this.configService.get('NODE_ENV') === 'production') {
       throw new HttpException(
         {
           statusCode: HttpStatus.SERVICE_UNAVAILABLE,
@@ -172,7 +171,7 @@ export class RedisRateLimitStore
       return violations ? Number.parseInt(violations, 10) : 0;
     }
 
-    if (process.env.NODE_ENV === 'production') {
+    if (this.configService.get('NODE_ENV') === 'production') {
       return 999; // Conservatively assume high violations if Redis is down
     }
 
@@ -215,7 +214,7 @@ export class RedisRateLimitStore
       return { blocked: false, retryAfter: 0 };
     }
 
-    if (process.env.NODE_ENV === 'production') {
+    if (this.configService.get('NODE_ENV') === 'production') {
       return { blocked: true, retryAfter: 60 }; // Fail closed in prod
     }
 

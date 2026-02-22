@@ -1,5 +1,7 @@
 import { headers } from 'next/headers';
 
+import { config } from '../config';
+
 /**
  * S1/S2: API Fetcher for Storefront
  * Supports internal networking (Docker) and dynamic tenant context
@@ -7,9 +9,8 @@ import { headers } from 'next/headers';
 
 // If we are on the server (SSR), we use the internal service name to bypass Traefik/DNS
 const IS_SERVER = typeof window === 'undefined';
-const INTERNAL_API_URL = process.env.INTERNAL_API_URL || 'http://api:3000/api';
-const PUBLIC_API_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+const INTERNAL_API_URL = config.internalApiUrl;
+const PUBLIC_API_URL = config.publicApiUrl;
 
 export const API_BASE = IS_SERVER ? INTERNAL_API_URL : PUBLIC_API_URL;
 

@@ -4,6 +4,7 @@
  * Purpose: Block known bot User-Agents and detect malicious automated patterns
  */
 
+import { env } from '@apex/config';
 import {
   ForbiddenException,
   Injectable,
@@ -98,7 +99,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
     const isAuthLogin = /\/api\/v1\/auth\/login/i.test(path);
     if (isAuthLogin || path.includes('/api/v1/provision')) {
       const captchaToken = req.headers['x-hcaptcha-token'] as string;
-      const isProd = process.env.NODE_ENV === 'production';
+      const isProd = env.NODE_ENV === 'production';
 
       if (isProd || captchaToken) {
         const isValid = await this.captchaService.verify(

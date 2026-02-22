@@ -1,3 +1,4 @@
+import { env } from '@apex/config';
 import { defineConfig } from 'drizzle-kit';
 
 /**
@@ -10,7 +11,7 @@ export default defineConfig({
   dialect: 'postgresql',
   dbCredentials: {
     url:
-      process.env.DATABASE_URL ||
+      env.DATABASE_URL ||
       'postgresql://apex:apex_dev@localhost:5432/apex_v2',
   },
   verbose: true,

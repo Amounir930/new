@@ -24,7 +24,7 @@ export class ApexSecurityScanner {
     });
   }
 
-  public scanDirectory(dir: string, includePattern = /\.ts$/) {
+  public scanDirectory(dir: string, rule = 'all', includePattern = /\.ts$/) {
     const files = this.getFilesRecursive(dir, includePattern);
     for (const file of files) {
       this.project.addSourceFileAtPath(file);
@@ -32,14 +32,13 @@ export class ApexSecurityScanner {
 
     const sourceFiles = this.project.getSourceFiles();
     for (const sf of sourceFiles) {
-      this.scanFile(sf);
+      this.scanFile(sf, rule);
     }
 
     return this.violations;
   }
 
-  private scanFile(sourceFile: any) {
-    const rule = process.env.SCAN_RULE || 'all';
+  private scanFile(sourceFile: any, rule = 'all') {
 
     if (rule === 'all' || rule === 's11-sqli')
       this.checkSQLInjection(sourceFile);
@@ -455,8 +454,6 @@ if (import.meta.main) {
     }
   }
 
-  process.env.SCAN_RULE = rule;
-
   const tsConfig = resolve(process.cwd(), 'tsconfig.json');
   const scanner = new ApexSecurityScanner(tsConfig);
 
@@ -472,7 +469,7 @@ if (import.meta.main) {
     const fullPath = resolve(process.cwd(), dir);
     if (existsSync(fullPath)) {
       console.log(`🔍 Scanning ${dir}...`);
-      allViolations = allViolations.concat(scanner.scanDirectory(fullPath));
+      allViolations = allViolations.concat(scanner.scanDirectory(fullPath, rule));
     } else {
       console.warn(`⚠️ Directory not found: ${dir}`);
     }

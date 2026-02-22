@@ -1,6 +1,7 @@
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
-import type { AuditService } from '@apex/audit';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditService } from '@apex/audit';
 import { sql, withTenantConnection } from '@apex/db';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type {
@@ -9,7 +10,8 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
-import type { BunShell } from '../utils/bun-shell.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class AnalyticsExportStrategy implements ExportStrategy {
@@ -19,7 +21,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
   constructor(
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) {}
+  ) { }
 
   async validate(options: ExportOptions): Promise<boolean> {
     return !!options.dateRange; // Requires date range

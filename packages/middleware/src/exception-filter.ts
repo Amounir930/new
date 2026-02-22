@@ -16,15 +16,16 @@ import {
 } from '@nestjs/common';
 import * as Sentry from '@sentry/nestjs';
 import type { Request, Response } from 'express';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { ZodError } from 'zod';
 
 // S5: Initialize Sentry globally for GlitchTip reporting
 // Note: Actual DSN-based init usually happens in main.ts,
 // but we keep a secondary check here for safety.
-if (env.GLITCHTIP_DSN && process.env.NODE_ENV === 'production') {
+if (env.GLITCHTIP_DSN && env.NODE_ENV === 'production') {
   Sentry.init({
     dsn: env.GLITCHTIP_DSN,
-    environment: process.env.NODE_ENV,
+    environment: env.NODE_ENV,
   });
 }
 
@@ -177,13 +178,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     statusCode: number,
     message: string | string[]
   ): string | string[] {
-    // S5 FIX: Never expose internal details for 500 errors
+    // Standardize S5: Never expose internal details for 500 errors
     if (statusCode === 500) {
       return 'Internal server error';
     }
 
-    // S5: In Development/Staging, favor transparency over sanitization
-    if (process.env.NODE_ENV !== 'production') {
+    // S1 Override: Respect ConfigService
+    if (env.NODE_ENV !== 'production') {
       return message;
     }
 

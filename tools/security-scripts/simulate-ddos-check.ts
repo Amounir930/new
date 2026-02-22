@@ -1,5 +1,4 @@
-// 🛡️ S1 Bypass: Ensure env validation doesn't crash simulation in CI
-process.env.NODE_ENV = 'test';
+import { env } from '@apex/config';
 
 /**
  * S6.3 - Active Throttling Stress Test
@@ -13,7 +12,7 @@ async function runTest() {
     '../../packages/middleware/src/redis-rate-limit-store'
   );
 
-  const maxRequests = Number.parseInt(process.env.MAX_REQUESTS || '10', 10);
+  const maxRequests = Number.parseInt(env.RATE_LIMIT_MAX || '10', 10);
   const store = new RedisRateLimitStore(new ConfigService());
   const testKey = 'stress:test:behavioral';
   const windowMs = 60000;

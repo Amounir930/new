@@ -1,3 +1,4 @@
+import { ConfigService } from '@apex/config';
 import { Public } from '@apex/auth';
 import {
   Controller,
@@ -20,6 +21,8 @@ import { createClient } from 'redis';
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
+  constructor(private readonly config: ConfigService) { }
+
   @Get()
   rootCheck() {
     return {
@@ -32,7 +35,7 @@ export class HealthController {
 
   @Get('redis')
   async checkRedis() {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    const redisUrl = this.config.get('REDIS_URL');
     const client = createClient({ url: redisUrl });
 
     try {
@@ -66,6 +69,6 @@ export class HealthController {
 
   @Get('status')
   checkStatus() {
-    return { status: 'ok', environment: process.env.NODE_ENV };
+    return { status: 'ok', environment: this.config.get('NODE_ENV') };
   }
 }

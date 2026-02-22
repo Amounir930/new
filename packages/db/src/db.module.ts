@@ -11,12 +11,17 @@ import { TenantRegistryService } from './tenant-registry.service.js';
     TenantRegistryService,
     CustomerService,
     {
+      provide: 'TENANT_REGISTRY',
+      useExisting: TenantRegistryService,
+    },
+    {
       provide: 'DATABASE_POOL',
       useValue: publicPool,
     },
   ],
   exports: [
     TenantRegistryService,
+    'TENANT_REGISTRY',
     CustomerService,
     'DATABASE_POOL', // Export token string
   ],

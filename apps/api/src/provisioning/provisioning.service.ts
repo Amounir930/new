@@ -1,8 +1,4 @@
-/**
- * Provisioning Service
- * Orchestrates the 60-second store creation process
- */
-
+import { env } from '@apex/config';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
@@ -55,7 +51,7 @@ export class ProvisioningService {
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
     @Inject('TENANT_REGISTRY')
     private readonly tenantRegistry: TenantRegistryService
-  ) {}
+  ) { }
 
   /**
    * Provision a new store in under 60 seconds
@@ -67,8 +63,8 @@ export class ProvisioningService {
 
     // S1 FIX: Strict NODE_ENV Validation
     if (
-      !process.env.NODE_ENV ||
-      !['development', 'test', 'production'].includes(process.env.NODE_ENV)
+      !env.NODE_ENV ||
+      !['development', 'test', 'production'].includes(env.NODE_ENV)
     ) {
       throw new InternalServerErrorException(
         'Invalid deployment environment (S1 Violation)'
@@ -170,8 +166,7 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${
-          error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }

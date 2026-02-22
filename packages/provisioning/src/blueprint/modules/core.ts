@@ -1,3 +1,4 @@
+import { env } from '@apex/config';
 import { pages, settings, users } from '@apex/db';
 import { encrypt, hashSensitiveData } from '@apex/security';
 import type {
@@ -46,11 +47,10 @@ export class CoreModule implements SeederModule {
     // S7: Encrypting PII (Email)
     // We expect adminEmail to be present in the context
 
-    const masterKey =
-      process.env.ENCRYPTION_MASTER_KEY ||
-      'test-master-key-must-be-32-bytes-length!!';
+    const masterKey = env.ENCRYPTION_MASTER_KEY;
+    const pepper = env.BLIND_INDEX_PEPPER || 'test-pepper';
     const encryptedEmail = JSON.stringify(encrypt(ctx.adminEmail, masterKey));
-    const emailHash = hashSensitiveData(ctx.adminEmail);
+    const emailHash = hashSensitiveData(ctx.adminEmail, pepper);
 
     await ctx.db
       .insert(users)

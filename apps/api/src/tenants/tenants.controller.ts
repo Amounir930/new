@@ -1,13 +1,39 @@
 // biome-ignore lint/style/useImportType: Dependency Injection token
 import { TenantRegistryService } from '@apex/db';
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
-import { SuperAdminGuard } from '../../../../packages/auth/src/guards/super-admin.guard.js';
-import { JwtAuthGuard } from '../../../../packages/auth/src/index.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditLog, AuditService } from '@apex/audit';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { z } from 'zod';
+import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
+
+const UpdateTenantSchema = z.object({
+  plan: z.string().optional(),
+  name: z.string().optional(),
+  status: z.string().optional(),
+  nicheType: z.string().optional(),
+});
+
+const UpdateFeatureSchema = z.object({
+  isEnabled: z.boolean(),
+});
 
 @Controller('admin/tenants')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
-  constructor(private readonly tenantRegistry: TenantRegistryService) {}
+  constructor(
+    private readonly tenantRegistry: TenantRegistryService,
+    @Inject('AUDIT_SERVICE')
+    private readonly audit: AuditService
+  ) { }
 
   @Get()
   async findAll() {
@@ -38,19 +64,22 @@ export class TenantsController {
   }
 
   @Patch(':id/features/:key')
+  @AuditLog({ action: 'TENANT_FEATURE_UPDATED', entityType: 'tenant' })
   async updateFeature(
     @Param('id') id: string,
     @Param('key') key: string,
-    @Body() body: { isEnabled: boolean }
+    @Body(new ZodValidationPipe(UpdateFeatureSchema)) body: { isEnabled: boolean }
   ) {
     const { governanceService } = await import('@apex/db');
     return governanceService.updateTenantFeatureGate(id, key, body.isEnabled);
   }
 
   @Patch(':id')
+  @AuditLog({ action: 'TENANT_UPDATED', entityType: 'tenant' })
   async update(
     @Param('id') id: string,
-    @Body() body: {
+    @Body(new ZodValidationPipe(UpdateTenantSchema))
+    body: {
       plan?: string;
       name?: string;
       status?: string;

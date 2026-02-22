@@ -8,6 +8,7 @@ import { AuditLog, AuditService } from '@apex/audit';
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { FraudGuard } from '@apex/middleware';
+import { env } from '@apex/config';
 import {
   Body,
   Controller,
@@ -21,7 +22,10 @@ import {
 } from '@nestjs/common';
 import type { Request } from 'express';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
-import type { ProvisioningService } from './provisioning.service.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { ProvisioningService } from './provisioning.service.js';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { ProvisionRequestSchema } from './dto/provision-request.dto.js';
 
 @Controller('provision')
 export class ProvisioningController {
@@ -32,7 +36,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) {}
+  ) { }
 
   /**
    * POST /api/provision
@@ -43,7 +47,10 @@ export class ProvisioningController {
   @UseGuards(JwtAuthGuard, SuperAdminGuard, FraudGuard)
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async provisionStore(@Req() _req: Request, @Body() dto: ProvisionRequestDto) {
+  async provisionStore(
+    @Req() _req: Request,
+    @Body(ZodValidationPipe) dto: ProvisionRequestDto
+  ) {
     this.logger.log(`Received provisioning request for: ${dto.subdomain}`);
 
     // The JwtAuthGuard and SuperAdminGuard handle the common case (Admin UI call)
@@ -77,6 +84,7 @@ export class ProvisioningController {
    * POST /api/provision/otp
    * S14: Generate OTP for payment verification
    */
+  @AuditLog({ action: 'PROVISIONING_OTP_REQUESTED', entityType: 'security' })
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
   @Post('otp')
   async requestProvisioningOTP(@Req() req: Request) {
@@ -86,7 +94,7 @@ export class ProvisioningController {
     this.logger.log(`[S14] OTP requested for provisioning by ${identifier}`);
     return {
       message: 'OTP sent to registered administrator device',
-      debug: process.env.NODE_ENV !== 'production' ? code : undefined,
+      debug: env.NODE_ENV !== 'production' ? code : undefined,
     };
   }
 }

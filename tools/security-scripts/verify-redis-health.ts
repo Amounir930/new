@@ -1,11 +1,12 @@
 import { createClient } from 'redis';
+import { env, ConfigService } from '@apex/config';
 
 /**
  * S6: Redis Health Verification Script
  * Used by CI gate to verify active connectivity
  */
 async function verifyRedis() {
-  const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+  const redisUrl = env.REDIS_URL || 'redis://localhost:6379';
   console.log(`🔍 S6: Verifying Redis connectivity at ${redisUrl}...`);
 
   const client = createClient({ url: redisUrl });
@@ -22,8 +23,7 @@ async function verifyRedis() {
     }
   } catch (error) {
     console.error(
-      `❌ S6: Redis connectivity failed: ${
-        error instanceof Error ? error.message : 'Unknown error'
+      `❌ S6: Redis connectivity failed: ${error instanceof Error ? error.message : 'Unknown error'
       }`
     );
     process.exit(1);

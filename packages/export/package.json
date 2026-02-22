@@ -25,7 +25,9 @@
     "@aws-sdk/client-s3": "^3.450.0",
     "@aws-sdk/s3-request-presigner": "^3.450.0",
     "@nestjs/common": "10.4.16",
-    "bullmq": "^5.0.0"
+    "bullmq": "^5.0.0",
+    "nestjs-zod": "^3.0.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@apex/test-utils": "workspace:*",

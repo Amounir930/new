@@ -15,10 +15,14 @@ import { AuditService } from './audit.service.js';
     Reflector,
     AuditService,
     {
+      provide: 'AUDIT_SERVICE',
+      useExisting: AuditService,
+    },
+    {
       provide: APP_INTERCEPTOR,
       useClass: AuditInterceptor,
     },
   ],
-  exports: [AuditService, Reflector],
+  exports: [AuditService, 'AUDIT_SERVICE', Reflector],
 })
-export class AuditModule {}
+export class AuditModule { }

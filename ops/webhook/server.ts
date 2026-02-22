@@ -1,7 +1,8 @@
+import { env } from '../../packages/config/src/index.ts';
 import { serve } from 'bun';
 import { spawn } from 'bun';
 
-const SECRET = process.env.WEBHOOK_SECRET || 'ApexDeploySecret2026';
+const SECRET = env.WEBHOOK_SECRET || 'ApexDeploySecret2026';
 const PORT = 9000;
 // We mount the host root to /app
 const REPO_DIR = '/app';

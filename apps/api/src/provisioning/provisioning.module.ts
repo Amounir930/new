@@ -13,15 +13,7 @@ import { ProvisioningService } from './provisioning.service.js';
       provide: 'PROVISIONING_SERVICE',
       useExisting: ProvisioningService,
     },
-    {
-      provide: 'AUDIT_SERVICE',
-      useExisting: AuditService,
-    },
-    {
-      provide: 'TENANT_REGISTRY',
-      useExisting: TenantRegistryService,
-    },
   ],
   exports: [ProvisioningService, 'PROVISIONING_SERVICE'],
 })
-export class ProvisioningModule {}
+export class ProvisioningModule { }

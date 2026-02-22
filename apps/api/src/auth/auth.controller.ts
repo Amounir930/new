@@ -1,7 +1,12 @@
-import { AuthService } from '@apex/auth';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditLog, AuditService } from '@apex/audit';
+import { AuthService, AuthUser } from '@apex/auth';
+import { ConfigService } from '@apex/config';
 import {
   Body,
   Controller,
+  HttpCode,
+  HttpStatus,
   Inject,
   Post,
   UnauthorizedException,
@@ -23,19 +28,23 @@ type LoginDto = z.infer<typeof LoginSchema>;
 export class AuthController {
   constructor(
     @Inject(AuthService)
-    private readonly authService: AuthService
-  ) {}
+    private readonly authService: AuthService,
+    private readonly config: ConfigService,
+    @Inject('AUDIT_SERVICE')
+    private readonly audit: AuditService
+  ) { }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Super Admin Login' })
-  @ApiResponse({ status: 201, description: 'JWT Token issued' })
+  @ApiResponse({ status: 200, description: 'JWT Token issued' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body(new ZodValidationPipe(LoginSchema)) body: LoginDto) {
     const { email, password } = body;
 
-    // Validate against Environment Variables
-    const adminEmail = process.env.SUPER_ADMIN_EMAIL;
-    const adminPassword = process.env.SUPER_ADMIN_PASSWORD;
+    // S1: Validate against ConfigService
+    const adminEmail = this.config.get('SUPER_ADMIN_EMAIL');
+    const adminPassword = this.config.get('SUPER_ADMIN_PASSWORD');
 
     if (!adminEmail || !adminPassword) {
       throw new UnauthorizedException(
@@ -44,37 +53,36 @@ export class AuthController {
     }
 
     if (email === adminEmail && password === adminPassword) {
-      console.log('[DEBUG] Login Success');
+      // S4: Audit successful login
+      await this.audit.log({
+        action: 'SUPER_ADMIN_LOGIN_SUCCESS',
+        entityType: 'user',
+        entityId: 'system-admin',
+        metadata: { email },
+      });
+
       // Generate Token with super_admin role
-      const token = await this.authService.generateToken({
+      const user: AuthUser = {
         id: 'super-admin-id',
         email: email,
         tenantId: 'system',
         role: 'super_admin',
-      });
+      };
 
-      // Quick fix: Since AuthService.generateToken might not include 'role' in the payload interface yet,
-      // we rely on the fact that we can't easily change the shared package right now without redeploying valid versions.
-      // However, we can construct the payload manually if we had access to JwtService, but Controller uses AuthService.
-      // Let's assume for now AuthService is enough or we might need to extend it.
-      // Wait, the shared AuthService generates a token with {sub, email, tenantId}.
-      // The SuperAdminGuard checks for `user.role === 'super_admin'`.
-      // If the token doesn't have 'role', the Guard will fail!
-
-      // We MUST ensure the token has the role.
-      // I will verify AuthService implementation again.
+      const token = await this.authService.generateToken(user);
 
       return { accessToken: token };
     }
 
-    console.log('[DEBUG] Login Failed:');
-    console.log(`[DEBUG] Input Email: '${email}'`);
-    console.log(`[DEBUG] Env Email: '${adminEmail}'`);
-    console.log(`[DEBUG] Input Password Length: ${password?.length}`);
-    console.log(`[DEBUG] Env Password Length: ${adminPassword?.length}`);
-    console.log(`[DEBUG] Match Email: ${email === adminEmail}`);
-    console.log(`[DEBUG] Match Password: ${password === adminPassword}`);
+    // S4: Audit failed login attempt
+    await this.audit.log({
+      action: 'SUPER_ADMIN_LOGIN_FAILED',
+      entityType: 'user',
+      entityId: 'system-admin',
+      metadata: { email, reason: 'Invalid credentials' },
+    });
 
+    // S5: Standardized error message without leaking internal match details
     throw new UnauthorizedException('Invalid credentials');
   }
 }

@@ -6,12 +6,16 @@ import {
   Query,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
+import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import type { StorefrontService } from './storefront.service.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { StorefrontService } from './storefront.service.js';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
 });
+
+type TenantIdDto = z.infer<typeof TenantIdSchema>;
 
 const ProductsQuerySchema = z.object({
   featured: z.coerce.boolean().optional(),
@@ -20,20 +24,20 @@ const ProductsQuerySchema = z.object({
   sort: z.enum(['newest', 'price_asc', 'price_desc']).optional(),
 });
 
+type ProductsQueryDto = z.infer<typeof ProductsQuerySchema>;
+
 @Controller({ path: 'storefront', version: VERSION_NEUTRAL })
 export class StorefrontController {
-  constructor(private readonly storefrontService: StorefrontService) {}
+  constructor(private readonly storefrontService: StorefrontService) { }
 
   @Get('config')
-  async getConfig(@Query() query: { tenantId?: string }) {
-    const validated = TenantIdSchema.parse(query);
-    return this.storefrontService.getTenantConfig(validated.tenantId);
+  async getConfig(@Query(ZodValidationPipe) query: TenantIdDto) {
+    return this.storefrontService.getTenantConfig(query.tenantId);
   }
 
   @Get('products')
-  async getProducts(@Query() query: Record<string, unknown>) {
-    const validated = ProductsQuerySchema.parse(query);
-    return this.storefrontService.getProducts(validated);
+  async getProducts(@Query(ZodValidationPipe) query: ProductsQueryDto) {
+    return this.storefrontService.getProducts(query);
   }
 
   @Get('products/:slug')
@@ -46,8 +50,7 @@ export class StorefrontController {
   }
 
   @Get('home')
-  async getHome(@Query() query: { tenantId?: string }) {
-    const validated = TenantIdSchema.parse(query);
-    return this.storefrontService.getHomeData(validated.tenantId);
+  async getHome(@Query(ZodValidationPipe) query: TenantIdDto) {
+    return this.storefrontService.getHomeData(query.tenantId);
   }
 }

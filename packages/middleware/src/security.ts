@@ -1,9 +1,4 @@
-/**
- * S8: Web Security Headers & Configuration
- * Constitution Reference: architecture.md (S8 Protocol)
- * Purpose: CSP, HSTS, CORS, CSRF protection
- */
-
+import { env } from '@apex/config';
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 
@@ -19,7 +14,7 @@ export const securityHeaders = {
   // Note: 'unsafe-eval' is ONLY allowed in development for Next.js HMR
   'Content-Security-Policy': [
     "default-src 'self'",
-    process.env.NODE_ENV === 'development'
+    env.NODE_ENV === 'development'
       ? "script-src 'self' 'unsafe-eval'" // Dev only: HMR requires eval
       : "script-src 'self'", // Production: strict, nonces added by middleware
     "style-src 'self' 'unsafe-inline'", // CSS inline is lower risk
@@ -81,13 +76,13 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
  */
 export interface CorsConfig {
   origin:
-    | string
-    | string[]
-    | boolean
-    | ((
-        origin: string | undefined,
-        callback: (err: Error | null, allow?: boolean) => void
-      ) => void);
+  | string
+  | string[]
+  | boolean
+  | ((
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => void);
   methods: string[];
   allowedHeaders: string[];
   exposedHeaders: string[];
@@ -126,8 +121,8 @@ export const defaultCorsConfig: CorsConfig = {
 
     // Load additional origins from env and trim whitespace
     const allowedOrigins =
-      process.env.ALLOWED_ORIGINS?.split(',')
-        .map((o) => o.trim())
+      ((env as any).ALLOWED_ORIGINS as string)?.split(',')
+        .map((o: string) => o.trim())
         .filter(Boolean) || [];
 
     const whitelist = [...devOrigins, ...productionOrigins, ...allowedOrigins];
@@ -170,7 +165,7 @@ export function getTenantCorsConfig(tenantDomain: string): CorsConfig {
       tenantDomain,
       `admin.${tenantDomain}`,
       // Add localhost for development
-      ...(process.env.NODE_ENV === 'development'
+      ...(env.NODE_ENV === 'development'
         ? ['http://localhost:3000', 'http://localhost:3001']
         : []),
     ],

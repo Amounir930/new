@@ -4,6 +4,7 @@
  */
 
 import 'reflect-metadata';
+import { env } from '@apex/config';
 import { AuditService } from '@apex/audit';
 import { GlobalExceptionFilter, defaultCorsConfig } from '@apex/middleware';
 import {
@@ -23,16 +24,16 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
   // S5: Initialize GlitchTip/Sentry at the earliest possible stage
-  if (process.env.GLITCHTIP_DSN && process.env.NODE_ENV === 'production') {
+  if (env.GLITCHTIP_DSN && env.NODE_ENV === 'production') {
     Sentry.init({
-      dsn: process.env.GLITCHTIP_DSN,
-      environment: process.env.NODE_ENV,
+      dsn: env.GLITCHTIP_DSN,
+      environment: env.NODE_ENV,
     });
     logger.log('🛡️  S5: GlitchTip Error Tracking Active');
   }
 
   // S1: Environment Verification
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = env.NODE_ENV === 'production';
   const logLevels: LogLevel[] = isProduction
     ? ['error', 'warn', 'log']
     : ['error', 'warn', 'log', 'debug', 'verbose'];
@@ -145,7 +146,7 @@ async function bootstrap() {
     ],
   });
 
-  const port = process.env.PORT || 3000;
+  const port = env.PORT || 3000;
   await app.listen(port);
 
   logger.log(`🚀 API is running on: http://localhost:${port}/api`);

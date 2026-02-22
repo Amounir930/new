@@ -1,3 +1,4 @@
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
 import {
   Controller,
@@ -17,7 +18,7 @@ export class HoneyTokensController {
   constructor(
     @Inject(AuditService)
     private readonly auditService: AuditService
-  ) {}
+  ) { }
 
   /**
    * S15: Honeypot for common scanners and unauthorized access attempts

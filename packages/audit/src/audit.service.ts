@@ -68,11 +68,11 @@ export class AuditService {
   private pool: any;
 
   constructor(
-    @Inject('DATABASE_POOL') pool?: any,
-    @Inject(EncryptionService) encryption?: EncryptionService
+    @Inject('DATABASE_POOL') pool: any,
+    @Inject(EncryptionService) encryption: EncryptionService
   ) {
     this.pool = pool || publicPool;
-    this.encryption = encryption || new EncryptionService();
+    this.encryption = encryption;
   }
 
   /**
@@ -260,10 +260,14 @@ export class AuditService {
 // 🛡️ Note: These are legacy wrappers around the AuditService.
 // They use a default instance for backward compatibility in tests.
 
+import { ConfigService } from '@apex/config';
+
 let defaultService: AuditService | null = null;
 function getService(): AuditService {
   if (!defaultService) {
-    defaultService = new AuditService(publicPool);
+    const config = new ConfigService();
+    const encryption = new EncryptionService(config);
+    defaultService = new AuditService(publicPool, encryption);
   }
   return defaultService;
 }

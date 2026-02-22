@@ -20,7 +20,7 @@ import {
   type NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule } from '@apex/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -31,17 +31,15 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
 import { HoneyTokensController } from './security/honey-tokens.controller.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
+import { ExportModule } from '@apex/export';
 
 @Module({
   imports: [
     // Core Data Module (explicitly imported for root context availability)
     DbModule,
 
-    // S1: Configuration
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ['.env', '.env.s1.local'],
-    }),
+    // S1: Configuration (Global validated service)
+    ConfigModule,
 
     // S6: Rate Limiting (Throttler)
     RateLimitModule,
@@ -52,6 +50,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     TenantsModule,
     StorefrontModule,
     AuditModule,
+    ExportModule,
   ],
   providers: [
     {

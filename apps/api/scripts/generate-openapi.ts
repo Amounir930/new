@@ -1,8 +1,10 @@
+import { env } from '@apex/config';
+
 // 🛡️ S1 Compliance: Enforce environment variables only.
 // No hardcoded mock secrets allowed in source control.
 if (
-  process.env.NODE_ENV === 'production' &&
-  (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('mock'))
+  env.NODE_ENV === 'production' &&
+  (!env.DATABASE_URL || env.DATABASE_URL.includes('mock'))
 ) {
   throw new Error(
     'S1 CRITICAL: Production environment detected with missing or mock DATABASE_URL'
@@ -14,8 +16,8 @@ process.env.TENANT_ISOLATION_MODE = 'strict';
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 
 console.log('DEBUG: Env vars set (Mock Mode):', {
-  DB: process.env.DATABASE_URL,
-  JWT: process.env.JWT_SECRET ? 'Exists' : 'Missing',
+  DB: env.DATABASE_URL,
+  JWT: env.JWT_SECRET ? 'Exists' : 'Missing',
 });
 
 // -----------------------------------------------------------------------------

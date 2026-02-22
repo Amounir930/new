@@ -85,6 +85,8 @@ export const EnvSchema = z.object({
     .string()
     .min(1, 'S1 Violation: REDIS_URL is required')
     .default('redis://localhost:6379'),
+  REDIS_HOST: z.string().default('localhost'),
+  REDIS_PORT: z.string().default('6379'),
 
   // MinIO/S3 Configuration
   MINIO_ENDPOINT: z.string().min(1),
@@ -108,6 +110,10 @@ export const EnvSchema = z.object({
   // Redis Security
   REDIS_PASSWORD: z.string().optional(),
 
+  // Security Secrets (S7)
+  API_KEY_SECRET: z.string().optional(),
+  BLIND_INDEX_PEPPER: z.string().optional(),
+
   // MinIO Root Credentials
   MINIO_ROOT_USER: z.string().optional(),
   MINIO_ROOT_PASSWORD: z.string().optional(),
@@ -128,10 +134,12 @@ export const EnvSchema = z.object({
     .string()
     .url('S1 Violation: GLITCHTIP_DSN must be a valid URL')
     .optional(),
+  ALLOWED_ORIGINS: z.string().optional(),
 
-  // hCaptcha (S11)
-  HCAPTCHA_SITE_KEY: z.string().optional(),
+  // mTLS Configuration
+  MTLS_CERT_PATH: z.string().default('/etc/mtls/certs'),
   HCAPTCHA_SECRET_KEY: z.string().optional(),
+  HCAPTCHA_SITE_KEY: z.string().optional(),
 
   // Gitea & Webhook (S2/S5)
   GITEA_DB_PASSWORD: z.string().optional(),

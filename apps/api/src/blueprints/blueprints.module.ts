@@ -7,6 +7,13 @@ import { BlueprintsService } from './blueprints.service.js';
 @Module({
   imports: [DbModule, AuditModule],
   controllers: [BlueprintsController],
-  providers: [BlueprintsService],
+  providers: [
+    BlueprintsService,
+    {
+      provide: 'BLUEPRINTS_SERVICE',
+      useExisting: BlueprintsService,
+    },
+  ],
+  exports: [BlueprintsService, 'BLUEPRINTS_SERVICE'],
 })
-export class BlueprintsModule {}
+export class BlueprintsModule { }

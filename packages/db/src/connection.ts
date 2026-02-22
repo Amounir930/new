@@ -3,28 +3,14 @@
  * Extracted to break circular dependencies with TenantRegistryService
  */
 
-import type { EnvConfig } from '@apex/config';
-import { validateEnv } from '@apex/config';
+import { env } from '@apex/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pkg from 'pg';
 
 const { Pool } = pkg;
 
-let env: EnvConfig;
-try {
-  env = validateEnv();
-} catch (error) {
-  if (process.env.NODE_ENV === 'test') {
-    // Permitted path for Rule S1/S2 in Sandbox/Test environment to allow partial testing
-    env = process.env as unknown as EnvConfig;
-  } else {
-    console.error(
-      '🚨 [S2 BOOTSTRAP PANIC] Environment validation failed during module evaluation:'
-    );
-    console.error(error instanceof Error ? error.message : 'Unknown error');
-    throw error;
-  }
-}
+// S1: Environment is already validated and exported by @apex/config
+// No need for local validation logic here.
 
 export const poolConfig: pkg.PoolConfig = {
   connectionString: env.DATABASE_URL,
@@ -34,10 +20,10 @@ export const poolConfig: pkg.PoolConfig = {
       : false,
 };
 
-if (process.env.POSTGRES_USER) poolConfig.user = process.env.POSTGRES_USER;
-if (process.env.POSTGRES_PASSWORD)
-  poolConfig.password = process.env.POSTGRES_PASSWORD;
-if (process.env.POSTGRES_DB) poolConfig.database = process.env.POSTGRES_DB;
+if (env.POSTGRES_USER) poolConfig.user = env.POSTGRES_USER;
+if (env.POSTGRES_PASSWORD)
+  poolConfig.password = env.POSTGRES_PASSWORD;
+if (env.POSTGRES_DB) poolConfig.database = env.POSTGRES_DB;
 
 // Connection pool for public schema (tenant management)
 export const publicPool = new Pool(poolConfig);

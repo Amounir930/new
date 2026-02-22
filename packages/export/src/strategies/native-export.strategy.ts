@@ -1,9 +1,4 @@
-/**
- * Native Export Strategy
- * Creates PostgreSQL binary dump (pg_dump -Fc)
- * Best for: Backup/restore within PostgreSQL ecosystem
- */
-
+import { env } from '@apex/config';
 import { Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,
@@ -11,14 +6,15 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
-import type { BunShell } from '../utils/bun-shell.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class NativeExportStrategy implements ExportStrategy {
   readonly name = 'native' as const;
   private readonly logger = new Logger(NativeExportStrategy.name);
 
-  constructor(private readonly shell: BunShell) {}
+  constructor(private readonly shell: BunShell) { }
 
   async validate(_options: ExportOptions): Promise<boolean> {
     // Check pg_dump availability
@@ -51,7 +47,7 @@ export class NativeExportStrategy implements ExportStrategy {
       schemaName, // Specific schema only
       '-f',
       outputFile,
-      process.env.DATABASE_URL || '',
+      env.DATABASE_URL,
     ]);
 
     const exitCode = await proc.exited;

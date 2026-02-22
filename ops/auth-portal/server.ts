@@ -1,13 +1,14 @@
+import { env } from '../../packages/config/src/index.ts';
 import { serve } from 'bun';
 
 const PORT = 8080;
 const COOKIE_NAME = 'apex_auth_session';
 const SESSION_VALUE = Bun.hash(
-  process.env.JWT_SECRET || 'default_secret'
+  env.JWT_SECRET || 'default_secret'
 ).toString();
 
-const EMAIL = process.env.SUPER_ADMIN_EMAIL || 'admin@60sec.shop';
-const PASSWORD = process.env.SUPER_ADMIN_PASSWORD || 'Admin@60SecShop!2026';
+const EMAIL = env.SUPER_ADMIN_EMAIL || 'admin@60sec.shop';
+const PASSWORD = env.SUPER_ADMIN_PASSWORD || 'Admin@60SecShop!2026';
 
 console.log(`🛡️  Apex Auth Portal starting on port ${PORT}...`);
 

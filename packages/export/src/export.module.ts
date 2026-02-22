@@ -17,18 +17,12 @@ import { NativeExportStrategy } from './strategies/native-export.strategy.js';
   imports: [],
   controllers: [ExportController],
   providers: [
-    ExportService,
     ExportWorker,
     ExportStrategyFactory,
     LiteExportStrategy,
     NativeExportStrategy,
     AnalyticsExportStrategy,
-    // ExportWorker is also injectable for controller
-    {
-      provide: ExportWorker,
-      useClass: ExportWorker,
-    },
   ],
   exports: [ExportService],
 })
-export class ExportModule {}
+export class ExportModule { }

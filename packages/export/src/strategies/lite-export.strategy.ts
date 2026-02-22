@@ -6,9 +6,11 @@
 
 import { rm } from 'node:fs/promises';
 import path from 'node:path';
-import type { AuditService } from '@apex/audit';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditService } from '@apex/audit';
 import {
-  type TenantRegistryService,
+  // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+  TenantRegistryService,
   sql,
   withTenantConnection,
 } from '@apex/db';
@@ -19,7 +21,8 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types.js';
-import type { BunShell } from '../utils/bun-shell.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { BunShell } from '../utils/bun-shell.js';
 
 @Injectable()
 export class LiteExportStrategy implements ExportStrategy {
@@ -30,7 +33,7 @@ export class LiteExportStrategy implements ExportStrategy {
     private readonly tenantRegistry: TenantRegistryService,
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) {}
+  ) { }
 
   async validate(options: ExportOptions): Promise<boolean> {
     return this.tenantRegistry.exists(options.tenantId);

@@ -1,11 +1,7 @@
-/**
- * P1: mTLS (Mutual TLS) Implementation
- * Purpose: Secure inter-service communication with mutual authentication
- */
-
 import { readFileSync } from 'node:fs';
 import { type Server, type ServerOptions, createServer } from 'node:https';
 import { join } from 'node:path';
+import { env } from '@apex/config';
 
 export interface MTLSConfig {
   /** Path to CA certificate */
@@ -49,8 +45,7 @@ export function loadCertificates(
     };
   } catch (error) {
     throw new Error(
-      `Failed to load mTLS certificates: ${
-        error instanceof Error ? error.message : error
+      `Failed to load mTLS certificates: ${error instanceof Error ? error.message : error
       }`
     );
   }
@@ -198,7 +193,7 @@ export function createMTLSClientConfig(config: MTLSClientConfig) {
 export function getCertificatePaths(
   serviceName: string
 ): Required<Pick<MTLSConfig, 'caCertPath' | 'certPath' | 'keyPath'>> {
-  const basePath = process.env.MTLS_CERT_PATH || '/etc/mtls/certs';
+  const basePath = env.MTLS_CERT_PATH || '/etc/mtls/certs';
 
   return {
     caCertPath: join(basePath, 'ca.crt'),
