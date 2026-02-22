@@ -3,7 +3,7 @@ import { StorefrontController } from './storefront.controller.js';
 import { StorefrontService } from './storefront.service.js';
 
 @Module({
-  controllers: [StorefrontController],
+  controllers: [],
   providers: [StorefrontService],
 })
-export class StorefrontModule {}
+export class StorefrontModule { }
