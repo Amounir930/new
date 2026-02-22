@@ -33,8 +33,7 @@ export class ExportService implements OnModuleDestroy {
     // Initialize BullMQ queue
     this.exportQueue = new Queue('tenant-export', {
       connection: {
-        host: env.REDIS_HOST,
-        port: Number.parseInt(env.REDIS_PORT, 10),
+        url: env.REDIS_URL,
       },
       defaultJobOptions: {
         attempts: 3,

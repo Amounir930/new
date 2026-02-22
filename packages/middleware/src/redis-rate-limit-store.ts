@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   type OnApplicationShutdown,
   type OnModuleInit,
 } from '@nestjs/common';
@@ -23,6 +24,7 @@ export class RedisRateLimitStore
     string,
     { count: number; resetTime: number; violations: number }
   > = new Map();
+  private readonly logger = new Logger(RedisRateLimitStore.name);
 
   constructor(private readonly configService: ConfigService) { }
 
@@ -61,6 +63,8 @@ export class RedisRateLimitStore
   private async connect(): Promise<void> {
     const redisUrl =
       this.configService.get('REDIS_URL') || 'redis://localhost:6379';
+
+    this.logger.log(`Initializing Redis Rate Limit Store: ${redisUrl.split('@').pop()?.split('/')[0] || 'localhost'}`);
 
     try {
       this.connecting = true;

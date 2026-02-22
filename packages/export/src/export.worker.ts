@@ -54,8 +54,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
     // Initialize exportQueue for status checks
     this.exportQueue = new Queue('tenant-export', {
       connection: {
-        host: this.config.get('REDIS_HOST'),
-        port: Number.parseInt(this.config.get('REDIS_PORT'), 10),
+        url: this.config.get('REDIS_URL'),
       },
     });
   }
@@ -67,8 +66,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       async (job) => this.processJob(job),
       {
         connection: {
-          host: this.config.get('REDIS_HOST'),
-          port: Number.parseInt(this.config.get('REDIS_PORT'), 10),
+          url: this.config.get('REDIS_URL'),
         },
         concurrency: 3, // Process 3 exports simultaneously (different tenants)
         limiter: {
