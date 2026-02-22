@@ -1,4 +1,4 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Injectable, Module } from '@nestjs/common';
 import { validateEnv } from './index';
 import type { EnvConfig } from './schema';
 
@@ -6,6 +6,7 @@ import type { EnvConfig } from './schema';
  * NestJS-compatible ConfigService
  * Provides typed access to environment variables
  */
+@Injectable()
 export class ConfigService {
   private readonly config: EnvConfig;
 
@@ -46,4 +47,4 @@ export class ConfigService {
   providers: [ConfigService],
   exports: [ConfigService],
 })
-export class ConfigModule {}
+export class ConfigModule { }
