@@ -4,6 +4,7 @@ import {
   NotFoundException,
   Param,
   Query,
+  VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { z } from 'zod';
 import type { StorefrontService } from './storefront.service.js';
@@ -19,9 +20,9 @@ const ProductsQuerySchema = z.object({
   sort: z.enum(['newest', 'price_asc', 'price_desc']).optional(),
 });
 
-@Controller('storefront')
+@Controller({ path: 'storefront', version: VERSION_NEUTRAL })
 export class StorefrontController {
-  constructor(private readonly storefrontService: StorefrontService) {}
+  constructor(private readonly storefrontService: StorefrontService) { }
 
   @Get('config')
   async getConfig(@Query() query: any) {

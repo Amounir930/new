@@ -8,8 +8,8 @@ export class AppController {
   @Version(VERSION_NEUTRAL)
   root() {
     return {
+      status: 'ok',
       message: 'Apex v2 API is running',
-      version: '1.0.0',
       timestamp: new Date().toISOString(),
     };
   }
@@ -25,9 +25,6 @@ export class AppController {
   @Public()
   robots() {
     return `User-agent: *
-Disallow: /
-# S11: Bot Defense Active
-User-agent: GPTBot
 Disallow: /`;
   }
 }

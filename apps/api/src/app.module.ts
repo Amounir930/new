@@ -77,13 +77,10 @@ export class AppModule implements NestModule {
         TenantIsolationMiddleware
       )
       .exclude(
-        { path: '*/health/(.*)', method: RequestMethod.GET },
-        { path: 'health/(.*)', method: RequestMethod.GET },
-        { path: 'api/health/(.*)', method: RequestMethod.GET },
-        { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
-        { path: '/api/health/liveness', method: RequestMethod.GET },
-        { path: '/api/health/status', method: RequestMethod.GET },
-        { path: '/', method: RequestMethod.GET } // Allow root path
+        { path: 'health/liveness', method: RequestMethod.GET },
+        { path: 'health/status', method: RequestMethod.GET },
+        { path: 'robots.txt', method: RequestMethod.GET },
+        { path: '/', method: RequestMethod.GET }
       )
       .forRoutes('*'); // Apply to all routes
   }
