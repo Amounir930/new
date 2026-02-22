@@ -20,8 +20,8 @@ export * from './coupons';
 export * from './customers';
 // FAQ & Help
 export * from './faq';
-// Home Page Blueprint & Marketing
 export * from './home';
+export * from './imports';
 export * from './knowledge-base';
 // Locations & Branches
 export * from './locations';

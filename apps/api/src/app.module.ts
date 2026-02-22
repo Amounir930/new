@@ -27,6 +27,8 @@ import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
 import { HealthModule } from './health/health.module.js';
 import { ProductsController } from './products/products.controller.js';
+import { BulkImportController } from './products/bulk-import.controller.js';
+import { BulkExportController } from './products/bulk-export.controller.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 import { HoneyTokensController } from './security/honey-tokens.controller.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
@@ -62,7 +64,12 @@ import { ExportModule } from '@apex/export';
       useClass: QuotaInterceptor,
     },
   ],
-  controllers: [AppController, ProductsController, HoneyTokensController],
+  controllers: [
+    AppController,
+    ProductsController,
+    BulkImportController,
+    HoneyTokensController
+  ],
 })
 export class AppModule implements NestModule {
   // S2: Apply Tenant Isolation Middleware & S11: Bot Protection

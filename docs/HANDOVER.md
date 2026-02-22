@@ -58,5 +58,12 @@ The system is strictly hardened according to Apex v2 security standards:
 - **Restart Services:** `sudo docker compose -f ops/docker-compose.prod.yml restart`
 - **Manual Sync:** `rsync -avz --exclude 'node_modules' ./ deploy@34.102.121.225:/opt/apex-v2`
 
+## 🏁 Project Milestones
+- [x] **Core Infra (S1-S8):** Hardened & Operational (S1-S15 Protocols).
+- [x] **Store-#01 (Home Page):** MV Best Sellers, Newsletter, & CSP Nonce Active.
+- [x] **Admin-#21 (Bulk Import):** Merchant-facing CSV Import/Export active.
+- [x] **Merchant Onboarding**: 3-step wizard workflow complete.
+- [x] **Admin-#17 (Orders):** Dashboard and Order management live.
+
 ---
-*Documented on 2026-02-20* 🛡️🚀✨💎🏁
+*Documented on 2026-02-22* 🛡️🚀✨💎🏁

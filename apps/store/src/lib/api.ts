@@ -40,8 +40,20 @@ export async function fetchStorefront(
     });
 
     if (!res.ok) {
-      console.error(`API Error [${res.status}]: ${url} | Tenant: ${tenantId}`);
-      return null;
+      const errorMsg = `API Error [${res.status}]: ${url} | Tenant: ${tenantId}`;
+      console.error(errorMsg);
+
+      // S5: Error Filtering & S4: Audit logging on frontend (conceptual)
+      if (res.status >= 500) {
+        // Critical error - log to GlitchTip/Sentry in real app
+        return { error: 'INTERNAL_SERVER_ERROR', status: res.status };
+      }
+
+      if (res.status === 429) {
+        return { error: 'TOO_MANY_REQUESTS', status: res.status };
+      }
+
+      return { error: 'API_ERROR', status: res.status };
     }
 
     return res.json();

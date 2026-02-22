@@ -19,11 +19,15 @@ import {
 } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { RedisRateLimitStore } from '@apex/middleware';
+import { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class StorefrontService {
-  constructor(private readonly redisStore: RedisRateLimitStore) { }
+  constructor(
+    private readonly redisStore: RedisRateLimitStore,
+    private readonly crypto: EncryptionService
+  ) { }
 
   async getTenantConfig(tenantId?: string) {
     const cacheKey = `storefront:config:${tenantId || 'default'}`;
@@ -197,9 +201,12 @@ export class StorefrontService {
   }
 
   async subscribeToNewsletter(email: string) {
+    // S7: Encrypt PII before storage
+    const encryptedEmail = this.crypto.encrypt(email).encrypted;
+
     return db
       .insert(newsletterSubscribers)
-      .values({ email })
+      .values({ email: encryptedEmail })
       .onConflictDoUpdate({
         target: newsletterSubscribers.email,
         set: { status: 'active' },
