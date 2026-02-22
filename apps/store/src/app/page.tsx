@@ -1,5 +1,6 @@
 import { ProductCard } from '@/components/ProductCard';
 import { getHomeData, getTenantConfig } from '@/lib/api';
+import { NewsletterSection } from '@/components/NewsletterSection';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 
@@ -104,38 +105,12 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Promotional Grid (Static placeholder for now) */}
-        <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-3xl bg-blue-600 group">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black/30 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-10 left-10 text-white space-y-2">
-              <h3 className="text-2xl font-bold">Summer Gadgets</h3>
-              <p className="text-gray-200">Up to 40% off on all accessories</p>
-              <button
-                type="button"
-                className="mt-2 font-bold underline underline-offset-4 decoration-2"
-              >
-                Shop Now
-              </button>
-            </div>
-          </div>
-          <div className="relative aspect-[16/9] overflow-hidden rounded-3xl bg-amber-500 group">
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1000')] bg-cover bg-center transition-transform duration-700 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black/30 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-10 left-10 text-white space-y-2">
-              <h3 className="text-2xl font-bold">New Arrivals</h3>
-              <p className="text-gray-200">Check out the latest tech stack</p>
-              <button
-                type="button"
-                className="mt-2 font-bold underline underline-offset-4 decoration-2"
-              >
-                Explore
-              </button>
-            </div>
-          </div>
-        </section>
+        {/* Newsletter Section (BR-01-SEC) */}
+        <NewsletterSection />
       </div>
     </div>
   );
 }
+
+// ISR: Revalidate every hour as per plan
+export const revalidate = 3600;

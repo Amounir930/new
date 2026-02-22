@@ -3,6 +3,8 @@ import {
   Get,
   NotFoundException,
   Param,
+  Post,
+  Body,
   Query,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
@@ -10,6 +12,7 @@ import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { StorefrontService } from './storefront.service.js';
+import { NewsletterSubscriptionDto } from './dto/newsletter.dto.js';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
@@ -52,5 +55,10 @@ export class StorefrontController {
   @Get('home')
   async getHome(@Query(ZodValidationPipe) query: TenantIdDto) {
     return this.storefrontService.getHomeData(query.tenantId);
+  }
+
+  @Post('newsletter')
+  async subscribe(@Body(ZodValidationPipe) body: NewsletterSubscriptionDto) {
+    return this.storefrontService.subscribeToNewsletter(body.email);
   }
 }

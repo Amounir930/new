@@ -7,6 +7,10 @@ import {
   gte,
   isNull,
   lte,
+  mvBestSellers,
+  newsletterSubscribers,
+  orderItems,
+  orders,
   productImages,
   productVariants,
   products,
@@ -149,11 +153,12 @@ export class StorefrontService {
     }
 
     // 2. Fetch fresh data with parallel queries (S3/Performance)
+    // BR-01-SEC: Use Materialized View for Best Sellers
     const now = new Date();
 
     const [bestSellers, activeBanners] = await Promise.all([
-      // Best Sellers (Featured products with primary images)
-      this.getProducts({ featured: true, limit: 8 }),
+      // Best Sellers from Materialized View (Fast)
+      db.select().from(mvBestSellers).limit(8),
 
       // Active Banners (BR-01-SEC logic)
       db
@@ -183,10 +188,22 @@ export class StorefrontService {
     };
 
     // 3. Cache results (S6/Performance)
+    // BR-01-SEC: TTL 10 seconds for home page
     if (client) {
-      await client.setEx(cacheKey, 300, JSON.stringify(homeData));
+      await client.setEx(cacheKey, 10, JSON.stringify(homeData));
     }
 
     return homeData;
+  }
+
+  async subscribeToNewsletter(email: string) {
+    return db
+      .insert(newsletterSubscribers)
+      .values({ email })
+      .onConflictDoUpdate({
+        target: newsletterSubscribers.email,
+        set: { status: 'active' },
+      })
+      .returning();
   }
 }

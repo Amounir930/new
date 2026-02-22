@@ -12,13 +12,16 @@ import {
   index,
   integer,
   jsonb,
+  pgMaterializedView,
   pgTable,
   text,
   timestamp,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { products } from './products';
+import { orderItems, orders } from './orders';
 
 /**
  * Flash Sales Campaigns
@@ -134,6 +137,50 @@ export const banners = pgTable(
 );
 
 /**
+ * Best Sellers Materialized View
+ * BR-01-SEC Compliance
+ */
+export const mvBestSellers = pgMaterializedView('mv_best_sellers', {
+  id: uuid('id').primaryKey(),
+  name: varchar('name', { length: 255 }),
+  slug: varchar('slug', { length: 255 }),
+  price: decimal('price', { precision: 10, scale: 2 }),
+  imageUrl: text('image_url'),
+  totalSold: integer('total_sold'),
+}).as(sql`
+  SELECT 
+    p.id,
+    p.name,
+    p.slug,
+    p.price,
+    (SELECT url FROM product_images WHERE product_id = p.id AND is_primary = true LIMIT 1) as image_url,
+    COALESCE(SUM(oi.quantity), 0) as total_sold
+  FROM products p
+  LEFT JOIN order_items oi ON p.id = oi.product_id
+  LEFT JOIN orders o ON oi.order_id = o.id AND o.status = 'completed'
+  WHERE p.is_active = true
+  GROUP BY p.id, p.name, p.slug, p.price
+  ORDER BY total_sold DESC
+`);
+
+/**
+ * Newsletter Subscribers Table
+ * Lead capture for storefront
+ */
+export const newsletterSubscribers = pgTable(
+  'newsletter_subscribers',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    email: varchar('email', { length: 255 }).notNull().unique(),
+    status: varchar('status', { length: 20 }).default('active'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    idxNewsletterEmail: index('idx_newsletter_email').on(table.email),
+  })
+);
+
+/**
  * Type Exports
  */
 export type FlashSale = typeof flashSales.$inferSelect;
@@ -147,3 +194,6 @@ export type NewBentoGrid = typeof bentoGrids.$inferInsert;
 
 export type Banner = typeof banners.$inferSelect;
 export type NewBanner = typeof banners.$inferInsert;
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type NewNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
