@@ -13,10 +13,13 @@ import { AnalyticsExportStrategy } from './strategies/analytics-export.strategy.
 import { LiteExportStrategy } from './strategies/lite-export.strategy.js';
 import { NativeExportStrategy } from './strategies/native-export.strategy.js';
 
+import { BunShell } from './utils/bun-shell.js';
+
 @Module({
   imports: [],
   controllers: [ExportController],
   providers: [
+    BunShell,
     ExportWorker,
     ExportStrategyFactory,
     ExportService,
