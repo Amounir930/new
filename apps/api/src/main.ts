@@ -106,9 +106,9 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // Prefix all routes with /api, but exclude the root path
+  // Prefix all routes with /api, but exclude the root path and health checks
   app.setGlobalPrefix('api', {
-    exclude: ['/', '/robots.txt'],
+    exclude: ['/', '/robots.txt', '/health', '/health/(.*)'],
   });
 
   // ═══════════════════════════════════════════════════════════════
