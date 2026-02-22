@@ -13,12 +13,13 @@ import {
   sql,
   tenantConfig,
 } from '@apex/db';
-import type { RedisRateLimitStore } from '@apex/middleware';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { RedisRateLimitStore } from '@apex/middleware';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class StorefrontService {
-  constructor(private readonly redisStore: RedisRateLimitStore) {}
+  constructor(private readonly redisStore: RedisRateLimitStore) { }
 
   async getTenantConfig(tenantId?: string) {
     const cacheKey = `storefront:config:${tenantId || 'default'}`;
