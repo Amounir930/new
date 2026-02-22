@@ -67,7 +67,10 @@ export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
     .string()
     .min(32)
     .max(128)
-    .regex(/^[A-Za-z0-9-_]+$/),
+    .regex(
+      /^[A-Za-z0-9][A-Za-z0-9-_]{30,126}[A-Za-z0-9]$/,
+      'Key must start and end with alphanumeric characters and contain only A-Z, 0-9, -, _'
+    ),
 
   /**
    * Optional inline blueprint definition

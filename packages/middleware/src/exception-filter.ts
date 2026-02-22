@@ -87,10 +87,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       userAgent: this.options.includeIpDetails
         ? request.headers['user-agent'] || null
         : '[REDACTED]',
-      // S5: Stack trace only in development
+      // S5: Stack trace only in development, with path redaction
       ...(this.options.includeStackTrace &&
         exception instanceof Error && {
-          stackTrace: exception.stack,
+          stackTrace: exception.stack?.replace(
+            /(\/app\/|C:\\Users\\[^\\]+\\Desktop\\60sec\.shop\\)/g,
+            '[REDACTED]/'
+          ),
         }),
     };
 

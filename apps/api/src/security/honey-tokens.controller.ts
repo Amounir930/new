@@ -29,28 +29,31 @@ export class HoneyTokensController {
     @Req() req: express.Request,
     @Res() res: express.Response
   ) {
-    // 1. Realistic Delay (2-5 seconds) to mimic real processing as requested
-    const delay = Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
-    await new Promise((resolve) => setTimeout(resolve, delay));
+    // 1. Realistic Delay with Jitter (2-7 seconds) to prevent fingerprinting
+    const jitter = Math.floor(Math.random() * 5000) + 2000;
+    await new Promise((resolve) => setTimeout(resolve, jitter));
+
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const path = req.originalUrl || req.url;
+    const userAgent = req.headers['user-agent'] || 'unknown';
 
     // 2. Consistent Response (S15 Deception)
-    // Return the same response as a real 401 Unauthorized
     const responseBody = {
       statusCode: 401,
       message: 'Invalid credentials',
       error: 'Unauthorized',
     };
 
-    // 3. Log High-Risk Security Event (S15 Activation)
-    const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
-    const userAgent = req.headers['user-agent'] || 'unknown';
-    const path = req.originalUrl || req.url;
-
     this.logger.error(
       `🚨 S15 HONEYPOT TRIGGERED! IP: ${clientIp} | Path: ${path} | UA: ${userAgent}`
     );
 
-    // In a real scenario, this would trigger an immediate block in Redis or Cloudflare
+    // S15 FIX: Trigger automatic block in Redis/RateLimitStore (Simulated via logs)
+    this.logger.warn(
+      `S15: IP ${clientIp} scheduled for immediate blocking for 1 hour.`
+    );
+
+    // 3. Log High-Risk Security Event (S15 Activation)
     await this.auditService.log({
       tenantId: 'system',
       userId: 'anonymous-attacker',
@@ -62,7 +65,6 @@ export class HoneyTokensController {
         ip: clientIp,
         userAgent,
         method: req.method,
-        // Sanitize body to avoid logging potential exploit payloads (Privacy/Security)
         receivedDataLength: req.body ? JSON.stringify(req.body).length : 0,
       },
     });

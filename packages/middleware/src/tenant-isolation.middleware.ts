@@ -126,10 +126,13 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     // e.g., provisioning a new tenant or system health checks
     // We use originalUrl to ensure we see the full path before NestJS routing shifts it
     const bypassRoutes = [
-      '/api/v1/auth/login',
-      '/api/v1/health',
-      '/api/health',
       '/health',
+      '/health/liveness',
+      '/health/readiness',
+      '/health/status',
+      '/api/health',
+      '/api/v1/health',
+      '/api/v1/auth/login',
       '/',
     ];
     const currentPath = req.originalUrl || req.path || '';
@@ -143,8 +146,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
           currentPath.includes(`/api/v1${route}`)
       )
     ) {
-      // S2 FIX: Even bypassed routes must ensure we are in public schema
-      // This prevents "dirty" connections from previous tenant requests.
+      // ✅ S2 FIX: Infrastructure and bypassed routes must ensure public schema
+      // This prevents context leakage from persistent connections in the pool.
       await publicDb.execute(sql`SET search_path TO public`);
       return next();
     }

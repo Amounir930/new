@@ -60,7 +60,7 @@ async function bootstrap() {
   app.useGlobalFilters(
     new GlobalExceptionFilter({
       includeStackTrace: !isProduction,
-      includeIpDetails: !isProduction,
+      includeIpDetails: false, // S5 FIX: Never leak IP details in response
     })
   );
 
@@ -70,7 +70,8 @@ async function bootstrap() {
   // S8 FIX: Generate CSP Nonce per request
   app.use((_req: any, res: any, next: any) => {
     const { randomBytes } = require('node:crypto');
-    res.locals.cspNonce = randomBytes(16).toString('hex');
+    // S8 FIX: Increase entropy to 32 bytes (256-bit) and use base64 for CSP compliance
+    res.locals.cspNonce = randomBytes(32).toString('base64');
     next();
   });
 
@@ -108,7 +109,13 @@ async function bootstrap() {
 
   // Prefix all routes with /api, but exclude the root path and health checks
   app.setGlobalPrefix('api', {
-    exclude: ['/', '/robots.txt', '/health', '/health/(.*)'],
+    exclude: [
+      { path: '/', method: 1 }, // GET
+      { path: '/robots.txt', method: 1 },
+      { path: '/health/liveness', method: 1 },
+      { path: '/health/status', method: 1 },
+      { path: 'health/(.*)', method: 1 },
+    ],
   });
 
   // ═══════════════════════════════════════════════════════════════
@@ -130,11 +137,11 @@ async function bootstrap() {
     swaggerOptions: {
       persistAuthorization: true,
     },
-    customCssUrl:
-      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui.css',
+    // S8 FIX: Localize Swagger assets to prevent external CDN dependence (Critical)
+    customCssUrl: '/api/docs/swagger-ui.css',
     customJs: [
-      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-bundle.js',
-      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.9.0/swagger-ui-standalone-preset.js',
+      '/api/docs/swagger-ui-bundle.js',
+      '/api/docs/swagger-ui-standalone-preset.js',
     ],
   });
 

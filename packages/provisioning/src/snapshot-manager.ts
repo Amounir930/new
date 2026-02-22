@@ -23,11 +23,11 @@ export class SnapshotManager {
       // 1. Settings (Anonymized: Exclude emails and phones)
       const settingsData = await db.select().from(settings);
       const settingsMap: Record<string, string> = {};
-      settingsData.forEach((s) => {
+      for (const s of settingsData) {
         if (!s.key.includes('email') && !s.key.includes('phone')) {
           settingsMap[s.key] = s.value;
         }
-      });
+      }
 
       // 2. Pages (Structure-Only: Headers only, empty content)
       const pagesData = await db.select().from(pages);

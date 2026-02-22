@@ -1,5 +1,5 @@
-import { Controller, Get, Version, VERSION_NEUTRAL } from '@nestjs/common';
 import { Public } from '@apex/auth';
+import { Controller, Get, VERSION_NEUTRAL, Version } from '@nestjs/common';
 
 @Controller()
 @Public()

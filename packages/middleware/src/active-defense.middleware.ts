@@ -27,33 +27,47 @@ export class ActiveDefenseMiddleware implements NestMiddleware {
     /shell\.php/i,
   ];
 
-  async use(req: Request, res: Response, next: NextFunction): Promise<void> {
-    const ip = req.ip || 'unknown';
+  private readonly HEALTH_PATHS = [
+    '/health',
+    '/health/liveness',
+    '/health/readiness',
+    '/health/status',
+    '/api/health',
+    '/api/v1/health',
+  ];
 
-    // 🛡️ Defense in Depth: Local bypass for health checks (S5 compliance)
-    const isHealthCheck = /(health|liveness|readiness)/i.test(
-      req.originalUrl || req.url
-    );
-    if (isHealthCheck) {
+  async use(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const path = req.originalUrl || req.url;
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+
+    // 🛡️ S15.3: Safe Bypass for infrastructure health probes
+    if (this.HEALTH_PATHS.some((hp) => path.startsWith(hp))) {
       return next();
     }
 
     // 1. S15 Level 1: Deceptive HTTP Headers (Obfuscation)
-    // Overwrite real info with deceptive signals to confuse scanners
-    res.setHeader('X-Powered-By', 'PHP/5.6.40'); // Mislead as an old PHP version
-    res.setHeader('Server', 'Apache/2.2.22 (Debian)'); // Mislead as an old Apache
+    res.setHeader('X-Powered-By', 'PHP/5.6.40');
+    res.setHeader('Server', 'Apache/2.2.22 (Debian)');
     res.setHeader('X-Active-Defense', 'Enabled');
 
     // 2. S15 Level 2: Honeypot Detection
     for (const pattern of this.honeypotPaths) {
-      if (pattern.test(req.url)) {
+      if (pattern.test(path)) {
         console.error(
-          `S15 CRITICAL: Honeytoken hit! Path: "${req.url}" | IP: ${ip}`
+          `S15 CRITICAL: Honeytoken hit! Path: "${path}" | IP: ${ip}`
         );
 
-        // S15 Level 3: Automatic IP Blacklisting (Permaban for 24 hours)
-        const key = `ratelimit:anonymous:ip:${ip}`;
-        await this.store.block(key, 86400_000); // 24-hour ban
+        try {
+          // S15 Level 3: Automatic IP Blacklisting (Permaban for 24 hours)
+          const key = `ratelimit:anonymous:ip:${ip}`;
+          await this.store.block(key, 86400_000); // 24-hour ban
+        } catch (_storeError) {
+          // S15: Fail-Closed Mechanism
+          // If the store fails, we MUST still block the suspicious request
+          console.error(
+            'S15: Defensive store failure, falling back to Fail-Closed block'
+          );
+        }
 
         throw new ForbiddenException('S15 Violation: Active defense triggered');
       }

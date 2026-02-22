@@ -25,11 +25,10 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
-import { HealthController } from './health/health.controller.js';
+import { HealthModule } from './health/health.module.js';
 import { ProductsController } from './products/products.controller.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 import { HoneyTokensController } from './security/honey-tokens.controller.js';
-import { StorefrontController } from './storefront/storefront.controller.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 
@@ -46,6 +45,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
 
     // S6: Rate Limiting (Throttler)
     RateLimitModule,
+    HealthModule, // FIX: Registered Health Module
     AuthModule, // Registered Auth Module
     ProvisioningModule,
     BlueprintsModule,
@@ -63,13 +63,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
       useClass: QuotaInterceptor,
     },
   ],
-  controllers: [
-    AppController,
-    ProductsController,
-    HoneyTokensController,
-    StorefrontController,
-    HealthController,
-  ],
+  controllers: [AppController, ProductsController, HoneyTokensController],
 })
 export class AppModule implements NestModule {
   // S2: Apply Tenant Isolation Middleware & S11: Bot Protection
@@ -82,8 +76,6 @@ export class AppModule implements NestModule {
         TenantIsolationMiddleware
       )
       .exclude(
-        { path: 'health/liveness', method: RequestMethod.GET },
-        { path: 'health/status', method: RequestMethod.GET },
         { path: 'robots.txt', method: RequestMethod.GET },
         { path: '/', method: RequestMethod.GET }
       )

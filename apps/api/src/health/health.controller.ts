@@ -4,10 +4,10 @@ import {
   Get,
   HttpStatus,
   Logger,
-  Res,
+  UseGuards,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
-import type * as express from 'express';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { createClient } from 'redis';
 
 /**
@@ -16,21 +16,22 @@ import { createClient } from 'redis';
  */
 @Controller({ path: 'health', version: [VERSION_NEUTRAL, '1'] })
 @Public()
+@UseGuards(ThrottlerGuard) // S6 FIX: Apply rate limiting to public health endpoints
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
   @Get()
-  rootCheck(@Res() res: express.Response) {
-    return res.status(HttpStatus.OK).json({
+  rootCheck() {
+    return {
       status: 'ok',
       message: 'Apex v2 API is running',
       version: '1.0.0',
       timestamp: new Date().toISOString(),
-    });
+    };
   }
 
   @Get('redis')
-  async checkRedis(@Res() res: express.Response) {
+  async checkRedis() {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     const client = createClient({ url: redisUrl });
 
@@ -39,35 +40,32 @@ export class HealthController {
       await client.ping();
       await client.disconnect();
 
-      return res.status(HttpStatus.OK).json({
+      return {
         status: 'ok',
         service: 'redis',
         message: 'Redis connectivity verified',
-      });
+      };
     } catch (error) {
-      // 🛡️ S5: Sanitize error message to prevent infrastructure info disclosure
       // 🛡️ S5: Sanitize error message to prevent infrastructure info disclosure
       this.logger.error(
         `Redis connectivity failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
 
-      return res.status(HttpStatus.SERVICE_UNAVAILABLE).json({
+      return {
         status: 'error',
         service: 'redis',
         message: 'Internal server error during connectivity check',
-      });
+      };
     }
   }
 
   @Get('liveness')
-  checkLiveness(@Res() res: express.Response) {
-    return res.status(HttpStatus.OK).json({ status: 'ok' });
+  checkLiveness() {
+    return { status: 'ok' };
   }
 
   @Get('status')
-  checkStatus(@Res() res: express.Response) {
-    return res
-      .status(HttpStatus.OK)
-      .json({ status: 'ok', environment: process.env.NODE_ENV });
+  checkStatus() {
+    return { status: 'ok', environment: process.env.NODE_ENV };
   }
 }

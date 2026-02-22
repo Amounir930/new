@@ -65,6 +65,16 @@ export class ProvisioningService {
     const startTime = Date.now();
     this.logger.log(`Starting provisioning for: ${options.subdomain}`);
 
+    // S1 FIX: Strict NODE_ENV Validation
+    if (
+      !process.env.NODE_ENV ||
+      !['development', 'test', 'production'].includes(process.env.NODE_ENV)
+    ) {
+      throw new InternalServerErrorException(
+        'Invalid deployment environment (S1 Violation)'
+      );
+    }
+
     // Track steps for rollback if needed
     const steps: ProvisioningStep[] = [
       { name: 'schema_creation', status: 'pending' },
@@ -143,8 +153,11 @@ export class ProvisioningService {
         entityType: 'STORE',
         entityId: options.subdomain,
         metadata: {
-          error: error instanceof Error ? error.message : 'Unknown',
-          steps,
+          // S4 FIX: Sanitize error message to prevent leakage of internal details
+          error: 'Provisioning failed. Check internal logs for details.',
+          failed_steps: steps
+            .filter((s) => s.status === 'failed')
+            .map((s) => s.name),
           plan: options.plan,
         },
       });

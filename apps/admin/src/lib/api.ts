@@ -26,7 +26,7 @@ export const setAuthToken = (token: string) => {
     const d = new Date();
     d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000);
     const expires = `expires=${d.toUTCString()}`;
-    // biome-ignore lint/suspicious/noDocumentCookie: Direct cookie assignment is needed for client-side auth
+    // biome-ignore lint/suspicious: Direct cookie assignment is needed for client-side auth
     document.cookie = `adm_tkn=${token}; ${expires}; path=/; SameSite=Strict; Secure`;
   }
 };

@@ -22,16 +22,16 @@ const ProductsQuerySchema = z.object({
 
 @Controller({ path: 'storefront', version: VERSION_NEUTRAL })
 export class StorefrontController {
-  constructor(private readonly storefrontService: StorefrontService) { }
+  constructor(private readonly storefrontService: StorefrontService) {}
 
   @Get('config')
-  async getConfig(@Query() query: any) {
+  async getConfig(@Query() query: { tenantId?: string }) {
     const validated = TenantIdSchema.parse(query);
     return this.storefrontService.getTenantConfig(validated.tenantId);
   }
 
   @Get('products')
-  async getProducts(@Query() query: any) {
+  async getProducts(@Query() query: Record<string, unknown>) {
     const validated = ProductsQuerySchema.parse(query);
     return this.storefrontService.getProducts(validated);
   }
@@ -46,7 +46,7 @@ export class StorefrontController {
   }
 
   @Get('home')
-  async getHome(@Query() query: any) {
+  async getHome(@Query() query: { tenantId?: string }) {
     const validated = TenantIdSchema.parse(query);
     return this.storefrontService.getHomeData(validated.tenantId);
   }

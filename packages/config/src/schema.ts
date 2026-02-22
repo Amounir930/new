@@ -10,13 +10,20 @@ export const EnvSchema = z.object({
     .string()
     .min(32, 'S1 Violation: JWT_SECRET must be at least 32 characters')
     .refine((key) => {
+      // S1: Mandatory complexity in Production
+      if (
+        process.env.NODE_ENV === 'production' &&
+        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
+      ) {
+        return false; // Force fail in production
+      }
       if (
         process.env.NODE_ENV === 'test' ||
         process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
       )
         return true;
       return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
-    }, 'S1 Violation: JWT_SECRET lacks required complexity (A-Z, a-z, 0-9)'),
+    }, 'S1 Violation: JWT_SECRET lacks required complexity (A-Z, a-z, 0-9) or unauthorized bypass in production'),
   ENCRYPTION_MASTER_KEY: z
     .string()
     .min(
@@ -25,7 +32,10 @@ export const EnvSchema = z.object({
     )
     .refine((key) => {
       // S7: Strict Production Validation
-      // In test mode or when specifically bypassed in CI, we allow "test" substring
+      if (process.env.NODE_ENV === 'production') {
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false; // Fail bypass
+        return !/test|default|example/i.test(key);
+      }
       if (
         process.env.NODE_ENV === 'test' ||
         process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
@@ -33,15 +43,17 @@ export const EnvSchema = z.object({
         return true;
 
       return !/test|default|example/i.test(key);
-    }, 'S1 Violation: Production key cannot contain test patterns')
+    }, 'S1 Violation: Production key cannot contain test patterns or unauthorized bypass')
     .refine((key) => {
       // S7: Complexity check: Uppercase, Lowercase, Number, Special Character
-      // Skip complexity check in test mode or when specifically bypassed in CI
-      if (
+      if (process.env.NODE_ENV === 'production') {
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false; // Fail bypass
+      } else if (
         process.env.NODE_ENV === 'test' ||
         process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
-      )
+      ) {
         return true;
+      }
 
       return (
         /[A-Z]/.test(key) &&
@@ -49,7 +61,7 @@ export const EnvSchema = z.object({
         /[0-9]/.test(key) &&
         /[@$!%*?&#/=_+.-]/.test(key)
       );
-    }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special)'),
+    }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special) or unauthorized bypass in production'),
 
   // S1: Admin Credentials (Strict Validation)
   SUPER_ADMIN_EMAIL: z
@@ -84,9 +96,7 @@ export const EnvSchema = z.object({
   MINIO_REGION: z.string().default('us-east-1'),
 
   // Application Settings
-  NODE_ENV: z
-    .enum(['development', 'production', 'test'])
-    .default('development'),
+  NODE_ENV: z.enum(['development', 'production', 'test']),
 
   PORT: z.string().default('3000'),
 

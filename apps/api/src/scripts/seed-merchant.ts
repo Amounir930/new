@@ -17,7 +17,8 @@ import { banners } from '@apex/db/schema/storefront/home';
 import { categories } from '@apex/db/schema/storefront/categories';
 
 const TENANT_SUBDOMAIN = 'adel';
-const SCHEMA_NAME = `tenant_${TENANT_SUBDOMAIN}`;
+// S2 FIX: Use less predictable schema name prefix
+const SCHEMA_NAME = `tenant_store_${TENANT_SUBDOMAIN}_v2`;
 
 async function main() {
   console.log(

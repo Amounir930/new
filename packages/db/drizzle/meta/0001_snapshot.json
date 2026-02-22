@@ -274,9 +274,7 @@
         "tenants_subdomain_unique": {
           "name": "tenants_subdomain_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "subdomain"
-          ]
+          "columns": ["subdomain"]
         }
       },
       "policies": {},
@@ -335,9 +333,7 @@
         "users_email_hash_unique": {
           "name": "users_email_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email_hash"
-          ]
+          "columns": ["email_hash"]
         }
       },
       "policies": {},
@@ -400,12 +396,8 @@
           "name": "feature_gates_tenant_id_tenants_id_fk",
           "tableFrom": "feature_gates",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -502,9 +494,7 @@
         "subscription_plans_code_unique": {
           "name": "subscription_plans_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
+          "columns": ["code"]
         }
       },
       "policies": {},
@@ -599,12 +589,8 @@
           "name": "tenant_quotas_tenant_id_tenants_id_fk",
           "tableFrom": "tenant_quotas",
           "tableTo": "tenants",
-          "columnsFrom": [
-            "tenant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tenant_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
