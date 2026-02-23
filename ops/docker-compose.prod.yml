@@ -112,7 +112,7 @@ services:
       retries: 3
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=ops_apex-data"
+      - "traefik.docker.network=ops_apex-public"
       # S3 API – Internal-network IPs only (backend calls only, not public)
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
       - "traefik.http.routers.minio.priority=5000"
@@ -129,13 +129,10 @@ services:
       - "traefik.http.routers.minio-console.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker,apex-minio-headers@docker"
       - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
-      - "traefik.docker.network=ops_apex-public"
     networks:
       - apex-data
       - apex-public
       - apex-internal
-    labels:
-      - "traefik.docker.network=ops_apex-public"
 
   # ═══════════════════════════════════════════════════════════════
   # Application API (NestJS)
@@ -429,7 +426,7 @@ services:
         limits:
           memory: 64M
     healthcheck:
-      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:8025').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8025 || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
