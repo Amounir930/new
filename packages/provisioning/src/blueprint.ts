@@ -46,9 +46,9 @@ export async function createBlueprint(
       description: options.description || null,
       blueprint: blueprint as unknown as BlueprintTemplate,
       isDefault: !!options.isDefault,
-      plan: options.plan || 'free',
-      nicheType: options.nicheType || 'retail',
-      status: options.status || 'active',
+      plan: (options.plan || 'free') as any,
+      nicheType: (options.nicheType || 'retail') as any,
+      status: (options.status || 'active') as any,
     })
     .returning();
 
@@ -197,7 +197,7 @@ export async function updateBlueprint(
   if (updates.blueprint) updateData.blueprint = updates.blueprint;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
   if (updates.plan) updateData.plan = updates.plan as 'free' | 'basic' | 'pro' | 'enterprise';
-  if (updates.nicheType) updateData.nicheType = updates.nicheType;
+  if (updates.nicheType) updateData.nicheType = updates.nicheType as any;
   if (updates.status) updateData.status = updates.status as 'active' | 'paused';
 
   const result = await publicDb

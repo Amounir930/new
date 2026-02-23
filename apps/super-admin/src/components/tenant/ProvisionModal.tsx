@@ -10,17 +10,18 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
-  password: z
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(100),
-    confirmPassword: z.string(),
-      blueprintId: z.string().optional(),
+const provisionSchema = z.object({
+  storeName: z.string().min(3, 'Store name is too short').max(100),
+  subdomain: z.string().min(3, 'Subdomain must be at least 3 characters').regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and dashes'),
+  adminEmail: z.string().email('Invalid email address'),
+  plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(100),
+  confirmPassword: z.string(),
+  blueprintId: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match",
-        path: ['confirmPassword'],
-      });
+  message: "Passwords don't match",
+  path: ['confirmPassword'],
+});
 
 type ProvisionFormValues = z.infer<typeof provisionSchema>;
 
@@ -156,103 +157,111 @@ export function ProvisionModal({
               )}
             </div>
 
-            {errors.adminEmail && (
-              <p className="text-destructive text-xs">
-                {errors.adminEmail.message}
-              </p>
+            <div className="space-y-2">
+              <Label htmlFor="adminEmail">Admin Email</Label>
+              <Input
+                id="adminEmail"
+                type="email"
+                placeholder="admin@example.com"
+                {...register('adminEmail')}
+              />
+              {errors.adminEmail && (
+                <p className="text-destructive text-xs">
+                  {errors.adminEmail.message}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Merchant Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  {...register('password')}
+                />
+                {errors.password && (
+                  <p className="text-destructive text-xs">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  {...register('confirmPassword')}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-destructive text-xs">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="plan">Plan</Label>
+              <select
+                id="plan"
+                {...register('plan')}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="free">Free</option>
+                <option value="basic">Basic</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+              {errors.plan && (
+                <p className="text-destructive text-xs">
+                  {errors.plan.message}
+                </p>
+              )}
+            </div>
+
+            {filteredBlueprints.length > 0 && (
+              <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                <Label htmlFor="blueprintId">
+                  Initial Template (Blueprint)
+                </Label>
+                <select
+                  id="blueprintId"
+                  {...register('blueprintId')}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">Default (Sector-based)</option>
+                  {filteredBlueprints.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} (v{b.version})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-muted-foreground text-[10px]">
+                  Override the default sector logic by picking a named
+                  blueprint.
+                </p>
+              </div>
             )}
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="password">Merchant Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-            />
-            {errors.password && (
-              <p className="text-destructive text-xs">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              {...register('confirmPassword')}
-            />
-            {errors.confirmPassword && (
-              <p className="text-destructive text-xs">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading ? 'Provisioning...' : 'Start 60s Provisioning'}
+              </Button>
+            </div>
+          </form>
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="plan">Plan</Label>
-          <select
-            id="plan"
-            {...register('plan')}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="free">Free</option>
-            <option value="basic">Basic</option>
-            <option value="pro">Pro</option>
-            <option value="enterprise">Enterprise</option>
-          </select>
-          {errors.plan && (
-            <p className="text-destructive text-xs">
-              {errors.plan.message}
-            </p>
-          )}
-        </div>
-
-        {filteredBlueprints.length > 0 && (
-          <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-            <Label htmlFor="blueprintId">
-              Initial Template (Blueprint)
-            </Label>
-            <select
-              id="blueprintId"
-              {...register('blueprintId')}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Default (Sector-based)</option>
-              {filteredBlueprints.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name} (v{b.version})
-                </option>
-              ))}
-            </select>
-            <p className="text-muted-foreground text-[10px]">
-              Override the default sector logic by picking a named
-              blueprint.
-            </p>
-          </div>
-        )}
-
-        <div className="flex justify-end space-x-2 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? 'Provisioning...' : 'Start 60s Provisioning'}
-          </Button>
-        </div>
-      </form>
-    </div>
       </div >
     </div >
   );

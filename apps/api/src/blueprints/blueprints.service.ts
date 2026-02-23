@@ -109,7 +109,7 @@ export class BlueprintsService {
       .update(onboardingBlueprints)
       .set({
         plan: dto.plan,
-        nicheType: dto.nicheType ?? undefined,
+        nicheType: (dto.nicheType ?? undefined) as any,
         status: dto.status as 'active' | 'paused' | undefined,
         blueprint: dto.blueprint as unknown as BlueprintTemplate,
         isDefault: dto.isDefault,

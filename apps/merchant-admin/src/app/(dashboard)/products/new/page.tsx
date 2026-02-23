@@ -4,7 +4,6 @@ import React from "react";
 import { ProductForm } from "@/components/products/product-form";
 import { apiFetch } from "@/lib/api";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner"; // Assuming sonner is used, if not I'll fallback
 
 export default function NewProductPage() {
     const router = useRouter();

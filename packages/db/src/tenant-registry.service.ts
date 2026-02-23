@@ -15,7 +15,7 @@ type NewTenant = typeof tenants.$inferInsert;
 
 @Injectable()
 export class TenantRegistryService {
-  constructor(private readonly encryption: EncryptionService) {}
+  constructor(private readonly encryption: EncryptionService) { }
 
   /**
    * Register a new tenant in the registry
@@ -57,10 +57,10 @@ export class TenantRegistryService {
     const _encryptedNicheType = data.nicheType
       ? this.encryption.encrypt(data.nicheType).encrypted // We only store the encrypted string?
       : // Wait, we need IV/Salt to decrypt.
-        // S7 Implementation Detail: structure is { encrypted, iv, tag, salt }
-        // We must serialize the whole EncryptedData object to string if the column is text.
-        // `nicheType` is text.
-        null;
+      // S7 Implementation Detail: structure is { encrypted, iv, tag, salt }
+      // We must serialize the whole EncryptedData object to string if the column is text.
+      // `nicheType` is text.
+      null;
 
     // Challenge: `nicheType` column is `text`. Storing JSON string of { encrypted, ... } is possible but might break length limits if small.
     // The `nicheType` likely isn't SUPER sensitive, but user asked for it.
@@ -107,13 +107,13 @@ export class TenantRegistryService {
     return decrypted;
   }
 
-  private decryptNicheType(nicheType: string | null): string | null {
-    if (!nicheType || !this.isEncrypted(nicheType)) return nicheType;
+  private decryptNicheType(nicheType: string | null): string {
+    if (!nicheType || !this.isEncrypted(nicheType)) return nicheType || 'retail';
     try {
       const encData = JSON.parse(Buffer.from(nicheType, 'base64').toString());
-      return this.encryption.decrypt(encData);
+      return this.encryption.decrypt(encData) || 'retail';
     } catch (_e) {
-      return nicheType;
+      return nicheType || 'retail';
     }
   }
 
@@ -205,7 +205,7 @@ export class TenantRegistryService {
     const [blueprint] = await publicDb
       .select({ uiConfig: onboardingBlueprints.uiConfig })
       .from(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.nicheType, nicheType))
+      .where(eq(onboardingBlueprints.nicheType, nicheType as any))
       .limit(1);
 
     return (blueprint?.uiConfig as Record<string, unknown>) || undefined;

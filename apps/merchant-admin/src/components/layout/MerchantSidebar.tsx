@@ -29,7 +29,11 @@ export function MerchantSidebar() {
     const [session, setSession] = useState<UserSession | null>(null);
 
     useEffect(() => {
-        setSession(getSession());
+        const loadSession = async () => {
+            const s = await getSession();
+            setSession(s);
+        };
+        loadSession();
     }, []);
 
     return (

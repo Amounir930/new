@@ -5,11 +5,11 @@ const PLANS = ['free', 'basic', 'pro', 'enterprise'];
 const SECTORS = [
   'retail',
   'wellness',
-  'professional',
-  'food',
   'education',
-  'real_estate',
-  'events',
+  'services',
+  'hospitality',
+  'real-estate',
+  'creative',
 ];
 
 function getQuotasForPlan(plan: string) {
@@ -39,7 +39,7 @@ async function seed() {
     console.log(`🗑️  WIPING all blueprints for sector: ${sector}...`);
     await publicDb
       .delete(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.nicheType, sector));
+      .where(eq(onboardingBlueprints.nicheType, sector as any));
 
     console.log(`🌱 Seeding Experiment Blueprints for Sector: ${sector}...`);
 
@@ -56,7 +56,7 @@ async function seed() {
       await publicDb.insert(onboardingBlueprints).values({
         name: `${sector.charAt(0).toUpperCase()}${sector.slice(1)} ${plan.charAt(0).toUpperCase()}${plan.slice(1)} Blueprint`,
         plan: plan as any,
-        nicheType: sector,
+        nicheType: sector as any,
         blueprint: blueprintData,
         status: 'active',
         isDefault: plan === 'free', // Set Free as default

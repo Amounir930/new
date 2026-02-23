@@ -1,6 +1,7 @@
 import { ShoppingCart, Package, Users, TrendingUp, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 
 export default function MerchantDashboard() {
     const [data, setData] = useState<any>(null);

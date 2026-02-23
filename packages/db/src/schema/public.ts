@@ -61,7 +61,8 @@ export const tenants = pgTable(
     name: text('name').notNull(),
     plan: tenantPlanEnum('plan').notNull().default('free'),
     status: tenantStatusEnum('status').notNull().default('active'),
-    nicheType: tenantNicheEnum('niche_type').notNull().default('retail'),
+    // S7 FIX 25A: nicheType is encrypted in TenantRegistryService, so it MUST be text to store ciphertext
+    nicheType: text('niche_type').notNull().default('retail'),
     uiConfig: jsonb('ui_config').default({}),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),

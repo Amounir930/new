@@ -37,6 +37,7 @@ export async function resolveTenant(
       createdAt: new Date(),
       schemaName: `tenant_${mockTenant.subdomain}`,
       isActive: true,
+      isSuspended: false,
     },
     () => {
       next();

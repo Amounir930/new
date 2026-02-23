@@ -5,10 +5,11 @@ import { notFound } from 'next/navigation';
 export default async function ProductPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ subdomain: string; slug: string }>;
 }) {
-  const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const { subdomain, slug } = await params;
+  // S2 FIX 24A: Pass tenantId (subdomain) to ensure isolation and fix build error
+  const product = await getProductBySlug(subdomain, slug);
 
   if (!product) {
     return notFound();

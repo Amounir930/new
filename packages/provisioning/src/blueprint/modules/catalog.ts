@@ -103,7 +103,7 @@ export class CatalogModule implements SeederModule {
           } as any)
           .onConflictDoUpdate({
             target: products.slug,
-            set: { name: p.name, price: p.price.toString() },
+            set: { name: p.name, price: p.price.toString() } as any,
           })
           .returning();
 
