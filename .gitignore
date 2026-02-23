@@ -44,8 +44,10 @@ lerna-debug.log*
 
 # ─── SSH Keys & Secrets (S10 Critical) ───
 ops/keys/
+ops/secrets/
 *.pem
 *.key
+*.txt.secret
 id_rsa*
 id_ed25519*
 secrets.json

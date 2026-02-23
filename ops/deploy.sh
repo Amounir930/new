@@ -65,8 +65,14 @@ docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm \
     }
 
 # 🔹 [3] Rolling Deploy with proper health checks
-echo "🚀  [4/4] Deploying updated services (no-cache to ensure fresh Next.js build)..."
-sudo docker compose --env-file ../../.env -f ops/docker-compose.prod.yml up -d --build --no-cache --no-deps api admin store
+echo "🚀  [3/4] Deploying updated services (no-cache for fresh Next.js build)..."
+# Verify secrets directory exists before deploying
+if [ ! -d "$DIR/ops/secrets" ]; then
+    echo "❌ Docker Secrets not found at $DIR/ops/secrets"
+    echo "   Run: bash ops/setup-secrets.sh"
+    exit 1
+fi
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --build --no-cache --no-deps api admin store
 
 # 🔹 [4] PROPER Health Check
 echo "🏥 [4/4] Health verification..."

@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# ═══════════════════════════════════════════════════════════════
+# ops/setup-secrets.sh
+# Fortress V3.0 - Zero-Downtime Docker Secrets Migration
+#
+# Run this ONCE on the server BEFORE deploying the new compose file.
+# Usage: bash ops/setup-secrets.sh
+# ═══════════════════════════════════════════════════════════════
+set -euo pipefail
+
+SECRETS_DIR="/opt/apex-v2/ops/secrets"
+ENV_FILE="/opt/apex-v2/.env"
+
+echo "🔐 [Fortress V3.0] Setting up Docker Secrets..."
+echo "   Reading secrets from: $ENV_FILE"
+
+# Helper: extract a value from the .env file
+get_env() {
+  local key="$1"
+  grep -E "^${key}=" "$ENV_FILE" | cut -d'"' -f2 | head -1
+}
+
+# Create secrets directory (restricted permissions)
+mkdir -p "$SECRETS_DIR"
+chmod 700 "$SECRETS_DIR"
+
+# Write secret files
+echo "$(get_env POSTGRES_PASSWORD)"    > "$SECRETS_DIR/postgres_password.txt"
+echo "$(get_env REDIS_PASSWORD)"       > "$SECRETS_DIR/redis_password.txt"
+echo "$(get_env JWT_SECRET)"           > "$SECRETS_DIR/jwt_secret.txt"
+echo "$(get_env CF_DNS_API_TOKEN)"     > "$SECRETS_DIR/cf_api_token.txt"
+echo "$(get_env MINIO_ROOT_PASSWORD)"  > "$SECRETS_DIR/minio_root_password.txt"
+echo "$(get_env GITEA_DB_PASSWORD)"    > "$SECRETS_DIR/gitea_db_password.txt"
+echo "$(get_env WEBHOOK_SECRET)"       > "$SECRETS_DIR/webhook_secret.txt"
+echo "$(get_env BACKUP_ENCRYPTION_KEY)" > "$SECRETS_DIR/backup_encryption_key.txt"
+
+# Restrict all secret files to root-only
+chmod 600 "$SECRETS_DIR"/*.txt
+chown root:root "$SECRETS_DIR"/*.txt
+
+echo ""
+echo "✅ Secrets created in: $SECRETS_DIR"
+echo ""
+echo "⚠️  NEXT STEPS (MANDATORY):"
+echo "   1. Verify files: ls -la $SECRETS_DIR"
+echo "   2. Run deployment: cd /opt/apex-v2 && bash ops/deploy.sh"
+echo "   3. After deployment succeeds – rotate ALL passwords in .env"
+echo "   4. Re-run: bash ops/setup-secrets.sh to sync rotated values"
+echo ""
+echo "🔒 Secret files are readable by root only (chmod 600)"
