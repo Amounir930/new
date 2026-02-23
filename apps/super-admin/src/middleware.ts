@@ -13,7 +13,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/blueprints') ||
     pathname.startsWith('/infra') ||
     pathname.startsWith('/security') ||
-    pathname.startsWith('/settings');
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/orders') ||
+    pathname.startsWith('/products');
 
   if (isProtected) {
     if (!token) {
@@ -68,6 +70,8 @@ export const config = {
     '/infra/:path*',
     '/security/:path*',
     '/settings/:path*',
+    '/orders/:path*',
+    '/products/:path*',
     '/login',
     '/'
   ],

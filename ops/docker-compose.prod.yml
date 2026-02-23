@@ -126,7 +126,7 @@ services:
       - "traefik.http.routers.minio-console.priority=5500"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
       - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio-console.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker,apex-minio-headers@docker"
+      - "traefik.http.routers.minio-console.middlewares=apex-cf-allowlist@docker,apex-minio-headers@docker"
       - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
     networks:
