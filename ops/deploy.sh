@@ -65,8 +65,8 @@ docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm \
     }
 
 # 🔹 [3] Rolling Deploy with proper health checks
-echo "🔄 [3/4] Deploying with zero downtime..."
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --remove-orphans
+echo "🚀  [4/4] Deploying updated services (no-cache to ensure fresh Next.js build)..."
+sudo docker compose --env-file ../../.env -f ops/docker-compose.prod.yml up -d --build --no-cache --no-deps api admin store
 
 # 🔹 [4] PROPER Health Check
 echo "🏥 [4/4] Health verification..."

@@ -216,12 +216,21 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.admin.rule=Host(`super-admin.60sec.shop`)"
-      - "traefik.http.routers.admin.priority=5000"
+      # Admin Subdomain
+      - "traefik.http.routers.admin.rule=Host(`super-admin.60sec.shop`) || Host(`admin.60sec.shop`)"
+      - "traefik.http.routers.admin.priority=4000"
       - "traefik.http.routers.admin.entrypoints=websecure"
       - "traefik.http.routers.admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.admin.middlewares=apex-admin-security@docker"
+      - "traefik.http.routers.admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-admin.loadbalancer.server.port=3001"
+
+      # Merchant Dashboard Subdomains
+      - "traefik.http.routers.admin-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/products`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
+      - "traefik.http.routers.admin-tenant.priority=4500"
+      - "traefik.http.routers.admin-tenant.entrypoints=websecure"
+      - "traefik.http.routers.admin-tenant.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.admin-tenant.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.routers.admin-tenant.service=apex-admin"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 30s
