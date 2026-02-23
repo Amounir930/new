@@ -3,12 +3,8 @@
  * Re-exports public and tenant schemas for backward compatibility
  */
 
-// Governance tables (from existing governance.ts)
-export * from './schema/governance';
-// Public schema tables (global, system-wide)
-export * from './schema/public';
-// Tenant schema tables (per-tenant isolation)
-export * from './schema/tenant';
+// Comprehensive schema export for Drizzle Kit and Application
+export * from './schema/index';
 
 /**
  * S2 Compliance Helpers

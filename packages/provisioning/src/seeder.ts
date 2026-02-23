@@ -22,7 +22,7 @@ export interface SeedOptions {
   subdomain: string;
   adminEmail: string;
   storeName: string;
-  plan?: string;
+  plan?: 'free' | 'basic' | 'pro' | 'enterprise';
   nicheType?: string; // S2.5: Industry classification
   uiConfig?: Record<string, any>; // S2.5: SDUI/Theme configuration
   blueprint?: any; // S3: Custom blueprint payload
@@ -55,19 +55,21 @@ export async function seedTenantData(
     executor.register(new CoreModule());
     executor.register(new CatalogModule());
 
-    await executor.execute(
-      {
-        subdomain: options.subdomain,
-        db: db,
-        schema: schemaName,
-        plan: options.plan || 'free',
-        adminEmail: options.adminEmail,
-        storeId: storeId,
-        nicheType: config.nicheType,
-        uiConfig: config.uiConfig,
-      },
-      config
-    );
+    await db.transaction(async (tx) => {
+      await executor.execute(
+        {
+          subdomain: options.subdomain,
+          db: tx as any, // Use transaction client
+          schema: schemaName,
+          plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
+          adminEmail: options.adminEmail,
+          storeId: storeId,
+          nicheType: config.nicheType,
+          uiConfig: config.uiConfig,
+        },
+        config
+      );
+    });
 
     const { users } = await import('@apex/db');
     const firstUser = await db.select({ id: users.id }).from(users).limit(1);
@@ -104,7 +106,7 @@ async function resolveTemplate(options: SeedOptions): Promise<any> {
     return options.blueprint;
   }
   const { getDefaultBlueprint } = await import('./blueprint.js');
-  const blueprintRecord = await getDefaultBlueprint(options.plan || 'free');
+  const blueprintRecord = await getDefaultBlueprint((options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise');
 
   if (!blueprintRecord) {
     throw new Error(
@@ -152,7 +154,7 @@ async function resolveStore(db: any, options: SeedOptions): Promise<string> {
       name: options.storeName,
       subdomain: options.subdomain,
       status: 'active',
-      plan: options.plan || 'free',
+      plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
     })
     .returning({ id: stores.id });
 

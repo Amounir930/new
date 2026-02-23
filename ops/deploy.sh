@@ -59,7 +59,7 @@ fi
 echo "🗄️  [2/4] Running migrations..."
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm \
     -e NODE_ENV=production \
-    api bun run --filter=@apex/db db:push || {
+    api bun run --filter=@apex/db db:migrate || {
         echo "❌ Migration failed! Rolling back..."
         exit 1
     }

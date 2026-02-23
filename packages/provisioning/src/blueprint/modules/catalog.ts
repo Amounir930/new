@@ -7,7 +7,7 @@ import type {
 
 export class CatalogModule implements SeederModule {
   name = 'catalog';
-  allowedPlans: string[] | '*' = '*'; // Available for all, but content varies by plan
+  allowedPlans: ('free' | 'basic' | 'pro' | 'enterprise')[] | '*' = '*'; // Available for all, but content varies by plan
 
   async run(ctx: BlueprintContext, config: BlueprintConfig) {
     if (!config.modules.catalog) {
@@ -77,7 +77,13 @@ export class CatalogModule implements SeederModule {
   ) {
     try {
       for (const p of productsList) {
-        const slug = p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        // Support Arabic slugs by allowing Arabic unicode range in regex
+        const slug =
+          p.slug ||
+          p.name
+            .toLowerCase()
+            .replace(/[^\u0600-\u06FFa-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
 
         const [insertedProduct] = await ctx.db
           .insert(products)

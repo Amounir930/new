@@ -112,7 +112,7 @@ export const EnvSchema = z.object({
 
   // Security Secrets (S7)
   API_KEY_SECRET: z.string().optional(),
-  BLIND_INDEX_PEPPER: z.string().optional(),
+  BLIND_INDEX_PEPPER: z.string().min(1, 'S1 Violation: BLIND_INDEX_PEPPER is required'),
 
   // MinIO Root Credentials
   MINIO_ROOT_USER: z.string().optional(),

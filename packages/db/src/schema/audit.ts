@@ -7,12 +7,15 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { tenants } from './public';
+
 export const auditLogs = pgTable(
   'audit_logs',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    tenantId: text('tenant_id').notNull(), // S2: Links to tenant subdomain or ID
-    userId: text('user_id'), // Nullable because system actions might not have a user
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }), // S2: Links to tenant ID
     userEmail: text('user_email'), // S4: User email for audit trail (Encrypted S7)
     action: text('action').notNull(), // e.g. 'PRODUCT_CREATED'
     entityType: text('entity_type').notNull(), // Renamed from resource for consistency

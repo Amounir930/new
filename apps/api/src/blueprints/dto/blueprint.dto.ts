@@ -56,11 +56,11 @@ export const blueprintStructureSchema: z.ZodType<BlueprintStructure> = z.object(
 export const createBlueprintSchema = z.object({
   name: z.string().min(3).max(100),
   description: z.string().optional(),
-  plan: z.string().default('free'),
+  plan: z.enum(['free', 'basic', 'pro', 'enterprise']).default('free'),
   nicheType: z.string().optional().nullable(),
   uiConfig: z.record(z.unknown()).optional().default({}),
   isDefault: z.boolean().default(false),
-  status: z.string().default('active'),
+  status: z.enum(['active', 'paused']).default('active'),
   blueprint: blueprintStructureSchema.optional(),
 });
 

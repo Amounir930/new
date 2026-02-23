@@ -9,12 +9,33 @@ import {
   index,
   jsonb,
   boolean as pgBoolean,
+  pgEnum,
   pgPolicy,
   pgTable,
   text,
   timestamp,
   uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
+
+/**
+ * S15: Systemic Enums for Input Validation (S3)
+ */
+export const tenantPlanEnum = pgEnum('tenant_plan', [
+  'free',
+  'basic',
+  'pro',
+  'enterprise',
+]);
+export const tenantStatusEnum = pgEnum('tenant_status', [
+  'active',
+  'suspended',
+  'deleted',
+]);
+export const blueprintStatusEnum = pgEnum('blueprint_status', [
+  'active',
+  'paused',
+]);
 
 // Note: Drizzle throws an error if pgSchema('public') is used.
 // Tables defined with pgTable() go to the default 'public' schema.
@@ -22,23 +43,27 @@ import {
 /**
  * S2: Tenant Registry (Global)
  */
-export const tenants = pgTable('tenants', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  subdomain: text('subdomain').notNull().unique(),
-  name: text('name').notNull(),
-  plan: text('plan').notNull().default('free'),
-  status: text('status').notNull().default('active'),
-  nicheType: text('niche_type'),
-  uiConfig: jsonb('ui_config').default({}),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-export const tenantsPolicy = pgPolicy('tenants_isolation', {
-  for: 'select',
-  to: 'public',
-  using: sql`status = 'active'`,
-});
+export const tenants = pgTable(
+  'tenants',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    subdomain: text('subdomain').notNull().unique(),
+    name: text('name').notNull(),
+    plan: tenantPlanEnum('plan').notNull().default('free'),
+    status: tenantStatusEnum('status').notNull().default('active'),
+    nicheType: text('niche_type'),
+    uiConfig: jsonb('ui_config').default({}),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => ({
+    isolation: pgPolicy('tenants_isolation', {
+      for: 'select',
+      to: 'public',
+      using: sql`status = 'active'`,
+    }),
+  })
+);
 
 export type Tenant = InferSelectModel<typeof tenants>;
 
@@ -53,9 +78,9 @@ export const onboardingBlueprints = pgTable(
     description: text('description'),
     blueprint: jsonb('blueprint').notNull(),
     isDefault: pgBoolean('is_default').notNull().default(false),
-    plan: text('plan').notNull().default('free'), // S21: free, basic, pro, enterprise
-    nicheType: text('niche_type').notNull(), // S21: retail, wellness, etc.
-    status: text('status').notNull().default('active'), // S21: active, paused
+    plan: tenantPlanEnum('plan').notNull().default('free'),
+    nicheType: text('niche_type').notNull(),
+    status: blueprintStatusEnum('status').notNull().default('active'),
     uiConfig: jsonb('ui_config').default({}),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -77,7 +102,9 @@ export const tenantMigrations = pgTable(
   'tenant_migrations',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    tenantId: text('tenant_id').notNull(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
     migrationName: text('migration_name').notNull(),
     appliedAt: timestamp('applied_at').defaultNow().notNull(),
     status: text('status').notNull().default('success'), // success | failed | pending

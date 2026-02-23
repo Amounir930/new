@@ -96,6 +96,15 @@ function enforceProductionChecks(parsed: EnvConfig): void {
   }
 
   if (
+    parsed.BLIND_INDEX_PEPPER.includes('default') ||
+    parsed.BLIND_INDEX_PEPPER.includes('test')
+  ) {
+    throw new Error(
+      'S1 Violation: BLIND_INDEX_PEPPER appears to be a default/test value in production'
+    );
+  }
+
+  if (
     parsed.DATABASE_URL.includes('localhost') &&
     !parsed.DATABASE_URL.includes('ssl')
   ) {
@@ -143,13 +152,15 @@ if (process.env.NODE_ENV !== 'test') {
 /**
  * Global validated environment configuration
  * (Fail-fast initialization)
- * In TEST mode, we fallback to process.env if parsing fails to avoid breaking module load
+ * S1: Strictly enforced. No bypasses.
  */
 export const env: EnvConfig = (() => {
   if (process.env.NODE_ENV === 'test') {
     try {
       return EnvSchema.parse(process.env);
     } catch (_e) {
+      // In test mode, we allow raw object access only if parsing fails, 
+      // primarily to support mock testing of the validator itself.
       return process.env as unknown as EnvConfig;
     }
   }

@@ -4,7 +4,7 @@ export interface BlueprintContext {
   subdomain: string;
   db: NodePgDatabase<Record<string, unknown>>; // MUST be scoped to tenant schema
   schema: string; // tenant_xyz
-  plan: string; // 'free', 'pro', etc.
+  plan: 'free' | 'basic' | 'pro' | 'enterprise'; // S15: Standardized Enums
   adminEmail: string; // Required for Core Module
   storeId?: string; // Reference to valid store ID
   nicheType?: string; // S2.5: Industry classification
@@ -51,8 +51,9 @@ export interface BlueprintRecord {
   description: string | null;
   blueprint: BlueprintTemplate;
   isDefault: boolean;
-  plan: string;
+  plan: 'free' | 'basic' | 'pro' | 'enterprise';
   nicheType?: string | null;
+  status: 'active' | 'paused';
   uiConfig?: Record<string, unknown> | null;
   createdAt: Date | null;
   updatedAt: Date | null;
@@ -61,6 +62,6 @@ export interface BlueprintRecord {
 export interface SeederModule {
   name: string;
   // returns allowed plans or true for all. If undefined, allowed for all.
-  allowedPlans?: string[] | '*';
+  allowedPlans?: ('free' | 'basic' | 'pro' | 'enterprise')[] | '*';
   run(ctx: BlueprintContext, config: BlueprintConfig): Promise<void>;
 }

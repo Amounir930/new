@@ -18,7 +18,7 @@ import {
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { tenants } from './public.js'; // Direct import to avoid circular dependency
+import { tenants } from './public'; // Direct import to avoid circular dependency
 
 /**
  * Subscription Plans Table

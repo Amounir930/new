@@ -12,6 +12,7 @@ import {
   index,
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -19,6 +20,29 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 import { customers } from './customers';
+
+/**
+ * S15: Order Lifecycle Enums (S3)
+ */
+export const orderStatusEnum = pgEnum('order_status', [
+  'pending',
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
+]);
+export const paymentStatusEnum = pgEnum('payment_status', [
+  'pending',
+  'paid',
+  'failed',
+  'refunded',
+]);
+export const paymentMethodEnum = pgEnum('payment_method', [
+  'card',
+  'cod',
+  'wallet',
+  'bnpl',
+]);
 
 /**
  * Orders Table
@@ -33,8 +57,8 @@ export const orders = pgTable(
     customerId: uuid('customer_id').references(() => customers.id), // NULL for guest
     guestEmail: varchar('guest_email', { length: 255 }), // For guest orders
 
-    status: varchar('status', { length: 20 }).notNull(), // Enum: pending, processing, shipped, delivered, cancelled
-    paymentStatus: varchar('payment_status', { length: 20 }).notNull(), // Enum: pending, paid, failed, refunded
+    status: orderStatusEnum('status').notNull(),
+    paymentStatus: paymentStatusEnum('payment_status').notNull(),
 
     // Pricing
     subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
@@ -44,7 +68,7 @@ export const orders = pgTable(
     total: decimal('total', { precision: 10, scale: 2 }).notNull(),
     currency: char('currency', { length: 3 }).notNull(),
 
-    paymentMethod: varchar('payment_method', { length: 20 }), // card, cod, wallet, bnpl
+    paymentMethod: paymentMethodEnum('payment_method'),
 
     // Addresses (snapshot at order time)
     shippingAddress: jsonb('shipping_address').notNull(),

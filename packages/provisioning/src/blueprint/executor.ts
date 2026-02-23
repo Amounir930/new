@@ -100,7 +100,7 @@ export class BlueprintExecutor {
     // 1. Plan Check
     if (module.allowedPlans && module.allowedPlans !== '*') {
       if (Array.isArray(module.allowedPlans)) {
-        if (!module.allowedPlans.includes(plan)) {
+        if (!module.allowedPlans.includes(plan as any)) {
           throw new Error(
             `[Permission Denied] Module '${module.name}' is not allowed for plan '${plan}'.`
           );

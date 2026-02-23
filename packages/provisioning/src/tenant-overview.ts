@@ -22,7 +22,7 @@ import {
   tenants,
 } from '@apex/db';
 
-export type TenantStatus = 'active' | 'suspended' | 'pending' | 'maintenance';
+export type TenantStatus = 'active' | 'suspended' | 'deleted';
 export type TenantPlan = 'free' | 'basic' | 'pro' | 'enterprise';
 
 export interface TenantOverviewRecord {
@@ -310,8 +310,7 @@ export async function getTenantStats(): Promise<{
   const byStatus: Record<string, number> = {
     active: 0,
     suspended: 0,
-    pending: 0,
-    maintenance: 0,
+    deleted: 0,
   };
 
   const byPlan: Record<string, number> = {

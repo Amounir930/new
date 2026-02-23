@@ -23,9 +23,9 @@ export async function createBlueprint(
   options: {
     description?: string;
     isDefault?: boolean;
-    plan?: string;
+    plan?: 'free' | 'basic' | 'pro' | 'enterprise';
     nicheType?: string;
-    status?: string;
+    status?: 'active' | 'paused';
   } = {}
 ): Promise<BlueprintRecord> {
   // Validate blueprint structure
@@ -106,7 +106,7 @@ export async function getBlueprintById(
  * Get default blueprint for a plan
  */
 export async function getDefaultBlueprint(
-  plan = 'free'
+  plan: 'free' | 'basic' | 'pro' | 'enterprise' = 'free'
 ): Promise<BlueprintRecord | null> {
   const results = await publicDb
     .select()
@@ -136,7 +136,8 @@ export async function getDefaultBlueprint(
         description: defaultBlueprintTemplate.description || null,
         blueprint: defaultBlueprintTemplate,
         isDefault: true,
-        plan: plan,
+        plan: plan as 'free' | 'basic' | 'pro' | 'enterprise',
+        status: 'active',
         nicheType: null,
         uiConfig: {},
         createdAt: new Date(),
@@ -172,9 +173,9 @@ export async function updateBlueprint(
     description?: string;
     blueprint?: BlueprintTemplate;
     isDefault?: boolean;
-    plan?: string;
+    plan?: 'free' | 'basic' | 'pro' | 'enterprise';
     nicheType?: string;
-    status?: string;
+    status?: 'active' | 'paused';
   }
 ): Promise<BlueprintRecord | null> {
   // Validate if blueprint is being updated
@@ -195,9 +196,9 @@ export async function updateBlueprint(
     updateData.description = updates.description;
   if (updates.blueprint) updateData.blueprint = updates.blueprint;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
-  if (updates.plan) updateData.plan = updates.plan;
+  if (updates.plan) updateData.plan = updates.plan as 'free' | 'basic' | 'pro' | 'enterprise';
   if (updates.nicheType) updateData.nicheType = updates.nicheType;
-  if (updates.status) updateData.status = updates.status;
+  if (updates.status) updateData.status = updates.status as 'active' | 'paused';
 
   const result = await publicDb
     .update(onboardingBlueprints)

@@ -9,7 +9,7 @@ import type {
 
 export class CoreModule implements SeederModule {
   name = 'core';
-  allowedPlans: string[] | '*' = '*'; // Core is allowed for all plans
+  allowedPlans: ('free' | 'basic' | 'pro' | 'enterprise')[] | '*' = '*'; // Core is allowed for all plans
 
   async run(ctx: BlueprintContext, config: BlueprintConfig) {
     if (!config.modules.core) {
@@ -48,9 +48,9 @@ export class CoreModule implements SeederModule {
     // We expect adminEmail to be present in the context
 
     const masterKey = env.ENCRYPTION_MASTER_KEY;
-    const pepper = env.BLIND_INDEX_PEPPER || 'test-pepper';
+    const pepper = env.BLIND_INDEX_PEPPER;
     const encryptedEmail = JSON.stringify(encrypt(ctx.adminEmail, masterKey));
-    const emailHash = hashSensitiveData(ctx.adminEmail, pepper);
+    const emailHash = hashSensitiveData(ctx.adminEmail, pepper!);
 
     await ctx.db
       .insert(users)
