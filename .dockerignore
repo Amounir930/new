@@ -8,3 +8,4 @@ dist
 tmp
 .gemini
 ops/keys
+ops/secrets
