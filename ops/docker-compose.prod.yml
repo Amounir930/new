@@ -130,7 +130,8 @@ services:
       - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
     networks:
-      - apex-data  # S3 API: internal only; Traefik also reaches apex-data network
+      - apex-data
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Application API (NestJS)
@@ -395,6 +396,39 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  # ═══════════════════════════════════════════════════════════════
+  # Mailpit (SMTP Testing)
+  # Tier: apex-internal (ISOLATED)
+  # ═══════════════════════════════════════════════════════════════
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: apex-mailpit
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:8025').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - apex-data
+      - apex-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
+      - "traefik.http.routers.mailpit.priority=5000"
+      - "traefik.http.routers.mailpit.entrypoints=websecure"
+      - "traefik.http.routers.mailpit.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.mailpit.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker"
+      - "traefik.http.services.apex-mailpit.loadbalancer.server.port=8025"
 
   # ═══════════════════════════════════════════════════════════════
   # Load Balancer (Traefik v2.11) – Zero-Trust Gateway
@@ -733,6 +767,7 @@ services:
       - ADMINER_DEFAULT_SERVER=postgres
     networks:
       - apex-data
+      - apex-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
@@ -740,7 +775,7 @@ services:
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
       - "traefik.http.routers.adminer.service=apex-adminer"
-      - "traefik.http.routers.adminer.middlewares=apex-internal-allowlist@docker,apex-basic-auth@docker"
+      - "traefik.http.routers.adminer.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker"
       - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
     deploy:
       resources:
