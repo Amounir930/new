@@ -3,49 +3,53 @@ import { jwtVerify } from 'jose';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!JWT_SECRET) {
-  console.error('❌ S1 Violation: JWT_SECRET is not defined in the environment.');
-}
-
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('adm_tkn')?.value;
   const { pathname } = request.nextUrl;
 
-  // Paths requiring super_admin role
-  const isSuperAdminRoute = pathname.startsWith('/super-admin');
+  // Protected paths for system governance
+  const isProtected = pathname.startsWith('/dashboard') || 
+                     pathname.startsWith('/tenants') || 
+                     pathname.startsWith('/blueprints') ||
+                     pathname.startsWith('/infra') ||
+                     pathname.startsWith('/security') ||
+                     pathname.startsWith('/settings');
 
-  if (isSuperAdminRoute) {
+  if (isProtected) {
     if (!token) {
+      console.warn(`[Security] Unauthenticated attempt to ${pathname}`);
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     try {
-      if (!JWT_SECRET) throw new Error('JWT_SECRET missing');
+      if (!JWT_SECRET) {
+        console.error('❌ S1 Violation: JWT_SECRET missing from environment.');
+        throw new Error('Internal Configuration Error');
+      }
       const secret = new TextEncoder().encode(JWT_SECRET);
       const { payload } = await jwtVerify(token, secret);
 
-      // Verify super_admin role
       if (payload.role !== 'super_admin') {
         console.warn(`[Security] Non-super-admin access attempt: ${payload.role}`);
         return NextResponse.redirect(new URL('/login', request.url));
       }
     } catch (error) {
-      console.error('[Security] JWT Verification Failed:', error);
+      console.error('[Security] Auth Verification Failed:', error);
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
 
-  // Redirect /login to /super-admin if already authenticated as super_admin
+  // Redirect /login back to dashboard if already authenticated
   if (pathname === '/login' || pathname === '/') {
-    if (token) {
+    if (token && JWT_SECRET) {
       try {
         const secret = new TextEncoder().encode(JWT_SECRET);
         const { payload } = await jwtVerify(token, secret);
         if (payload.role === 'super_admin') {
-          return NextResponse.redirect(new URL('/super-admin', request.url));
+          return NextResponse.redirect(new URL('/dashboard', request.url));
         }
       } catch (e) {
-        // Invalid token
+        // Soft fail
       }
     }
   }
@@ -54,5 +58,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/super-admin/:path*', '/login'],
+  matcher: [
+    '/dashboard/:path*', 
+    '/tenants/:path*', 
+    '/blueprints/:path*', 
+    '/infra/:path*', 
+    '/security/:path*', 
+    '/settings/:path*', 
+    '/login', 
+    '/'
+  ],
 };

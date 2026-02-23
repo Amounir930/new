@@ -129,9 +129,13 @@ services:
       - "traefik.http.routers.minio-console.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker,apex-minio-headers@docker"
       - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
+      - "traefik.docker.network=ops_apex-public"
     networks:
       - apex-data
+      - apex-public
       - apex-internal
+    labels:
+      - "traefik.docker.network=ops_apex-public"
 
   # ═══════════════════════════════════════════════════════════════
   # Application API (NestJS)
@@ -231,6 +235,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      JWT_SECRET: ${JWT_SECRET:-}
       JWT_SECRET_FILE: /run/secrets/jwt_secret
     networks:
       - apex-public
@@ -248,7 +253,14 @@ services:
       - "traefik.http.routers.merchant-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-merchant-admin.loadbalancer.server.port=3001"
       # Merchant Dashboard paths on tenant subdomains
-      - "traefik.http.routers.merchant-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/products`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
+      # Point 1 FIX: Removed Host(`60sec.shop`) from /products interception to prevent login redirect
+      - "traefik.http.routers.merchant-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
+      - "traefik.http.routers.merchant-tenant-products.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) && PathPrefix(`/products`)"
+      - "traefik.http.routers.merchant-tenant-products.priority=4501"
+      - "traefik.http.routers.merchant-tenant-products.entrypoints=websecure"
+      - "traefik.http.routers.merchant-tenant-products.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.merchant-tenant-products.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.routers.merchant-tenant-products.service=apex-merchant-admin"
       - "traefik.http.routers.merchant-tenant.priority=4500"
       - "traefik.http.routers.merchant-tenant.entrypoints=websecure"
       - "traefik.http.routers.merchant-tenant.tls.certresolver=letsencrypt"
@@ -281,6 +293,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      JWT_SECRET: ${JWT_SECRET:-}
       JWT_SECRET_FILE: /run/secrets/jwt_secret
     networks:
       - apex-public
@@ -297,6 +310,7 @@ services:
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
+      - "traefik.docker.network=ops_apex-public"
     healthcheck:
       test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3001').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
@@ -325,6 +339,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      JWT_SECRET: ${JWT_SECRET:-}
       INTERNAL_API_URL: http://api:3000/api
       # S1: Secrets for SSR/Client-side resolution
       PORT: 3002
@@ -420,9 +435,11 @@ services:
       retries: 3
     networks:
       - apex-data
+      - apex-public
       - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=ops_apex-public"
       - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
       - "traefik.http.routers.mailpit.priority=5000"
       - "traefik.http.routers.mailpit.entrypoints=websecure"
@@ -777,6 +794,7 @@ services:
       - "traefik.http.routers.adminer.service=apex-adminer"
       - "traefik.http.routers.adminer.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker"
       - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
+      - "traefik.docker.network=ops_apex-public"
     deploy:
       resources:
         limits:

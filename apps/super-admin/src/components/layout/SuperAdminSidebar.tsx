@@ -7,19 +7,19 @@ import {
     ShieldCheck,
     Users,
     Settings,
-    LayoutGrid,
-    Globe,
     Server,
-    Database
+    Database,
+    LayoutDashboard, // Added
+    Box // Added
 } from 'lucide-react';
 
-const navigation = [
-    { name: 'System Status', href: '/dashboard', icon: Activity },
-    { name: 'Tenants', href: '/dashboard/tenants', icon: Globe },
-    { name: 'Blueprints', href: '/dashboard/blueprints', icon: LayoutGrid },
-    { name: 'Infrastructure', href: '/dashboard/infra', icon: Server },
-    { name: 'Security Audit', href: '/dashboard/security', icon: ShieldCheck },
-    { name: 'Global Settings', href: '/dashboard/settings', icon: Settings },
+const navItems = [
+    { icon: LayoutDashboard, label: 'Overview', href: '/dashboard' },
+    { icon: Users, label: 'Tenants', href: '/dashboard/tenants' },
+    { icon: Box, label: 'Blueprints', href: '/dashboard/blueprints' },
+    { icon: Server, label: 'Infrastructure', href: '/dashboard/infra' },
+    { icon: ShieldCheck, label: 'Security', href: '/dashboard/security' },
+    { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 
 export function SuperAdminSidebar() {
@@ -43,11 +43,11 @@ export function SuperAdminSidebar() {
 
             <nav className="flex-1 px-4 space-y-1">
                 <div className="px-4 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-widest">Management</div>
-                {navigation.map((item) => {
+                {navItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
                     return (
                         <Link
-                            key={item.name}
+                            key={item.label}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-300 ${isActive
                                 ? 'bg-white/10 text-white shadow-xl backdrop-blur-md border border-white/10'
@@ -55,7 +55,7 @@ export function SuperAdminSidebar() {
                                 }`}
                         >
                             <item.icon className={`w-5 h-5 transition-colors ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
-                            {item.name}
+                            {item.label}
                         </Link>
                     );
                 })}
