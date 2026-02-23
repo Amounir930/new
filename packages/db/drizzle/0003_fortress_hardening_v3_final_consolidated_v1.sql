@@ -3,6 +3,10 @@
 -- Security-hardened + Idempotent (all statements safe to re-run)
 -- ============================================================
 
+-- ─── 0. EXTENSIONS ──────────────────────────────────────────
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";--> statement-breakpoint
+CREATE EXTENSION IF NOT EXISTS "vector";--> statement-breakpoint
+
 -- ─── 1. ENUM TYPES ──────────────────────────────────────────
 DO $$ BEGIN CREATE TYPE "public"."blueprint_status" AS ENUM('active', 'paused');
 EXCEPTION WHEN duplicate_object THEN null; END $$;--> statement-breakpoint
@@ -120,6 +124,17 @@ EXCEPTION WHEN duplicate_object THEN null; END $$;--> statement-breakpoint
 DO $$ BEGIN
   CREATE POLICY "banners_tenant_isolation" ON "banners" AS RESTRICTIVE FOR ALL TO public
   USING (tenant_id IS NULL OR tenant_id::text = current_setting('app.current_tenant_id', true));
+EXCEPTION WHEN duplicate_object THEN null; END $$;--> statement-breakpoint
+
+-- import_errors: tenant can only see errors linked to their own import jobs
+DO $$ BEGIN
+  CREATE POLICY "import_errors_tenant_isolation" ON "import_errors" AS RESTRICTIVE FOR ALL TO public
+  USING (
+    job_id IN (
+      SELECT id FROM import_jobs
+      WHERE tenant_id::text = current_setting('app.current_tenant_id', true)
+    )
+  );
 EXCEPTION WHEN duplicate_object THEN null; END $$;--> statement-breakpoint
 
 -- ─── 5. ALTER COLUMNS ────────────────────────────────────────
