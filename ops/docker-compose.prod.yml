@@ -254,7 +254,7 @@ services:
       - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.routers.merchant-tenant.service=apex-merchant-admin"
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
+      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3001').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -297,7 +297,7 @@ services:
       - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
+      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3001').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -346,7 +346,7 @@ services:
       - "traefik.http.routers.store-main.middlewares=apex-store-csp@docker,apex-global-ratelimit@docker"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
     healthcheck:
-      test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:3002').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))\""]
+      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3002').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -715,6 +715,33 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ═══════════════════════════════════════════════════════════════
+  # Database Explorer (Adminer) - Internal Access Only
+  # ═══════════════════════════════════════════════════════════════
+  adminer:
+    image: adminer:latest
+    container_name: apex-adminer
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    networks:
+      - apex-data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
+      - "traefik.http.routers.adminer.priority=5000"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.adminer.service=apex-adminer"
+      - "traefik.http.routers.adminer.middlewares=apex-internal-allowlist@docker,apex-basic-auth@docker"
+      - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
     deploy:
       resources:
         limits:
