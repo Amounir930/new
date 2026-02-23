@@ -100,7 +100,7 @@ export const EnvSchema = z.object({
   // Application Settings
   NODE_ENV: z.enum(['development', 'production', 'test']),
 
-  PORT: z.string().default('3000'),
+  PORT: z.coerce.number().default(3000),
 
   // Database Docker/Seed Context
   POSTGRES_USER: z.string().optional(),
@@ -112,7 +112,8 @@ export const EnvSchema = z.object({
 
   // Security Secrets (S7)
   API_KEY_SECRET: z.string().optional(),
-  BLIND_INDEX_PEPPER: z.string().min(1, 'S1 Violation: BLIND_INDEX_PEPPER is required'),
+  BLIND_INDEX_PEPPER: z.string().min(32, 'S1 Violation: PEPPER must be at least 32 chars'),
+  INTERNAL_API_SECRET: z.string().min(32, 'S1 Violation: INTERNAL_API_SECRET must be at least 32 chars'),
 
   // MinIO Root Credentials
   MINIO_ROOT_USER: z.string().optional(),
@@ -151,6 +152,10 @@ export const EnvSchema = z.object({
   // AI & Vector Search (BR-03-SEC)
   PGVECTOR_DIMENSION: z.string().default('1536'),
   OPENAI_API_KEY: z.string().optional(),
+
+  // Root Domain Configuration (S2)
+  APP_DOMAIN: z.string().default('60sec.shop'),
+  APP_ROOT_DOMAIN: z.string().default('60sec.shop'),
 });
 
 export type EnvConfig = z.infer<typeof EnvSchema>;

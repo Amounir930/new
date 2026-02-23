@@ -22,15 +22,46 @@ interface ProvisionOptions {
 export async function main(args: string[] = process.argv.slice(2)) {
   const options = parseArgs(args);
 
-  // 🛡️ S1/S5: Securely acquire password if not in quiet mode
+  // 🛡️ S1/S10: Securely acquire password with masking (Prevent shoulder-surfing/history leaks)
   if (!options.password && !options.quiet) {
     const rl = createInterface({
       input: process.stdin,
       output: process.stdout,
     });
-    // Note: Standard readline doesn't hide input easily without extra deps,
-    // but this avoids the ps aux/bash_history exposure of --password
-    options.password = await rl.question('Enter admin password: ');
+
+    process.stdout.write('Enter admin password: ');
+
+    // Manual masking implementation using RawMode (S10)
+    options.password = '';
+    const stdin = process.stdin;
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding('utf-8');
+
+    await new Promise<void>((resolve) => {
+      const onData = (c: string) => {
+        if (c === '\n' || c === '\r' || c === '\u0004') {
+          stdin.setRawMode(false);
+          stdin.pause();
+          stdin.removeListener('data', onData);
+          process.stdout.write('\n');
+          resolve();
+          return;
+        }
+        if (c === '\u0003') process.exit(); // Ctrl+C
+        if (c === '\u007f' || c === '\b') { // Backspace
+          if (options.password!.length > 0) {
+            options.password = options.password!.slice(0, -1);
+            process.stdout.write('\b \b');
+          }
+        } else {
+          options.password! += c;
+          process.stdout.write('*');
+        }
+      };
+      stdin.on('data', onData);
+    });
+
     rl.close();
   }
 

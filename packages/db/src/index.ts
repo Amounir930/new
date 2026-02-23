@@ -41,6 +41,7 @@ export * from './db.module';
 export * from './schema/index';
 export * from './services/index';
 export * from './tenant-registry.service';
+export * from './context';
 
 import { publicDb, publicPool } from './connection.js';
 export { publicDb, publicPool };

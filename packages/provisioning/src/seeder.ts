@@ -23,6 +23,7 @@ export interface SeedOptions {
   adminEmail: string;
   storeName: string;
   plan?: 'free' | 'basic' | 'pro' | 'enterprise';
+  password?: string; // S7: Hashed password for admin user
   nicheType?: string; // S2.5: Industry classification
   uiConfig?: Record<string, any>; // S2.5: SDUI/Theme configuration
   blueprint?: any; // S3: Custom blueprint payload
@@ -63,6 +64,7 @@ export async function seedTenantData(
           schema: schemaName,
           plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
           adminEmail: options.adminEmail,
+          password: options.password,
           storeId: storeId,
           nicheType: config.nicheType,
           uiConfig: config.uiConfig,

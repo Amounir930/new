@@ -18,6 +18,8 @@ export interface TenantContext {
   readonly createdAt: Date;
   readonly schemaName: string;
   readonly isActive: boolean;
+  readonly isSuspended: boolean; // S15 FIX 19A: Steel Control flag (enforced by Guards, not Middleware)
+  readonly executor?: any; // Drizzle executor/client for stickiness (S2)
 }
 
 /**
@@ -36,9 +38,23 @@ export function runWithTenantContext<T>(
   context: TenantContext,
   callback: () => T | Promise<T>
 ): T | Promise<T> {
-  // 🔒 S2 Enforcement: Ensure context is immutable at runtime
-  Object.freeze(context);
-  return tenantStorage.run(context, callback);
+  // S2 FIX 24A: Fortress-Grade Immutability (The Proxy Shield)
+  // Destructive Object.freeze (deleted previously) breaks teardown lifecycle (Fix 18B).
+  // A read-only Proxy allows the middleware to mutate isActive/executor internally,
+  // while the application gets a strictly immutable view.
+  const readonlyView = new Proxy(context, {
+    set: () => {
+      throw new Error('S2 VIOLATION: TenantContext is immutable at runtime.');
+    },
+    defineProperty: () => {
+      throw new Error('S2 VIOLATION: TenantContext is immutable at runtime.');
+    },
+    deleteProperty: () => {
+      throw new Error('S2 VIOLATION: TenantContext is immutable at runtime.');
+    }
+  });
+
+  return tenantStorage.run(readonlyView, callback);
 }
 
 /**

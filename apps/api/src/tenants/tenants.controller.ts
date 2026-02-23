@@ -14,6 +14,7 @@ import {
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
+import { SecurityService } from '@apex/middleware';
 
 const UpdateTenantSchema = z.object({
   plan: z.string().optional(),
@@ -31,6 +32,7 @@ const UpdateFeatureSchema = z.object({
 export class TenantsController {
   constructor(
     private readonly tenantRegistry: TenantRegistryService,
+    private readonly security: SecurityService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
   ) { }
@@ -70,6 +72,12 @@ export class TenantsController {
     @Param('key') key: string,
     @Body(new ZodValidationPipe(UpdateFeatureSchema)) body: { isEnabled: boolean }
   ) {
+    // S3: Validate feature key against known master list
+    const MASTER_FEATURES = ['analytics', 'custom-domains', 'api-access', 'bulk-import', 'advanced-seo'];
+    if (!MASTER_FEATURES.includes(key)) {
+      throw new Error(`Invalid feature key: ${key}`);
+    }
+
     const { governanceService } = await import('@apex/db');
     return governanceService.updateTenantFeatureGate(id, key, body.isEnabled);
   }
@@ -87,6 +95,12 @@ export class TenantsController {
     }
   ) {
     const updated = await this.tenantRegistry.update(id, body);
+
+    // S15: Steel Control Sync
+    // If status changed, update the global Redis lock for instant enforcement
+    if (body.status) {
+      await this.security.setTenantLock(updated.subdomain, body.status === 'suspended');
+    }
 
     // S21: If plan or niche changed, we might want to suggest a re-sync or
     // automate it. For now, we return the updated tenant.

@@ -1,5 +1,3 @@
-import { headers } from 'next/headers';
-
 import { config } from '../config';
 
 /**
@@ -14,18 +12,17 @@ const PUBLIC_API_URL = config.publicApiUrl;
 
 export const API_BASE = IS_SERVER ? INTERNAL_API_URL : PUBLIC_API_URL;
 
+/**
+ * S12 FIX 11C: Refactored to accept tenantId as an argument.
+ * Calling headers() inside this function forces the entire page into 'force-dynamic',
+ * killing ISR (revalidate). Explicitly passing the tenantId preserves ISR.
+ */
 export async function fetchStorefront(
   endpoint: string,
+  tenantId: string = 'public',
   options: RequestInit = {}
 ) {
   const url = `${API_BASE}${endpoint}`;
-
-  // Extract tenant from headers (Injected by middleware.ts)
-  let tenantId = 'public';
-  if (IS_SERVER) {
-    const headerList = await headers();
-    tenantId = headerList.get('x-tenant-id') || 'public';
-  }
 
   try {
     const res = await fetch(url, {
@@ -40,12 +37,11 @@ export async function fetchStorefront(
     });
 
     if (!res.ok) {
-      const errorMsg = `API Error [${res.status}]: ${url} | Tenant: ${tenantId}`;
+      // S5 Security: Mask internal URL to prevent infrastructure disclosure
+      const errorMsg = `API Error [${res.status}] | Tenant: ${tenantId}`;
       console.error(errorMsg);
 
-      // S5: Error Filtering & S4: Audit logging on frontend (conceptual)
       if (res.status >= 500) {
-        // Critical error - log to GlitchTip/Sentry in real app
         return { error: 'INTERNAL_SERVER_ERROR', status: res.status };
       }
 
@@ -63,19 +59,26 @@ export async function fetchStorefront(
   }
 }
 
-export async function getHomeData() {
-  return fetchStorefront('/storefront/home', {
+export async function getHomeData(tenantId: string) {
+  return fetchStorefront('/storefront/home', tenantId, {
     next: { revalidate: 300 }, // S12: ISR 5 mins
   });
 }
 
-export async function getTenantConfig() {
-  return fetchStorefront('/storefront/config', {
+export async function getTenantConfig(tenantId: string) {
+  return fetchStorefront('/storefront/config', tenantId, {
     next: { revalidate: 3600 }, // Cache for 1 hour
   });
 }
 
+export async function getStoreBootstrap(tenantId: string) {
+  return fetchStorefront('/storefront/bootstrap', tenantId, {
+    next: { revalidate: 60 }, // S12: Aggregate revalidation
+  });
+}
+
 export async function getProducts(
+  tenantId: string,
   params: {
     featured?: boolean;
     category?: string;
@@ -84,13 +87,13 @@ export async function getProducts(
   } = {}
 ) {
   const query = new URLSearchParams(params as any).toString();
-  return fetchStorefront(`/storefront/products?${query}`, {
+  return fetchStorefront(`/storefront/products?${query}`, tenantId, {
     next: { revalidate: 60 },
   });
 }
 
-export async function getProductBySlug(slug: string) {
-  return fetchStorefront(`/storefront/products/${slug}`, {
+export async function getProductBySlug(tenantId: string, slug: string) {
+  return fetchStorefront(`/storefront/products/${slug}`, tenantId, {
     next: { revalidate: 60 },
   });
 }

@@ -216,18 +216,21 @@ services:
         order: start-first
 
   # ═══════════════════════════════════════════════════════════════
-  # Admin UI (Super Admin + Merchant Panel)
+  # Merchant Admin Panel
   # Tier: apex-public (DMZ)
   # ═══════════════════════════════════════════════════════════════
-  admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/admin:latest
+  merchant-admin:
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:latest
     build:
       context: ..
-      dockerfile: apps/admin/Dockerfile
+      dockerfile: apps/merchant-admin/Dockerfile
     restart: always
+    secrets:
+      - jwt_secret
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
     networks:
       - apex-public
     security_opt:
@@ -236,20 +239,63 @@ services:
       - ALL
     labels:
       - "traefik.enable=true"
-      # Super Admin & Merchant Admin subdomains
-      - "traefik.http.routers.admin.rule=Host(`super-admin.60sec.shop`) || Host(`admin.60sec.shop`)"
-      - "traefik.http.routers.admin.priority=4000"
-      - "traefik.http.routers.admin.entrypoints=websecure"
-      - "traefik.http.routers.admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
-      - "traefik.http.services.apex-admin.loadbalancer.server.port=3001"
+      # Merchant Admin portal
+      - "traefik.http.routers.merchant-admin.rule=Host(`admin.60sec.shop`)"
+      - "traefik.http.routers.merchant-admin.priority=4000"
+      - "traefik.http.routers.merchant-admin.entrypoints=websecure"
+      - "traefik.http.routers.merchant-admin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.merchant-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.services.apex-merchant-admin.loadbalancer.server.port=3001"
       # Merchant Dashboard paths on tenant subdomains
-      - "traefik.http.routers.admin-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/products`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
-      - "traefik.http.routers.admin-tenant.priority=4500"
-      - "traefik.http.routers.admin-tenant.entrypoints=websecure"
-      - "traefik.http.routers.admin-tenant.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.admin-tenant.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
-      - "traefik.http.routers.admin-tenant.service=apex-admin"
+      - "traefik.http.routers.merchant-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/products`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
+      - "traefik.http.routers.merchant-tenant.priority=4500"
+      - "traefik.http.routers.merchant-tenant.entrypoints=websecure"
+      - "traefik.http.routers.merchant-tenant.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.routers.merchant-tenant.service=apex-merchant-admin"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "0.5"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Super Admin Panel (System Governance)
+  # Tier: apex-public (DMZ)
+  # ═══════════════════════════════════════════════════════════════
+  super-admin:
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
+    build:
+      context: ..
+      dockerfile: apps/super-admin/Dockerfile
+    restart: always
+    secrets:
+      - jwt_secret
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+    networks:
+      - apex-public
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    labels:
+      - "traefik.enable=true"
+      # System Governance portal
+      - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
+      - "traefik.http.routers.super-admin.priority=5000"
+      - "traefik.http.routers.super-admin.entrypoints=websecure"
+      - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 30s

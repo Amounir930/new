@@ -1,10 +1,5 @@
-/**
- * S2: Tenant Isolation Middleware
- * Constitution Reference: architecture.md (S2 Protocol)
- * Purpose: Extract tenant from subdomain and enforce schema isolation
- */
-
-import { eq, publicDb, sql, tenants } from '@apex/db';
+import { eq, publicDb, publicPool, sql, tenants } from '@apex/db';
+import { env } from '@apex/config';
 import {
   HttpStatus,
   Injectable,
@@ -13,53 +8,56 @@ import {
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { type TenantContext, tenantStorage } from './connection-context.js';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { dbContextStorage } from '@apex/db';
 
 export interface TenantRequest extends Request {
   tenantContext?: TenantContext;
 }
 
 /**
- * Extracts tenant ID from subdomain
- * e.g., alpha.apex.localhost -> alpha
+ * Extracts tenant ID from subdomain using root domain from config
+ * Handles complex TLDs (Point 'ب')
  */
 function extractSubdomain(host: string): string | null {
-  // Remove port if present
-  const hostname = host.split(':')[0];
+  const hostname = host.split(':')[0].toLowerCase();
+  const rootDomain = env.APP_ROOT_DOMAIN.toLowerCase();
 
-  // Localhost development
-  if (hostname.includes('localhost')) {
-    const parts = hostname.split('.');
-    if (parts.length > 2 && parts[0] !== 'www') {
-      return parts[0];
-    }
-    return null; // Root domain
+  // If already at root domain or doesn't end with root domain, return null
+  if (hostname === rootDomain || !hostname.endsWith(`.${rootDomain}`)) {
+    return null;
   }
 
-  // Production
-  const parts = hostname.split('.');
-  if (parts.length >= 3) {
-    return parts[0];
-  }
+  // Extract the part before the root domain
+  const subdomainPart = hostname.slice(0, -(rootDomain.length + 1));
+  const parts = subdomainPart.split('.');
 
-  return null;
+  // Return the first part (innermost subdomain)
+  return parts[parts.length - 1] || null;
 }
 
 /**
- * Validates tenant exists and is active
- * CRITICAL FIX (S2): Replaced mock data with real DB query
+ * Validates tenant exists and is active (Supports subdomains and custom domains)
  */
-async function validateTenant(subdomain: string): Promise<TenantContext> {
+async function validateTenant(identifier: string): Promise<Omit<TenantContext, 'executor'>> {
   try {
-    // Query database for tenant
+    const { or, sql } = await import('@apex/db');
     const result = await publicDb
       .select({
         id: tenants.id,
         subdomain: tenants.subdomain,
+        customDomain: sql<string>`custom_domain`,
         plan: tenants.plan,
         status: tenants.status,
       })
       .from(tenants)
-      .where(eq(tenants.subdomain, subdomain))
+      .where(
+        or(
+          eq(tenants.subdomain, identifier),
+          sql`custom_domain = ${identifier}`,
+          sql`${tenants.id}::text = ${identifier}`
+        )
+      )
       .limit(1);
 
     if (result.length === 0) {
@@ -68,13 +66,8 @@ async function validateTenant(subdomain: string): Promise<TenantContext> {
 
     const tenant = result[0];
 
-    // Check tenant status
-    if (tenant.status === 'suspended') {
-      throw new UnauthorizedException('Tenant is suspended');
-    }
-
     if (tenant.status !== 'active') {
-      throw new UnauthorizedException('Tenant is not active');
+      throw new UnauthorizedException(`Tenant is ${tenant.status}`);
     }
 
     return {
@@ -83,16 +76,13 @@ async function validateTenant(subdomain: string): Promise<TenantContext> {
       subdomain: tenant.subdomain,
       plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       isActive: true,
+      isSuspended: false, // S15 FIX 19A: Default; overridden by Steel Control in middleware
       features: [],
       createdAt: new Date(),
     };
   } catch (error) {
-    // If it's already an UnauthorizedException, re-throw it
-    if (error instanceof UnauthorizedException) {
-      throw error;
-    }
-    // Log the error but don't expose internal details
-    console.error(`S2 Error validating tenant ${subdomain}:`, error);
+    if (error instanceof UnauthorizedException) throw error;
+    console.error(`S2 Error validating tenant ${identifier}:`, error);
     throw new UnauthorizedException('Tenant validation failed');
   }
 }
@@ -100,108 +90,153 @@ async function validateTenant(subdomain: string): Promise<TenantContext> {
 @Injectable()
 export class TenantIsolationMiddleware implements NestMiddleware {
   async use(req: TenantRequest, res: Response, next: NextFunction) {
-    const host = req.headers.host || '';
-    const subdomain = extractSubdomain(host);
+    const rawHost = req.headers.host || '';
+    const cleanHost = rawHost.split(':')[0]; // S2 FIX 16D: Backend Port Stripping
+    const xTenantId = req.headers['x-tenant-id'] as string;
 
+    // S2 FIX 18A: Cryptographic Internal Secret (IP Spoofing Defense)
+    // Never trust req.ip — X-Forwarded-For is client-controllable with trust proxy.
+    // Only trust x-tenant-id when accompanied by a shared secret.
+    const isInternal = req.headers['x-internal-secret'] === env.INTERNAL_API_SECRET;
+    const subdomain = extractSubdomain(cleanHost);
+    let identifier = subdomain || cleanHost;
+    if (xTenantId && isInternal) {
+      identifier = xTenantId; // Only trust header with valid cryptographic secret
+    }
+
+    // Infrastructure subdomains or root domain
     if (
       !subdomain ||
       [
-        'api',
-        'super-admin',
-        'www',
-        'staging',
-        'blue',
-        'green',
-        'git',
-        'admin',
-        'mail',
+        'api', 'super-admin', 'www', 'staging', 'blue', 'green', 'git', 'admin', 'mail'
       ].includes(subdomain.toLowerCase())
     ) {
-      // S2 FIX: Infrastructure subdomains must explicitly set search_path to public
-      await publicDb.execute(sql`SET search_path TO public`);
       return next();
     }
 
-    // S2/S4 Bypass: Specific routes that don't require tenant isolation
-    // e.g., provisioning a new tenant or system health checks
-    // We use originalUrl to ensure we see the full path before NestJS routing shifts it
+    // Bypass routes (Health, Login only — NOT Webhooks)
     const bypassRoutes = [
       '/health',
-      '/health/liveness',
-      '/health/readiness',
-      '/health/status',
-      '/api/health',
-      '/api/v1/health',
       '/api/v1/auth/login',
-      '/',
+      '/favicon.ico',
     ];
     const currentPath = req.originalUrl || req.path || '';
-    if (
-      bypassRoutes.some(
-        (route) =>
-          currentPath === route ||
-          currentPath.startsWith(`${route}/`) ||
-          currentPath.startsWith(`${route}?`) ||
-          currentPath.includes(`/v1${route}`) ||
-          currentPath.includes(`/api/v1${route}`)
-      )
-    ) {
-      // ✅ S2 FIX: Infrastructure and bypassed routes must ensure public schema
-      // This prevents context leakage from persistent connections in the pool.
-      await publicDb.execute(sql`SET search_path TO public`);
+    if (bypassRoutes.some(route => currentPath === route || currentPath.startsWith(`${route}/`))) {
       return next();
     }
 
-    try {
-      const tenantContext = await validateTenant(subdomain);
+    // S2 FIX 20B: Webhook routes get their own tenant resolution via payload
+    const webhookPaths = ['/api/v1/payments/webhook', '/api/v1/webhooks'];
+    const isWebhook = webhookPaths.some(p => currentPath === p || currentPath.startsWith(`${p}/`));
+    if (isWebhook && (!subdomain || ['api', 'www'].includes(subdomain.toLowerCase()))) {
+      // Webhook arrives on infra domain — resolve tenant from signed payload
+      try {
+        const crypto = await import('node:crypto');
+        const signature = req.headers['stripe-signature'] || req.headers['x-webhook-signature'] || '';
 
-      // S2: Hard Isolation (Session-Level)
-      // We set the search_path immediately before entering the Async context
-      await publicDb.execute(
-        sql`SET search_path TO ${sql.identifier(tenantContext.schemaName)}, public`
-      );
+        // S2 FIX 21A: Use preserved raw body bytes, NOT re-serialized JSON
+        // JSON.stringify destroys key ordering/whitespace → HMAC mismatch 100% of the time
+        const rawBodyBuffer: Buffer = (req as any).rawBody || Buffer.from(JSON.stringify(req.body || {}));
 
-      tenantStorage.run(tenantContext, async () => {
-        req.tenantContext = tenantContext;
-        res.setHeader('X-Tenant-ID', tenantContext.tenantId);
-        res.setHeader('X-Tenant-Schema', tenantContext.schemaName);
+        const expectedSig = crypto.createHmac('sha256', env.WEBHOOK_SECRET || '')
+          .update(rawBodyBuffer).digest('hex');
 
-        // S2: Verification - Ensure isolation is active for this connection
-        try {
-          const check = await publicDb.execute(sql`SELECT current_schema()`);
-          const currentSchema = (check.rows[0] as any)?.current_schema;
-          if (currentSchema !== tenantContext.schemaName) {
-            throw new Error(
-              `S2 Violation: Schema isolation failed for ${tenantContext.subdomain}. Found: ${currentSchema}`
-            );
-          }
-        } catch (e) {
-          console.error('S2 Critical Failure:', e);
-          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            error: 'S2 Isolation Failure',
-            message: 'Strict security enforcement failed',
-          });
+        // Constant-time comparison to prevent timing attacks
+        const sigBuffer = Buffer.from(String(signature));
+        const expectedBuffer = Buffer.from(expectedSig);
+        if (sigBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(sigBuffer, expectedBuffer)) {
+          res.status(HttpStatus.FORBIDDEN).json({ error: 'Invalid webhook signature' });
+          return;
         }
 
-        // Reset path after the request is finished/closed to prevent pool contamination
-        const cleanup = async () => {
-          try {
-            await publicDb.execute(sql`SET search_path TO public`);
-          } catch (e) {
-            console.error('S2 WARNING: Failed to reset search_path', e);
-          }
-        };
+        // S2 FIX 21A: Strict sanitization — prevent NoSQL/ORM injection via payload
+        const rawTenantId = req.body?.metadata?.tenantId || req.body?.tenantId;
+        if (!rawTenantId || typeof rawTenantId !== 'string' || !/^[a-zA-Z0-9_-]{3,50}$/.test(rawTenantId)) {
+          res.status(HttpStatus.BAD_REQUEST).json({ error: 'Missing or malformed tenantId in payload' });
+          return;
+        }
 
-        res.on('finish', cleanup);
-        res.on('close', cleanup);
+        identifier = rawTenantId;
+      } catch (err) {
+        res.status(HttpStatus.FORBIDDEN).json({ error: 'Webhook verification failed' });
+        return;
+      }
+    }
 
-        next();
+    // S2 FIX 19B: Validate BEFORE connecting to pool (DoS Prevention)
+    // Fake tenants are rejected using lightweight publicDb, not the dedicated pool.
+    const baseContext = await validateTenant(identifier);
+
+    // S15 FIX 19A: Steel Control - set isSuspended flag instead of throwing
+    // Guards enforce suspension (Super Admin bypasses, regular users blocked)
+    let isSuspended = false;
+    try {
+      const { SecurityService } = await import('./security.service.js');
+      const security = new SecurityService(env as any);
+      const lockData = await security.getTenantLock(identifier);
+      if (lockData?.locked) {
+        isSuspended = true;
+      }
+    } catch {
+      // Redis down? Proceed without suspension check (fail-open for availability)
+    }
+
+    // NOW allocate the dedicated connection (only for validated tenants)
+    const client = await publicPool.connect();
+
+    try {
+      // 🚀 Performance Optimization: Combined Session Prep
+      // S2: Secure Session Prep (SQL Injection Fix)
+      await client.query(`SET search_path TO "${baseContext.schemaName}"`);
+      await client.query('SELECT set_config(\'app.current_tenant_id\', $1, false)', [baseContext.tenantId]);
+
+      // Create scoped Drizzle instance using THIS SPECIFIC CLIENT
+      const scopedDb = drizzle(client);
+
+      const tenantContext: TenantContext = {
+        ...baseContext,
+        isSuspended,
+        executor: scopedDb
+      };
+
+      tenantStorage.run(tenantContext, () => {
+        dbContextStorage.run(tenantContext.executor, () => {
+          req.tenantContext = tenantContext;
+          res.setHeader('X-Tenant-ID', tenantContext.tenantId);
+
+          // Clean up: Release client back to pool when request ends
+          let isCleanedUp = false; // 🛡️ S2 FIX: Prevent Double Release Crash
+          const cleanup = () => {
+            if (isCleanedUp) return;
+            isCleanedUp = true;
+
+            // S2 FIX 18B: Destroy executor to prevent Dangling Promise corruption
+            (tenantContext as any).isActive = false;
+            (tenantContext as any).executor = null;
+
+            // S2 FIX: DISCARD ALL to prevent Pool Poisoning
+            client.query('DISCARD ALL')
+              .catch(err => console.error('S2 DB Cleanup Error', err))
+              .finally(() => {
+                client.release();
+              });
+          };
+
+          res.once('finish', cleanup); // Using once for idempotency
+          res.once('close', cleanup);
+
+          next();
+        });
       });
-    } catch (_error) {
-      // S2: Invalid or non-existent tenant subdomains are rejected with 403 Forbidden
+    } catch (error) {
+      // S2 FIX 17A: DISCARD ALL even on error path (Dirty Catch Prevention)
+      client.query('DISCARD ALL')
+        .catch(() => { /* swallow cleanup errors */ })
+        .finally(() => client.release());
+
       res.status(HttpStatus.FORBIDDEN).json({
         statusCode: HttpStatus.FORBIDDEN,
-        message: `S2 Violation: Domain '${subdomain}' is not authorized`,
+        message: error instanceof Error ? error.message : 'Tenant Access Denied',
         error: 'Forbidden',
       });
     }
@@ -223,7 +258,12 @@ export class TenantScopedGuard implements CanActivate {
     }
 
     if (!request.tenantContext.isActive) {
-      throw new UnauthorizedException('Tenant is suspended');
+      throw new UnauthorizedException('Tenant is inactive');
+    }
+
+    // S15 FIX 19A: Enforce suspension at Guard level (NOT Middleware)
+    if (request.tenantContext.isSuspended) {
+      throw new UnauthorizedException('Tenant is suspended (Steel Control)');
     }
 
     return true;

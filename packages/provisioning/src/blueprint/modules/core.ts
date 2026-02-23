@@ -52,11 +52,19 @@ export class CoreModule implements SeederModule {
     const encryptedEmail = JSON.stringify(encrypt(ctx.adminEmail, masterKey));
     const emailHash = hashSensitiveData(ctx.adminEmail, pepper!);
 
-    await ctx.db
+    // S7/S15: Secure Merchant Password Hashing (12 rounds)
+    let hashedPassword = null;
+    if (ctx.password) {
+      const bcrypt = await import('bcrypt');
+      hashedPassword = await bcrypt.hash(ctx.password, 12);
+    }
+
+    await (ctx.db as any)
       .insert(users)
       .values({
         email: encryptedEmail,
         emailHash: emailHash,
+        password: hashedPassword,
         role: 'admin',
         status: 'active',
       })

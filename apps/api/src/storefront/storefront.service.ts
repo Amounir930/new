@@ -2,6 +2,7 @@ import {
   and,
   banners,
   db,
+  dbContextStorage,
   desc,
   eq,
   gte,
@@ -29,8 +30,16 @@ export class StorefrontService {
     private readonly crypto: EncryptionService
   ) { }
 
-  async getTenantConfig(tenantId?: string) {
-    const cacheKey = `storefront:config:${tenantId || 'default'}`;
+  // S2 FIX 19C: Get pre-configured DB executor from middleware (no second connection)
+  private getDb() {
+    const db = dbContextStorage.getStore();
+    if (!db) throw new Error('S2 CRITICAL: Database context missing! Request not routed through TenantIsolationMiddleware.');
+    return db;
+  }
+
+  async getTenantConfig(tenantId: string) {
+    const db = this.getDb();
+    const cacheKey = `storefront:config:${tenantId}`;
     const client = await this.redisStore.getClient();
 
     if (client) {
@@ -41,7 +50,7 @@ export class StorefrontService {
     // Fetch config from tenant_config table
     const configEntries = await db.select().from(tenantConfig);
     const config = configEntries.reduce(
-      (acc, curr) => {
+      (acc: Record<string, any>, curr: any) => {
         acc[curr.key] = curr.value;
         return acc;
       },
@@ -71,12 +80,13 @@ export class StorefrontService {
     return result;
   }
 
-  async getProducts(params: {
+  async getProducts(tenantId: string, params: {
     featured?: boolean;
     category?: string;
     limit?: number;
     sort?: 'newest' | 'price_asc' | 'price_desc';
   }) {
+    const db = this.getDb();
     const conditions = [eq(products.isActive, true)];
 
     if (params.featured) {
@@ -91,11 +101,11 @@ export class StorefrontService {
       .select({
         id: products.id,
         slug: products.slug,
-        name: products.name,
-        price: products.price,
-        compareAtPrice: products.compareAtPrice,
+        name: products.nameEn,
+        price: products.basePrice,
+        compareAtPrice: products.salePrice,
         rating: sql<number>`4.5`,
-        imageUrl: sql<string>`(SELECT url FROM product_images WHERE product_id = ${products.id} AND is_primary = true LIMIT 1)`,
+        imageUrl: products.mainImage,
       })
       .from(products)
       .where(and(...conditions))
@@ -104,15 +114,16 @@ export class StorefrontService {
     if (params.sort === 'newest') {
       query = query.orderBy(desc(products.createdAt));
     } else if (params.sort === 'price_asc') {
-      query = query.orderBy(products.price);
+      query = query.orderBy(products.basePrice);
     } else if (params.sort === 'price_desc') {
-      query = query.orderBy(desc(products.price));
+      query = query.orderBy(desc(products.basePrice));
     }
 
     return query.limit(params.limit || 20);
   }
 
-  async getProductBySlug(slug: string) {
+  async getProductBySlug(tenantId: string, slug: string) {
+    const db = this.getDb();
     const productData = await db
       .select()
       .from(products)
@@ -144,11 +155,11 @@ export class StorefrontService {
     };
   }
 
-  async getHomeData(tenantId?: string) {
-    const cacheKey = `storefront:home:${tenantId || 'default'}`;
+  async getHomeData(tenantId: string) {
+    const db = this.getDb();
+    const cacheKey = `storefront:home:${tenantId}`;
     const client = await this.redisStore.getClient();
 
-    // 1. Try to get from cache (S6/Performance)
     if (client) {
       const cachedData = await client.get(cacheKey);
       if (cachedData) {
@@ -156,15 +167,10 @@ export class StorefrontService {
       }
     }
 
-    // 2. Fetch fresh data with parallel queries (S3/Performance)
-    // BR-01-SEC: Use Materialized View for Best Sellers
     const now = new Date();
 
     const [bestSellers, activeBanners] = await Promise.all([
-      // Best Sellers from Materialized View (Fast)
       db.select().from(mvBestSellers).limit(8),
-
-      // Active Banners (BR-01-SEC logic)
       db
         .select()
         .from(banners)
@@ -172,7 +178,6 @@ export class StorefrontService {
           and(
             eq(banners.active, true),
             eq(banners.position, 'hero'),
-            // Correct Drizzle logical OR
             sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR 
                             (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now}) OR
                             (${banners.startDate} <= ${now} AND ${banners.endDate} IS NULL)`
@@ -191,8 +196,6 @@ export class StorefrontService {
       },
     };
 
-    // 3. Cache results (S6/Performance)
-    // BR-01-SEC: TTL 10 seconds for home page
     if (client) {
       await client.setEx(cacheKey, 10, JSON.stringify(homeData));
     }
@@ -200,17 +203,78 @@ export class StorefrontService {
     return homeData;
   }
 
-  async subscribeToNewsletter(email: string) {
+  // S12 FIX 19C: Aggregated Bootstrap (uses middleware connection, no second pool hit)
+  async getBootstrapData(tenantId: string) {
+    const cacheKey = `storefront:bootstrap:${tenantId}`;
+    const client = await this.redisStore.getClient();
+    if (client) {
+      const cached = await client.get(cacheKey);
+      if (cached) return JSON.parse(cached);
+    }
+
+    const [config, home] = await Promise.all([
+      this.fetchConfigInternal(tenantId),
+      this.fetchHomeInternal(tenantId),
+    ]);
+
+    const result = { config, homeData: home };
+
+    if (client) {
+      await client.setEx(cacheKey, 60, JSON.stringify(result));
+    }
+
+    return result;
+  }
+
+  /** Internal helpers — use middleware-provided DB context */
+  private async fetchConfigInternal(tenantId: string) {
+    const db = this.getDb();
+    const configEntries = await db.select().from(tenantConfig);
+    const config = configEntries.reduce((acc: Record<string, any>, curr: any) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {} as Record<string, any>);
+
+    const heroBanners = await db.select().from(banners)
+      .where(and(eq(banners.active, true), eq(banners.position, 'hero')))
+      .orderBy(desc(banners.priority)).limit(1);
+
+    return {
+      storeName: config.store_name || 'APEX STORE',
+      logoUrl: config.logo_url,
+      primaryColor: config.primary_color || '#000000',
+      heroBanner: heroBanners[0],
+      ...config,
+    };
+  }
+
+  private async fetchHomeInternal(tenantId: string) {
+    const db = this.getDb();
+    const now = new Date();
+    const [bestSellers, activeBanners] = await Promise.all([
+      db.select().from(mvBestSellers).limit(8),
+      db.select().from(banners).where(and(eq(banners.active, true), eq(banners.position, 'hero'),
+        sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now})`
+      )).limit(5).orderBy(desc(banners.priority)),
+    ]);
+    return { banners: activeBanners, bestSellers, meta: { lastUpdated: now.toISOString(), tenantId } };
+  }
+
+  async subscribeToNewsletter(tenantId: string, email: string) {
+    const db = this.getDb();
     // S7: Encrypt PII before storage
     const encryptedEmail = this.crypto.encrypt(email).encrypted;
 
-    return db
-      .insert(newsletterSubscribers)
-      .values({ email: encryptedEmail })
-      .onConflictDoUpdate({
-        target: newsletterSubscribers.email,
-        set: { status: 'active' },
-      })
-      .returning();
+    // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure
+    return db.transaction(async (tx) => {
+      return tx
+        .insert(newsletterSubscribers)
+        .values({ email: encryptedEmail })
+        .onConflictDoUpdate({
+          target: newsletterSubscribers.email,
+          set: { status: 'active' },
+        })
+        .returning();
+    });
   }
 }

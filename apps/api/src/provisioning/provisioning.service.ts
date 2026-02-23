@@ -32,6 +32,7 @@ export interface ProvisioningOptions {
   adminEmail: string;
   storeName: string;
   plan: 'free' | 'basic' | 'pro' | 'enterprise';
+  password?: string; // New: Initial merchant password
   nicheType?: string; // S2.5: Industry classification
   uiConfig?: Record<string, unknown>; // S2.5: SDUI/Theme configuration
   blueprint?: unknown; // S3: Custom blueprint payload
@@ -101,14 +102,15 @@ export class ProvisioningService {
         adminEmail: options.adminEmail,
         storeName: options.storeName,
         plan: options.plan,
+        password: options.password, // S7: Secure merchant password
         nicheType: options.nicheType, // S2.5: Priority niche
         uiConfig: options.uiConfig, // S2.5: Priority UI Config
         blueprint: effectiveBlueprint, // S3: Pass custom blueprint
       });
       steps[3].status = 'done';
 
-      // 4. Reset search_path to public to ensure registerTenant and syncGovernance can see the registry
-      await publicDb.execute(sql`SET search_path TO public`);
+      // S2 FIX 1D: Removed SET search_path on shared pool (was contaminating connections)
+      // registerTenant and syncGovernance use schema-qualified queries via publicDb
 
       // 5. Register in Public Schema (CRITICAL: Must happen before syncGovernance)
       await this.registerTenant(options, seedResult.adminId);
@@ -219,7 +221,7 @@ export class ProvisioningService {
       .from(onboardingBlueprints)
       .where(
         and(
-          eq(onboardingBlueprints.nicheType, options.nicheType || 'retail'),
+          eq(onboardingBlueprints.nicheType, (options.nicheType || 'retail') as any),
           eq(onboardingBlueprints.plan, options.plan)
         )
       )
@@ -339,15 +341,24 @@ export class ProvisioningService {
       }
     }
 
-    // 2. Sync Quotas
+    // 2. Sync Quotas (S3: Normalize & Validate via Zod)
     if (blueprint.quotas) {
+      const { z } = await import('zod');
+      const QuotaSchema = z.object({
+        max_products: z.number().int().min(0).max(1000000).default(0),
+        max_orders: z.number().int().min(0).max(1000000).default(0),
+        max_pages: z.number().int().min(0).max(1000).default(0),
+      }).strip();
+
+      const normalizedQuotas = QuotaSchema.parse(blueprint.quotas);
+
       await publicDb
         .insert(tenantQuotas)
         .values({
           tenantId: tenant.id,
-          maxProducts: blueprint.quotas.max_products || 0,
-          maxOrders: blueprint.quotas.max_orders || 0,
-          maxPages: blueprint.quotas.max_pages || 0,
+          maxProducts: normalizedQuotas.max_products,
+          maxOrders: normalizedQuotas.max_orders,
+          maxPages: normalizedQuotas.max_pages,
         })
         .onConflictDoNothing();
     }

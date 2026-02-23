@@ -36,7 +36,7 @@ export function sanitizeSchemaName(subdomain: string): string {
   const clean = subdomain.toLowerCase().trim();
 
   // Strict S2 Validation: Reject special characters
-  if (!/^[a-z0-9_-]+$/.test(clean)) {
+  if (!/^[a-z][a-z0-9_]{2,49}$/.test(clean)) {
     throw new Error('Invalid subdomain');
   }
 
@@ -68,8 +68,9 @@ export async function withTenantConnection<T>(
   operation: (db: any) => Promise<T>
 ): Promise<T> {
   // 1. Resolve tenant and verify status (via public pool)
+  // S2 FIX: Support ID, subdomain, or custom_domain resolution
   const result = await publicPool.query(
-    'SELECT id, subdomain, status FROM tenants WHERE id::text = $1 OR subdomain = $1 LIMIT 1',
+    'SELECT id, subdomain, status FROM tenants WHERE id::text = $1 OR subdomain = $1 OR custom_domain = $1 LIMIT 1',
     [tenantIdOrSubdomain]
   );
 
@@ -95,8 +96,14 @@ export async function withTenantConnection<T>(
 
   try {
     // 3. Set secure context with connection-scoped search_path
-    // S2: Since we use an isolated Client and destroy it after, SET is safe.
-    await client.query(`SET search_path TO "${schemaName}", public`);
+    // S2 FIX 1A: NO 'public' fallback — tenant schema ONLY
+    await client.query(`SET search_path TO "${schemaName}"`);
+
+    // S2 FIX 1C: Activate RLS policies via session variable
+    await client.query(
+      `SELECT set_config('app.current_tenant_id', $1, true)`,
+      [tenant.id]
+    );
 
     // 4. Double-check verification: Verify we are in the correct schema
     const checkResult = await client.query('SELECT current_schema()');
@@ -133,18 +140,10 @@ export async function withTenantConnection<T>(
  * S2: Handles search_path for schema isolation.
  * Used for one-off operations like seeding and migrations.
  */
-export function createTenantDb(subdomain: string) {
-  const _schemaName = sanitizeSchemaName(subdomain);
-
-  // S2: Create a dedicated client for this operation to ensure isolation
-  // We use a simplified approach here that returns a Drizzle instance
-  // wrapped around a client that has the search_path set.
-
-  const _client = new pkg.Client(poolConfig);
-
-  // Note: This is an async operation but this factory is sync.
-  // In a real production app, we would use a more sophisticated pool manager.
-  // For the fix, we will modify the runner to handle the connection.
-
-  return publicDb; // Fallback for now, will refactor runner instead.
+export function createTenantDb(_subdomain: string): never {
+  // S2 FIX 1B: NEVER silently return publicDb.
+  // Use withTenantConnection() for all tenant-scoped operations.
+  throw new Error(
+    'S2 Violation: createTenantDb is deprecated. Use withTenantConnection() instead.'
+  );
 }

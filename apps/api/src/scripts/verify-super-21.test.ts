@@ -5,16 +5,16 @@
  */
 
 // S1 Bypass for Test Script
-process.env.JWT_SECRET = 'Test_Secret_Key_For_Verification_32_Chars!';
-process.env.ENCRYPTION_MASTER_KEY = 'Super_Secure_Key_Complex_Enough_32_!!';
-process.env.SUPER_ADMIN_EMAIL = 'admin@apex-security.com'; // Valid email format
-process.env.SUPER_ADMIN_PASSWORD = 'StrongPassword123!';
-process.env.DATABASE_URL =
-  'postgresql://mock_user:mock_pass@localhost:5432/mock_db'; // gitleaks:allow
+// S1 Bypass for Test Script (S10: No production secrets in code)
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-32-chars-at-least-!!!'; // gitleaks:allow
+process.env.ENCRYPTION_MASTER_KEY = process.env.ENCRYPTION_MASTER_KEY || 'test-master-key-32-chars-at-least'; // gitleaks:allow
+process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
+process.env.SUPER_ADMIN_PASSWORD = 'test-password';
+process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'; // gitleaks:allow
 process.env.MINIO_ENDPOINT = 'localhost';
 process.env.MINIO_ACCESS_KEY = 'minioadmin';
-process.env.MINIO_SECRET_KEY = 'minioadmin123';
-process.env.NODE_ENV = 'test'; // Force test env to avoid strict production checks sometimes
+process.env.MINIO_SECRET_KEY = 'minioadmin';
+process.env.NODE_ENV = 'test';
 
 import { mock } from 'bun:test';
 

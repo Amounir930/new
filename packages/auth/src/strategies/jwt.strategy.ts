@@ -11,11 +11,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!configService) {
       throw new Error('ConfigService is missing in JwtStrategy constructor');
     }
+    // S1 FIX 3A: JWT_SECRET is MANDATORY. No fallback allowed.
+    const jwtSecret = configService.get('JWT_SECRET');
+    if (!jwtSecret) {
+      throw new Error('S1 Violation: JWT_SECRET environment variable is required. Application cannot start.');
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get('JWT_SECRET') || 'temporary-secret-for-build',
+      secretOrKey: jwtSecret,
     });
   }
 

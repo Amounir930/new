@@ -40,6 +40,7 @@ async function bootstrap() {
 
   const options: NestApplicationOptions = {
     logger: logLevels,
+    bodyParser: false, // S6 FIX 11A: Disable default bodyParser to allow custom limits
   };
 
   const app = await NestFactory.create(AppModule, options);
@@ -52,10 +53,28 @@ async function bootstrap() {
     logger.error('Failed to initialize Audit System', error);
   }
 
-  // S3.3: Payload Size Limit (Prevent DoS/ReDoS)
+  // S6 HOTFIX: Dynamic payload limit (single parser, no double-parse conflicts)
   const bodyParser = await import('body-parser');
-  app.use(bodyParser.json({ limit: '10mb' }));
-  app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
+
+  // S2 FIX 21B: Capture raw body for webhook signature verification
+  const captureRawBody = (req: any, _res: any, buf: Buffer) => {
+    req.rawBody = buf;
+  };
+
+  // S2 FIX 23A: Wrapper Pattern for dynamic limits
+  // body-parser.json() does NOT support functions for 'limit'. 
+  // We must create static parsers and route between them manually.
+  const defaultParser = bodyParser.json({ limit: '100kb', verify: captureRawBody });
+  const importParser = bodyParser.json({ limit: '2mb', verify: captureRawBody });
+
+  app.use((req: any, res: any, next: any) => {
+    if (req.originalUrl?.includes('/api/products/import')) {
+      return importParser(req, res, next);
+    }
+    return defaultParser(req, res, next);
+  });
+
+  app.use(bodyParser.urlencoded({ limit: '100kb', extended: true }));
 
   // S5: Global Exception Filter (Hardened)
   app.useGlobalFilters(
@@ -68,29 +87,16 @@ async function bootstrap() {
   // S3: Global Zod Validation Pipe
   app.useGlobalPipes(new ZodValidationPipe());
 
-  // S8 FIX: Generate CSP Nonce per request
-  app.use((_req: any, res: any, next: any) => {
-    const { randomBytes } = require('node:crypto');
-    // S8 FIX: Increase entropy to 32 bytes (256-bit) and use base64 for CSP compliance
-    res.locals.cspNonce = randomBytes(32).toString('base64');
-    next();
-  });
+  // S8 FIX 6A: CSP Nonce REMOVED from API.
+  // This API returns JSON only — browsers don't execute scripts from JSON.
+  // CSP with nonces belongs in the Next.js frontends, not here.
 
-  // S8: Security Headers (Helmet)
-  // CRITICAL FIX (S8): Removed 'unsafe-inline' from scriptSrc
-  // Using strict CSP with nonce generation for inline scripts
-  // biome-ignore format: S8 Security Gate requires robust detection
+  // S8: Security Headers (Helmet) — Simplified for JSON API
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", 'https://cdn.jsdelivr.net', (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`],
-        styleSrc: ["'self'", 'https://cdn.jsdelivr.net', 'https://fonts.googleapis.com', (_req: any, res: any) => `'nonce-${res.locals.cspNonce}'`],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
       },
     },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
@@ -108,7 +114,7 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // Prefix all routes with /api, but exclude the root path and health checks
+  // Prefix all routes with /api, but exclude root, health, and S15 honeypots
   app.setGlobalPrefix('api', {
     exclude: [
       { path: '/', method: 1 }, // GET
@@ -116,6 +122,17 @@ async function bootstrap() {
       { path: '/health/liveness', method: 1 },
       { path: '/health/status', method: 1 },
       { path: 'health/(.*)', method: 1 },
+      // S15 FIX 8A: Honeypots at ROOT so scanners find them
+      { path: '/.env', method: 1 },
+      { path: '/.env', method: 4 }, // POST
+      { path: '/wp-admin', method: 1 },
+      { path: '/wp-admin', method: 4 },
+      { path: '/wp-login.php', method: 1 },
+      { path: '/wp-login.php', method: 4 },
+      { path: '/admin/login', method: 1 },
+      { path: '/admin/login', method: 4 },
+      { path: '/config.php', method: 1 },
+      { path: '/config.php', method: 4 },
     ],
   });
 

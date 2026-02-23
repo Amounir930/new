@@ -1,15 +1,16 @@
 import { ConfigService } from '@apex/config';
 import { Public } from '@apex/auth';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { RedisRateLimitStore } from '@apex/middleware';
 import {
   Controller,
   Get,
-  HttpStatus,
   Logger,
+  ServiceUnavailableException,
   UseGuards,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
-import { createClient } from 'redis';
 
 /**
  * Health Controller
@@ -21,7 +22,10 @@ import { createClient } from 'redis';
 export class HealthController {
   private readonly logger = new Logger(HealthController.name);
 
-  constructor(private readonly config: ConfigService) { }
+  constructor(
+    private readonly config: ConfigService,
+    private readonly redisStore: RedisRateLimitStore, // S2 FIX 22A: Singleton, no per-request TCP churn
+  ) { }
 
   @Get()
   rootCheck() {
@@ -35,30 +39,25 @@ export class HealthController {
 
   @Get('redis')
   async checkRedis() {
-    const redisUrl = this.config.get('REDIS_URL');
-    const client = createClient({ url: redisUrl });
+    // S2 FIX 22A: Reuse singleton Redis connection (no TCP Port Exhaustion)
+    const client = await this.redisStore.getClient();
+    if (!client) {
+      this.logger.error('Redis connectivity failed: client unavailable');
+      throw new ServiceUnavailableException('Redis service unavailable');
+    }
 
     try {
-      await client.connect();
       await client.ping();
-      await client.disconnect();
-
       return {
         status: 'ok',
         service: 'redis',
         message: 'Redis connectivity verified',
       };
     } catch (error) {
-      // 🛡️ S5: Sanitize error message to prevent infrastructure info disclosure
       this.logger.error(
         `Redis connectivity failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
-
-      return {
-        status: 'error',
-        service: 'redis',
-        message: 'Internal server error during connectivity check',
-      };
+      throw new ServiceUnavailableException('Redis service unavailable');
     }
   }
 
@@ -67,8 +66,7 @@ export class HealthController {
     return { status: 'ok' };
   }
 
-  @Get('status')
   checkStatus() {
-    return { status: 'ok', environment: this.config.get('NODE_ENV') };
+    return { status: 'ok' };
   }
 }

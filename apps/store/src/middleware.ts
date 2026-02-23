@@ -2,45 +2,51 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * S2: Tenant Detection Middleware for Storefront
- * Extracts subdomain and injects it as a header for all downstream API requests
+ * S2 HOTFIX: Multi-tenant Middleware with Subdomain Rewrite
+ *
+ * PROBLEM SOLVED: force-dynamic kills ALL caching (DB crushed under load),
+ * but ISR with Host header causes cross-tenant cache poisoning.
+ *
+ * SOLUTION: Rewrite the URL to include the subdomain in the PATH.
+ * e.g. store1.60sec.shop/ → internally routed as /m/store1/
+ * Next.js sees each subdomain as a DIFFERENT page → safe per-tenant ISR caching.
  */
 export function middleware(request: NextRequest) {
+  // S2 FIX 18C: Only trust the raw Host header (TLS/SNI verified).
+  // x-forwarded-host is client-controllable and enables cache poisoning.
   const host = request.headers.get('host') || '';
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const effectiveHost = forwardedHost || host;
 
-  // 1. Extract subdomain
-  let subdomain = '';
-  const parts = effectiveHost.split('.');
+  // S2 FIX: Strip port from host to prevent resolution failure (Point 4)
+  const cleanHost = host.split(':')[0];
+  const isApexDomain = cleanHost.endsWith('.60sec.shop') || cleanHost.includes('localhost');
+  let tenantIdentifier = cleanHost; // Default for custom domains
 
-  if (host.includes('localhost')) {
-    // localhost:3002 or tenant.localhost:3002
-    if (parts.length > 2) subdomain = parts[0];
-  } else {
-    // tenant.60sec.shop
-    if (parts.length >= 3) subdomain = parts[0];
+  if (isApexDomain) {
+    const parts = cleanHost.split('.');
+    if (cleanHost.includes('localhost')) {
+      if (parts.length > 2) tenantIdentifier = parts[0];
+    } else {
+      // S2 FIX 16B: Explicitly handle root domain (parts.length < 3)
+      if (parts.length < 3) {
+        tenantIdentifier = ''; // Root domain
+      } else {
+        // e.g. store1.60sec.shop -> parts = [store1, 60sec, shop] -> index length-3
+        tenantIdentifier = parts[parts.length - 3];
+      }
+    }
   }
 
-  // 2. Ignore infrastructure subdomains
-  const infraSubdomains = [
-    'api',
-    'super-admin',
-    'git',
-    'www',
-    'admin',
-    'staging',
-  ];
-  const isInfra = infraSubdomains.includes(subdomain.toLowerCase());
+  // S2: Decide if we should intercept or let infra handle it
+  const infraSubdomains = ['api', 'super-admin', 'git', 'www', 'admin', 'staging'];
+  // If no identifier (root) or identifier is in infra list
+  const isInfra = !tenantIdentifier || infraSubdomains.includes(tenantIdentifier.toLowerCase());
 
-  // 3. Generate Security Nonce (S8)
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
-
-  // 4. Content Security Policy with Nonce (S8)
+  // S8 FIX 13A: RESTORED 'unsafe-inline' for React Hydration (Next.js App Router dependency)
+  // Nonces are incompatible with ISR, so we stick to 'self' and trusted domains + inline.
   const cspHeader = `
     default-src 'self' localhost:* https://*.60sec.shop;
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://*.60sec.shop localhost:* 'unsafe-eval';
-    style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com https://*.60sec.shop localhost:* 'unsafe-inline';
+    script-src 'self' https://*.60sec.shop localhost:* 'unsafe-eval' 'unsafe-inline';
+    style-src 'self' https://fonts.googleapis.com https://*.60sec.shop localhost:* 'unsafe-inline';
     img-src 'self' data: https: https://*.60sec.shop localhost:*;
     font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop localhost:*;
     connect-src 'self' https://*.60sec.shop http://localhost:*;
@@ -49,40 +55,37 @@ export function middleware(request: NextRequest) {
     form-action 'self';
   `.replace(/\s{2,}/g, ' ').trim();
 
-  // 5. Inject tenant info and security headers
+  // Build request headers
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.delete('x-tenant-id'); // S2: Never trust client-provided tenant
   requestHeaders.set('Content-Security-Policy', cspHeader);
 
-  if (subdomain && !isInfra) {
-    requestHeaders.set('x-tenant-id', subdomain);
-  } else {
-    requestHeaders.set('x-tenant-id', 'public');
+  if (tenantIdentifier && !isInfra) {
+    requestHeaders.set('x-tenant-id', tenantIdentifier);
+
+    // S12 HOTFIX: Use tenantIdentifier for internal path-based ISR isolation
+    const url = request.nextUrl.clone();
+    url.pathname = `/m/${tenantIdentifier}${url.pathname}`;
+
+    const response = NextResponse.rewrite(url, {
+      request: { headers: requestHeaders },
+    });
+    response.headers.set('Content-Security-Policy', cspHeader);
+    return response;
   }
 
+  requestHeaders.set('x-tenant-id', 'public');
+
   const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
+    request: { headers: requestHeaders },
   });
-
-  // 6. Set response headers for security (S8)
   response.headers.set('Content-Security-Policy', cspHeader);
-  response.headers.set('x-nonce', nonce);
-
   return response;
 }
 
-// Only run on page routes, not static assets or api routes
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // S2 FIX 16A: SEO-Safe Matcher (Only ignore specific static extensions)
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|css|js|woff|woff2)$).*)',
   ],
 };

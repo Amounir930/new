@@ -33,6 +33,7 @@ import { ProvisioningModule } from './provisioning/provisioning.module.js';
 import { HoneyTokensController } from './security/honey-tokens.controller.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
+import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
 import { ExportModule } from '@apex/export';
 
 @Module({
@@ -68,23 +69,40 @@ import { ExportModule } from '@apex/export';
     AppController,
     ProductsController,
     BulkImportController,
-    HoneyTokensController
+    HoneyTokensController,
+    MerchantStatsController
   ],
 })
 export class AppModule implements NestModule {
-  // S2: Apply Tenant Isolation Middleware & S11: Bot Protection
+  // S2: Apply Tenant Isolation & S11: Bot Protection with specific exclusions
   configure(consumer: MiddlewareConsumer) {
+    // 1. General Defense (Broad Application)
     consumer
-      .apply(
-        ActiveDefenseMiddleware,
-        FingerprintMiddleware,
-        BotProtectionMiddleware,
-        TenantIsolationMiddleware
-      )
+      .apply(ActiveDefenseMiddleware, FingerprintMiddleware)
+      .forRoutes('*');
+
+    // 2. Bot Protection (Exclude Health checks to prevent False Positives)
+    consumer
+      .apply(BotProtectionMiddleware)
       .exclude(
+        { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
+        { path: 'health/(.*)', method: RequestMethod.GET },
         { path: 'robots.txt', method: RequestMethod.GET },
         { path: '/', method: RequestMethod.GET }
       )
-      .forRoutes('*'); // Apply to all routes
+      .forRoutes('*');
+
+    // 3. Tenant Isolation (Exclude Auth & Health - S2 Resilience)
+    consumer
+      .apply(TenantIsolationMiddleware)
+      .exclude(
+        { path: 'api/v1/auth/(.*)', method: RequestMethod.POST },
+        { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
+        { path: 'auth/(.*)', method: RequestMethod.POST },
+        { path: 'health/(.*)', method: RequestMethod.GET },
+        { path: 'robots.txt', method: RequestMethod.GET },
+        { path: '/', method: RequestMethod.GET }
+      )
+      .forRoutes('*');
   }
 }

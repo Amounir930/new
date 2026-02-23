@@ -69,6 +69,7 @@ export {
   SecurityHeadersMiddleware,
   securityHeaders,
 } from './security.js';
+export { SecurityService } from './security.service.js';
 // S2: Tenant Isolation Middleware
 export {
   SuperAdminOrTenantGuard,

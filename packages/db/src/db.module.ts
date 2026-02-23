@@ -2,6 +2,8 @@ import { SecurityModule } from '@apex/security';
 import { Global, Module, type OnApplicationShutdown } from '@nestjs/common';
 import { publicPool } from './connection.js';
 import { CustomerService } from './services/customer.service.js';
+import { ProductsService } from './services/products.service.js';
+import { MerchantStatsService } from './services/merchant-stats.service.js';
 import { TenantRegistryService } from './tenant-registry.service.js';
 
 @Global()
@@ -10,6 +12,8 @@ import { TenantRegistryService } from './tenant-registry.service.js';
   providers: [
     TenantRegistryService,
     CustomerService,
+    ProductsService,
+    MerchantStatsService,
     {
       provide: 'TENANT_REGISTRY',
       useExisting: TenantRegistryService,
@@ -23,6 +27,8 @@ import { TenantRegistryService } from './tenant-registry.service.js';
     TenantRegistryService,
     'TENANT_REGISTRY',
     CustomerService,
+    ProductsService,
+    MerchantStatsService,
     'DATABASE_POOL', // Export token string
   ],
 })

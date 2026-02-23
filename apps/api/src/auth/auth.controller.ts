@@ -9,6 +9,7 @@ import {
   HttpStatus,
   Inject,
   Post,
+  Res,
   UnauthorizedException,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
@@ -39,7 +40,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Super Admin Login' })
   @ApiResponse({ status: 200, description: 'JWT Token issued' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body(new ZodValidationPipe(LoginSchema)) body: LoginDto) {
+  async login(
+    @Body(new ZodValidationPipe(LoginSchema)) body: LoginDto,
+    @Res({ passthrough: true }) response: any
+  ) {
     const { email, password } = body;
 
     // S1: Validate against ConfigService
@@ -52,7 +56,10 @@ export class AuthController {
       );
     }
 
-    if (email === adminEmail && password === adminPassword) {
+    // S7: Compare hashed password using bcrypt (S1-S15 Compliance)
+    const isPasswordValid = await require('bcrypt').compare(password, adminPassword);
+
+    if (email === adminEmail && isPasswordValid) {
       // S4: Audit successful login
       await this.audit.log({
         action: 'SUPER_ADMIN_LOGIN_SUCCESS',
@@ -70,6 +77,15 @@ export class AuthController {
       };
 
       const token = await this.authService.generateToken(user);
+
+      // S8: Set Secure, HttpOnly cookie for admin session (Prevent XSS theft)
+      response.cookie('adm_tkn', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        path: '/',
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+      });
 
       return { accessToken: token };
     }

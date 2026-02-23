@@ -125,8 +125,7 @@ export class AuditService {
     try {
       const client = await this.pool.connect();
       try {
-        await client.query('SET search_path TO public');
-
+        // S2: Using schema-qualified INSERT (public.audit_logs) — no SET needed
         await client.query(
           `INSERT INTO public.audit_logs (
               tenant_id, 
@@ -145,7 +144,9 @@ export class AuditService {
           [
             tenantId,
             entry.userId || null,
-            encryptedEmail.encrypted,
+            // S7 FIX 2A: Store FULL cipher object (encrypted + iv + tag + salt)
+            // Previously stored only .encrypted, making decryption IMPOSSIBLE
+            entry.userEmail ? JSON.stringify(this.encryption.encrypt(entry.userEmail)) : null,
             entry.action,
             entry.entityType, // Schema uses entity_type
             entry.entityId, // Schema uses entity_id
@@ -177,7 +178,7 @@ export class AuditService {
     const client = await this.pool.connect();
     try {
       // 0. Ensure public schema (S2 Enforcement)
-      await client.query('SET search_path TO public');
+      // Using schema-qualified DDL (public.audit_logs) below
 
       // 1. Create table if not exists
       await client.query(`
@@ -317,7 +318,7 @@ export async function logSecurityEvent(
 export async function query(options: AuditQueryOptions): Promise<any[]> {
   const client = await publicPool.connect();
   try {
-    await client.query('SET search_path TO public');
+    // S2: Using schema-qualified query — no SET search_path needed
     const { rows } = await client.query(
       'SELECT * FROM public.audit_logs WHERE tenant_id = $1 AND action = $2',
       [options.tenantId, options.action]

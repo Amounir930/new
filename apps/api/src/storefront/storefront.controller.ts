@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Body,
+  Req,
   Query,
   VERSION_NEUTRAL,
   UsePipes,
@@ -15,6 +16,8 @@ import { AuditLog } from '@apex/audit';
 import { RateLimit } from '@apex/middleware';
 import { StorefrontService } from './storefront.service.js';
 import { NewsletterSubscriptionDto } from './dto/newsletter.dto.js';
+import type { TenantRequest } from '@apex/middleware';
+import { Request } from 'express';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
@@ -25,7 +28,7 @@ type TenantIdDto = z.infer<typeof TenantIdSchema>;
 const ProductsQuerySchema = z.object({
   featured: z.coerce.boolean().optional(),
   category: z.string().optional(),
-  limit: z.coerce.number().optional(),
+  limit: z.coerce.number().min(1).max(100).optional(), // S2 FIX 22C: Hard ceiling prevents OOM
   sort: z.enum(['newest', 'price_asc', 'price_desc']).optional(),
 });
 
@@ -38,20 +41,23 @@ export class StorefrontController {
 
   @Get('config')
   @AuditLog('STOREFRONT_CONFIG_VIEW')
-  async getConfig(@Query() query: TenantIdDto) {
-    return this.storefrontService.getTenantConfig(query.tenantId);
+  async getConfig(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
+    const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
+    return this.storefrontService.getTenantConfig(tenantId);
   }
 
   @Get('products')
   @AuditLog('STOREFRONT_PRODUCT_LIST')
-  async getProducts(@Query() query: ProductsQueryDto) {
-    return this.storefrontService.getProducts(query);
+  async getProducts(@Req() req: TenantRequest, @Query() query: ProductsQueryDto, @Query() tenantQuery: TenantIdDto) {
+    const tenantId = req.tenantContext?.tenantId || tenantQuery.tenantId || 'public';
+    return this.storefrontService.getProducts(tenantId, query);
   }
 
   @Get('products/:slug')
   @AuditLog({ action: 'STOREFRONT_PRODUCT_VIEW', entityType: 'product' })
-  async getProductBySlug(@Param('slug') slug: string) {
-    const product = await this.storefrontService.getProductBySlug(slug);
+  async getProductBySlug(@Req() req: TenantRequest, @Param('slug') slug: string, @Query() query: TenantIdDto) {
+    const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
+    const product = await this.storefrontService.getProductBySlug(tenantId, slug);
     if (!product) {
       throw new NotFoundException('Product not found');
     }
@@ -60,14 +66,23 @@ export class StorefrontController {
 
   @Get('home')
   @AuditLog('STOREFRONT_HOME_VIEW')
-  async getHome(@Query() query: TenantIdDto) {
-    return this.storefrontService.getHomeData(query.tenantId);
+  async getHome(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
+    const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
+    return this.storefrontService.getHomeData(tenantId);
+  }
+
+  @Get('bootstrap')
+  @AuditLog('STOREFRONT_BOOTSTRAP')
+  async getBootstrap(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
+    const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
+    return this.storefrontService.getBootstrapData(tenantId);
   }
 
   @Post('newsletter')
   @AuditLog('STOREFRONT_NEWSLETTER_SUBSCRIBE')
   @RateLimit({ requests: 5, windowMs: 3600000 }) // S6: Limit to 5 per hour
-  async subscribe(@Body() body: NewsletterSubscriptionDto) {
-    return this.storefrontService.subscribeToNewsletter(body.email);
+  async subscribe(@Req() req: TenantRequest, @Body() body: NewsletterSubscriptionDto, @Query() query: TenantIdDto) {
+    const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
+    return this.storefrontService.subscribeToNewsletter(tenantId, body.email);
   }
 }

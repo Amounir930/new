@@ -64,8 +64,8 @@ export class BlueprintsService {
       .values({
         name: dto.name,
         description: dto.description || null,
-        plan: dto.plan,
-        nicheType: dto.nicheType || 'retail',
+        plan: dto.plan as any,
+        nicheType: (dto.nicheType || 'retail') as any,
         status: (dto.status || 'active') as 'active' | 'paused',
         uiConfig: dto.uiConfig || {},
         isDefault: dto.isDefault,
@@ -92,7 +92,12 @@ export class BlueprintsService {
   ): Promise<BlueprintRecord> {
     if (dto.blueprint) {
       try {
-        validateBlueprint(dto.blueprint as unknown as BlueprintTemplate);
+        const { z } = await import('zod');
+        // S3: Strict validation with unknown key stripping
+        const result = z.record(z.any()).safeParse(dto.blueprint);
+        if (!result.success) throw new Error('Invalid blueprint payload');
+
+        validateBlueprint(result.data as any);
       } catch (e) {
         throw new Error(
           `Invalid blueprint structure: ${e instanceof Error ? e.message : 'Unknown error'}`
@@ -170,7 +175,7 @@ export class BlueprintsService {
           name: name,
           description: description || template.description || null,
           plan: 'custom' as any,
-          nicheType: nicheType || 'retail',
+          nicheType: (nicheType || 'retail') as any,
           status: 'active' as const,
           isDefault: false,
           blueprint: template as any as BlueprintTemplate, // Type bridge for snapshot

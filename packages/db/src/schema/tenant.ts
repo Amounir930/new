@@ -14,6 +14,7 @@ export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   email: text('email').notNull(), // S7: Encrypted JSON
   emailHash: text('email_hash').notNull().unique(), // S7: Blind Index
+  password: text('password'), // S7: Hashed password (Bcrypt)
   role: text('role').notNull().default('user'),
   status: text('status').notNull().default('active'),
   createdAt: timestamp('created_at').defaultNow(),

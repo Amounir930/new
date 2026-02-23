@@ -36,6 +36,15 @@ export const blueprintStatusEnum = pgEnum('blueprint_status', [
   'active',
   'paused',
 ]);
+export const tenantNicheEnum = pgEnum('tenant_niche', [
+  'retail',
+  'wellness',
+  'education',
+  'services',
+  'hospitality',
+  'real-estate',
+  'creative',
+]);
 
 // Note: Drizzle throws an error if pgSchema('public') is used.
 // Tables defined with pgTable() go to the default 'public' schema.
@@ -48,10 +57,11 @@ export const tenants = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     subdomain: text('subdomain').notNull().unique(),
+    customDomain: text('custom_domain').unique(),
     name: text('name').notNull(),
     plan: tenantPlanEnum('plan').notNull().default('free'),
     status: tenantStatusEnum('status').notNull().default('active'),
-    nicheType: text('niche_type'),
+    nicheType: tenantNicheEnum('niche_type').notNull().default('retail'),
     uiConfig: jsonb('ui_config').default({}),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -79,7 +89,7 @@ export const onboardingBlueprints = pgTable(
     blueprint: jsonb('blueprint').notNull(),
     isDefault: pgBoolean('is_default').notNull().default(false),
     plan: tenantPlanEnum('plan').notNull().default('free'),
-    nicheType: text('niche_type').notNull(),
+    nicheType: tenantNicheEnum('niche_type').notNull().default('retail'),
     status: blueprintStatusEnum('status').notNull().default('active'),
     uiConfig: jsonb('ui_config').default({}),
     createdAt: timestamp('created_at').defaultNow(),
