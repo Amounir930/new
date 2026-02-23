@@ -1,3 +1,5 @@
+'use client';
+
 import { ShoppingCart, Package, Users, TrendingUp, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
