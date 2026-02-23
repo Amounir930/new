@@ -35,6 +35,7 @@ import { StorefrontModule } from './storefront/storefront.module.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
 import { ExportModule } from '@apex/export';
+import { SecurityModule } from './security/security.module.js';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ExportModule } from '@apex/export';
     StorefrontModule,
     AuditModule,
     ExportModule,
+    SecurityModule,
   ],
   providers: [
     {

@@ -14,7 +14,7 @@ import {
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
-import { SecurityService } from '@apex/middleware';
+import { SecurityService } from '../security/security.service.js';
 
 const UpdateTenantSchema = z.object({
   plan: z.string().optional(),
