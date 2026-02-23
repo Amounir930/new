@@ -36,7 +36,7 @@ export default function TenantsPage() {
     async function fetchTenants() {
         try {
             setLoading(true);
-            const data = await apiFetch('/admin/tenants');
+            const data = await apiFetch('/v1/admin/tenants');
             setTenants(Array.isArray(data) ? data : []);
         } catch (e) {
             console.error('Failed to fetch tenants:', e);
@@ -142,8 +142,8 @@ export default function TenantsPage() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-widest ${tenant.plan === 'enterprise' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                                                tenant.plan === 'pro' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                                                    'bg-slate-500/10 text-slate-400 border border-white/5'
+                                            tenant.plan === 'pro' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                                                'bg-slate-500/10 text-slate-400 border border-white/5'
                                             }`}>
                                             {tenant.plan}
                                         </span>

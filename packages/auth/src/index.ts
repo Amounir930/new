@@ -36,7 +36,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
     user: TUser | false
   ): TUser {
     if (err || !user) {
-      throw err || new UnauthorizedException();
+      // S5 FIX: ALWAYS throw UnauthorizedException (401), never raw Error (500).
+      // Passport can pass JsonWebTokenError, TokenExpiredError, etc.
+      // The GlobalExceptionFilter only recognizes HttpException subclasses.
+      const message = err?.message || 'Authentication required';
+      throw new UnauthorizedException(message);
     }
     return user;
   }

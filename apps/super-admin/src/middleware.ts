@@ -8,12 +8,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Protected paths for system governance
-  const isProtected = pathname.startsWith('/dashboard') || 
-                     pathname.startsWith('/tenants') || 
-                     pathname.startsWith('/blueprints') ||
-                     pathname.startsWith('/infra') ||
-                     pathname.startsWith('/security') ||
-                     pathname.startsWith('/settings');
+  const isProtected = pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/tenants') ||
+    pathname.startsWith('/blueprints') ||
+    pathname.startsWith('/infra') ||
+    pathname.startsWith('/security') ||
+    pathname.startsWith('/settings');
 
   if (isProtected) {
     if (!token) {
@@ -30,17 +30,20 @@ export async function middleware(request: NextRequest) {
       const { payload } = await jwtVerify(token, secret);
 
       if (payload.role !== 'super_admin') {
-        console.warn(`[Security] Non-super-admin access attempt: ${payload.role}`);
-        return NextResponse.redirect(new URL('/login', request.url));
+        throw new Error('S2: Role mismatch');
       }
+
+      return NextResponse.next();
     } catch (error) {
       console.error('[Security] Auth Verification Failed:', error);
-      return NextResponse.redirect(new URL('/login', request.url));
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete('adm_tkn');
+      return response;
     }
   }
 
-  // Redirect /login back to dashboard if already authenticated
-  if (pathname === '/login' || pathname === '/') {
+  // Root redirect to dashboard if logged in
+  if (pathname === '/' || pathname === '/login') {
     if (token && JWT_SECRET) {
       try {
         const secret = new TextEncoder().encode(JWT_SECRET);
@@ -59,13 +62,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*', 
-    '/tenants/:path*', 
-    '/blueprints/:path*', 
-    '/infra/:path*', 
-    '/security/:path*', 
-    '/settings/:path*', 
-    '/login', 
+    '/dashboard/:path*',
+    '/tenants/:path*',
+    '/blueprints/:path*',
+    '/infra/:path*',
+    '/security/:path*',
+    '/settings/:path*',
+    '/login',
     '/'
   ],
 };

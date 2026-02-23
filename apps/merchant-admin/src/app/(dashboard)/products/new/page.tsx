@@ -10,7 +10,7 @@ export default function NewProductPage() {
 
     const handleCreateProduct = async (data: any) => {
         try {
-            await apiFetch('/products', {
+            await apiFetch('/v1/products', {
                 method: 'POST',
                 body: JSON.stringify(data),
             });

@@ -226,6 +226,8 @@ services:
     build:
       context: ..
       dockerfile: apps/merchant-admin/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     restart: always
     secrets:
       - jwt_secret
@@ -284,6 +286,8 @@ services:
     build:
       context: ..
       dockerfile: apps/super-admin/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     restart: always
     secrets:
       - jwt_secret
@@ -329,6 +333,8 @@ services:
     build:
       context: ..
       dockerfile: apps/store/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     restart: always
     env_file:
       - ../.env
@@ -780,6 +786,7 @@ services:
     networks:
       - apex-data
       - apex-internal
+      - apex-public
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=ops_apex-public"
