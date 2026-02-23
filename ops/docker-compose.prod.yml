@@ -326,6 +326,7 @@ services:
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
       # S1: Secrets for SSR/Client-side resolution
+      PORT: 3002
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       REDIS_PASSWORD_FILE: /run/secrets/redis_password
     networks:
@@ -690,6 +691,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=100m
+      - /home/bun:noexec,nosuid,size=10m
     volumes:
       - /opt/apex-v2:/app:ro
     networks:
