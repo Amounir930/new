@@ -156,10 +156,12 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      # Use secrets via _FILE convention where supported, or pass sanitized non-secret:
+      # DATABASE_URL without password (password resolved via POSTGRES_PASSWORD_FILE)
       DATABASE_URL: postgresql://${POSTGRES_USER:-apex}@postgres:5432/${POSTGRES_DB:-apex_v2}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       DB_SSL: ${DB_SSL:-false}
-      REDIS_URL: redis://:@redis:6379
+      REDIS_URL: redis://@redis:6379
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
       SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@60sec.shop}
@@ -167,7 +169,7 @@ services:
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-apex-assets}
     networks:
@@ -277,6 +279,9 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
+      # S1: Secrets for SSR/Client-side resolution
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
     networks:
       - apex-public
       - apex-internal  # SSR calls to API go through internal network

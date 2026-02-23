@@ -4,11 +4,33 @@
  * Rule: Application MUST crash on invalid environment configuration
  */
 
+import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import type { EnvConfig } from './schema';
 import { EnvSchema } from './schema';
 
 export * from './schema';
+
+/**
+ * S1: Secret File Resolution
+ * Resolves environment variables ending in _FILE by reading their file content.
+ * e.g. JWT_SECRET_FILE=/run/secrets/jwt -> JWT_SECRET=<content>
+ */
+function resolveSecretFiles(): void {
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.endsWith('_FILE') && value) {
+      try {
+        const secretKey = key.replace('_FILE', '');
+        // Only resolve if the target key isn't already set directly
+        if (!process.env[secretKey]) {
+          process.env[secretKey] = readFileSync(value, 'utf8').trim();
+        }
+      } catch (error) {
+        console.warn(`⚠️ Failed to resolve secret file for ${key}:`, error);
+      }
+    }
+  }
+}
 
 /**
  * Validates environment variables at boot time
@@ -17,6 +39,7 @@ export * from './schema';
  */
 export function validateEnv(): EnvConfig {
   try {
+    resolveSecretFiles();
     const parsed = EnvSchema.parse(process.env);
     enforceProductionChecks(parsed);
     enforceGenericChecks(parsed);
