@@ -688,10 +688,14 @@ services:
     environment:
       - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret
       - DOCKER_HOST=tcp://apex-docker-proxy:2375
+      - BUN_CONFIG_NO_UPDATE_CHECK=1
+      - BUN_TELEMETRY_DISABLED=1
+      - BUN_INSTALL_CACHE_DIR=/tmp/bun-cache
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=100m
       - /home/bun:noexec,nosuid,size=10m
+      - /root:noexec,nosuid,size=10m
     volumes:
       - /opt/apex-v2:/app:ro
     networks:
