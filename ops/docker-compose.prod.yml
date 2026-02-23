@@ -36,7 +36,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
@@ -113,7 +113,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=ops_apex-public"
-      # S3 API – Internal-network IPs only (backend calls only, not public)
+      # S3 API – Internal-network IPs only
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
       - "traefik.http.routers.minio.priority=5000"
       - "traefik.http.routers.minio.entrypoints=websecure"
@@ -121,7 +121,7 @@ services:
       - "traefik.http.routers.minio.middlewares=apex-internal-allowlist@docker"
       - "traefik.http.routers.minio.service=apex-minio"
       - "traefik.http.services.apex-minio.loadbalancer.server.port=9000"
-      # Console UI – Cloudflare IPs + Basic Auth (IP-gated admin console)
+      # Console UI – Cloudflare IPs + Basic Auth
       - "traefik.http.routers.minio-console.rule=Host(`storage-admin.60sec.shop`)"
       - "traefik.http.routers.minio-console.priority=5500"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
@@ -272,7 +272,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
@@ -307,7 +307,6 @@ services:
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
-      - "traefik.docker.network=ops_apex-public"
     healthcheck:
       test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3001').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 30s
@@ -317,7 +316,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
@@ -351,7 +350,6 @@ services:
       - ALL
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=ops_apex-public"
       - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
       - "traefik.http.routers.store-main.priority=3000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
@@ -367,7 +365,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
@@ -784,6 +782,7 @@ services:
       - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=ops_apex-public"
       - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
       - "traefik.http.routers.adminer.priority=5000"
       - "traefik.http.routers.adminer.entrypoints=websecure"
@@ -791,7 +790,6 @@ services:
       - "traefik.http.routers.adminer.service=apex-adminer"
       - "traefik.http.routers.adminer.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker"
       - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
-      - "traefik.docker.network=ops_apex-public"
     deploy:
       resources:
         limits:
