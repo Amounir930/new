@@ -27,11 +27,14 @@ const UpdateFeatureSchema = z.object({
   isEnabled: z.boolean(),
 });
 
+import { forwardRef } from '@nestjs/common';
+
 @Controller('admin/tenants')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
   constructor(
     private readonly tenantRegistry: TenantRegistryService,
+    @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService

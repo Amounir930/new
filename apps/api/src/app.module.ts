@@ -39,23 +39,25 @@ import { SecurityModule } from './security/security.module.js';
 
 @Module({
   imports: [
-    // Core Data Module (explicitly imported for root context availability)
+    // S15: Security Module (Global) - Register FIRST
+    SecurityModule,
+
+    // Core Data Module
     DbModule,
 
-    // S1: Configuration (Global validated service)
+    // S1: Configuration
     ConfigModule,
 
-    // S6: Rate Limiting (Throttler)
+    // S6: Rate Limiting
     RateLimitModule,
-    HealthModule, // FIX: Registered Health Module
-    AuthModule, // Registered Auth Module
+    HealthModule,
+    AuthModule,
     ProvisioningModule,
     BlueprintsModule,
     TenantsModule,
     StorefrontModule,
     AuditModule,
     ExportModule,
-    SecurityModule,
   ],
   providers: [
     {
