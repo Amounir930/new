@@ -30,6 +30,26 @@ function resolveSecretFiles(): void {
       }
     }
   }
+
+  // S1: Intelligent Patching for Connection URLs
+  // If passwords were resolved from secrets, inject them into URLs if they contain '@' host separator
+  if (process.env.REDIS_PASSWORD && process.env.REDIS_URL?.includes('@')) {
+    const url = process.env.REDIS_URL;
+    if (url.startsWith('redis://@')) {
+      process.env.REDIS_URL = url.replace('redis://@', `redis://:${encodeURIComponent(process.env.REDIS_PASSWORD)}@`);
+    } else if (!url.includes(':') || url.indexOf(':') === url.lastIndexOf(':')) {
+      // Handle redis://:pass@host or redis://host cases if needed, but the primarily one is redis://@host
+    }
+  }
+
+  if (process.env.POSTGRES_PASSWORD && process.env.DATABASE_URL?.includes('@')) {
+    const url = process.env.DATABASE_URL;
+    // Replace postgresql://user@host with postgresql://user:pass@host
+    const regex = /(postgresql?:\/\/)([^:/@]+)@/;
+    if (regex.test(url)) {
+      process.env.DATABASE_URL = url.replace(regex, `$1$2:${encodeURIComponent(process.env.POSTGRES_PASSWORD)}@`);
+    }
+  }
 }
 
 /**
