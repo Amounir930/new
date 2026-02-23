@@ -104,14 +104,30 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       identifier = xTenantId; // Only trust header with valid cryptographic secret
     }
 
-    // Infrastructure subdomains or root domain
+    // S2 FIX 17D: Infrastructure/Root fallback (System Context)
+    // Management traffic must still have a valid context to satisfied strict S2 executors.
     if (
       !subdomain ||
-      [
-        'api', 'super-admin', 'www', 'staging', 'blue', 'green', 'git', 'admin', 'mail'
-      ].includes(subdomain.toLowerCase())
+      ['api', 'super-admin', 'www', 'staging', 'blue', 'green', 'git', 'admin', 'mail'].includes(subdomain.toLowerCase())
     ) {
-      return next();
+      const systemContext: TenantContext = {
+        tenantId: 'system',
+        schemaName: 'public',
+        subdomain: subdomain || 'root',
+        plan: 'enterprise',
+        isActive: true,
+        isSuspended: false,
+        features: [],
+        createdAt: new Date(),
+        executor: publicDb
+      };
+
+      return tenantStorage.run(systemContext, () => {
+        return dbContextStorage.run(systemContext.executor, () => {
+          req.tenantContext = systemContext;
+          next();
+        });
+      });
     }
 
     // Bypass routes (Health, Login only — NOT Webhooks)

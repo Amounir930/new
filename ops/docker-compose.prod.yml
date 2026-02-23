@@ -346,7 +346,7 @@ services:
       - "traefik.http.routers.store-main.middlewares=apex-store-csp@docker,apex-global-ratelimit@docker"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3002').then(r => process.exit(r.ok ? 0 : 1))"]
+      test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:3002').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
