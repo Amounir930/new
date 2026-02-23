@@ -1,13 +1,28 @@
-import { env } from '../../packages/config/src/index.ts';
 import { serve } from 'bun';
 import { spawn } from 'bun';
+import { readFileSync } from 'node:fs';
 
-const SECRET = env.WEBHOOK_SECRET || 'ApexDeploySecret2026';
+// S1: Standalone Secret Resolver (No dependencies)
+function resolveSecrets() {
+  for (const [key, value] of Object.entries(process.env)) {
+    if (key.endsWith('_FILE') && value) {
+      try {
+        const secretKey = key.replace('_FILE', '');
+        process.env[secretKey] = readFileSync(value, 'utf8').trim();
+      } catch (e) {
+        console.warn(`⚠️ Failed to read secret file ${value}: ${e}`);
+      }
+    }
+  }
+}
+resolveSecrets();
+
+const SECRET = process.env.WEBHOOK_SECRET || 'ApexDeploySecret2026';
 const PORT = 9000;
 // We mount the host root to /app
 const REPO_DIR = '/app';
 
-console.log(`🛡️  Apex Webhook Listener v1.0 starting on port ${PORT}...`);
+console.log(`🛡️  Apex Webhook Listener v1.1 starting on port ${PORT}...`);
 
 serve({
   port: PORT,
