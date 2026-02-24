@@ -11,6 +11,7 @@ import {
   boolean as pgBoolean,
   pgEnum,
   pgPolicy,
+  pgSchema,
   pgTable,
   text,
   timestamp,
@@ -50,9 +51,14 @@ export const tenantNicheEnum = pgEnum('tenant_niche', [
 // Tables defined with pgTable() go to the default 'public' schema.
 
 /**
+ * S2: Governance Schema (Universal Management)
+ */
+export const governanceSchema = pgSchema('governance');
+
+/**
  * S2: Tenant Registry (Global)
  */
-export const tenants = pgTable(
+export const tenants = governanceSchema.table(
   'tenants',
   {
     id: uuid('id').defaultRandom().primaryKey(),
@@ -81,7 +87,7 @@ export type Tenant = InferSelectModel<typeof tenants>;
 /**
  * Super-#21: Onboarding Blueprint Editor
  */
-export const onboardingBlueprints = pgTable(
+export const onboardingBlueprints = governanceSchema.table(
   'onboarding_blueprints',
   {
     id: uuid('id').defaultRandom().primaryKey(),

@@ -36,6 +36,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
 import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
 import { ExportModule } from '@apex/export';
 import { SecurityModule } from './security/security.module.js';
+import { GovernanceModule } from './governance/governance.module.js';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { SecurityModule } from './security/security.module.js';
     StorefrontModule,
     AuditModule,
     ExportModule,
+    GovernanceModule,
   ],
   providers: [
     {

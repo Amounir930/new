@@ -12,19 +12,20 @@ import {
   decimal,
   integer,
   jsonb,
+  pgSchema,
   pgTable,
   text,
   timestamp,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { tenants } from './public'; // Direct import to avoid circular dependency
+import { governanceSchema, tenants } from './public'; // Direct import to avoid circular dependency
 
 /**
  * Subscription Plans Table
  * Defines the available tiers (Free, Pro, Enterprise, etc.)
  */
-export const subscriptionPlans = pgTable('subscription_plans', {
+export const subscriptionPlans = governanceSchema.table('subscription_plans', {
   id: uuid('id').defaultRandom().primaryKey(),
   code: varchar('code', { length: 50 }).notNull().unique(), // e.g., 'free', 'basic', 'pro'
   name: varchar('name', { length: 100 }).notNull(),
@@ -46,7 +47,7 @@ export const subscriptionPlans = pgTable('subscription_plans', {
  * Tenant Quotas Table
  * Specific overrides for individual tenants.
  */
-export const tenantQuotas = pgTable('tenant_quotas', {
+export const tenantQuotas = governanceSchema.table('tenant_quotas', {
   id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id')
     .notNull()
@@ -65,7 +66,7 @@ export const tenantQuotas = pgTable('tenant_quotas', {
  * Feature Gates Table
  * Plan-based or tenant-specific feature toggling.
  */
-export const featureGates = pgTable('feature_gates', {
+export const featureGates = governanceSchema.table('feature_gates', {
   id: uuid('id').defaultRandom().primaryKey(),
   tenantId: uuid('tenant_id').references(() => tenants.id, {
     onDelete: 'cascade',
@@ -84,7 +85,7 @@ export const featureGates = pgTable('feature_gates', {
  * System Config Table
  * Global toggles for the entire platform (Super Admin only)
  */
-export const systemConfig = pgTable('system_config', {
+export const systemConfig = governanceSchema.table('system_config', {
   key: varchar('key', { length: 100 }).primaryKey(), // e.g., 'master_maintenance', 'allow_new_registrations'
   value: jsonb('value').notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
