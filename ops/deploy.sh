@@ -31,6 +31,7 @@ trap 'rm -f "$LOCK_FILE"' EXIT
 # ✅ Load and validate variables
 echo "🔍 Validating environment..."
 # S1: Load variables safely without triggering shell expansion errors on bcrypt hashes
+# We use 'set +u' and avoid direct sourcing if possible, or source with care.
 set +u
 set -a
 source "$ENV_FILE"
@@ -60,7 +61,9 @@ fi
 
 # 🔹 [2] Database Migration (Pre-deploy - Zero Downtime Safe)
 echo "🗄️  [2/4] Running migrations..."
+# Mount local packages/db to ensure idempotent migration SQLs are used regardless of image state
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm \
+    -v "$DIR/packages/db:/app/packages/db" \
     -e NODE_ENV=production \
     api bun run --filter=@apex/db db:migrate || {
         echo "❌ Migration failed! Rolling back..."
