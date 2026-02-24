@@ -30,8 +30,11 @@ trap 'rm -f "$LOCK_FILE"' EXIT
 
 # ✅ Load and validate variables
 echo "🔍 Validating environment..."
+# S1: Load variables safely without triggering shell expansion errors on bcrypt hashes
+set +u
 set -a
 source "$ENV_FILE"
+set -u
 set +a
 
 REQUIRED_VARS=("GITEA_DB_PASSWORD" "WEBHOOK_SECRET" "DATABASE_URL" "JWT_SECRET")
