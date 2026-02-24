@@ -1,4 +1,4 @@
-CREATE TABLE "auth_logs" (
+CREATE TABLE IF NOT EXISTS "auth_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"customer_id" uuid,
 	"action" varchar(50) NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE "auth_logs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "otp_codes" (
+CREATE TABLE IF NOT EXISTS "otp_codes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"customer_id" uuid,
 	"phone" varchar(20),
@@ -19,7 +19,7 @@ CREATE TABLE "otp_codes" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "carts" (
+CREATE TABLE IF NOT EXISTS "carts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"customer_id" uuid,
 	"session_id" varchar(64),
@@ -30,7 +30,7 @@ CREATE TABLE "carts" (
 	"expires_at" timestamp with time zone
 );
 --> statement-breakpoint
-CREATE TABLE "categories" (
+CREATE TABLE IF NOT EXISTS "categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"slug" varchar(255) NOT NULL,
 	"name" varchar(255) NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE "categories" (
 	CONSTRAINT "categories_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "menu_items" (
+CREATE TABLE IF NOT EXISTS "menu_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"menu_type" varchar(20) NOT NULL,
 	"parent_id" uuid,
@@ -58,13 +58,13 @@ CREATE TABLE "menu_items" (
 	"is_active" boolean DEFAULT true
 );
 --> statement-breakpoint
-CREATE TABLE "tenant_config" (
+CREATE TABLE IF NOT EXISTS "tenant_config" (
 	"key" varchar(100) PRIMARY KEY NOT NULL,
 	"value" jsonb NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "blog_posts" (
+CREATE TABLE IF NOT EXISTS "blog_posts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"slug" varchar(255) NOT NULL,
 	"title" varchar(255) NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE "blog_posts" (
 	CONSTRAINT "blog_posts_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "coupons" (
+CREATE TABLE IF NOT EXISTS "coupons" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"code" varchar(50) NOT NULL,
 	"type" varchar(20) NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE "coupons" (
 	CONSTRAINT "coupons_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
-CREATE TABLE "customer_addresses" (
+CREATE TABLE IF NOT EXISTS "customer_addresses" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"label" varchar(50),
@@ -107,7 +107,7 @@ CREATE TABLE "customer_addresses" (
 	"is_default" boolean DEFAULT false
 );
 --> statement-breakpoint
-CREATE TABLE "customers" (
+CREATE TABLE IF NOT EXISTS "customers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text NOT NULL,
 	"email_hash" char(64) NOT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE "customers" (
 	CONSTRAINT "customers_email_hash_unique" UNIQUE("email_hash")
 );
 --> statement-breakpoint
-CREATE TABLE "faq_categories" (
+CREATE TABLE IF NOT EXISTS "faq_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"order" integer DEFAULT 0,
@@ -133,7 +133,7 @@ CREATE TABLE "faq_categories" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "faqs" (
+CREATE TABLE IF NOT EXISTS "faqs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"category_id" uuid,
 	"question" varchar(500) NOT NULL,
@@ -144,7 +144,7 @@ CREATE TABLE "faqs" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "bento_grids" (
+CREATE TABLE IF NOT EXISTS "bento_grids" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"layout_id" varchar(50) NOT NULL,
@@ -152,7 +152,7 @@ CREATE TABLE "bento_grids" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "flash_sale_products" (
+CREATE TABLE IF NOT EXISTS "flash_sale_products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"flash_sale_id" uuid,
 	"product_id" uuid,
@@ -162,7 +162,7 @@ CREATE TABLE "flash_sale_products" (
 	"order" integer DEFAULT 0
 );
 --> statement-breakpoint
-CREATE TABLE "flash_sales" (
+CREATE TABLE IF NOT EXISTS "flash_sales" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(110) NOT NULL,
 	"end_time" timestamp with time zone NOT NULL,
@@ -171,14 +171,14 @@ CREATE TABLE "flash_sales" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "search_analytics" (
+CREATE TABLE IF NOT EXISTS "search_analytics" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"query" varchar(255) NOT NULL,
 	"count" integer DEFAULT 1,
 	"last_searched_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "kb_articles" (
+CREATE TABLE IF NOT EXISTS "kb_articles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"category_id" uuid,
 	"slug" varchar(255) NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE "kb_articles" (
 	CONSTRAINT "kb_articles_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "kb_categories" (
+CREATE TABLE IF NOT EXISTS "kb_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"slug" varchar(255) NOT NULL,
@@ -201,7 +201,7 @@ CREATE TABLE "kb_categories" (
 	CONSTRAINT "kb_categories_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "store_locations" (
+CREATE TABLE IF NOT EXISTS "store_locations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"address" text NOT NULL,
@@ -213,7 +213,7 @@ CREATE TABLE "store_locations" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "loyalty_rules" (
+CREATE TABLE IF NOT EXISTS "loyalty_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"points_per_currency" integer DEFAULT 1,
@@ -225,7 +225,7 @@ CREATE TABLE "loyalty_rules" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "notifications" (
+CREATE TABLE IF NOT EXISTS "notifications" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"title" varchar(255) NOT NULL,
@@ -236,7 +236,7 @@ CREATE TABLE "notifications" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "order_items" (
+CREATE TABLE IF NOT EXISTS "order_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"product_id" uuid,
@@ -249,7 +249,7 @@ CREATE TABLE "order_items" (
 	"image_url" text
 );
 --> statement-breakpoint
-CREATE TABLE "orders" (
+CREATE TABLE IF NOT EXISTS "orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_number" varchar(20) NOT NULL,
 	"customer_id" uuid,
@@ -275,7 +275,7 @@ CREATE TABLE "orders" (
 	CONSTRAINT "orders_order_number_unique" UNIQUE("order_number")
 );
 --> statement-breakpoint
-CREATE TABLE "payment_logs" (
+CREATE TABLE IF NOT EXISTS "payment_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_id" uuid,
 	"provider" varchar(50) NOT NULL,
@@ -287,7 +287,7 @@ CREATE TABLE "payment_logs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "back_in_stock_requests" (
+CREATE TABLE IF NOT EXISTS "back_in_stock_requests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"product_id" uuid,
 	"customer_id" uuid,
@@ -297,7 +297,7 @@ CREATE TABLE "back_in_stock_requests" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "product_images" (
+CREATE TABLE IF NOT EXISTS "product_images" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"url" text NOT NULL,
@@ -306,13 +306,13 @@ CREATE TABLE "product_images" (
 	"order" integer DEFAULT 0
 );
 --> statement-breakpoint
-CREATE TABLE "product_tags" (
+CREATE TABLE IF NOT EXISTS "product_tags" (
 	"product_id" uuid NOT NULL,
 	"tag" varchar(50) NOT NULL,
 	CONSTRAINT "product_tags_product_id_tag_unique" UNIQUE("product_id","tag")
 );
 --> statement-breakpoint
-CREATE TABLE "product_variants" (
+CREATE TABLE IF NOT EXISTS "product_variants" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"sku" varchar(100),
@@ -325,7 +325,7 @@ CREATE TABLE "product_variants" (
 	CONSTRAINT "product_variants_sku_unique" UNIQUE("sku")
 );
 --> statement-breakpoint
-CREATE TABLE "products" (
+CREATE TABLE IF NOT EXISTS "products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"slug" varchar(255) NOT NULL,
 	"name" varchar(255) NOT NULL,
@@ -352,7 +352,7 @@ CREATE TABLE "products" (
 	CONSTRAINT "products_sku_unique" UNIQUE("sku")
 );
 --> statement-breakpoint
-CREATE TABLE "referrals" (
+CREATE TABLE IF NOT EXISTS "referrals" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"referrer_id" uuid NOT NULL,
 	"referred_id" uuid,
@@ -364,7 +364,7 @@ CREATE TABLE "referrals" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "reviews" (
+CREATE TABLE IF NOT EXISTS "reviews" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"customer_id" uuid NOT NULL,
@@ -377,7 +377,7 @@ CREATE TABLE "reviews" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "rma_requests" (
+CREATE TABLE IF NOT EXISTS "rma_requests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"order_item_id" uuid,
@@ -390,7 +390,7 @@ CREATE TABLE "rma_requests" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "shipping_zones" (
+CREATE TABLE IF NOT EXISTS "shipping_zones" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"region" varchar(100) NOT NULL,
@@ -401,7 +401,7 @@ CREATE TABLE "shipping_zones" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "size_guides" (
+CREATE TABLE IF NOT EXISTS "size_guides" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"category_id" uuid,
@@ -411,7 +411,7 @@ CREATE TABLE "size_guides" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "order_timeline" (
+CREATE TABLE IF NOT EXISTS "order_timeline" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"order_id" uuid,
 	"status" varchar(50) NOT NULL,
@@ -422,7 +422,7 @@ CREATE TABLE "order_timeline" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "wallet_transactions" (
+CREATE TABLE IF NOT EXISTS "wallet_transactions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"amount" numeric(10, 2) NOT NULL,
@@ -433,7 +433,7 @@ CREATE TABLE "wallet_transactions" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "wishlists" (
+CREATE TABLE IF NOT EXISTS "wishlists" (
 	"customer_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"added_at" timestamp with time zone DEFAULT now(),
@@ -482,45 +482,45 @@ ALTER TABLE "wallet_transactions" ADD CONSTRAINT "wallet_transactions_customer_i
 ALTER TABLE "wallet_transactions" ADD CONSTRAINT "wallet_transactions_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "public"."customers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "idx_carts_customer" ON "carts" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_carts_session" ON "carts" USING btree ("session_id");--> statement-breakpoint
-CREATE INDEX "idx_carts_expires" ON "carts" USING btree ("expires_at");--> statement-breakpoint
-CREATE INDEX "idx_categories_parent" ON "categories" USING btree ("parent_id");--> statement-breakpoint
-CREATE INDEX "idx_categories_active" ON "categories" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_menu_items_type" ON "menu_items" USING btree ("menu_type");--> statement-breakpoint
-CREATE INDEX "idx_menu_items_parent" ON "menu_items" USING btree ("parent_id");--> statement-breakpoint
-CREATE INDEX "idx_menu_items_active" ON "menu_items" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_blog_posts_slug" ON "blog_posts" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "idx_blog_posts_published" ON "blog_posts" USING btree ("is_published");--> statement-breakpoint
-CREATE INDEX "idx_blog_posts_published_at" ON "blog_posts" USING btree ("published_at");--> statement-breakpoint
-CREATE INDEX "idx_coupons_code" ON "coupons" USING btree ("code");--> statement-breakpoint
-CREATE INDEX "idx_coupons_active" ON "coupons" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_customer_addresses_customer" ON "customer_addresses" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_customers_email_hash" ON "customers" USING btree ("email_hash");--> statement-breakpoint
-CREATE INDEX "idx_faq_category" ON "faqs" USING btree ("category_id");--> statement-breakpoint
-CREATE INDEX "idx_faq_active" ON "faqs" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_fs_prod_campaign" ON "flash_sale_products" USING btree ("flash_sale_id");--> statement-breakpoint
-CREATE INDEX "idx_fs_prod_product" ON "flash_sale_products" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_flash_sales_status" ON "flash_sales" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "idx_flash_sales_end_time" ON "flash_sales" USING btree ("end_time");--> statement-breakpoint
-CREATE INDEX "idx_search_query" ON "search_analytics" USING btree ("query");--> statement-breakpoint
-CREATE INDEX "idx_kb_article_slug" ON "kb_articles" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "idx_location_name" ON "store_locations" USING btree ("name");--> statement-breakpoint
-CREATE INDEX "idx_order_items_order" ON "order_items" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_orders_customer" ON "orders" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_orders_status" ON "orders" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "idx_orders_created" ON "orders" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "idx_orders_number" ON "orders" USING btree ("order_number");--> statement-breakpoint
-CREATE INDEX "idx_product_images_product" ON "product_images" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_variants_product" ON "product_variants" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_variants_attributes" ON "product_variants" USING btree ("attributes");--> statement-breakpoint
-CREATE INDEX "idx_products_slug" ON "products" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "idx_products_category" ON "products" USING btree ("category_id");--> statement-breakpoint
-CREATE INDEX "idx_products_active" ON "products" USING btree ("is_active") WHERE is_active = true;--> statement-breakpoint
-CREATE INDEX "idx_products_search" ON "products" USING btree ("name");--> statement-breakpoint
-CREATE INDEX "idx_reviews_product" ON "reviews" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_reviews_approved" ON "reviews" USING btree ("is_approved") WHERE is_approved = true;--> statement-breakpoint
-CREATE INDEX "idx_reviews_customer" ON "reviews" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_shipping_region" ON "shipping_zones" USING btree ("region");--> statement-breakpoint
-CREATE INDEX "idx_shipping_active" ON "shipping_zones" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "blueprint_niche_plan_idx" ON "onboarding_blueprints" USING btree ("niche_type","plan");
+CREATE INDEX IF NOT EXISTS "idx_carts_customer" ON "carts" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_carts_session" ON "carts" USING btree ("session_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_carts_expires" ON "carts" USING btree ("expires_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_categories_parent" ON "categories" USING btree ("parent_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_categories_active" ON "categories" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_menu_items_type" ON "menu_items" USING btree ("menu_type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_menu_items_parent" ON "menu_items" USING btree ("parent_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_menu_items_active" ON "menu_items" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_blog_posts_slug" ON "blog_posts" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_blog_posts_published" ON "blog_posts" USING btree ("is_published");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_blog_posts_published_at" ON "blog_posts" USING btree ("published_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_coupons_code" ON "coupons" USING btree ("code");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_coupons_active" ON "coupons" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_customer_addresses_customer" ON "customer_addresses" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_customers_email_hash" ON "customers" USING btree ("email_hash");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_faq_category" ON "faqs" USING btree ("category_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_faq_active" ON "faqs" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_fs_prod_campaign" ON "flash_sale_products" USING btree ("flash_sale_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_fs_prod_product" ON "flash_sale_products" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_flash_sales_status" ON "flash_sales" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_flash_sales_end_time" ON "flash_sales" USING btree ("end_time");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_search_query" ON "search_analytics" USING btree ("query");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_kb_article_slug" ON "kb_articles" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_location_name" ON "store_locations" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_order_items_order" ON "order_items" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_customer" ON "orders" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_status" ON "orders" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_created" ON "orders" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_number" ON "orders" USING btree ("order_number");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_product_images_product" ON "product_images" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_variants_product" ON "product_variants" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_variants_attributes" ON "product_variants" USING btree ("attributes");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_slug" ON "products" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_category" ON "products" USING btree ("category_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_active" ON "products" USING btree ("is_active") WHERE is_active = true;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_search" ON "products" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_reviews_product" ON "reviews" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_reviews_approved" ON "reviews" USING btree ("is_approved") WHERE is_approved = true;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_reviews_customer" ON "reviews" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_shipping_region" ON "shipping_zones" USING btree ("region");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_shipping_active" ON "shipping_zones" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "blueprint_niche_plan_idx" ON "onboarding_blueprints" USING btree ("niche_type","plan");
