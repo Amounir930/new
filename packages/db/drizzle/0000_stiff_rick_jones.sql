@@ -47,15 +47,17 @@ CREATE TABLE IF NOT EXISTS "tenants" (
 	"plan" text DEFAULT 'free' NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
 	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now(),
-	CONSTRAINT "tenants_subdomain_unique" UNIQUE("subdomain")
+	"updated_at" timestamp DEFAULT now()
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "tenants_subdomain_unique" ON "tenants" ("subdomain");
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"email" text NOT NULL,
 	"role" text DEFAULT 'user' NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
-	"created_at" timestamp DEFAULT now(),
-	CONSTRAINT "users_email_unique" UNIQUE("email")
+	"created_at" timestamp DEFAULT now()
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "users_email_unique" ON "users" ("email");

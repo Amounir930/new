@@ -59,4 +59,4 @@ CREATE INDEX IF NOT EXISTS "audit_logs_tenant_idx" ON "audit_logs" USING btree (
 CREATE INDEX IF NOT EXISTS "audit_logs_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "audit_logs_action_idx" ON "audit_logs" USING btree ("action");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "audit_logs_created_idx" ON "audit_logs" USING btree ("created_at");--> statement-breakpoint
-DO $$ BEGIN ALTER TABLE "users" ADD CONSTRAINT "users_email_hash_unique" UNIQUE("email_hash"); EXCEPTION WHEN duplicate_object THEN null; END $$;
+CREATE UNIQUE INDEX IF NOT EXISTS "users_email_hash_unique" ON "users" ("email_hash");
