@@ -50,13 +50,13 @@ CREATE TABLE IF NOT EXISTS "tenant_quotas" (
 );
 --> statement-breakpoint
 DO $$ BEGIN ALTER TABLE "users" DROP CONSTRAINT "users_email_unique"; EXCEPTION WHEN undefined_object THEN null; END $$;--> statement-breakpoint
-ALTER TABLE "audit_logs" ALTER COLUMN "metadata" SET DATA TYPE jsonb USING "metadata"::jsonb;--> statement-breakpoint
-ALTER TABLE "audit_logs" ALTER COLUMN "created_at" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_hash" text NOT NULL;--> statement-breakpoint
+DO $$ BEGIN ALTER TABLE "audit_logs" ALTER COLUMN "metadata" SET DATA TYPE jsonb USING "metadata"::jsonb; EXCEPTION WHEN others THEN null; END $$;--> statement-breakpoint
+DO $$ BEGIN ALTER TABLE "audit_logs" ALTER COLUMN "created_at" SET NOT NULL; EXCEPTION WHEN others THEN null; END $$;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "email_hash" text NOT NULL DEFAULT '';--> statement-breakpoint
 DO $$ BEGIN ALTER TABLE "feature_gates" ADD CONSTRAINT "feature_gates_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN null; END $$;--> statement-breakpoint
 DO $$ BEGIN ALTER TABLE "tenant_quotas" ADD CONSTRAINT "tenant_quotas_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action; EXCEPTION WHEN duplicate_object THEN null; END $$;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "audit_logs_tenant_idx" ON "audit_logs" USING btree ("tenant_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "audit_logs_entity_idx" ON "audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "audit_logs_action_idx" ON "audit_logs" USING btree ("action");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "audit_logs_created_idx" ON "audit_logs" USING btree ("created_at");--> statement-breakpoint
-ALTER TABLE "users" ADD CONSTRAINT "users_email_hash_unique" UNIQUE("email_hash");
+DO $$ BEGIN ALTER TABLE "users" ADD CONSTRAINT "users_email_hash_unique" UNIQUE("email_hash"); EXCEPTION WHEN duplicate_object THEN null; END $$;
