@@ -17,9 +17,4 @@ export class GovernanceController {
         return this.governanceService.getInfraHealth();
     }
 
-    @Get('bootstrap-migration')
-    @UseGuards(JwtAuthGuard, SuperAdminGuard)
-    async bootstrap() {
-        return this.governanceService.runGovernanceMigration();
-    }
 }

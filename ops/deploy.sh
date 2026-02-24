@@ -72,7 +72,7 @@ if [ ! -d "$DIR/ops/secrets" ]; then
     echo "   Run: bash ops/setup-secrets.sh"
     exit 1
 fi
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps --remove-orphans api admin store
+docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --no-deps --remove-orphans api merchant-admin super-admin store
 
 # 🔹 [4] PROPER Health Check
 echo "🏥 [4/4] Health verification..."

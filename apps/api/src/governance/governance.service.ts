@@ -48,32 +48,4 @@ export class GovernanceService {
     ];
   }
 
-  async runGovernanceMigration() {
-    const migrationSql = `
-      CREATE SCHEMA IF NOT EXISTS governance;
-      DO $$ 
-      BEGIN
-        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'tenants') THEN
-          ALTER TABLE public.tenants SET SCHEMA governance;
-        END IF;
-        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'onboarding_blueprints') THEN
-          ALTER TABLE public.onboarding_blueprints SET SCHEMA governance;
-        END IF;
-        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'subscription_plans') THEN
-          ALTER TABLE public.subscription_plans SET SCHEMA governance;
-        END IF;
-        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'feature_gates') THEN
-          ALTER TABLE public.feature_gates SET SCHEMA governance;
-        END IF;
-        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'tenant_quotas') THEN
-          ALTER TABLE public.tenant_quotas SET SCHEMA governance;
-        END IF;
-        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'system_config') THEN
-          ALTER TABLE public.system_config SET SCHEMA governance;
-        END IF;
-      END $$;
-      ALTER ROLE apex SET search_path TO governance, public;
-    `;
-    return publicDb.execute(sql.raw(migrationSql));
-  }
 }

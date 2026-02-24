@@ -29,6 +29,13 @@
       "when": 1771819060187,
       "tag": "0003_fortress_hardening_v3_final_consolidated_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771900000000,
+      "tag": "0004_automated_governance",
+      "breakpoints": true
     }
   ]
 }
