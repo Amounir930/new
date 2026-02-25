@@ -9,7 +9,9 @@ export const dbContextStorage = new AsyncLocalStorage<NodePgDatabase<any>>();
 /**
  * Get the current scoped database executor if available
  */
-export function getScopedDb<T extends Record<string, any>>(defaultDb: NodePgDatabase<T>): NodePgDatabase<T> {
-    const scoped = dbContextStorage.getStore();
-    return (scoped as NodePgDatabase<T>) || defaultDb;
+export function getScopedDb<T extends Record<string, any>>(
+  defaultDb: NodePgDatabase<T>
+): NodePgDatabase<T> {
+  const scoped = dbContextStorage.getStore();
+  return (scoped as NodePgDatabase<T>) || defaultDb;
 }

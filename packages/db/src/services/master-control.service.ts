@@ -1,41 +1,29 @@
-/**
- * Master Control Service (Rule 2: S2 Compliance)
- *
- * Global platform management for Super Admins.
- * Handles system-wide toggles and maintenance mode.
- *
- * @module @apex/db/services/master-control.service
- */
-
+import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
-import { db } from '../connection';
-import { systemConfig } from '../schema/governance';
+import { publicDb } from '../connection.js';
+import type { RedisService } from '../redis.service.js';
+import { systemSettings as systemConfig } from '../schema/governance.js';
 
+@Injectable()
 export class MasterControlService {
+  constructor(private readonly redisService: RedisService) {}
+
   /**
    * Set a global system configuration
    */
   async setConfig(key: string, value: any): Promise<void> {
-    await db
-      .insert(systemConfig)
-      .values({ key, value, updatedAt: new Date() })
-      .onConflictDoUpdate({
-        target: systemConfig.key,
-        set: { value, updatedAt: new Date() },
-      });
+    await publicDb.insert(systemConfig).values({ config: { [key]: value } });
+    // Note: system_settings uses 'config' jsonb, not 'key'/'value' columns like old systemConfig might have.
+    // I'll adjust to match the actual schema in governance.ts: system_settings(id, createdAt, updatedAt, config)
   }
 
   /**
    * Get a global system configuration
    */
   async getConfig<T = any>(key: string, defaultValue: T): Promise<T> {
-    const result = await db
-      .select()
-      .from(systemConfig)
-      .where(eq(systemConfig.key, key))
-      .limit(1);
+    const result = await publicDb.select().from(systemConfig).limit(1);
 
-    return (result[0]?.value as T) ?? defaultValue;
+    return (result[0]?.config as any)?.[key] ?? defaultValue;
   }
 
   /**
@@ -53,13 +41,20 @@ export class MasterControlService {
    * Toggle Master Maintenance Mode
    */
   async toggleMaintenance(enabled: boolean, message?: string): Promise<void> {
-    await this.setConfig('master_maintenance', {
+    const payload = {
       enabled,
       message:
         message ||
         'Platform is currently undergoing maintenance. Please try again later.',
-      updatedAt: new Date().toISOString(),
-    });
+    };
+
+    await this.setConfig('master_maintenance', payload);
+
+    // Mandate #19: Propagate via Redis Pub/Sub
+    await this.redisService.publish(
+      'platform:maintenance',
+      JSON.stringify(payload)
+    );
   }
 }
 

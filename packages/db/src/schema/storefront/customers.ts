@@ -1,95 +1,145 @@
 /**
- * Storefront Customer Schema
+ * Storefront Customer Schema — V5 Enterprise Hardening
  *
- * Customer and address tables for templates.
- *
- * @module @apex/db/schema/storefront/customers
+ * Tables: customers, addresses, payment_methods.
+ * Security: S7 Encrypted Safety + PII Compliance.
  */
 
+import { sql } from 'drizzle-orm';
 import {
   boolean,
-  char,
-  decimal,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
+import { consentChannelEnum } from '../enums';
+import {
+  deletedAt,
+  encryptedCheck,
+  encryptedText,
+  moneyAmount,
+  ulidId,
+} from '../v5-core';
 
 /**
- * Customers Table
+ * 👤 Customers Table
+ * ALIGNMENT: UUID -> TS -> BIGINT -> BOOL -> TEXT (Encrypted) -> ARRAY -> JSONB
  */
 export const customers = pgTable(
   'customers',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    // ── 1. Fixed ──
+    id: ulidId(),
+    tenantId: uuid('tenant_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    lastLoginAt: timestamp('last_login_at', {
+      withTimezone: true,
+      precision: 6,
+    }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true, precision: 6 }),
 
-    email: text('email').notNull(), // S7: Encrypted JSON { iv, content, tag }
-    emailHash: char('email_hash', { length: 64 }).notNull().unique(), // S7: Blind Index (SHA-256)
-    passwordHash: text('password_hash'), // Argon2id
+    // ── 2. Money ──
+    walletBalance: moneyAmount('wallet_balance').default(
+      sql`'(0,SAR)'::money_amount`
+    ),
 
-    firstName: text('first_name'), // S7: Encrypted JSON
-    lastName: text('last_name'), // S7: Encrypted JSON
-    phone: text('phone'), // S7: Encrypted JSON
-    phoneHash: char('phone_hash', { length: 64 }), // S7: Blind Index (SHA-256)
+    // ── 3. Boolean ──
+    isActive: boolean('is_active').default(true).notNull(),
+    emailVerified: boolean('email_verified').default(false).notNull(),
+    phoneVerified: boolean('phone_verified').default(false).notNull(),
+    // Audit 777 Point #6: Version must be NOT NULL and DEFAULT 1
+    version: integer('version').default(1).notNull(),
+
+    // ── 4. S7 Encrypted Scalars (Point #13) ──
+    // MUST use text() to prevent ciphertext overflow.
+    email: encryptedText('email').notNull(),
+    phone: text('phone'),
+    firstName: text('first_name'),
+    lastName: text('last_name'),
     avatarUrl: text('avatar_url'),
 
-    isVerified: boolean('is_verified').default(false),
+    // ── 4.1 Blind Indexes (Mandate #11, #14) ──
+    // Binary hashes for secure search without decryption
+    emailHash: text('email_hash'),
+    phoneHash: text('phone_hash'),
 
-    // Loyalty & Wallet
-    loyaltyPoints: integer('loyalty_points').default(0),
-    walletBalance: decimal('wallet_balance', {
-      precision: 10,
-      scale: 2,
-    }).default('0'),
+    // ── 5. Arrays ──
+    tags: text('tags').array(),
 
-    lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
-    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    // ── 6. JSONB ──
+    preferences: jsonb('preferences').notNull().default({}), // Fixed: jsonb with default
   },
   (table) => ({
-    idxCustomersEmailHash: index('idx_customers_email_hash').on(
-      table.emailHash
-    ),
+    // Directive #12: Soft-delete safe unique index for emails.
+    idxCustomerEmail: uniqueIndex('idx_customer_email_active')
+      .on(table.email)
+      .where(sql`deleted_at IS NULL`),
+    idxCustomerPhone: index('idx_customer_phone_active')
+      .on(table.phone)
+      .where(sql`deleted_at IS NULL`),
+
+    // Mandate #14: Blind Index Uniqueness
+    idxCustomerPhoneHash: uniqueIndex('idx_customer_phone_hash')
+      .on(table.phoneHash)
+      .where(sql`deleted_at IS NULL`),
+    idxCustomerEmailHash: uniqueIndex('idx_customer_email_hash')
+      .on(table.emailHash)
+      .where(sql`deleted_at IS NULL`),
+
+    // Mandate #10: S7 Structural Integrity Checks
+    emailEncrypted: encryptedCheck(table.email),
+    phoneEncrypted: encryptedCheck(table.phone),
+    firstNameEncrypted: encryptedCheck(table.firstName),
+    lastNameEncrypted: encryptedCheck(table.lastName),
   })
 );
 
 /**
- * Customer Addresses Table
+ * 📍 Customer Addresses
  */
 export const customerAddresses = pgTable(
   'customer_addresses',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    // ── Fixed ──
+    id: ulidId(),
+    tenantId: uuid('tenant_id').notNull(),
     customerId: uuid('customer_id')
       .notNull()
       .references(() => customers.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
 
-    label: varchar('label', { length: 50 }), // "Home", "Work"
-    name: varchar('name', { length: 255 }).notNull(), // Recipient name
+    // ── Boolean ──
+    isDefault: boolean('is_default').default(false).notNull(),
 
-    line1: varchar('line1', { length: 255 }).notNull(),
-    line2: varchar('line2', { length: 255 }),
-    city: varchar('city', { length: 100 }).notNull(),
-    state: varchar('state', { length: 100 }),
-    postalCode: varchar('postal_code', { length: 20 }).notNull(),
-    country: char('country', { length: 2 }).notNull(), // ISO 3166-1 alpha-2
-
-    phone: varchar('phone', { length: 20 }), // S7: Encrypted
-    isDefault: boolean('is_default').default(false),
+    // ── Text ──
+    // ── 7. PII Encryption (Point #26) ──
+    name: text('name'),
+    addressLine1: text('address_line1').notNull(), // S7 Encrypted
+    addressLine2: text('address_line2'), // S7 Encrypted
+    city: text('city').notNull(),
+    state: text('state'),
+    zipCode: text('zip_code'), // S7 Encrypted
+    country: text('country').notNull(), // ISO 3166-1
+    phone: text('phone'), // S7 Encrypted
   },
   (table) => ({
-    idxCustomerAddressesCustomer: index('idx_customer_addresses_customer').on(
-      table.customerId
-    ),
+    idxAddrCustomer: index('idx_addr_customer').on(table.customerId),
   })
 );
 
-// Type exports
+// Type Exports
 export type Customer = typeof customers.$inferSelect;
 export type NewCustomer = typeof customers.$inferInsert;
-
 export type CustomerAddress = typeof customerAddresses.$inferSelect;
-export type NewCustomerAddress = typeof customerAddresses.$inferInsert;

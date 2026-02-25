@@ -1,5 +1,5 @@
 /**
- * Storefront Configuration Schema
+ * Storefront Configuration Schema — V5
  *
  * Tenant config and navigation tables for templates.
  *
@@ -12,37 +12,44 @@ import {
   integer,
   jsonb,
   pgTable,
+  text,
   timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
+import { ulidId } from '../v5-core';
 
 /**
  * Tenant Config Table (key-value storage)
  */
 export const tenantConfig = pgTable('tenant_config', {
-  key: varchar('key', { length: 100 }).primaryKey(),
-  value: jsonb('value').notNull(),
+  key: text('key').primaryKey(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  value: jsonb('value').notNull(),
 });
 
 /**
  * Menu Items Table (navigation)
+ * Column alignment: UUID → TIMESTAMPTZ → INT → BOOLEAN → TEXT
  */
 export const menuItems = pgTable(
   'menu_items',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    // ── Fixed (Alignment) ──
+    id: ulidId(),
+    parentId: uuid('parent_id').references((): any => menuItems.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 
-    menuType: varchar('menu_type', { length: 20 }).notNull(), // header, footer, mobile
-    parentId: uuid('parent_id').references((): any => menuItems.id), // Self-reference for nested menus
-
-    label: varchar('label', { length: 100 }).notNull(),
-    url: varchar('url', { length: 255 }),
-    icon: varchar('icon', { length: 50 }),
-
+    // ── Integer ──
     order: integer('order').default(0),
+
+    // ── Boolean ──
     isActive: boolean('is_active').default(true),
+
+    // ── Scalar ──
+    menuType: text('menu_type').notNull(),
+    label: text('label').notNull(),
+    url: text('url'),
+    icon: text('icon'),
   },
   (table) => ({
     idxMenuItemsType: index('idx_menu_items_type').on(table.menuType),
@@ -51,9 +58,7 @@ export const menuItems = pgTable(
   })
 );
 
-// Type exports
+// ─── Type Exports ───────────────────────────────────────────
 export type TenantConfig = typeof tenantConfig.$inferSelect;
-export type NewTenantConfig = typeof tenantConfig.$inferInsert;
-
 export type MenuItem = typeof menuItems.$inferSelect;
 export type NewMenuItem = typeof menuItems.$inferInsert;

@@ -1,46 +1,44 @@
 /**
- * Payment Logs Schema
+ * Storefront Payment Logs Schema — V5 Enterprise Hardening
  *
- * Forensic logs for payment transactions, successes, and failures.
+ * Forensic record of external gateway interactions.
+ * High Volume: BRIN indexing for audit compliance.
  *
  * @module @apex/db/schema/storefront/payment-logs
  */
 
-import {
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { ulidId } from '../v5-core';
 import { orders } from './orders';
 
 /**
  * Payment Logs Table
+ * Alignment: UUID -> TIMESTAMPTZ -> TEXT
  */
-export const paymentLogs = pgTable('payment_logs', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  orderId: uuid('order_id').references(() => orders.id, {
-    onDelete: 'cascade',
-  }),
+export const paymentLogs = pgTable(
+  'payment_logs',
+  {
+    // ── Fixed ──
+    id: ulidId(),
+    orderId: uuid('order_id').references(() => orders.id),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 
-  provider: varchar('provider', { length: 50 }).notNull(), // Stripe, PayPal, COD
-  transactionId: varchar('transaction_id', { length: 255 }),
+    // ── Scalar ──
+    gateway: text('gateway').notNull(), // Stripe, PayPal, Moyasar
+    action: text('action').notNull(), // authorize, capture, webhook_received
+    status: text('status').notNull(), // success, failure
+    requestPayload: text('request_payload'),
+    responsePayload: text('response_payload'),
+    errorMessage: text('error_message'),
+  },
+  (table) => ({
+    idxPaymentLogOrder: index('idx_payment_log_order').on(table.orderId),
+    // Performance: BRIN for high-volume logs
+    idxPaymentLogCreated: index('idx_payment_log_created_brin').using(
+      'brin',
+      table.createdAt
+    ),
+  })
+);
 
-  status: varchar('status', { length: 20 }).notNull(), // success, failed, pending
-
-  errorCode: varchar('error_code', { length: 100 }),
-  errorMessage: text('error_message'),
-
-  // Full provider response for forensic analysis
-  rawResponse: jsonb('raw_response'),
-
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-/**
- * Type Exports
- */
 export type PaymentLog = typeof paymentLogs.$inferSelect;
-export type NewPaymentLog = typeof paymentLogs.$inferInsert;

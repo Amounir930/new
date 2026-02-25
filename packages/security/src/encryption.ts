@@ -110,9 +110,10 @@ export function hashApiKey(apiKey: string, secret: string): string {
  * Generates deterministic hash for searching encrypted fields (email, phone).
  * Uses a separate secret (BLIND_INDEX_PEPPER) to prevent rainbow table attacks.
  */
-export function hashSensitiveData(value: string, pepper: string): string {
+export function hashSensitiveData(value: string, pepper: string, salt?: string): string {
   const { createHmac } = require('node:crypto');
-  return createHmac('sha256', pepper).update(value).digest('hex');
+  const finalKey = salt ? `${pepper}:${salt}` : pepper;
+  return createHmac('sha256', finalKey).update(value).digest('hex');
 }
 
 /**
@@ -243,13 +244,13 @@ export class EncryptionService {
     return hashApiKey(apiKey, this.apiKeySecret || 'test-secret');
   }
 
-  hashSensitiveData(value: string): string {
+  hashSensitiveData(value: string, salt?: string): string {
     if (!this.blindIndexPepper && this.config.get('NODE_ENV') === 'production') {
       throw new Error(
         'S1 Violation: BLIND_INDEX_PEPPER is required in production'
       );
     }
-    return hashSensitiveData(value, this.blindIndexPepper || 'test-pepper');
+    return hashSensitiveData(value, this.blindIndexPepper || 'test-pepper', salt);
   }
 
   generateApiKey(): string {

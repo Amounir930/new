@@ -1,5 +1,5 @@
 /**
- * Notifications Schema
+ * Notifications Schema — V5
  *
  * Tables for user-facing notifications.
  *
@@ -8,36 +8,48 @@
 
 import {
   boolean,
+  index,
   pgTable,
   text,
   timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
+import { ulidId } from '../v5-core';
 import { customers } from './customers';
 
 /**
  * Notifications Table
+ * Column alignment: UUID → TIMESTAMPTZ → BOOLEAN → TEXT
  */
-export const notifications = pgTable('notifications', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  customerId: uuid('customer_id')
-    .notNull()
-    .references(() => customers.id, { onDelete: 'cascade' }),
+export const notifications = pgTable(
+  'notifications',
+  {
+    // ── Fixed (Alignment) ──
+    id: ulidId(),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 
-  title: varchar('title', { length: 255 }).notNull(),
-  content: text('content').notNull(),
+    // ── Boolean ──
+    isRead: boolean('is_read').default(false),
 
-  type: varchar('type', { length: 50 }).default('general'), // order, promo, system, wallet
-  isRead: boolean('is_read').default(false),
+    // ── Scalar ──
+    type: text('type').default('general'),
+    title: text('title').notNull(),
+    content: text('content').notNull(),
+    metadata: text('metadata'),
+  },
+  (table) => ({
+    idxNotificationCustomer: index('idx_notification_customer').on(
+      table.customerId
+    ),
+    idxNotificationCreated: index('idx_notification_created').on(
+      table.createdAt
+    ),
+  })
+);
 
-  metadata: varchar('metadata', { length: 500 }), // JSON string for action links, etc.
-
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-/**
- * Type Exports
- */
+// ─── Type Exports ───────────────────────────────────────────
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;

@@ -137,6 +137,25 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       '/favicon.ico',
     ];
     const currentPath = req.originalUrl || req.path || '';
+
+    // S15 FIX: Global Maintenance Mode Check (Auditor Point #15)
+    try {
+      const { systemSettings } = await import('@apex/db');
+      const settings = await publicDb.select().from(systemSettings).limit(1);
+      const isMaintenance = (settings[0]?.config as any)?.master_maintenance?.enabled;
+
+      // Super admins bypass maintenance mode
+      if (isMaintenance && req.user?.role !== 'super_admin' && !bypassRoutes.includes(currentPath)) {
+        res.status(HttpStatus.SERVICE_UNAVAILABLE).json({
+          error: 'Maintenance',
+          message: (settings[0]?.config as any)?.master_maintenance?.message || 'Platform under maintenance'
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn('S15: Failed to check maintenance mode status', err);
+    }
+
     if (bypassRoutes.some(route => currentPath === route || currentPath.startsWith(`${route}/`))) {
       return next();
     }
@@ -151,7 +170,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         const signature = req.headers['stripe-signature'] || req.headers['x-webhook-signature'] || '';
 
         // S2 FIX 21A: Use preserved raw body bytes, NOT re-serialized JSON
-        // JSON.stringify destroys key ordering/whitespace → HMAC mismatch 100% of the time
         const rawBodyBuffer: Buffer = (req as any).rawBody || Buffer.from(JSON.stringify(req.body || {}));
 
         const expectedSig = crypto.createHmac('sha256', env.WEBHOOK_SECRET || '')
@@ -165,7 +183,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
           return;
         }
 
-        // S2 FIX 21A: Strict sanitization — prevent NoSQL/ORM injection via payload
         const rawTenantId = req.body?.metadata?.tenantId || req.body?.tenantId;
         if (!rawTenantId || typeof rawTenantId !== 'string' || !/^[a-zA-Z0-9_-]{3,50}$/.test(rawTenantId)) {
           res.status(HttpStatus.BAD_REQUEST).json({ error: 'Missing or malformed tenantId in payload' });
@@ -180,8 +197,14 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     }
 
     // S2 FIX 19B: Validate BEFORE connecting to pool (DoS Prevention)
-    // Fake tenants are rejected using lightweight publicDb, not the dedicated pool.
+    // S9 FIX: Kill-Switch Logic (Auditor Point #9)
     const baseContext = await validateTenant(identifier);
+    const tenantStatus = (baseContext as any).status;
+
+    if (tenantStatus !== 'active' && req.user?.role !== 'super_admin') {
+      res.status(HttpStatus.FORBIDDEN).json({ error: 'Tenant Suspended', message: 'This storefront has been suspended by governance.' });
+      return;
+    }
 
     // S15 FIX 19A: Steel Control - set isSuspended flag instead of throwing
     // Guards enforce suspension (Super Admin bypasses, regular users blocked)
@@ -202,9 +225,11 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
     try {
       // 🚀 Performance Optimization: Combined Session Prep
-      // S2: Secure Session Prep (SQL Injection Fix)
-      await client.query(`SET search_path TO "${baseContext.schemaName}"`);
-      await client.query('SELECT set_config(\'app.current_tenant_id\', $1, false)', [baseContext.tenantId]);
+      // S2: Secure Session Prep (SQL Injection Fix - Audit 777 Point #38)
+      // schemaName is already sanitized, but we use double quotes for schema qualification.
+      await client.query(`SET LOCAL search_path TO "${baseContext.schemaName}", public`);
+      await client.query('SELECT set_config(\'app.current_tenant\', $1, true)', [baseContext.tenantId]);
+      await client.query('SET statement_timeout = \'10s\''); // Mandate #25: DoS Protection
 
       // Create scoped Drizzle instance using THIS SPECIFIC CLIENT
       const scopedDb = drizzle(client);

@@ -6,8 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": true,
-    "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"]
+    "ignoreUnknown": true
   },
   "formatter": {
     "enabled": true,
@@ -59,7 +58,7 @@
   },
   "overrides": [
     {
-      "include": [
+      "ignore": [
         "packages/db/drizzle/meta/**",
         "packages/db/drizzle/_journal.json"
       ],
@@ -71,13 +70,17 @@
       }
     },
     {
-      "include": ["**/package.json"],
+      "ignore": [
+        "**/package.json"
+      ],
       "formatter": {
         "enabled": false
       }
     },
     {
-      "include": ["**/next-env.d.ts"],
+      "ignore": [
+        "**/next-env.d.ts"
+      ],
       "formatter": {
         "enabled": false
       },

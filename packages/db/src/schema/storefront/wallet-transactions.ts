@@ -1,44 +1,59 @@
 /**
- * Wallet Transactions Schema
+ * Storefront Wallet Transactions Schema — V5 Enterprise Hardening
  *
- * S7: Forensic financial logging for customer wallets.
+ * Immutable ledger for customer store credit.
+ * Financial Integrity: money_amount composite + Not-NULL balances.
  *
  * @module @apex/db/schema/storefront/wallet-transactions
  */
 
+import { sql } from 'drizzle-orm';
 import {
-  decimal,
+  check,
+  index,
   pgTable,
   text,
   timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
+import { moneyAmount, ulidId } from '../v5-core';
 import { customers } from './customers';
-import { orders } from './orders';
 
 /**
- * Wallet Transactions Table
+ * Wallet Transactions Table (Ledger)
+ * Alignment: UUID -> TIMESTAMPTZ -> MONEY -> TEXT
  */
-export const walletTransactions = pgTable('wallet_transactions', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  customerId: uuid('customer_id')
-    .notNull()
-    .references(() => customers.id, { onDelete: 'cascade' }),
+export const walletTransactions = pgTable(
+  'wallet_transactions',
+  {
+    // ── Fixed (Alignment Tier 1) ──
+    id: ulidId(),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id, { onDelete: 'restrict' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 
-  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
-  type: varchar('type', { length: 20 }).notNull(), // credit, debit
+    // ── Money (Alignment Tier 2) ──
+    amount: moneyAmount('amount').notNull(),
+    balanceAfter: moneyAmount('balance_after').notNull(),
 
-  reason: varchar('reason', { length: 100 }).notNull(), // refund, topup, purchase, promo
-  description: text('description'),
+    // ── Scalar / Text ──
+    type: text('type').notNull(), // deposit, withdrawal, refund, order_payment
+    referenceId: text('reference_id'), // order_id or external_tx_id
+    description: text('description'),
+  },
+  (table) => ({
+    idxWalletCustomer: index('idx_wallet_customer').on(table.customerId),
+    idxWalletCreated: index('idx_wallet_created_brin').using(
+      'brin',
+      table.createdAt
+    ),
+    // Fatal Mandate #21: Physical Non-Negative Balance Check
+    balanceCheck: check(
+      'ck_wallet_balance_positive',
+      sql`("balance_after"->>'amount')::BIGINT >= 0`
+    ),
+  })
+);
 
-  orderId: uuid('order_id').references(() => orders.id), // For purchase/refund links
-
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-/**
- * Type Exports
- */
 export type WalletTransaction = typeof walletTransactions.$inferSelect;
-export type NewWalletTransaction = typeof walletTransactions.$inferInsert;

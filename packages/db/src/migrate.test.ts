@@ -47,9 +47,9 @@ describe('Migration Script Structure', () => {
     expect(content).toContain('validateEnv()');
   });
 
-  it('should use drizzle with pool', () => {
+  it('should use drizzle with pool client', () => {
     const content = readFileSync(migratePath, 'utf-8');
-    expect(content).toContain('drizzle(pool)');
+    expect(content).toContain('drizzle(client)');
   });
 
   it('should call migrate with correct parameters', () => {
@@ -60,7 +60,7 @@ describe('Migration Script Structure', () => {
 
   it('should log migration progress', () => {
     const content = readFileSync(migratePath, 'utf-8');
-    expect(content).toContain('Running migrations...');
+    expect(content).toContain('Running migrations for');
     expect(content).toContain('Migrations completed successfully');
   });
 

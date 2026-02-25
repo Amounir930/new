@@ -1,44 +1,46 @@
 /**
- * Order Timeline Schema
+ * Storefront Order Timeline Schema — V5 Enterprise Hardening
  *
- * Snapshot history for order status changes and tracking events.
+ * Audit trail for order-related events.
+ * High Volume: BRIN indexing on createdAt.
  *
  * @module @apex/db/schema/storefront/timeline
  */
 
-import {
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-  varchar,
-} from 'drizzle-orm/pg-core';
+import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { ulidId } from '../v5-core';
 import { orders } from './orders';
 
 /**
  * Order Timeline Table
+ * Alignment: UUID -> TIMESTAMPTZ -> TEXT -> JSONB
  */
-export const orderTimeline = pgTable('order_timeline', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  orderId: uuid('order_id').references(() => orders.id, {
-    onDelete: 'cascade',
-  }),
+export const orderTimeline = pgTable(
+  'order_timeline',
+  {
+    // ── Fixed (Alignment Tier 1) ──
+    id: ulidId(),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 
-  status: varchar('status', { length: 50 }).notNull(), // pending, shipped, etc.
-  title: varchar('title', { length: 255 }), // Display title in Arabic/English
-  notes: text('notes'), // Detailed description
+    // ── Scalar (Alignment Tier 2) ──
+    event: text('event').notNull(), // order_shipped, payment_authorized
+    actorType: text('actor_type').notNull(), // admin, customer, system
+    actorId: text('actor_id'),
 
-  // Optional snapshot of location { city: string, lat: number, lng: number }
-  location: jsonb('location'),
+    // ── JSONB (Variable) ──
+    metadata: text('metadata'), // JSON string or text details
+  },
+  (table) => ({
+    idxTimelineOrder: index('idx_timeline_order').on(table.orderId),
+    // Performance: BRIN for sequential timeline tracking
+    idxTimelineCreated: index('idx_timeline_created_brin').using(
+      'brin',
+      table.createdAt
+    ),
+  })
+);
 
-  updatedBy: uuid('updated_by'), // Reference to admin/staff id
-
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-});
-
-/**
- * Type Exports
- */
 export type OrderTimeline = typeof orderTimeline.$inferSelect;
-export type NewOrderTimeline = typeof orderTimeline.$inferInsert;

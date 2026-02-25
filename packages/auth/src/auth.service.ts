@@ -17,14 +17,16 @@ export interface AuthUser {
 
 @Injectable()
 export class AuthService {
-  constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
+  constructor(@Inject(JwtService) private readonly jwtService: JwtService) { }
 
   async generateToken(user: AuthUser): Promise<string> {
-    const payload: JwtPayload = {
+    const crypto = await import('node:crypto');
+    const payload: JwtPayload & { jti: string } = {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
       role: user.role,
+      jti: crypto.randomUUID(), // Audit 777 Point #47: Session ID regeneration
     };
     return this.jwtService.sign(payload);
   }

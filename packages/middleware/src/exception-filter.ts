@@ -166,6 +166,16 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       };
     }
 
+    // Generic Error (Audit 777 Point #50: Map SQL errors)
+    const err = exception as any;
+    if (err.code && typeof err.code === 'string' && err.code.startsWith('23')) {
+      return {
+        statusCode: HttpStatus.CONFLICT,
+        message: 'Data integrity violation. Please check your inputs.',
+        error: 'Conflict',
+      };
+    }
+
     // Default: Internal server error
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,

@@ -1,5 +1,5 @@
 /**
- * FAQ Schema
+ * FAQ Schema — V5
  *
  * Tables for Frequently Asked Questions.
  *
@@ -14,40 +14,51 @@ import {
   text,
   timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
+import { ulidId } from '../v5-core';
 
 /**
  * FAQ Categories Table
  */
 export const faqCategories = pgTable('faq_categories', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: varchar('name', { length: 100 }).notNull(),
+  // ── Fixed (Alignment) ──
+  id: ulidId(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+
+  // ── Integer ──
   order: integer('order').default(0),
+
+  // ── Boolean ──
   isActive: boolean('is_active').default(true),
 
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  // ── Scalar ──
+  name: text('name').notNull(),
 });
 
 /**
  * FAQs Table
+ * Column alignment: UUID → TIMESTAMPTZ → INT → BOOLEAN → TEXT
  */
 export const faqs = pgTable(
   'faqs',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    // ── Fixed (Alignment) ──
+    id: ulidId(),
     categoryId: uuid('category_id').references(() => faqCategories.id, {
       onDelete: 'set null',
     }),
-
-    question: varchar('question', { length: 500 }).notNull(),
-    answer: text('answer').notNull(),
-
-    order: integer('order').default(0),
-    isActive: boolean('is_active').default(true),
-
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+
+    // ── Integer ──
+    order: integer('order').default(0),
+
+    // ── Boolean ──
+    isActive: boolean('is_active').default(true),
+
+    // ── Scalar ──
+    question: text('question').notNull(),
+    answer: text('answer').notNull(),
   },
   (table) => ({
     idxFaqCategory: index('idx_faq_category').on(table.categoryId),
@@ -55,11 +66,6 @@ export const faqs = pgTable(
   })
 );
 
-/**
- * Type Exports
- */
+// ─── Type Exports ───────────────────────────────────────────
 export type FaqCategory = typeof faqCategories.$inferSelect;
-export type NewFaqCategory = typeof faqCategories.$inferInsert;
-
 export type Faq = typeof faqs.$inferSelect;
-export type NewFaq = typeof faqs.$inferInsert;

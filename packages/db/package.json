@@ -16,7 +16,7 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push:pg",
-    "db:migrate": "bun src/migrate.ts",
+    "db:migrate": "bun src/run-migrate.ts",
     "db:studio": "drizzle-kit studio",
     "test": "cross-env NODE_ENV=test bun test",
     "test:s2": "cross-env NODE_ENV=test bun test src/s2-isolation.test.ts",

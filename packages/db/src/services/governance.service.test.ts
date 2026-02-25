@@ -11,20 +11,29 @@ mock.module('drizzle-orm', () => {
   };
 });
 
-// 2. Mock the DB index Natively in Bun
-mock.module('../index', () => {
+// 3. Mock RedisService
+mock.module('../redis.service', () => {
   return {
-    db: {
-      execute: async () => [{ count: 0 }],
+    RedisService: class {
+      subscribe = async () => {};
+      publish = async () => 0;
     },
-    publicDb: {
-      select: () => ({ from: () => ({ where: () => ({ limit: () => [] }) }) }),
-    },
-    getTenantTableName: (t: string, s: string) => `${s}.${t}`,
+    getGlobalRedis: async () => ({
+      getClient: () => ({}),
+    }),
   };
 });
 
-import { governanceService } from './governance.service';
+// 4. Mock @apex/security
+mock.module('@apex/security', () => {
+  return {
+    EncryptionService: class {
+      decrypt = (v: any) => v;
+    },
+  };
+});
+
+import { governanceService } from './governance.service.js';
 
 describe('GovernanceService Logic (Bun Native Mock)', () => {
   it('should verify Stage 2 logic: allowed = current < limit', async () => {
@@ -33,7 +42,12 @@ describe('GovernanceService Logic (Bun Native Mock)', () => {
     const countSpy = spyOn(governanceService as any, 'getResourceCount');
 
     // Case 1: Over/At Limit
-    limitsSpy.mockResolvedValue({ maxProducts: 5, maxOrders: 10, maxPages: 5 });
+    limitsSpy.mockResolvedValue({
+      maxProducts: 5,
+      maxOrders: 10,
+      maxPages: 5,
+      ownerEmail: 'admin@test.com',
+    });
     countSpy.mockResolvedValue(5);
     let result = await governanceService.checkQuota('t1', 'products', 's1');
     expect(result.allowed).toBe(false);
@@ -44,7 +58,12 @@ describe('GovernanceService Logic (Bun Native Mock)', () => {
     expect(result.allowed).toBe(true);
 
     // Case 3: Banned (Limit 0)
-    limitsSpy.mockResolvedValue({ maxProducts: 0, maxOrders: 10, maxPages: 5 });
+    limitsSpy.mockResolvedValue({
+      maxProducts: 0,
+      maxOrders: 10,
+      maxPages: 5,
+      ownerEmail: 'admin@test.com',
+    });
     countSpy.mockResolvedValue(0);
     result = await governanceService.checkQuota('t1', 'products', 's1');
     expect(result.allowed).toBe(false);

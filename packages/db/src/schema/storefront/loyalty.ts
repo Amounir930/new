@@ -1,5 +1,5 @@
 /**
- * Loyalty System Schema
+ * Loyalty System Schema — V5
  *
  * Tables for loyalty rules and points management.
  *
@@ -7,32 +7,37 @@
  */
 
 import {
+  boolean,
   integer,
   jsonb,
   pgTable,
+  text,
   timestamp,
-  uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
+import { ulidId } from '../v5-core';
 
 /**
  * Loyalty Rules Table
  */
 export const loyaltyRules = pgTable('loyalty_rules', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  name: varchar('name', { length: 100 }).notNull(),
+  // ── Fixed (Alignment) ──
+  id: ulidId(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 
+  // ── Integer ──
   pointsPerCurrency: integer('points_per_currency').default(1),
   minRedeemPoints: integer('min_redeem_points').default(100),
   pointsExpiryDays: integer('points_expiry_days'), // NULL = never
 
-  // Reward mapping [{ points: 500, couponCode: 'LOYAL50' }]
+  // ── Boolean (Decision #2.1: Unified Booleans) ──
+  isActive: boolean('is_active').default(true),
+
+  // ── Scalar ──
+  name: text('name').notNull(),
+
+  // ── JSONB (Decision #5: i18n/Metadata) ──
   rewards: jsonb('rewards').default([]),
-
-  isActive: integer('is_active').default(1),
-
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 /**

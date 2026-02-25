@@ -33,10 +33,19 @@ mock.module('./schema.js', () => ({
   },
 }));
 
+// Mock @apex/security
+mock.module('@apex/security', () => ({
+  EncryptionService: class {
+    encrypt = (v: any) => ({ encrypted: v, iv: 'iv', tag: 'tag' });
+    decrypt = (v: any) => (typeof v === 'string' ? v : v.encrypted);
+  },
+}));
+
 // Mock drizzle-orm
 mock.module('drizzle-orm', () => ({
   eq: mock().mockReturnValue('eq-mock'),
   or: mock().mockReturnValue('or-mock'),
+  desc: mock().mockReturnValue('desc-mock'),
 }));
 
 describe('TenantRegistryService', () => {
@@ -49,7 +58,10 @@ describe('TenantRegistryService', () => {
     mockDb.insert.mockClear();
     mockDb.select.mockClear();
 
-    service = new TenantRegistryService();
+    service = new TenantRegistryService({
+      encrypt: (v: any) => ({ encrypted: v, iv: 'iv', tag: 'tag' }),
+      decrypt: (v: any) => (typeof v === 'string' ? v : v.encrypted),
+    } as any);
   });
 
   describe('exists', () => {
@@ -69,10 +81,17 @@ describe('TenantRegistryService', () => {
 
   describe('getBySubdomain', () => {
     it('should return tenant record if found', async () => {
-      const mockRecord = { id: 't1', subdomain: 'alpha', name: 'Alpha' };
+      const mockRecord = {
+        id: 't1',
+        subdomain: 'alpha',
+        name: 'Alpha',
+        status: 'active',
+      };
       mockDb.limit.mockResolvedValueOnce([mockRecord]);
       const result = await service.getBySubdomain('alpha');
-      expect(result).toEqual(mockRecord);
+      expect(result).toEqual(
+        expect.objectContaining({ id: 't1', subdomain: 'alpha' })
+      );
     });
 
     it('should return null if not found', async () => {
@@ -88,12 +107,16 @@ describe('TenantRegistryService', () => {
         subdomain: 'new',
         name: 'New Store',
         plan: 'pro' as const,
+        nicheType: 'retail',
+        uiConfig: {},
       };
       const mockRecord = { ...mockData, id: 'uuid-new', status: 'active' };
       mockDb.returning.mockResolvedValueOnce([mockRecord]);
 
-      const result = await service.register(mockData);
-      expect(result).toEqual(mockRecord);
+      const result = await service.register(mockData as any);
+      expect(result).toEqual(
+        expect.objectContaining({ id: 'uuid-new', subdomain: 'new' })
+      );
       expect(mockDb.insert).toHaveBeenCalled();
     });
   });

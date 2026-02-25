@@ -8,8 +8,8 @@ import {
   type HomePageBlueprint,
   HomePageBlueprintSchema,
 } from '@apex/validators';
-import { desc, eq, sql } from 'drizzle-orm';
-import { db } from '../connection';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { publicDb as db } from '../connection.js';
 import {
   type FlashSaleProduct,
   type TenantConfig,
@@ -18,7 +18,7 @@ import {
   flashSales,
   searchAnalytics,
   tenantConfig,
-} from '../schema/storefront';
+} from '../schema/storefront/index.js';
 
 export class HomePageService {
   /**
@@ -48,7 +48,7 @@ export class HomePageService {
     const flashCampaign = await db
       .select()
       .from(flashSales)
-      .where(eq(flashSales.status, 'active'))
+      .where(and(eq(flashSales.status, 'active'), isNull(flashSales.deletedAt)))
       .limit(1);
     let flashSalesData: any;
 
@@ -61,13 +61,17 @@ export class HomePageService {
         endTime: flashCampaign[0].endTime.toISOString(),
         products: products.map((p: FlashSaleProduct) => ({
           productId: p.productId,
-          discountPercentage: Number(p.discountPercentage),
+          discountPercentage: Number(p.discountBasisPoints) / 100,
           quantityLimit: p.quantityLimit,
         })),
       };
     }
 
-    const bento = await db.select().from(bentoGrids).limit(1);
+    const bento = await db
+      .select()
+      .from(bentoGrids)
+      .where(isNull(bentoGrids.deletedAt))
+      .limit(1);
 
     const blueprint = {
       header: header || { navigation: [] },
@@ -97,7 +101,7 @@ export class HomePageService {
       })
       .onConflictDoUpdate({
         target: tenantConfig.key,
-        set: { value: heroData, updatedAt: new Date() },
+        set: { value: heroData },
       });
   }
 
@@ -119,7 +123,7 @@ export class HomePageService {
           campaign.products.map((p: any) => ({
             flashSaleId: newCampaign.id,
             productId: p.productId,
-            discountPercentage: p.discountPercentage.toString(),
+            discountBasisPoints: Math.round(Number(p.discountPercentage) * 100),
             quantityLimit: p.quantityLimit,
           }))
         );
@@ -156,7 +160,7 @@ export class HomePageService {
         set: {
           // 🔒 S11: Safe atomic increment. Isolation verified via S2 search_path.
           count: sql`count + 1 /* S2: WHERE isolation_verified */`,
-          lastSearchedAt: new Date(),
+          lastSearchedAt: sql`CLOCK_TIMESTAMP()`,
         },
         // S2: Prove isolation to security scanner
         where: eq(searchAnalytics.query, normalizedQuery),

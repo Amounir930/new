@@ -6,20 +6,18 @@
 
 import { type MasterBlueprint, MasterBlueprintSchema } from '@apex/validators';
 import { eq } from 'drizzle-orm';
-import { db } from '../connection';
+import { db } from '../connection.js';
 import {
   type Category,
   categories,
+  shippingMethods,
   shippingZones,
   storeLocations,
   tenantConfig,
-} from '../schema/storefront';
-import { homePageService } from './home-page.service';
+} from '../schema/storefront/index.js';
+import { homePageService } from './home-page.service.js';
 
 export class MasterBlueprintService {
-  /**
-   * Get the complete Master Blueprint for a tenant
-   */
   /**
    * Get the complete Master Blueprint for a tenant
    */
@@ -33,11 +31,16 @@ export class MasterBlueprintService {
     const getConfig = (key: string, defaultVal: any) =>
       configRows.find((r) => r.key === key)?.value || defaultVal;
 
-    // Get Shipping Zones
+    // Get Shipping Zones & Methods (Joined)
     const zones = await db
-      .select()
+      .select({
+        region: shippingZones.name,
+        price: shippingMethods.basePrice,
+        estimatedDays: shippingMethods.estimatedDays,
+      })
       .from(shippingZones)
-      .where(eq(shippingZones.isActive, 1));
+      .innerJoin(shippingMethods, eq(shippingMethods.zoneId, shippingZones.id))
+      .where(eq(shippingZones.isActive, true));
 
     // Get Store Locations
     const branches = await db.select().from(storeLocations).limit(5);
@@ -51,7 +54,7 @@ export class MasterBlueprintService {
         ...getConfig('checkout_config', { paymentMethods: ['cod'] }),
         shippingZones: zones.map((z) => ({
           region: z.region,
-          price: Number(z.basePrice),
+          price: Number((z.price as any)?.amount ?? 0),
           estimatedDays: z.estimatedDays || undefined,
         })),
       },
@@ -136,7 +139,7 @@ export class MasterBlueprintService {
       })
       .onConflictDoUpdate({
         target: tenantConfig.key,
-        set: { value: pdpData, updatedAt: new Date() },
+        set: { value: pdpData },
       });
   }
 
@@ -178,7 +181,6 @@ export class MasterBlueprintService {
         bannerUrl: data.bannerUrl,
         metaTitle: data.metaTitle,
         metaDescription: data.metaDescription,
-        updatedAt: new Date() as any, // Assuming it exists, if not Drizzle handles it if defined
       })
       .where(eq(categories.id, categoryId));
   }

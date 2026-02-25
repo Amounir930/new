@@ -1,49 +1,62 @@
 /**
- * RMA (Return Merchandise Authorization) Schema
+ * RMA (Return Merchandise Authorization) Schema — V5 Enterprise Hardening
  *
- * Tables for managing product returns and refunds.
+ * Tables for managing product returns.
+ * Logic: RESTRICT on orders + order_items (preserve financial trail).
  *
  * @module @apex/db/schema/storefront/rma
  */
 
 import {
+  index,
   jsonb,
   pgTable,
   text,
   timestamp,
   uuid,
-  varchar,
 } from 'drizzle-orm/pg-core';
+import {
+  rmaConditionEnum,
+  rmaReasonCodeEnum,
+  rmaResolutionEnum,
+} from '../enums';
+import { ulidId } from '../v5-core';
 import { orderItems, orders } from './orders';
 
 /**
  * RMA Requests Table
+ * Alignment: UUID -> TIMESTAMPTZ -> ENUM -> TEXT -> JSONB
  */
-export const rmaRequests = pgTable('rma_requests', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  orderId: uuid('order_id')
-    .notNull()
-    .references(() => orders.id, { onDelete: 'cascade' }),
+export const rmaRequests = pgTable(
+  'rma_requests',
+  {
+    // ── Fixed (Alignment Tier 1) ──
+    id: ulidId(),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'restrict' }),
+    orderItemId: uuid('order_item_id')
+      .notNull()
+      .references(() => orderItems.id, { onDelete: 'restrict' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 
-  // Optional: reference specific item
-  orderItemId: uuid('order_item_id').references(() => orderItems.id),
+    // ── Enum (Alignment Tier 2/3) ──
+    reasonCode: rmaReasonCodeEnum('reason_code').notNull(),
+    condition: rmaConditionEnum('condition').default('new').notNull(),
+    resolution: rmaResolutionEnum('resolution').default('refund').notNull(),
 
-  reason: varchar('reason', { length: 100 }).notNull(), // damaged, wrong_size, etc.
-  description: text('description'),
+    // ── Scalar ──
+    status: text('status').default('pending').notNull(),
+    description: text('description'),
 
-  status: varchar('status', { length: 20 }).default('pending'), // pending, approved, rejected, completed
+    // ── JSONB (Variable) ──
+    evidence: jsonb('evidence').default([]),
+  },
+  (table) => ({
+    idxRmaOrder: index('idx_rma_order').on(table.orderId),
+    idxRmaStatus: index('idx_rma_status').on(table.status),
+  })
+);
 
-  // Evidence images/videos [{ url, type }]
-  evidence: jsonb('evidence').default([]),
-
-  resolution: varchar('resolution', { length: 50 }), // refund, replacement, store_credit
-
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
-
-/**
- * Type Exports
- */
 export type RmaRequest = typeof rmaRequests.$inferSelect;
-export type NewRmaRequest = typeof rmaRequests.$inferInsert;

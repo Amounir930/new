@@ -54,12 +54,9 @@ async function seed() {
       console.log(`📝 Inserting Blueprint for ${sector}/${plan}...`);
 
       await publicDb.insert(onboardingBlueprints).values({
-        name: `${sector.charAt(0).toUpperCase()}${sector.slice(1)} ${plan.charAt(0).toUpperCase()}${plan.slice(1)} Blueprint`,
-        plan: plan as any,
-        nicheType: sector as any,
-        blueprint: blueprintData,
+        nicheType: `${sector}-${plan}`,
+        uiConfig: blueprintData,
         status: 'active',
-        isDefault: plan === 'free', // Set Free as default
       });
     }
   }

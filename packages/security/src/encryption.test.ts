@@ -86,7 +86,7 @@ describe('EncryptionService', () => {
   });
 
   it('should initialize with provided master key', () => {
-    process.env.ENCRYPTION_MASTER_KEY = 'ValidProdPass32CharsWith1$!Abc12';
+    process.env.ENCRYPTION_MASTER_KEY = 'ValidProdPass32CharsWith1$!Abc12'; // gitleaks:allow
     process.env.NODE_ENV = 'production';
 
     service = new EncryptionService();
@@ -134,12 +134,12 @@ describe('EncryptionService', () => {
 
   it('should throw in production if key has low entropy', () => {
     process.env.NODE_ENV = 'production';
-    process.env.ENCRYPTION_MASTER_KEY = 'AAAAaaaa1111!!!!AAAAaaaa1111!!!!';
+    process.env.ENCRYPTION_MASTER_KEY = 'AAAAaaaa1111!!!!AAAAaaaa1111!!!!'; // gitleaks:allow
     expect(() => new EncryptionService()).toThrow('insufficient entropy');
   });
 
   it('should delegate methods to utility functions', () => {
-    process.env.ENCRYPTION_MASTER_KEY = 'Test-Encryption-Key-32-Chars-Long!1';
+    process.env.ENCRYPTION_MASTER_KEY = 'Test-Encryption-Key-32-Chars-Long!1'; // gitleaks:allow
     process.env.NODE_ENV = 'test';
     const srv = new EncryptionService();
 

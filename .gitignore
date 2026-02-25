@@ -89,3 +89,6 @@ Collect-Project.ps1
 
 # ─── Embedded repos ───
 KIMI/
+
+# ─── Database Metadata (Issue 10) ───
+packages/db/drizzle/meta/

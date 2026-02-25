@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1770657116582,
-      "tag": "0000_stiff_rick_jones",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1771101246333,
-      "tag": "0001_stormy_old_lace",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1771477434408,
-      "tag": "0002_moaning_lucky_pierre",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1771819060187,
-      "tag": "0003_fortress_hardening_v3_final_consolidated_v1",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1771900000000,
-      "tag": "0004_automated_governance",
+      "when": 1771907396911,
+      "tag": "0000_even_lady_mastermind",
       "breakpoints": true
     }
   ]

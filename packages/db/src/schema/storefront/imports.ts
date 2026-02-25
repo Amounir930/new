@@ -1,63 +1,88 @@
-import {
-    pgTable,
-    uuid,
-    varchar,
-    integer,
-    timestamp,
-    text,
-    jsonb,
-    index,
-    check,
-} from 'drizzle-orm/pg-core';
+/**
+ * Storefront Imports Schema — V5
+ *
+ * Tracking for bulk product imports per tenant.
+ *
+ * @module @apex/db/schema/storefront/imports
+ */
+
 import { sql } from 'drizzle-orm';
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { ulidId } from '../v5-core';
 
 /**
- * S2: Import Jobs Table
- * Tracking for bulk product imports per tenant
+ * Import Jobs Table
+ * Column alignment: UUID → TIMESTAMPTZ → INT → TEXT
  */
 export const importJobs = pgTable(
-    'import_jobs',
-    {
-        id: uuid('id').defaultRandom().primaryKey(),
-        tenantId: uuid('tenant_id').notNull(),
-        adminId: uuid('admin_id').notNull(),
-        filename: varchar('filename', { length: 255 }).notNull(),
-        fileSize: integer('file_size').notNull(),
-        fileHash: varchar('file_hash', { length: 64 }).notNull(),
-        status: varchar('status', { length: 20 })
-            .default('pending')
-            .notNull(),
-        totalRows: integer('total_rows').default(0),
-        processedRows: integer('processed_rows').default(0),
-        successRows: integer('success_rows').default(0),
-        errorRows: integer('error_rows').default(0),
-        errorReportUrl: text('error_report_url'),
-        startedAt: timestamp('started_at', { withTimezone: true }),
-        completedAt: timestamp('completed_at', { withTimezone: true }),
-        createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-    },
-    (table) => ({
-        idxImportTenant: index('idx_import_jobs_tenant').on(table.tenantId, table.createdAt),
-        statusCheck: sql`CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'partial'))`,
-        progressCheck: sql`CHECK (processed_rows <= total_rows)`,
-    })
+  'import_jobs',
+  {
+    // ── Fixed (Alignment) ──
+    id: ulidId(),
+    tenantId: uuid('tenant_id').notNull(),
+    adminId: uuid('admin_id').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+
+    // ── Integer ──
+    fileSize: integer('file_size').notNull(),
+    totalRows: integer('total_rows').default(0),
+    processedRows: integer('processed_rows').default(0),
+    successRows: integer('success_rows').default(0),
+    errorRows: integer('error_rows').default(0),
+
+    // ── Scalar ──
+    status: text('status').default('pending').notNull(),
+    filename: text('filename').notNull(),
+    fileHash: text('file_hash').notNull(),
+    errorReportUrl: text('error_report_url'),
+  },
+  (table) => ({
+    idxImportTenant: index('idx_import_jobs_tenant').on(
+      table.tenantId,
+      table.createdAt
+    ),
+    statusCheck: sql`CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'partial'))`,
+    progressCheck: sql`CHECK (processed_rows <= total_rows)`,
+  })
 );
 
 /**
- * S7: Import Errors Table
- * Stores row-level validation errors. PII in rowData is encrypted.
+ * Import Errors Table
  */
 export const importErrors = pgTable(
-    'import_errors',
-    {
-        id: uuid('id').defaultRandom().primaryKey(),
-        jobId: uuid('job_id').references(() => importJobs.id, { onDelete: 'cascade' }),
-        rowNumber: integer('row_number').notNull(),
-        rowData: jsonb('row_data'), // Encrypted PII (S7)
-        errorMessage: text('error_message').notNull(),
-        errorType: varchar('error_type', { length: 50 }),
-    },
-    (table) => ({
-        idxImportErrJob: index('idx_import_errors_job').on(table.jobId),
-    })
+  'import_errors',
+  {
+    // ── Fixed ──
+    id: ulidId(),
+    jobId: uuid('job_id').references(() => importJobs.id, {
+      onDelete: 'cascade',
+    }),
+
+    // ── Integer ──
+    rowNumber: integer('row_number').notNull(),
+
+    // ── Scalar ──
+    errorMessage: text('error_message').notNull(),
+    errorType: text('error_type'),
+
+    // ── JSONB (S7 Encrypted) ──
+    rowData: jsonb('row_data'),
+  },
+  (table) => ({
+    idxImportErrJob: index('idx_import_errors_job').on(table.jobId),
+  })
 );
+
+// ─── Type Exports ───────────────────────────────────────────
+export type ImportJob = typeof importJobs.$inferSelect;
+export type ImportError = typeof importErrors.$inferSelect;

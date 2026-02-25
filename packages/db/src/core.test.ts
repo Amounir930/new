@@ -6,7 +6,7 @@ let currentPath = 'public';
 // Define mocks at top level scope but they will be initialized when this module executes
 // Helper to reduce complexity
 const handleMockQuery = (text: string, params: any[]) => {
-  if (text.includes('SET SEARCH_PATH TO')) {
+  if (text.includes('SEARCH_PATH TO')) {
     const match = text.match(/TO "([^"]+)"/i);
     if (match) currentPath = match[1].toLowerCase();
     return { rows: [], rowCount: 0 };
@@ -20,7 +20,7 @@ const handleMockQuery = (text: string, params: any[]) => {
     return params.some((p: any) => p === 'non-existent')
       ? { rows: [], rowCount: 0 }
       : {
-          rows: [{ id: 't1', subdomain: 'tenant_a', status: 'active' }],
+          rows: [{ id: 't1', subdomain: 'tenant1', status: 'active' }],
           rowCount: 1,
         };
   }
@@ -32,8 +32,12 @@ const handleMockQuery = (text: string, params: any[]) => {
       return { rows: [{ name: 'Beta Secret' }], rowCount: 1 };
   }
 
+  if (text.includes('SELECT 1 FROM INFORMATION_SCHEMA.SCHEMATA')) {
+    return { rows: [{ 1: 1 }], rowCount: 1 };
+  }
+
   if (text.includes('SELECT CURRENT_SCHEMA')) {
-    return { rows: [{ current_schema: 'tenant_tenant_a' }], rowCount: 1 };
+    return { rows: [{ current_schema: 'tenant_tenant1' }], rowCount: 1 };
   }
 
   return { rows: [], rowCount: 0 };
@@ -53,11 +57,24 @@ const mockClientInstance = {
       return handleMockQuery(text, params);
     }
   ),
-  end: mock().mockImplementation(async () => {
+  end: mock().mockResolvedValue(undefined),
+  release: mock().mockImplementation(async () => {
+    // Audit 777 Point #4: release() is the pool canonical reset
     currentPath = 'public';
   }),
-  release: mock().mockResolvedValue(undefined),
 };
+
+// Mock Redis (Audit 777 Point #3)
+const mockRedis = {
+  connect: mock().mockResolvedValue(undefined),
+  set: mock().mockResolvedValue('OK'), // returns 'OK' on success
+  disconnect: mock().mockResolvedValue(undefined),
+  isOpen: true,
+};
+
+mock.module('redis', () => ({
+  createClient: mock().mockImplementation(() => mockRedis),
+}));
 
 const mockPool = {
   connect: mock().mockResolvedValue(mockClientInstance),
@@ -110,6 +127,7 @@ describe('S2 Integrated Logic', () => {
     mockClientInstance.end.mockClear();
     mockClientInstance.connect.mockClear();
     mockPool.query.mockClear();
+    mockRedis.set.mockClear();
 
     currentPath = 'public';
 
@@ -117,12 +135,9 @@ describe('S2 Integrated Logic', () => {
     coreModule = await import('./core.js');
     withTenantConnection = coreModule.withTenantConnection;
     verifyTenantExists = coreModule.verifyTenantExists;
-    tenantA = 't1';
-
-    // Spy on factory to ensure we use OUR mock instance
-    spyOn(coreModule.dbClientFactory, 'createClient').mockImplementation(
-      () => mockClientInstance as any
-    );
+    tenantA = 'tenant1';
+    // VerifyTenantExists and WithTenantConnection now use publicPool directly
+    // which is already mocked at the module level in this file.
   });
 
   describe('Isolation Enforcement', () => {
@@ -139,7 +154,7 @@ describe('S2 Integrated Logic', () => {
     it('should reset state after successful operation', async () => {
       await withTenantConnection(tenantA, async () => {});
       expect(currentPath).toBe('public');
-      expect(mockClientInstance.end).toHaveBeenCalled();
+      expect(mockClientInstance.release).toHaveBeenCalled();
     });
 
     it('should reset state after failed operation', async () => {
@@ -149,7 +164,7 @@ describe('S2 Integrated Logic', () => {
         });
       } catch (_e) {}
       expect(currentPath).toBe('public');
-      expect(mockClientInstance.end).toHaveBeenCalled();
+      expect(mockClientInstance.release).toHaveBeenCalled();
     });
   });
 
@@ -178,12 +193,12 @@ describe('S2 Integrated Logic', () => {
           throw new Error('Test Fail');
         });
       } catch (_e) {}
-      expect(mockClientInstance.end).toHaveBeenCalled();
+      expect(mockClientInstance.release).toHaveBeenCalled();
     });
 
     it('should handle connection errors gracefully', async () => {
       const error = new Error('Connection failed');
-      mockClientInstance.connect.mockRejectedValueOnce(error);
+      mockPool.connect.mockRejectedValueOnce(error);
 
       // Just verify it throws the error
       await expect(
@@ -198,7 +213,7 @@ describe('S2 Integrated Logic', () => {
       // Our mockPool handles this via mockClientInstance.query logic.
       // If we query for 't1', it returns rows.
       // Use the outer variable
-      const exists = await verifyTenantExists('t1');
+      const exists = await verifyTenantExists('tenant1');
       expect(exists).toBe(true);
     });
 

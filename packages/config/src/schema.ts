@@ -79,6 +79,8 @@ export const EnvSchema = z.object({
     .min(1, 'S1 Violation: DATABASE_URL is required')
     .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL is supported'),
   DB_SSL: z.enum(['true', 'false']).default('true'),
+  DB_CA_CERT: z.string().optional(),
+  READ_REPLICA_URL: z.string().optional(),
 
   // Redis Configuration
   REDIS_URL: z
