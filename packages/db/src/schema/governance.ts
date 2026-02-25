@@ -78,6 +78,8 @@ export const tenants = governanceSchema.table(
     secretSalt: text('secret_salt')
       .notNull()
       .default(sql`gen_random_uuid()::text`), // Mandate #11
+    oldSecretSalt: text('old_secret_salt'), // Vector 1: Salt Rotation Support
+    saltRotatedAt: timestamp('salt_rotated_at', { withTimezone: true, precision: 6 }),
     suspendedReason: text('suspended_reason'),
     nicheType: text('niche_type'),
 

@@ -44,7 +44,7 @@ export class GovernanceService {
       (message: string) => {
         try {
           const { tenantId, type } = JSON.parse(message);
-          if (type === 'feature_gates') {
+          if (type === 'feature_gates' || type === 'tenant_config') {
             this.featureCache.delete(tenantId);
           }
         } catch (err) {
@@ -52,6 +52,18 @@ export class GovernanceService {
         }
       }
     );
+
+    // Vector 4: pg_notify listener for tenant_config updates (Cache Invalidation)
+    const client = await (this.db.session as any).client; // Get raw pg client if possible
+    if (client && typeof client.on === 'function') {
+      await client.query('LISTEN tenant_config_upsert');
+      client.on('notification', (msg: any) => {
+        if (msg.channel === 'tenant_config_upsert') {
+          console.log(`[Governance] pg_notify received: ${msg.payload}. Purging cache.`);
+          this.featureCache.delete(msg.payload);
+        }
+      });
+    }
   }
 
   private async notifyCacheInvalidation(tenantId: string, type: string) {
@@ -114,61 +126,10 @@ export class GovernanceService {
     };
   }
 
-  /**
-   * Check if a tenant has reached their quota for a resource
+  /* 
+   * Vector 2: Application-side quota checks removed in favor of DB triggers.
+   * checkQuota and getResourceCount are deprecated.
    */
-  async checkQuota(
-    tenantId: string,
-    resourceType: 'products' | 'orders' | 'pages',
-    subdomain: string
-  ): Promise<{
-    allowed: boolean;
-    limit: number;
-    current: number;
-    ownerEmail: string;
-  }> {
-    const limits = await this.getTenantLimits(tenantId);
-    const current = await this.getResourceCount(subdomain, resourceType);
-
-    let limit = 0;
-    switch (resourceType) {
-      case 'products':
-        limit = limits.maxProducts;
-        break;
-      case 'orders':
-        limit = limits.maxOrders;
-        break;
-      case 'pages':
-        limit = limits.maxPages;
-        break;
-    }
-
-    return {
-      allowed: current < limit,
-      limit,
-      current,
-      ownerEmail: limits.ownerEmail,
-    };
-  }
-
-  /**
-   * Internal helper to count resources within a tenant schema
-   * Audit 444 Point #22: Hardened dynamic SQL via sql.identifier (quote_ident equivalent)
-   */
-  private async getResourceCount(
-    subdomain: string,
-    resourceType: 'products' | 'orders' | 'pages'
-  ): Promise<number> {
-    const { sanitizeSchemaName } = await import('../core.js');
-    const tableName = resourceType === 'pages' ? 'pages' : resourceType;
-    const schemaName = sanitizeSchemaName(subdomain);
-
-    const result = await this.db.execute(
-      sql`SELECT COUNT(*) as count FROM ${sql.identifier(schemaName)}.${sql.identifier(tableName)} WHERE deleted_at IS NULL`
-    );
-
-    return Number((result.rows[0] as any)?.count || 0);
-  }
 
   /**
    * Verify if a specific feature is enabled for a tenant
@@ -355,7 +316,7 @@ export class GovernanceService {
 export const governanceService = new GovernanceService(
   null as any,
   {
-    subscribe: async () => {},
+    subscribe: async () => { },
     publish: async () => 0,
     getClient: () => ({}) as any,
   } as any,

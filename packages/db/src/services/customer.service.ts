@@ -20,7 +20,7 @@ export class CustomerService {
   constructor(
     private readonly encryptionService: EncryptionService,
     private readonly tenantRegistry: TenantRegistryService
-  ) {}
+  ) { }
 
   /**
    * Create a new customer with encrypted PII.
@@ -103,17 +103,29 @@ export class CustomerService {
     if (!tenant) throw new Error('TENANT_NOT_FOUND');
 
     // Mandate #11: Consistent use of tenant-specific salt
-    const emailHash = this.encryptionService.hashSensitiveData(
+    // Vector 1: Dual-salt verification during rotation window
+    const currentSalt = tenant.secretSalt;
+    const oldSalt = (tenant as any).oldSecretSalt;
+
+    const currentEmailHash = this.encryptionService.hashSensitiveData(
       email,
-      tenant.secretSalt
+      currentSalt
     );
+    const oldEmailHash = oldSalt
+      ? this.encryptionService.hashSensitiveData(email, oldSalt)
+      : null;
 
     return await withTenantConnection(tenantId, async (db) => {
       const result = await db
         .select()
         .from(customers)
         .where(
-          and(eq(customers.emailHash, emailHash), isNull(customers.deletedAt))
+          and(
+            oldEmailHash
+              ? sql`${customers.emailHash} IN (${currentEmailHash}, ${oldEmailHash})`
+              : eq(customers.emailHash, currentEmailHash),
+            isNull(customers.deletedAt)
+          )
         )
         .limit(1);
 

@@ -56,15 +56,20 @@ publicPool.on('error', (err) => {
 publicPool.on('release', (_err: any, client: any) => {
   // Risk #5: Absolute forensic reset including error paths
   if (client) {
-    client
-      .query('RESET ALL; SET search_path TO public')
-      .catch((resetErr: any) => {
-        console.error(
-          'S2 Critical: Forensic reset failed, destroying connection:',
-          resetErr
-        );
-        client.release(true); // Force destruction on any reset failure
-      });
+    try {
+      client
+        .query('RESET ALL; SET search_path TO public')
+        .catch((resetErr: any) => {
+          console.error(
+            'S2 Critical: Forensic reset failed, destroying connection:',
+            resetErr
+          );
+          client.release(true); // Force destruction on any reset failure
+        });
+    } catch (syncErr) {
+      console.error('S2 Critical: Synchronous reset failure, destroying:', syncErr);
+      client.release(true);
+    }
   }
 });
 
@@ -80,15 +85,20 @@ export const readPool = new Pool({
  */
 readPool.on('release', (_err: any, client: any) => {
   if (client) {
-    client
-      .query('RESET ALL; SET search_path TO public')
-      .catch((resetErr: any) => {
-        console.error(
-          'S2 Critical: Read pool reset failed, destroying:',
-          resetErr
-        );
-        client.release(true);
-      });
+    try {
+      client
+        .query('RESET ALL; SET search_path TO public')
+        .catch((resetErr: any) => {
+          console.error(
+            'S2 Critical: Read pool reset failed, destroying:',
+            resetErr
+          );
+          client.release(true);
+        });
+    } catch (syncErr) {
+      console.error('S2 Critical: Synchronous read pool reset failure, destroying:', syncErr);
+      client.release(true);
+    }
   }
 });
 

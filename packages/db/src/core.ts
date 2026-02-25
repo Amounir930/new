@@ -205,8 +205,8 @@ async function configureConnectionContext(
   await client.query('BEGIN');
 
   // Mandate #1: Isolation context - Fail Hard if missing (missing_ok = false)
-  await client.query('SELECT set_config($1, $2, false)', [
-    'app.current_tenant',
+  // S2 Hardening: Use SET LOCAL within transaction block as per Directive
+  await client.query("SELECT set_config('app.current_tenant', $1, true)", [
     tenant.id,
   ]);
 
