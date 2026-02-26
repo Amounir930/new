@@ -20,14 +20,14 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { governanceUsers } from '../governance.js';
-import { deletedAt, ulidId } from '../v5-core';
+import { deletedAt, storefrontSchema, ulidId } from '../v5-core';
 
 // ─── Staff Roles ─────────────────────────────────────────────
 /**
  * Staff Roles (RBAC)
  * ALIGNMENT: UUID -> TS -> BOOL -> TEXT -> JSONB
  */
-export const staffRoles = pgTable(
+export const staffRoles = storefrontSchema.table(
   'staff_roles',
   {
     // ── 1. Fixed ──
@@ -65,7 +65,7 @@ export const staffRoles = pgTable(
 );
 
 // ─── Staff Members ───────────────────────────────────────────
-export const staffMembers = pgTable(
+export const staffMembers = storefrontSchema.table(
   'staff_members',
   {
     // ── Fixed (Alignment) ──
@@ -103,7 +103,7 @@ export const staffMembers = pgTable(
 );
 
 // ─── Staff Sessions (Secure) ────────────────────────────────
-export const staffSessions = pgTable(
+export const staffSessions = storefrontSchema.table(
   'staff_sessions',
   {
     // ── Fixed (Alignment) ──

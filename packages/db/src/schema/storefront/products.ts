@@ -18,7 +18,14 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { deletedAt, grams, moneyAmount, occVersion, ulidId } from '../v5-core';
+import {
+  deletedAt,
+  grams,
+  moneyAmount,
+  occVersion,
+  storefrontSchema,
+  ulidId,
+} from '../v5-core';
 import { brands } from './brands';
 import { categories } from './categories';
 
@@ -33,10 +40,7 @@ const vector = customType<{ data: number[]; driverData: string }>({
     return `[${value.join(',')}]`;
   },
   fromDriver(value) {
-    return value
-      .replace(/[\[\]]/g, '')
-      .split(',')
-      .map(Number);
+    return value.replace(/[[\]]/g, '').split(',').map(Number);
   },
 });
 
@@ -44,7 +48,7 @@ const vector = customType<{ data: number[]; driverData: string }>({
  * 🛒 Products Table
  * ABSOLUTE ALIGNMENT: UUID -> TS -> BIGINT -> INT -> BOOL -> TEXT -> ARRAY -> JSONB -> VECTOR
  */
-export const products = pgTable(
+export const products = storefrontSchema.table(
   'products',
   {
     // ── 1. Fixed (UUID/ULID) ──
@@ -135,7 +139,7 @@ export const products = pgTable(
  * 📦 Product Variants
  * Optimistic Locking: Handled at level logic.
  */
-export const productVariants = pgTable(
+export const productVariants = storefrontSchema.table(
   'product_variants',
   {
     // ── Fixed ──

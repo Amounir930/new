@@ -11,19 +11,18 @@ export class MasterControlService {
   /**
    * Set a global system configuration
    */
-  async setConfig(key: string, value: any): Promise<void> {
+  async setConfig(key: string, value: unknown): Promise<void> {
     await publicDb.insert(systemConfig).values({ config: { [key]: value } });
-    // Note: system_settings uses 'config' jsonb, not 'key'/'value' columns like old systemConfig might have.
-    // I'll adjust to match the actual schema in governance.ts: system_settings(id, createdAt, updatedAt, config)
   }
 
   /**
    * Get a global system configuration
    */
-  async getConfig<T = any>(key: string, defaultValue: T): Promise<T> {
+  async getConfig<T = unknown>(key: string, defaultValue: T): Promise<T> {
     const result = await publicDb.select().from(systemConfig).limit(1);
 
-    return (result[0]?.config as any)?.[key] ?? defaultValue;
+    const config = result[0]?.config as Record<string, T> | null;
+    return config?.[key] ?? defaultValue;
   }
 
   /**
@@ -58,4 +57,9 @@ export class MasterControlService {
   }
 }
 
-export const masterControlService = new MasterControlService();
+// Stub for legacy/non-DI consumers — matches governance.service.ts pattern.
+export const masterControlService = new MasterControlService({
+  subscribe: async () => {},
+  publish: async () => 0,
+  getClient: () => ({}) as any,
+} as any);

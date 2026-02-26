@@ -22,6 +22,7 @@ export interface EncryptedData {
   iv: string;
   tag: string;
   salt: string;
+  version?: number; // Item 12: Key version for rotation
 }
 
 /**
@@ -31,9 +32,10 @@ export interface EncryptedData {
  * Note: Higher N values may exceed OpenSSL memory limits in some environments
  */
 function deriveKey(masterKey: string, salt: Buffer): Buffer {
-  // S7 FIX: High-work factor parameters for key stretching
-  // N=16384 (2^14), r=8, p=1 - optimized for commercially available hardware while resisting ASIC attacks
-  return scryptSync(masterKey, salt, KEY_LENGTH, { N: 16384, r: 8, p: 1 });
+  // Item 9: Hardened scrypt parameters for production (N=65536)
+  const isProduction = process.env.NODE_ENV === 'production';
+  const N = isProduction ? 65536 : 16384;
+  return scryptSync(masterKey, salt, KEY_LENGTH, { N, r: 8, p: 1 });
 }
 
 /**
@@ -67,6 +69,16 @@ export function decrypt(
   masterKey: string,
   fallbackKey?: string
 ): string {
+  // Item 10: Structural verification
+  if (
+    !encryptedData.encrypted ||
+    !encryptedData.iv ||
+    !encryptedData.tag ||
+    !encryptedData.salt
+  ) {
+    throw new Error('S7 Violation: Malformed encrypted data structure');
+  }
+
   const performDecryption = (keyStr: string): string => {
     const salt = Buffer.from(encryptedData.salt, 'hex');
     const iv = Buffer.from(encryptedData.iv, 'hex');
@@ -84,7 +96,8 @@ export function decrypt(
   try {
     return performDecryption(masterKey);
   } catch (error) {
-    if (fallbackKey) {
+    // Item 11: Prevent fallbackKey in production
+    if (fallbackKey && process.env.NODE_ENV !== 'production') {
       try {
         return performDecryption(fallbackKey);
       } catch (_fallbackError) {
@@ -93,7 +106,9 @@ export function decrypt(
         );
       }
     }
-    throw error;
+    throw new Error(
+      `S7 Violation: Decryption failed. ${process.env.NODE_ENV === 'production' ? '' : error}`
+    );
   }
 }
 
@@ -110,7 +125,11 @@ export function hashApiKey(apiKey: string, secret: string): string {
  * Generates deterministic hash for searching encrypted fields (email, phone).
  * Uses a separate secret (BLIND_INDEX_PEPPER) to prevent rainbow table attacks.
  */
-export function hashSensitiveData(value: string, pepper: string, salt?: string): string {
+export function hashSensitiveData(
+  value: string,
+  pepper: string,
+  salt?: string
+): string {
   const { createHmac } = require('node:crypto');
   const finalKey = salt ? `${pepper}:${salt}` : pepper;
   return createHmac('sha256', finalKey).update(value).digest('hex');
@@ -138,7 +157,7 @@ export function maskSensitive(value: string, visibleChars = 4): string {
 /**
  * NestJS Injectable Encryption Service
  */
-import { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -149,21 +168,31 @@ export class EncryptionService {
 
   constructor(private readonly config: ConfigService) {
     this.masterKey = this.config.get('ENCRYPTION_MASTER_KEY') as string;
-    this.apiKeySecret = this.config.getWithDefault('API_KEY_SECRET', '') as string;
-    this.blindIndexPepper = this.config.getWithDefault('BLIND_INDEX_PEPPER', '') as string;
+    this.blindIndexPepper = this.config.get('BLIND_INDEX_PEPPER') as string;
+    this.apiKeySecret = this.config.get('API_KEY_SECRET') || '';
 
-    // CRITICAL FIX (S7): Strict enforcement for production
-    // In production, test keys are NEVER allowed, regardless of environment variables
     const isProduction = this.config.get('NODE_ENV') === 'production';
+
+    // Item 17: If API_KEY_SECRET looks like encrypted JSON, decrypt it
+    if (this.apiKeySecret?.includes('"encrypted":')) {
+      try {
+        const encryptedData = JSON.parse(this.apiKeySecret) as EncryptedData;
+        this.apiKeySecret = decrypt(encryptedData, this.masterKey);
+      } catch (_e) {
+        if (isProduction) {
+          throw new Error(
+            'S1 Violation: Encrypted API_KEY_SECRET in environment is malformed'
+          );
+        }
+        // Fallback to raw value in non-production if it's not actually JSON
+      }
+    }
     const isTestMode = this.config.get('NODE_ENV') === 'test' && !isProduction;
 
     if (!this.masterKey) {
       if (isTestMode) {
         // S7 FIX: Generate random key per test run instead of static string
         this.masterKey = randomBytes(32).toString('base64url');
-        console.warn(
-          '⚠️ S7: Using RANDOM test encryption key - NEVER use in production'
-        );
       } else {
         throw new Error('S1 Violation: ENCRYPTION_MASTER_KEY is required');
       }
@@ -245,12 +274,19 @@ export class EncryptionService {
   }
 
   hashSensitiveData(value: string, salt?: string): string {
-    if (!this.blindIndexPepper && this.config.get('NODE_ENV') === 'production') {
+    if (
+      !this.blindIndexPepper &&
+      this.config.get('NODE_ENV') === 'production'
+    ) {
       throw new Error(
         'S1 Violation: BLIND_INDEX_PEPPER is required in production'
       );
     }
-    return hashSensitiveData(value, this.blindIndexPepper || 'test-pepper', salt);
+    return hashSensitiveData(
+      value,
+      this.blindIndexPepper || 'test-pepper',
+      salt
+    );
   }
 
   generateApiKey(): string {

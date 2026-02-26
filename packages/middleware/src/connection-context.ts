@@ -51,7 +51,7 @@ export function runWithTenantContext<T>(
     },
     deleteProperty: () => {
       throw new Error('S2 VIOLATION: TenantContext is immutable at runtime.');
-    }
+    },
   });
 
   return tenantStorage.run(readonlyView, callback);

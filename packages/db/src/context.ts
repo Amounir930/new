@@ -4,12 +4,14 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 /**
  * Storage for request-scoped database executors (Stickiness S2)
  */
-export const dbContextStorage = new AsyncLocalStorage<NodePgDatabase<any>>();
+export const dbContextStorage = new AsyncLocalStorage<
+  NodePgDatabase<Record<string, unknown>>
+>();
 
 /**
  * Get the current scoped database executor if available
  */
-export function getScopedDb<T extends Record<string, any>>(
+export function getScopedDb<T extends Record<string, unknown>>(
   defaultDb: NodePgDatabase<T>
 ): NodePgDatabase<T> {
   const scoped = dbContextStorage.getStore();

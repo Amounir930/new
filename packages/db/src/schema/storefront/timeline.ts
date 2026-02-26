@@ -8,14 +8,14 @@
  */
 
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { orders } from './orders';
 
 /**
  * Order Timeline Table
  * Alignment: UUID -> TIMESTAMPTZ -> TEXT -> JSONB
  */
-export const orderTimeline = pgTable(
+export const orderTimeline = storefrontSchema.table(
   'order_timeline',
   {
     // ── Fixed (Alignment Tier 1) ──

@@ -8,29 +8,29 @@
 
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
   jsonb,
-  pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { deletedAt, ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * Categories Table — self-referencing hierarchy
  * Column alignment: UUID → TIMESTAMPTZ → INT → BOOLEAN → TEXT → JSONB
  */
-export const categories = pgTable(
+export const categories = storefrontSchema.table(
   'categories',
   {
     // ── Fixed (Alignment) ──
     id: ulidId(),
     tenantId: uuid('tenant_id').notNull(),
-    parentId: uuid('parent_id').references((): any => categories.id, {
+    parentId: uuid('parent_id').references((): AnyPgColumn => categories.id, {
       onDelete: 'restrict',
     }),
     createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })

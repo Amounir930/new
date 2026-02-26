@@ -16,7 +16,8 @@ import { type RedisClientType, createClient } from 'redis';
  */
 @Injectable()
 export class RedisRateLimitStore
-  implements OnModuleInit, OnApplicationShutdown {
+  implements OnModuleInit, OnApplicationShutdown
+{
   private client: RedisClientType | null = null;
   private connecting = false;
   private fallbackToMemory = false;
@@ -26,7 +27,7 @@ export class RedisRateLimitStore
   > = new Map();
   private readonly logger = new Logger(RedisRateLimitStore.name);
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
     await this.connect();
@@ -64,14 +65,17 @@ export class RedisRateLimitStore
     const redisUrl =
       this.configService.get('REDIS_URL') || 'redis://localhost:6379';
 
-    this.logger.log(`Initializing Redis Rate Limit Store: ${redisUrl.split('@').pop()?.split('/')[0] || 'localhost'}`);
+    this.logger.log(
+      `Initializing Redis Rate Limit Store: ${redisUrl.split('@').pop()?.split('/')[0] || 'localhost'}`
+    );
 
     try {
       this.connecting = true;
       this.client = createClient({ url: redisUrl });
 
       this.client.on('error', (err) => {
-        const isProduction = this.configService.get('NODE_ENV') === 'production';
+        const isProduction =
+          this.configService.get('NODE_ENV') === 'production';
         if (isProduction) {
           console.error(
             '❌ S6 CRITICAL: Redis runtime error in production. Disabling memory fallback to ensure Fail-Closed security.',

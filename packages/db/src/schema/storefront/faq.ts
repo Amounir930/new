@@ -15,12 +15,12 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * FAQ Categories Table
  */
-export const faqCategories = pgTable('faq_categories', {
+export const faqCategories = storefrontSchema.table('faq_categories', {
   // ── Fixed (Alignment) ──
   id: ulidId(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -39,7 +39,7 @@ export const faqCategories = pgTable('faq_categories', {
  * FAQs Table
  * Column alignment: UUID → TIMESTAMPTZ → INT → BOOLEAN → TEXT
  */
-export const faqs = pgTable(
+export const faqs = storefrontSchema.table(
   'faqs',
   {
     // ── Fixed (Alignment) ──

@@ -15,12 +15,12 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { bytea, ulidId } from '../v5-core';
+import { bytea, storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * 🧩 App Installations (Third-party integrations)
  */
-export const appInstallations = pgTable('app_installations', {
+export const appInstallations = storefrontSchema.table('app_installations', {
   // ── 1. Fixed ──
   id: ulidId(),
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -39,24 +39,27 @@ export const appInstallations = pgTable('app_installations', {
 /**
  * ⚓ Webhook Subscriptions
  */
-export const webhookSubscriptions = pgTable('webhook_subscriptions', {
-  // ── 1. Fixed ──
-  id: ulidId(),
-  createdAt: timestamp('created_at', { withTimezone: true })
-    .defaultNow()
-    .notNull(),
+export const webhookSubscriptions = storefrontSchema.table(
+  'webhook_subscriptions',
+  {
+    // ── 1. Fixed ──
+    id: ulidId(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
 
-  // ── 2. Boolean ──
-  isActive: boolean('is_active').default(true).notNull(),
+    // ── 2. Boolean ──
+    isActive: boolean('is_active').default(true).notNull(),
 
-  // ── 3. Scalar ──
-  topic: text('topic').notNull(), // order.created, product.updated
-  address: text('address').notNull(),
-  format: text('format').default('json'),
+    // ── 3. Scalar ──
+    topic: text('topic').notNull(), // order.created, product.updated
+    address: text('address').notNull(),
+    format: text('format').default('json'),
 
-  // Directive #19: Webhook Payload Tampering Protection
-  secret: bytea('secret').notNull(),
-});
+    // Directive #19: Webhook Payload Tampering Protection
+    secret: bytea('secret').notNull(),
+  }
+);
 
 // Type Exports
 export type AppInstallation = typeof appInstallations.$inferSelect;

@@ -15,13 +15,18 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { locationTypeEnum } from '../enums';
-import { deletedAt, geographyPoint, ulidId } from '../v5-core';
+import {
+  deletedAt,
+  geographyPoint,
+  storefrontSchema,
+  ulidId,
+} from '../v5-core';
 
 /**
  * 🏤 Store / Warehouse Locations
  * ALIGNMENT: UUID -> TS -> BOOL -> ENUM -> TEXT -> GEOGRAPHY
  */
-export const storeLocations = pgTable(
+export const storeLocations = storefrontSchema.table(
   'store_locations',
   {
     // ── 1. Fixed ──

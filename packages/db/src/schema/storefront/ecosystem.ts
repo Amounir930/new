@@ -23,7 +23,15 @@ import {
   b2bCompanyStatusEnum,
   outboxStatusEnum,
 } from '../enums';
-import { deletedAt, microAmount, moneyAmount, ulidId } from '../v5-core';
+import {
+  deletedAt,
+  encryptedCheck,
+  encryptedText,
+  microAmount,
+  moneyAmount,
+  storefrontSchema,
+  ulidId,
+} from '../v5-core';
 
 /**
  * 📤 Outbox Events (Event Sourcing / Reliable Integration)
@@ -31,7 +39,7 @@ import { deletedAt, microAmount, moneyAmount, ulidId } from '../v5-core';
  * TUNING: High-throughput fillfactor 70.
  * ALIGNMENT: UUID -> TIMESTAMPTZ -> ENUM -> TEXT -> JSONB
  */
-export const outboxEvents = pgTable(
+export const outboxEvents = storefrontSchema.table(
   'outbox_events',
   {
     // ── 1. Fixed (Aligned) ──
@@ -70,7 +78,7 @@ export const outboxEvents = pgTable(
 /**
  * 🤝 B2B Features
  */
-export const b2bCompanies = pgTable('b2b_companies', {
+export const b2bCompanies = storefrontSchema.table('b2b_companies', {
   // ── 1. Fixed ──
   id: ulidId(),
   tenantId: uuid('tenant_id').notNull(),
@@ -91,7 +99,7 @@ export const b2bCompanies = pgTable('b2b_companies', {
   billingEmail: text('billing_email'),
 });
 
-export const b2bPricingTiers = pgTable(
+export const b2bPricingTiers = storefrontSchema.table(
   'b2b_pricing_tiers',
   {
     // ── 1. Fixed ──
@@ -124,7 +132,7 @@ export const b2bPricingTiers = pgTable(
   })
 );
 
-export const b2bUsers = pgTable('b2b_users', {
+export const b2bUsers = storefrontSchema.table('b2b_users', {
   // ── 1. Fixed ──
   id: ulidId(),
   tenantId: uuid('tenant_id').notNull(),
@@ -149,7 +157,7 @@ export const b2bUsers = pgTable('b2b_users', {
  * 🪝 Webhooks
  * ALIGNMENT: UUID -> TS -> INT -> TEXT -> JSONB
  */
-export const webhooks = pgTable('webhooks', {
+export const webhooks = storefrontSchema.table('webhooks', {
   id: ulidId(),
   tenantId: uuid('tenant_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
@@ -168,23 +176,35 @@ export const webhooks = pgTable('webhooks', {
 /**
  * 📣 Affiliate Program
  */
-export const affiliatePartners = pgTable('affiliate_partners', {
-  // ── 1. Fixed ──
-  id: ulidId(),
-  tenantId: uuid('tenant_id').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
-    .defaultNow()
-    .notNull(),
+export const affiliatePartners = storefrontSchema.table(
+  'affiliate_partners',
+  {
+    // ── 1. Fixed ──
+    id: ulidId(),
+    tenantId: uuid('tenant_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
 
-  // ── 2. Enum ──
-  status: affiliateStatusEnum('status').default('pending').notNull(),
+    // ── 2. Enum ──
+    status: affiliateStatusEnum('status').default('pending').notNull(),
 
-  // ── 3. Scalar ──
-  code: text('code').notNull().unique(),
-  email: text('email').notNull(),
-});
+    // ── 3. Scalar ──
+    code: text('code').notNull().unique(),
+    // A-03 Fix: Encrypted PII + blind index for searchable lookups.
+    email: encryptedText('email').notNull(),
+    emailHash: text('email_hash'), // HMAC-SHA256 blind index for DB-level search
+  },
+  (table) => ({
+    idxAffiliateEmailHash: index('idx_affiliate_email_hash').on(
+      table.emailHash
+    ),
+    // A-03 Fix: Enforce S7 ciphertext structure
+    emailEncrypted: encryptedCheck(table.email),
+  })
+);
 
-export const affiliateTransactions = pgTable(
+export const affiliateTransactions = storefrontSchema.table(
   'affiliate_transactions',
   {
     // ── 1. Fixed ──

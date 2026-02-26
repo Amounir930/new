@@ -16,13 +16,13 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { moneyAmount, ulidId } from '../v5-core';
+import { moneyAmount, storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * Coupons Table
  * Alignment Rule: UUID -> TIMESTAMPTZ -> MONEY -> INTEGER -> BOOLEAN -> TEXT
  */
-export const coupons = pgTable(
+export const coupons = storefrontSchema.table(
   'coupons',
   {
     // ── Fixed (Alignment Tier 1) ──

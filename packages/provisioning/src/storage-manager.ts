@@ -36,10 +36,13 @@ export let minioClient: Minio.Client | null = null;
 
 function getMinioClient(): Minio.Client {
   if (!minioClient) {
+    const isProd = env.NODE_ENV === 'production';
+    const useSSL = isProd ? true : env.MINIO_USE_SSL === 'true'; // Item 44: Force SSL in production
+
     minioClient = new Minio.Client({
       endPoint: env.MINIO_ENDPOINT,
       port: Number.parseInt(env.MINIO_PORT, 10),
-      useSSL: env.MINIO_USE_SSL === 'true',
+      useSSL,
       accessKey: env.MINIO_ACCESS_KEY,
       secretKey: env.MINIO_SECRET_KEY,
     });
@@ -325,10 +328,12 @@ export async function getStorageStats(
 }
 
 async function getPublicReadPolicy(bucketName: string): Promise<unknown> {
+  // Item 44: Strictly limited public access policy
   return {
     Version: '2012-10-17',
     Statement: [
       {
+        Sid: 'PublicReadForSpecificPrefix',
         Effect: 'Allow',
         Principal: '*',
         Action: ['s3:GetObject'],

@@ -6,15 +6,15 @@
  * @module @apex/db/schema/storefront/auth
  */
 
-import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { index, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { customers } from './customers';
 
 /**
  * OTP Codes Table (One-Time Passwords)
  * Alignment: UUID -> TIMESTAMPTZ -> TEXT
  */
-export const otpCodes = pgTable('otp_codes', {
+export const otpCodes = storefrontSchema.table('otp_codes', {
   // ── Fixed (Alignment Tier 1) ──
   id: ulidId(),
   customerId: uuid('customer_id').references(() => customers.id, {
@@ -34,7 +34,7 @@ export const otpCodes = pgTable('otp_codes', {
  * Auth Logs Table (Security Monitoring)
  * Alignment: UUID -> TIMESTAMPTZ -> TEXT
  */
-export const authLogs = pgTable(
+export const authLogs = storefrontSchema.table(
   'auth_logs',
   {
     // ── Fixed ──

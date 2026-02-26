@@ -3,12 +3,10 @@
  * Exposed API for Super Admins to create new store environments
  */
 
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { AuditLog, AuditService } from '@apex/audit';
+import { AuditLog, type AuditService } from '@apex/audit';
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { FraudGuard } from '@apex/middleware';
 import { env } from '@apex/config';
+import { FraudGuard } from '@apex/middleware';
 import {
   Body,
   Controller,
@@ -21,11 +19,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { ProvisioningService } from './provisioning.service.js';
 import { ZodValidationPipe } from 'nestjs-zod';
+import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
 import { ProvisionRequestSchema } from './dto/provision-request.dto.js';
+import type { ProvisioningService } from './provisioning.service.js';
 
 @Controller('provision')
 export class ProvisioningController {
@@ -36,7 +33,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) { }
+  ) {}
 
   /**
    * POST /api/provision

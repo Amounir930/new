@@ -77,7 +77,13 @@ export const EnvSchema = z.object({
   DATABASE_URL: z
     .string()
     .min(1, 'S1 Violation: DATABASE_URL is required')
-    .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL is supported'),
+    .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL is supported')
+    .refine((url) => {
+      if (process.env.NODE_ENV === 'production') {
+        return url.includes('ssl=require') || url.includes('sslmode=require');
+      }
+      return true;
+    }, 'S1 Violation: DATABASE_URL must require SSL in production'),
   DB_SSL: z.enum(['true', 'false']).default('true'),
   DB_CA_CERT: z.string().optional(),
   READ_REPLICA_URL: z.string().optional(),
@@ -86,7 +92,13 @@ export const EnvSchema = z.object({
   REDIS_URL: z
     .string()
     .min(1, 'S1 Violation: REDIS_URL is required')
-    .default('redis://localhost:6379'),
+    .refine((url) => {
+      if (process.env.NODE_ENV === 'production') {
+        // Enforce password in production (redis://:password@host:port)
+        return /redis:\/\/[^:]*:[^@]+@/.test(url);
+      }
+      return true;
+    }, 'S1 Violation: REDIS_URL must include a password in production'),
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.string().default('6379'),
 
@@ -113,9 +125,51 @@ export const EnvSchema = z.object({
   REDIS_PASSWORD: z.string().optional(),
 
   // Security Secrets (S7)
-  API_KEY_SECRET: z.string().optional(),
-  BLIND_INDEX_PEPPER: z.string().min(32, 'S1 Violation: PEPPER must be at least 32 chars'),
-  INTERNAL_API_SECRET: z.string().min(32, 'S1 Violation: INTERNAL_API_SECRET must be at least 32 chars'),
+  API_KEY_SECRET: z
+    .string()
+    .min(32, 'S1 Violation: API_KEY_SECRET must be at least 32 chars')
+    .refine((key) => {
+      if (process.env.NODE_ENV === 'production') {
+        return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
+      }
+      return true;
+    }, 'S1 Violation: API_KEY_SECRET lacks required complexity'),
+
+  BLIND_INDEX_PEPPER: z
+    .string()
+    .min(32, 'S1 Violation: BLIND_INDEX_PEPPER must be at least 32 chars')
+    .refine((key) => {
+      if (process.env.NODE_ENV === 'production') {
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false;
+        return (
+          /[A-Z]/.test(key) &&
+          /[a-z]/.test(key) &&
+          /[0-9]/.test(key) &&
+          /[@$!%*?&#/=_+.-]/.test(key)
+        );
+      }
+      return true;
+    }, 'S1 Violation: BLIND_INDEX_PEPPER lacks required complexity'),
+
+  SESSION_SALT: z
+    .string()
+    .min(32, 'S1 Violation: SESSION_SALT must be at least 32 chars')
+    .refine((key) => {
+      if (process.env.NODE_ENV === 'production') {
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false;
+        return (
+          /[A-Z]/.test(key) &&
+          /[a-z]/.test(key) &&
+          /[0-9]/.test(key) &&
+          /[@$!%*?&#/=_+.-]/.test(key)
+        );
+      }
+      return true;
+    }, 'S1 Violation: SESSION_SALT lacks required complexity'),
+
+  INTERNAL_API_SECRET: z
+    .string()
+    .min(32, 'S1 Violation: INTERNAL_API_SECRET must be at least 32 chars'),
 
   // MinIO Root Credentials
   MINIO_ROOT_USER: z.string().optional(),
@@ -137,7 +191,15 @@ export const EnvSchema = z.object({
     .string()
     .url('S1 Violation: GLITCHTIP_DSN must be a valid URL')
     .optional(),
-  ALLOWED_ORIGINS: z.string().optional(),
+  ALLOWED_ORIGINS: z
+    .string()
+    .refine((val) => {
+      if (process.env.NODE_ENV === 'production') {
+        return val !== '*';
+      }
+      return true;
+    }, 'S8 Violation: ALLOWED_ORIGINS cannot be "*" in production')
+    .optional(),
 
   // mTLS Configuration
   MTLS_CERT_PATH: z.string().default('/etc/mtls/certs'),

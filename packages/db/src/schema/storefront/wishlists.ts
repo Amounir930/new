@@ -1,3 +1,4 @@
+import { storefrontSchema } from '../v5-core';
 /**
  * Storefront Wishlist Schema — V5
  *
@@ -14,7 +15,7 @@ import { products } from './products';
  * Wishlists Table
  * Column alignment: UUID → TIMESTAMPTZ
  */
-export const wishlists = pgTable(
+export const wishlists = storefrontSchema.table(
   'wishlists',
   {
     // ── Fixed (Alignment) ──

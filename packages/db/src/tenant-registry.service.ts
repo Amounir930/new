@@ -4,8 +4,8 @@ import { Injectable } from '@nestjs/common';
 import { desc, eq } from 'drizzle-orm';
 import { publicDb } from './connection.js';
 import { getGlobalRedis } from './redis.service.js';
-import { type Tenant, tenants } from './schema.js';
 import { onboardingBlueprints } from './schema/governance.js';
+import { type Tenant, tenants } from './schema.js';
 
 /**
  * S2: Tenant Registry Service
@@ -40,7 +40,9 @@ export class TenantRegistryService {
       // S7: Storing encrypted data as standardized JSON
       nicheType: this.encryptField(data.nicheType),
       uiConfig: data.uiConfig
-        ? (this.encryption.encrypt(JSON.stringify(data.uiConfig)) as any)
+        ? (this.encryption.encrypt(
+            JSON.stringify(data.uiConfig)
+          ) as unknown as Record<string, unknown>)
         : null,
     } as NewTenant;
 
@@ -62,7 +64,9 @@ export class TenantRegistryService {
     const decrypted = { ...tenant };
 
     decrypted.nicheType = this.decryptNicheType(tenant.nicheType);
-    decrypted.uiConfig = this.decryptUiConfig(tenant.uiConfig);
+    decrypted.uiConfig = this.decryptUiConfig(
+      tenant.uiConfig as Record<string, unknown> | null | undefined
+    );
 
     return decrypted;
   }
@@ -80,24 +84,27 @@ export class TenantRegistryService {
     }
   }
 
-  private decryptUiConfig(uiConfig: any): any {
-    if (!uiConfig) return uiConfig;
+  private decryptUiConfig(
+    uiConfig: Record<string, unknown> | null | undefined
+  ): Record<string, unknown> | null {
+    if (!uiConfig) return null;
 
-    if (uiConfig.encrypted && uiConfig.iv && uiConfig.tag) {
+    if (
+      typeof uiConfig === 'object' &&
+      'encrypted' in uiConfig &&
+      'iv' in uiConfig &&
+      'tag' in uiConfig
+    ) {
       try {
-        const jsonStr = this.encryption.decrypt(uiConfig);
-        return JSON.parse(jsonStr);
+        const jsonStr = this.encryption.decrypt(
+          uiConfig as unknown as Parameters<typeof this.encryption.decrypt>[0]
+        );
+        return JSON.parse(jsonStr) as Record<string, unknown>;
       } catch (_e) {
         return uiConfig;
       }
     }
     return uiConfig;
-  }
-
-  private isEncrypted(val: string): boolean {
-    // Simple heuristic: starts with valid base64 char and likely JSON
-    // Better: try parse
-    return val.trim().length > 0;
   }
 
   /**
@@ -177,7 +184,7 @@ export class TenantRegistryService {
     const [blueprint] = await publicDb
       .select({ uiConfig: onboardingBlueprints.uiConfig })
       .from(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.nicheType, nicheType as any))
+      .where(eq(onboardingBlueprints.nicheType, nicheType))
       .limit(1);
 
     return (blueprint?.uiConfig as Record<string, unknown>) || undefined;
@@ -219,7 +226,15 @@ export class TenantRegistryService {
       nicheType?: string;
     }
   ): Promise<Tenant> {
-    const updateData: any = { ...data };
+    // Build typed update object explicitly — no `any` spreading
+    const updateData: Partial<
+      Pick<NewTenant, 'plan' | 'name' | 'status' | 'nicheType'>
+    > = {};
+    if (data.plan !== undefined)
+      updateData.plan = data.plan as NewTenant['plan'];
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.status !== undefined)
+      updateData.status = data.status as NewTenant['status'];
 
     // S7: Encrypt nicheType consistently (Risk #14)
     if (data.nicheType) {

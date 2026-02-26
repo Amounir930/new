@@ -19,50 +19,53 @@ interface ProvisionOptions {
   quiet?: boolean;
 }
 
+/**
+ * S10: Secure Password Input with Masking
+ */
+async function acquirePasswordSecurely(): Promise<string> {
+  process.stdout.write('Enter admin password: ');
+
+  let password = '';
+  const stdin = process.stdin;
+  stdin.setRawMode(true);
+  stdin.resume();
+  stdin.setEncoding('utf-8');
+
+  return new Promise<string>((resolve) => {
+    const onData = (c: string) => {
+      if (c === '\n' || c === '\r' || c === '\u0004') {
+        stdin.setRawMode(false);
+        stdin.pause();
+        stdin.removeListener('data', onData);
+        process.stdout.write('\n');
+        resolve(password);
+        return;
+      }
+
+      if (c === '\u0003') process.exit();
+
+      const isBackspace = c === '\u007f' || c === '\b';
+      if (isBackspace) {
+        if (password.length > 0) {
+          password = password.slice(0, -1);
+          process.stdout.write('\b \b');
+        }
+        return;
+      }
+
+      password += c;
+      process.stdout.write('*');
+    };
+    stdin.on('data', onData);
+  });
+}
+
 export async function main(args: string[] = process.argv.slice(2)) {
   const options = parseArgs(args);
 
-  // 🛡️ S1/S10: Securely acquire password with masking (Prevent shoulder-surfing/history leaks)
+  // 🛡️ S1/S10: Securely acquire password with masking
   if (!options.password && !options.quiet) {
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    process.stdout.write('Enter admin password: ');
-
-    // Manual masking implementation using RawMode (S10)
-    options.password = '';
-    const stdin = process.stdin;
-    stdin.setRawMode(true);
-    stdin.resume();
-    stdin.setEncoding('utf-8');
-
-    await new Promise<void>((resolve) => {
-      const onData = (c: string) => {
-        if (c === '\n' || c === '\r' || c === '\u0004') {
-          stdin.setRawMode(false);
-          stdin.pause();
-          stdin.removeListener('data', onData);
-          process.stdout.write('\n');
-          resolve();
-          return;
-        }
-        if (c === '\u0003') process.exit(); // Ctrl+C
-        if (c === '\u007f' || c === '\b') { // Backspace
-          if (options.password!.length > 0) {
-            options.password = options.password!.slice(0, -1);
-            process.stdout.write('\b \b');
-          }
-        } else {
-          options.password! += c;
-          process.stdout.write('*');
-        }
-      };
-      stdin.on('data', onData);
-    });
-
-    rl.close();
+    options.password = await acquirePasswordSecurely();
   }
 
   if (!options.password) {
@@ -74,16 +77,14 @@ export async function main(args: string[] = process.argv.slice(2)) {
   }
 
   try {
-    // Create NestJS application context (without HTTP server)
     const app = await NestFactory.createApplicationContext(AppModule, {
-      logger: ['error', 'warn'], // Always show errors and warnings
+      logger: ['error', 'warn'],
     });
 
     const provisioningService = app.get<ProvisioningService>(
       'PROVISIONING_SERVICE'
     );
 
-    // Execute provisioning
     const result = await provisioningService.provision({
       subdomain: options.subdomain,
       storeName: options.storeName,
@@ -104,7 +105,6 @@ export async function main(args: string[] = process.argv.slice(2)) {
       '❌ Provisioning failed:',
       error instanceof Error ? error.message : error
     );
-    // S5: Diagnostic info logic removed to prevent leaks
     throw error;
   }
 }

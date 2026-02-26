@@ -28,8 +28,9 @@ export function createMockProductImage(
 ): ProductImage {
   return {
     url: faker.image.urlLoremFlickr({ category: 'product' }),
-    alt: faker.commerce.productName(),
+    altText: faker.commerce.productName(),
     isPrimary: false,
+    order: 0,
     ...overrides,
   };
 }
@@ -54,10 +55,16 @@ export function createMockProductVariant(
     price: basePrice,
     compareAtPrice: faker.datatype.boolean() ? basePrice * 1.2 : null,
     quantity: faker.number.int({ min: 0, max: 100 }),
-    attributes: {
-      color: faker.color.human(),
-      size: faker.helpers.arrayElement(['S', 'M', 'L', 'XL']),
-    },
+    attributes: [
+      {
+        name: 'Color',
+        value: faker.color.human(),
+      },
+      {
+        name: 'Size',
+        value: faker.helpers.arrayElement(['S', 'M', 'L', 'XL']),
+      },
+    ],
     imageUrl: faker.image.urlLoremFlickr({ category: 'product' }),
     ...overrides,
   };
@@ -78,8 +85,14 @@ export function createMockProduct(
     slug:
       options.slug ??
       faker.helpers.slugify(faker.commerce.productName()).toLowerCase(),
-    name: options.name ?? faker.commerce.productName(),
-    description: faker.commerce.productDescription(),
+    name: {
+      ar: faker.commerce.productName(),
+      en: faker.commerce.productName(),
+    },
+    description: {
+      ar: faker.commerce.productDescription(),
+      en: faker.commerce.productDescription(),
+    },
     shortDescription: faker.lorem.sentence(),
 
     price: basePrice,

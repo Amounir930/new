@@ -4,8 +4,8 @@
  */
 
 import 'reflect-metadata';
-import { env } from '@apex/config';
 import { AuditService } from '@apex/audit';
+import { env } from '@apex/config';
 import { GlobalExceptionFilter, defaultCorsConfig } from '@apex/middleware';
 import {
   type LogLevel,
@@ -62,10 +62,16 @@ async function bootstrap() {
   };
 
   // S2 FIX 23A: Wrapper Pattern for dynamic limits
-  // body-parser.json() does NOT support functions for 'limit'. 
+  // body-parser.json() does NOT support functions for 'limit'.
   // We must create static parsers and route between them manually.
-  const defaultParser = bodyParser.json({ limit: '100kb', verify: captureRawBody });
-  const importParser = bodyParser.json({ limit: '2mb', verify: captureRawBody });
+  const defaultParser = bodyParser.json({
+    limit: '100kb',
+    verify: captureRawBody,
+  });
+  const importParser = bodyParser.json({
+    limit: '2mb',
+    verify: captureRawBody,
+  });
 
   app.use((req: any, res: any, next: any) => {
     if (req.originalUrl?.includes('/api/products/import')) {
@@ -92,18 +98,27 @@ async function bootstrap() {
   // CSP with nonces belongs in the Next.js frontends, not here.
 
   // S8: Security Headers (Helmet) — Simplified for JSON API
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'none'"],
-        frameAncestors: ["'none'"],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'none'"],
+          frameAncestors: ["'none'"], // Item 41: Prevent clickjacking
+          baseUri: ["'none'"],
+          formAction: ["'none'"],
+        },
       },
-    },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-    xContentTypeOptions: true,
-    xFrameOptions: { action: 'deny' },
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-  }));
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }, // Item 41: Strict HSTS
+      xContentTypeOptions: true,
+      xFrameOptions: { action: 'deny' },
+      referrerPolicy: { policy: 'same-origin' }, // Item 41: Stricter referrer policy
+      dnsPrefetchControl: { allow: false },
+    })
+  );
 
   // S8: CORS Configuration
   app.enableCors(defaultCorsConfig);

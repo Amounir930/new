@@ -45,11 +45,6 @@
     "@nestjs/core": "^10.0.0",
     "typescript": "^5.0.0"
   },
-  "keywords": [
-    "security",
-    "mtls",
-    "secrets-rotation",
-    "penetration-testing"
-  ],
+  "keywords": ["security", "mtls", "secrets-rotation", "penetration-testing"],
   "license": "MIT"
 }

@@ -14,7 +14,8 @@ export default async function RootPage() {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-white">60sec.shop</h1>
         <p className="text-gray-400">
-          Visit your store at <code className="text-blue-400">yourstore.60sec.shop</code>
+          Visit your store at{' '}
+          <code className="text-blue-400">yourstore.60sec.shop</code>
         </p>
       </div>
     </div>

@@ -1,4 +1,6 @@
+import type { ExtractTablesWithRelations } from 'drizzle-orm';
 import { sql } from 'drizzle-orm';
+import type { NodePgTransaction } from 'drizzle-orm/node-postgres';
 import type { db } from './index';
 
 /**
@@ -16,7 +18,12 @@ import type { db } from './index';
 export async function withTenantContext<T>(
   client: typeof db,
   tenantId: string,
-  callback: (tx: any) => Promise<T>
+  callback: (
+    tx: NodePgTransaction<
+      Record<string, unknown>,
+      ExtractTablesWithRelations<Record<string, unknown>>
+    >
+  ) => Promise<T>
 ): Promise<T> {
   return await client.transaction(async (tx) => {
     // Mandate #1 & #2: STRICT LOCAL TRANSACTION SCOPE + NOT NULL BYPASS

@@ -8,6 +8,7 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  check,
   index,
   integer,
   jsonb,
@@ -23,6 +24,7 @@ import {
   encryptedCheck,
   encryptedText,
   moneyAmount,
+  storefrontSchema,
   ulidId,
 } from '../v5-core';
 
@@ -30,7 +32,7 @@ import {
  * 👤 Customers Table
  * ALIGNMENT: UUID -> TS -> BIGINT -> BOOL -> TEXT (Encrypted) -> ARRAY -> JSONB
  */
-export const customers = pgTable(
+export const customers = storefrontSchema.table(
   'customers',
   {
     // ── 1. Fixed ──
@@ -101,13 +103,19 @@ export const customers = pgTable(
     phoneEncrypted: encryptedCheck(table.phone),
     firstNameEncrypted: encryptedCheck(table.firstName),
     lastNameEncrypted: encryptedCheck(table.lastName),
+
+    // Order 3: Prevent multi-currency corruption. Force internal wallet to SAR.
+    walletCurrencyCheck: check(
+      'wallet_currency_sar_only',
+      sql`(${table.walletBalance}).currency = 'SAR'`
+    ),
   })
 );
 
 /**
  * 📍 Customer Addresses
  */
-export const customerAddresses = pgTable(
+export const customerAddresses = storefrontSchema.table(
   'customer_addresses',
   {
     // ── Fixed ──
@@ -121,21 +129,27 @@ export const customerAddresses = pgTable(
       .notNull(),
 
     // ── Boolean ──
-    isDefault: boolean('is_default').default(false).notNull(),
+    isDefault: boolean('is_default').default(false),
+    isDefaultBilling: boolean('is_default_billing').default(false),
 
     // ── Text ──
-    // ── 7. PII Encryption (Point #26) ──
-    name: text('name'),
-    addressLine1: text('address_line1').notNull(), // S7 Encrypted
-    addressLine2: text('address_line2'), // S7 Encrypted
+    label: text('label'),
+    name: text('name').notNull(),
+    line1: text('line1').notNull(), // S7 Encrypted
+    line2: text('line2'), // S7 Encrypted
     city: text('city').notNull(),
     state: text('state'),
-    zipCode: text('zip_code'), // S7 Encrypted
+    postalCode: text('postal_code').notNull(), // S7 Encrypted
     country: text('country').notNull(), // ISO 3166-1
     phone: text('phone'), // S7 Encrypted
   },
   (table) => ({
     idxAddrCustomer: index('idx_addr_customer').on(table.customerId),
+    // A-02 Fix: Enforce S7 encryption on all PII address fields.
+    // These were previously marked as 'S7 Encrypted' only in comments with no DB enforcement.
+    line1Encrypted: encryptedCheck(table.line1),
+    postalCodeEncrypted: encryptedCheck(table.postalCode),
+    phoneEncrypted: encryptedCheck(table.phone),
   })
 );
 

@@ -11,14 +11,50 @@ import {
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { publicDb as db } from '../connection.js';
 import {
-  type FlashSaleProduct,
-  type TenantConfig,
   bentoGrids,
+  type FlashSaleProduct,
   flashSaleProducts,
   flashSales,
   searchAnalytics,
+  type TenantConfig,
   tenantConfig,
 } from '../schema/storefront/index.js';
+
+// ---------------------------------------------------------------------------
+// Input types for update methods
+// ---------------------------------------------------------------------------
+
+/** Hero section data as provided by the API layer */
+export interface HeroData {
+  slides: unknown[];
+  [key: string]: unknown;
+}
+
+/** Single product in a flash sale creation request */
+export interface FlashSaleProductInput {
+  productId: string;
+  discountPercentage: number;
+  quantityLimit?: number | null;
+}
+
+/** Flash sale campaign creation payload */
+export interface FlashSaleInput {
+  name?: string;
+  endTime: string;
+  products?: FlashSaleProductInput[];
+}
+
+/** Flash sale enriched data shape for the blueprint response */
+interface FlashSalesData {
+  endTime: string;
+  products: FlashSaleProductInput[];
+}
+
+/** Bento grid update payload */
+export interface BentoData {
+  layoutId: string;
+  slots: Record<string, unknown>;
+}
 
 export class HomePageService {
   /**
@@ -50,7 +86,7 @@ export class HomePageService {
       .from(flashSales)
       .where(and(eq(flashSales.status, 'active'), isNull(flashSales.deletedAt)))
       .limit(1);
-    let flashSalesData: any;
+    let flashSalesData: FlashSalesData | undefined;
 
     if (flashCampaign[0]) {
       const products = await db
@@ -60,9 +96,9 @@ export class HomePageService {
       flashSalesData = {
         endTime: flashCampaign[0].endTime.toISOString(),
         products: products.map((p: FlashSaleProduct) => ({
-          productId: p.productId,
+          productId: p.productId as string, // Cast to string as schema says notNull
           discountPercentage: Number(p.discountBasisPoints) / 100,
-          quantityLimit: p.quantityLimit,
+          quantityLimit: p.quantityLimit ?? 0,
         })),
       };
     }
@@ -78,7 +114,10 @@ export class HomePageService {
       hero: hero || { slides: [] },
       flashSales: flashSalesData,
       bentoGrid: bento[0]
-        ? { layoutId: bento[0].layoutId, slots: bento[0].slots as any }
+        ? {
+            layoutId: bento[0].layoutId,
+            slots: bento[0].slots as Record<string, unknown>,
+          }
         : { layoutId: 'default', slots: {} },
       trust: trust || { marqueeTexts: [], serviceIcons: [] },
       footer: footer || { contact: {} },
@@ -92,7 +131,7 @@ export class HomePageService {
   /**
    * Save/Update Hero Section
    */
-  async updateHero(_tenantId: string, heroData: any) {
+  async updateHero(_tenantId: string, heroData: HeroData) {
     await db
       .insert(tenantConfig)
       .values({
@@ -108,23 +147,24 @@ export class HomePageService {
   /**
    * Create active Flash Sale campaign
    */
-  async createFlashSale(_tenantId: string, campaign: any) {
+  async createFlashSale(_tenantId: string, campaign: FlashSaleInput) {
     return await db.transaction(async (tx) => {
       const [newCampaign] = await tx
         .insert(flashSales)
         .values({
-          name: campaign.name || 'Flash Sale',
+          tenantId: _tenantId,
+          name: { en: campaign.name || 'Flash Sale' }, // name is jsonb
           endTime: new Date(campaign.endTime),
         })
         .returning();
 
       if (campaign.products && campaign.products.length > 0) {
         await tx.insert(flashSaleProducts).values(
-          campaign.products.map((p: any) => ({
+          campaign.products.map((p: FlashSaleProductInput) => ({
             flashSaleId: newCampaign.id,
             productId: p.productId,
             discountBasisPoints: Math.round(Number(p.discountPercentage) * 100),
-            quantityLimit: p.quantityLimit,
+            quantityLimit: p.quantityLimit ?? 0,
           }))
         );
       }
@@ -135,9 +175,10 @@ export class HomePageService {
   /**
    * Update Bento Grid layout
    */
-  async updateBentoGrid(_tenantId: string, bentoData: any) {
+  async updateBentoGrid(tenantId: string, bentoData: BentoData) {
     await db.insert(bentoGrids).values({
-      name: 'Primary Home Grid',
+      tenantId,
+      name: { en: 'Primary Home Grid' }, // Ensuring jsonb mapping
       layoutId: bentoData.layoutId,
       slots: bentoData.slots,
     });

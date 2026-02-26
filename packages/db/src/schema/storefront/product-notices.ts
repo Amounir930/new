@@ -14,7 +14,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { customers } from './customers';
 import { products } from './products';
 
@@ -22,7 +22,7 @@ import { products } from './products';
  * Back in Stock Requests
  * Column alignment: UUID → TIMESTAMPTZ → BOOLEAN → TEXT
  */
-export const backInStockRequests = pgTable(
+export const backInStockRequests = storefrontSchema.table(
   'back_in_stock_requests',
   {
     // ── Fixed (Alignment) ──

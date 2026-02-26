@@ -10,18 +10,26 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const provisionSchema = z.object({
-  storeName: z.string().min(3, 'Store name is too short').max(100),
-  subdomain: z.string().min(3, 'Subdomain must be at least 3 characters').regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and dashes'),
-  adminEmail: z.string().email('Invalid email address'),
-  plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(100),
-  confirmPassword: z.string(),
-  blueprintId: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
+const provisionSchema = z
+  .object({
+    storeName: z.string().min(3, 'Store name is too short').max(100),
+    subdomain: z
+      .string()
+      .min(3, 'Subdomain must be at least 3 characters')
+      .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and dashes'),
+    adminEmail: z.string().email('Invalid email address'),
+    plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(100),
+    confirmPassword: z.string(),
+    blueprintId: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 type ProvisionFormValues = z.infer<typeof provisionSchema>;
 
@@ -262,7 +270,7 @@ export function ProvisionModal({
             </div>
           </form>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }

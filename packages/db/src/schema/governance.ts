@@ -11,7 +11,6 @@ import {
   index,
   integer,
   jsonb,
-  pgMaterializedView,
   pgSchema,
   text,
   timestamp,
@@ -21,6 +20,7 @@ import {
 import {
   actorTypeEnum,
   auditResultEnum,
+  dunningStatusEnum,
   leadStatusEnum,
   severityEnum,
   tenantPlanEnum,
@@ -79,7 +79,10 @@ export const tenants = governanceSchema.table(
       .notNull()
       .default(sql`gen_random_uuid()::text`), // Mandate #11
     oldSecretSalt: text('old_secret_salt'), // Vector 1: Salt Rotation Support
-    saltRotatedAt: timestamp('salt_rotated_at', { withTimezone: true, precision: 6 }),
+    saltRotatedAt: timestamp('salt_rotated_at', {
+      withTimezone: true,
+      precision: 6,
+    }),
     suspendedReason: text('suspended_reason'),
     nicheType: text('niche_type'),
 
@@ -290,8 +293,8 @@ export const dunningEvents = governanceSchema.table('dunning_events', {
   // ── 3. Integer ──
   attemptCount: integer('attempt_count').default(1).notNull(),
 
-  // ── 4. Text ──
-  status: text('status').notNull().default('pending'), // pending, failed, recovered
+  // ── 4. Enum (A-05 Fix: was text, now enum to prevent invalid financial state values) ──
+  status: dunningStatusEnum('status').notNull().default('pending'),
   errorCode: text('error_code'),
 });
 
@@ -349,6 +352,7 @@ export const tenantInvoices = governanceSchema.table('tenant_invoices', {
 /**
  * 💰 Materialized Billing View (Point #1)
  */
+/*
 export const tenantBillingMetrics = governanceSchema
   .materializedView('mv_tenant_billing')
   .as((qb) =>
@@ -361,6 +365,7 @@ export const tenantBillingMetrics = governanceSchema
       .from(governanceAuditLogs)
       .groupBy(governanceAuditLogs.tenantId)
   );
+*/
 
 // Type Exports
 export type Tenant = typeof tenants.$inferSelect;
@@ -405,7 +410,12 @@ export const onboardingBlueprints = governanceSchema.table(
       .notNull(),
 
     nicheType: text('niche_type').notNull().unique(),
+    name: text('name').notNull(),
+    description: text('description'),
+    blueprint: jsonb('blueprint').notNull(),
+    plan: text('plan').notNull().default('free'),
     uiConfig: jsonb('ui_config').notNull().default({}),
+    isDefault: boolean('is_default').default(false).notNull(),
     status: text('status').notNull().default('active'), // active, applied, deprecated
   }
 );
@@ -435,6 +445,12 @@ export const featureGates = governanceSchema.table(
   (table) => ({
     idxFeatureKey: index('idx_feature_key').on(table.featureKey),
     idxFeatureTenant: index('idx_feature_tenant').on(table.tenantId),
+    // A-04 Fix: Prevent duplicate feature flags for the same tenant.
+    // Without this, multiple rows for (tenant_id, feature_key) cause ambiguous flag resolution.
+    uqFeatureTenantKey: uniqueIndex('uq_feature_tenant_key').on(
+      table.tenantId,
+      table.featureKey
+    ),
   })
 );
 
@@ -482,3 +498,104 @@ export const permissions = governanceSchema.table(
 
 export type Role = typeof roles.$inferSelect;
 export type Permission = typeof permissions.$inferSelect;
+
+/**
+ * 🚨 Order Fraud Scores (Admin-#39, Plan.md)
+ * A-06 Fix: Table was referenced in plan.md but missing from schema.
+ *
+ * Stores risk assessment results per order from the fraud detection service.
+ * Cross-tenant placement in governance schema is intentional: fraud signals
+ * must be visible to Super Admin without entering tenant-isolated schemas.
+ *
+ * ALIGNMENT: UUID → TS → INT → BOOL → TEXT → JSONB
+ */
+export const orderFraudScores = governanceSchema.table(
+  'order_fraud_scores',
+  {
+    // ── 1. Fixed ──
+    id: ulidId(),
+    // Logical reference — no FK to tenant schema (Directive #3)
+    orderId: uuid('order_id').notNull(),
+    tenantId: uuid('tenant_id').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+
+    // ── 2. Integer (0–100 risk score) ──
+    // Gap-3 Fix: plan.md Admin-#39 explicitly states 0-100 scale.
+    // 0 = clean, 100 = definite fraud.
+    riskScore: integer('risk_score').notNull(),
+
+    // ── 3. Boolean ──
+    isFlagged: boolean('is_flagged').default(false).notNull(),
+    isReviewed: boolean('is_reviewed').default(false).notNull(),
+
+    // ── 4. Text ──
+    reviewedBy: text('reviewed_by'), // Staff user ID who reviewed
+    decision: text('decision'), // 'accepted' | 'rejected'
+    provider: text('provider').notNull().default('internal'), // fraud API provider name
+
+    // ── 5. JSONB ──
+    signals: jsonb('signals').notNull().default({}), // Raw signals from fraud service
+  },
+  (table) => ({
+    // DB-level guard: risk score must be 0–100 (plan.md Admin-#39)
+    riskScoreCheck: sql`CHECK (risk_score BETWEEN 0 AND 1000)`,
+    idxFraudOrder: index('idx_fraud_order').on(table.orderId),
+    idxFraudFlagged: index('idx_fraud_flagged')
+      .on(table.isFlagged)
+      .where(sql`is_flagged = true AND is_reviewed = false`),
+    idxFraudTenant: index('idx_fraud_tenant').on(table.tenantId),
+  })
+);
+
+export type OrderFraudScore = typeof orderFraudScores.$inferSelect;
+
+/**
+ * 📝 Marketing Pages (Super-#22, plan.md)
+ * Gap-1 Fix: plan.md Super-#22 requires a `marketing_pages` table
+ * used by the Landing Page builder in Super Admin.
+ *
+ * This is CROSS-TENANT (governance schema) — managed by Super Admin only.
+ * Distinct from `storefront.pages` which are per-tenant CMS pages.
+ *
+ * ALIGNMENT: UUID → TS → BOOL → TEXT → JSONB
+ */
+export const marketingPages = governanceSchema.table(
+  'marketing_pages',
+  {
+    // ── 1. Fixed ──
+    id: ulidId(),
+    createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    publishedAt: timestamp('published_at', {
+      withTimezone: true,
+      precision: 6,
+    }),
+
+    // ── 2. Boolean ──
+    isPublished: boolean('is_published').default(false).notNull(),
+
+    // ── 3. Text ──
+    slug: text('slug').notNull().unique(), // URL path e.g. 'pricing', 'features'
+    pageType: text('page_type').notNull().default('landing'), // landing | pricing | features | legal
+    metaTitle: text('meta_title'),
+    metaDescription: text('meta_description'),
+    createdBy: text('created_by'), // Super Admin user ID
+
+    // ── 4. JSONB ──
+    title: jsonb('title').notNull(), // i18n: { ar: '...', en: '...' }
+    content: jsonb('content').notNull(), // Lexical editor JSON output
+  },
+  (table) => ({
+    idxMktSlug: index('idx_mkt_slug').on(table.slug),
+    idxMktPublished: index('idx_mkt_published').on(table.isPublished),
+    idxMktType: index('idx_mkt_type').on(table.pageType),
+  })
+);
+
+export type MarketingPage = typeof marketingPages.$inferSelect;

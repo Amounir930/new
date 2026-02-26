@@ -17,7 +17,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { inventoryMovementTypeEnum, reservationStatusEnum } from '../enums';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { storeLocations } from './locations';
 import { productVariants } from './products';
 
@@ -26,7 +26,7 @@ import { productVariants } from './products';
  * TUNING: High-concurrency update performance.
  * ALIGNMENT: UUID -> TIMESTAMPTZ -> BIGINT -> INTEGER -> BOOLEAN -> TEXT
  */
-export const inventoryLevels = pgTable(
+export const inventoryLevels = storefrontSchema.table(
   'inventory_levels',
   {
     // ── 1. Fixed ──
@@ -65,7 +65,7 @@ export const inventoryLevels = pgTable(
 /**
  * 📜 Inventory Movements (Audit Ledger)
  */
-export const inventoryMovements = pgTable(
+export const inventoryMovements = storefrontSchema.table(
   'inventory_movements',
   {
     // ── Fixed ──
@@ -92,7 +92,9 @@ export const inventoryMovements = pgTable(
     referenceId: text('reference_id'),
   },
   (table) => ({
-    qtyPos: check('qty_positive', sql`"quantity" > 0`),
+    // C-03 Fix: Allow negative quantities for outflow operations (sale, damage, write_off, transfer_out).
+    // Positive = stock-in, Negative = stock-out. Zero is always invalid.
+    qtyNonzero: check('qty_nonzero', sql`"quantity" <> 0`),
     idxInvMovementsCreated: index('idx_inv_mov_created_brin').using(
       'brin',
       table.createdAt
@@ -109,7 +111,7 @@ export type InventoryMovement = typeof inventoryMovements.$inferSelect;
  * ⚡ Inventory Reservations (Flash Sales)
  * Swept by pg_cron (Mandate #16)
  */
-export const inventoryReservations = pgTable(
+export const inventoryReservations = storefrontSchema.table(
   'inventory_reservations',
   {
     // ── Fixed ──

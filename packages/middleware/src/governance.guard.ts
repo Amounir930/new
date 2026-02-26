@@ -4,7 +4,7 @@
  * Enforces feature-level access control based on plan and tenant specific gates.
  */
 
-import { governanceService } from '@apex/db';
+import type { GovernanceService } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -27,7 +27,10 @@ export const RequireFeature = (feature: string) =>
 
 @Injectable()
 export class GovernanceGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private governanceService: GovernanceService
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const feature = this.reflector.get<string>(
@@ -55,7 +58,7 @@ export class GovernanceGuard implements CanActivate {
       );
     }
 
-    const isEnabled = await governanceService.isFeatureEnabled(
+    const isEnabled = await this.governanceService.isFeatureEnabled(
       tenantId,
       feature
     );

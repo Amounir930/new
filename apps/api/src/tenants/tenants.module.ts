@@ -7,4 +7,4 @@ import { TenantsController } from './tenants.controller.js';
   controllers: [TenantsController, TenantsPublicController],
   providers: [],
 })
-export class TenantsModule { }
+export class TenantsModule {}

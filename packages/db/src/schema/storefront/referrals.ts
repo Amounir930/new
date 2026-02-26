@@ -15,14 +15,14 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { moneyAmount, ulidId } from '../v5-core';
+import { moneyAmount, storefrontSchema, ulidId } from '../v5-core';
 import { customers } from './customers';
 
 /**
  * Referrals Table
  * Column alignment: UUID → TIMESTAMPTZ → MONEY → BOOLEAN → TEXT
  */
-export const referrals = pgTable(
+export const referrals = storefrontSchema.table(
   'referrals',
   {
     // ── Fixed (Alignment) ──

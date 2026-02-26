@@ -39,7 +39,6 @@ export class ApexSecurityScanner {
   }
 
   private scanFile(sourceFile: any, rule = 'all') {
-
     if (rule === 'all' || rule === 's11-sqli')
       this.checkSQLInjection(sourceFile);
     if (rule === 'all' || rule === 's14-export')
@@ -469,7 +468,9 @@ if (import.meta.main) {
     const fullPath = resolve(process.cwd(), dir);
     if (existsSync(fullPath)) {
       console.log(`🔍 Scanning ${dir}...`);
-      allViolations = allViolations.concat(scanner.scanDirectory(fullPath, rule));
+      allViolations = allViolations.concat(
+        scanner.scanDirectory(fullPath, rule)
+      );
     } else {
       console.warn(`⚠️ Directory not found: ${dir}`);
     }

@@ -196,7 +196,8 @@ export async function updateBlueprint(
     updateData.description = updates.description;
   if (updates.blueprint) updateData.blueprint = updates.blueprint;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
-  if (updates.plan) updateData.plan = updates.plan as 'free' | 'basic' | 'pro' | 'enterprise';
+  if (updates.plan)
+    updateData.plan = updates.plan as 'free' | 'basic' | 'pro' | 'enterprise';
   if (updates.nicheType) updateData.nicheType = updates.nicheType as any;
   if (updates.status) updateData.status = updates.status as 'active' | 'paused';
 

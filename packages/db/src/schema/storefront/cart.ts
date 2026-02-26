@@ -7,21 +7,14 @@
  * @module @apex/db/schema/storefront/cart
  */
 
-import {
-  index,
-  jsonb,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-} from 'drizzle-orm/pg-core';
-import { moneyAmount, ulidId } from '../v5-core';
+import { index, jsonb, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { moneyAmount, storefrontSchema, ulidId } from '../v5-core';
 import { customers } from './customers';
 
 /**
  * Carts Table — FILLFACTOR 80% (high-update)
  */
-export const carts = pgTable(
+export const carts = storefrontSchema.table(
   'carts',
   {
     // ── Fixed (Alignment) ──
@@ -49,5 +42,7 @@ export const carts = pgTable(
 );
 
 // ─── Type Exports ───────────────────────────────────────────
-export type Cart = typeof customers.$inferSelect;
-export type NewCart = typeof customers.$inferInsert;
+// C-2 Fix: Was incorrectly pointing to `customers.$inferSelect` (type catastrophe).
+// Corrected to derive types from the `carts` table as intended.
+export type Cart = typeof carts.$inferSelect;
+export type NewCart = typeof carts.$inferInsert;

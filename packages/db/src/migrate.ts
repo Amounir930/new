@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import * as dotenv from 'dotenv';
+
 dotenv.config({ path: resolve(process.cwd(), '../../.env') });
 
 import { validateEnv } from '@apex/config';
@@ -110,7 +111,7 @@ async function runMigrations() {
     `Running migrations for ${tenantId ? `tenant: ${tenantId}` : 'PUBLIC schema'}...`
   );
 
-  let env: any;
+  let env: ReturnType<typeof validateEnv>;
   try {
     env = validateEnv();
   } catch (error) {

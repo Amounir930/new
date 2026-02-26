@@ -15,16 +15,16 @@
  * @returns Sanitized value safe for spreadsheet consumption
  */
 export function sanitizeCsvField(value: string): string {
-    if (typeof value !== 'string') return value;
+  if (typeof value !== 'string') return value;
 
-    const dangerousPrefixes = ['=', '+', '-', '@', '\t', '\r', '\n'];
+  const dangerousPrefixes = ['=', '+', '-', '@', '\t', '\r', '\n'];
 
-    if (dangerousPrefixes.some(prefix => value.startsWith(prefix))) {
-        // Prepend single quote to neutralize formula execution
-        return `'${value}`;
-    }
+  if (dangerousPrefixes.some((prefix) => value.startsWith(prefix))) {
+    // Prepend single quote to neutralize formula execution
+    return `'${value}`;
+  }
 
-    return value;
+  return value;
 }
 
 /**
@@ -32,12 +32,15 @@ export function sanitizeCsvField(value: string): string {
  * @param record - Key-value object from CSV row
  * @returns Sanitized record
  */
-export function sanitizeCsvRecord(record: Record<string, unknown>): Record<string, unknown> {
-    const sanitized: Record<string, unknown> = {};
+export function sanitizeCsvRecord(
+  record: Record<string, unknown>
+): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
 
-    for (const [key, value] of Object.entries(record)) {
-        sanitized[key] = typeof value === 'string' ? sanitizeCsvField(value) : value;
-    }
+  for (const [key, value] of Object.entries(record)) {
+    sanitized[key] =
+      typeof value === 'string' ? sanitizeCsvField(value) : value;
+  }
 
-    return sanitized;
+  return sanitized;
 }

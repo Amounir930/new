@@ -7,7 +7,7 @@
  */
 
 import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { categories } from './categories';
 import { products } from './products';
 
@@ -15,7 +15,7 @@ import { products } from './products';
  * Size Guides Table
  * Column alignment: UUID → TIMESTAMPTZ → TEXT → JSONB
  */
-export const sizeGuides = pgTable('size_guides', {
+export const sizeGuides = storefrontSchema.table('size_guides', {
   // ── Fixed (Alignment) ──
   id: ulidId(),
   categoryId: uuid('category_id').references(() => categories.id),

@@ -1,9 +1,6 @@
+import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST } from '@apex/provisioning';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import {
-  MASTER_FEATURE_LIST,
-  MASTER_QUOTA_LIST,
-} from '@apex/provisioning';
 
 // ─── S21: Blueprint Structure Schema ─────────────────────────────────────────
 // Using explicit interface + z.lazy() to break TypeScript's deep-inference loop.
@@ -65,13 +62,13 @@ export const createBlueprintSchema = z.object({
 });
 
 export type CreateBlueprintInput = z.infer<typeof createBlueprintSchema>;
-export class CreateBlueprintDto extends createZodDto(createBlueprintSchema) { }
+export class CreateBlueprintDto extends createZodDto(createBlueprintSchema) {}
 
 // ─── Update Blueprint ─────────────────────────────────────────────────────────
 
 export const updateBlueprintSchema = createBlueprintSchema.partial();
 export type UpdateBlueprintInput = z.infer<typeof updateBlueprintSchema>;
-export class UpdateBlueprintDto extends createZodDto(updateBlueprintSchema) { }
+export class UpdateBlueprintDto extends createZodDto(updateBlueprintSchema) {}
 
 // ─── Snapshot Blueprint ───────────────────────────────────────────────────────
 
@@ -85,4 +82,4 @@ export const snapshotBlueprintSchema = z.object({
 export type SnapshotBlueprintInput = z.infer<typeof snapshotBlueprintSchema>;
 export class SnapshotBlueprintDto extends createZodDto(
   snapshotBlueprintSchema
-) { }
+) {}

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
 
 // --- MOCK SETUP ---
 let currentPath = 'public';
@@ -114,7 +114,7 @@ mock.module('./connection.js', () => ({
 describe('S2 Integrated Logic', () => {
   let coreModule: any;
   let withTenantConnection: any;
-  let verifyTenantExists: any;
+  let resolveAndValidateTenant: any;
   let tenantA: string;
 
   // Use beforeAll to import AFTER mocks are set up
@@ -134,7 +134,7 @@ describe('S2 Integrated Logic', () => {
     // Import module dynamically
     coreModule = await import('./core.js');
     withTenantConnection = coreModule.withTenantConnection;
-    verifyTenantExists = coreModule.verifyTenantExists;
+    resolveAndValidateTenant = coreModule.resolveAndValidateTenant;
     tenantA = 'tenant1';
     // VerifyTenantExists and WithTenantConnection now use publicPool directly
     // which is already mocked at the module level in this file.
@@ -207,20 +207,18 @@ describe('S2 Integrated Logic', () => {
     });
   });
 
-  describe('Tenant Verification', () => {
-    it('should return true when tenant exists', async () => {
-      // Logic: verifyTenantExists uses publicPool.query
-      // Our mockPool handles this via mockClientInstance.query logic.
-      // If we query for 't1', it returns rows.
-      // Use the outer variable
-      const exists = await verifyTenantExists('tenant1');
-      expect(exists).toBe(true);
+  describe('Tenant Verification (resolveAndValidateTenant)', () => {
+    it('should return tenant info when tenant exists', async () => {
+      const tenant = await resolveAndValidateTenant('tenant1');
+      expect(tenant).toBeDefined();
+      expect(tenant.subdomain).toBe('tenant1');
+      expect(tenant.status).toBe('active');
     });
 
-    it('should return false when tenant missing', async () => {
-      // Use the outer variable
-      const exists = await verifyTenantExists('non-existent');
-      expect(exists).toBe(false);
+    it('should throw an error when tenant missing', async () => {
+      await expect(resolveAndValidateTenant('non-existent')).rejects.toThrow(
+        /S2 Violation/
+      );
     });
   });
 });

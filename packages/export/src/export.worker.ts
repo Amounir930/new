@@ -8,7 +8,7 @@
 import { readFile, rm } from 'node:fs/promises';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
-import { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config';
 import {
   GetObjectCommand,
   PutObjectCommand,
@@ -42,11 +42,20 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
   ) {
     // Initialize S3/MinIO client
     this.s3Client = new S3Client({
-      endpoint: this.config.getWithDefault('MINIO_ENDPOINT', 'http://localhost:9000'),
+      endpoint: this.config.getWithDefault(
+        'MINIO_ENDPOINT',
+        'http://localhost:9000'
+      ),
       region: this.config.getWithDefault('MINIO_REGION', 'us-east-1'),
       credentials: {
-        accessKeyId: this.config.getWithDefault('MINIO_ACCESS_KEY', '') as string,
-        secretAccessKey: this.config.getWithDefault('MINIO_SECRET_KEY', '') as string,
+        accessKeyId: this.config.getWithDefault(
+          'MINIO_ACCESS_KEY',
+          ''
+        ) as string,
+        secretAccessKey: this.config.getWithDefault(
+          'MINIO_SECRET_KEY',
+          ''
+        ) as string,
       },
       forcePathStyle: true,
     });
@@ -135,7 +144,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       if (result.sizeBytes > this.MAX_EXPORT_SIZE_BYTES) {
         throw new Error(
           `Export size (${(result.sizeBytes / 1024 / 1024).toFixed(2)}MB) ` +
-          `exceeds limit (${this.MAX_EXPORT_SIZE_BYTES / 1024 / 1024}MB)`
+            `exceeds limit (${this.MAX_EXPORT_SIZE_BYTES / 1024 / 1024}MB)`
         );
       }
 
@@ -200,7 +209,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
       });
 
       // Cleanup local file immediately (S14.8: Native Node.js cleanup)
-      await rm(result.downloadUrl, { force: true }).catch(() => { });
+      await rm(result.downloadUrl, { force: true }).catch(() => {});
       this.logger.log(`Cleaned up local file: ${result.downloadUrl}`);
 
       await job.updateProgress(100);
@@ -238,7 +247,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
 
       // Cleanup on failure (S14.8: Native Node.js cleanup)
       if (localFilePath) {
-        await rm(localFilePath, { force: true }).catch(() => { });
+        await rm(localFilePath, { force: true }).catch(() => {});
         this.logger.log(`Cleaned up failed export file: ${localFilePath}`);
       }
 

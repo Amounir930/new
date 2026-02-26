@@ -62,7 +62,11 @@ export async function seedTenantData(
           subdomain: options.subdomain,
           db: tx as any, // Use transaction client
           schema: schemaName,
-          plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
+          plan: (options.plan || 'free') as
+            | 'free'
+            | 'basic'
+            | 'pro'
+            | 'enterprise',
           adminEmail: options.adminEmail,
           password: options.password,
           storeId: storeId,
@@ -108,7 +112,9 @@ async function resolveTemplate(options: SeedOptions): Promise<any> {
     return options.blueprint;
   }
   const { getDefaultBlueprint } = await import('./blueprint.js');
-  const blueprintRecord = await getDefaultBlueprint((options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise');
+  const blueprintRecord = await getDefaultBlueprint(
+    (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise'
+  );
 
   if (!blueprintRecord) {
     throw new Error(

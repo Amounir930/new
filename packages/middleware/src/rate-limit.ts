@@ -19,7 +19,6 @@ import {
 } from '@nestjs/common';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 export { RedisRateLimitStore };
 
@@ -52,7 +51,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -281,4 +280,4 @@ import { QuotaInterceptor } from './quota.interceptor.js';
     FraudGuard,
   ],
 })
-export class RateLimitModule { }
+export class RateLimitModule {}

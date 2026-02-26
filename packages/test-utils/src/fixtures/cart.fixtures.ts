@@ -20,7 +20,7 @@ export function createMockCartItem(overrides?: Partial<CartItem>): CartItem {
   return {
     productId: product.id,
     variantId: null,
-    name: product.name,
+    name: product.name.en as string,
     sku: faker.string.alphanumeric(10).toUpperCase(),
     price: product.price,
     quantity,

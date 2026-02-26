@@ -7,21 +7,21 @@
  */
 
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
   jsonb,
-  pgTable,
   text,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * Tenant Config Table (key-value storage)
  */
-export const tenantConfig = pgTable('tenant_config', {
+export const tenantConfig = storefrontSchema.table('tenant_config', {
   key: text('key').primaryKey(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   value: jsonb('value').notNull(),
@@ -31,12 +31,12 @@ export const tenantConfig = pgTable('tenant_config', {
  * Menu Items Table (navigation)
  * Column alignment: UUID → TIMESTAMPTZ → INT → BOOLEAN → TEXT
  */
-export const menuItems = pgTable(
+export const menuItems = storefrontSchema.table(
   'menu_items',
   {
     // ── Fixed (Alignment) ──
     id: ulidId(),
-    parentId: uuid('parent_id').references((): any => menuItems.id),
+    parentId: uuid('parent_id').references((): AnyPgColumn => menuItems.id),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 
     // ── Integer ──

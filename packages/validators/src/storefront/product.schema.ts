@@ -41,8 +41,13 @@ export const ProductVariantSchema = z.object({
     .min(0, 'Quantity cannot be negative'),
 
   attributes: z
-    .record(z.string(), z.string())
-    .describe('Variant attributes (e.g., { color: "Red", size: "XL" })'),
+    .array(z.object({
+      name: z.string().min(1),
+      value: z.string().min(1),
+      group: z.string().optional(),
+    }))
+    .optional()
+    .describe('Variant-specific attributes'),
 
   imageUrl: z.string().url('Invalid variant image URL').nullable(),
 });
@@ -53,9 +58,11 @@ export type ProductVariant = z.infer<typeof ProductVariantSchema>;
  * Product Image Schema
  */
 export const ProductImageSchema = z.object({
+  id: z.string().uuid().optional(),
   url: z.string().url('Invalid image URL'),
-  alt: z.string().nullable(),
-  isPrimary: z.boolean(),
+  altText: z.string().nullable().optional(),
+  isPrimary: z.boolean().default(false),
+  order: z.number().int().default(0),
 });
 
 export type ProductImage = z.infer<typeof ProductImageSchema>;
@@ -75,12 +82,9 @@ export const ProductSchema = z.object({
       'Slug must contain only lowercase letters, numbers, and hyphens'
     ),
 
-  name: z
-    .string()
-    .min(1, 'Product name is required')
-    .max(255, 'Product name cannot exceed 255 characters'),
+  name: z.record(z.string()).describe('Localized names (ar, en, etc.)'),
 
-  description: z.string().nullable(),
+  description: z.record(z.string()).nullable().describe('Localized descriptions'),
 
   shortDescription: z
     .string()
@@ -130,6 +134,22 @@ export const ProductSchema = z.object({
     .string()
     .max(100, 'Brand name cannot exceed 100 characters')
     .nullable(),
+
+  attributes: z
+    .array(z.object({
+      name: z.string().min(1),
+      value: z.string().min(1),
+      group: z.string().optional(),
+    }))
+    .optional(),
+
+  metafields: z
+    .array(z.object({
+      namespace: z.string().default('global'),
+      key: z.string().min(1),
+      value: z.unknown(),
+    }))
+    .optional(),
 
   // ═══════════════════════════════════════════════════════════
   // Variants

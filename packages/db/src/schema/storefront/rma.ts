@@ -20,14 +20,14 @@ import {
   rmaReasonCodeEnum,
   rmaResolutionEnum,
 } from '../enums';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { orderItems, orders } from './orders';
 
 /**
  * RMA Requests Table
  * Alignment: UUID -> TIMESTAMPTZ -> ENUM -> TEXT -> JSONB
  */
-export const rmaRequests = pgTable(
+export const rmaRequests = storefrontSchema.table(
   'rma_requests',
   {
     // ── Fixed (Alignment Tier 1) ──

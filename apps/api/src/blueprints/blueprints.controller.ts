@@ -1,5 +1,6 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditLog, AuditService } from '@apex/audit';
+import { CurrentUser, JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import {
   Body,
   Controller,
@@ -12,16 +13,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { CurrentUser, JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { BlueprintsService } from './blueprints.service.js';
 import {
-  createBlueprintSchema,
-  snapshotBlueprintSchema,
-  updateBlueprintSchema,
   type CreateBlueprintDto,
   type SnapshotBlueprintDto,
   type UpdateBlueprintDto,
+  createBlueprintSchema,
+  snapshotBlueprintSchema,
+  updateBlueprintSchema,
 } from './dto/blueprint.dto.js';
 
 @Controller('admin/blueprints')
@@ -31,7 +31,7 @@ export class BlueprintsController {
     private readonly blueprintsService: BlueprintsService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) { }
+  ) {}
 
   @Get()
   findAll() {
@@ -66,7 +66,8 @@ export class BlueprintsController {
   @AuditLog({ action: 'BLUEPRINT_SNAPSHOT_CREATED', entityType: 'blueprint' })
   snapshot(
     @CurrentUser('id') userId: string,
-    @Body(new ZodValidationPipe(snapshotBlueprintSchema)) dto: SnapshotBlueprintDto
+    @Body(new ZodValidationPipe(snapshotBlueprintSchema))
+    dto: SnapshotBlueprintDto
   ) {
     return this.blueprintsService.snapshot(
       userId,

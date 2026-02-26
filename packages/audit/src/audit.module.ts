@@ -25,4 +25,4 @@ import { AuditService } from './audit.service.js';
   ],
   exports: [AuditService, 'AUDIT_SERVICE', Reflector],
 })
-export class AuditModule { }
+export class AuditModule {}

@@ -19,7 +19,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { moneyAmount, ulidId } from '../v5-core';
+import { moneyAmount, storefrontSchema, ulidId } from '../v5-core';
 
 export const discountTypeEnum = pgEnum('discount_type', [
   'percentage',
@@ -31,7 +31,7 @@ export const discountTypeEnum = pgEnum('discount_type', [
 /**
  * 🏷️ Price Rules (Logic Layer)
  */
-export const priceRules = pgTable(
+export const priceRules = storefrontSchema.table(
   'price_rules',
   {
     // ── 1. Fixed ──
@@ -80,7 +80,7 @@ export const priceRules = pgTable(
 /**
  * 🎫 Discount Codes (UI Layer)
  */
-export const discountCodes = pgTable(
+export const discountCodes = storefrontSchema.table(
   'discount_codes',
   {
     // ── 1. Fixed ──

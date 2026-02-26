@@ -4,10 +4,16 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import { withTenantConnection } from '../core.js';
 import {
   type Customer,
-  type NewCustomer,
   customers,
+  type NewCustomer,
 } from '../schema/storefront/customers.js';
 import type { TenantRegistryService } from '../tenant-registry.service.js';
+
+/**
+ * Extended tenant type for salt-rotation window.
+ * oldSecretSalt is populated only during the rotation period defined by Mandate #11 / Vector 1.
+ */
+type TenantWithRotatedSalt = { secretSalt: string; oldSecretSalt?: string };
 
 /**
  * S7: Customer Service — V5 Standard
@@ -20,7 +26,7 @@ export class CustomerService {
   constructor(
     private readonly encryptionService: EncryptionService,
     private readonly tenantRegistry: TenantRegistryService
-  ) { }
+  ) {}
 
   /**
    * Create a new customer with encrypted PII.
@@ -105,7 +111,8 @@ export class CustomerService {
     // Mandate #11: Consistent use of tenant-specific salt
     // Vector 1: Dual-salt verification during rotation window
     const currentSalt = tenant.secretSalt;
-    const oldSalt = (tenant as any).oldSecretSalt;
+    // Mandate #11 / Vector 1: During the rotation window, oldSecretSalt may be set.
+    const oldSalt = (tenant as unknown as TenantWithRotatedSalt).oldSecretSalt;
 
     const currentEmailHash = this.encryptionService.hashSensitiveData(
       email,
@@ -189,11 +196,12 @@ export class CustomerService {
 
           return this.decryptCustomer(updatedCustomer);
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         attempt++;
         // Check for OCC Violation (P0001) or standard Stale Data
+        const err = error as { code?: string; message?: string };
         const isOccError =
-          error.code === 'P0001' || error.message === 'STALE_DATA_OR_NOT_FOUND';
+          err.code === 'P0001' || err.message === 'STALE_DATA_OR_NOT_FOUND';
 
         if (isOccError && attempt < maxRetries) {
           const delay = 2 ** attempt * 100; // Exponential backoff: 200ms, 400ms, 800ms

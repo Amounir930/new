@@ -4,7 +4,9 @@
  */
 
 import { AuditInterceptor, AuditModule, AuditService } from '@apex/audit';
+import { ConfigModule } from '@apex/config';
 import { DbModule } from '@apex/db';
+import { ExportModule } from '@apex/export';
 import {
   ActiveDefenseMiddleware,
   BotProtectionMiddleware,
@@ -20,23 +22,21 @@ import {
   type NestModule,
   RequestMethod,
 } from '@nestjs/common';
-import { ConfigModule } from '@apex/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
+import { GovernanceModule } from './governance/governance.module.js';
 import { HealthModule } from './health/health.module.js';
-import { ProductsController } from './products/products.controller.js';
-import { BulkImportController } from './products/bulk-import.controller.js';
 import { BulkExportController } from './products/bulk-export.controller.js';
+import { BulkImportController } from './products/bulk-import.controller.js';
+import { ProductsController } from './products/products.controller.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
 import { HoneyTokensController } from './security/honey-tokens.controller.js';
-import { StorefrontModule } from './storefront/storefront.module.js';
-import { TenantsModule } from './tenants/tenants.module.js';
-import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
-import { ExportModule } from '@apex/export';
 import { SecurityModule } from './security/security.module.js';
-import { GovernanceModule } from './governance/governance.module.js';
+import { StorefrontModule } from './storefront/storefront.module.js';
+import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
+import { TenantsModule } from './tenants/tenants.module.js';
 
 @Module({
   imports: [
@@ -76,7 +76,7 @@ import { GovernanceModule } from './governance/governance.module.js';
     ProductsController,
     BulkImportController,
     HoneyTokensController,
-    MerchantStatsController
+    MerchantStatsController,
   ],
 })
 export class AppModule implements NestModule {

@@ -9,7 +9,7 @@ import { FraudScoringService } from './fraud-scoring.service.js';
 
 @Injectable()
 export class FraudGuard implements CanActivate {
-  constructor(private readonly fraudService: FraudScoringService) { }
+  constructor(private readonly fraudService: FraudScoringService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

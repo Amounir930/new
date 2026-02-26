@@ -21,7 +21,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
   constructor(
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) { }
+  ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
     return !!options.dateRange; // Requires date range

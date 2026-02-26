@@ -19,36 +19,56 @@ export * from './schema';
 function resolveSecretFiles(): void {
   for (const [key, value] of Object.entries(process.env)) {
     if (key.endsWith('_FILE') && value) {
-      try {
-        const secretKey = key.replace('_FILE', '');
-        // Only resolve if the target key isn't already set directly
-        if (!process.env[secretKey]) {
-          process.env[secretKey] = readFileSync(value, 'utf8').trim();
-        }
-      } catch (error) {
-        console.warn(`⚠️ Failed to resolve secret file for ${key}:`, error);
-      }
+      processSecretFile(key, value);
     }
   }
 
   // S1: Intelligent Patching for Connection URLs
-  // If passwords were resolved from secrets, inject them into URLs if they contain '@' host separator
-  if (process.env.REDIS_PASSWORD && process.env.REDIS_URL?.includes('@')) {
-    const url = process.env.REDIS_URL;
-    if (url.startsWith('redis://@')) {
-      process.env.REDIS_URL = url.replace('redis://@', `redis://:${encodeURIComponent(process.env.REDIS_PASSWORD)}@`);
-    } else if (!url.includes(':') || url.indexOf(':') === url.lastIndexOf(':')) {
-      // Handle redis://:pass@host or redis://host cases if needed, but the primarily one is redis://@host
+  patchRedisUrl();
+  patchDatabaseUrl();
+}
+
+function processSecretFile(key: string, value: string): void {
+  try {
+    const secretKey = key.replace('_FILE', '');
+    // Only resolve if the target key isn't already set directly
+    if (!process.env[secretKey]) {
+      process.env[secretKey] = readFileSync(value, 'utf8').trim();
     }
+  } catch (error) {
+    console.warn(`⚠️ Failed to resolve secret file for ${key}:`, error);
+  }
+}
+
+function patchRedisUrl(): void {
+  if (!process.env.REDIS_PASSWORD || !process.env.REDIS_URL?.includes('@')) {
+    return;
   }
 
-  if (process.env.POSTGRES_PASSWORD && process.env.DATABASE_URL?.includes('@')) {
-    const url = process.env.DATABASE_URL;
-    // Replace postgresql://user@host with postgresql://user:pass@host
-    const regex = /(postgresql?:\/\/)([^:/@]+)@/;
-    if (regex.test(url)) {
-      process.env.DATABASE_URL = url.replace(regex, `$1$2:${encodeURIComponent(process.env.POSTGRES_PASSWORD)}@`);
-    }
+  const url = process.env.REDIS_URL;
+  if (url.startsWith('redis://@')) {
+    process.env.REDIS_URL = url.replace(
+      'redis://@',
+      `redis://:${encodeURIComponent(process.env.REDIS_PASSWORD)}@`
+    );
+  }
+}
+
+function patchDatabaseUrl(): void {
+  if (
+    !process.env.POSTGRES_PASSWORD ||
+    !process.env.DATABASE_URL?.includes('@')
+  ) {
+    return;
+  }
+
+  const url = process.env.DATABASE_URL;
+  const regex = /(postgresql?:\/\/)([^:/@]+)@/;
+  if (regex.test(url)) {
+    process.env.DATABASE_URL = url.replace(
+      regex,
+      `$1$2:${encodeURIComponent(process.env.POSTGRES_PASSWORD)}@`
+    );
   }
 }
 
@@ -159,7 +179,7 @@ export const env: EnvConfig = (() => {
     try {
       return EnvSchema.parse(process.env);
     } catch (_e) {
-      // In test mode, we allow raw object access only if parsing fails, 
+      // In test mode, we allow raw object access only if parsing fails,
       // primarily to support mock testing of the validator itself.
       return process.env as unknown as EnvConfig;
     }

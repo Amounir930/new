@@ -1,58 +1,90 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
 
-// mocks
+// 1. Define Mocks for the DB Pool
 let currentPath = 'public';
 const mockClient = {
-    query: mock(async (text: string) => {
-        if (text.includes('SET SEARCH_PATH')) {
-            const match = text.match(/TO "([^"]+)"/i);
-            if (match) currentPath = match[1].toLowerCase();
-        }
-        if (text.includes('CURRENT_SETTING(\'APP.CURRENT_TENANT\', FALSE)')) {
-            // Mock fail-hard behavior: If it wasn't set, it should throw in a real DB
-            // But here we just mock the check
-            return { rows: [{ tenant: 'tenant1' }] };
-        }
-        return { rows: [], rowCount: 0 };
-    }),
-    release: mock(() => { currentPath = 'public'; }),
+  query: mock(async (query: any) => {
+    const text = typeof query === 'string' ? query : query.text || '';
+    const qs = text.toUpperCase();
+
+    if (qs.includes('SET LOCAL SEARCH_PATH')) {
+      const match = text.match(/TO "([^"]+)"/i);
+      if (match) currentPath = match[1].toLowerCase();
+    }
+    if (qs.includes('SHOW SEARCH_PATH')) {
+      return { rows: [{ search_path: currentPath }], rowCount: 1 };
+    }
+    if (qs.includes('SELECT 1 FROM INFORMATION_SCHEMA.SCHEMATA')) {
+      return { rows: [{ 1: 1 }], rowCount: 1 };
+    }
+    if (
+      qs.includes('BEGIN') ||
+      qs.includes('COMMIT') ||
+      qs.includes('ROLLBACK') ||
+      qs.includes('RESET ALL')
+    ) {
+      if (qs.includes('RESET ALL')) currentPath = 'public';
+      return { rows: [], rowCount: 0 };
+    }
+    if (qs.includes('SELECT ID, SUBDOMAIN, STATUS FROM TENANTS')) {
+      return {
+        rows: [{ id: 'tenant1', subdomain: 'tenant1', status: 'active' }],
+        rowCount: 1,
+      };
+    }
+    return { rows: [], rowCount: 0 };
+  }),
+  release: mock(() => {
+    currentPath = 'public';
+  }),
 };
 
 const mockPool = {
-    connect: mock(async () => mockClient),
-    query: mock(async () => ({ rows: [] })),
+  connect: mock(async () => mockClient),
+  query: mockClient.query,
+  on: mock(),
 };
 
+// 2. Mock ONLY the connection layer (Leaf nodes)
 mock.module('./connection.js', () => ({
-    publicPool: mockPool,
+  publicPool: mockPool,
+  publicDb: { execute: mock() },
 }));
 
-mock.module('./core.js', () => ({
-    sanitizeSchemaName: (s: string) => `tenant_${s}`,
-    configureConnectionContext: async (c: any, t: string) => {
-        await c.query(`SET app.current_tenant = '${t}'`);
-        await c.query(`SET search_path TO "tenant_${t}", public`);
-    }
+// Mock Redis to prevent real connection attempts
+mock.module('./redis.service.js', () => ({
+  getGlobalRedis: async () => ({
+    getClient: () => ({ exists: async () => 0, set: async () => 'OK' }),
+  }),
 }));
+
+// 3. Import real logic
+import { configureConnectionContext, sanitizeSchemaName } from './core.js';
 
 describe('S2 Isolation & Fail-Hard Protocol', () => {
-    it('should enforce fail-hard when tenant context is missing', async () => {
-        // This test simulates the DB behavior where missing_ok = false
-        const { configureConnectionContext } = await import('./core.js');
-        const client = mockClient as any;
+  it('should sanitize subdomains correctly', () => {
+    expect(sanitizeSchemaName('test-store')).toBe('tenant_test_store');
+    expect(() => sanitizeSchemaName('public')).toThrow(/reserved/);
+  });
 
-        await configureConnectionContext(client, 'tenant1');
-        expect(client.query).toHaveBeenCalledWith(expect.stringContaining('SET app.current_tenant'));
-    });
+  it('should enforce fail-hard and strictly switch search_path', async () => {
+    const tenant = {
+      id: 'tenant1',
+      subdomain: 'tenant1',
+      status: 'active',
+    } as any;
+    const client = mockClient as any;
 
-    it('should strictly switch search_path and reset on release', async () => {
-        const { publicPool } = await import('./connection.js');
-        const client = await publicPool.connect();
+    await configureConnectionContext(client, tenant, {});
 
-        await client.query('SET SEARCH_PATH TO "tenant_123"');
-        expect(currentPath).toBe('tenant_123');
+    expect(client.query).toHaveBeenCalledWith(
+      expect.stringMatching(/SET LOCAL search_path TO "tenant_tenant1"/i)
+    );
+    expect(currentPath).toBe('tenant_tenant1');
+  });
 
-        client.release();
-        expect(currentPath).toBe('public');
-    });
+  it('should reset search_path on release', async () => {
+    mockClient.release();
+    expect(currentPath).toBe('public');
+  });
 });

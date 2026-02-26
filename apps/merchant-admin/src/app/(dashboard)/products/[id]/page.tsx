@@ -1,66 +1,72 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { ProductForm } from "@/components/products/product-form";
-import { apiFetch } from "@/lib/api";
-import { useRouter, useParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { ProductForm } from '@/components/products/product-form';
+import { apiFetch } from '@/lib/api';
+import { Loader2 } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 
 export default function EditProductPage() {
-    const router = useRouter();
-    const params = useParams();
-    const id = params.id as string;
-    const [product, setProduct] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        async function fetchProduct() {
-            try {
-                const data = await apiFetch<any>(`/products/${id}`);
-                setProduct(data);
-            } catch (error) {
-                console.error('Failed to fetch product:', error);
-            } finally {
-                setLoading(false);
-            }
-        }
-        if (id) fetchProduct();
-    }, [id]);
-
-    const handleUpdateProduct = async (data: any) => {
-        try {
-            await apiFetch(`/products/${id}`, {
-                method: 'PATCH',
-                body: JSON.stringify(data),
-            });
-
-            router.push('/dashboard/products');
-            router.refresh();
-        } catch (error) {
-            console.error('Failed to update product:', error);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="flex h-screen items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const data = await apiFetch<any>(`/products/${id}`);
+        setProduct(data);
+      } catch (error) {
+        console.error('Failed to fetch product:', error);
+      } finally {
+        setLoading(false);
+      }
     }
+    if (id) fetchProduct();
+  }, [id]);
 
-    if (!product) {
-        return (
-            <div className="flex h-screen flex-col items-center justify-center gap-4">
-                <p className="text-xl font-bold">Product not found</p>
-                <button onClick={() => router.back()} className="text-primary hover:underline">Go back</button>
-            </div>
-        );
+  const handleUpdateProduct = async (data: any) => {
+    try {
+      await apiFetch(`/products/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+
+      router.push('/dashboard/products');
+      router.refresh();
+    } catch (error) {
+      console.error('Failed to update product:', error);
     }
+  };
 
+  if (loading) {
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-8">
-            <ProductForm initialData={product} onSubmit={handleUpdateProduct} />
-        </div>
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl font-bold">Product not found</p>
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="text-primary hover:underline"
+        >
+          Go back
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto p-4 md:p-8">
+      <ProductForm initialData={product} onSubmit={handleUpdateProduct} />
+    </div>
+  );
 }

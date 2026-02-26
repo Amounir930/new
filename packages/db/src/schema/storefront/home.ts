@@ -17,15 +17,16 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { deletedAt, ulidId } from '../v5-core';
+import { deletedAt, storefrontSchema, ulidId } from '../v5-core';
 import { products } from './products';
 
 // ─── Flash Sales ─────────────────────────────────────────────
-export const flashSales = pgTable(
+export const flashSales = storefrontSchema.table(
   'flash_sales',
   {
     // ── Fixed (Alignment) ──
     id: ulidId(),
+    tenantId: uuid('tenant_id').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
     endTime: timestamp('end_time', { withTimezone: true }).notNull(),
@@ -48,7 +49,7 @@ export const flashSales = pgTable(
   })
 );
 
-export const flashSaleProducts = pgTable(
+export const flashSaleProducts = storefrontSchema.table(
   'flash_sale_products',
   {
     // ── Fixed (Alignment) ──
@@ -75,9 +76,10 @@ export const flashSaleProducts = pgTable(
 );
 
 // ─── Layouts & UI ────────────────────────────────────────────
-export const bentoGrids = pgTable('bento_grids', {
+export const bentoGrids = storefrontSchema.table('bento_grids', {
   // ── Fixed ──
   id: ulidId(),
+  tenantId: uuid('tenant_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   deletedAt: deletedAt(),
 
@@ -89,7 +91,7 @@ export const bentoGrids = pgTable('bento_grids', {
   slots: jsonb('slots').notNull(),
 });
 
-export const banners = pgTable(
+export const banners = storefrontSchema.table(
   'banners',
   {
     // ── Fixed (Alignment) ──
@@ -128,7 +130,7 @@ export const banners = pgTable(
 );
 
 // ─── Marketing Analytics ─────────────────────────────────────
-export const searchAnalytics = pgTable(
+export const searchAnalytics = storefrontSchema.table(
   'search_analytics',
   {
     // ── Fixed ──
@@ -148,7 +150,7 @@ export const searchAnalytics = pgTable(
   })
 );
 
-export const newsletterSubscribers = pgTable(
+export const newsletterSubscribers = storefrontSchema.table(
   'newsletter_subscribers',
   {
     // ── Fixed ──

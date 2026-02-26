@@ -12,17 +12,16 @@ import {
   index,
   integer,
   jsonb,
-  pgTable,
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { deletedAt, ulidId } from '../v5-core';
+import { deletedAt, storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * Pages Table (static CMS pages)
  * Column alignment: UUID → TIMESTAMPTZ → INT → BOOLEAN → TEXT → JSONB
  */
-export const pages = pgTable(
+export const pages = storefrontSchema.table(
   'pages',
   {
     // ── Fixed (Alignment) ──
@@ -56,7 +55,7 @@ export const pages = pgTable(
 /**
  * Blog Posts Table — i18n + enhanced metadata
  */
-export const blogPosts = pgTable(
+export const blogPosts = storefrontSchema.table(
   'blog_posts',
   {
     // ── Fixed (Alignment) ──

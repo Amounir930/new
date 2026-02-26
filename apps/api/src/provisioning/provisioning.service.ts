@@ -1,6 +1,6 @@
-import { env } from '@apex/config';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
+import { env } from '@apex/config';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import {
   TenantRegistryService,
@@ -52,7 +52,7 @@ export class ProvisioningService {
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
     @Inject('TENANT_REGISTRY')
     private readonly tenantRegistry: TenantRegistryService
-  ) { }
+  ) {}
 
   /**
    * Provision a new store in under 60 seconds
@@ -168,7 +168,8 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${
+          error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }
@@ -221,7 +222,10 @@ export class ProvisioningService {
       .from(onboardingBlueprints)
       .where(
         and(
-          eq(onboardingBlueprints.nicheType, (options.nicheType || 'retail') as any),
+          eq(
+            onboardingBlueprints.nicheType,
+            (options.nicheType || 'retail') as any
+          ),
           eq(onboardingBlueprints.plan, options.plan)
         )
       )
@@ -344,11 +348,13 @@ export class ProvisioningService {
     // 2. Sync Quotas (S3: Normalize & Validate via Zod)
     if (blueprint.quotas) {
       const { z } = await import('zod');
-      const QuotaSchema = z.object({
-        max_products: z.number().int().min(0).max(1000000).default(0),
-        max_orders: z.number().int().min(0).max(1000000).default(0),
-        max_pages: z.number().int().min(0).max(1000).default(0),
-      }).strip();
+      const QuotaSchema = z
+        .object({
+          max_products: z.number().int().min(0).max(1000000).default(0),
+          max_orders: z.number().int().min(0).max(1000000).default(0),
+          max_staff: z.number().int().min(0).max(1000).default(0),
+        })
+        .strip();
 
       const normalizedQuotas = QuotaSchema.parse(blueprint.quotas);
 
@@ -358,7 +364,7 @@ export class ProvisioningService {
           tenantId: tenant.id,
           maxProducts: normalizedQuotas.max_products,
           maxOrders: normalizedQuotas.max_orders,
-          maxPages: normalizedQuotas.max_pages,
+          maxStaff: normalizedQuotas.max_staff,
         })
         .onConflictDoNothing();
     }

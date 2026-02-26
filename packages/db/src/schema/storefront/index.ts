@@ -8,11 +8,12 @@
 export * from '../enums';
 
 // Auth & Security
+export * from './analytics';
 export * from './auth';
 export * from './brands';
 export * from './cart';
-export * from './categories';
 export * from './catalog-advanced';
+export * from './categories';
 export * from './commerce';
 export * from './config';
 export * from './content';
@@ -24,6 +25,7 @@ export * from './home';
 export * from './imports';
 export * from './inventory';
 export * from './knowledge-base';
+export * from './legal-pages';
 export * from './locations';
 export * from './loyalty';
 export * from './notifications';

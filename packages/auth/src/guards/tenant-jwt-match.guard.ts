@@ -18,7 +18,9 @@ export interface TenantRequest extends Request {
     [key: string]: unknown;
   };
   user?: {
+    id: string; // Item 28: Required for session verification
     tenantId?: string;
+    role?: string;
     [key: string]: unknown;
   };
 }

@@ -51,4 +51,4 @@ export class ConfigService {
   providers: [ConfigService],
   exports: [ConfigService],
 })
-export class ConfigModule { }
+export class ConfigModule {}

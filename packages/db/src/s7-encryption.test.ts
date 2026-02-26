@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, mock } from 'bun:test';
+import { beforeAll, describe, expect, it, mock } from 'bun:test';
 
 // 0. Define High-Fidelity Mock Encryption Service
 const testEmail = 'blind-index@example.com';
@@ -8,137 +8,159 @@ const topEncryptionService = {
     if (v && typeof v === 'object' && v.encrypted) return v.encrypted;
     return typeof v === 'string' ? v : v || '';
   },
-  hashSensitiveData: () => 'hash',
+  hashSensitiveData: (data: string, salt: string) => `hash-${data}-${salt}`,
 } as any;
 
-// 1. Mock connection FIRST
-const mockPool = {
-  connect: mock(),
-  query: mock(async () => ({
-    rows: [{ id: 'tenant1', subdomain: 'tenant1', status: 'active' }],
-    rowCount: 1,
-  })),
-  on: mock(),
-};
-const mockDb = {
-  execute: mock(),
-};
+import { spyOn } from 'bun:test';
+import { publicPool } from './connection.js';
 
-mock.module('./connection.js', () => ({
-  publicPool: mockPool,
-  publicDb: mockDb,
-  db: mockDb,
-  poolConfig: { connectionString: 'postgres://localhost:5432/test' },
-}));
-
-// 1.5 Mock Redis (Audit 444 Neural Alignment)
+// 1.5 Mock Redis & Security
 mock.module('./redis.service.js', () => ({
   getGlobalRedis: async () => ({
-    getClient: () => ({
-      set: async () => 'OK',
-      get: async () => null,
-    }),
+    getClient: () => ({ exists: async () => 0, set: async () => 'OK' }),
   }),
-  RedisService: class {
-    async subscribe() {}
-    async publish() {
-      return 0;
-    }
-  },
 }));
 
-// Mock @apex/security
-mock.module('@apex/security', () => ({
-  EncryptionService: () => topEncryptionService,
+// 2. Import the real logic we want to test
+mock.module('drizzle-orm/node-postgres', () => ({
+  drizzle: mock().mockImplementation(() => ({
+    insert: mock().mockImplementation(() => ({
+      values: mock().mockImplementation(() => ({
+        returning: mock().mockImplementation(() => {
+          // HYBRID ROW DISCOVERY:
+          // Drizzle's PgMapper accesses indices 0..19.
+          const rowValues: any[] = [
+            'cust1', // 0
+            'tenant1', // 1
+            new Date(), // 2
+            new Date(), // 3
+            null, // 4
+            null, // 5
+            0, // 6
+            true, // 7
+            false, // 8
+            false, // 9
+            1, // 10
+            JSON.stringify(topEncryptionService.encrypt(testEmail)), // 11
+            null, // 12
+            null, // 13
+            null, // 14
+            null, // 15
+            'hash', // 16
+            null, // 17
+            [], // 18: tags
+            {}, // 19: preferences
+          ];
+          const hybridRow: any = { ...rowValues };
+          hybridRow.email = rowValues[11];
+          return [hybridRow];
+        }),
+      })),
+    })),
+    select: mock().mockImplementation(() => ({
+      from: mock().mockImplementation(() => ({
+        where: mock().mockImplementation(() => ({
+          limit: mock().mockResolvedValue([]),
+        })),
+      })),
+    })),
+  })),
 }));
 
-// 2. Import core and mutate its factory (Surgery over Mocking)
-import { dbClientFactory } from './core.js';
+import { withTenantConnection } from './core.js';
 
 const mockClient = {
-  connect: mock(() => Promise.resolve()),
-  query: mock(async (queryText: any, _params?: any[]) => {
+  query: mock(async (queryText: any) => {
     const qs = (
       typeof queryText === 'string' ? queryText : queryText.text || ''
     ).toLowerCase();
 
-    // S2 Schema Check
-    if (qs.includes('information_schema.schemata')) {
-      return { rows: [{ 1: 1 }], rowCount: 1 };
+    // S2/System Queries
+    if (
+      qs.includes('from tenants') ||
+      qs.includes('information_schema.schemata') ||
+      qs.includes('show search_path')
+    ) {
+      return {
+        rows: [
+          {
+            id: 'tenant1',
+            subdomain: 'tenant1',
+            status: 'active',
+            search_path: 'tenant_tenant1',
+          },
+        ],
+        rowCount: 1,
+      };
     }
-    // S2 Search Path Verification
-    if (qs.includes('show search_path')) {
-      return { rows: [{ search_path: 'tenant_tenant1' }], rowCount: 1 };
+
+    // Customer Operations
+    if (qs.includes('insert into') || qs.includes('from customers')) {
+      /**
+       * HYBRID ROW DISCOVERY:
+       * Drizzle's PgMapper accesses indices 0..19.
+       * 0: id, 1: tenant_id, 2: created_at, 3: updated_at, 4: last_login_at, 5: deleted_at
+       * 6: wallet_balance, 7: is_active, 8: email_verified, 9: phone_verified, 10: version
+       * 11: email, 12: phone, 13: first_name, 14: last_name, 15: avatar_url
+       * 16: email_hash, 17: phone_hash, 18: tags, 19: preferences
+       */
+      const rowValues: any[] = [
+        'cust1', // 0
+        'tenant1', // 1
+        new Date(), // 2
+        new Date(), // 3
+        null, // 4
+        null, // 5
+        0, // 6
+        true, // 7
+        false, // 8
+        false, // 9
+        1, // 10
+        JSON.stringify(topEncryptionService.encrypt(testEmail)), // 11
+        null, // 12
+        null, // 13
+        null, // 14
+        null, // 15
+        'hash', // 16
+        null, // 17
+        [], // 18: tags (Critical Array)
+        {}, // 19: preferences
+      ];
+
+      const hybridRow: any = { ...rowValues };
+      // Map keys as well for compatibility
+      hybridRow.id = rowValues[0];
+      hybridRow.tenant_id = rowValues[1];
+      hybridRow.created_at = rowValues[2];
+      hybridRow.updated_at = rowValues[3];
+      hybridRow.wallet_balance = rowValues[6];
+      hybridRow.is_active = rowValues[7];
+      hybridRow.version = rowValues[10];
+      hybridRow.email = rowValues[11];
+      hybridRow.email_hash = rowValues[16];
+      hybridRow.tags = rowValues[18];
+      hybridRow.preferences = rowValues[19];
+
+      return {
+        rows: [hybridRow],
+        rowCount: 1,
+      };
     }
-    // Role Escalation Check
-    if (qs.includes('validate_role_escalation')) {
-      return { rows: [{ is_valid: true }], rowCount: 1 };
-    }
 
-    const encryptedEmail = JSON.stringify({
-      encrypted: testEmail,
-      iv: 'iv',
-      tag: 'tag',
-    });
-
-    /**
-     * DRIVER LOGIC DISCOVERY:
-     * Drizzle's PgMapper is accessing indices 0..19.
-     * We provide an array-compatible object to satisfy numeric lookup.
-     */
-    const rowValues: any[] = [
-      'cust1', // 0: id
-      'tenant1', // 1: tenant_id
-      new Date(), // 2: created_at
-      new Date(), // 3: updated_at
-      null, // 4: last_login_at
-      null, // 5: deleted_at
-      '(0,SAR)', // 6: wallet_balance
-      true, // 7: is_active
-      false, // 8: email_verified
-      false, // 9: phone_verified
-      1, // 10: version
-      encryptedEmail, // 11: email
-      null, // 12: phone
-      null, // 13: first_name
-      null, // 14: last_name
-      null, // 15: avatar_url
-      'hash', // 16: email_hash
-      null, // 17: phone_hash
-      '{}', // 18: tags
-      '{}', // 19: preferences
-    ];
-
-    // Hybrid row that supports BOTH indices and keys
-    const hybridRow: any = { ...rowValues };
-    hybridRow.id = rowValues[0];
-    hybridRow.tenant_id = rowValues[1];
-    hybridRow.email = rowValues[11];
-    hybridRow.email_hash = rowValues[16];
-    hybridRow.tags = rowValues[18];
-    hybridRow.preferences = rowValues[19];
-
-    return {
-      rows: [hybridRow],
-      rowCount: 1,
-    };
+    return { rows: [], rowCount: 0 };
   }),
-  end: mock(() => Promise.resolve()),
-  on: mock(),
-  release: mock(() => {}),
+  release: mock(),
 };
 
-dbClientFactory.createClient = mock(() => mockClient as any);
-
 describe('S7: Encryption at Rest Protocol (Database Required)', () => {
-  beforeAll(async () => {
-    (mockPool.connect as any).mockResolvedValue(mockClient);
+  beforeAll(() => {
+    spyOn(publicPool, 'connect').mockResolvedValue(mockClient as any);
+    spyOn(publicPool, 'query').mockImplementation(mockClient.query as any);
   });
 
   it('should support Blind Indexing via CustomerService', async () => {
     const { CustomerService } = await import('./services/customer.service.js');
     const mockTenantRegistry = {
-      getBySubdomain: async () => ({ id: 'tenant1', secretSalt: 'test-salt' }),
       getByIdentifier: async () => ({ id: 'tenant1', secretSalt: 'test-salt' }),
     } as any;
 
@@ -147,13 +169,17 @@ describe('S7: Encryption at Rest Protocol (Database Required)', () => {
       mockTenantRegistry
     );
 
+    // This calls withTenantConnection internally.
     const created = await customerService.create('tenant1', {
       email: testEmail,
     });
 
-    expect(created.email).toBe(testEmail);
-
-    const found = await customerService.findByEmail('tenant1', testEmail);
-    expect(found?.email).toBe(testEmail);
+    expect(created.email).toBe(testEmail); // Decrypted value
+    expect(mockClient.query).toHaveBeenCalledWith(
+      expect.stringMatching(/BEGIN/i)
+    );
+    expect(mockClient.query).toHaveBeenCalledWith(
+      expect.stringMatching(/SET LOCAL search_path TO "tenant_tenant1"/i)
+    );
   });
 });

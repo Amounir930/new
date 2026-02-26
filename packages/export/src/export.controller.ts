@@ -4,6 +4,8 @@
  * Protected by authentication and rate limiting
  */
 
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { AuditLog, AuditService } from '@apex/audit';
 import {
   Body,
   Controller,
@@ -19,23 +21,23 @@ import {
   Req,
 } from '@nestjs/common';
 import type { Request } from 'express';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { AuditLog, AuditService } from '@apex/audit';
+import { ZodValidationPipe } from 'nestjs-zod';
+import { z } from 'zod';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { ExportService } from './export.service.js';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { ExportWorker } from './export.worker.js';
 import type { ExportJob, ExportProfile } from './types.js';
-import { ZodValidationPipe } from 'nestjs-zod';
-import { z } from 'zod';
 
 const CreateExportSchema = z.object({
   profile: z.string() as z.ZodType<ExportProfile>,
   includeAssets: z.boolean().optional(),
-  dateRange: z.object({
-    from: z.string(),
-    to: z.string(),
-  }).optional(),
+  dateRange: z
+    .object({
+      from: z.string(),
+      to: z.string(),
+    })
+    .optional(),
 });
 
 type CreateExportDto = z.infer<typeof CreateExportSchema>;
@@ -55,7 +57,7 @@ export class ExportController {
     private readonly exportWorker: ExportWorker,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) { }
+  ) {}
 
   /**
    * POST /api/v1/tenant/export
@@ -85,9 +87,9 @@ export class ExportController {
       includeAssets: dto.includeAssets,
       dateRange: dto.dateRange
         ? {
-          from: new Date(dto.dateRange.from),
-          to: new Date(dto.dateRange.to),
-        }
+            from: new Date(dto.dateRange.from),
+            to: new Date(dto.dateRange.to),
+          }
         : undefined,
     });
 

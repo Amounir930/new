@@ -1,4 +1,3 @@
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
 import {
   Controller,
@@ -18,7 +17,7 @@ export class HoneyTokensController {
   constructor(
     @Inject(AuditService)
     private readonly auditService: AuditService
-  ) { }
+  ) {}
 
   /**
    * S15: Honeypot for common scanners and unauthorized access attempts
@@ -31,7 +30,8 @@ export class HoneyTokensController {
     @Res() res: express.Response
   ) {
     // 1. Realistic Multi-Stage Jitter (S15: Dynamic Timing)
-    const jitter = Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] % 8000) + 1000;
+    const jitter =
+      Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] % 8000) + 1000;
     await new Promise((resolve) => setTimeout(resolve, jitter));
 
     const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';

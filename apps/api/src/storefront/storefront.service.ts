@@ -20,7 +20,7 @@ import {
 } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { RedisRateLimitStore } from '@apex/middleware';
-import { EncryptionService } from '@apex/security';
+import type { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -28,12 +28,15 @@ export class StorefrontService {
   constructor(
     private readonly redisStore: RedisRateLimitStore,
     private readonly crypto: EncryptionService
-  ) { }
+  ) {}
 
   // S2 FIX 19C: Get pre-configured DB executor from middleware (no second connection)
   private getDb() {
     const db = dbContextStorage.getStore();
-    if (!db) throw new Error('S2 CRITICAL: Database context missing! Request not routed through TenantIsolationMiddleware.');
+    if (!db)
+      throw new Error(
+        'S2 CRITICAL: Database context missing! Request not routed through TenantIsolationMiddleware.'
+      );
     return db;
   }
 
@@ -50,27 +53,27 @@ export class StorefrontService {
     // Fetch config from tenant_config table
     const configEntries = await db.select().from(tenantConfig);
     const config = configEntries.reduce(
-      (acc: Record<string, any>, curr: any) => {
+      (acc: Record<string, unknown>, curr) => {
         acc[curr.key] = curr.value;
         return acc;
       },
-      {} as Record<string, any>
+      {} as Record<string, unknown>
     );
 
     // Fetch hero banners
     const heroBanners = await db
       .select()
       .from(banners)
-      .where(and(eq(banners.active, true), eq(banners.position, 'hero')))
+      .where(and(eq(banners.isActive, true), eq(banners.position, 'hero')))
       .orderBy(desc(banners.priority))
       .limit(1);
 
     const result = {
-      storeName: config.store_name || 'APEX STORE',
-      logoUrl: config.logo_url,
-      primaryColor: config.primary_color || '#000000',
+      storeName: (config.store_name as string) || 'APEX STORE',
+      logoUrl: config.logo_url as string | undefined,
+      primaryColor: (config.primary_color as string) || '#000000',
       heroBanner: heroBanners[0],
-      ...config,
+      ...(config as Record<string, unknown>),
     };
 
     if (client) {
@@ -80,12 +83,15 @@ export class StorefrontService {
     return result;
   }
 
-  async getProducts(tenantId: string, params: {
-    featured?: boolean;
-    category?: string;
-    limit?: number;
-    sort?: 'newest' | 'price_asc' | 'price_desc';
-  }) {
+  async getProducts(
+    _tenantId: string,
+    params: {
+      featured?: boolean;
+      category?: string;
+      limit?: number;
+      sort?: 'newest' | 'price_asc' | 'price_desc';
+    }
+  ) {
     const db = this.getDb();
     const conditions = [eq(products.isActive, true)];
 
@@ -101,7 +107,7 @@ export class StorefrontService {
       .select({
         id: products.id,
         slug: products.slug,
-        name: products.nameEn,
+        name: products.name,
         price: products.basePrice,
         compareAtPrice: products.salePrice,
         rating: sql<number>`4.5`,
@@ -122,7 +128,7 @@ export class StorefrontService {
     return query.limit(params.limit || 20);
   }
 
-  async getProductBySlug(tenantId: string, slug: string) {
+  async getProductBySlug(_tenantId: string, slug: string) {
     const db = this.getDb();
     const productData = await db
       .select()
@@ -155,9 +161,9 @@ export class StorefrontService {
     };
   }
 
-  async getHomeData(tenantId: string) {
+  async getHomeData(_tenantId: string) {
     const db = this.getDb();
-    const cacheKey = `storefront:home:${tenantId}`;
+    const cacheKey = `storefront:home:${_tenantId}`;
     const client = await this.redisStore.getClient();
 
     if (client) {
@@ -176,7 +182,7 @@ export class StorefrontService {
         .from(banners)
         .where(
           and(
-            eq(banners.active, true),
+            eq(banners.isActive, true),
             eq(banners.position, 'hero'),
             sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR 
                             (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now}) OR
@@ -192,7 +198,7 @@ export class StorefrontService {
       bestSellers,
       meta: {
         lastUpdated: now.toISOString(),
-        tenantId: tenantId,
+        tenantId: _tenantId,
       },
     };
 
@@ -204,8 +210,8 @@ export class StorefrontService {
   }
 
   // S12 FIX 19C: Aggregated Bootstrap (uses middleware connection, no second pool hit)
-  async getBootstrapData(tenantId: string) {
-    const cacheKey = `storefront:bootstrap:${tenantId}`;
+  async getBootstrapData(_tenantId: string) {
+    const cacheKey = `storefront:bootstrap:${_tenantId}`;
     const client = await this.redisStore.getClient();
     if (client) {
       const cached = await client.get(cacheKey);
@@ -213,8 +219,8 @@ export class StorefrontService {
     }
 
     const [config, home] = await Promise.all([
-      this.fetchConfigInternal(tenantId),
-      this.fetchHomeInternal(tenantId),
+      this.fetchConfigInternal(_tenantId),
+      this.fetchHomeInternal(_tenantId),
     ]);
 
     const result = { config, homeData: home };
@@ -227,40 +233,59 @@ export class StorefrontService {
   }
 
   /** Internal helpers — use middleware-provided DB context */
-  private async fetchConfigInternal(tenantId: string) {
+  private async fetchConfigInternal(_tenantId: string) {
     const db = this.getDb();
     const configEntries = await db.select().from(tenantConfig);
-    const config = configEntries.reduce((acc: Record<string, any>, curr: any) => {
-      acc[curr.key] = curr.value;
-      return acc;
-    }, {} as Record<string, any>);
+    const config = configEntries.reduce(
+      (acc: Record<string, unknown>, curr) => {
+        acc[curr.key] = curr.value;
+        return acc;
+      },
+      {} as Record<string, unknown>
+    );
 
-    const heroBanners = await db.select().from(banners)
-      .where(and(eq(banners.active, true), eq(banners.position, 'hero')))
-      .orderBy(desc(banners.priority)).limit(1);
+    const heroBanners = await db
+      .select()
+      .from(banners)
+      .where(and(eq(banners.isActive, true), eq(banners.position, 'hero')))
+      .orderBy(desc(banners.priority))
+      .limit(1);
 
     return {
-      storeName: config.store_name || 'APEX STORE',
-      logoUrl: config.logo_url,
-      primaryColor: config.primary_color || '#000000',
+      storeName: (config.store_name as string) || 'APEX STORE',
+      logoUrl: config.logo_url as string | undefined,
+      primaryColor: (config.primary_color as string) || '#000000',
       heroBanner: heroBanners[0],
-      ...config,
+      ...(config as Record<string, unknown>),
     };
   }
 
-  private async fetchHomeInternal(tenantId: string) {
+  private async fetchHomeInternal(_tenantId: string) {
     const db = this.getDb();
     const now = new Date();
     const [bestSellers, activeBanners] = await Promise.all([
       db.select().from(mvBestSellers).limit(8),
-      db.select().from(banners).where(and(eq(banners.active, true), eq(banners.position, 'hero'),
-        sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now})`
-      )).limit(5).orderBy(desc(banners.priority)),
+      db
+        .select()
+        .from(banners)
+        .where(
+          and(
+            eq(banners.isActive, true),
+            eq(banners.position, 'hero'),
+            sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now})`
+          )
+        )
+        .limit(5)
+        .orderBy(desc(banners.priority)),
     ]);
-    return { banners: activeBanners, bestSellers, meta: { lastUpdated: now.toISOString(), tenantId } };
+    return {
+      banners: activeBanners,
+      bestSellers,
+      meta: { lastUpdated: now.toISOString(), tenantId: _tenantId },
+    };
   }
 
-  async subscribeToNewsletter(tenantId: string, email: string) {
+  async subscribeToNewsletter(_tenantId: string, email: string) {
     const db = this.getDb();
     // S7: Encrypt PII before storage
     const encryptedEmail = this.crypto.encrypt(email).encrypted;
@@ -272,7 +297,7 @@ export class StorefrontService {
         .values({ email: encryptedEmail })
         .onConflictDoUpdate({
           target: newsletterSubscribers.email,
-          set: { status: 'active' },
+          set: { isActive: true },
         })
         .returning();
     });

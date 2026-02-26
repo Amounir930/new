@@ -16,13 +16,13 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * Import Jobs Table
  * Column alignment: UUID → TIMESTAMPTZ → INT → TEXT
  */
-export const importJobs = pgTable(
+export const importJobs = storefrontSchema.table(
   'import_jobs',
   {
     // ── Fixed (Alignment) ──
@@ -59,7 +59,7 @@ export const importJobs = pgTable(
 /**
  * Import Errors Table
  */
-export const importErrors = pgTable(
+export const importErrors = storefrontSchema.table(
   'import_errors',
   {
     // ── Fixed ──

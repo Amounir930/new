@@ -1,7 +1,7 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditLog, AuditService } from '@apex/audit';
-import { AuthService, AuthUser } from '@apex/auth';
-import { ConfigService } from '@apex/config';
+import { AuthService, type AuthUser } from '@apex/auth';
+import type { ConfigService } from '@apex/config';
 import {
   Body,
   Controller,
@@ -11,9 +11,11 @@ import {
   Post,
   Res,
   UnauthorizedException,
+  UseGuards,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 
@@ -33,13 +35,12 @@ export class AuthController {
     private readonly config: ConfigService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) { }
+  ) {}
 
   @Post('login')
+  @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Super Admin Login' })
-  @ApiResponse({ status: 200, description: 'JWT Token issued' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body(new ZodValidationPipe(LoginSchema)) body: LoginDto,
     @Res({ passthrough: true }) response: any
@@ -56,8 +57,11 @@ export class AuthController {
       );
     }
 
-    // S7: Compare hashed password using bcrypt (S1-S15 Compliance)
-    const isPasswordValid = await require('bcrypt').compare(password, adminPassword);
+    // S7/Item 29: Compare hashed password using bcrypt (S1-S15 Compliance: 12 Rounds)
+    const isPasswordValid = await require('bcrypt').compare(
+      password,
+      adminPassword
+    );
 
     if (email === adminEmail && isPasswordValid) {
       // S4: Audit successful login

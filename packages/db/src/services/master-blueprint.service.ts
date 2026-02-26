@@ -17,6 +17,34 @@ import {
 } from '../schema/storefront/index.js';
 import { homePageService } from './home-page.service.js';
 
+// ---------------------------------------------------------------------------
+// Input types for update methods
+// ---------------------------------------------------------------------------
+
+/** PDP section configuration payload */
+export type PdpConfigInput = Record<string, unknown>;
+
+/** Shipping zone upsert payload */
+export interface ShippingZoneInput {
+  id?: string;
+  name: string;
+  isActive?: boolean;
+  [key: string]: unknown;
+}
+
+/** Store location upsert payload */
+export interface StoreLocationInput {
+  id?: string;
+  name: string;
+  tenantId: string;
+  code: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  phone?: string;
+  [key: string]: unknown;
+}
+
 export class MasterBlueprintService {
   /**
    * Get the complete Master Blueprint for a tenant
@@ -28,7 +56,7 @@ export class MasterBlueprintService {
     const home = await homePageService.getBlueprint(tenantId);
 
     // Helper to fetch config or use default
-    const getConfig = (key: string, defaultVal: any) =>
+    const getConfig = (key: string, defaultVal: unknown): unknown =>
       configRows.find((r) => r.key === key)?.value || defaultVal;
 
     // Get Shipping Zones & Methods (Joined)
@@ -51,10 +79,13 @@ export class MasterBlueprintService {
       quickView: getConfig('quick_view_config', {}),
       cart: getConfig('cart_config', {}),
       checkout: {
-        ...getConfig('checkout_config', { paymentMethods: ['cod'] }),
+        ...(getConfig('checkout_config', { paymentMethods: ['cod'] }) as Record<
+          string,
+          unknown
+        >),
         shippingZones: zones.map((z) => ({
           region: z.region,
-          price: Number((z.price as any)?.amount ?? 0),
+          price: Number((z.price as unknown as { amount: bigint }).amount ?? 0),
           estimatedDays: z.estimatedDays || undefined,
         })),
       },
@@ -64,7 +95,10 @@ export class MasterBlueprintService {
       }),
       compare: getConfig('compare_config', { enabled: true }),
       locations: {
-        ...getConfig('location_settings', { enabled: true }),
+        ...(getConfig('location_settings', { enabled: true }) as Record<
+          string,
+          unknown
+        >),
         branchLimit: branches.length,
       },
       account: getConfig('account_settings', {
@@ -130,7 +164,7 @@ export class MasterBlueprintService {
   /**
    * Update PDP Configuration
    */
-  async updatePDP(_tenantId: string, pdpData: any) {
+  async updatePDP(_tenantId: string, pdpData: PdpConfigInput) {
     await db
       .insert(tenantConfig)
       .values({
@@ -146,28 +180,51 @@ export class MasterBlueprintService {
   /**
    * Update Shipping Zones
    */
-  async updateShippingZone(zone: any) {
+  async updateShippingZone(zone: ShippingZoneInput) {
+    const data = {
+      name: zone.name,
+      isActive: zone.isActive,
+    };
+
     if (zone.id) {
       await db
         .update(shippingZones)
-        .set(zone)
+        .set(data)
         .where(eq(shippingZones.id, zone.id));
     } else {
-      await db.insert(shippingZones).values(zone);
+      await db.insert(shippingZones).values({
+        ...data,
+        tenantId: zone.tenantId as string, // Ensure tenantId from input or context
+        countryCode: zone.countryCode as string,
+      });
     }
   }
 
   /**
    * Update Store Location
    */
-  async saveLocation(location: any) {
+  async saveLocation(location: StoreLocationInput) {
+    const data = {
+      name: location.name,
+      code: location.code,
+      address: location.address,
+      isActive: location.isActive as boolean | undefined,
+      coordinates:
+        location.lat !== undefined && location.lng !== undefined
+          ? { lat: location.lat as number, lng: location.lng as number }
+          : undefined,
+    };
+
     if (location.id) {
       await db
         .update(storeLocations)
-        .set(location)
+        .set(data)
         .where(eq(storeLocations.id, location.id));
     } else {
-      await db.insert(storeLocations).values(location);
+      await db.insert(storeLocations).values({
+        ...data,
+        tenantId: location.tenantId,
+      });
     }
   }
 

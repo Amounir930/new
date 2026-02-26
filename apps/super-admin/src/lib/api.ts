@@ -2,15 +2,13 @@ import { config } from '../config';
 
 const API_URL = config.apiUrl;
 
-const ADM_TKN = 'adm_tkn=';
-
 export const getAuthToken = () => {
   // S8: Manual token extraction disabled for HttpOnly compatibility.
   // Browser will handle token transport automatically via credentials: 'include'.
   return null;
 };
 
-export const setAuthToken = (token: string) => {
+export const setAuthToken = (_token: string) => {
   // S8: Client-side cookie setting is deprecated in favor of server-side Set-Cookie.
   // This remains only for non-HttpOnly legacy support if needed, otherwise ignore.
 };

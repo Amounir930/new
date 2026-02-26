@@ -33,7 +33,7 @@ export class LiteExportStrategy implements ExportStrategy {
     private readonly tenantRegistry: TenantRegistryService,
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) { }
+  ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
     return this.tenantRegistry.exists(options.tenantId);

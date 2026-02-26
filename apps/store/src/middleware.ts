@@ -11,39 +11,47 @@ import type { NextRequest } from 'next/server';
  * e.g. store1.60sec.shop/ → internally routed as /m/store1/
  * Next.js sees each subdomain as a DIFFERENT page → safe per-tenant ISR caching.
  */
-export function middleware(request: NextRequest) {
-  // S2 FIX 18C: Only trust the raw Host header (TLS/SNI verified).
-  // x-forwarded-host is client-controllable and enables cache poisoning.
-  const host = request.headers.get('host') || '';
-
-  // S2 FIX: Strip port from host to prevent resolution failure (Point 4)
+function getTenantIdentifier(host: string): string {
   const cleanHost = host.split(':')[0];
-  const isApexDomain = cleanHost.endsWith('.60sec.shop') || cleanHost.includes('localhost');
-  let tenantIdentifier = cleanHost; // Default for custom domains
+  return resolveTenantIdentifier(cleanHost);
+}
+
+function resolveTenantIdentifier(cleanHost: string): string {
+  const isApexDomain =
+    cleanHost.endsWith('.60sec.shop') || cleanHost.includes('localhost');
 
   if (isApexDomain) {
     const parts = cleanHost.split('.');
     if (cleanHost.includes('localhost')) {
-      if (parts.length > 2) tenantIdentifier = parts[0];
-    } else {
-      // S2 FIX 16B: Explicitly handle root domain (parts.length < 3)
-      if (parts.length < 3) {
-        tenantIdentifier = ''; // Root domain
-      } else {
-        // e.g. store1.60sec.shop -> parts = [store1, 60sec, shop] -> index length-3
-        tenantIdentifier = parts[parts.length - 3];
-      }
+      return parts.length > 2 ? parts[0] : cleanHost;
     }
+    // S2 FIX 16B: Explicitly handle root domain (parts.length < 3)
+    if (parts.length < 3) {
+      return ''; // Root domain
+    }
+    // e.g. store1.60sec.shop -> parts = [store1, 60sec, shop] -> index length-3
+    return parts[parts.length - 3];
   }
+  return cleanHost; // Default for custom domains
+}
 
-  // S2: Decide if we should intercept or let infra handle it
-  const infraSubdomains = ['api', 'super-admin', 'git', 'www', 'admin', 'staging'];
-  // If no identifier (root) or identifier is in infra list
-  const isInfra = !tenantIdentifier || infraSubdomains.includes(tenantIdentifier.toLowerCase());
+function getInfraStatus(tenantIdentifier: string): boolean {
+  const infraSubdomains = [
+    'api',
+    'super-admin',
+    'git',
+    'www',
+    'admin',
+    'staging',
+  ];
+  return (
+    !tenantIdentifier ||
+    infraSubdomains.includes(tenantIdentifier.toLowerCase())
+  );
+}
 
-  // S8 FIX 13A: RESTORED 'unsafe-inline' for React Hydration (Next.js App Router dependency)
-  // Nonces are incompatible with ISR, so we stick to 'self' and trusted domains + inline.
-  const cspHeader = `
+function getCSPHeader(): string {
+  return `
     default-src 'self' localhost:* https://*.60sec.shop;
     script-src 'self' https://*.60sec.shop localhost:* 'unsafe-eval' 'unsafe-inline';
     style-src 'self' https://fonts.googleapis.com https://*.60sec.shop localhost:* 'unsafe-inline';
@@ -53,7 +61,16 @@ export function middleware(request: NextRequest) {
     frame-ancestors 'none';
     base-uri 'self';
     form-action 'self';
-  `.replace(/\s{2,}/g, ' ').trim();
+  `
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+export function middleware(request: NextRequest) {
+  const host = request.headers.get('host') || '';
+  const tenantIdentifier = getTenantIdentifier(host);
+  const isInfra = getInfraStatus(tenantIdentifier);
+  const cspHeader = getCSPHeader();
 
   // Build request headers
   const requestHeaders = new Headers(request.headers);

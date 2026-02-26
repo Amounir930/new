@@ -19,7 +19,7 @@ export const API_BASE = IS_SERVER ? INTERNAL_API_URL : PUBLIC_API_URL;
  */
 export async function fetchStorefront(
   endpoint: string,
-  tenantId: string = 'public',
+  tenantId = 'public',
   options: RequestInit = {}
 ) {
   const url = `${API_BASE}${endpoint}`;

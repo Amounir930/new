@@ -47,8 +47,10 @@ export async function createTenantSchema(
     // }
 
     // Create schema with proper authorization (S2 Protocol)
+    // Item 43: Ensure strict schema creation
     await client.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
     await client.query(`GRANT ALL ON SCHEMA "${schemaName}" TO CURRENT_USER`);
+    await client.query(`ALTER SCHEMA "${schemaName}" OWNER TO CURRENT_USER`);
 
     const durationMs = performance.now() - startTime;
 

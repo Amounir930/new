@@ -65,6 +65,8 @@ export class SnapshotManager {
       );
       throw error;
     } finally {
+      // Item 45: Ensure search_path is reset even on failure to prevent bleed
+      await client.query('RESET search_path').catch(() => {});
       client.release();
     }
   }

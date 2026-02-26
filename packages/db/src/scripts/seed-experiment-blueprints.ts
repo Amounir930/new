@@ -39,7 +39,7 @@ async function seed() {
     console.log(`🗑️  WIPING all blueprints for sector: ${sector}...`);
     await publicDb
       .delete(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.nicheType, sector as any));
+      .where(eq(onboardingBlueprints.nicheType, sector));
 
     console.log(`🌱 Seeding Experiment Blueprints for Sector: ${sector}...`);
 
@@ -54,7 +54,10 @@ async function seed() {
       console.log(`📝 Inserting Blueprint for ${sector}/${plan}...`);
 
       await publicDb.insert(onboardingBlueprints).values({
+        name: `${sector}-${plan}-blueprint`,
         nicheType: `${sector}-${plan}`,
+        plan: plan,
+        blueprint: blueprintData,
         uiConfig: blueprintData,
         status: 'active',
       });

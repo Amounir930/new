@@ -18,7 +18,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { customers } from './customers';
 import { orders } from './orders';
 import { products } from './products';
@@ -27,7 +27,7 @@ import { products } from './products';
  * Reviews Table
  * Column alignment: UUID → TIMESTAMPTZ → INT → BOOLEAN → TEXT
  */
-export const reviews = pgTable(
+export const reviews = storefrontSchema.table(
   'reviews',
   {
     // ── Fixed (Alignment) ──

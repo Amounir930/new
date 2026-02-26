@@ -20,6 +20,8 @@ export interface SecretConfig {
   lastRotatedAt: Date;
   /** Next scheduled rotation timestamp */
   nextRotationAt: Date;
+  /** Item 15: Secret registration timestamp to enforce memory limit */
+  registeredAt: Date;
 }
 
 /**
@@ -109,6 +111,7 @@ export class SecretsManager {
           now.getTime() +
             (options.rotationInterval || this.DEFAULT_ROTATION_INTERVAL)
         ),
+      registeredAt: now, // Item 15: Track registration time
       previousValue: options.previousValue,
     };
 
@@ -122,10 +125,24 @@ export class SecretsManager {
 
   /**
    * Get current secret value
+   * Item 15: Enforce 24h memory limit
    */
   getSecret(name: string): string | undefined {
     const config = this.secrets.get(name);
-    return config?.currentValue;
+    if (!config) return undefined;
+
+    // Item 15: If secret has been in memory > 24h, purge it
+    const now = new Date();
+    const memoryAgeMs = now.getTime() - config.registeredAt.getTime();
+    if (memoryAgeMs > 24 * 60 * 60 * 1000) {
+      this.secrets.delete(name);
+      console.warn(
+        `[SecretsManager] Secret ${name} purged: memory age exceeded 24h`
+      );
+      return undefined;
+    }
+
+    return config.currentValue;
   }
 
   /**
@@ -282,15 +299,27 @@ export class SecretsManager {
 
   /**
    * Emergency rotation - rotate all secrets immediately
+   * Item 16: Robust implementation
    */
   emergencyRotation(): string[] {
-    console.warn('[SecretsManager] EMERGENCY ROTATION INITIATED');
+    console.warn(
+      '[SecretsManager] EMERGENCY ROTATION INITIATED - COMPROMISE DETECTED'
+    );
 
     const rotated: string[] = [];
 
     for (const [name] of this.secrets) {
-      this.rotateSecret(name, 'compromise');
-      rotated.push(name);
+      try {
+        this.rotateSecret(name, 'compromise');
+        rotated.push(name);
+      } catch (error) {
+        console.error(
+          `[SecretsManager] Failed to rotate ${name} during emergency:`,
+          error
+        );
+        // Force delete if rotation fails to ensure compromised data is cleared
+        this.secrets.delete(name);
+      }
     }
 
     return rotated;

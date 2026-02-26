@@ -11,7 +11,7 @@ import { GeoIpService } from './geo-ip.service.js';
 import { RedisRateLimitStore } from './redis-rate-limit-store.js';
 
 export interface FraudScore {
-  score: number; // 0-100 (100 is high risk)
+  score: number; // 0-1000 (1000 is high risk)
   reasons: string[];
 }
 
@@ -61,7 +61,7 @@ export class FraudScoringService {
     if (paymentVelocity.reason) reasons.push(paymentVelocity.reason);
 
     return {
-      score: Math.min(score, 100),
+      score: Math.min(score, 1000),
       reasons,
     };
   }
@@ -76,7 +76,7 @@ export class FraudScoringService {
     const { count } = await this.store.increment(key, 3600000);
 
     if (count > 3) {
-      return { score: 60, reason: 'Excessive payment attempts detected' };
+      return { score: 600, reason: 'Excessive payment attempts detected' };
     }
 
     return { score: 0 };
@@ -91,7 +91,7 @@ export class FraudScoringService {
     const { count } = await this.store.increment(key, 60000); // 1-minute window
 
     if (count > 50) {
-      return { score: 30, reason: 'High velocity per fingerprint' };
+      return { score: 300, reason: 'High velocity per fingerprint' };
     }
 
     return { score: 0 };
@@ -120,7 +120,7 @@ export class FraudScoringService {
         currentGeo
       );
       if (fraudReason) {
-        fraudResult = { score: 50, reason: fraudReason };
+        fraudResult = { score: 500, reason: fraudReason };
       }
     }
 
@@ -165,7 +165,7 @@ export class FraudScoringService {
       !req.headers['user-agent'] ||
       req.headers['user-agent'].includes('Headless')
     ) {
-      return { score: 40, reason: 'Anomalous User-Agent' };
+      return { score: 400, reason: 'Anomalous User-Agent' };
     }
 
     return { score: 0 };

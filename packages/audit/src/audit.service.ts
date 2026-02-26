@@ -88,9 +88,9 @@ export class AuditService {
     const validatedMetadata = AuditMetadataSchema.parse(entry.metadata || {});
 
     // 🔒 S7 Protection: Encrypt PII before logging
-    const encryptedEmail = entry.userEmail
-      ? this.encryption.encrypt(entry.userEmail)
-      : { encrypted: null };
+    if (entry.userEmail) {
+      this.encryption.encrypt(entry.userEmail);
+    }
 
     const rawMetadata = {
       ...validatedMetadata,
@@ -139,22 +139,30 @@ export class AuditService {
               user_agent,
               severity,
               result,
+              checksum,
               created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
           [
             tenantId,
             entry.userId || null,
             // S7 FIX 2A: Store FULL cipher object (encrypted + iv + tag + salt)
-            // Previously stored only .encrypted, making decryption IMPOSSIBLE
-            entry.userEmail ? JSON.stringify(this.encryption.encrypt(entry.userEmail)) : null,
+            entry.userEmail
+              ? JSON.stringify(this.encryption.encrypt(entry.userEmail))
+              : null,
             entry.action,
-            entry.entityType, // Schema uses entity_type
-            entry.entityId, // Schema uses entity_id
-            encryptedMetadata, // Store the whole encrypted object { encrypted: ... } as JSONB
+            entry.entityType,
+            entry.entityId,
+            encryptedMetadata,
             entry.ipAddress || null,
             entry.userAgent || null,
             entry.severity || 'INFO',
             entry.result || entry.status || 'SUCCESS',
+            this.calculateChecksum({
+              tenantId,
+              action: entry.action,
+              entityId: entry.entityId,
+              timestamp,
+            }), // Item 42: HMAC Checksum
             timestamp,
           ]
         );
@@ -182,7 +190,7 @@ export class AuditService {
 
       // 1. Create table if not exists
       await client.query(`
-        CREATE TABLE IF NOT EXISTS public.audit_logs (
+        CREATE TABLE IF NOT EXISTS public.audit_logs(
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           tenant_id TEXT NOT NULL,
           user_id TEXT,
@@ -195,9 +203,10 @@ export class AuditService {
           user_agent TEXT,
           severity TEXT DEFAULT 'INFO',
           result TEXT DEFAULT 'SUCCESS',
+          checksum TEXT, // Item 42: Integrity Hash
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-      `);
+        `);
 
       // 2. Create performance indexes
       await client.query(
@@ -220,7 +229,7 @@ export class AuditService {
         CREATE TRIGGER trg_protect_audit_update 
         BEFORE UPDATE ON public.audit_logs 
         FOR EACH ROW EXECUTE FUNCTION protect_audit_log_update();
-      `);
+        `);
 
       // Prevent DELETE
       await client.query(`
@@ -234,7 +243,7 @@ export class AuditService {
         CREATE TRIGGER trg_protect_audit_delete 
         BEFORE DELETE ON public.audit_logs 
         FOR EACH ROW EXECUTE FUNCTION protect_audit_log_delete();
-      `);
+        `);
 
       // Prevent TRUNCATE (S4 Deep Hardening)
       await client.query(`
@@ -248,12 +257,25 @@ export class AuditService {
         CREATE TRIGGER trg_protect_audit_truncate 
         BEFORE TRUNCATE ON public.audit_logs 
         FOR EACH STATEMENT EXECUTE FUNCTION protect_audit_log_truncate();
-      `);
+        `);
 
       this.logger.log('S4 Immutable Auditing active.');
     } finally {
       client.release();
     }
+  }
+
+  /**
+   * Item 42: Calculate HMAC checksum for log integrity
+   */
+  private calculateChecksum(data: any): string {
+    const crypto = require('node:crypto');
+    const hmacKey =
+      process.env.AUDIT_HMAC_KEY || 'default-audit-hardened-key-32-chars!!';
+    return crypto
+      .createHmac('sha256', hmacKey)
+      .update(JSON.stringify(data))
+      .digest('hex');
   }
 }
 

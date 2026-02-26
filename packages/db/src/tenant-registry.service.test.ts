@@ -33,14 +33,6 @@ mock.module('./schema.js', () => ({
   },
 }));
 
-// Mock @apex/security
-mock.module('@apex/security', () => ({
-  EncryptionService: class {
-    encrypt = (v: any) => ({ encrypted: v, iv: 'iv', tag: 'tag' });
-    decrypt = (v: any) => (typeof v === 'string' ? v : v.encrypted);
-  },
-}));
-
 // Mock drizzle-orm
 mock.module('drizzle-orm', () => ({
   eq: mock().mockReturnValue('eq-mock'),

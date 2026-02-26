@@ -19,15 +19,21 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { geographyPoint, moneyAmount, ulidId } from '../v5-core';
+import {
+  geographyPoint,
+  moneyAmount,
+  storefrontSchema,
+  ulidId,
+} from '../v5-core';
 
 /**
  * Shipping Zones
  * Decision #11: PostGIS Geography for spatial boundaries.
  */
-export const shippingZones = pgTable('shipping_zones', {
+export const shippingZones = storefrontSchema.table('shipping_zones', {
   // ── 1. Fixed ──
   id: ulidId(),
+  tenantId: uuid('tenant_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -49,7 +55,7 @@ export const shippingZones = pgTable('shipping_zones', {
 /**
  * Shipping Methods & Rates
  */
-export const shippingMethods = pgTable('shipping_methods', {
+export const shippingMethods = storefrontSchema.table('shipping_methods', {
   // ── 1. Fixed ──
   id: ulidId(),
   zoneId: uuid('zone_id')
@@ -79,7 +85,7 @@ export const shippingMethods = pgTable('shipping_methods', {
 /**
  * Tax Categories & Rates
  */
-export const taxCategories = pgTable(
+export const taxCategories = storefrontSchema.table(
   'tax_categories',
   {
     // ── 1. Fixed ──

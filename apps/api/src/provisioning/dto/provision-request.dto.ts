@@ -38,12 +38,16 @@ export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
   /**
    * Display name of the store
    */
-  storeName: z.string().min(2).max(100),
+  storeName: z
+    .string()
+    .min(2)
+    .max(100)
+    .regex(/^[a-zA-Z0-9\s._-]+$/, 'Store name contains invalid characters'),
 
   /**
    * Initial administrator email
    */
-  adminEmail: z.string().email(),
+  adminEmail: z.string().email().max(255),
 
   /**
    * Plan level for the new tenant

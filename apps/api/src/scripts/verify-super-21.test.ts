@@ -6,8 +6,10 @@
 
 // S1 Bypass for Test Script
 // S1 Bypass for Test Script (S10: No production secrets in code)
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-32-chars-at-least-!!!'; // gitleaks:allow
-process.env.ENCRYPTION_MASTER_KEY = process.env.ENCRYPTION_MASTER_KEY || 'test-master-key-32-chars-at-least'; // gitleaks:allow
+process.env.JWT_SECRET =
+  process.env.JWT_SECRET || 'test-secret-32-chars-at-least-!!!'; // gitleaks:allow
+process.env.ENCRYPTION_MASTER_KEY =
+  process.env.ENCRYPTION_MASTER_KEY || 'test-master-key-32-chars-at-least'; // gitleaks:allow
 process.env.SUPER_ADMIN_EMAIL = 'admin@example.com';
 process.env.SUPER_ADMIN_PASSWORD = 'test-password';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test'; // gitleaks:allow

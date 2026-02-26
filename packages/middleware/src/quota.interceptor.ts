@@ -4,6 +4,7 @@
  * Enforces resource-level quotas (max products, max orders, etc.)
  */
 
+import type { GovernanceService } from '@apex/db';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -23,18 +24,21 @@ export const QUOTA_KEY = 'governance_quota';
  * Decorator to check quota before operation.
  * Usage: @CheckQuota('products')
  */
-export const CheckQuota = (resource: 'products' | 'orders' | 'pages') =>
+export const CheckQuota = (resource: 'products' | 'orders' | 'staff') =>
   SetMetadata(QUOTA_KEY, resource);
 
 @Injectable()
 export class QuotaInterceptor implements NestInterceptor {
-  constructor(private reflector: Reflector) {}
+  constructor(
+    private reflector: Reflector,
+    private governanceService: GovernanceService
+  ) {}
 
   async intercept(
     context: ExecutionContext,
     next: CallHandler
   ): Promise<Observable<any>> {
-    const resource = this.reflector.get<'products' | 'orders' | 'pages'>(
+    const resource = this.reflector.get<'products' | 'orders' | 'staff'>(
       QUOTA_KEY,
       context.getHandler()
     );
@@ -59,8 +63,7 @@ export class QuotaInterceptor implements NestInterceptor {
       );
     }
 
-    const { governanceService } = await import('@apex/db');
-    const result = await governanceService.checkQuota(
+    const result = await this.governanceService.checkQuota(
       tenantId,
       resource,
       subdomain

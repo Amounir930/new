@@ -24,8 +24,14 @@ export class StaffService {
     }
   ): Promise<{ token: string; expiresAt: Date }> {
     const rawToken = randomBytes(32).toString('hex');
-    // Risk #Staff-S01: Forensic Salt for token hashing
-    const salt = process.env.SESSION_SALT || 'ultimate_forensic_salt_2026';
+    // C-1 Fix: No fallback salt allowed — fail hard per S1 Mandate.
+    // A static salt in source code allows any reader to compute tokenHash and forge sessions.
+    const salt = process.env.SESSION_SALT;
+    if (!salt || salt.trim().length < 32) {
+      throw new Error(
+        'S1 Violation: SESSION_SALT is missing or too short (min 32 chars). Cannot create secure staff sessions.'
+      );
+    }
     const tokenHash = createHash('sha256')
       .update(rawToken + salt)
       .digest('hex');
@@ -50,7 +56,13 @@ export class StaffService {
    * Validate a session token strictly via hash.
    */
   async validateSession(tenantId: string, token: string) {
-    const salt = process.env.SESSION_SALT || 'ultimate_forensic_salt_2026';
+    // C-1 Fix: Same fail-hard logic for validation path.
+    const salt = process.env.SESSION_SALT;
+    if (!salt || salt.trim().length < 32) {
+      throw new Error(
+        'S1 Violation: SESSION_SALT is missing or too short (min 32 chars). Cannot validate staff sessions.'
+      );
+    }
     const tokenHash = createHash('sha256')
       .update(token + salt)
       .digest('hex');
@@ -69,7 +81,25 @@ export class StaffService {
         )
         .limit(1);
 
-      return result[0] || null;
+      const session = result[0];
+
+      if (!session) {
+        // Order 4: Log failed session validation attempt as a security incident.
+        await db.execute(sql`
+          INSERT INTO governance.audit_logs (actor_id, action, tenant_id, metadata)
+          VALUES (
+            'SYSTEM',
+            'STAFF_SESSION_FAILED',
+            ${tenantId},
+            jsonb_build_object(
+              'reason', 'TOKEN_NOT_FOUND_OR_REVOKED',
+              'timestamp', CLOCK_TIMESTAMP()
+            )
+          )
+        `);
+      }
+
+      return session || null;
     });
   }
 

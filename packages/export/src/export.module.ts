@@ -29,4 +29,4 @@ import { BunShell } from './utils/bun-shell.js';
   ],
   exports: [ExportService],
 })
-export class ExportModule { }
+export class ExportModule {}

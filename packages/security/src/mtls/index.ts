@@ -45,7 +45,8 @@ export function loadCertificates(
     };
   } catch (error) {
     throw new Error(
-      `Failed to load mTLS certificates: ${error instanceof Error ? error.message : error
+      `Failed to load mTLS certificates: ${
+        error instanceof Error ? error.message : error
       }`
     );
   }
@@ -62,7 +63,8 @@ export function createMTLSServerOptions(config: MTLSConfig): ServerOptions {
     cert: certs.cert,
     key: certs.key,
     requestCert: config.requestCert,
-    rejectUnauthorized: config.rejectUnauthorized,
+    rejectUnauthorized:
+      process.env.NODE_ENV === 'production' ? true : config.rejectUnauthorized,
     // Enable only secure TLS versions
     minVersion: 'TLSv1.3',
     // Cipher suites
@@ -130,15 +132,19 @@ export class MTLSServer {
           (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
         );
 
-        if (daysUntilExpiry <= 30) {
-          console.warn(
-            `[mTLS] WARNING: Certificate expires in ${daysUntilExpiry} days!`
-          );
-        }
-
-        if (daysUntilExpiry <= 7) {
+        if (daysUntilExpiry <= 0) {
+          console.error('[mTLS] FATAL: Certificate HAS EXPIRED!');
+          if (process.env.NODE_ENV === 'production') {
+            // In production, we don't want to run with expired certs
+            process.exit(1);
+          }
+        } else if (daysUntilExpiry <= 7) {
           console.error(
             `[mTLS] CRITICAL: Certificate expires in ${daysUntilExpiry} days - RENEW NOW!`
+          );
+        } else if (daysUntilExpiry <= 30) {
+          console.warn(
+            `[mTLS] WARNING: Certificate expires in ${daysUntilExpiry} days!`
           );
         }
       }

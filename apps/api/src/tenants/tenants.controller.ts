@@ -1,7 +1,8 @@
-// biome-ignore lint/style/useImportType: Dependency Injection token
-import { TenantRegistryService } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditLog, AuditService } from '@apex/audit';
+import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
+// biome-ignore lint/style/useImportType: Dependency Injection token
+import { GovernanceService, TenantRegistryService } from '@apex/db';
 import {
   Body,
   Controller,
@@ -10,10 +11,10 @@ import {
   Param,
   Patch,
   UseGuards,
+  forwardRef,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import { SecurityService } from '../security/security.service.js';
 
 const UpdateTenantSchema = z.object({
@@ -27,18 +28,17 @@ const UpdateFeatureSchema = z.object({
   isEnabled: z.boolean(),
 });
 
-import { forwardRef } from '@nestjs/common';
-
 @Controller('admin/tenants')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
   constructor(
     private readonly tenantRegistry: TenantRegistryService,
+    private readonly governance: GovernanceService,
     @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) { }
+  ) {}
 
   @Get()
   async findAll() {
@@ -47,8 +47,7 @@ export class TenantsController {
 
   @Get(':id/features')
   async getFeatures(@Param('id') id: string) {
-    const { governanceService } = await import('@apex/db');
-    const gates = await governanceService.getTenantFeatureGates(id);
+    const gates = await this.governance.getTenantFeatureGates(id);
 
     // Resolve effective state
     const features: Record<
@@ -73,16 +72,23 @@ export class TenantsController {
   async updateFeature(
     @Param('id') id: string,
     @Param('key') key: string,
-    @Body(new ZodValidationPipe(UpdateFeatureSchema)) body: { isEnabled: boolean }
+    @Body(new ZodValidationPipe(UpdateFeatureSchema)) body: {
+      isEnabled: boolean;
+    }
   ) {
     // S3: Validate feature key against known master list
-    const MASTER_FEATURES = ['analytics', 'custom-domains', 'api-access', 'bulk-import', 'advanced-seo'];
+    const MASTER_FEATURES = [
+      'analytics',
+      'custom-domains',
+      'api-access',
+      'bulk-import',
+      'advanced-seo',
+    ];
     if (!MASTER_FEATURES.includes(key)) {
       throw new Error(`Invalid feature key: ${key}`);
     }
 
-    const { governanceService } = await import('@apex/db');
-    return governanceService.updateTenantFeatureGate(id, key, body.isEnabled);
+    return this.governance.updateTenantFeatureGate(id, key, body.isEnabled);
   }
 
   @Patch(':id')
@@ -102,7 +108,10 @@ export class TenantsController {
     // S15: Steel Control Sync
     // If status changed, update the global Redis lock for instant enforcement
     if (body.status) {
-      await this.security.setTenantLock(updated.subdomain, body.status === 'suspended');
+      await this.security.setTenantLock(
+        updated.subdomain,
+        body.status === 'suspended'
+      );
     }
 
     // S21: If plan or niche changed, we might want to suggest a re-sync or

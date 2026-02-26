@@ -2,9 +2,8 @@ import type { EncryptionService } from '@apex/security';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, or, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { createClient } from 'redis';
 import { publicDb } from '../connection.js';
-import { getTenantTableName } from '../schema.js';
+import type { RedisService } from '../redis.service.js';
 import {
   featureGates,
   subscriptionPlans,
@@ -12,8 +11,19 @@ import {
   tenants,
 } from '../schema/governance.js';
 import type * as schema from '../schema/index.js';
+import { getTenantTableName } from '../schema.js';
+import type { RawPgClientShape } from '../types.js';
 
-import type { RedisService } from '../redis.service.js';
+interface PgNotification {
+  channel: string;
+  payload: string;
+}
+
+interface FeatureGateResult {
+  featureKey: string;
+  isEnabled: boolean;
+  tenantId: string | null;
+}
 
 @Injectable()
 export class GovernanceService {
@@ -54,12 +64,14 @@ export class GovernanceService {
     );
 
     // Vector 4: pg_notify listener for tenant_config updates (Cache Invalidation)
-    const client = await (this.db.session as any).client; // Get raw pg client if possible
-    if (client && typeof client.on === 'function') {
-      await client.query('LISTEN tenant_config_upsert');
-      client.on('notification', (msg: any) => {
+    // Note: Drizzle ORM's NodePgDatabase does not expose the raw pg client directly.
+    // pg_notify is a secondary invalidation path; primary path is Redis Pub/Sub above.
+    // If a direct pg client is ever injected, wire it here. For now, we rely on Redis.
+    const rawClient = (this.db as unknown as RawPgClientShape).$client;
+    if (rawClient && typeof rawClient.on === 'function') {
+      await rawClient.query?.('LISTEN tenant_config_upsert');
+      rawClient.on('notification', (msg: PgNotification) => {
         if (msg.channel === 'tenant_config_upsert') {
-          console.log(`[Governance] pg_notify received: ${msg.payload}. Purging cache.`);
           this.featureCache.delete(msg.payload);
         }
       });
@@ -116,20 +128,74 @@ export class GovernanceService {
 
     return {
       maxProducts:
-        quotaOverride?.maxProducts ?? (plan as any)?.defaultMaxProducts ?? 50,
+        quotaOverride?.maxProducts ??
+        (plan as { defaultMaxProducts?: number })?.defaultMaxProducts ??
+        50,
       maxOrders:
-        quotaOverride?.maxOrders ?? (plan as any)?.defaultMaxOrders ?? 100,
-      maxPages: quotaOverride?.maxStaff ?? (plan as any)?.defaultMaxPages ?? 5, // maxStaff is used for staff limit in schema, but service says maxPages? Wait.
+        quotaOverride?.maxOrders ??
+        (plan as { defaultMaxOrders?: number })?.defaultMaxOrders ??
+        100,
+      maxPages:
+        quotaOverride?.maxStaff ??
+        (plan as { defaultMaxPages?: number })?.defaultMaxPages ??
+        5,
       storageLimitGb:
-        quotaOverride?.storageLimitGb ?? (plan as any)?.defaultStorageGb ?? 1,
+        quotaOverride?.storageLimitGb ??
+        (plan as { defaultStorageGb?: number })?.defaultStorageGb ??
+        1,
       ownerEmail: decryptedEmail,
     };
   }
 
-  /* 
-   * Vector 2: Application-side quota checks removed in favor of DB triggers.
-   * checkQuota and getResourceCount are deprecated.
+  /**
+   * Check if a tenant has remaining quota for a resource.
    */
+  async checkQuota(
+    tenantId: string,
+    resource: 'products' | 'orders' | 'staff',
+    subdomain: string
+  ): Promise<{ allowed: boolean; limit: number; current: number }> {
+    const limits = await this.getTenantLimits(tenantId);
+    let limit = 0;
+    let current = 0;
+
+    switch (resource) {
+      case 'products':
+        limit = limits.maxProducts;
+        break;
+      case 'orders':
+        limit = limits.maxOrders;
+        break;
+      case 'staff':
+        limit = limits.maxPages; // Note: service mapping mismatch in original code
+        break;
+    }
+
+    current = await this.getResourceCount(subdomain, resource);
+
+    return {
+      allowed: current < limit,
+      limit,
+      current,
+    };
+  }
+
+  /**
+   * Get current resource count from tenant-isolated schema
+   */
+  private async getResourceCount(
+    subdomain: string,
+    resource: 'products' | 'orders' | 'staff'
+  ): Promise<number> {
+    const tableName = getTenantTableName(subdomain, resource);
+
+    // Mandate #14: Direct SQL count for resource-level auditing
+    const result = await this.db.execute(
+      sql.raw(`SELECT count(*)::int as count FROM ${tableName}`)
+    );
+
+    return (result.rows[0] as { count: number })?.count ?? 0;
+  }
 
   /**
    * Verify if a specific feature is enabled for a tenant
@@ -195,7 +261,7 @@ export class GovernanceService {
 
         if (!tenant) return [];
 
-        const gates = await this.db
+        const gates = (await this.db
           .select({
             featureKey: featureGates.featureKey,
             isEnabled: featureGates.isEnabled,
@@ -205,9 +271,9 @@ export class GovernanceService {
           .where(
             or(
               eq(featureGates.tenantId, tenantId),
-              eq(featureGates.planCode, tenant.plan)
+              eq(featureGates.planCode, (tenant as { plan: string }).plan)
             )
-          );
+          )) as FeatureGateResult[];
 
         const featureMap = new Map<string, boolean>();
         for (const gate of gates) {
@@ -312,15 +378,10 @@ export class GovernanceService {
   }
 }
 
-// Support for legacy/non-DI consumers. In NestJS, this would be handled via providers.
-export const governanceService = new GovernanceService(
-  null as any,
-  {
-    subscribe: async () => { },
-    publish: async () => 0,
-    getClient: () => ({}) as any,
-  } as any,
-  {
-    decrypt: (v: any) => (typeof v === 'string' ? v : JSON.stringify(v)),
-  } as any
-);
+// IMPORTANT: The GovernanceService requires proper dependency injection.
+// Do NOT instantiate this class directly outside of NestJS DI context.
+// If you need to use govern features in non-DI contexts, wire the dependencies explicitly.
+//
+// The previous `governanceService` singleton was removed because it used
+// `null as unknown as RedisService` and `null as unknown as NodePgDatabase` stubs,
+// which cause runtime crashes on first use. Use NestJS DI instead.

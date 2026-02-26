@@ -16,4 +16,4 @@ import { BlueprintsService } from './blueprints.service.js';
   ],
   exports: [BlueprintsService, 'BLUEPRINTS_SERVICE'],
 })
-export class BlueprintsModule { }
+export class BlueprintsModule {}

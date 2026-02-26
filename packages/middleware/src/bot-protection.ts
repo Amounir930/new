@@ -16,7 +16,7 @@ import { HCaptchaService } from './hcaptcha.service.js';
 
 @Injectable()
 export class BotProtectionMiddleware implements NestMiddleware {
-  constructor(private readonly captchaService: HCaptchaService) { }
+  constructor(private readonly captchaService: HCaptchaService) {}
 
   // Common bot and scraper User-Agent patterns
   private readonly botUserAgents = [
@@ -53,7 +53,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
       throw new ForbiddenException('S11 Violation: User-Agent header required');
     }
 
-    if (this.isBotUserAgent(userAgent, clientIp, _res)) {
+    if (this.isBotUserAgent(req, userAgent, clientIp, _res)) {
       return;
     }
 
@@ -75,19 +75,35 @@ export class BotProtectionMiddleware implements NestMiddleware {
   }
 
   private isBotUserAgent(
+    req: Request,
     userAgent: string,
     clientIp: string,
     res: Response
   ): boolean {
     for (const botPattern of this.botUserAgents) {
       if (botPattern.test(userAgent)) {
-        console.debug(
+        console.warn(
           `S11: Bot blocked (Silent) - UA: "${userAgent}" | IP: ${clientIp}`
         );
+        // Item 34: Silent rejection without feedback
         res.destroy();
         return true;
       }
     }
+
+    // Item 34: Detect headless/automated headers
+    const automatedHeaders = [
+      'sec-ch-ua-mobile',
+      'x-puppeteer-id',
+      'playwright-id',
+    ];
+    for (const h of automatedHeaders) {
+      if (req.headers[h]) {
+        res.destroy();
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -128,7 +144,6 @@ export class BotProtectionMiddleware implements NestMiddleware {
       }
     }
   }
-
 
   private checkSuspiciousPaths(req: Request): void {
     const suspiciousPaths = [

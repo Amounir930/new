@@ -16,14 +16,14 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { moneyAmount, ulidId } from '../v5-core';
+import { moneyAmount, storefrontSchema, ulidId } from '../v5-core';
 import { customers } from './customers';
 
 /**
  * Wallet Transactions Table (Ledger)
  * Alignment: UUID -> TIMESTAMPTZ -> MONEY -> TEXT
  */
-export const walletTransactions = pgTable(
+export const walletTransactions = storefrontSchema.table(
   'wallet_transactions',
   {
     // ── Fixed (Alignment Tier 1) ──
@@ -38,6 +38,9 @@ export const walletTransactions = pgTable(
     balanceAfter: moneyAmount('balance_after').notNull(),
 
     // ── Scalar / Text ──
+    // C-2 Fix: Explicit currency column as single source of truth.
+    // Prevents currency confusion by making the wallet's denomination explicit.
+    currency: text('currency').notNull().default('SAR'),
     type: text('type').notNull(), // deposit, withdrawal, refund, order_payment
     referenceId: text('reference_id'), // order_id or external_tx_id
     description: text('description'),
@@ -52,6 +55,15 @@ export const walletTransactions = pgTable(
     balanceCheck: check(
       'ck_wallet_balance_positive',
       sql`("balance_after"->>'amount')::BIGINT >= 0`
+    ),
+    // C-2 Fix: Currency consistency — prevents depositing USD into a SAR wallet.
+    // All three values (amount, balance_after, currency column) must agree.
+    walletCurrencyCheck: check(
+      'ck_wallet_currency_consistent',
+      sql`
+        "currency" = ("amount"->>'currency')
+        AND "currency" = ("balance_after"->>'currency')
+      `
     ),
   })
 );

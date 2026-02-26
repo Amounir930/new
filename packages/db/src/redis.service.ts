@@ -3,7 +3,7 @@ import {
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
-import { type RedisClientType, createClient } from 'redis';
+import { createClient, type RedisClientType } from 'redis';
 
 /**
  * Enterprise Redis Singleton Service — V5

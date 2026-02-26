@@ -1,14 +1,15 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   bigint,
   check,
   customType,
   integer,
+  pgSchema,
   text,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { pgSchema } from 'drizzle-orm/pg-core';
 
 /**
  * Enterprise Decision #1: Zero-Trust Schema Isolation.
@@ -27,6 +28,7 @@ import { pgSchema } from 'drizzle-orm/pg-core';
  * });
  */
 export const createTenantSchema = (id: string) => pgSchema(`tenant_${id}`);
+export const storefrontSchema = pgSchema('storefront');
 
 /**
  * Enterprise Decision #2: ULID stored as UUID (16 bytes).
@@ -72,14 +74,26 @@ export const moneyAmount = (name: string) =>
       return `(${value.amount},${value.currency})`;
     },
     fromDriver(value) {
-      if (!value || typeof value !== 'string')
+      // H-2 Fix: Wrapped in try/catch. BigInt() throws on malformed DB values,
+      // which would crash the Node.js process without this guard.
+      try {
+        if (!value || typeof value !== 'string')
+          return { amount: 0n, currency: 'SAR' };
+        const match = value.match(/^\((\d+),(.+)\)$/);
+        if (!match) return { amount: 0n, currency: 'SAR' };
+        return {
+          amount: BigInt(match[1]),
+          currency: match[2].trim().replace(/['"]/, ''),
+        };
+      } catch (e) {
+        // Log malformed value without crashing. Return safe zero.
+        console.error(
+          '[moneyAmount] fromDriver parse failure. Returning zero:',
+          value,
+          e
+        );
         return { amount: 0n, currency: 'SAR' };
-      const match = value.match(/^\((\d+),(.+)\)$/);
-      if (!match) return { amount: 0n, currency: 'SAR' };
-      return {
-        amount: BigInt(match[1]),
-        currency: match[2].trim().replace(/['"]/g, ''),
-      };
+      }
     },
   })(name);
 
@@ -108,13 +122,31 @@ export const microAmount = (name: string) =>
 export const encryptedText = (name: string) => text(name);
 
 /**
- * S7 Validation Helper (Mandate #10)
+ * S7 Validation Helper (Mandate #10) — HARDENED (C-01 Fix)
+ *
+ * Validates that the column value is a proper AES-256-GCM ciphertext envelope:
+ *   { "enc": true, "iv": "<base64>", "tag": "<base64>", "data": "<base64>" }
+ *
+ * Rejects:
+ *   - Plaintext strings (no JSON)
+ *   - JSON objects missing required cryptographic fields
+ *   - Null (handled at column level)
+ *
  * Usage: (table) => ({ check: encryptedCheck(table.column) })
  */
-export const encryptedCheck = (column: any) =>
+export const encryptedCheck = (column: AnyPgColumn) =>
   check(
     `check_${column.name}_encrypted`,
-    sql`${column}::jsonb ? 'encrypted' AND jsonb_typeof(${column}::jsonb) = 'object'`
+    sql`
+      (${column} IS NULL) OR (
+        jsonb_typeof(${column}::jsonb) = 'object'
+        AND (${column}::jsonb) ? 'enc'
+        AND (${column}::jsonb) ? 'iv'
+        AND (${column}::jsonb) ? 'tag'
+        AND (${column}::jsonb) ? 'data'
+        AND ((${column}::jsonb ->> 'enc')::boolean = true)
+      )
+    `
   );
 
 /**
@@ -162,19 +194,6 @@ export const ALIGNMENT_LEGEND =
  */
 export const basisPoints = (name: string) => integer(name);
 export const grams = (name: string) => integer(name);
-/**
- * Fatal Mandate #19/32: Global JSON.stringify Monkey-patch
- * Nuclear backstop to prevent TypeError in production microservices.
- */
-const originalStringify = JSON.stringify;
-(JSON as any).stringify = (value: any, replacer?: any, space?: any) => {
-  const bigintReplacerOverride = (key: string, val: any) => {
-    const finalVal = typeof val === 'bigint' ? val.toString() : val;
-    return replacer ? replacer(key, finalVal) : finalVal;
-  };
-  return originalStringify(value, bigintReplacerOverride, space);
-};
-
 /**
  * Fatal Mandate #20: Strict Integer Heuristic
  * Used in JSONB math triggers to reject decimals/floating point injection.

@@ -16,13 +16,13 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { moneyAmount, ulidId } from '../v5-core';
-import { productVariants, products } from './products';
+import { moneyAmount, storefrontSchema, ulidId } from '../v5-core';
+import { products, productVariants } from './products';
 
 /**
  * 🧠 Smart Collections (Dynamic Filtering)
  */
-export const smartCollections = pgTable('smart_collections', {
+export const smartCollections = storefrontSchema.table('smart_collections', {
   // ── 1. Fixed ──
   id: ulidId(),
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -43,7 +43,7 @@ export const smartCollections = pgTable('smart_collections', {
 /**
  * 📦 Product Bundles
  */
-export const productBundles = pgTable('product_bundles', {
+export const productBundles = storefrontSchema.table('product_bundles', {
   // ── 1. Fixed ──
   id: ulidId(),
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -64,24 +64,27 @@ export const productBundles = pgTable('product_bundles', {
 /**
  * 🔗 Bundle Items (Reference Layer)
  */
-export const productBundleItems = pgTable('product_bundle_items', {
-  // ── 1. Fixed ──
-  id: ulidId(),
-  bundleId: uuid('bundle_id')
-    .notNull()
-    .references(() => productBundles.id, { onDelete: 'cascade' }),
-  variantId: uuid('variant_id')
-    .notNull()
-    .references(() => productVariants.id),
+export const productBundleItems = storefrontSchema.table(
+  'product_bundle_items',
+  {
+    // ── 1. Fixed ──
+    id: ulidId(),
+    bundleId: uuid('bundle_id')
+      .notNull()
+      .references(() => productBundles.id, { onDelete: 'cascade' }),
+    variantId: uuid('variant_id')
+      .notNull()
+      .references(() => productVariants.id),
 
-  // ── 2. Integer ──
-  quantity: integer('quantity').default(1).notNull(),
-});
+    // ── 2. Integer ──
+    quantity: integer('quantity').default(1).notNull(),
+  }
+);
 
 /**
  * 🔍 Search Synonyms
  */
-export const searchSynonyms = pgTable('search_synonyms', {
+export const searchSynonyms = storefrontSchema.table('search_synonyms', {
   // ── 1. Fixed ──
   id: ulidId(),
   createdAt: timestamp('created_at', { withTimezone: true })

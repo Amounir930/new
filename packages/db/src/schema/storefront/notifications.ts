@@ -14,14 +14,14 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { customers } from './customers';
 
 /**
  * Notifications Table
  * Column alignment: UUID → TIMESTAMPTZ → BOOLEAN → TEXT
  */
-export const notifications = pgTable(
+export const notifications = storefrontSchema.table(
   'notifications',
   {
     // ── Fixed (Alignment) ──

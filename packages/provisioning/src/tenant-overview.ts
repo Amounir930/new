@@ -5,24 +5,18 @@
  */
 
 import {
-  type SQL,
   type Tenant,
   and,
   asc,
-  auditLogs,
   count,
-  db,
   desc,
   eq,
-  onboardingBlueprints,
   publicDb,
   sql,
-  tenantMigrations,
-  tenantQuotas,
   tenants,
 } from '@apex/db';
 
-export type TenantStatus = 'active' | 'suspended' | 'deleted';
+export type TenantStatus = 'active' | 'suspended' | 'archived';
 export type TenantPlan = 'free' | 'basic' | 'pro' | 'enterprise';
 
 export interface TenantOverviewRecord {
@@ -310,7 +304,7 @@ export async function getTenantStats(): Promise<{
   const byStatus: Record<string, number> = {
     active: 0,
     suspended: 0,
-    deleted: 0,
+    archived: 0,
   };
 
   const byPlan: Record<string, number> = {

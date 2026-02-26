@@ -2,8 +2,11 @@ import { describe, expect, it, mock, spyOn } from 'bun:test';
 
 // 1. Mock drizzle-orm Natively in Bun
 mock.module('drizzle-orm', () => {
-  const sqlMock = (strings: any, ...values: any[]) => ({ strings, values });
-  (sqlMock as any).raw = (str: string) => str;
+  const sqlMock = (strings: unknown, ...values: unknown[]) => ({
+    strings,
+    values,
+  });
+  (sqlMock as { raw: (str: string) => string }).raw = (str: string) => str;
   return {
     sql: sqlMock,
     eq: () => ({}),
@@ -11,8 +14,13 @@ mock.module('drizzle-orm', () => {
   };
 });
 
+// 2. Mock connection
+mock.module('../connection.js', () => ({
+  publicDb: {},
+}));
+
 // 3. Mock RedisService
-mock.module('../redis.service', () => {
+mock.module('../redis.service.js', () => {
   return {
     RedisService: class {
       subscribe = async () => {};
@@ -24,22 +32,74 @@ mock.module('../redis.service', () => {
   };
 });
 
-// 4. Mock @apex/security
-mock.module('@apex/security', () => {
-  return {
-    EncryptionService: class {
-      decrypt = (v: any) => v;
-    },
-  };
-});
+// 5. Mock schema modules
+mock.module('../schema/governance.js', () => ({
+  featureGates: {},
+  subscriptionPlans: {},
+  tenantQuotas: {},
+  tenants: {},
+}));
 
-import { governanceService } from './governance.service.js';
+mock.module('../schema/index.js', () => ({}));
+
+mock.module('../schema.js', () => ({
+  getTenantTableName: (subdomain: string, resource: string) =>
+    `tenant_${subdomain}.${resource}`,
+}));
+
+import type { EncryptionService } from '@apex/security';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import type { RedisService } from '../redis.service.js';
+import type * as schema from '../schema/index.js';
+import { GovernanceService } from './governance.service.js';
+
+/**
+ * Instantiate GovernanceService directly with mocked dependencies (no null stubs).
+ */
+function makeGovernanceService(): GovernanceService {
+  const mockDb = {
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          then: async (cb: (r: unknown[]) => unknown) => cb([]),
+        }),
+      }),
+    }),
+    execute: async () => ({ rows: [{ count: 0 }] }),
+    insert: () => ({ values: () => ({}) }),
+    update: () => ({ set: () => ({ where: () => ({}) }) }),
+  } as unknown as NodePgDatabase<typeof schema>;
+
+  const mockRedis = {
+    subscribe: async () => {},
+    publish: async () => 0,
+  } as unknown as RedisService;
+
+  const mockEncryption = {
+    decrypt: (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v)),
+    encrypt: (v: string) => v,
+  } as unknown as EncryptionService;
+
+  return new GovernanceService(mockDb, mockRedis, mockEncryption);
+}
 
 describe('GovernanceService Logic (Bun Native Mock)', () => {
   it('should verify Stage 2 logic: allowed = current < limit', async () => {
+    const governanceService = makeGovernanceService();
+
     // We spy on the internal methods to simulate DB results
-    const limitsSpy = spyOn(governanceService as any, 'getTenantLimits');
-    const countSpy = spyOn(governanceService as any, 'getResourceCount');
+    const limitsSpy = spyOn(
+      governanceService as unknown as {
+        getTenantLimits: (...args: unknown[]) => unknown;
+      },
+      'getTenantLimits'
+    );
+    const countSpy = spyOn(
+      governanceService as unknown as {
+        getResourceCount: (...args: unknown[]) => unknown;
+      },
+      'getResourceCount'
+    );
 
     // Case 1: Over/At Limit
     limitsSpy.mockResolvedValue({

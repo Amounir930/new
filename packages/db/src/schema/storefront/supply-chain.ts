@@ -15,14 +15,14 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { moneyAmount, ulidId } from '../v5-core';
+import { moneyAmount, storefrontSchema, ulidId } from '../v5-core';
 import { storeLocations } from './locations';
 import { productVariants } from './products';
 
 /**
  * 🏭 Suppliers
  */
-export const suppliers = pgTable('suppliers', {
+export const suppliers = storefrontSchema.table('suppliers', {
   // ── 1. Fixed ──
   id: ulidId(),
   createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
@@ -40,7 +40,7 @@ export const suppliers = pgTable('suppliers', {
 /**
  * 📝 Purchase Orders
  */
-export const purchaseOrders = pgTable('purchase_orders', {
+export const purchaseOrders = storefrontSchema.table('purchase_orders', {
   // ── 1. Fixed ──
   id: ulidId(),
   supplierId: uuid('supplier_id')
@@ -64,7 +64,7 @@ export const purchaseOrders = pgTable('purchase_orders', {
 /**
  * 📦 Purchase Order Items
  */
-export const purchaseOrderItems = pgTable(
+export const purchaseOrderItems = storefrontSchema.table(
   'purchase_order_items',
   {
     // ── 1. Fixed ──
@@ -91,24 +91,27 @@ export const purchaseOrderItems = pgTable(
 /**
  * 🚚 Inventory Transfers
  */
-export const inventoryTransfers = pgTable('inventory_transfers', {
-  // ── 1. Fixed ──
-  id: ulidId(),
-  originLocationId: uuid('origin_id')
-    .notNull()
-    .references(() => storeLocations.id, { onDelete: 'restrict' }),
-  destinationLocationId: uuid('destination_id')
-    .notNull()
-    .references(() => storeLocations.id, { onDelete: 'restrict' }),
-  createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
-    .defaultNow()
-    .notNull(),
-  shippedAt: timestamp('shipped_at', { withTimezone: true, precision: 6 }),
-  receivedAt: timestamp('received_at', { withTimezone: true, precision: 6 }),
+export const inventoryTransfers = storefrontSchema.table(
+  'inventory_transfers',
+  {
+    // ── 1. Fixed ──
+    id: ulidId(),
+    originLocationId: uuid('origin_id')
+      .notNull()
+      .references(() => storeLocations.id, { onDelete: 'restrict' }),
+    destinationLocationId: uuid('destination_id')
+      .notNull()
+      .references(() => storeLocations.id, { onDelete: 'restrict' }),
+    createdAt: timestamp('created_at', { withTimezone: true, precision: 6 })
+      .defaultNow()
+      .notNull(),
+    shippedAt: timestamp('shipped_at', { withTimezone: true, precision: 6 }),
+    receivedAt: timestamp('received_at', { withTimezone: true, precision: 6 }),
 
-  // ── 2. Text ──
-  status: text('status').notNull().default('pending'),
-});
+    // ── 2. Text ──
+    status: text('status').notNull().default('pending'),
+  }
+);
 
 // Type Exports
 export type Supplier = typeof suppliers.$inferSelect;

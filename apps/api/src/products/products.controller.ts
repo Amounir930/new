@@ -1,3 +1,13 @@
+import { AuditLog } from '@apex/audit';
+import { type AuthenticatedRequest, JwtAuthGuard } from '@apex/auth';
+// biome-ignore lint/style/useImportType: DI
+import { ProductsService } from '@apex/db';
+import {
+  CheckQuota,
+  GovernanceGuard,
+  QuotaInterceptor,
+  RequireFeature,
+} from '@apex/middleware';
 import {
   Body,
   Controller,
@@ -6,66 +16,91 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { AuditLog } from '@apex/audit';
-import { JwtAuthGuard } from '@apex/auth';
-import { ProductsService } from '@apex/db';
-import {
-  GovernanceGuard,
-  RequireFeature,
-  CheckQuota,
-  QuotaInterceptor,
-} from '@apex/middleware';
-import { CreateProductDto, UpdateProductDto } from './dto/create-product.dto';
+import type {
+  CreateProductDto,
+  UpdateProductDto,
+} from './dto/create-product.dto';
 
 @Controller('products')
 @UseGuards(JwtAuthGuard, GovernanceGuard)
 @UseInterceptors(QuotaInterceptor)
 export class ProductsController {
-  constructor(private readonly products: ProductsService) { }
+  constructor(private readonly productsService: ProductsService) {}
 
   @Get()
   @RequireFeature('ecommerce')
-  findAll() {
-    return this.products.findAll();
+  async findAll(@Req() req: AuthenticatedRequest) {
+    return this.productsService.findAll(req.user.tenantId!);
   }
 
   @Post()
   @RequireFeature('ecommerce')
   @CheckQuota('products')
   @AuditLog({ action: 'PRODUCT_CREATED', entityType: 'product' })
-  async create(@Body() body: CreateProductDto) {
-    const product = await this.products.create(body as any);
+  async create(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: CreateProductDto
+  ) {
+    const tenantId = req.user.tenantId!;
+    // Map DTO to localized schema
+    const productData = {
+      ...body,
+      name: { ar: body.nameAr, en: body.nameEn },
+      description: { ar: body.descriptionAr, en: body.descriptionEn },
+      tenantId,
+    };
+
+    const product = await this.productsService.create(
+      tenantId,
+      productData as any
+    );
     return {
       success: true,
-      message: 'Product created successfully',
-      data: product
+      data: product,
     };
   }
 
   @Patch(':id')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_UPDATED', entityType: 'product' })
-  async update(@Param('id') id: string, @Body() body: UpdateProductDto) {
-    const product = await this.products.update(id, body as any);
+  async update(
+    @Req() req: AuthenticatedRequest,
+    @Param('id') id: string,
+    @Body() body: UpdateProductDto
+  ) {
+    const tenantId = req.user.tenantId!;
+    const { version, ...updateData } = body;
+
+    // Map localized fields if present
+    const mappedData: any = { ...updateData };
+    if (body.nameAr || body.nameEn) {
+      mappedData.name = { ar: body.nameAr, en: body.nameEn };
+    }
+
+    const product = await this.productsService.update(
+      tenantId,
+      id,
+      version,
+      mappedData
+    );
     return {
       success: true,
-      message: 'Product updated successfully',
-      data: product
+      data: product,
     };
   }
 
   @Delete(':id')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_DELETED', entityType: 'product' })
-  async remove(@Param('id') id: string) {
-    await this.products.delete(id);
+  async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    await this.productsService.delete(req.user.tenantId!, id);
     return {
       success: true,
-      message: 'Product deleted successfully'
+      message: 'Product deleted successfully',
     };
   }
 }

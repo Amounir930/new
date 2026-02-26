@@ -14,12 +14,12 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * Loyalty Rules Table
  */
-export const loyaltyRules = pgTable('loyalty_rules', {
+export const loyaltyRules = storefrontSchema.table('loyalty_rules', {
   // ── Fixed (Alignment) ──
   id: ulidId(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

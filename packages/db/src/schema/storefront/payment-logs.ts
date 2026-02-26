@@ -8,14 +8,14 @@
  */
 
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { ulidId } from '../v5-core';
+import { storefrontSchema, ulidId } from '../v5-core';
 import { orders } from './orders';
 
 /**
  * Payment Logs Table
  * Alignment: UUID -> TIMESTAMPTZ -> TEXT
  */
-export const paymentLogs = pgTable(
+export const paymentLogs = storefrontSchema.table(
   'payment_logs',
   {
     // ── Fixed ──

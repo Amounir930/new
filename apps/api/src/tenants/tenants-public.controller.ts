@@ -4,7 +4,7 @@ import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 
 @Controller('public/tenants')
 export class TenantsPublicController {
-  constructor(private readonly tenantRegistry: TenantRegistryService) { }
+  constructor(private readonly tenantRegistry: TenantRegistryService) {}
 
   /**
    * S2.5: Discovery API for Storefronts

@@ -11,19 +11,18 @@ import {
   boolean,
   index,
   jsonb,
-  pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { deletedAt, ulidId } from '../v5-core';
+import { deletedAt, storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * Brands Table
  * Column alignment: UUID → TIMESTAMPTZ → BOOLEAN → TEXT → JSONB
  */
-export const brands = pgTable(
+export const brands = storefrontSchema.table(
   'brands',
   {
     // ── Fixed (Alignment) ──

@@ -16,4 +16,4 @@ import { StorefrontService } from './storefront.service.js';
   ],
   exports: [StorefrontService, 'STOREFRONT_SERVICE'],
 })
-export class StorefrontModule { }
+export class StorefrontModule {}

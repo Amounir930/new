@@ -29,6 +29,7 @@ import {
   deletedAt,
   moneyAmount,
   occVersion,
+  storefrontSchema,
   ulidId,
 } from '../v5-core';
 import { commerceMarkets } from './commerce';
@@ -40,7 +41,7 @@ import { productVariants } from './products';
  * 🧾 Orders Table
  * ALIGNMENT: UUID -> TS -> BIGINT -> INT -> BOOL -> ENUM -> TEXT -> JSONB
  */
-export const orders = pgTable(
+export const orders = storefrontSchema.table(
   'orders',
   {
     // ── 1. Fixed (Neural Alignment) ──
@@ -52,6 +53,7 @@ export const orders = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true, precision: 6 })
       .defaultNow()
       .notNull(),
+    deletedAt: deletedAt(), // Audit 777: Soft Delete support
 
     // ── 2. Scalar ──
     orderNumber: text('order_number').notNull(), // Target of tenant-specific sequence (Risk #40)
@@ -81,7 +83,11 @@ export const orders = pgTable(
       .notNull(),
     source: orderSourceEnum('source').default('web').notNull(),
 
-    // ── 9. OCC ──
+    // ── 9. Currency (new — A-01 Fix) ──
+    // Stored alongside order for fast currency matching without decomposing moneyAmount composites.
+    currency: text('currency').notNull().default('SAR'),
+
+    // ── 10. OCC ──
     version: occVersion(),
   },
   (table) => ({
@@ -96,29 +102,27 @@ export const orders = pgTable(
       'brin',
       table.createdAt
     ),
+    // C-02 Fix: CHECK now references ACTUAL declared columns.
+    // Old check referenced shipping_total / tax_total / discount_total which DO NOT EXIST.
+    // Formula: total = subtotal + tax_amount - discount_amount (shipping is baked into subtotal)
     checkoutMathCheck: check(
       'checkout_math_check',
       sql`
-        ("total"->>'amount') ~ '^[0-9]+$' AND
         ("subtotal"->>'amount') ~ '^[0-9]+$' AND
-        ("shipping_total"->>'amount') ~ '^[0-9]+$' AND
-        ("tax_total"->>'amount') ~ '^[0-9]+$' AND
-        ("discount_total"->>'amount') ~ '^[0-9]+$' AND
-        ("total"->>'amount')::BIGINT = 
-          ("subtotal"->>'amount')::BIGINT + 
-          ("shipping_total"->>'amount')::BIGINT + 
-          ("tax_total"->>'amount')::BIGINT - 
-          ("discount_total"->>'amount')::BIGINT
+        ("tax_amount"->>'amount') ~ '^[0-9]+$' AND
+        ("discount_amount"->>'amount') ~ '^[0-9]+$' AND
+        ("total"->>'amount') ~ '^[0-9]+$' AND
+        ("total"->>'amount')::BIGINT =
+          ("subtotal"->>'amount')::BIGINT +
+          ("tax_amount"->>'amount')::BIGINT -
+          ("discount_amount"->>'amount')::BIGINT
       `
     ),
-    // Mandate #25: Currency match at DB level
+    // A-01 Fix: currencyMatchCheck now references the actual `currency` column.
     currencyMatchCheck: check(
       'currency_match_check',
-      sql`"currency" = ("total"->>'currency')`
+      sql`"currency" = ("total"->>'currency') AND "currency" = ("subtotal"->>'currency')`
     ),
-    // Audit 777 Point #35: Order currency must match wallet currency
-    // This is often enforced at the customer level or during checkout.
-    // Adding a check for the order itself here.
   })
 );
 
@@ -126,7 +130,7 @@ export const orders = pgTable(
  * 📦 Order Items
  * Compliance Point #2: RESTRICT deletion for accounting trails.
  */
-export const orderItems = pgTable(
+export const orderItems = storefrontSchema.table(
   'order_items',
   {
     // ── Fixed ──
@@ -166,7 +170,7 @@ export const orderItems = pgTable(
  *
  * ALIGNMENT: UUID -> TS -> BIGINT -> ENUM -> TEXT
  */
-export const refunds = pgTable('refunds', {
+export const refunds = storefrontSchema.table('refunds', {
   // ── 1. Fixed ──
   id: ulidId(),
   tenantId: uuid('tenant_id').notNull(),
@@ -190,7 +194,7 @@ export const refunds = pgTable('refunds', {
  * AUDIT Point #19: SUM(refunds.amount) <= orders.total logic MUST be enforced
  * at the application service layer or via a DB trigger.
  */
-export const refundItems = pgTable(
+export const refundItems = storefrontSchema.table(
   'refund_items',
   {
     // ── 1. Fixed ──
@@ -218,7 +222,7 @@ export const refundItems = pgTable(
  * 🔄 RMA (Return Merchandise Authorization) Items
  * Directive #7: Positive quantity checks for returns.
  */
-export const rmaItems = pgTable(
+export const rmaItems = storefrontSchema.table(
   'rma_items',
   {
     id: ulidId(),
@@ -246,7 +250,7 @@ export type OrderItem = typeof orderItems.$inferSelect;
  * 🛒 Abandoned Checkouts (Cart Storage Exhaustion)
  * Swept by pg_cron at 60 days (Mandate #14)
  */
-export const abandonedCheckouts = pgTable(
+export const abandonedCheckouts = storefrontSchema.table(
   'abandoned_checkouts',
   {
     // ── Fixed ──

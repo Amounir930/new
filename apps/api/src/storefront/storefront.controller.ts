@@ -1,23 +1,23 @@
+import { AuditLog } from '@apex/audit';
+import { RateLimit } from '@apex/middleware';
+import type { TenantRequest } from '@apex/middleware';
 import {
+  Body,
   Controller,
   Get,
   NotFoundException,
   Param,
   Post,
-  Body,
-  Req,
   Query,
-  VERSION_NEUTRAL,
+  Req,
   UsePipes,
+  VERSION_NEUTRAL,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import { AuditLog } from '@apex/audit';
-import { RateLimit } from '@apex/middleware';
-import { StorefrontService } from './storefront.service.js';
-import { NewsletterSubscriptionDto } from './dto/newsletter.dto.js';
-import type { TenantRequest } from '@apex/middleware';
-import { Request } from 'express';
+import type { NewsletterSubscriptionDto } from './dto/newsletter.dto.js';
+import type { StorefrontService } from './storefront.service.js';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
@@ -37,7 +37,7 @@ type ProductsQueryDto = z.infer<typeof ProductsQuerySchema>;
 @Controller({ path: 'storefront', version: VERSION_NEUTRAL })
 @UsePipes(ZodValidationPipe)
 export class StorefrontController {
-  constructor(private readonly storefrontService: StorefrontService) { }
+  constructor(private readonly storefrontService: StorefrontService) {}
 
   @Get('config')
   @AuditLog('STOREFRONT_CONFIG_VIEW')
@@ -48,16 +48,28 @@ export class StorefrontController {
 
   @Get('products')
   @AuditLog('STOREFRONT_PRODUCT_LIST')
-  async getProducts(@Req() req: TenantRequest, @Query() query: ProductsQueryDto, @Query() tenantQuery: TenantIdDto) {
-    const tenantId = req.tenantContext?.tenantId || tenantQuery.tenantId || 'public';
+  async getProducts(
+    @Req() req: TenantRequest,
+    @Query() query: ProductsQueryDto,
+    @Query() tenantQuery: TenantIdDto
+  ) {
+    const tenantId =
+      req.tenantContext?.tenantId || tenantQuery.tenantId || 'public';
     return this.storefrontService.getProducts(tenantId, query);
   }
 
   @Get('products/:slug')
   @AuditLog({ action: 'STOREFRONT_PRODUCT_VIEW', entityType: 'product' })
-  async getProductBySlug(@Req() req: TenantRequest, @Param('slug') slug: string, @Query() query: TenantIdDto) {
+  async getProductBySlug(
+    @Req() req: TenantRequest,
+    @Param('slug') slug: string,
+    @Query() query: TenantIdDto
+  ) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
-    const product = await this.storefrontService.getProductBySlug(tenantId, slug);
+    const product = await this.storefrontService.getProductBySlug(
+      tenantId,
+      slug
+    );
     if (!product) {
       throw new NotFoundException('Product not found');
     }
@@ -81,7 +93,11 @@ export class StorefrontController {
   @Post('newsletter')
   @AuditLog('STOREFRONT_NEWSLETTER_SUBSCRIBE')
   @RateLimit({ requests: 5, windowMs: 3600000 }) // S6: Limit to 5 per hour
-  async subscribe(@Req() req: TenantRequest, @Body() body: NewsletterSubscriptionDto, @Query() query: TenantIdDto) {
+  async subscribe(
+    @Req() req: TenantRequest,
+    @Body() body: NewsletterSubscriptionDto,
+    @Query() query: TenantIdDto
+  ) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
     return this.storefrontService.subscribeToNewsletter(tenantId, body.email);
   }

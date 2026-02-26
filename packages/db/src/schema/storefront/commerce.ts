@@ -8,19 +8,17 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
-  index,
-  pgTable,
   text,
   timestamp,
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { deletedAt, moneyAmount, ulidId } from '../v5-core';
+import { deletedAt, moneyAmount, storefrontSchema, ulidId } from '../v5-core';
 
 /**
  * 🌍 Global Markets
  */
-export const commerceMarkets = pgTable(
+export const commerceMarkets = storefrontSchema.table(
   'commerce_markets',
   {
     // ── 1. Fixed ──
@@ -50,7 +48,7 @@ export const commerceMarkets = pgTable(
 /**
  * 💰 Price Lists (Market-Specific Pricing)
  */
-export const priceLists = pgTable(
+export const priceLists = storefrontSchema.table(
   'price_lists',
   {
     // ── 1. Fixed ──
@@ -80,7 +78,7 @@ export const priceLists = pgTable(
 /**
  * 💱 Currency Rates
  */
-export const currencyRates = pgTable('currency_rates', {
+export const currencyRates = storefrontSchema.table('currency_rates', {
   // ── 1. Fixed ──
   id: ulidId(),
   tenantId: uuid('tenant_id').notNull(),

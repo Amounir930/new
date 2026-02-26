@@ -16,4 +16,4 @@ import { ProvisioningService } from './provisioning.service.js';
   ],
   exports: [ProvisioningService, 'PROVISIONING_SERVICE'],
 })
-export class ProvisioningModule { }
+export class ProvisioningModule {}

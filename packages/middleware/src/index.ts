@@ -25,6 +25,8 @@ export {
   type TenantContext,
   tenantStorage,
 } from './connection-context.js';
+// S4: Database Security
+export * from './db-security.interceptor.js';
 // S5: Global Exception Filter
 export {
   AuthenticationError,
@@ -84,3 +86,7 @@ export {
   resolveTenant,
   type TenantResolutionStrategy,
 } from './tenant-resolution.js';
+
+// Tier 3 Security Support
+export { SecretDetectionMiddleware } from './secret-detection.js';
+export { TenantEventService, type TenantEvent } from './events.service.js';
