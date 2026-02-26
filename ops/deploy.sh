@@ -63,9 +63,8 @@ fi
 echo "🗄️  [2/4] Running migrations..."
 # Mount local packages/db to ensure idempotent migration SQLs are used regardless of image state
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm \
-    -v "$DIR/packages/db:/app/packages/db" \
     -e NODE_ENV=production \
-    api bun run --filter=@apex/db db:migrate || {
+    api bun run --filter=@apex/db db:migrate -- --public || {
         echo "❌ Migration failed! Rolling back..."
         exit 1
     }
