@@ -92,3 +92,4 @@ KIMI/
 
 # ─── Database Metadata (Issue 10) ───
 packages/db/drizzle/meta/
+.env
