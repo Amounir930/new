@@ -4,6 +4,7 @@
  */
 
 import {
+  NodePgDatabase,
   drizzle,
   eq,
   onboardingBlueprints,
@@ -15,7 +16,7 @@ import {
 import { BlueprintExecutor } from './blueprint/executor';
 import { CatalogModule } from './blueprint/modules/catalog';
 import { CoreModule } from './blueprint/modules/core';
-import type { BlueprintConfig } from './blueprint/types';
+import type { BlueprintConfig, BlueprintTemplate } from './blueprint/types';
 import { sanitizeSchemaName } from './schema-manager';
 
 export interface SeedOptions {
@@ -25,8 +26,8 @@ export interface SeedOptions {
   plan?: 'free' | 'basic' | 'pro' | 'enterprise';
   password?: string; // S7: Hashed password for admin user
   nicheType?: string; // S2.5: Industry classification
-  uiConfig?: Record<string, any>; // S2.5: SDUI/Theme configuration
-  blueprint?: any; // S3: Custom blueprint payload
+  uiConfig?: Record<string, unknown>; // S2.5: SDUI/Theme configuration
+  blueprint?: BlueprintTemplate; // S3: Custom blueprint payload
 }
 
 export interface SeedResult {
@@ -107,7 +108,9 @@ export async function seedTenantData(
 /**
  * Helper to resolve blueprint template
  */
-async function resolveTemplate(options: SeedOptions): Promise<any> {
+async function resolveTemplate(
+  options: SeedOptions
+): Promise<BlueprintTemplate> {
   if (options.blueprint) {
     return options.blueprint;
   }
@@ -129,7 +132,7 @@ async function resolveTemplate(options: SeedOptions): Promise<any> {
  */
 function buildBlueprintConfig(
   options: SeedOptions,
-  template: any
+  template: BlueprintTemplate
 ): BlueprintConfig {
   return {
     modules: { core: true, catalog: true },
@@ -145,7 +148,10 @@ function buildBlueprintConfig(
 /**
  * Helper to resolve store record (Idempotency)
  */
-async function resolveStore(db: any, options: SeedOptions): Promise<string> {
+async function resolveStore(
+  db: NodePgDatabase<Record<string, unknown>>,
+  options: SeedOptions
+): Promise<string> {
   const { stores } = await import('@apex/db');
   const existingStore = await db
     .select({ id: stores.id })
