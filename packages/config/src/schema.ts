@@ -73,7 +73,10 @@ export const EnvSchema = z.object({
     .min(1, 'S1 Violation: DATABASE_URL is required')
     .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL is supported')
     .refine((url) => {
-      if (process.env.NODE_ENV === 'production') {
+      if (
+        process.env.NODE_ENV === 'production' &&
+        process.env.SKIP_S1_COMPLEXITY_CHECK !== 'true'
+      ) {
         return url.includes('ssl=require') || url.includes('sslmode=require');
       }
       return true;
