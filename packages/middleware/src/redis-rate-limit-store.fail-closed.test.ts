@@ -13,17 +13,14 @@ mock.module('redis', () => ({
 describe('S6 Fail-Closed Behavior (Production)', () => {
   let store: RedisRateLimitStore;
 
-  beforeEach(() => {
-    // Mock ConfigService
+  it('should reject requests (503) if Redis is unreachable in production', async () => {
     const mockConfig = {
-      get: mock().mockReturnValue('redis://localhost:6379'),
+      get: mock((key: string) => {
+        if (key === 'NODE_ENV') return 'production';
+        return 'redis://localhost:6379';
+      }),
     };
     store = new RedisRateLimitStore(mockConfig as any);
-  });
-
-  it('should reject requests (503) if Redis is unreachable in production', async () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
 
     try {
       // @ts-expect-error - access private
@@ -39,13 +36,17 @@ describe('S6 Fail-Closed Behavior (Production)', () => {
       expect(e.getResponse().message).toContain(
         'Rate limiting service unavailable'
       );
-    } finally {
-      process.env.NODE_ENV = originalEnv;
     }
   });
 
   it('should allow memory fallback in non-production', async () => {
-    process.env.NODE_ENV = 'development';
+    const mockConfig = {
+      get: mock((key: string) => {
+        if (key === 'NODE_ENV') return 'development';
+        return 'redis://localhost:6379';
+      }),
+    };
+    store = new RedisRateLimitStore(mockConfig as any);
 
     // @ts-expect-error
     store.client = null;
@@ -54,6 +55,5 @@ describe('S6 Fail-Closed Behavior (Production)', () => {
 
     const result = await store.increment('test-ip', 60000);
     expect(result.count).toBe(1);
-    // Should stay at 1 for new key
   });
 });

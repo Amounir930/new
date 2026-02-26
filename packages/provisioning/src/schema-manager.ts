@@ -33,18 +33,19 @@ export async function createTenantSchema(
 
   try {
     // Check if schema already exists
-    // const existing = await client.query(
-    //   `
-    //   SELECT schema_name
-    //   FROM information_schema.schemata
-    //   WHERE schema_name = $1
-    // `,
-    //   [schemaName]
-    // );
+    const schemaCheck = await client.query(
+      `
+      SELECT schema_name
+      FROM information_schema.schemata
+      WHERE schema_name = $1
+    `,
+      [schemaName]
+    );
+    const existing = schemaCheck.rows.length > 0;
 
-    // if (existing.rows.length > 0) {
-    //   throw new Error(`Schema '${schemaName}' already exists`);
-    // }
+    if (existing) {
+      throw new Error(`Schema '${schemaName}' already exists`);
+    }
 
     // Create schema with proper authorization (S2 Protocol)
     // Item 43: Ensure strict schema creation

@@ -9,9 +9,9 @@ import path from 'node:path';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
 import {
-  // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-  TenantRegistryService,
   sql,
+  // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+  type TenantRegistryService,
   withTenantConnection,
 } from '@apex/db';
 import { Inject, Injectable, Logger } from '@nestjs/common';

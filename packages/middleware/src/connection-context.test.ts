@@ -4,12 +4,12 @@
 
 import { beforeEach, describe, expect, it } from 'bun:test';
 import {
-  type TenantContext,
   getCurrentTenantContext,
   getCurrentTenantId,
   hasTenantContext,
   requireTenantContext,
   runWithTenantContext,
+  type TenantContext,
 } from './connection-context.js';
 
 describe('ConnectionContext', () => {

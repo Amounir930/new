@@ -21,7 +21,12 @@
     "lint:fix": "biome check --write .",
     "typecheck": "tsc --noEmit"
   },
-  "keywords": ["testing", "mocks", "fixtures", "test-utils"],
+  "keywords": [
+    "testing",
+    "mocks",
+    "fixtures",
+    "test-utils"
+  ],
   "dependencies": {
     "@faker-js/faker": "^8.3.1",
     "@nestjs/common": "10.4.16",

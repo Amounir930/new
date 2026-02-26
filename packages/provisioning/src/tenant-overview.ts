@@ -5,7 +5,6 @@
  */
 
 import {
-  type Tenant,
   and,
   asc,
   count,
@@ -13,6 +12,7 @@ import {
   eq,
   publicDb,
   sql,
+  type Tenant,
   tenants,
 } from '@apex/db';
 

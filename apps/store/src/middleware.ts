@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 /**
  * S2 HOTFIX: Multi-tenant Middleware with Subdomain Rewrite

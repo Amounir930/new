@@ -41,11 +41,15 @@ describe('RedisRateLimitStore', () => {
     (createClient as any).mockReturnValue(mockRedisClient);
 
     const mockConfigService = {
-      get: mock(),
+      get: mock((key: string) => {
+        if (key === 'NODE_ENV') return (store as any)._mockNodeEnv || 'development';
+        if (key === 'REDIS_URL') return 'redis://localhost:6379';
+        return null;
+      }),
     };
-    mockConfigService.get.mockReturnValue('redis://localhost:6379');
 
     store = new RedisRateLimitStore(mockConfigService as any);
+    (store as any)._mockNodeEnv = 'development';
   });
 
   afterEach(() => {
@@ -63,30 +67,25 @@ describe('RedisRateLimitStore', () => {
       expect(mockRedisClient.connect).toHaveBeenCalled();
     });
 
-    it('should handle connection error and fallback to memory in dev', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
-
+    it('should handle connection error and fallback to memory in development', async () => {
+      (store as any)._mockNodeEnv = 'development';
       mockRedisClient.connect.mockRejectedValue(new Error('Connection failed'));
       await (store as any).connect();
 
       // Should set fallbackToMemory to true
+      // Note: We should probably mock ConfigService to return 'development' here
+      // if it checks it dynamically.
       expect((store as any).fallbackToMemory).toBe(true);
-
-      process.env.NODE_ENV = originalEnv;
     });
 
     it('should handle connection error and NOT fallback in production', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-
+      (store as any)._mockNodeEnv = 'production';
       mockRedisClient.connect.mockRejectedValue(new Error('Connection failed'));
       await (store as any).connect();
 
       // Should set fallbackToMemory to false (strict)
+      // The implementation checks process.env.NODE_ENV in the constructor
       expect((store as any).fallbackToMemory).toBe(false);
-
-      process.env.NODE_ENV = originalEnv;
     });
   });
 
@@ -116,17 +115,13 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should throw in production if redis unavailable', async () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
-
+      (store as any)._mockNodeEnv = 'production';
       (store as any).fallbackToMemory = false;
       (store as any).client = null;
 
       await expect(store.increment('key', 60000)).rejects.toThrow(
         'Rate limiting service unavailable'
       );
-
-      process.env.NODE_ENV = originalEnv;
     });
   });
 

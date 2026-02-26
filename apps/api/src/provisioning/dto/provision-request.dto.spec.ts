@@ -160,14 +160,14 @@ describe('ProvisionRequestSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept storeName with special characters', () => {
-      const validData = {
+    it('should reject storeName with special characters', () => {
+      const invalidData = {
         ...validProvisionData,
         storeName: 'Coffee & Beans™ Shop 🍵',
       };
 
-      const result = ProvisionRequestSchema.safeParse(validData);
-      expect(result.success).toBe(true);
+      const result = ProvisionRequestSchema.safeParse(invalidData);
+      expect(result.success).toBe(false);
     });
   });
 

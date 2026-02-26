@@ -1,20 +1,18 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { apiFetch } from '@/lib/api';
 import {
   CheckCircle2,
   Clock,
   Edit3,
   Eye,
   LayoutGrid,
-  MoreHorizontal,
   Plus,
   Search,
-  Trash2,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { apiFetch } from '@/lib/api';
 
 interface Blueprint {
   id: string;

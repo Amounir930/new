@@ -1,7 +1,7 @@
 'use client';
 
+import { Server } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Server, Settings, ShieldCheck } from 'lucide-react';
 
 export default function InfraPage() {
   return (

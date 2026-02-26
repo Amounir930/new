@@ -1,9 +1,9 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
 import {
-  type NodePgDatabase,
   drizzle,
   eq,
+  type NodePgDatabase,
   onboardingBlueprints,
   sql,
 } from '@apex/db';

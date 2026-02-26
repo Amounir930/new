@@ -5,16 +5,14 @@
  */
 
 import { publicDb as db, eq, publicPool as pool, sql, tenants } from '@apex/db';
-
-import {
-  productImages,
-  productVariants,
-  products,
-} from '@apex/db/schema/storefront/products';
+import { categories } from '@apex/db/schema/storefront/categories';
 
 import { banners } from '@apex/db/schema/storefront/home';
-
-import { categories } from '@apex/db/schema/storefront/categories';
+import {
+  productImages,
+  products,
+  productVariants,
+} from '@apex/db/schema/storefront/products';
 
 const TENANT_SUBDOMAIN = 'adel';
 // S2 FIX: Use less predictable schema name prefix

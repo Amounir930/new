@@ -1,9 +1,5 @@
 'use client';
 
-import { ProvisionModal } from '@/components/tenant/ProvisionModal';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { apiFetch } from '@/lib/api';
 import {
   Activity,
   ArrowUpRight,
@@ -14,6 +10,10 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { ProvisionModal } from '@/components/tenant/ProvisionModal';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { apiFetch } from '@/lib/api';
 
 interface PlatformStats {
   activeTenants: number;
@@ -185,7 +185,7 @@ export default function SuperAdminDashboard() {
                     <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden hidden sm:block">
                       <div
                         className={`h-full rounded-full transition-all duration-1000 ${
-                          Number.parseInt(node.load) > 80
+                          Number.parseInt(node.load, 10) > 80
                             ? 'bg-amber-500'
                             : 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]'
                         }`}

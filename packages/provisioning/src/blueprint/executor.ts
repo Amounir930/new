@@ -133,6 +133,10 @@ export function validateBlueprint(blueprint: any): BlueprintTemplate {
     throw new Error('Blueprint must define modules object');
   }
 
+  if (blueprint.version !== '1.0') {
+    throw new Error('version must be "1.0"');
+  }
+
   // 1. Strict Module Check (All 41 must exist)
   for (const feature of MASTER_FEATURE_LIST) {
     if (!(feature in blueprint.modules)) {

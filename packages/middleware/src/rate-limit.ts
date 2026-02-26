@@ -236,8 +236,8 @@ export const ThrottleConfig = {
 };
 
 import { ActiveDefenseMiddleware } from './active-defense.middleware.js';
-import { FraudScoringService } from './fraud-scoring.service.js';
 import { FraudGuard } from './fraud.guard.js';
+import { FraudScoringService } from './fraud-scoring.service.js';
 import { GeoIpService } from './geo-ip.service.js';
 import { GovernanceGuard } from './governance.guard.js';
 import { HCaptchaService } from './hcaptcha.service.js';

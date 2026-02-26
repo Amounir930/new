@@ -1,14 +1,33 @@
 import 'reflect-metadata';
 import { describe, expect, it, mock } from 'bun:test';
-import { ConfigService } from '@apex/config';
+import { ConfigService, ConfigModule } from '@apex/config';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from './auth.module.js';
 import { AuthService } from './auth.service.js';
+import { StaffService } from '@apex/db';
+import { Module, Global } from '@nestjs/common';
+
+const mockStaffService = {
+  validateSession: mock(),
+  findOne: mock(),
+};
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide: StaffService,
+      useValue: mockStaffService,
+    },
+  ],
+  exports: [StaffService],
+})
+class MockDbModule { }
 
 describe('AuthModule', () => {
   it('should be defined', async () => {
     const module = await Test.createTestingModule({
-      imports: [AuthModule],
+      imports: [MockDbModule, AuthModule],
     })
       .overrideProvider(ConfigService)
       .useValue({
@@ -38,7 +57,7 @@ describe('AuthModule', () => {
     };
 
     const module = await Test.createTestingModule({
-      imports: [AuthModule],
+      imports: [MockDbModule, AuthModule],
     })
       .overrideProvider(ConfigService)
       .useValue(mockConfigService)
@@ -48,3 +67,4 @@ describe('AuthModule', () => {
     expect(authService).toBeDefined();
   });
 });
+

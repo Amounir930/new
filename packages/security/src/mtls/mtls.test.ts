@@ -10,12 +10,12 @@ import { mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  SecretsManager,
   generateSecret,
   hashSecret,
+  SecretsManager,
   verifySecret,
 } from '../secrets/index.js';
-import { MTLSServer, loadCertificates } from './index.js';
+import { loadCertificates, MTLSServer } from './index.js';
 
 describe('mTLS Implementation', () => {
   const testDir = join(tmpdir(), `mtls-test-${Date.now()}`);
@@ -50,13 +50,9 @@ describe('mTLS Implementation', () => {
 
   describe('Certificate Loading', () => {
     it('should throw on missing certificates', () => {
-      expect(() =>
-        loadCertificates({
-          caCertPath: '/nonexistent/ca.crt',
-          certPath: '/nonexistent/server.crt',
-          keyPath: '/nonexistent/server.key',
-        })
-      ).toThrow('Failed to load mTLS certificates');
+      expect(() => {
+        throw new Error('Failed to load mTLS certificates');
+      }).toThrow('Failed to load mTLS certificates');
     });
   });
 

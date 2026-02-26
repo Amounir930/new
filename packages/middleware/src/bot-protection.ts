@@ -16,7 +16,7 @@ import { HCaptchaService } from './hcaptcha.service.js';
 
 @Injectable()
 export class BotProtectionMiddleware implements NestMiddleware {
-  constructor(private readonly captchaService: HCaptchaService) {}
+  constructor(private readonly captchaService: HCaptchaService) { }
 
   // Common bot and scraper User-Agent patterns
   private readonly botUserAgents = [
@@ -83,11 +83,9 @@ export class BotProtectionMiddleware implements NestMiddleware {
     for (const botPattern of this.botUserAgents) {
       if (botPattern.test(userAgent)) {
         console.warn(
-          `S11: Bot blocked (Silent) - UA: "${userAgent}" | IP: ${clientIp}`
+          `S11: Bot blocked - UA: "${userAgent}" | IP: ${clientIp}`
         );
-        // Item 34: Silent rejection without feedback
-        res.destroy();
-        return true;
+        throw new ForbiddenException('S11 Violation: Automated access blocked');
       }
     }
 

@@ -37,8 +37,12 @@ export async function runTenantMigrations(
     const _db = drizzle(client);
 
     // Fix 2: Point to the separated tenant migrations folder
-    // Use explicit path in Docker container to avoid relative path resolution issues
-    const migrationsPath = '/app/packages/db/drizzle/tenant';
+    // In local dev/test, this is usually at ../../../db/drizzle/tenant relative to this file
+    const rootDir = path.resolve(
+      new URL('.', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'),
+      '../../..'
+    );
+    const migrationsPath = path.join(rootDir, 'db/drizzle/tenant');
 
     console.log(`[Runner] Migrations path: ${migrationsPath}`);
     try {

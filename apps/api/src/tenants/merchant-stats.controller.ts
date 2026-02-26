@@ -12,6 +12,6 @@ export class MerchantStatsController {
   async getStats(@Req() req: AuthenticatedRequest) {
     const tenantId = req.user.tenantId;
     if (!tenantId) throw new Error('S2 CRITICAL: Tenant context missing');
-    return this.statsService.getDashboardStats(tenantId);
+    return this.statsService.getDashboardStats();
   }
 }

@@ -1,6 +1,12 @@
 import { env } from '@apex/config';
-import { eq, publicDb, publicPool, sql, tenants } from '@apex/db';
-import { dbContextStorage } from '@apex/db';
+import {
+  dbContextStorage,
+  eq,
+  publicDb,
+  publicPool,
+  sql,
+  tenants,
+} from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -274,11 +280,11 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   }
 
   private checkTenantStatus(
-    baseContext: any,
+    baseContext: Omit<TenantContext, 'executor'>,
     req: TenantRequest,
     res: Response
   ): boolean {
-    if (baseContext.status !== 'active' && req.user?.role !== 'super_admin') {
+    if (!baseContext.isActive && req.user?.role !== 'super_admin') {
       res.status(HttpStatus.FORBIDDEN).json({
         error: 'Tenant Suspended',
         message: 'This storefront has been suspended by governance.',

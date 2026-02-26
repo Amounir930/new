@@ -8,7 +8,7 @@ import { Project } from 'ts-morph';
 import { ApexSecurityScanner } from './scanner-cli.js';
 
 describe('ApexSecurityScanner', () => {
-  const scanner = new ApexSecurityScanner('tsconfig.json');
+  const scanner = new ApexSecurityScanner();
 
   describe('SQL Injection Detection (S11)', () => {
     it('should detect unsafe sql.raw() concatenation', () => {

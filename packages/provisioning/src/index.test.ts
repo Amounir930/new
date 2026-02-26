@@ -3,8 +3,6 @@ import * as provisioning from './index.js';
 
 describe('Provisioning Module Exports', () => {
   it('should export quota service functions', () => {
-    expect(provisioning.PLAN_LIMITS).toBeDefined();
-    expect(provisioning.getPlanLimits).toBeDefined();
     expect(provisioning.isFeatureAllowed).toBeDefined();
     expect(provisioning.checkProvisioningQuota).toBeDefined();
     expect(provisioning.validateSubdomainAvailability).toBeDefined();

@@ -1,6 +1,6 @@
 import { AuditLog } from '@apex/audit';
-import { RateLimit } from '@apex/middleware';
 import type { TenantRequest } from '@apex/middleware';
+import { RateLimit } from '@apex/middleware';
 import {
   Body,
   Controller,

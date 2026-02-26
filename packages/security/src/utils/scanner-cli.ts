@@ -17,11 +17,16 @@ export class ApexSecurityScanner {
     this.violations = [];
   }
 
-  constructor(tsConfigPath: string) {
-    this.project = new Project({
-      tsConfigFilePath: tsConfigPath,
+  constructor(tsConfigPath?: string) {
+    const options: any = {
       skipAddingFilesFromTsConfig: true,
-    });
+    };
+
+    if (tsConfigPath && existsSync(tsConfigPath)) {
+      options.tsConfigFilePath = tsConfigPath;
+    }
+
+    this.project = new Project(options);
   }
 
   public scanDirectory(dir: string, rule = 'all', includePattern = /\.ts$/) {

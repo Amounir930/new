@@ -6,12 +6,12 @@ import { GovernanceService, TenantRegistryService } from '@apex/db';
 import {
   Body,
   Controller,
+  forwardRef,
   Get,
   Inject,
   Param,
   Patch,
   UseGuards,
-  forwardRef,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';

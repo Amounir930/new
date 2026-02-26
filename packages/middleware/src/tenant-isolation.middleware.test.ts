@@ -22,12 +22,25 @@ const mockDb = {
 
 mock.module('@apex/db', () => ({
   publicDb: mockDb,
+  publicPool: {
+    connect: mock().mockResolvedValue({
+      query: mock().mockResolvedValue(undefined),
+      release: mock(),
+    }),
+  },
+  redis: {
+    exists: mock().mockResolvedValue(0),
+  },
   tenants: {
     id: 'id-col',
     subdomain: 'sub-col',
     plan: 'plan-col',
     status: 'status-col',
   },
+}));
+
+mock.module('@apex/config', () => ({
+  env: { APP_ROOT_DOMAIN: 'apex.localhost' },
 }));
 
 describe('TenantIsolationMiddleware', () => {
@@ -37,7 +50,7 @@ describe('TenantIsolationMiddleware', () => {
   let next: NextFunction;
 
   beforeEach(() => {
-    mockDb.limit.mockClear();
+    mockDb.limit.mockReset().mockResolvedValue([]);
     mockDb.select.mockClear();
     mockDb.from.mockClear();
     mockDb.where.mockClear();
@@ -48,24 +61,29 @@ describe('TenantIsolationMiddleware', () => {
     };
     res = {
       setHeader: mock(),
+      status: mock().mockReturnValue({ json: mock() }),
+      once: mock(),
     };
     next = mock();
   });
 
   describe('Subdomain Extraction', () => {
     it('should resolve tenant for localhost subdomains', async () => {
-      mockDb.limit.mockResolvedValueOnce([
-        { id: 'uuid-1', subdomain: 'alpha', plan: 'pro', status: 'active' },
-      ]);
+      mockDb.limit
+        .mockResolvedValueOnce([]) // for maintenance mode check
+        .mockResolvedValueOnce([
+          { id: 'uuid-1', subdomain: 'alpha', plan: 'pro', status: 'active' },
+        ]);
       await middleware.use(req, res, next);
       expect(req.tenantContext.subdomain).toBe('alpha');
       expect(next).toHaveBeenCalled();
     });
 
-    it('should bypass for root domain', async () => {
+    it('should assign system context for root domain', async () => {
       req.headers.host = 'localhost';
       await middleware.use(req, res, next);
-      expect(req.tenantContext).toBeUndefined();
+      expect(req.tenantContext).toBeDefined();
+      expect(req.tenantContext?.tenantId).toBe('system');
       expect(next).toHaveBeenCalled();
     });
 
@@ -86,9 +104,11 @@ describe('TenantIsolationMiddleware', () => {
     });
 
     it('should throw UnauthorizedException if tenant suspended', async () => {
-      mockDb.limit.mockResolvedValueOnce([
-        { id: 'u1', subdomain: 'a', status: 'suspended' },
-      ]);
+      mockDb.limit
+        .mockResolvedValueOnce([]) // system settings
+        .mockResolvedValueOnce([
+          { id: 'u1', subdomain: 'a', status: 'suspended' },
+        ]);
       await expect(middleware.use(req, res, next)).rejects.toThrow(
         UnauthorizedException
       );

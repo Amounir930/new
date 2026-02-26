@@ -1,5 +1,7 @@
 'use client';
 
+import { Download, Eye, Printer } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,8 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Download, Eye, Printer } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);

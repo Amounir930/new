@@ -1,6 +1,6 @@
 import type { ConfigService } from '@apex/config';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
-import { type RedisClientType, createClient } from 'redis';
+import { createClient, type RedisClientType } from 'redis';
 
 /**
  * S15: Security Service for "Steel Control"

@@ -32,8 +32,8 @@ describe('BotProtectionMiddleware', () => {
         nextFunction
       )
     ).toThrow(ForbiddenException);
-    expect(() =>
-      middleware.use(
+    expect(async () =>
+      await middleware.use(
         mockRequest as Request,
         mockResponse as Response,
         nextFunction
@@ -50,8 +50,8 @@ describe('BotProtectionMiddleware', () => {
         nextFunction
       )
     ).toThrow(ForbiddenException);
-    expect(() =>
-      middleware.use(
+    expect(async () =>
+      await middleware.use(
         mockRequest as Request,
         mockResponse as Response,
         nextFunction
@@ -61,8 +61,8 @@ describe('BotProtectionMiddleware', () => {
 
   it('should block known bot User-Agents (python-requests)', () => {
     mockRequest.headers = { 'user-agent': 'python-requests/2.25.1' };
-    expect(() =>
-      middleware.use(
+    expect(async () =>
+      await middleware.use(
         mockRequest as Request,
         mockResponse as Response,
         nextFunction
@@ -82,8 +82,8 @@ describe('BotProtectionMiddleware', () => {
         nextFunction
       )
     ).toThrow(ForbiddenException);
-    expect(() =>
-      middleware.use(
+    expect(async () =>
+      await middleware.use(
         mockRequest as Request,
         mockResponse as Response,
         nextFunction
@@ -91,12 +91,12 @@ describe('BotProtectionMiddleware', () => {
     ).toThrow('S11 Violation: Security violation detected');
   });
 
-  it('should allow legitimate browser User-Agents', () => {
+  it('should allow legitimate browser User-Agents', async () => {
     mockRequest.headers = {
       'user-agent':
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     };
-    middleware.use(
+    await middleware.use(
       mockRequest as Request,
       mockResponse as Response,
       nextFunction
@@ -104,10 +104,10 @@ describe('BotProtectionMiddleware', () => {
     expect(nextFunction).toHaveBeenCalled();
   });
 
-  it('should skip check for health endpoints', () => {
+  it('should skip check for health endpoints', async () => {
     mockRequest.headers = { 'user-agent': 'curl/7.68.0' }; // Blocked usually
     mockRequest.url = '/api/v1/health/liveness';
-    middleware.use(
+    await middleware.use(
       mockRequest as Request,
       mockResponse as Response,
       nextFunction

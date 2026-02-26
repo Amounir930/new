@@ -3,14 +3,16 @@ import { AuditService } from '@apex/audit';
 import { env } from '@apex/config';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import {
-  TenantRegistryService,
+  and,
+  eq,
   featureGates,
   onboardingBlueprints,
   publicDb,
+  sql,
+  TenantRegistryService,
   tenantQuotas,
   tenants,
 } from '@apex/db';
-import { and, eq, sql } from '@apex/db';
 import {
   createStorageBucket,
   createTenantSchema,

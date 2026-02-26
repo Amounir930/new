@@ -27,6 +27,7 @@ export {
 } from './connection-context.js';
 // S4: Database Security
 export * from './db-security.interceptor.js';
+export { type TenantEvent, TenantEventService } from './events.service.js';
 // S5: Global Exception Filter
 export {
   AuthenticationError,
@@ -60,6 +61,8 @@ export {
   RedisRateLimitStore,
   ThrottleConfig,
 } from './rate-limit.js';
+// Tier 3 Security Support
+export { SecretDetectionMiddleware } from './secret-detection.js';
 // S8: Security Headers & CORS
 export {
   type CorsConfig,
@@ -86,7 +89,3 @@ export {
   resolveTenant,
   type TenantResolutionStrategy,
 } from './tenant-resolution.js';
-
-// Tier 3 Security Support
-export { SecretDetectionMiddleware } from './secret-detection.js';
-export { TenantEventService, type TenantEvent } from './events.service.js';

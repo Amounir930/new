@@ -1,5 +1,16 @@
 'use client';
 
+import {
+  Edit,
+  MoreHorizontal,
+  Package,
+  Plus,
+  Search,
+  Trash2,
+} from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,17 +23,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { apiFetch } from '@/lib/api';
-import {
-  Edit,
-  MoreHorizontal,
-  Package,
-  Plus,
-  Search,
-  Trash2,
-} from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);

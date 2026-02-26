@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import {
-  EncryptionService,
   decrypt,
+  EncryptionService,
   encrypt,
   generateApiKey,
   hashApiKey,
@@ -138,6 +138,8 @@ describe('EncryptionService', () => {
     const config = mockConfig({
       ENCRYPTION_MASTER_KEY: '',
       NODE_ENV: 'production',
+      BLIND_INDEX_PEPPER: 'pepper-must-be-32-chars-long-one!',
+      API_KEY_SECRET: 'test-api-secret-key-32-chars-!!!!',
     });
 
     expect(() => new EncryptionService(config)).toThrow(
@@ -149,6 +151,8 @@ describe('EncryptionService', () => {
     const config = mockConfig({
       ENCRYPTION_MASTER_KEY: 'short',
       NODE_ENV: 'development',
+      BLIND_INDEX_PEPPER: 'pepper-must-be-32-chars-long-one!',
+      API_KEY_SECRET: 'test-api-secret-key-32-chars-!!!!',
     });
     expect(() => new EncryptionService(config)).toThrow('S1 Violation');
   });
@@ -158,6 +162,7 @@ describe('EncryptionService', () => {
       NODE_ENV: 'production',
       ENCRYPTION_MASTER_KEY: 'test-encryption-key-32-chars-long!',
       BLIND_INDEX_PEPPER: 'pepper-must-be-32-chars-long-one!',
+      API_KEY_SECRET: 'test-api-secret-key-32-chars-!!!!',
     });
     expect(() => new EncryptionService(config)).toThrow('forbidden pattern');
   });
@@ -166,6 +171,8 @@ describe('EncryptionService', () => {
     const config = mockConfig({
       NODE_ENV: 'production',
       ENCRYPTION_MASTER_KEY: 'MasterPassWithoutSpecialCharsLongEnough', // gitleaks:allow
+      BLIND_INDEX_PEPPER: 'pepper-must-be-32-chars-long-one!',
+      API_KEY_SECRET: 'test-api-secret-key-32-chars-!!!!',
     });
     expect(() => new EncryptionService(config)).toThrow('must contain');
   });
@@ -174,6 +181,8 @@ describe('EncryptionService', () => {
     const config = mockConfig({
       NODE_ENV: 'production',
       ENCRYPTION_MASTER_KEY: 'AAAAaaaa1111!!!!AAAAaaaa1111!!!!', // gitleaks:allow
+      BLIND_INDEX_PEPPER: 'pepper-must-be-32-chars-long-one!',
+      API_KEY_SECRET: 'test-api-secret-key-32-chars-!!!!',
     });
     expect(() => new EncryptionService(config)).toThrow('insufficient entropy');
   });

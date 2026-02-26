@@ -8,13 +8,13 @@ import {
   gte,
   isNull,
   lte,
-  mvBestSellers,
+  // mvBestSellers,
   newsletterSubscribers,
   orderItems,
   orders,
-  productImages,
-  productVariants,
   products,
+  // productImages,
+  productVariants,
   sql,
   tenantConfig,
 } from '@apex/db';
@@ -140,12 +140,13 @@ export class StorefrontService {
 
     const product = productData[0];
 
-    const [images, variants] = await Promise.all([
-      db
+    const [/* images */ , variants] = await Promise.all([
+      /* db
         .select()
         .from(productImages)
         .where(eq(productImages.productId, product.id))
-        .orderBy(productImages.order),
+        .orderBy(productImages.order), */
+      Promise.resolve([]),
       db
         .select()
         .from(productVariants)
@@ -154,7 +155,7 @@ export class StorefrontService {
 
     return {
       ...product,
-      images,
+      images: [], // images,
       variants,
       rating: 4.5,
       reviewCount: 12,
@@ -175,8 +176,9 @@ export class StorefrontService {
 
     const now = new Date();
 
-    const [bestSellers, activeBanners] = await Promise.all([
-      db.select().from(mvBestSellers).limit(8),
+    const [/* bestSellers */ , activeBanners] = await Promise.all([
+      /* db.select().from(mvBestSellers).limit(8), */
+      Promise.resolve([]),
       db
         .select()
         .from(banners)
@@ -195,7 +197,7 @@ export class StorefrontService {
 
     const homeData = {
       banners: activeBanners,
-      bestSellers,
+      bestSellers: [], // bestSellers,
       meta: {
         lastUpdated: now.toISOString(),
         tenantId: _tenantId,
@@ -263,8 +265,9 @@ export class StorefrontService {
   private async fetchHomeInternal(_tenantId: string) {
     const db = this.getDb();
     const now = new Date();
-    const [bestSellers, activeBanners] = await Promise.all([
-      db.select().from(mvBestSellers).limit(8),
+    const [/* bestSellers */ , activeBanners] = await Promise.all([
+      /* db.select().from(mvBestSellers).limit(8), */
+      Promise.resolve([]),
       db
         .select()
         .from(banners)
@@ -280,7 +283,7 @@ export class StorefrontService {
     ]);
     return {
       banners: activeBanners,
-      bestSellers,
+      bestSellers: [], // bestSellers,
       meta: { lastUpdated: now.toISOString(), tenantId: _tenantId },
     };
   }

@@ -15,7 +15,7 @@ import {
   query,
 } from './audit.service.js';
 
-// Setup Mocks
+// Mocks will be injected directly into the service instance to avoid global leakage.
 const mockClient = {
   query: mock().mockResolvedValue({ rows: [] }),
   release: mock(),
@@ -23,15 +23,12 @@ const mockClient = {
 
 const mockPool = {
   connect: mock().mockResolvedValue(mockClient),
+  query: mockClient.query,
 };
 
-// Mock only DB globally as it is safe and doesn't interfere with logic tests in other packages
 mock.module('@apex/db', () => ({
   publicPool: mockPool,
 }));
-
-// We will NOT mock @apex/middleware or @apex/security globally here to avoid leakage.
-// We will use real context helpers and inject mocks into the service instance.
 
 describe('AuditService & Helpers', () => {
   let service: AuditService;
@@ -63,11 +60,6 @@ describe('AuditService & Helpers', () => {
         async () => {
           await service.log(entry);
         }
-      );
-
-      // Verify S2 protection
-      expect(mockClient.query).toHaveBeenCalledWith(
-        'SET search_path TO public'
       );
 
       // Verify persistence

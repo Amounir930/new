@@ -1,7 +1,7 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export default function SettingsPage() {
   return (

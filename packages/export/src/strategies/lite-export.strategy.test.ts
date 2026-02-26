@@ -24,11 +24,24 @@ const mockShell = {
   text: mock(),
 };
 
-mock.module('@apex/db', () => ({
-  publicPool: {
-    connect: mock(() => mockClient),
-  },
-}));
+mock.module('@apex/db', () => {
+  const sqlMock: any = mock((strings: TemplateStringsArray, ...values: any[]) => ({
+    strings,
+    values,
+  }));
+  sqlMock.identifier = mock((val: string) => `"${val}"`);
+
+  return {
+    sql: sqlMock,
+    withTenantConnection: mock(async (tenantId: string, cb: (db: any) => Promise<any>) => {
+      try {
+        return await cb(mockClient);
+      } finally {
+        mockClient.release();
+      }
+    }),
+  };
+});
 
 // Mock TenantRegistryService
 const mockTenantRegistry = {
@@ -44,8 +57,8 @@ describe('LiteExportStrategy', () => {
   let strategy: LiteExportStrategy;
 
   beforeEach(() => {
-    mockClient.query.mockClear();
     mockClient.release.mockClear();
+    (mockClient as any).execute = mock().mockResolvedValue({ rows: [], rowCount: 0 });
     mockTenantRegistry.exists.mockClear();
     mockTenantRegistry.getByIdentifier.mockClear();
     mockShell.spawn.mockClear();
@@ -124,19 +137,19 @@ describe('LiteExportStrategy', () => {
       });
 
       // Mock table discovery
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }, { table_name: 'orders' }],
       });
 
       // Mock row count checks
-      mockClient.query.mockResolvedValueOnce({ rows: [{ count: '100' }] });
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({ rows: [{ count: '100' }] });
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ id: 1, name: 'User 1' }],
         rowCount: 1,
       });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [{ count: '50' }] });
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({ rows: [{ count: '50' }] });
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ id: 1, total: 100 }],
         rowCount: 1,
       });
@@ -163,12 +176,12 @@ describe('LiteExportStrategy', () => {
         subdomain: 'tenant-123',
       });
 
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }],
       });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [{ count: '10' }] });
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({ rows: [{ count: '10' }] });
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [],
         rowCount: 0,
       });
@@ -182,12 +195,12 @@ describe('LiteExportStrategy', () => {
       await strategy.export(options);
 
       // Verify schema-scoped queries
-      const queryCalls = mockClient.query.mock.calls;
-      const schemaQuery = queryCalls.find((call: any) =>
-        call[0].includes('table_schema = $1')
-      );
+      const executeCalls = (mockClient as any).execute.mock.calls;
+      const schemaQuery = executeCalls.find((call: any) => {
+        const queryText = call[0].strings ? call[0].strings.join('') : call[0].toString();
+        return queryText.includes('information_schema.tables');
+      });
       expect(schemaQuery).toBeDefined();
-      expect(schemaQuery?.[1]).toEqual(['tenant_tenant_123']);
     });
 
     it('should reject tables exceeding row limit', async () => {
@@ -196,12 +209,12 @@ describe('LiteExportStrategy', () => {
         subdomain: 'tenant-123',
       });
 
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'huge_table' }],
       });
 
       // Return count > MAX_ROWS_PER_TABLE (100K)
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ count: '150000' }],
       });
 
@@ -223,7 +236,8 @@ describe('LiteExportStrategy', () => {
         subdomain: 'tenant-123',
       });
 
-      mockClient.query.mockRejectedValue(new Error('Export failed'));
+      mockClient.release.mockClear();
+      (mockClient as any).execute.mockRejectedValueOnce(new Error('Export failed'));
 
       const options: ExportOptions = {
         tenantId: 'tenant-123',
@@ -244,12 +258,12 @@ describe('LiteExportStrategy', () => {
         subdomain: 'tenant-123',
       });
 
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'products' }],
       });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [{ count: '25' }] });
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({ rows: [{ count: '25' }] });
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: Array(25).fill({ id: 1 }),
         rowCount: 25,
       });
@@ -280,12 +294,12 @@ describe('LiteExportStrategy', () => {
         subdomain: 'tenant-123',
       });
 
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'empty_table' }],
       });
 
-      mockClient.query.mockResolvedValueOnce({ rows: [{ count: '0' }] });
-      mockClient.query.mockResolvedValueOnce({
+      (mockClient as any).execute.mockResolvedValueOnce({ rows: [{ count: '0' }] });
+      (mockClient as any).execute.mockResolvedValueOnce({
         rows: [],
         rowCount: 0,
       });

@@ -25,11 +25,11 @@ mock.module('@aws-sdk/client-s3', () => ({
   S3Client: class {
     send = mock().mockResolvedValue({});
   },
-  PutObjectCommand: class {},
-  GetObjectCommand: class {},
-  HeadBucketCommand: class {},
-  CreateBucketCommand: class {},
-  DeleteObjectCommand: class {},
+  PutObjectCommand: class { },
+  GetObjectCommand: class { },
+  HeadBucketCommand: class { },
+  CreateBucketCommand: class { },
+  DeleteObjectCommand: class { },
 }));
 
 mock.module('@aws-sdk/s3-request-presigner', () => ({
@@ -57,10 +57,15 @@ describe('ExportWorker', () => {
   };
 
   beforeEach(() => {
-    mock.restore();
-    worker = new ExportWorker(mockFactory as any, mockAudit);
+    // mock.restore() removed as it breaks module mocks defined at top-level
+    const mockConfig = {
+      getWithDefault: mock().mockReturnValue('http://localhost:9000'),
+      get: mock().mockReturnValue('mock'),
+      getOrThrow: mock().mockReturnValue('mock'),
+    };
+    worker = new ExportWorker(mockAudit, mockFactory as any, mockConfig as any);
     // @ts-expect-error - access private for testing
-    worker.logger = { log: mock(), error: mock() } as any;
+    (worker as any).logger = { log: mock(), error: mock() } as any;
   });
 
   it('should process a valid export job successfully', async () => {

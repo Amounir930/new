@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test';
 import {
-  InMemoryEventBus,
-  TenantProvisioningStartedSchema,
   createCorrelationId,
   createEventId,
   createTimestamp,
+  InMemoryEventBus,
+  TenantProvisioningStartedSchema,
   validateEvent,
 } from './index.js';
 

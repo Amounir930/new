@@ -1,10 +1,4 @@
-import {
-  db,
-  importErrors,
-  importJobs,
-  productImages,
-  products,
-} from '@apex/db';
+import { db, importErrors, importJobs, products } from '@apex/db';
 import type { EncryptionService } from '@apex/security';
 import {
   OnQueueActive,

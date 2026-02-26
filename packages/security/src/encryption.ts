@@ -273,6 +273,10 @@ export class EncryptionService {
     return hashApiKey(apiKey, this.apiKeySecret || 'test-secret');
   }
 
+  generateApiKey(): string {
+    return generateApiKey();
+  }
+
   hashSensitiveData(value: string, salt?: string): string {
     if (
       !this.blindIndexPepper &&
@@ -287,10 +291,6 @@ export class EncryptionService {
       this.blindIndexPepper || 'test-pepper',
       salt
     );
-  }
-
-  generateApiKey(): string {
-    return generateApiKey();
   }
 
   mask(value: string, visibleChars?: number): string {

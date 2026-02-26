@@ -5,14 +5,14 @@
 
 import { describe, expect, it, mock } from 'bun:test';
 import {
-  type TenantPlan,
-  type TenantStatus,
   deleteTenant,
   getTenantById,
   getTenantBySubdomain,
   getTenantList,
   getTenantStats,
   killSwitch,
+  type TenantPlan,
+  type TenantStatus,
   updateTenant,
   updateTenantPlan,
   updateTenantStatus,
@@ -102,9 +102,12 @@ mock.module('@apex/db', () => {
       updatedAt: 'updated_at',
     },
     publicDb: {
-      select: mock().mockReturnValue({
-        from: mock().mockReturnValue(mockQuery),
-        total: mock().mockResolvedValue([{ total: mockTenants.length }]),
+      select: mock().mockImplementation(() => {
+        const selectMock = {
+          from: mock().mockReturnValue(mockQuery),
+          total: mock().mockResolvedValue([{ total: mockTenants.length }]),
+        };
+        return selectMock;
       }),
       update: mock().mockReturnValue({
         set: mock().mockReturnThis(),
@@ -116,8 +119,14 @@ mock.module('@apex/db', () => {
         returning: mock().mockResolvedValue([{ id: 'deleted' }]),
       }),
     },
+    sql: mock().mockImplementation(() => ({
+      mapWith: mock().mockReturnThis(),
+    })),
   };
 });
+// Add sql.raw separately since it's a property of the function
+import { sql } from '@apex/db';
+(sql as any).raw = mock().mockImplementation((s: string) => s);
 
 describe('Tenant Overview Service', () => {
   describe('getTenantList', () => {

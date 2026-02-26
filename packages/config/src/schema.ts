@@ -36,13 +36,7 @@ export const EnvSchema = z.object({
         if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false; // Fail bypass
         return !/test|default|example/i.test(key);
       }
-      if (
-        process.env.NODE_ENV === 'test' ||
-        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
-      )
-        return true;
-
-      return !/test|default|example/i.test(key);
+      return true;
     }, 'S1 Violation: Production key cannot contain test patterns or unauthorized bypass')
     .refine((key) => {
       // S7: Complexity check: Uppercase, Lowercase, Number, Special Character

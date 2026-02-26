@@ -34,7 +34,6 @@ export class ConfigService {
   get<K extends keyof EnvConfig>(key: K): EnvConfig[K] {
     return this.config[key];
   }
-
   /**
    * Get a configuration value with a default fallback
    */
@@ -51,4 +50,4 @@ export class ConfigService {
   providers: [ConfigService],
   exports: [ConfigService],
 })
-export class ConfigModule {}
+export class ConfigModule { }

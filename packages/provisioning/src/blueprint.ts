@@ -1,4 +1,5 @@
 import { and, desc, eq, onboardingBlueprints, publicDb } from '@apex/db';
+export { validateBlueprint } from './blueprint/executor.js';
 import { validateBlueprint } from './blueprint/executor.js';
 import type { BlueprintRecord, BlueprintTemplate } from './blueprint/types.js';
 
@@ -46,9 +47,9 @@ export async function createBlueprint(
       description: options.description || null,
       blueprint: blueprint as unknown as BlueprintTemplate,
       isDefault: !!options.isDefault,
-      plan: (options.plan || 'free') as any,
-      nicheType: (options.nicheType || 'retail') as any,
-      status: (options.status || 'active') as any,
+      plan: options.plan || 'free',
+      nicheType: options.nicheType || 'retail',
+      status: options.status || 'active',
     })
     .returning();
 
@@ -69,7 +70,7 @@ export async function getAllBlueprints(): Promise<BlueprintRecord[]> {
     .from(onboardingBlueprints)
     .orderBy(desc(onboardingBlueprints.createdAt));
 
-  return results.map((r: any) => ({
+  return results.map((r) => ({
     ...r,
     blueprint: r.blueprint as unknown as BlueprintTemplate,
     uiConfig: r.uiConfig as Record<string, unknown> | null,
@@ -197,9 +198,9 @@ export async function updateBlueprint(
   if (updates.blueprint) updateData.blueprint = updates.blueprint;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
   if (updates.plan)
-    updateData.plan = updates.plan as 'free' | 'basic' | 'pro' | 'enterprise';
-  if (updates.nicheType) updateData.nicheType = updates.nicheType as any;
-  if (updates.status) updateData.status = updates.status as 'active' | 'paused';
+    updateData.plan = updates.plan;
+  if (updates.nicheType) updateData.nicheType = updates.nicheType;
+  if (updates.status) updateData.status = updates.status;
 
   const result = await publicDb
     .update(onboardingBlueprints)

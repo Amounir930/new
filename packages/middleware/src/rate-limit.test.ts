@@ -54,7 +54,10 @@ describe('RateLimitGuard', () => {
     reflector = new Reflector();
     // Mock ConfigService
     configService = {
-      get: mock().mockReturnValue('redis://localhost:6379'),
+      get: mock().mockImplementation((key: string) => {
+        if (key === 'NODE_ENV') return process.env.NODE_ENV || 'development';
+        return 'redis://localhost:6379';
+      }),
     } as any;
 
     // Mock RedisRateLimitStore instance
@@ -89,8 +92,8 @@ describe('RateLimitGuard', () => {
         getRequest: () => mockRequest,
         getResponse: () => mockResponse,
       }),
-      getHandler: () => function testHandler() {},
-      getClass: () => class TestController {},
+      getHandler: () => function testHandler() { },
+      getClass: () => class TestController { },
     } as any;
   });
 
@@ -228,7 +231,10 @@ describe('RedisRateLimitStore Branches', () => {
 
   beforeEach(() => {
     configService = {
-      get: mock(),
+      get: mock().mockImplementation((key: string) => {
+        if (key === 'NODE_ENV') return process.env.NODE_ENV || 'development';
+        return 'redis://localhost:6379';
+      }),
     } as any;
     store = new RedisRateLimitStore(configService);
     mock.restore();

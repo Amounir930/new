@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { type Server, type ServerOptions, createServer } from 'node:https';
+import { createServer, type Server, type ServerOptions } from 'node:https';
 import { join } from 'node:path';
 import { env } from '@apex/config';
 

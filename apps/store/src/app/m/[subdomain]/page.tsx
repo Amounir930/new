@@ -3,10 +3,10 @@
 // Next.js caches each [subdomain] as a separate page — no poisoning
 export const revalidate = 60;
 
+import Image from 'next/image';
 import { NewsletterSection } from '@/components/NewsletterSection';
 import { ProductCard } from '@/components/ProductCard';
 import { getStoreBootstrap } from '@/lib/api';
-import Image from 'next/image';
 
 interface TenantPageProps {
   params: Promise<{ subdomain: string }>;

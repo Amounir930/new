@@ -1,6 +1,5 @@
 'use client';
 
-import { type UserSession, getSession } from '@/lib/session';
 import {
   BarChart3,
   Home,
@@ -13,6 +12,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { getSession, type UserSession } from '@/lib/session';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },

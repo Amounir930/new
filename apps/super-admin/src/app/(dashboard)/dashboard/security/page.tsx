@@ -1,7 +1,7 @@
 'use client';
 
-import { Card } from '@/components/ui/card';
 import { ShieldCheck } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 
 export default function SecurityPage() {
   return (

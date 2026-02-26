@@ -1,9 +1,9 @@
 'use client';
 
-import { ProductForm } from '@/components/products/product-form';
-import { apiFetch } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import React from 'react';
+import { ProductForm } from '@/components/products/product-form';
+import { apiFetch } from '@/lib/api';
 
 export default function NewProductPage() {
   const router = useRouter();

@@ -30,6 +30,9 @@ describe('AuthService', () => {
         sub: user.id,
         email: user.email,
         tenantId: user.tenantId,
+        role: undefined,
+        jti: expect.any(String),
+        dfp: undefined,
       });
     });
   });
@@ -43,11 +46,12 @@ describe('AuthService', () => {
         id: 'u1',
         email: 'test@test.com',
         tenantId: 't1',
+        role: undefined,
       });
     });
 
     it('should throw UnauthorizedException if sub is missing', async () => {
-      const payload = { email: 'test@test.com' } as any;
+      const payload = { email: 'test@test.com', tenantId: 't1' } as any;
       await expect(service.validateUser(payload)).rejects.toThrow(
         UnauthorizedException
       );

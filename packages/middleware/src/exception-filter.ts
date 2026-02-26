@@ -92,11 +92,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // S5: Stack trace only in development, with path redaction
       ...(this.options.includeStackTrace &&
         exception instanceof Error && {
-          stackTrace: exception.stack?.replace(
-            /(\/app\/|C:\\Users\\[^\\]+\\Desktop\\60sec\.shop\\)/g,
-            '[REDACTED]/'
-          ),
-        }),
+        stackTrace: exception.stack?.replace(
+          /(\/app\/|[Cc]:\\Users\\[^\\]+\\Desktop\\60sec\.shop\\)/g,
+          '[REDACTED]/'
+        ),
+      }),
     };
 
     // Log internally
@@ -268,7 +268,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException {}
+export class OperationalError extends HttpException { }
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {

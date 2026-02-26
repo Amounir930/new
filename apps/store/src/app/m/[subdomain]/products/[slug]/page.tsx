@@ -1,6 +1,6 @@
-import { getProductBySlug } from '@/lib/api';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { getProductBySlug } from '@/lib/api';
 
 export default async function ProductPage({
   params,

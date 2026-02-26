@@ -6,10 +6,10 @@
 import 'reflect-metadata';
 import { AuditService } from '@apex/audit';
 import { env } from '@apex/config';
-import { GlobalExceptionFilter, defaultCorsConfig } from '@apex/middleware';
+import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
 import {
-  type LogLevel,
   Logger,
+  type LogLevel,
   type NestApplicationOptions,
   VersioningType,
 } from '@nestjs/common';

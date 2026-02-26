@@ -1,11 +1,9 @@
 import { AuditLog } from '@apex/audit';
+import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
 import { db, products } from '@apex/db';
-import { Controller, Get, Res } from '@nestjs/common';
+import { Controller, Get, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { Parser } from 'json2csv';
-
-import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
-import { UseGuards } from '@nestjs/common';
 
 @Controller('admin/products/export')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
