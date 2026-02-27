@@ -232,7 +232,7 @@ CREATE TABLE "governance"."onboarding_blueprints" (
 	"ui_config" jsonb DEFAULT '{}'::jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "tenant_migrations" (
+CREATE TABLE "public"."tenant_migrations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"applied_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -263,13 +263,13 @@ CREATE TABLE "governance"."tenants" (
 );
 --> statement-breakpoint
 ALTER TABLE "governance"."tenants" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-CREATE TABLE "settings" (
+CREATE TABLE "public"."settings" (
 	"key" text PRIMARY KEY NOT NULL,
 	"value" text NOT NULL,
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "stores" (
+CREATE TABLE "public"."stores" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" text NOT NULL,
 	"subdomain" text NOT NULL,
@@ -278,7 +278,7 @@ CREATE TABLE "stores" (
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "users" (
+CREATE TABLE "public"."users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"email" text NOT NULL,
 	"email_hash" text NOT NULL,
@@ -289,7 +289,7 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_email_hash_unique" UNIQUE("email_hash")
 );
 --> statement-breakpoint
-CREATE TABLE "auth_logs" (
+CREATE TABLE "public"."auth_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"action" varchar(50) NOT NULL,
@@ -299,7 +299,7 @@ CREATE TABLE "auth_logs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "otp_codes" (
+CREATE TABLE "public"."otp_codes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"phone" varchar(20),
@@ -354,7 +354,7 @@ CREATE TABLE "storefront"."categories" (
 	"description" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "entity_metafields" (
+CREATE TABLE "public"."entity_metafields" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"entity_type" varchar(50) NOT NULL,
 	"entity_id" uuid NOT NULL,
@@ -365,14 +365,14 @@ CREATE TABLE "entity_metafields" (
 	CONSTRAINT "uq_metafield" UNIQUE("entity_type","entity_id","namespace","key")
 );
 --> statement-breakpoint
-CREATE TABLE "search_synonyms" (
+CREATE TABLE "public"."search_synonyms" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"term" varchar(100) NOT NULL,
 	"synonyms" jsonb NOT NULL,
 	CONSTRAINT "search_synonyms_term_unique" UNIQUE("term")
 );
 --> statement-breakpoint
-CREATE TABLE "smart_collections" (
+CREATE TABLE "public"."smart_collections" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -387,7 +387,7 @@ CREATE TABLE "smart_collections" (
 	"conditions" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "tax_categories" (
+CREATE TABLE "public"."tax_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"priority" integer DEFAULT 0,
 	"is_default" boolean DEFAULT false,
@@ -396,7 +396,7 @@ CREATE TABLE "tax_categories" (
 	"description" text
 );
 --> statement-breakpoint
-CREATE TABLE "tax_rules" (
+CREATE TABLE "public"."tax_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tax_category_id" uuid,
 	"rate" integer NOT NULL,
@@ -409,7 +409,7 @@ CREATE TABLE "tax_rules" (
 	"applies_to" varchar(20) DEFAULT 'all'
 );
 --> statement-breakpoint
-CREATE TABLE "currency_rates" (
+CREATE TABLE "public"."currency_rates" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"from_currency" char(3) NOT NULL,
@@ -417,7 +417,7 @@ CREATE TABLE "currency_rates" (
 	"rate" numeric(12, 6) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "discount_codes" (
+CREATE TABLE "public"."discount_codes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"price_rule_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -426,7 +426,7 @@ CREATE TABLE "discount_codes" (
 	CONSTRAINT "discount_codes_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
-CREATE TABLE "markets" (
+CREATE TABLE "public"."markets" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"is_primary" boolean DEFAULT false,
@@ -437,7 +437,7 @@ CREATE TABLE "markets" (
 	"countries" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "price_lists" (
+CREATE TABLE "public"."price_lists" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"market_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -449,7 +449,7 @@ CREATE TABLE "price_lists" (
 	"currency" char(3) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "price_rules" (
+CREATE TABLE "public"."price_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
@@ -468,7 +468,7 @@ CREATE TABLE "price_rules" (
 	"combines_with" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "menu_items" (
+CREATE TABLE "public"."menu_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"menu_type" varchar(20) NOT NULL,
 	"parent_id" uuid,
@@ -479,13 +479,13 @@ CREATE TABLE "menu_items" (
 	"is_active" boolean DEFAULT true
 );
 --> statement-breakpoint
-CREATE TABLE "tenant_config" (
+CREATE TABLE "public"."tenant_config" (
 	"key" varchar(100) PRIMARY KEY NOT NULL,
 	"value" jsonb NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "blog_posts" (
+CREATE TABLE "public"."blog_posts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -565,7 +565,7 @@ CREATE TABLE "storefront"."customer_consents" (
 	"user_agent" text
 );
 --> statement-breakpoint
-CREATE TABLE "customer_segments" (
+CREATE TABLE "public"."customer_segments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"customer_count" integer DEFAULT 0,
@@ -602,7 +602,7 @@ CREATE TABLE "storefront"."customers" (
 	"tags" text[] DEFAULT '{}'::text[]
 );
 --> statement-breakpoint
-CREATE TABLE "payment_methods" (
+CREATE TABLE "public"."payment_methods" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -617,7 +617,7 @@ CREATE TABLE "payment_methods" (
 	CONSTRAINT "uq_payment_fingerprint" UNIQUE("customer_id","fingerprint")
 );
 --> statement-breakpoint
-CREATE TABLE "abandoned_checkouts" (
+CREATE TABLE "public"."abandoned_checkouts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -628,7 +628,7 @@ CREATE TABLE "abandoned_checkouts" (
 	"items" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "affiliate_partners" (
+CREATE TABLE "public"."affiliate_partners" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -640,7 +640,7 @@ CREATE TABLE "affiliate_partners" (
 	CONSTRAINT "affiliate_partners_referral_code_unique" UNIQUE("referral_code")
 );
 --> statement-breakpoint
-CREATE TABLE "affiliate_transactions" (
+CREATE TABLE "public"."affiliate_transactions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"partner_id" uuid NOT NULL,
 	"order_id" uuid NOT NULL,
@@ -650,7 +650,7 @@ CREATE TABLE "affiliate_transactions" (
 	"status" "affiliate_tx_status" DEFAULT 'pending' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "app_installations" (
+CREATE TABLE "public"."app_installations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"installed_at" timestamp with time zone DEFAULT now(),
 	"is_active" boolean DEFAULT true,
@@ -661,7 +661,7 @@ CREATE TABLE "app_installations" (
 	"scopes" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "b2b_companies" (
+CREATE TABLE "public"."b2b_companies" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"credit_limit" bigint DEFAULT 0,
@@ -672,7 +672,7 @@ CREATE TABLE "b2b_companies" (
 	"industry" varchar(100)
 );
 --> statement-breakpoint
-CREATE TABLE "b2b_pricing_tiers" (
+CREATE TABLE "public"."b2b_pricing_tiers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"company_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -680,7 +680,7 @@ CREATE TABLE "b2b_pricing_tiers" (
 	"price" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "b2b_users" (
+CREATE TABLE "public"."b2b_users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"company_id" uuid NOT NULL,
 	"customer_id" uuid NOT NULL,
@@ -688,7 +688,7 @@ CREATE TABLE "b2b_users" (
 	"role" "b2b_user_role" DEFAULT 'buyer' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "outbox_events" (
+CREATE TABLE "public"."outbox_events" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"processed_at" timestamp with time zone,
@@ -700,7 +700,7 @@ CREATE TABLE "outbox_events" (
 	"payload" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "product_views" (
+CREATE TABLE "public"."product_views" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"customer_id" uuid,
@@ -709,7 +709,7 @@ CREATE TABLE "product_views" (
 	"source" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "webhook_subscriptions" (
+CREATE TABLE "public"."webhook_subscriptions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"app_id" uuid NOT NULL,
 	"is_active" boolean DEFAULT true,
@@ -718,7 +718,7 @@ CREATE TABLE "webhook_subscriptions" (
 	"secret" text
 );
 --> statement-breakpoint
-CREATE TABLE "faq_categories" (
+CREATE TABLE "public"."faq_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"order" integer DEFAULT 0,
@@ -726,7 +726,7 @@ CREATE TABLE "faq_categories" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "faqs" (
+CREATE TABLE "public"."faqs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"category_id" uuid,
 	"question" varchar(500) NOT NULL,
@@ -737,7 +737,7 @@ CREATE TABLE "faqs" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "banners" (
+CREATE TABLE "public"."banners" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -756,7 +756,7 @@ CREATE TABLE "banners" (
 	"subtitle" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "bento_grids" (
+CREATE TABLE "public"."bento_grids" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"name" jsonb NOT NULL,
@@ -764,7 +764,7 @@ CREATE TABLE "bento_grids" (
 	"slots" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "flash_sale_products" (
+CREATE TABLE "public"."flash_sale_products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"flash_sale_id" uuid,
 	"product_id" uuid,
@@ -774,7 +774,7 @@ CREATE TABLE "flash_sale_products" (
 	"sort_order" integer DEFAULT 0
 );
 --> statement-breakpoint
-CREATE TABLE "flash_sales" (
+CREATE TABLE "public"."flash_sales" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -784,7 +784,7 @@ CREATE TABLE "flash_sales" (
 	"status" varchar(20) DEFAULT 'active'
 );
 --> statement-breakpoint
-CREATE TABLE "newsletter_subscribers" (
+CREATE TABLE "public"."newsletter_subscribers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"unsubscribed_at" timestamp with time zone,
@@ -793,14 +793,14 @@ CREATE TABLE "newsletter_subscribers" (
 	"source" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "search_analytics" (
+CREATE TABLE "public"."search_analytics" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"query" varchar(255) NOT NULL,
 	"count" integer DEFAULT 1,
 	"last_searched_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "import_errors" (
+CREATE TABLE "public"."import_errors" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"job_id" uuid,
 	"row_number" integer NOT NULL,
@@ -809,7 +809,7 @@ CREATE TABLE "import_errors" (
 	"error_type" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "import_jobs" (
+CREATE TABLE "public"."import_jobs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"admin_id" uuid NOT NULL,
@@ -827,7 +827,7 @@ CREATE TABLE "import_jobs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "inventory_levels" (
+CREATE TABLE "public"."inventory_levels" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"location_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
@@ -839,7 +839,7 @@ CREATE TABLE "inventory_levels" (
 	CONSTRAINT "uq_inventory_loc_var" UNIQUE("location_id","variant_id")
 );
 --> statement-breakpoint
-CREATE TABLE "inventory_movements" (
+CREATE TABLE "public"."inventory_movements" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
@@ -851,7 +851,7 @@ CREATE TABLE "inventory_movements" (
 	"reference_id" uuid
 );
 --> statement-breakpoint
-CREATE TABLE "inventory_reservations" (
+CREATE TABLE "public"."inventory_reservations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
@@ -862,14 +862,14 @@ CREATE TABLE "inventory_reservations" (
 	"quantity" integer NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "inventory_transfer_items" (
+CREATE TABLE "public"."inventory_transfer_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"transfer_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"quantity" integer NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "inventory_transfers" (
+CREATE TABLE "public"."inventory_transfers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"from_location_id" uuid NOT NULL,
 	"to_location_id" uuid NOT NULL,
@@ -880,7 +880,7 @@ CREATE TABLE "inventory_transfers" (
 	"notes" text
 );
 --> statement-breakpoint
-CREATE TABLE "locations" (
+CREATE TABLE "public"."locations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -891,7 +891,7 @@ CREATE TABLE "locations" (
 	"coordinates" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "kb_articles" (
+CREATE TABLE "public"."kb_articles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"category_id" uuid,
 	"slug" varchar(255) NOT NULL,
@@ -904,7 +904,7 @@ CREATE TABLE "kb_articles" (
 	CONSTRAINT "kb_articles_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "kb_categories" (
+CREATE TABLE "public"."kb_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"slug" varchar(255) NOT NULL,
@@ -914,7 +914,7 @@ CREATE TABLE "kb_categories" (
 	CONSTRAINT "kb_categories_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "store_locations" (
+CREATE TABLE "public"."store_locations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"address" text NOT NULL,
@@ -926,7 +926,7 @@ CREATE TABLE "store_locations" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "loyalty_rules" (
+CREATE TABLE "public"."loyalty_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"points_per_currency" integer DEFAULT 1,
@@ -938,7 +938,7 @@ CREATE TABLE "loyalty_rules" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "notifications" (
+CREATE TABLE "public"."notifications" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"title" varchar(255) NOT NULL,
@@ -949,7 +949,7 @@ CREATE TABLE "notifications" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "fulfillment_items" (
+CREATE TABLE "public"."fulfillment_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"fulfillment_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
@@ -969,7 +969,7 @@ CREATE TABLE "storefront"."fulfillments" (
 	"tracking_url" text
 );
 --> statement-breakpoint
-CREATE TABLE "order_edits" (
+CREATE TABLE "public"."order_edits" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"line_item_id" uuid,
@@ -1040,7 +1040,7 @@ CREATE TABLE "storefront"."orders" (
 	"billing_address" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "refund_items" (
+CREATE TABLE "public"."refund_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"refund_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
@@ -1048,7 +1048,7 @@ CREATE TABLE "refund_items" (
 	"amount" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "refunds" (
+CREATE TABLE "public"."refunds" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"refunded_by" uuid,
@@ -1060,7 +1060,7 @@ CREATE TABLE "refunds" (
 	"reason" text
 );
 --> statement-breakpoint
-CREATE TABLE "rma_items" (
+CREATE TABLE "public"."rma_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"rma_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
@@ -1071,7 +1071,7 @@ CREATE TABLE "rma_items" (
 	"resolution" varchar(20)
 );
 --> statement-breakpoint
-CREATE TABLE "payment_logs" (
+CREATE TABLE "public"."payment_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid,
 	"provider" varchar(50) NOT NULL,
@@ -1084,7 +1084,7 @@ CREATE TABLE "payment_logs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "back_in_stock_requests" (
+CREATE TABLE "public"."back_in_stock_requests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid,
 	"customer_id" uuid,
@@ -1094,7 +1094,7 @@ CREATE TABLE "back_in_stock_requests" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "product_attributes" (
+CREATE TABLE "public"."product_attributes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"sort_order" integer DEFAULT 0,
@@ -1103,14 +1103,14 @@ CREATE TABLE "product_attributes" (
 	"attribute_group" varchar(100)
 );
 --> statement-breakpoint
-CREATE TABLE "product_bundle_items" (
+CREATE TABLE "public"."product_bundle_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"bundle_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"quantity" integer DEFAULT 1 NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "product_bundles" (
+CREATE TABLE "public"."product_bundles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
@@ -1121,14 +1121,14 @@ CREATE TABLE "product_bundles" (
 	"name" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "product_category_mapping" (
+CREATE TABLE "public"."product_category_mapping" (
 	"product_id" uuid NOT NULL,
 	"category_id" uuid NOT NULL,
 	"is_primary" boolean DEFAULT false,
 	CONSTRAINT "product_category_mapping_product_id_category_id_unique" UNIQUE("product_id","category_id")
 );
 --> statement-breakpoint
-CREATE TABLE "product_images" (
+CREATE TABLE "public"."product_images" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"is_primary" boolean DEFAULT false,
@@ -1137,7 +1137,7 @@ CREATE TABLE "product_images" (
 	"alt_text" varchar(255)
 );
 --> statement-breakpoint
-CREATE TABLE "product_tags" (
+CREATE TABLE "public"."product_tags" (
 	"product_id" uuid NOT NULL,
 	"tag" varchar(50) NOT NULL,
 	CONSTRAINT "product_tags_product_id_tag_unique" UNIQUE("product_id","tag")
@@ -1210,7 +1210,7 @@ CREATE TABLE "storefront"."_products" (
 	"embedding" vector(1536)
 );
 --> statement-breakpoint
-CREATE TABLE "related_products" (
+CREATE TABLE "public"."related_products" (
 	"product_id" uuid NOT NULL,
 	"related_product_id" uuid NOT NULL,
 	"relation_type" varchar(20) DEFAULT 'similar' NOT NULL,
@@ -1218,7 +1218,7 @@ CREATE TABLE "related_products" (
 	CONSTRAINT "related_products_product_id_related_product_id_unique" UNIQUE("product_id","related_product_id")
 );
 --> statement-breakpoint
-CREATE TABLE "referrals" (
+CREATE TABLE "public"."referrals" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"referrer_id" uuid NOT NULL,
 	"referred_id" uuid,
@@ -1245,7 +1245,7 @@ CREATE TABLE "storefront"."reviews" (
 	"content" text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "rma_requests" (
+CREATE TABLE "public"."rma_requests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"order_item_id" uuid,
@@ -1274,7 +1274,7 @@ CREATE TABLE "storefront"."shipping_zones" (
 	"estimated_days" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "size_guides" (
+CREATE TABLE "public"."size_guides" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"category_id" uuid,
@@ -1320,7 +1320,7 @@ CREATE TABLE "storefront"."staff_sessions" (
 	"user_agent" text
 );
 --> statement-breakpoint
-CREATE TABLE "purchase_order_items" (
+CREATE TABLE "public"."purchase_order_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"po_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
@@ -1329,7 +1329,7 @@ CREATE TABLE "purchase_order_items" (
 	"unit_cost" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "purchase_orders" (
+CREATE TABLE "public"."purchase_orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"supplier_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
@@ -1345,7 +1345,7 @@ CREATE TABLE "purchase_orders" (
 	"notes" text
 );
 --> statement-breakpoint
-CREATE TABLE "suppliers" (
+CREATE TABLE "public"."suppliers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -1360,7 +1360,7 @@ CREATE TABLE "suppliers" (
 	"address" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "order_timeline" (
+CREATE TABLE "public"."order_timeline" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid,
 	"updated_by" uuid,
@@ -1384,7 +1384,7 @@ CREATE TABLE "storefront"."wallet_transactions" (
 	CONSTRAINT "wallet_non_negative_balance" CHECK ((balance_after).amount >= 0)
 );
 --> statement-breakpoint
-CREATE TABLE "wishlists" (
+CREATE TABLE "public"."wishlists" (
 	"customer_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"added_at" timestamp with time zone DEFAULT now(),
@@ -1398,91 +1398,91 @@ ALTER TABLE "governance"."leads" ADD CONSTRAINT "leads_converted_tenant_id_tenan
 ALTER TABLE "governance"."plan_change_history" ADD CONSTRAINT "plan_change_history_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "governance"."tenants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "governance"."tenant_invoices" ADD CONSTRAINT "tenant_invoices_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "governance"."tenants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "governance"."tenant_quotas" ADD CONSTRAINT "tenant_quotas_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "governance"."tenants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tenant_migrations" ADD CONSTRAINT "tenant_migrations_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "governance"."tenants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "auth_logs" ADD CONSTRAINT "auth_logs_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "otp_codes" ADD CONSTRAINT "otp_codes_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "carts" ADD CONSTRAINT "carts_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "categories" ADD CONSTRAINT "categories_parent_id_categories_id_fk" FOREIGN KEY ("parent_id") REFERENCES "storefront"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "tax_rules" ADD CONSTRAINT "tax_rules_tax_category_id_tax_categories_id_fk" FOREIGN KEY ("tax_category_id") REFERENCES "public"."tax_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "discount_codes" ADD CONSTRAINT "discount_codes_price_rule_id_price_rules_id_fk" FOREIGN KEY ("price_rule_id") REFERENCES "public"."price_rules"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "price_lists" ADD CONSTRAINT "price_lists_market_id_markets_id_fk" FOREIGN KEY ("market_id") REFERENCES "public"."markets"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "price_lists" ADD CONSTRAINT "price_lists_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "price_lists" ADD CONSTRAINT "price_lists_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "menu_items" ADD CONSTRAINT "menu_items_parent_id_menu_items_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."menu_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "customer_addresses" ADD CONSTRAINT "customer_addresses_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "customer_consents" ADD CONSTRAINT "customer_consents_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payment_methods" ADD CONSTRAINT "payment_methods_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "abandoned_checkouts" ADD CONSTRAINT "abandoned_checkouts_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "affiliate_partners" ADD CONSTRAINT "affiliate_partners_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "affiliate_transactions" ADD CONSTRAINT "affiliate_transactions_partner_id_affiliate_partners_id_fk" FOREIGN KEY ("partner_id") REFERENCES "public"."affiliate_partners"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "affiliate_transactions" ADD CONSTRAINT "affiliate_transactions_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "b2b_pricing_tiers" ADD CONSTRAINT "b2b_pricing_tiers_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."b2b_companies"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "b2b_pricing_tiers" ADD CONSTRAINT "b2b_pricing_tiers_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "b2b_users" ADD CONSTRAINT "b2b_users_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."b2b_companies"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "b2b_users" ADD CONSTRAINT "b2b_users_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "webhook_subscriptions" ADD CONSTRAINT "webhook_subscriptions_app_id_app_installations_id_fk" FOREIGN KEY ("app_id") REFERENCES "public"."app_installations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "faqs" ADD CONSTRAINT "faqs_category_id_faq_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."faq_categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "flash_sale_products" ADD CONSTRAINT "flash_sale_products_flash_sale_id_flash_sales_id_fk" FOREIGN KEY ("flash_sale_id") REFERENCES "public"."flash_sales"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "flash_sale_products" ADD CONSTRAINT "flash_sale_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "import_errors" ADD CONSTRAINT "import_errors_job_id_import_jobs_id_fk" FOREIGN KEY ("job_id") REFERENCES "public"."import_jobs"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_levels" ADD CONSTRAINT "inventory_levels_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_levels" ADD CONSTRAINT "inventory_levels_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_movements" ADD CONSTRAINT "inventory_movements_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_reservations" ADD CONSTRAINT "inventory_reservations_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_reservations" ADD CONSTRAINT "inventory_reservations_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_transfer_items" ADD CONSTRAINT "inventory_transfer_items_transfer_id_inventory_transfers_id_fk" FOREIGN KEY ("transfer_id") REFERENCES "public"."inventory_transfers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_transfer_items" ADD CONSTRAINT "inventory_transfer_items_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_transfers" ADD CONSTRAINT "inventory_transfers_from_location_id_locations_id_fk" FOREIGN KEY ("from_location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "inventory_transfers" ADD CONSTRAINT "inventory_transfers_to_location_id_locations_id_fk" FOREIGN KEY ("to_location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "kb_articles" ADD CONSTRAINT "kb_articles_category_id_kb_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."kb_categories"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "notifications" ADD CONSTRAINT "notifications_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "fulfillment_items" ADD CONSTRAINT "fulfillment_items_fulfillment_id_fulfillments_id_fk" FOREIGN KEY ("fulfillment_id") REFERENCES "storefront"."fulfillments"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "fulfillment_items" ADD CONSTRAINT "fulfillment_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "fulfillments" ADD CONSTRAINT "fulfillments_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "order_edits" ADD CONSTRAINT "order_edits_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "order_edits" ADD CONSTRAINT "order_edits_line_item_id_order_items_id_fk" FOREIGN KEY ("line_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "order_items" ADD CONSTRAINT "order_items_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "orders" ADD CONSTRAINT "orders_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "refund_items" ADD CONSTRAINT "refund_items_refund_id_refunds_id_fk" FOREIGN KEY ("refund_id") REFERENCES "public"."refunds"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "refund_items" ADD CONSTRAINT "refund_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "refunds" ADD CONSTRAINT "refunds_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "rma_items" ADD CONSTRAINT "rma_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "payment_logs" ADD CONSTRAINT "payment_logs_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "back_in_stock_requests" ADD CONSTRAINT "back_in_stock_requests_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "back_in_stock_requests" ADD CONSTRAINT "back_in_stock_requests_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_attributes" ADD CONSTRAINT "product_attributes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_bundle_items" ADD CONSTRAINT "product_bundle_items_bundle_id_product_bundles_id_fk" FOREIGN KEY ("bundle_id") REFERENCES "public"."product_bundles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_bundle_items" ADD CONSTRAINT "product_bundle_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_category_mapping" ADD CONSTRAINT "product_category_mapping_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_category_mapping" ADD CONSTRAINT "product_category_mapping_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_images" ADD CONSTRAINT "product_images_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "product_tags" ADD CONSTRAINT "product_tags_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."tenant_migrations" ADD CONSTRAINT "tenant_migrations_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "governance"."tenants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."auth_logs" ADD CONSTRAINT "auth_logs_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."otp_codes" ADD CONSTRAINT "otp_codes_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."carts" ADD CONSTRAINT "carts_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."categories" ADD CONSTRAINT "categories_parent_id_categories_id_fk" FOREIGN KEY ("parent_id") REFERENCES "storefront"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."tax_rules" ADD CONSTRAINT "tax_rules_tax_category_id_tax_categories_id_fk" FOREIGN KEY ("tax_category_id") REFERENCES "public"."tax_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."discount_codes" ADD CONSTRAINT "discount_codes_price_rule_id_price_rules_id_fk" FOREIGN KEY ("price_rule_id") REFERENCES "public"."price_rules"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."price_lists" ADD CONSTRAINT "price_lists_market_id_markets_id_fk" FOREIGN KEY ("market_id") REFERENCES "public"."markets"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."price_lists" ADD CONSTRAINT "price_lists_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."price_lists" ADD CONSTRAINT "price_lists_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."menu_items" ADD CONSTRAINT "menu_items_parent_id_menu_items_id_fk" FOREIGN KEY ("parent_id") REFERENCES "public"."menu_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."customer_addresses" ADD CONSTRAINT "customer_addresses_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."customer_consents" ADD CONSTRAINT "customer_consents_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."payment_methods" ADD CONSTRAINT "payment_methods_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."abandoned_checkouts" ADD CONSTRAINT "abandoned_checkouts_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."affiliate_partners" ADD CONSTRAINT "affiliate_partners_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."affiliate_transactions" ADD CONSTRAINT "affiliate_transactions_partner_id_affiliate_partners_id_fk" FOREIGN KEY ("partner_id") REFERENCES "public"."affiliate_partners"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."affiliate_transactions" ADD CONSTRAINT "affiliate_transactions_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."b2b_pricing_tiers" ADD CONSTRAINT "b2b_pricing_tiers_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."b2b_companies"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."b2b_pricing_tiers" ADD CONSTRAINT "b2b_pricing_tiers_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."b2b_users" ADD CONSTRAINT "b2b_users_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "public"."b2b_companies"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."b2b_users" ADD CONSTRAINT "b2b_users_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."webhook_subscriptions" ADD CONSTRAINT "webhook_subscriptions_app_id_app_installations_id_fk" FOREIGN KEY ("app_id") REFERENCES "public"."app_installations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."faqs" ADD CONSTRAINT "faqs_category_id_faq_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."faq_categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."flash_sale_products" ADD CONSTRAINT "flash_sale_products_flash_sale_id_flash_sales_id_fk" FOREIGN KEY ("flash_sale_id") REFERENCES "public"."flash_sales"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."flash_sale_products" ADD CONSTRAINT "flash_sale_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."import_errors" ADD CONSTRAINT "import_errors_job_id_import_jobs_id_fk" FOREIGN KEY ("job_id") REFERENCES "public"."import_jobs"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_levels" ADD CONSTRAINT "inventory_levels_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_levels" ADD CONSTRAINT "inventory_levels_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_movements" ADD CONSTRAINT "inventory_movements_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_movements" ADD CONSTRAINT "inventory_movements_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_reservations" ADD CONSTRAINT "inventory_reservations_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_reservations" ADD CONSTRAINT "inventory_reservations_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_transfer_items" ADD CONSTRAINT "inventory_transfer_items_transfer_id_inventory_transfers_id_fk" FOREIGN KEY ("transfer_id") REFERENCES "public"."inventory_transfers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_transfer_items" ADD CONSTRAINT "inventory_transfer_items_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_transfers" ADD CONSTRAINT "inventory_transfers_from_location_id_locations_id_fk" FOREIGN KEY ("from_location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."inventory_transfers" ADD CONSTRAINT "inventory_transfers_to_location_id_locations_id_fk" FOREIGN KEY ("to_location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."kb_articles" ADD CONSTRAINT "kb_articles_category_id_kb_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."kb_categories"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."notifications" ADD CONSTRAINT "notifications_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."fulfillment_items" ADD CONSTRAINT "fulfillment_items_fulfillment_id_fulfillments_id_fk" FOREIGN KEY ("fulfillment_id") REFERENCES "storefront"."fulfillments"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."fulfillment_items" ADD CONSTRAINT "fulfillment_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."fulfillments" ADD CONSTRAINT "fulfillments_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."order_edits" ADD CONSTRAINT "order_edits_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."order_edits" ADD CONSTRAINT "order_edits_line_item_id_order_items_id_fk" FOREIGN KEY ("line_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."order_items" ADD CONSTRAINT "order_items_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."orders" ADD CONSTRAINT "orders_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."refund_items" ADD CONSTRAINT "refund_items_refund_id_refunds_id_fk" FOREIGN KEY ("refund_id") REFERENCES "public"."refunds"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."refund_items" ADD CONSTRAINT "refund_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."refunds" ADD CONSTRAINT "refunds_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."rma_items" ADD CONSTRAINT "rma_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."payment_logs" ADD CONSTRAINT "payment_logs_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."back_in_stock_requests" ADD CONSTRAINT "back_in_stock_requests_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."back_in_stock_requests" ADD CONSTRAINT "back_in_stock_requests_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."product_attributes" ADD CONSTRAINT "product_attributes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."product_bundle_items" ADD CONSTRAINT "product_bundle_items_bundle_id_product_bundles_id_fk" FOREIGN KEY ("bundle_id") REFERENCES "public"."product_bundles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."product_bundle_items" ADD CONSTRAINT "product_bundle_items_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."product_images" ADD CONSTRAINT "product_images_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."product_tags" ADD CONSTRAINT "product_tags_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "product_variants" ADD CONSTRAINT "product_variants_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_brand_id_brands_id_fk" FOREIGN KEY ("brand_id") REFERENCES "storefront"."brands"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "products" ADD CONSTRAINT "products_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "related_products" ADD CONSTRAINT "related_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "related_products" ADD CONSTRAINT "related_products_related_product_id_products_id_fk" FOREIGN KEY ("related_product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "referrals" ADD CONSTRAINT "referrals_referrer_id_customers_id_fk" FOREIGN KEY ("referrer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "referrals" ADD CONSTRAINT "referrals_referred_id_customers_id_fk" FOREIGN KEY ("referred_id") REFERENCES "storefront"."customers"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "reviews" ADD CONSTRAINT "reviews_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "reviews" ADD CONSTRAINT "reviews_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "reviews" ADD CONSTRAINT "reviews_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "rma_requests" ADD CONSTRAINT "rma_requests_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "rma_requests" ADD CONSTRAINT "rma_requests_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "size_guides" ADD CONSTRAINT "size_guides_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "size_guides" ADD CONSTRAINT "size_guides_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "staff_members" ADD CONSTRAINT "staff_members_role_id_staff_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "storefront"."staff_roles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "staff_sessions" ADD CONSTRAINT "staff_sessions_staff_id_staff_members_id_fk" FOREIGN KEY ("staff_id") REFERENCES "storefront"."staff_members"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "purchase_order_items" ADD CONSTRAINT "purchase_order_items_po_id_purchase_orders_id_fk" FOREIGN KEY ("po_id") REFERENCES "public"."purchase_orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "purchase_order_items" ADD CONSTRAINT "purchase_order_items_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "purchase_orders" ADD CONSTRAINT "purchase_orders_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "purchase_orders" ADD CONSTRAINT "purchase_orders_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "order_timeline" ADD CONSTRAINT "order_timeline_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "wallet_transactions" ADD CONSTRAINT "wallet_transactions_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "wallet_transactions" ADD CONSTRAINT "wallet_transactions_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."related_products" ADD CONSTRAINT "related_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."related_products" ADD CONSTRAINT "related_products_related_product_id_products_id_fk" FOREIGN KEY ("related_product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."referrals" ADD CONSTRAINT "referrals_referrer_id_customers_id_fk" FOREIGN KEY ("referrer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."referrals" ADD CONSTRAINT "referrals_referred_id_customers_id_fk" FOREIGN KEY ("referred_id") REFERENCES "storefront"."customers"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."reviews" ADD CONSTRAINT "reviews_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."reviews" ADD CONSTRAINT "reviews_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."reviews" ADD CONSTRAINT "reviews_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."rma_requests" ADD CONSTRAINT "rma_requests_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."rma_requests" ADD CONSTRAINT "rma_requests_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."size_guides" ADD CONSTRAINT "size_guides_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."size_guides" ADD CONSTRAINT "size_guides_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."staff_members" ADD CONSTRAINT "staff_members_role_id_staff_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "storefront"."staff_roles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."staff_sessions" ADD CONSTRAINT "staff_sessions_staff_id_staff_members_id_fk" FOREIGN KEY ("staff_id") REFERENCES "storefront"."staff_members"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."purchase_order_items" ADD CONSTRAINT "purchase_order_items_po_id_purchase_orders_id_fk" FOREIGN KEY ("po_id") REFERENCES "public"."purchase_orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."purchase_order_items" ADD CONSTRAINT "purchase_order_items_variant_id_product_variants_id_fk" FOREIGN KEY ("variant_id") REFERENCES "storefront"."_product_variants"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."purchase_orders" ADD CONSTRAINT "purchase_orders_supplier_id_suppliers_id_fk" FOREIGN KEY ("supplier_id") REFERENCES "public"."suppliers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."purchase_orders" ADD CONSTRAINT "purchase_orders_location_id_locations_id_fk" FOREIGN KEY ("location_id") REFERENCES "public"."locations"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."order_timeline" ADD CONSTRAINT "order_timeline_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."wallet_transactions" ADD CONSTRAINT "wallet_transactions_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "storefront"."wallet_transactions" ADD CONSTRAINT "wallet_transactions_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."wishlists" ADD CONSTRAINT "wishlists_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "public"."wishlists" ADD CONSTRAINT "wishlists_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "audit_logs_created_idx" ON "governance"."audit_logs" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX "audit_logs_tenant_idx" ON "governance"."audit_logs" USING btree ("tenant_id");--> statement-breakpoint
 CREATE INDEX "audit_logs_entity_idx" ON "governance"."audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
