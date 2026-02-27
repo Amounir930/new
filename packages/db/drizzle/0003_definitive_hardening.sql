@@ -16,8 +16,7 @@ $$ LANGUAGE plpgsql;
 CREATE SCHEMA IF NOT EXISTS partman;
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
 
--- 2. Convert governance.audit_logs to a partitioned table (State-Aware)
-DO $
+DO $$
 BEGIN
     -- Only rename if audit_logs is a regular table (not already partitioned)
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs' AND c.relkind = 'r') THEN
@@ -74,7 +73,8 @@ BEGIN
     UPDATE partman.part_config 
     SET retention = '90 days', retention_keep_table = false 
     WHERE parent_table = 'governance.audit_logs';
-END $;
+END $$;
+
 
 -- Mandate #14: Audit Immutability Triggers (S4/S7)
 -- Prevents any modification of logs once written.
