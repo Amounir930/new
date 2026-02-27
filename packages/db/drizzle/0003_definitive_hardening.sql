@@ -49,6 +49,7 @@ BEGIN
             "metadata" jsonb,
             "impersonator_id" text,
             "checksum" text,
+            "actor_type" "public"."actor_type" DEFAULT 'tenant_admin' NOT NULL,
             PRIMARY KEY (id, created_at)
         ) PARTITION BY RANGE (created_at);
 
