@@ -20,7 +20,7 @@ CREATE SCHEMA IF NOT EXISTS "vault";
 --> statement-breakpoint
 CREATE SCHEMA IF NOT EXISTS "storefront";
 --> statement-breakpoint
-CREATE TYPE "public"."money_amount" AS (amount BIGINT, currency CHAR(3));
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'money_amount') THEN CREATE TYPE "public"."money_amount" AS (amount BIGINT, currency CHAR(3)); END IF; END $$;
 --> statement-breakpoint
 CREATE OR REPLACE FUNCTION gen_ulid() RETURNS uuid AS $$
 DECLARE
@@ -37,38 +37,38 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 --> statement-breakpoint
-CREATE TYPE "public"."affiliate_status" AS ENUM('active', 'pending', 'suspended');--> statement-breakpoint
-CREATE TYPE "public"."affiliate_tx_status" AS ENUM('pending', 'approved', 'paid', 'rejected');--> statement-breakpoint
-CREATE TYPE "public"."audit_result" AS ENUM('SUCCESS', 'FAILURE');--> statement-breakpoint
-CREATE TYPE "public"."b2b_company_status" AS ENUM('active', 'pending', 'suspended');--> statement-breakpoint
-CREATE TYPE "public"."b2b_user_role" AS ENUM('admin', 'buyer', 'viewer');--> statement-breakpoint
-CREATE TYPE "public"."blueprint_status" AS ENUM('active', 'paused');--> statement-breakpoint
-CREATE TYPE "public"."consent_channel" AS ENUM('email', 'sms', 'push', 'whatsapp');--> statement-breakpoint
-CREATE TYPE "public"."discount_applies_to" AS ENUM('all', 'specific_products', 'specific_categories', 'specific_customers');--> statement-breakpoint
-CREATE TYPE "public"."discount_type" AS ENUM('percentage', 'fixed', 'buy_x_get_y', 'free_shipping');--> statement-breakpoint
-CREATE TYPE "public"."dunning_status" AS ENUM('pending', 'retried', 'failed', 'recovered');--> statement-breakpoint
-CREATE TYPE "public"."fulfillment_status" AS ENUM('pending', 'shipped', 'in_transit', 'delivered', 'failed');--> statement-breakpoint
-CREATE TYPE "public"."inventory_movement_type" AS ENUM('in', 'out', 'adjustment', 'return', 'transfer');--> statement-breakpoint
-CREATE TYPE "public"."invoice_status" AS ENUM('draft', 'issued', 'paid', 'overdue');--> statement-breakpoint
-CREATE TYPE "public"."lead_status" AS ENUM('new', 'contacted', 'qualified', 'converted');--> statement-breakpoint
-CREATE TYPE "public"."location_type" AS ENUM('warehouse', 'retail', 'dropship');--> statement-breakpoint
-CREATE TYPE "public"."order_source" AS ENUM('web', 'mobile', 'b2b', 'pos');--> statement-breakpoint
-CREATE TYPE "public"."order_status" AS ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned');--> statement-breakpoint
-CREATE TYPE "public"."outbox_status" AS ENUM('pending', 'processing', 'completed', 'failed');--> statement-breakpoint
-CREATE TYPE "public"."payment_method" AS ENUM('card', 'cod', 'wallet', 'bnpl', 'bank_transfer');--> statement-breakpoint
-CREATE TYPE "public"."payment_status" AS ENUM('pending', 'paid', 'partially_refunded', 'refunded', 'failed');--> statement-breakpoint
-CREATE TYPE "public"."purchase_order_status" AS ENUM('draft', 'ordered', 'partial', 'received', 'cancelled');--> statement-breakpoint
-CREATE TYPE "public"."refund_status" AS ENUM('pending', 'processed', 'failed');--> statement-breakpoint
-CREATE TYPE "public"."reservation_status" AS ENUM('active', 'converted', 'expired');--> statement-breakpoint
-CREATE TYPE "public"."rma_condition" AS ENUM('new', 'opened', 'damaged');--> statement-breakpoint
-CREATE TYPE "public"."rma_reason_code" AS ENUM('defective', 'wrong_item', 'changed_mind', 'not_as_described', 'damaged_in_transit');--> statement-breakpoint
-CREATE TYPE "public"."rma_resolution" AS ENUM('refund', 'exchange', 'store_credit');--> statement-breakpoint
-CREATE TYPE "public"."audit_severity" AS ENUM('INFO', 'WARNING', 'CRITICAL');--> statement-breakpoint
-CREATE TYPE "public"."tenant_niche" AS ENUM('retail', 'wellness', 'education', 'services', 'hospitality', 'real-estate', 'creative');--> statement-breakpoint
-CREATE TYPE "public"."tenant_plan" AS ENUM('free', 'basic', 'pro', 'enterprise');--> statement-breakpoint
-CREATE TYPE "public"."tenant_status" AS ENUM('active', 'suspended', 'pending', 'archived');--> statement-breakpoint
-CREATE TYPE "public"."transfer_status" AS ENUM('draft', 'in_transit', 'received', 'cancelled');--> statement-breakpoint
-CREATE TABLE "governance"."audit_logs" (
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'affiliate_status') THEN CREATE TYPE "public"."affiliate_status" AS ENUM('active', 'pending', 'suspended'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'affiliate_tx_status') THEN CREATE TYPE "public"."affiliate_tx_status" AS ENUM('pending', 'approved', 'paid', 'rejected'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_result') THEN CREATE TYPE "public"."audit_result" AS ENUM('SUCCESS', 'FAILURE'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'b2b_company_status') THEN CREATE TYPE "public"."b2b_company_status" AS ENUM('active', 'pending', 'suspended'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'b2b_user_role') THEN CREATE TYPE "public"."b2b_user_role" AS ENUM('admin', 'buyer', 'viewer'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'blueprint_status') THEN CREATE TYPE "public"."blueprint_status" AS ENUM('active', 'paused'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'consent_channel') THEN CREATE TYPE "public"."consent_channel" AS ENUM('email', 'sms', 'push', 'whatsapp'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'discount_applies_to') THEN CREATE TYPE "public"."discount_applies_to" AS ENUM('all', 'specific_products', 'specific_categories', 'specific_customers'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'discount_type') THEN CREATE TYPE "public"."discount_type" AS ENUM('percentage', 'fixed', 'buy_x_get_y', 'free_shipping'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dunning_status') THEN CREATE TYPE "public"."dunning_status" AS ENUM('pending', 'retried', 'failed', 'recovered'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'fulfillment_status') THEN CREATE TYPE "public"."fulfillment_status" AS ENUM('pending', 'shipped', 'in_transit', 'delivered', 'failed'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'inventory_movement_type') THEN CREATE TYPE "public"."inventory_movement_type" AS ENUM('in', 'out', 'adjustment', 'return', 'transfer'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'invoice_status') THEN CREATE TYPE "public"."invoice_status" AS ENUM('draft', 'issued', 'paid', 'overdue'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'lead_status') THEN CREATE TYPE "public"."lead_status" AS ENUM('new', 'contacted', 'qualified', 'converted'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'location_type') THEN CREATE TYPE "public"."location_type" AS ENUM('warehouse', 'retail', 'dropship'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_source') THEN CREATE TYPE "public"."order_source" AS ENUM('web', 'mobile', 'b2b', 'pos'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status') THEN CREATE TYPE "public"."order_status" AS ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'outbox_status') THEN CREATE TYPE "public"."outbox_status" AS ENUM('pending', 'processing', 'completed', 'failed'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_method') THEN CREATE TYPE "public"."payment_method" AS ENUM('card', 'cod', 'wallet', 'bnpl', 'bank_transfer'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status') THEN CREATE TYPE "public"."payment_status" AS ENUM('pending', 'paid', 'partially_refunded', 'refunded', 'failed'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'purchase_order_status') THEN CREATE TYPE "public"."purchase_order_status" AS ENUM('draft', 'ordered', 'partial', 'received', 'cancelled'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'refund_status') THEN CREATE TYPE "public"."refund_status" AS ENUM('pending', 'processed', 'failed'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'reservation_status') THEN CREATE TYPE "public"."reservation_status" AS ENUM('active', 'converted', 'expired'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'rma_condition') THEN CREATE TYPE "public"."rma_condition" AS ENUM('new', 'opened', 'damaged'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'rma_reason_code') THEN CREATE TYPE "public"."rma_reason_code" AS ENUM('defective', 'wrong_item', 'changed_mind', 'not_as_described', 'damaged_in_transit'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'rma_resolution') THEN CREATE TYPE "public"."rma_resolution" AS ENUM('refund', 'exchange', 'store_credit'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'audit_severity') THEN CREATE TYPE "public"."audit_severity" AS ENUM('INFO', 'WARNING', 'CRITICAL'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tenant_niche') THEN CREATE TYPE "public"."tenant_niche" AS ENUM('retail', 'wellness', 'education', 'services', 'hospitality', 'real-estate', 'creative'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tenant_plan') THEN CREATE TYPE "public"."tenant_plan" AS ENUM('free', 'basic', 'pro', 'enterprise'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tenant_status') THEN CREATE TYPE "public"."tenant_status" AS ENUM('active', 'suspended', 'pending', 'archived'); END IF; END $$;--> statement-breakpoint
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transfer_status') THEN CREATE TYPE "public"."transfer_status" AS ENUM('draft', 'in_transit', 'received', 'cancelled'); END IF; END $$;--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "governance"."audit_logs" (
 	"id" uuid DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"severity" "audit_severity" DEFAULT 'INFO' NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE "governance"."audit_logs" (
 );
 --> statement-breakpoint
 --> statement-breakpoint
-CREATE TABLE "governance"."app_usage_records" (
+CREATE TABLE IF NOT EXISTS "governance"."app_usage_records" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -100,7 +100,7 @@ CREATE TABLE "governance"."app_usage_records" (
 	"metric" varchar(50) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."dunning_events" (
+CREATE TABLE IF NOT EXISTS "governance"."dunning_events" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -112,7 +112,7 @@ CREATE TABLE "governance"."dunning_events" (
 	"error_message" text
 );
 --> statement-breakpoint
-CREATE TABLE "vault"."encryption_keys" (
+CREATE TABLE IF NOT EXISTS "vault"."encryption_keys" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -124,7 +124,7 @@ CREATE TABLE "vault"."encryption_keys" (
 	CONSTRAINT "encryption_keys_tenant_id_unique" UNIQUE("tenant_id")
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."feature_gates" (
+CREATE TABLE IF NOT EXISTS "governance"."feature_gates" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -134,7 +134,7 @@ CREATE TABLE "governance"."feature_gates" (
 	"metadata" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."leads" (
+CREATE TABLE IF NOT EXISTS "governance"."leads" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"converted_tenant_id" uuid,
@@ -151,7 +151,7 @@ CREATE TABLE "governance"."leads" (
 	"tags" jsonb DEFAULT '[]'::jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."plan_change_history" (
+CREATE TABLE IF NOT EXISTS "governance"."plan_change_history" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -161,7 +161,7 @@ CREATE TABLE "governance"."plan_change_history" (
 	"changed_by" text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."subscription_plans" (
+CREATE TABLE IF NOT EXISTS "governance"."subscription_plans" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -182,13 +182,13 @@ CREATE TABLE "governance"."subscription_plans" (
 	CONSTRAINT "subscription_plans_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."system_config" (
+CREATE TABLE IF NOT EXISTS "governance"."system_config" (
 	"key" varchar(100) PRIMARY KEY NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"value" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."tenant_invoices" (
+CREATE TABLE IF NOT EXISTS "governance"."tenant_invoices" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -204,7 +204,7 @@ CREATE TABLE "governance"."tenant_invoices" (
 	"pdf_url" text
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."tenant_quotas" (
+CREATE TABLE IF NOT EXISTS "governance"."tenant_quotas" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -218,7 +218,7 @@ CREATE TABLE "governance"."tenant_quotas" (
 	"api_rate_limit" integer
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."onboarding_blueprints" (
+CREATE TABLE IF NOT EXISTS "governance"."onboarding_blueprints" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -232,7 +232,7 @@ CREATE TABLE "governance"."onboarding_blueprints" (
 	"ui_config" jsonb DEFAULT '{}'::jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."tenant_migrations" (
+CREATE TABLE IF NOT EXISTS "public"."tenant_migrations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"applied_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -241,7 +241,7 @@ CREATE TABLE "public"."tenant_migrations" (
 	"error_message" text
 );
 --> statement-breakpoint
-CREATE TABLE "governance"."tenants" (
+CREATE TABLE IF NOT EXISTS "governance"."tenants" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -263,13 +263,13 @@ CREATE TABLE "governance"."tenants" (
 );
 --> statement-breakpoint
 ALTER TABLE "governance"."tenants" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
-CREATE TABLE "public"."settings" (
+CREATE TABLE IF NOT EXISTS "public"."settings" (
 	"key" text PRIMARY KEY NOT NULL,
 	"value" text NOT NULL,
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."stores" (
+CREATE TABLE IF NOT EXISTS "public"."stores" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" text NOT NULL,
 	"subdomain" text NOT NULL,
@@ -278,7 +278,7 @@ CREATE TABLE "public"."stores" (
 	"created_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."users" (
+CREATE TABLE IF NOT EXISTS "public"."users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"email" text NOT NULL,
 	"email_hash" text NOT NULL,
@@ -289,7 +289,7 @@ CREATE TABLE "public"."users" (
 	CONSTRAINT "users_email_hash_unique" UNIQUE("email_hash")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."auth_logs" (
+CREATE TABLE IF NOT EXISTS "public"."auth_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"action" varchar(50) NOT NULL,
@@ -299,7 +299,7 @@ CREATE TABLE "public"."auth_logs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."otp_codes" (
+CREATE TABLE IF NOT EXISTS "public"."otp_codes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"phone" varchar(20),
@@ -310,7 +310,7 @@ CREATE TABLE "public"."otp_codes" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."brands" (
+CREATE TABLE IF NOT EXISTS "storefront"."brands" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -324,7 +324,7 @@ CREATE TABLE "storefront"."brands" (
 	"description" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."carts" (
+CREATE TABLE IF NOT EXISTS "storefront"."carts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -335,7 +335,7 @@ CREATE TABLE "storefront"."carts" (
 	"applied_coupons" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."categories" (
+CREATE TABLE IF NOT EXISTS "storefront"."categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"parent_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -354,7 +354,7 @@ CREATE TABLE "storefront"."categories" (
 	"description" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."entity_metafields" (
+CREATE TABLE IF NOT EXISTS "public"."entity_metafields" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"entity_type" varchar(50) NOT NULL,
 	"entity_id" uuid NOT NULL,
@@ -365,14 +365,14 @@ CREATE TABLE "public"."entity_metafields" (
 	CONSTRAINT "uq_metafield" UNIQUE("entity_type","entity_id","namespace","key")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."search_synonyms" (
+CREATE TABLE IF NOT EXISTS "public"."search_synonyms" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"term" varchar(100) NOT NULL,
 	"synonyms" jsonb NOT NULL,
 	CONSTRAINT "search_synonyms_term_unique" UNIQUE("term")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."smart_collections" (
+CREATE TABLE IF NOT EXISTS "public"."smart_collections" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -387,7 +387,7 @@ CREATE TABLE "public"."smart_collections" (
 	"conditions" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."tax_categories" (
+CREATE TABLE IF NOT EXISTS "public"."tax_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"priority" integer DEFAULT 0,
 	"is_default" boolean DEFAULT false,
@@ -396,7 +396,7 @@ CREATE TABLE "public"."tax_categories" (
 	"description" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."tax_rules" (
+CREATE TABLE IF NOT EXISTS "public"."tax_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tax_category_id" uuid,
 	"rate" integer NOT NULL,
@@ -409,7 +409,7 @@ CREATE TABLE "public"."tax_rules" (
 	"applies_to" varchar(20) DEFAULT 'all'
 );
 --> statement-breakpoint
-CREATE TABLE "public"."currency_rates" (
+CREATE TABLE IF NOT EXISTS "public"."currency_rates" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"from_currency" char(3) NOT NULL,
@@ -417,7 +417,7 @@ CREATE TABLE "public"."currency_rates" (
 	"rate" numeric(12, 6) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."discount_codes" (
+CREATE TABLE IF NOT EXISTS "public"."discount_codes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"price_rule_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -426,7 +426,7 @@ CREATE TABLE "public"."discount_codes" (
 	CONSTRAINT "discount_codes_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."markets" (
+CREATE TABLE IF NOT EXISTS "public"."markets" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"is_primary" boolean DEFAULT false,
@@ -437,7 +437,7 @@ CREATE TABLE "public"."markets" (
 	"countries" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."price_lists" (
+CREATE TABLE IF NOT EXISTS "public"."price_lists" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"market_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -449,7 +449,7 @@ CREATE TABLE "public"."price_lists" (
 	"currency" char(3) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."price_rules" (
+CREATE TABLE IF NOT EXISTS "public"."price_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
@@ -468,7 +468,7 @@ CREATE TABLE "public"."price_rules" (
 	"combines_with" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."menu_items" (
+CREATE TABLE IF NOT EXISTS "public"."menu_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"menu_type" varchar(20) NOT NULL,
 	"parent_id" uuid,
@@ -479,13 +479,13 @@ CREATE TABLE "public"."menu_items" (
 	"is_active" boolean DEFAULT true
 );
 --> statement-breakpoint
-CREATE TABLE "public"."tenant_config" (
+CREATE TABLE IF NOT EXISTS "public"."tenant_config" (
 	"key" varchar(100) PRIMARY KEY NOT NULL,
 	"value" jsonb NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."blog_posts" (
+CREATE TABLE IF NOT EXISTS "public"."blog_posts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -506,7 +506,7 @@ CREATE TABLE "public"."blog_posts" (
 	"content" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."pages" (
+CREATE TABLE IF NOT EXISTS "storefront"."pages" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -521,7 +521,7 @@ CREATE TABLE "storefront"."pages" (
 	"content" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."coupons" (
+CREATE TABLE IF NOT EXISTS "storefront"."coupons" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
@@ -537,7 +537,7 @@ CREATE TABLE "storefront"."coupons" (
 	CONSTRAINT "coupons_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."customer_addresses" (
+CREATE TABLE IF NOT EXISTS "storefront"."customer_addresses" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"is_default" boolean DEFAULT false,
@@ -553,7 +553,7 @@ CREATE TABLE "storefront"."customer_addresses" (
 	"phone" varchar(20)
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."customer_consents" (
+CREATE TABLE IF NOT EXISTS "storefront"."customer_consents" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"consented_at" timestamp with time zone DEFAULT now(),
@@ -565,7 +565,7 @@ CREATE TABLE "storefront"."customer_consents" (
 	"user_agent" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."customer_segments" (
+CREATE TABLE IF NOT EXISTS "public"."customer_segments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"customer_count" integer DEFAULT 0,
@@ -575,7 +575,7 @@ CREATE TABLE "public"."customer_segments" (
 	"conditions" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."customers" (
+CREATE TABLE IF NOT EXISTS "storefront"."customers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"last_login_at" timestamp with time zone,
@@ -602,7 +602,7 @@ CREATE TABLE "storefront"."customers" (
 	"tags" text[] DEFAULT '{}'::text[]
 );
 --> statement-breakpoint
-CREATE TABLE "public"."payment_methods" (
+CREATE TABLE IF NOT EXISTS "public"."payment_methods" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -617,7 +617,7 @@ CREATE TABLE "public"."payment_methods" (
 	CONSTRAINT "uq_payment_fingerprint" UNIQUE("customer_id","fingerprint")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."abandoned_checkouts" (
+CREATE TABLE IF NOT EXISTS "public"."abandoned_checkouts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -628,7 +628,7 @@ CREATE TABLE "public"."abandoned_checkouts" (
 	"items" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."affiliate_partners" (
+CREATE TABLE IF NOT EXISTS "public"."affiliate_partners" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -640,7 +640,7 @@ CREATE TABLE "public"."affiliate_partners" (
 	CONSTRAINT "affiliate_partners_referral_code_unique" UNIQUE("referral_code")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."affiliate_transactions" (
+CREATE TABLE IF NOT EXISTS "public"."affiliate_transactions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"partner_id" uuid NOT NULL,
 	"order_id" uuid NOT NULL,
@@ -650,7 +650,7 @@ CREATE TABLE "public"."affiliate_transactions" (
 	"status" "affiliate_tx_status" DEFAULT 'pending' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."app_installations" (
+CREATE TABLE IF NOT EXISTS "public"."app_installations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"installed_at" timestamp with time zone DEFAULT now(),
 	"is_active" boolean DEFAULT true,
@@ -661,7 +661,7 @@ CREATE TABLE "public"."app_installations" (
 	"scopes" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."b2b_companies" (
+CREATE TABLE IF NOT EXISTS "public"."b2b_companies" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"credit_limit" bigint DEFAULT 0,
@@ -672,7 +672,7 @@ CREATE TABLE "public"."b2b_companies" (
 	"industry" varchar(100)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."b2b_pricing_tiers" (
+CREATE TABLE IF NOT EXISTS "public"."b2b_pricing_tiers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"company_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
@@ -680,7 +680,7 @@ CREATE TABLE "public"."b2b_pricing_tiers" (
 	"price" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."b2b_users" (
+CREATE TABLE IF NOT EXISTS "public"."b2b_users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"company_id" uuid NOT NULL,
 	"customer_id" uuid NOT NULL,
@@ -688,7 +688,7 @@ CREATE TABLE "public"."b2b_users" (
 	"role" "b2b_user_role" DEFAULT 'buyer' NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."outbox_events" (
+CREATE TABLE IF NOT EXISTS "public"."outbox_events" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"processed_at" timestamp with time zone,
@@ -700,7 +700,7 @@ CREATE TABLE "public"."outbox_events" (
 	"payload" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."product_views" (
+CREATE TABLE IF NOT EXISTS "public"."product_views" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"customer_id" uuid,
@@ -709,7 +709,7 @@ CREATE TABLE "public"."product_views" (
 	"source" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."webhook_subscriptions" (
+CREATE TABLE IF NOT EXISTS "public"."webhook_subscriptions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"app_id" uuid NOT NULL,
 	"is_active" boolean DEFAULT true,
@@ -718,7 +718,7 @@ CREATE TABLE "public"."webhook_subscriptions" (
 	"secret" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."faq_categories" (
+CREATE TABLE IF NOT EXISTS "public"."faq_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"order" integer DEFAULT 0,
@@ -726,7 +726,7 @@ CREATE TABLE "public"."faq_categories" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."faqs" (
+CREATE TABLE IF NOT EXISTS "public"."faqs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"category_id" uuid,
 	"question" varchar(500) NOT NULL,
@@ -737,7 +737,7 @@ CREATE TABLE "public"."faqs" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."banners" (
+CREATE TABLE IF NOT EXISTS "public"."banners" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -756,7 +756,7 @@ CREATE TABLE "public"."banners" (
 	"subtitle" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."bento_grids" (
+CREATE TABLE IF NOT EXISTS "public"."bento_grids" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"name" jsonb NOT NULL,
@@ -764,7 +764,7 @@ CREATE TABLE "public"."bento_grids" (
 	"slots" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."flash_sale_products" (
+CREATE TABLE IF NOT EXISTS "public"."flash_sale_products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"flash_sale_id" uuid,
 	"product_id" uuid,
@@ -774,7 +774,7 @@ CREATE TABLE "public"."flash_sale_products" (
 	"sort_order" integer DEFAULT 0
 );
 --> statement-breakpoint
-CREATE TABLE "public"."flash_sales" (
+CREATE TABLE IF NOT EXISTS "public"."flash_sales" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -784,7 +784,7 @@ CREATE TABLE "public"."flash_sales" (
 	"status" varchar(20) DEFAULT 'active'
 );
 --> statement-breakpoint
-CREATE TABLE "public"."newsletter_subscribers" (
+CREATE TABLE IF NOT EXISTS "public"."newsletter_subscribers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"unsubscribed_at" timestamp with time zone,
@@ -793,14 +793,14 @@ CREATE TABLE "public"."newsletter_subscribers" (
 	"source" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."search_analytics" (
+CREATE TABLE IF NOT EXISTS "public"."search_analytics" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"query" varchar(255) NOT NULL,
 	"count" integer DEFAULT 1,
 	"last_searched_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."import_errors" (
+CREATE TABLE IF NOT EXISTS "public"."import_errors" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"job_id" uuid,
 	"row_number" integer NOT NULL,
@@ -809,7 +809,7 @@ CREATE TABLE "public"."import_errors" (
 	"error_type" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."import_jobs" (
+CREATE TABLE IF NOT EXISTS "public"."import_jobs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"admin_id" uuid NOT NULL,
@@ -827,7 +827,7 @@ CREATE TABLE "public"."import_jobs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."inventory_levels" (
+CREATE TABLE IF NOT EXISTS "public"."inventory_levels" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"location_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
@@ -839,7 +839,7 @@ CREATE TABLE "public"."inventory_levels" (
 	CONSTRAINT "uq_inventory_loc_var" UNIQUE("location_id","variant_id")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."inventory_movements" (
+CREATE TABLE IF NOT EXISTS "public"."inventory_movements" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
@@ -851,7 +851,7 @@ CREATE TABLE "public"."inventory_movements" (
 	"reference_id" uuid
 );
 --> statement-breakpoint
-CREATE TABLE "public"."inventory_reservations" (
+CREATE TABLE IF NOT EXISTS "public"."inventory_reservations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
@@ -862,14 +862,14 @@ CREATE TABLE "public"."inventory_reservations" (
 	"quantity" integer NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."inventory_transfer_items" (
+CREATE TABLE IF NOT EXISTS "public"."inventory_transfer_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"transfer_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"quantity" integer NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."inventory_transfers" (
+CREATE TABLE IF NOT EXISTS "public"."inventory_transfers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"from_location_id" uuid NOT NULL,
 	"to_location_id" uuid NOT NULL,
@@ -880,7 +880,7 @@ CREATE TABLE "public"."inventory_transfers" (
 	"notes" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."locations" (
+CREATE TABLE IF NOT EXISTS "public"."locations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -891,7 +891,7 @@ CREATE TABLE "public"."locations" (
 	"coordinates" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."kb_articles" (
+CREATE TABLE IF NOT EXISTS "public"."kb_articles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"category_id" uuid,
 	"slug" varchar(255) NOT NULL,
@@ -904,7 +904,7 @@ CREATE TABLE "public"."kb_articles" (
 	CONSTRAINT "kb_articles_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."kb_categories" (
+CREATE TABLE IF NOT EXISTS "public"."kb_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"slug" varchar(255) NOT NULL,
@@ -914,7 +914,7 @@ CREATE TABLE "public"."kb_categories" (
 	CONSTRAINT "kb_categories_slug_unique" UNIQUE("slug")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."store_locations" (
+CREATE TABLE IF NOT EXISTS "public"."store_locations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"address" text NOT NULL,
@@ -926,7 +926,7 @@ CREATE TABLE "public"."store_locations" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."loyalty_rules" (
+CREATE TABLE IF NOT EXISTS "public"."loyalty_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"points_per_currency" integer DEFAULT 1,
@@ -938,7 +938,7 @@ CREATE TABLE "public"."loyalty_rules" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."notifications" (
+CREATE TABLE IF NOT EXISTS "public"."notifications" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"title" varchar(255) NOT NULL,
@@ -949,14 +949,14 @@ CREATE TABLE "public"."notifications" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."fulfillment_items" (
+CREATE TABLE IF NOT EXISTS "public"."fulfillment_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"fulfillment_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
 	"quantity" integer NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."fulfillments" (
+CREATE TABLE IF NOT EXISTS "storefront"."fulfillments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"location_id" uuid,
@@ -969,7 +969,7 @@ CREATE TABLE "storefront"."fulfillments" (
 	"tracking_url" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."order_edits" (
+CREATE TABLE IF NOT EXISTS "public"."order_edits" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"line_item_id" uuid,
@@ -982,7 +982,7 @@ CREATE TABLE "public"."order_edits" (
 	"new_value" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."order_items" (
+CREATE TABLE IF NOT EXISTS "storefront"."order_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"product_id" uuid,
@@ -1002,7 +1002,7 @@ CREATE TABLE "storefront"."order_items" (
 	"discount_allocations" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."orders" (
+CREATE TABLE IF NOT EXISTS "storefront"."orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"market_id" uuid,
@@ -1040,7 +1040,7 @@ CREATE TABLE "storefront"."orders" (
 	"billing_address" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."refund_items" (
+CREATE TABLE IF NOT EXISTS "public"."refund_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"refund_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
@@ -1048,7 +1048,7 @@ CREATE TABLE "public"."refund_items" (
 	"amount" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."refunds" (
+CREATE TABLE IF NOT EXISTS "public"."refunds" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"refunded_by" uuid,
@@ -1060,7 +1060,7 @@ CREATE TABLE "public"."refunds" (
 	"reason" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."rma_items" (
+CREATE TABLE IF NOT EXISTS "public"."rma_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"rma_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
@@ -1071,7 +1071,7 @@ CREATE TABLE "public"."rma_items" (
 	"resolution" varchar(20)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."payment_logs" (
+CREATE TABLE IF NOT EXISTS "public"."payment_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid,
 	"provider" varchar(50) NOT NULL,
@@ -1084,7 +1084,7 @@ CREATE TABLE "public"."payment_logs" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."back_in_stock_requests" (
+CREATE TABLE IF NOT EXISTS "public"."back_in_stock_requests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid,
 	"customer_id" uuid,
@@ -1094,7 +1094,7 @@ CREATE TABLE "public"."back_in_stock_requests" (
 	"created_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "public"."product_attributes" (
+CREATE TABLE IF NOT EXISTS "public"."product_attributes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"sort_order" integer DEFAULT 0,
@@ -1103,14 +1103,14 @@ CREATE TABLE "public"."product_attributes" (
 	"attribute_group" varchar(100)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."product_bundle_items" (
+CREATE TABLE IF NOT EXISTS "public"."product_bundle_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"bundle_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"quantity" integer DEFAULT 1 NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."product_bundles" (
+CREATE TABLE IF NOT EXISTS "public"."product_bundles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
@@ -1121,14 +1121,14 @@ CREATE TABLE "public"."product_bundles" (
 	"name" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."product_category_mapping" (
+CREATE TABLE IF NOT EXISTS "public"."product_category_mapping" (
 	"product_id" uuid NOT NULL,
 	"category_id" uuid NOT NULL,
 	"is_primary" boolean DEFAULT false,
 	CONSTRAINT "product_category_mapping_product_id_category_id_unique" UNIQUE("product_id","category_id")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."product_images" (
+CREATE TABLE IF NOT EXISTS "public"."product_images" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"is_primary" boolean DEFAULT false,
@@ -1137,13 +1137,13 @@ CREATE TABLE "public"."product_images" (
 	"alt_text" varchar(255)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."product_tags" (
+CREATE TABLE IF NOT EXISTS "public"."product_tags" (
 	"product_id" uuid NOT NULL,
 	"tag" varchar(50) NOT NULL,
 	CONSTRAINT "product_tags_product_id_tag_unique" UNIQUE("product_id","tag")
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."_product_variants" (
+CREATE TABLE IF NOT EXISTS "storefront"."_product_variants" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"deleted_at" timestamp with time zone,
@@ -1158,7 +1158,7 @@ CREATE TABLE "storefront"."_product_variants" (
 	"options" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."_products" (
+CREATE TABLE IF NOT EXISTS "storefront"."_products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"brand_id" uuid,
 	"category_id" uuid,
@@ -1210,7 +1210,7 @@ CREATE TABLE "storefront"."_products" (
 	"embedding" vector(1536)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."related_products" (
+CREATE TABLE IF NOT EXISTS "public"."related_products" (
 	"product_id" uuid NOT NULL,
 	"related_product_id" uuid NOT NULL,
 	"relation_type" varchar(20) DEFAULT 'similar' NOT NULL,
@@ -1218,7 +1218,7 @@ CREATE TABLE "public"."related_products" (
 	CONSTRAINT "related_products_product_id_related_product_id_unique" UNIQUE("product_id","related_product_id")
 );
 --> statement-breakpoint
-CREATE TABLE "public"."referrals" (
+CREATE TABLE IF NOT EXISTS "public"."referrals" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"referrer_id" uuid NOT NULL,
 	"referred_id" uuid,
@@ -1231,7 +1231,7 @@ CREATE TABLE "public"."referrals" (
 	"status" varchar(20) DEFAULT 'pending'
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."reviews" (
+CREATE TABLE IF NOT EXISTS "storefront"."reviews" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"customer_id" uuid NOT NULL,
@@ -1245,7 +1245,7 @@ CREATE TABLE "storefront"."reviews" (
 	"content" text NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."rma_requests" (
+CREATE TABLE IF NOT EXISTS "public"."rma_requests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"order_item_id" uuid,
@@ -1258,7 +1258,7 @@ CREATE TABLE "public"."rma_requests" (
 	"evidence" jsonb DEFAULT '[]'::jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."shipping_zones" (
+CREATE TABLE IF NOT EXISTS "storefront"."shipping_zones" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -1274,7 +1274,7 @@ CREATE TABLE "storefront"."shipping_zones" (
 	"estimated_days" varchar(50)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."size_guides" (
+CREATE TABLE IF NOT EXISTS "public"."size_guides" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"category_id" uuid,
@@ -1284,7 +1284,7 @@ CREATE TABLE "public"."size_guides" (
 	"updated_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."staff_members" (
+CREATE TABLE IF NOT EXISTS "storefront"."staff_members" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -1298,7 +1298,7 @@ CREATE TABLE "storefront"."staff_members" (
 	"phone" text
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."staff_roles" (
+CREATE TABLE IF NOT EXISTS "storefront"."staff_roles" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1307,7 +1307,7 @@ CREATE TABLE "storefront"."staff_roles" (
 	"permissions" jsonb NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."staff_sessions" (
+CREATE TABLE IF NOT EXISTS "storefront"."staff_sessions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"staff_id" uuid NOT NULL,
@@ -1320,7 +1320,7 @@ CREATE TABLE "storefront"."staff_sessions" (
 	"user_agent" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."purchase_order_items" (
+CREATE TABLE IF NOT EXISTS "public"."purchase_order_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"po_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
@@ -1329,7 +1329,7 @@ CREATE TABLE "public"."purchase_order_items" (
 	"unit_cost" bigint NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "public"."purchase_orders" (
+CREATE TABLE IF NOT EXISTS "public"."purchase_orders" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"supplier_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
@@ -1345,7 +1345,7 @@ CREATE TABLE "public"."purchase_orders" (
 	"notes" text
 );
 --> statement-breakpoint
-CREATE TABLE "public"."suppliers" (
+CREATE TABLE IF NOT EXISTS "public"."suppliers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -1360,7 +1360,7 @@ CREATE TABLE "public"."suppliers" (
 	"address" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "public"."order_timeline" (
+CREATE TABLE IF NOT EXISTS "public"."order_timeline" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid,
 	"updated_by" uuid,
@@ -1371,7 +1371,7 @@ CREATE TABLE "public"."order_timeline" (
 	"location" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "storefront"."wallet_transactions" (
+CREATE TABLE IF NOT EXISTS "storefront"."wallet_transactions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"order_id" uuid,
@@ -1384,7 +1384,7 @@ CREATE TABLE "storefront"."wallet_transactions" (
 	CONSTRAINT "wallet_non_negative_balance" CHECK ((balance_after).amount >= 0)
 );
 --> statement-breakpoint
-CREATE TABLE "public"."wishlists" (
+CREATE TABLE IF NOT EXISTS "public"."wishlists" (
 	"customer_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"added_at" timestamp with time zone DEFAULT now(),
@@ -1483,24 +1483,24 @@ ALTER TABLE "storefront"."wallet_transactions" ADD CONSTRAINT "wallet_transactio
 ALTER TABLE "storefront"."wallet_transactions" ADD CONSTRAINT "wallet_transactions_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public"."wishlists" ADD CONSTRAINT "wishlists_customer_id_customers_id_fk" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "public"."wishlists" ADD CONSTRAINT "wishlists_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."_products"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "audit_logs_created_idx" ON "governance"."audit_logs" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "audit_logs_tenant_idx" ON "governance"."audit_logs" USING btree ("tenant_id");--> statement-breakpoint
-CREATE INDEX "audit_logs_entity_idx" ON "governance"."audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
-CREATE INDEX "audit_logs_action_idx" ON "governance"."audit_logs" USING btree ("action");--> statement-breakpoint
-CREATE INDEX "idx_leads_email_hash" ON "governance"."leads" USING btree ("email_hash");--> statement-breakpoint
-CREATE INDEX "idx_leads_status" ON "governance"."leads" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "idx_invoices_tenant" ON "governance"."tenant_invoices" USING btree ("tenant_id");--> statement-breakpoint
-CREATE INDEX "idx_invoices_status" ON "governance"."tenant_invoices" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "blueprint_niche_plan_idx" ON "governance"."onboarding_blueprints" USING btree ("niche_type","plan");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_created_idx" ON "governance"."audit_logs" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_tenant_idx" ON "governance"."audit_logs" USING btree ("tenant_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_entity_idx" ON "governance"."audit_logs" USING btree ("entity_type","entity_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audit_logs_action_idx" ON "governance"."audit_logs" USING btree ("action");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_leads_email_hash" ON "governance"."leads" USING btree ("email_hash");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_leads_status" ON "governance"."leads" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_invoices_tenant" ON "governance"."tenant_invoices" USING btree ("tenant_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_invoices_status" ON "governance"."tenant_invoices" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "blueprint_niche_plan_idx" ON "governance"."onboarding_blueprints" USING btree ("niche_type","plan");--> statement-breakpoint
 CREATE INDEX "tenant_migrations_tenant_idx" ON "tenant_migrations" USING btree ("tenant_id");--> statement-breakpoint
-CREATE INDEX "idx_brands_slug_active" ON "storefront"."brands" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_brands_active" ON "storefront"."brands" USING btree ("is_active") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_carts_customer" ON "storefront"."carts" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_carts_session" ON "storefront"."carts" USING btree ("session_id");--> statement-breakpoint
-CREATE INDEX "idx_carts_expires" ON "storefront"."carts" USING btree ("expires_at");--> statement-breakpoint
-CREATE INDEX "idx_categories_slug_active" ON "storefront"."categories" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_categories_parent" ON "storefront"."categories" USING btree ("parent_id");--> statement-breakpoint
-CREATE INDEX "idx_categories_active" ON "storefront"."categories" USING btree ("is_active") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_brands_slug_active" ON "storefront"."brands" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_brands_active" ON "storefront"."brands" USING btree ("is_active") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_carts_customer" ON "storefront"."carts" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_carts_session" ON "storefront"."carts" USING btree ("session_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_carts_expires" ON "storefront"."carts" USING btree ("expires_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_categories_slug_active" ON "storefront"."categories" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_categories_parent" ON "storefront"."categories" USING btree ("parent_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_categories_active" ON "storefront"."categories" USING btree ("is_active") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX "idx_metafields_lookup" ON "entity_metafields" USING btree ("entity_type","entity_id");--> statement-breakpoint
 CREATE INDEX "idx_smart_collections_slug" ON "smart_collections" USING btree ("slug");--> statement-breakpoint
 CREATE INDEX "idx_tax_rules_country" ON "tax_rules" USING btree ("country");--> statement-breakpoint
@@ -1521,9 +1521,9 @@ CREATE INDEX "idx_coupons_code" ON "coupons" USING btree ("code");--> statement-
 CREATE INDEX "idx_coupons_active" ON "coupons" USING btree ("is_active");--> statement-breakpoint
 CREATE INDEX "idx_customer_addresses_customer" ON "customer_addresses" USING btree ("customer_id");--> statement-breakpoint
 CREATE INDEX "idx_consent_customer" ON "customer_consents" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_customers_email_hash" ON "storefront"."customers" USING btree ("email_hash");--> statement-breakpoint
-CREATE INDEX "idx_customers_active" ON "storefront"."customers" USING btree ("created_at") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_customers_tags" ON "storefront"."customers" USING btree ("tags");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_customers_email_hash" ON "storefront"."customers" USING btree ("email_hash");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_customers_active" ON "storefront"."customers" USING btree ("created_at") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_customers_tags" ON "storefront"."customers" USING btree ("tags");--> statement-breakpoint
 CREATE INDEX "idx_payment_customer" ON "payment_methods" USING btree ("customer_id");--> statement-breakpoint
 CREATE INDEX "idx_abandoned_created" ON "abandoned_checkouts" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX "idx_aff_partner" ON "affiliate_transactions" USING btree ("partner_id");--> statement-breakpoint
@@ -1559,10 +1559,10 @@ CREATE INDEX "idx_fulfill_items" ON "fulfillment_items" USING btree ("fulfillmen
 CREATE INDEX "idx_fulfillments_order" ON "fulfillments" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "idx_order_edits" ON "order_edits" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "idx_order_items_order" ON "order_items" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_orders_number_active" ON "storefront"."orders" USING btree ("order_number") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_orders_admin" ON "storefront"."orders" USING btree ("status","created_at") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_orders_customer" ON "storefront"."orders" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_orders_created" ON "storefront"."orders" USING brin ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_number_active" ON "storefront"."orders" USING btree ("order_number") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_admin" ON "storefront"."orders" USING btree ("status","created_at") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_customer" ON "storefront"."orders" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_orders_created" ON "storefront"."orders" USING brin ("created_at");--> statement-breakpoint
 CREATE INDEX "idx_refund_items" ON "refund_items" USING btree ("refund_id");--> statement-breakpoint
 CREATE INDEX "idx_refunds_order" ON "refunds" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "idx_rma_items_rma" ON "rma_items" USING btree ("rma_id");--> statement-breakpoint
@@ -1571,13 +1571,13 @@ CREATE INDEX "idx_bundle_items" ON "product_bundle_items" USING btree ("bundle_i
 CREATE INDEX "idx_product_images_product" ON "product_images" USING btree ("product_id");--> statement-breakpoint
 CREATE INDEX "idx_variant_sku_active" ON "product_variants" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX "idx_variants_product" ON "product_variants" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_products_sku_active" ON "storefront"."products" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_products_slug_active" ON "storefront"."products" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_products_active" ON "storefront"."products" USING btree ("category_id") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_products_featured" ON "storefront"."products" USING btree ("is_featured") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_products_tags" ON "storefront"."products" USING btree ("tags");--> statement-breakpoint
-CREATE INDEX "idx_products_name" ON "storefront"."products" USING gin ("name");--> statement-breakpoint
-CREATE INDEX "idx_products_brand" ON "storefront"."products" USING btree ("brand_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_sku_active" ON "storefront"."products" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_slug_active" ON "storefront"."products" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_active" ON "storefront"."products" USING btree ("category_id") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_featured" ON "storefront"."products" USING btree ("is_featured") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_tags" ON "storefront"."products" USING btree ("tags");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_name" ON "storefront"."products" USING gin ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_brand" ON "storefront"."products" USING btree ("brand_id");--> statement-breakpoint
 CREATE INDEX "idx_referral_code" ON "referrals" USING btree ("referral_code");--> statement-breakpoint
 CREATE INDEX "idx_referral_referrer" ON "referrals" USING btree ("referrer_id");--> statement-breakpoint
 CREATE INDEX "idx_reviews_product" ON "reviews" USING btree ("product_id");--> statement-breakpoint
@@ -1596,8 +1596,8 @@ CREATE INDEX "idx_po_supplier" ON "purchase_orders" USING btree ("supplier_id");
 CREATE INDEX "idx_po_status" ON "purchase_orders" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "idx_timeline_order" ON "order_timeline" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "idx_timeline_created" ON "order_timeline" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "idx_wallet_customer" ON "storefront"."wallet_transactions" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_wallet_created" ON "storefront"."wallet_transactions" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_wallet_customer" ON "storefront"."wallet_transactions" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_wallet_created" ON "storefront"."wallet_transactions" USING btree ("created_at");--> statement-breakpoint
 CREATE POLICY "tenants_isolation" ON "governance"."tenants" AS PERMISSIVE FOR SELECT TO public USING (status = 'active');
 
 ALTER TABLE "governance"."tenants" ENABLE ROW LEVEL SECURITY;
