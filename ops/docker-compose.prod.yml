@@ -159,7 +159,7 @@ services:
     environment:
       NODE_ENV: production
       # DATABASE_URL without password (password resolved via POSTGRES_PASSWORD_FILE)
-      DATABASE_URL: postgresql://${POSTGRES_USER:-apex}@postgres:5432/${POSTGRES_DB:-apex_v2}?sslmode=require
+      DATABASE_URL: postgresql://${POSTGRES_USER:-apex}@postgres:5432/${POSTGRES_DB:-apex_v2}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       DB_SSL: ${DB_SSL:-false}
       REDIS_URL: redis://@redis:6379
