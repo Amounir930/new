@@ -16,7 +16,6 @@ $$ LANGUAGE plpgsql;
 CREATE SCHEMA IF NOT EXISTS partman;
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
 --> statement-breakpoint
-
 DO $$
 BEGIN
     -- Only rename if audit_logs is a regular table (not already partitioned)
@@ -82,8 +81,9 @@ BEGIN
         EXECUTE 'UPDATE partman.part_config SET retention = ''90 days'', retention_keep_table = false WHERE parent_table = ''governance.audit_logs''';
     EXCEPTION WHEN OTHERS THEN NULL;
     END;
-END $$;
+END $;
 --> statement-breakpoint
+
 
 
 
@@ -261,8 +261,9 @@ DO $$ BEGIN
         CREATE OR REPLACE VIEW governance.active_tenants AS SELECT * FROM governance.tenants WHERE deleted_at IS NULL;
     EXCEPTION WHEN OTHERS THEN NULL;
     END;
-END $$;
+END $;
 --> statement-breakpoint
+
 -- Audit 444 Mandate: Deployment of trg_log_drift and Financial Restriction
 -- Statement-breakpoint
 CREATE OR REPLACE FUNCTION log_schema_drift()
@@ -303,13 +304,15 @@ DO $$ BEGIN
     ALTER TABLE "storefront"."orders" DROP CONSTRAINT IF EXISTS "orders_customer_id_fkey";
     ALTER TABLE "storefront"."orders" ADD CONSTRAINT "orders_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE RESTRICT;
 EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
+END $;
 --> statement-breakpoint
+
 
 DO $$ BEGIN
     ALTER TABLE "storefront"."refunds" DROP CONSTRAINT IF EXISTS "refunds_order_id_fkey";
     ALTER TABLE "storefront"."refunds" ADD CONSTRAINT "refunds_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE RESTRICT;
 EXCEPTION WHEN OTHERS THEN NULL;
-END $$;
+END $;
 --> statement-breakpoint
+
 

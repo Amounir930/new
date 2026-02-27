@@ -5,7 +5,6 @@ CREATE EXTENSION IF NOT EXISTS vector;
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS postgis;
 --> statement-breakpoint
-
 -- 2. Define Custom Types
 DO $$
 BEGIN
@@ -88,34 +87,34 @@ CREATE TABLE IF NOT EXISTS "storefront"."product_category_mapping" (
 
 -- 5. Table Enhancements & Conversions
 -- Governance
-DO $$ BEGIN ALTER TABLE "governance"."plan_change_history" ALTER COLUMN "from_plan" TYPE "public"."tenant_plan" USING "from_plan"::"public"."tenant_plan", ALTER COLUMN "to_plan" TYPE "public"."tenant_plan" USING "to_plan"::"public"."tenant_plan"; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "governance"."plan_change_history" ALTER COLUMN "from_plan" TYPE "public"."tenant_plan" USING "from_plan"::"public"."tenant_plan", ALTER COLUMN "to_plan" TYPE "public"."tenant_plan" USING "to_plan"::"public"."tenant_plan"; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
-DO $$ BEGIN ALTER TABLE "governance"."leads" ADD COLUMN IF NOT EXISTS "landing_page_url" text, ADD COLUMN IF NOT EXISTS "utm_source" varchar(100), ADD COLUMN IF NOT EXISTS "utm_medium" varchar(100), ADD COLUMN IF NOT EXISTS "utm_campaign" varchar(100); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "governance"."leads" ADD COLUMN IF NOT EXISTS "landing_page_url" text, ADD COLUMN IF NOT EXISTS "utm_source" varchar(100), ADD COLUMN IF NOT EXISTS "utm_medium" varchar(100), ADD COLUMN IF NOT EXISTS "utm_campaign" varchar(100); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
-DO $$ BEGIN ALTER TABLE "governance"."audit_logs" ADD COLUMN IF NOT EXISTS "actor_type" "public"."actor_type" DEFAULT 'tenant_admin' NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "governance"."audit_logs" ADD COLUMN IF NOT EXISTS "actor_type" "public"."actor_type" DEFAULT 'tenant_admin' NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- Supply Chain (Phase 4)
-DO $$ BEGIN ALTER TABLE "storefront"."suppliers" ADD COLUMN IF NOT EXISTS "lead_time_days" integer DEFAULT 7, ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR', ADD COLUMN IF NOT EXISTS "notes" text; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."suppliers" ADD COLUMN IF NOT EXISTS "lead_time_days" integer DEFAULT 7, ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR', ADD COLUMN IF NOT EXISTS "notes" text; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
-DO $$ BEGIN ALTER TABLE "storefront"."purchase_orders" ADD COLUMN IF NOT EXISTS "order_number" text, ADD COLUMN IF NOT EXISTS "subtotal" money_amount, ADD COLUMN IF NOT EXISTS "tax_amount" money_amount, ADD COLUMN IF NOT EXISTS "shipping_amount" money_amount, ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR', ADD COLUMN IF NOT EXISTS "notes" text; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."purchase_orders" ADD COLUMN IF NOT EXISTS "order_number" text, ADD COLUMN IF NOT EXISTS "subtotal" money_amount, ADD COLUMN IF NOT EXISTS "tax_amount" money_amount, ADD COLUMN IF NOT EXISTS "shipping_amount" money_amount, ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR', ADD COLUMN IF NOT EXISTS "notes" text; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- Discounts (Phase 4)
-DO $$ BEGIN ALTER TABLE "storefront"."price_rules" ADD COLUMN IF NOT EXISTS "applies_to" text DEFAULT 'all' NOT NULL, ADD COLUMN IF NOT EXISTS "entitled_ids" jsonb DEFAULT '[]'; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."price_rules" ADD COLUMN IF NOT EXISTS "applies_to" text DEFAULT 'all' NOT NULL, ADD COLUMN IF NOT EXISTS "entitled_ids" jsonb DEFAULT '[]'; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- Global Trade (Phase 5)
-DO $$ BEGIN ALTER TABLE "storefront"."commerce_markets" ADD COLUMN IF NOT EXISTS "is_primary" boolean DEFAULT false NOT NULL, ADD COLUMN IF NOT EXISTS "countries" jsonb DEFAULT '[]'; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."commerce_markets" ADD COLUMN IF NOT EXISTS "is_primary" boolean DEFAULT false NOT NULL, ADD COLUMN IF NOT EXISTS "countries" jsonb DEFAULT '[]'; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
-DO $$ BEGIN ALTER TABLE "storefront"."price_lists" ADD COLUMN IF NOT EXISTS "product_id" uuid, ADD COLUMN IF NOT EXISTS "variant_id" uuid, ADD COLUMN IF NOT EXISTS "price" money_amount, ADD COLUMN IF NOT EXISTS "compare_at_price" money_amount, ADD COLUMN IF NOT EXISTS "min_quantity" integer DEFAULT 1 NOT NULL, ADD COLUMN IF NOT EXISTS "max_quantity" integer; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."price_lists" ADD COLUMN IF NOT EXISTS "product_id" uuid, ADD COLUMN IF NOT EXISTS "variant_id" uuid, ADD COLUMN IF NOT EXISTS "price" money_amount, ADD COLUMN IF NOT EXISTS "compare_at_price" money_amount, ADD COLUMN IF NOT EXISTS "min_quantity" integer DEFAULT 1 NOT NULL, ADD COLUMN IF NOT EXISTS "max_quantity" integer; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
-DO $$ BEGIN ALTER TABLE "storefront"."currency_rates" ALTER COLUMN "rate" TYPE numeric(12,6); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."currency_rates" ALTER COLUMN "rate" TYPE numeric(12,6); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- 6. Indices & Constraints
@@ -124,53 +123,53 @@ CREATE INDEX IF NOT EXISTS "idx_audit_created_brin" ON "governance"."audit_logs"
 --> statement-breakpoint
 
 -- product_images
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_images_product" ON "storefront"."product_images" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_images_product" ON "storefront"."product_images" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN ALTER TABLE "storefront"."product_images" ADD CONSTRAINT "product_images_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."product_images" ADD CONSTRAINT "product_images_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- product_attributes
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_attrs_product" ON "storefront"."product_attributes" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_attrs_product" ON "storefront"."product_attributes" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_attrs_name" ON "storefront"."product_attributes" ("name"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_attrs_name" ON "storefront"."product_attributes" ("name"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN ALTER TABLE "storefront"."product_attributes" ADD CONSTRAINT "product_attributes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."product_attributes" ADD CONSTRAINT "product_attributes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- entity_metafields
-DO $$ BEGIN CREATE UNIQUE INDEX IF NOT EXISTS "idx_meta_unique" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id", "namespace", "key"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE UNIQUE INDEX IF NOT EXISTS "idx_meta_unique" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id", "namespace", "key"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_meta_lookup" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_meta_lookup" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_meta_value_gin" ON "storefront"."entity_metafields" USING GIN ("value"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_meta_value_gin" ON "storefront"."entity_metafields" USING GIN ("value"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- related_products
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_related_main" ON "storefront"."related_products" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_related_main" ON "storefront"."related_products" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_related_product_id_products_id_fk" FOREIGN KEY ("related_product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_related_product_id_products_id_fk" FOREIGN KEY ("related_product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- product_category_mapping
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_cat_mapping_product" ON "storefront"."product_category_mapping" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_cat_mapping_product" ON "storefront"."product_category_mapping" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_cat_mapping_category" ON "storefront"."product_category_mapping" ("category_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_cat_mapping_category" ON "storefront"."product_category_mapping" ("category_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- purchase_orders
-DO $$ BEGIN CREATE UNIQUE INDEX IF NOT EXISTS "idx_po_number_unique" ON "storefront"."purchase_orders" ("tenant_id", "order_number"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE UNIQUE INDEX IF NOT EXISTS "idx_po_number_unique" ON "storefront"."purchase_orders" ("tenant_id", "order_number"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- commercial
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_price_list_product" ON "storefront"."price_lists" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_price_list_product" ON "storefront"."price_lists" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
-DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_price_list_variant" ON "storefront"."price_lists" ("variant_id"); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN CREATE INDEX IF NOT EXISTS "idx_price_list_variant" ON "storefront"."price_lists" ("variant_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 -- 7. Performance Tuning (Autovacuum)
@@ -178,17 +177,17 @@ DO $$ BEGIN ALTER TABLE storefront.outbox_events SET (
     autovacuum_vacuum_scale_factor = 0.01,
     autovacuum_analyze_scale_factor = 0.005,
     autovacuum_vacuum_cost_limit = 1000
-); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 DO $$ BEGIN ALTER TABLE storefront.inventory_levels SET (
     autovacuum_vacuum_scale_factor = 0.01,
     autovacuum_analyze_scale_factor = 0.005
-); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint
 
 DO $$ BEGIN ALTER TABLE storefront.carts SET (
     autovacuum_vacuum_scale_factor = 0.05,
     autovacuum_analyze_scale_factor = 0.02
-); EXCEPTION WHEN OTHERS THEN NULL; END $$;
+); EXCEPTION WHEN OTHERS THEN NULL; END $;
 --> statement-breakpoint

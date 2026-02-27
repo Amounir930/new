@@ -44,6 +44,7 @@ ALTER TABLE governance.tenants
   );
 --> statement-breakpoint
 
+
 -- governance.users.email
 ALTER TABLE governance.users
   DROP CONSTRAINT IF EXISTS check_email_encrypted,
@@ -59,6 +60,7 @@ ALTER TABLE governance.users
   );
 --> statement-breakpoint
 
+
 -- governance.leads.email
 ALTER TABLE governance.leads
   DROP CONSTRAINT IF EXISTS check_email_encrypted,
@@ -73,6 +75,7 @@ ALTER TABLE governance.leads
     )
   );
 --> statement-breakpoint
+
 
 -- storefront.customers — email, phone, first_name, last_name
 ALTER TABLE storefront.customers
@@ -110,6 +113,7 @@ ALTER TABLE storefront.customers
   );
 --> statement-breakpoint
 
+
 -- ============================================================
 -- [C-02] Fix checkout_math_check — references actual columns
 -- OLD: referenced shipping_total, tax_total, discount_total (NON-EXISTENT)
@@ -129,6 +133,7 @@ ALTER TABLE storefront.orders
   );
 --> statement-breakpoint
 
+
 -- ============================================================
 -- [C-03] Fix inventory_movements quantity check
 -- OLD: qty > 0 — blocked legitimate outflow (sale, write-off)
@@ -139,6 +144,7 @@ ALTER TABLE storefront.inventory_movements
   ADD CONSTRAINT qty_nonzero CHECK (quantity <> 0);
 --> statement-breakpoint
 
+
 -- ============================================================
 -- [A-01] Add currency column to orders
 -- Required for the currency_match_check constraint to be valid.
@@ -146,7 +152,6 @@ ALTER TABLE storefront.inventory_movements
 ALTER TABLE storefront.orders
   ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'SAR';
 --> statement-breakpoint
-
 ALTER TABLE storefront.orders
   DROP CONSTRAINT IF EXISTS currency_match_check,
   ADD CONSTRAINT currency_match_check CHECK (
@@ -154,6 +159,7 @@ ALTER TABLE storefront.orders
     AND currency = ("subtotal"->>'currency')
   );
 --> statement-breakpoint
+
 
 -- ============================================================
 -- [A-02] Enforce S7 encryption on customer_addresses PII
@@ -186,13 +192,13 @@ ALTER TABLE storefront.customer_addresses
   );
 --> statement-breakpoint
 
+
 -- ============================================================
 -- [A-03] Encrypt affiliate_partners.email + add blind index
 -- ============================================================
 ALTER TABLE storefront.affiliate_partners
   ADD COLUMN IF NOT EXISTS email_hash TEXT;
 --> statement-breakpoint
-
 -- Migrate existing emails to hash BEFORE adding constraint
 -- NOTE: @apex/security migration script must pre-encrypt existing rows.
 -- This constraint activates for new rows immediately.
@@ -206,6 +212,7 @@ ALTER TABLE storefront.affiliate_partners
     )
   );
 --> statement-breakpoint
+
 
 CREATE INDEX IF NOT EXISTS idx_affiliate_email_hash
   ON storefront.affiliate_partners (email_hash);
@@ -233,8 +240,9 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dunning_status') THEN
     CREATE TYPE dunning_status AS ENUM ('pending', 'retried', 'failed', 'recovered');
   END IF;
-END $$;
+END $;
 --> statement-breakpoint
+
 
 -- Step 2: Normalize existing text values
 UPDATE governance.dunning_events
@@ -245,11 +253,9 @@ ALTER TABLE governance.dunning_events
   ALTER COLUMN status TYPE dunning_status
   USING status::dunning_status;
 --> statement-breakpoint
-
 ALTER TABLE governance.dunning_events
   ALTER COLUMN status SET DEFAULT 'pending'::dunning_status;
 --> statement-breakpoint
-
 -- ============================================================
 -- [A-06] Create order_fraud_scores table (plan.md Admin-#39)
 -- Cross-tenant in governance schema — visible to Super Admin

@@ -28,8 +28,9 @@ BEGIN
             r.table_schema, r.table_name, r.column_name, r.column_name);
         RAISE NOTICE 'Financial Fix: Converted %.%.% to money_amount', r.table_schema, r.table_name, r.column_name;
     END LOOP;
-END $$;
+END $;
 --> statement-breakpoint
+
 
 -- ─── 2. UNBOUNDED REFUNDS PROTECTION ────────────────────────────
 -- Ensures SUM(refunds.amount) <= orders.total
@@ -139,11 +140,9 @@ FOR EACH ROW EXECUTE FUNCTION storefront.block_inventory_mutation();
 
 DROP INDEX IF EXISTS storefront.idx_b2b_tier_collision;
 --> statement-breakpoint
-
 ALTER TABLE storefront.b2b_pricing_tiers 
 DROP CONSTRAINT IF EXISTS exclude_b2b_pricing_overlap;
 --> statement-breakpoint
-
 ALTER TABLE storefront.b2b_pricing_tiers 
 ADD CONSTRAINT exclude_b2b_pricing_overlap 
 EXCLUDE USING gist (
@@ -153,5 +152,6 @@ EXCLUDE USING gist (
     int4range(min_quantity, COALESCE(max_quantity, 2147483647), '[]') WITH &&
 );
 --> statement-breakpoint
+
 
 RAISE NOTICE 'Category 1 Remediation Complete.';
