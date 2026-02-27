@@ -281,4 +281,4 @@ END $$;
 DROP EVENT TRIGGER IF EXISTS trg_log_drift;
 CREATE EVENT TRIGGER trg_log_drift ON ddl_command_end EXECUTE FUNCTION governance.log_schema_drift();
 
-RAISE NOTICE '0002_security_hardening.sql: SUCCESS. Codebase Integrity Restored.';
+DO $$ BEGIN RAISE NOTICE '0002_security_hardening.sql: SUCCESS. Codebase Integrity Restored.'; END $$;
