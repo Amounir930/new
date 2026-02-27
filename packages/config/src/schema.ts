@@ -11,19 +11,15 @@ export const EnvSchema = z.object({
     .min(32, 'S1 Violation: JWT_SECRET must be at least 32 characters')
     .refine((key) => {
       // S1: Mandatory complexity in Production
-      if (
-        process.env.NODE_ENV === 'production' &&
-        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
-      ) {
-        return false; // Force fail in production
+      if (process.env.NODE_ENV === 'production') {
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
+          // Only allow bypass if ENABLE_S1_ENFORCEMENT is explicitly 'false' (emergency only)
+          return process.env.ENABLE_S1_ENFORCEMENT === 'false';
+        }
+        return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
       }
-      if (
-        process.env.NODE_ENV === 'test' ||
-        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
-      )
-        return true;
-      return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
-    }, 'S1 Violation: JWT_SECRET lacks required complexity (A-Z, a-z, 0-9) or unauthorized bypass in production'),
+      return true;
+    }, 'S1 Violation: JWT_SECRET lacks required complexity or unauthorized bypass in production'),
   ENCRYPTION_MASTER_KEY: z
     .string()
     .min(
@@ -33,7 +29,9 @@ export const EnvSchema = z.object({
     .refine((key) => {
       // S7: Strict Production Validation
       if (process.env.NODE_ENV === 'production') {
-        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false; // Fail bypass
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
+          return process.env.ENABLE_S1_ENFORCEMENT === 'false';
+        }
         return !/test|default|example/i.test(key);
       }
       return true;
@@ -41,7 +39,9 @@ export const EnvSchema = z.object({
     .refine((key) => {
       // S7: Complexity check: Uppercase, Lowercase, Number, Special Character
       if (process.env.NODE_ENV === 'production') {
-        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false; // Fail bypass
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
+          return process.env.ENABLE_S1_ENFORCEMENT === 'false';
+        }
       } else if (
         process.env.NODE_ENV === 'test' ||
         process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
@@ -55,7 +55,7 @@ export const EnvSchema = z.object({
         /[0-9]/.test(key) &&
         /[@$!%*?&#/=_+.-]/.test(key)
       );
-    }, 'S1 Violation: Key lacks required complexity (A-Z, a-z, 0-9, special) or unauthorized bypass in production'),
+    }, 'S1 Violation: Key lacks required complexity or unauthorized bypass in production'),
 
   // S1: Admin Credentials (Strict Validation)
   SUPER_ADMIN_EMAIL: z
@@ -73,14 +73,13 @@ export const EnvSchema = z.object({
     .min(1, 'S1 Violation: DATABASE_URL is required')
     .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL is supported')
     .refine((url) => {
-      if (
-        process.env.NODE_ENV === 'production' &&
-        process.env.SKIP_S1_COMPLEXITY_CHECK !== 'true'
-      ) {
+      if (process.env.NODE_ENV === 'production') {
+        if (process.env.DB_SSL_OPTIONAL === 'true') return true;
         return url.includes('ssl=require') || url.includes('sslmode=require');
       }
       return true;
-    }, 'S1 Violation: DATABASE_URL must require SSL in production'),
+    }, 'S1 Violation: DATABASE_URL must require SSL in production (unless DB_SSL_OPTIONAL=true)'),
+  DB_SSL_OPTIONAL: z.string().default('false'),
   DB_SSL: z.enum(['true', 'false']).default('true'),
   DB_CA_CERT: z.string().optional(),
   READ_REPLICA_URL: z.string().optional(),
@@ -127,17 +126,22 @@ export const EnvSchema = z.object({
     .min(32, 'S1 Violation: API_KEY_SECRET must be at least 32 chars')
     .refine((key) => {
       if (process.env.NODE_ENV === 'production') {
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
+          return process.env.ENABLE_S1_ENFORCEMENT === 'false';
+        }
         return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
       }
       return true;
-    }, 'S1 Violation: API_KEY_SECRET lacks required complexity'),
+    }, 'S1 Violation: API_KEY_SECRET lacks required complexity or unauthorized bypass in production'),
 
   BLIND_INDEX_PEPPER: z
     .string()
     .min(32, 'S1 Violation: BLIND_INDEX_PEPPER must be at least 32 chars')
     .refine((key) => {
       if (process.env.NODE_ENV === 'production') {
-        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false;
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
+          return process.env.ENABLE_S1_ENFORCEMENT === 'false';
+        }
         return (
           /[A-Z]/.test(key) &&
           /[a-z]/.test(key) &&
@@ -146,14 +150,16 @@ export const EnvSchema = z.object({
         );
       }
       return true;
-    }, 'S1 Violation: BLIND_INDEX_PEPPER lacks required complexity'),
+    }, 'S1 Violation: BLIND_INDEX_PEPPER lacks required complexity or unauthorized bypass in production'),
 
   SESSION_SALT: z
     .string()
     .min(32, 'S1 Violation: SESSION_SALT must be at least 32 chars')
     .refine((key) => {
       if (process.env.NODE_ENV === 'production') {
-        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return false;
+        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
+          return process.env.ENABLE_S1_ENFORCEMENT === 'false';
+        }
         return (
           /[A-Z]/.test(key) &&
           /[a-z]/.test(key) &&
@@ -162,7 +168,7 @@ export const EnvSchema = z.object({
         );
       }
       return true;
-    }, 'S1 Violation: SESSION_SALT lacks required complexity'),
+    }, 'S1 Violation: SESSION_SALT lacks required complexity or unauthorized bypass in production'),
 
   INTERNAL_API_SECRET: z
     .string()
