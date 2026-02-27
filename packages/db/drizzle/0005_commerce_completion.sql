@@ -107,29 +107,21 @@ CREATE TABLE "storefront"."rma_requests" (
 --> statement-breakpoint
 -- ─── PATCH: STAFF SCHEMA (Building on 0001_baseline) ──────────────
 -- staff_members: Add missing audit/soft-delete columns
-ALTER TABLE "storefront"."staff_members" 
+DO $$ BEGIN ALTER TABLE "storefront"."staff_members" 
 ADD COLUMN IF NOT EXISTS "last_login_at" timestamp (6) with time zone,
-ADD COLUMN IF NOT EXISTS "deleted_at" timestamp (6) with time zone;
+ADD COLUMN IF NOT EXISTS "deleted_at" timestamp (6) with time zone; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- staff_roles: Add description and strict permission check
-ALTER TABLE "storefront"."staff_roles" 
-ADD COLUMN IF NOT EXISTS "description" text,
-DROP CONSTRAINT IF EXISTS "permissions_strict_keys";
-
-ALTER TABLE "storefront"."staff_roles"
+DO $$ BEGIN ALTER TABLE "storefront"."staff_roles"
 ADD CONSTRAINT "permissions_strict_keys" CHECK (
       jsonb_typeof("permissions") = 'object' 
-      AND NOT EXISTS (
-        SELECT 1 
-        FROM jsonb_object_keys("permissions") AS k 
-        WHERE k NOT IN ('products', 'orders', 'customers', 'settings', 'promotions', 'analytics')
-      )
+      AND ("permissions" - array['products', 'orders', 'customers', 'settings', 'promotions', 'analytics'] = '{}'::jsonb)
     );
 
 -- staff_sessions: Ensure session salt version is present
-ALTER TABLE "storefront"."staff_sessions" 
+DO $$ BEGIN ALTER TABLE "storefront"."staff_sessions" 
 ADD COLUMN IF NOT EXISTS "session_salt_version" integer DEFAULT 1 NOT NULL,
-ADD COLUMN IF NOT EXISTS "revoked_at" timestamp (6) with time zone;
+ADD COLUMN IF NOT EXISTS "revoked_at" timestamp (6) with time zone; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 --> statement-breakpoint
 -- staff_sessions table creation removed (redundant with 0001)
 --> statement-breakpoint
