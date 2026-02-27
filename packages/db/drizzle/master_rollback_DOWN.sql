@@ -16,8 +16,6 @@ BEGIN
     END IF;
 END $$;
 --> statement-breakpoint
-
-
 -- ============================================================================
 -- ◀ 1. REVERSE PHASE 8 (Commerce Completion)
 -- ============================================================================
@@ -76,14 +74,10 @@ DROP TABLE IF EXISTS "storefront"."staff_sessions" CASCADE;
 -- A. Performance Tuning (Autovacuum Revert)
 ALTER TABLE storefront.outbox_events RESET (autovacuum_vacuum_scale_factor, autovacuum_analyze_scale_factor, autovacuum_vacuum_cost_limit);
 --> statement-breakpoint
-
 ALTER TABLE storefront.inventory_levels RESET (autovacuum_vacuum_scale_factor, autovacuum_analyze_scale_factor);
 --> statement-breakpoint
-
 ALTER TABLE storefront.carts RESET (autovacuum_vacuum_scale_factor, autovacuum_analyze_scale_factor);
 --> statement-breakpoint
-
-
 -- B. Indices & Constraints 
 DROP INDEX IF EXISTS "governance"."idx_audit_created_brin";
 --> statement-breakpoint
@@ -91,7 +85,6 @@ DROP INDEX IF EXISTS "governance"."idx_audit_created_brin";
 ALTER TABLE "governance"."plan_change_history" 
     ALTER COLUMN "from_plan" TYPE varchar(50), ALTER COLUMN "to_plan" TYPE varchar(50);
 --> statement-breakpoint
-
 ALTER TABLE "governance"."leads" 
     DROP COLUMN IF EXISTS "landing_page_url", DROP COLUMN IF EXISTS "utm_source",
     DROP COLUMN IF EXISTS "utm_medium", DROP COLUMN IF EXISTS "utm_campaign";
@@ -134,20 +127,14 @@ DROP EVENT TRIGGER IF EXISTS trg_audit_schema_drift;
 --> statement-breakpoint
 DROP FUNCTION IF EXISTS log_schema_drift();
 --> statement-breakpoint
-
-
 ALTER TABLE "storefront"."orders" DROP CONSTRAINT IF EXISTS "orders_customer_id_fkey";
 --> statement-breakpoint
 ALTER TABLE "storefront"."orders" ADD CONSTRAINT "orders_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id");
 --> statement-breakpoint
-
-
 ALTER TABLE "storefront"."refunds" DROP CONSTRAINT IF EXISTS "refunds_order_id_fkey";
 --> statement-breakpoint
 ALTER TABLE "storefront"."refunds" ADD CONSTRAINT "refunds_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id");
 --> statement-breakpoint
-
-
 DROP VIEW IF EXISTS storefront.active_products;
 --> statement-breakpoint
 DROP VIEW IF EXISTS storefront.active_orders;
@@ -156,27 +143,20 @@ DROP VIEW IF EXISTS governance.active_tenants;
 --> statement-breakpoint
 DROP FUNCTION IF EXISTS governance.detect_tenant_leaks();
 --> statement-breakpoint
-
 DROP FUNCTION IF EXISTS governance.move_to_archival_vault();
 --> statement-breakpoint
-
-
 DROP TRIGGER IF EXISTS trg_audit_immutable_update ON governance.audit_logs;
 --> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_audit_immutable_delete ON governance.audit_logs;
 --> statement-breakpoint
 DROP FUNCTION IF EXISTS governance.enforce_audit_immutability();
 --> statement-breakpoint
-
-
 DROP TRIGGER IF EXISTS trg_block_audit_update ON governance.audit_logs;
 --> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_block_audit_delete ON governance.audit_logs;
 --> statement-breakpoint
 DROP FUNCTION IF EXISTS block_audit_mutation();
 --> statement-breakpoint
-
-
 -- ============================================================================
 -- ◀ 5. REVERSE INITIAL SECURITY HARDENING (Migration 0002)
 -- ============================================================================
@@ -190,39 +170,34 @@ DROP TABLE IF EXISTS storefront.shipping_rates;
 -- Financial Mutex (Revert)
 DROP FUNCTION IF EXISTS storefront.enforce_wallet_integrity_v4();
 --> statement-breakpoint
-
-
 -- Tenant Isolation (Revert)
 DO $$
 DECLARE t TEXT;
 BEGIN
     FOR t IN SELECT table_name FROM information_schema.tables WHERE table_schema = 'storefront' LOOP
         EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON storefront.%I;', t);
-        EXECUTE format('ALTER TABLE storefront.%I DISABLE ROW LEVEL SECURITY;', t);
-        EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON storefront.%I;', t, t);
-        EXECUTE format('DROP FUNCTION IF EXISTS storefront.verify_tenant_session_%I();', t);
-    END LOOP;
+--> statement-breakpoint
+EXECUTE format('ALTER TABLE storefront.%I DISABLE ROW LEVEL SECURITY;', t);
+--> statement-breakpoint
+EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON storefront.%I;', t, t);
+--> statement-breakpoint
+EXECUTE format('DROP FUNCTION IF EXISTS storefront.verify_tenant_session_%I();', t);
+--> statement-breakpoint
+END LOOP;
 END $$;
 --> statement-breakpoint
-
 DROP FUNCTION IF EXISTS governance.enforce_tenant_hardening(TEXT, TEXT);
 --> statement-breakpoint
-
-
 -- Audit Immutability (Revert)
 DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
 --> statement-breakpoint
 DROP FUNCTION IF EXISTS governance.block_audit_tamper_event();
 --> statement-breakpoint
-
-
 -- Compliance (Revert)
 DROP FUNCTION IF EXISTS governance.verify_compliance();
 --> statement-breakpoint
-
 DROP FUNCTION IF EXISTS governance.log_schema_drift();
 --> statement-breakpoint
-
 DROP TABLE IF EXISTS governance.schema_drift_log;
 --> statement-breakpoint
 -- Cron (Revert)
@@ -243,8 +218,6 @@ BEGIN
     END IF;
 END $$;
 --> statement-breakpoint
-
-
 -- FINANCIAL TYPES ROLLBACK LAST (Prevents column drop failures)
 DO $$ 
 DECLARE r RECORD;
@@ -257,11 +230,10 @@ BEGIN
     ) LOOP
         BEGIN
             EXECUTE format('ALTER TABLE %I.%I ALTER COLUMN %I TYPE bigint USING ( (%I).amount )', r.table_schema, r.table_name, r.column_name, r.column_name);
-        EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'Rollback Skip: %.%.%', r.table_schema, r.table_name, r.column_name;
+--> statement-breakpoint
+EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'Rollback Skip: %.%.%', r.table_schema, r.table_name, r.column_name;
         END;
     END LOOP;
 END $$;
 --> statement-breakpoint
-
-
 RAISE NOTICE 'master_rollback_DOWN.sql: SUCCESS. Unified master rollback complete.';

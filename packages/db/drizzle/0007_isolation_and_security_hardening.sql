@@ -21,18 +21,18 @@ BEGIN
         -- Generic policy for all storefront tables assuming tenant_id column exists
         BEGIN
             EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON storefront.%I', t_name);
-            EXECUTE format('CREATE POLICY tenant_isolation_policy ON storefront.%I 
+--> statement-breakpoint
+EXECUTE format('CREATE POLICY tenant_isolation_policy ON storefront.%I 
                             USING (tenant_id = (current_setting(''app.current_tenant_id'', true))::uuid)
                             WITH CHECK (tenant_id = (current_setting(''app.current_tenant_id'', true))::uuid)', t_name);
-            RAISE NOTICE 'RLS Policy Applied: storefront.%', t_name;
+--> statement-breakpoint
+RAISE NOTICE 'RLS Policy Applied: storefront.%', t_name;
         EXCEPTION WHEN OTHERS THEN
             RAISE NOTICE 'RLS Policy Skip: storefront.% (Missing tenant_id?)', t_name;
         END;
     END LOOP;
 END $$;
 --> statement-breakpoint
-
-
 -- ─── 2. SCHEMA UNIFICATION ──────────────────────────────────────
 -- Drop duplicates in public schema that should only be in storefront.
 
@@ -70,24 +70,24 @@ BEGIN
             -- Only rename if target doesn't exist yet
             IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = '_' || t) THEN
                 EXECUTE format('ALTER TABLE storefront.%I RENAME TO %I', t, '_' || t);
-            END IF;
+--> statement-breakpoint
+END IF;
             
             -- 2. Create view without deleted rows
             -- Using * is acceptable here as we want to mirror the original schema but filter data.
             EXECUTE format('CREATE OR REPLACE VIEW storefront.%I AS SELECT * FROM storefront.%I WHERE deleted_at IS NULL', t, '_' || t);
-            
-            -- 3. Grant permissions (Role-based as per lead directive)
+--> statement-breakpoint
+-- 3. Grant permissions (Role-based as per lead directive)
             EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON storefront.%I TO role_tenant_admin', t);
-            EXECUTE format('GRANT SELECT ON storefront.%I TO role_app_service', t);
-            
-            RAISE NOTICE 'Soft Delete View Created: storefront.%', t;
+--> statement-breakpoint
+EXECUTE format('GRANT SELECT ON storefront.%I TO role_app_service', t);
+--> statement-breakpoint
+RAISE NOTICE 'Soft Delete View Created: storefront.%', t;
             END IF;
         END IF;
     END LOOP;
 END $$;
 --> statement-breakpoint
-
-
 -- ─── 4. SESSION & AUTH SECURITY ─────────────────────────────────
 -- Staff sessions must have unique token hashes.
 -- Fix C: Clean up duplicates before adding the constraint
@@ -103,21 +103,19 @@ ALTER TABLE storefront.staff_sessions DROP CONSTRAINT IF EXISTS staff_sessions_t
 --> statement-breakpoint
 ALTER TABLE storefront.staff_sessions ADD CONSTRAINT staff_sessions_token_hash_unique UNIQUE (token_hash);
 --> statement-breakpoint
-
-
 -- Auth logs must be immutable.
 DROP TRIGGER IF EXISTS trg_block_auth_log_update ON public.auth_logs;
 --> statement-breakpoint
 CREATE TRIGGER trg_block_auth_log_update
 BEFORE UPDATE ON public.auth_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_block_auth_log_delete ON public.auth_logs;
 --> statement-breakpoint
 CREATE TRIGGER trg_block_auth_log_delete
 BEFORE DELETE ON public.auth_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
-
+--> statement-breakpoint
 -- ─── 5. PII ENCRYPTION (S7/GDPR) ────────────────────────────────
 -- Encrypting phone and names in customer-related tables.
 
@@ -126,6 +124,7 @@ CREATE OR REPLACE FUNCTION vault.pii_encrypt(plain_text TEXT)
 RETURNS TEXT AS $$
 DECLARE
     v_key TEXT := current_setting('app.encryption_key', true);
+--> statement-breakpoint
 BEGIN
     IF plain_text IS NULL OR plain_text = '' THEN RETURN plain_text; END IF;
     IF v_key IS NULL OR v_key = '' THEN
@@ -134,6 +133,7 @@ BEGIN
     -- Note: This is a simplified demonstration of field-level encryption. 
     -- In production, pg_crypto with AES would be used with proper salts.
     RETURN encode(encrypt_iv(plain_text::bytea, v_key::bytea, '0123456789abcdef'::bytea, 'aes'), 'hex');
+--> statement-breakpoint
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -147,14 +147,17 @@ CREATE OR REPLACE FUNCTION storefront.encrypt_app_secrets()
 RETURNS TRIGGER AS $$
 DECLARE
     v_key TEXT := current_setting('app.encryption_key', true);
+--> statement-breakpoint
 BEGIN
     IF NEW.api_key IS NOT NULL THEN
         NEW.api_key := vault.pii_encrypt(NEW.api_key);
-    END IF;
+--> statement-breakpoint
+END IF;
     IF NEW.settings IS NOT NULL THEN
         -- Encrypting whole JSONB as a string for simplicity in this hardened layer
         NEW.settings := to_jsonb(vault.pii_encrypt(NEW.settings::text));
-    END IF;
+--> statement-breakpoint
+END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -164,7 +167,7 @@ DROP TRIGGER IF EXISTS trg_encrypt_app_secrets ON storefront.app_installations;
 CREATE TRIGGER trg_encrypt_app_secrets
 BEFORE INSERT OR UPDATE ON storefront.app_installations
 FOR EACH ROW EXECUTE FUNCTION storefront.encrypt_app_secrets();
-
+--> statement-breakpoint
 -- ─── 7. VAULT SHREDDING ENHANCEMENT (Audit Point #11) ────────────
 -- Overriding archival trigger to encrypt the payload before it hits the vault.
 
@@ -174,8 +177,8 @@ DECLARE
     v_user_email TEXT;
 BEGIN
     v_user_email := current_setting('app.current_user_email', true);
-    
-    INSERT INTO vault.archival_vault (
+--> statement-breakpoint
+INSERT INTO vault.archival_vault (
         table_name,
         original_id,
         tenant_id,
@@ -190,8 +193,8 @@ BEGIN
         to_jsonb(vault.pii_encrypt(to_jsonb(OLD)::text)), -- Encrypted Payload
         encode(digest(to_jsonb(OLD)::text, 'sha256'), 'hex')
     );
-    
-    RETURN OLD;
+--> statement-breakpoint
+RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -52,8 +52,8 @@ BEGIN
             "actor_type" text DEFAULT 'tenant_admin' NOT NULL,
             PRIMARY KEY (id, created_at)
         ) PARTITION BY RANGE (created_at);
-
-        -- Migrate baseline data if it exists
+--> statement-breakpoint
+-- Migrate baseline data if it exists
         IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs_baseline') THEN
             INSERT INTO governance.audit_logs SELECT * FROM governance.audit_logs_baseline;
         END IF;
@@ -71,7 +71,8 @@ BEGIN
                 'daily',
                 p_start_partition := (now() - interval '1 day')::text
             );
-        EXCEPTION WHEN OTHERS THEN
+--> statement-breakpoint
+EXCEPTION WHEN OTHERS THEN
             RAISE NOTICE 'Partman setup skipped: %', SQLERRM;
         END;
     END;
@@ -83,10 +84,6 @@ BEGIN
     END;
 END $$;
 --> statement-breakpoint
-
-
-
-
 -- Mandate #14: Audit Immutability Triggers (S4/S7)
 -- Prevents any modification of logs once written.
 
@@ -102,12 +99,13 @@ DROP TRIGGER IF EXISTS trg_audit_immutable_update ON governance.audit_logs;
 CREATE TRIGGER trg_audit_immutable_update
 BEFORE UPDATE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
-
+--> statement-breakpoint
 DROP TRIGGER IF EXISTS trg_audit_immutable_delete ON governance.audit_logs;
 --> statement-breakpoint
 CREATE TRIGGER trg_audit_immutable_delete
 BEFORE DELETE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
+--> statement-breakpoint
 -- Mandate #7: Archival Vault & Cryptographic Tombstones
 -- Super Admin Hard Deletions move records to Vault instead of permanent loss.
 
@@ -118,8 +116,8 @@ DECLARE
 BEGIN
     -- 1. Identify actor (Super Admin context)
     v_user_email := current_setting('app.current_user_email', true);
-    
-    -- 2. Insert into vault
+--> statement-breakpoint
+-- 2. Insert into vault
     INSERT INTO vault.archival_vault (
         table_name,
         original_id,
@@ -135,8 +133,8 @@ BEGIN
         to_jsonb(OLD),
         encode(digest(to_jsonb(OLD)::text, 'sha256'), 'hex') -- Cryptographic Tombstone
     );
-    
-    RETURN OLD;
+--> statement-breakpoint
+RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -144,6 +142,7 @@ $$ LANGUAGE plpgsql;
 -- CREATE TRIGGER trg_vault_delete_orders
 -- BEFORE DELETE ON storefront.orders
 -- FOR EACH ROW EXECUTE FUNCTION governance.move_to_archival_vault();
+--> statement-breakpoint
 -- Mandate #11: Tenant Isolation Bypass Validation
 -- Recursive CTE to detect cross-tenant leakage or missing RLS policies.
 
@@ -200,8 +199,8 @@ BEGIN
         -- Audit the access (Mandate #4/S4)
         INSERT INTO governance.audit_logs (tenant_id, action, metadata)
         VALUES (p_tenant_id, ''DEK_ACCESS'', jsonb_build_object(''timestamp'', now()));
-        
-        SELECT encrypted_key INTO v_key
+--> statement-breakpoint
+SELECT encrypted_key INTO v_key
         FROM vault.encryption_keys
         WHERE tenant_id = p_tenant_id AND is_active = true;
         
@@ -234,7 +233,8 @@ BEGIN
                 'timestamp', now()
             )
         );
-    END LOOP;
+--> statement-breakpoint
+END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -263,7 +263,6 @@ DO $$ BEGIN
     END;
 END $$;
 --> statement-breakpoint
-
 -- Audit 444 Mandate: Deployment of trg_log_drift and Financial Restriction
 -- Statement-breakpoint
 CREATE OR REPLACE FUNCTION log_schema_drift()
@@ -292,7 +291,8 @@ BEGIN
                 'object', obj.object_identity
             )
         );
-    END LOOP;
+--> statement-breakpoint
+END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -306,13 +306,9 @@ DO $$ BEGIN
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 --> statement-breakpoint
-
-
 DO $$ BEGIN
     ALTER TABLE "storefront"."refunds" DROP CONSTRAINT IF EXISTS "refunds_order_id_fkey";
     ALTER TABLE "storefront"."refunds" ADD CONSTRAINT "refunds_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE RESTRICT;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 --> statement-breakpoint
-
-

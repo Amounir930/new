@@ -73,8 +73,6 @@ BEGIN
   END IF;
 END $$;
 --> statement-breakpoint
-
-
 -- ── Step 3: Move tenant-scoped orphaned tables to 'legacy' ────
 -- These tables NEED tenant_id — they are tenant data accidentally in public.
 -- They are moved to 'legacy' until they can be refactored into storefront schema.
@@ -190,8 +188,6 @@ BEGIN
   END IF;
 END $$;
 --> statement-breakpoint
-
-
 -- ── Step 4: Revoke CREATE on public schema from app role ──────
 -- Prevents future accidents where ORM or dev creates a table in public.
 -- Postgres 15+ default: no CREATE on public, but enforce explicitly.
@@ -210,8 +206,6 @@ BEGIN
   END IF;
 END $$;
 --> statement-breakpoint
-
-
 -- ── Step 5: Verify public schema is clean ────────────────────
 DO $$
 DECLARE
@@ -230,8 +224,6 @@ BEGIN
   END IF;
 END $$;
 --> statement-breakpoint
-
-
 -- ── Step 6: Document legacy schema purpose ────────────────────
 COMMENT ON SCHEMA legacy IS
   'Quarantine zone for tables from 0001_baseline.sql that were accidentally created in public schema '

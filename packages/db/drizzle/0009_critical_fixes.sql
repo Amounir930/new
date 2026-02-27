@@ -43,8 +43,6 @@ ALTER TABLE governance.tenants
     )
   );
 --> statement-breakpoint
-
-
 -- governance.users.email
 ALTER TABLE governance.users
   DROP CONSTRAINT IF EXISTS check_email_encrypted,
@@ -59,8 +57,6 @@ ALTER TABLE governance.users
     )
   );
 --> statement-breakpoint
-
-
 -- governance.leads.email
 ALTER TABLE governance.leads
   DROP CONSTRAINT IF EXISTS check_email_encrypted,
@@ -75,8 +71,6 @@ ALTER TABLE governance.leads
     )
   );
 --> statement-breakpoint
-
-
 -- storefront.customers — email, phone, first_name, last_name
 ALTER TABLE storefront.customers
   DROP CONSTRAINT IF EXISTS check_email_encrypted,
@@ -112,8 +106,6 @@ ALTER TABLE storefront.customers
     )
   );
 --> statement-breakpoint
-
-
 -- ============================================================
 -- [C-02] Fix checkout_math_check — references actual columns
 -- OLD: referenced shipping_total, tax_total, discount_total (NON-EXISTENT)
@@ -132,8 +124,6 @@ ALTER TABLE storefront.orders
         - ("discount_amount"->>'amount')::BIGINT
   );
 --> statement-breakpoint
-
-
 -- ============================================================
 -- [C-03] Fix inventory_movements quantity check
 -- OLD: qty > 0 — blocked legitimate outflow (sale, write-off)
@@ -143,8 +133,6 @@ ALTER TABLE storefront.inventory_movements
   DROP CONSTRAINT IF EXISTS qty_positive,
   ADD CONSTRAINT qty_nonzero CHECK (quantity <> 0);
 --> statement-breakpoint
-
-
 -- ============================================================
 -- [A-01] Add currency column to orders
 -- Required for the currency_match_check constraint to be valid.
@@ -159,8 +147,6 @@ ALTER TABLE storefront.orders
     AND currency = ("subtotal"->>'currency')
   );
 --> statement-breakpoint
-
-
 -- ============================================================
 -- [A-02] Enforce S7 encryption on customer_addresses PII
 -- OLD: comment-only "S7 Encrypted" with no DB enforcement
@@ -191,8 +177,6 @@ ALTER TABLE storefront.customer_addresses
     )
   );
 --> statement-breakpoint
-
-
 -- ============================================================
 -- [A-03] Encrypt affiliate_partners.email + add blind index
 -- ============================================================
@@ -212,11 +196,9 @@ ALTER TABLE storefront.affiliate_partners
     )
   );
 --> statement-breakpoint
-
-
 CREATE INDEX IF NOT EXISTS idx_affiliate_email_hash
   ON storefront.affiliate_partners (email_hash);
-
+--> statement-breakpoint
 -- ============================================================
 -- [A-04] Unique constraint on (tenant_id, feature_key) for feature_gates
 -- Prevents ambiguous flag resolution from duplicate rows.
@@ -230,7 +212,7 @@ DELETE FROM governance.feature_gates fg1
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_feature_tenant_key
   ON governance.feature_gates (tenant_id, feature_key);
-
+--> statement-breakpoint
 -- ============================================================
 -- [A-05] Convert dunning_events.status to proper enum
 -- ============================================================
@@ -239,15 +221,14 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dunning_status') THEN
     CREATE TYPE dunning_status AS ENUM ('pending', 'retried', 'failed', 'recovered');
-  END IF;
+--> statement-breakpoint
+END IF;
 END $$;
 --> statement-breakpoint
-
-
 -- Step 2: Normalize existing text values
 UPDATE governance.dunning_events
   SET status = 'retried'  WHERE status NOT IN ('pending', 'retried', 'failed', 'recovered');
-
+--> statement-breakpoint
 -- Step 3: Cast column to enum
 ALTER TABLE governance.dunning_events
   ALTER COLUMN status TYPE dunning_status
@@ -273,9 +254,11 @@ CREATE TABLE IF NOT EXISTS governance.order_fraud_scores (
   provider     TEXT        NOT NULL DEFAULT 'internal',
   signals      JSONB       NOT NULL DEFAULT '{}'
 );
-
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_fraud_order   ON governance.order_fraud_scores (order_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_fraud_tenant  ON governance.order_fraud_scores (tenant_id);
+--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS idx_fraud_flagged ON governance.order_fraud_scores (is_flagged)
   WHERE is_flagged = true AND is_reviewed = false;
 
