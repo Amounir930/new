@@ -1571,15 +1571,15 @@ CREATE INDEX IF NOT EXISTS "idx_rma_items_rma" ON "public"."rma_items" USING btr
 CREATE INDEX IF NOT EXISTS "idx_attrs_product" ON "public"."product_attributes" USING btree ("product_id","attribute_name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_bundle_items" ON "public"."product_bundle_items" USING btree ("bundle_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_product_images_product" ON "public"."product_images" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_variant_sku_active" ON "public"."product_variants" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_variants_product" ON "public"."product_variants" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_sku_active" ON "storefront"."products" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_slug_active" ON "storefront"."products" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_active" ON "storefront"."products" USING btree ("category_id") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_featured" ON "storefront"."products" USING btree ("is_featured") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_tags" ON "storefront"."products" USING btree ("tags");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_variant_sku_active" ON "storefront"."_product_variants" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_variants_product" ON "storefront"."_product_variants" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_sku_active" ON "storefront"."_products" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_slug_active" ON "storefront"."_products" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_active" ON "storefront"."_products" USING btree ("category_id") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_featured" ON "storefront"."_products" USING btree ("is_featured") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_tags" ON "storefront"."_products" USING btree ("tags");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_name" ON "storefront"."_products" USING gin ("name" gin_trgm_ops);--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_brand" ON "storefront"."products" USING btree ("brand_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_brand" ON "storefront"."_products" USING btree ("brand_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_referral_code" ON "public"."referrals" USING btree ("referral_code");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_referral_referrer" ON "public"."referrals" USING btree ("referrer_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_reviews_product" ON "storefront"."reviews" USING btree ("product_id");--> statement-breakpoint
@@ -1608,7 +1608,7 @@ ALTER TABLE "storefront"."carts" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "storefront"."categories" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "storefront"."customers" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "storefront"."orders" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "storefront"."products" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "storefront"."_products" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "storefront"."pages" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "storefront"."wallet_transactions" ENABLE ROW LEVEL SECURITY;
 
