@@ -14,11 +14,11 @@ END $$;
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS vector;
 --> statement-breakpoint
-CREATE SCHEMA "governance";
+CREATE SCHEMA IF NOT EXISTS "governance";
 --> statement-breakpoint
-CREATE SCHEMA "vault";
+CREATE SCHEMA IF NOT EXISTS "vault";
 --> statement-breakpoint
-CREATE SCHEMA "storefront";
+CREATE SCHEMA IF NOT EXISTS "storefront";
 --> statement-breakpoint
 CREATE TYPE "public"."money_amount" AS (amount BIGINT, currency CHAR(3));
 --> statement-breakpoint
