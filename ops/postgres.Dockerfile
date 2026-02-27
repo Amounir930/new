@@ -16,5 +16,13 @@ RUN git clone https://github.com/pgpartman/pg_partman.git /tmp/pg_partman \
     && make \
     && make install \
     && cd / \
-    && rm -rf /tmp/pg_partman \
+    && rm -rf /tmp/pg_partman
+
+RUN git clone https://github.com/pgvector/pgvector.git /tmp/pgvector \
+    && cd /tmp/pgvector \
+    && git checkout v0.5.1 \
+    && make \
+    && make install \
+    && cd / \
+    && rm -rf /tmp/pgvector \
     && apk del .build-deps
