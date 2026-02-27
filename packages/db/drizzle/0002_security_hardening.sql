@@ -35,7 +35,7 @@ CREATE EXTENSION IF NOT EXISTS "btree_gist";
 
 -- ─── 3. MISSING SCHEMA RESTORATION (Truncation Fix) ─────────────
 CREATE TABLE IF NOT EXISTS storefront.shipping_zones (
-    id UUID PRIMARY KEY DEFAULT gen_ulid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_ulid(),
     tenant_id UUID NOT NULL,
     name TEXT NOT NULL,
     country_code CHAR(2) NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS storefront.shipping_zones (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS storefront.shipping_methods (
-    id UUID PRIMARY KEY DEFAULT gen_ulid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_ulid(),
     zone_id UUID NOT NULL REFERENCES storefront.shipping_zones(id) ON DELETE CASCADE,
     tenant_id UUID NOT NULL,
     name TEXT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS storefront.shipping_methods (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS storefront.shipping_rates (
-    id UUID PRIMARY KEY DEFAULT gen_ulid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_ulid(),
     method_id UUID NOT NULL REFERENCES storefront.shipping_methods(id) ON DELETE RESTRICT,
     tenant_id UUID NOT NULL,
     price public.money_amount NOT NULL,

@@ -1,7 +1,7 @@
 -- Phase 8 Commerce Completion Migration
 
 CREATE TABLE IF NOT EXISTS "storefront"."customer_segments" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"name" text NOT NULL,
 	"query" text NOT NULL
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."customer_segments" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."affiliate_partners" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
 	"status" "affiliate_status" DEFAULT 'pending' NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."affiliate_partners" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."affiliate_transactions" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"partner_id" uuid NOT NULL,
 	"created_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."affiliate_transactions" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."app_installations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"app_key" text NOT NULL,
 	"access_token" text NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."app_installations" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."b2b_companies" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."b2b_companies" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."b2b_pricing_tiers" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"company_id" uuid NOT NULL,
 	"created_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."b2b_pricing_tiers" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."b2b_users" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"company_id" uuid NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."b2b_users" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."webhook_subscriptions" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"topic" text NOT NULL,
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."webhook_subscriptions" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."rma_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
 	"created_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."rma_items" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."rma_requests" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),

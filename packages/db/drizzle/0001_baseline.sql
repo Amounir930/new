@@ -24,7 +24,7 @@ CREATE SCHEMA IF NOT EXISTS "storefront";
 --> statement-breakpoint
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'money_amount') THEN CREATE TYPE "public"."money_amount" AS (amount BIGINT, currency CHAR(3)); END IF; END $$;
 --> statement-breakpoint
-CREATE OR REPLACE FUNCTION gen_ulid() RETURNS uuid AS $$
+CREATE OR REPLACE FUNCTION public.gen_ulid() RETURNS uuid AS $$
 DECLARE
   t_ms BIGINT;
   r1 BIGINT;
@@ -71,7 +71,7 @@ DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tenant_plan') 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tenant_status') THEN CREATE TYPE "public"."tenant_status" AS ENUM('active', 'suspended', 'pending', 'archived'); END IF; END $$;--> statement-breakpoint
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transfer_status') THEN CREATE TYPE "public"."transfer_status" AS ENUM('draft', 'in_transit', 'received', 'cancelled'); END IF; END $$;--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."audit_logs" (
-	"id" uuid DEFAULT gen_ulid() NOT NULL,
+	"id" uuid DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"severity" "audit_severity" DEFAULT 'INFO' NOT NULL,
 	"result" "audit_result" DEFAULT 'SUCCESS' NOT NULL,
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "governance"."audit_logs" (
 --> statement-breakpoint
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."app_usage_records" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"app_id" uuid NOT NULL,
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS "governance"."app_usage_records" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."dunning_events" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"next_retry_at" timestamp with time zone,
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS "governance"."dunning_events" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "vault"."encryption_keys" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"rotated_at" timestamp with time zone,
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS "vault"."encryption_keys" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."feature_gates" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"is_enabled" boolean DEFAULT false,
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS "governance"."feature_gates" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."leads" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"converted_tenant_id" uuid,
 	"status" "lead_status" DEFAULT 'new' NOT NULL,
@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS "governance"."leads" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."plan_change_history" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"from_plan" varchar(50) NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS "governance"."plan_change_history" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."subscription_plans" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"price_monthly" "public"."money_amount" NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS "governance"."system_config" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."tenant_invoices" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"paid_at" timestamp with time zone,
@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS "governance"."tenant_invoices" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."tenant_quotas" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"max_products" integer,
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS "governance"."tenant_quotas" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."onboarding_blueprints" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"plan" "tenant_plan" DEFAULT 'free' NOT NULL,
@@ -235,7 +235,7 @@ CREATE TABLE IF NOT EXISTS "governance"."onboarding_blueprints" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."tenant_migrations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"applied_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"migration_name" text NOT NULL,
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS "public"."tenant_migrations" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "governance"."tenants" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"trial_ends_at" timestamp with time zone,
@@ -272,7 +272,7 @@ CREATE TABLE IF NOT EXISTS "public"."settings" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."stores" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"name" text NOT NULL,
 	"subdomain" text NOT NULL,
 	"status" text DEFAULT 'active' NOT NULL,
@@ -281,7 +281,7 @@ CREATE TABLE IF NOT EXISTS "public"."stores" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."users" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"email" text NOT NULL,
 	"email_hash" text NOT NULL,
 	"password" text,
@@ -292,7 +292,7 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."auth_logs" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"action" varchar(50) NOT NULL,
 	"ip_address" varchar(45),
@@ -302,7 +302,7 @@ CREATE TABLE IF NOT EXISTS "public"."auth_logs" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."otp_codes" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"phone" varchar(20),
 	"code" varchar(10) NOT NULL,
@@ -313,7 +313,7 @@ CREATE TABLE IF NOT EXISTS "public"."otp_codes" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."brands" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"deleted_at" timestamp with time zone,
@@ -327,7 +327,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."brands" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."carts" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"expires_at" timestamp with time zone,
@@ -338,7 +338,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."carts" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."categories" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"parent_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -357,7 +357,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."categories" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."entity_metafields" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"entity_type" varchar(50) NOT NULL,
 	"entity_id" uuid NOT NULL,
 	"namespace" varchar(100) NOT NULL,
@@ -368,14 +368,14 @@ CREATE TABLE IF NOT EXISTS "public"."entity_metafields" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."search_synonyms" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"term" varchar(100) NOT NULL,
 	"synonyms" jsonb NOT NULL,
 	CONSTRAINT "search_synonyms_term_unique" UNIQUE("term")
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."smart_collections" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"is_active" boolean DEFAULT true,
@@ -390,7 +390,7 @@ CREATE TABLE IF NOT EXISTS "public"."smart_collections" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."tax_categories" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"priority" integer DEFAULT 0,
 	"is_default" boolean DEFAULT false,
 	"name" varchar(100) NOT NULL,
@@ -399,7 +399,7 @@ CREATE TABLE IF NOT EXISTS "public"."tax_categories" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."tax_rules" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tax_category_id" uuid,
 	"rate" integer NOT NULL,
 	"priority" integer DEFAULT 0,
@@ -412,7 +412,7 @@ CREATE TABLE IF NOT EXISTS "public"."tax_rules" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."currency_rates" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"from_currency" char(3) NOT NULL,
 	"to_currency" char(3) NOT NULL,
@@ -420,7 +420,7 @@ CREATE TABLE IF NOT EXISTS "public"."currency_rates" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."discount_codes" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"price_rule_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"used_count" integer DEFAULT 0,
@@ -429,7 +429,7 @@ CREATE TABLE IF NOT EXISTS "public"."discount_codes" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."markets" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"is_primary" boolean DEFAULT false,
 	"is_active" boolean DEFAULT true,
@@ -440,7 +440,7 @@ CREATE TABLE IF NOT EXISTS "public"."markets" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."price_lists" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"market_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"variant_id" uuid,
@@ -452,7 +452,7 @@ CREATE TABLE IF NOT EXISTS "public"."price_lists" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."price_rules" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
 	"ends_at" timestamp with time zone,
@@ -471,7 +471,7 @@ CREATE TABLE IF NOT EXISTS "public"."price_rules" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."menu_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"menu_type" varchar(20) NOT NULL,
 	"parent_id" uuid,
 	"label" varchar(100) NOT NULL,
@@ -488,7 +488,7 @@ CREATE TABLE IF NOT EXISTS "public"."tenant_config" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."blog_posts" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"published_at" timestamp with time zone,
@@ -509,7 +509,7 @@ CREATE TABLE IF NOT EXISTS "public"."blog_posts" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."pages" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"deleted_at" timestamp with time zone,
@@ -524,7 +524,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."pages" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."coupons" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
 	"expires_at" timestamp with time zone,
@@ -540,7 +540,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."coupons" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."customer_addresses" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"is_default" boolean DEFAULT false,
 	"is_default_billing" boolean DEFAULT false,
@@ -556,7 +556,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."customer_addresses" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."customer_consents" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"consented_at" timestamp with time zone DEFAULT now(),
 	"revoked_at" timestamp with time zone,
@@ -568,7 +568,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."customer_consents" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."customer_segments" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"customer_count" integer DEFAULT 0,
 	"auto_update" boolean DEFAULT true,
@@ -578,7 +578,7 @@ CREATE TABLE IF NOT EXISTS "public"."customer_segments" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."customers" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"last_login_at" timestamp with time zone,
 	"last_order_at" timestamp with time zone,
@@ -605,7 +605,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."customers" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."payment_methods" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"expires_at" date,
@@ -620,7 +620,7 @@ CREATE TABLE IF NOT EXISTS "public"."payment_methods" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."abandoned_checkouts" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"recovered_at" timestamp with time zone,
@@ -631,7 +631,7 @@ CREATE TABLE IF NOT EXISTS "public"."abandoned_checkouts" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."affiliate_partners" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"commission_rate" integer DEFAULT 500 NOT NULL,
@@ -643,7 +643,7 @@ CREATE TABLE IF NOT EXISTS "public"."affiliate_partners" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."affiliate_transactions" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"partner_id" uuid NOT NULL,
 	"order_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -653,7 +653,7 @@ CREATE TABLE IF NOT EXISTS "public"."affiliate_transactions" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."app_installations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"installed_at" timestamp with time zone DEFAULT now(),
 	"is_active" boolean DEFAULT true,
 	"app_name" varchar(255) NOT NULL,
@@ -664,7 +664,7 @@ CREATE TABLE IF NOT EXISTS "public"."app_installations" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."b2b_companies" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"credit_limit" bigint DEFAULT 0,
 	"payment_terms_days" integer DEFAULT 30,
@@ -675,7 +675,7 @@ CREATE TABLE IF NOT EXISTS "public"."b2b_companies" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."b2b_pricing_tiers" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"company_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"min_quantity" integer DEFAULT 1 NOT NULL,
@@ -683,7 +683,7 @@ CREATE TABLE IF NOT EXISTS "public"."b2b_pricing_tiers" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."b2b_users" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"company_id" uuid NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -691,7 +691,7 @@ CREATE TABLE IF NOT EXISTS "public"."b2b_users" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."outbox_events" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"processed_at" timestamp with time zone,
 	"retry_count" integer DEFAULT 0,
@@ -703,7 +703,7 @@ CREATE TABLE IF NOT EXISTS "public"."outbox_events" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."product_views" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"customer_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -712,7 +712,7 @@ CREATE TABLE IF NOT EXISTS "public"."product_views" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."webhook_subscriptions" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"app_id" uuid NOT NULL,
 	"is_active" boolean DEFAULT true,
 	"event" varchar(100) NOT NULL,
@@ -721,7 +721,7 @@ CREATE TABLE IF NOT EXISTS "public"."webhook_subscriptions" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."faq_categories" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"order" integer DEFAULT 0,
 	"is_active" boolean DEFAULT true,
@@ -729,7 +729,7 @@ CREATE TABLE IF NOT EXISTS "public"."faq_categories" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."faqs" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"category_id" uuid,
 	"question" varchar(500) NOT NULL,
 	"answer" text NOT NULL,
@@ -740,7 +740,7 @@ CREATE TABLE IF NOT EXISTS "public"."faqs" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."banners" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"start_date" timestamp with time zone,
@@ -759,7 +759,7 @@ CREATE TABLE IF NOT EXISTS "public"."banners" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."bento_grids" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"name" jsonb NOT NULL,
 	"layout_id" varchar(50) NOT NULL,
@@ -767,7 +767,7 @@ CREATE TABLE IF NOT EXISTS "public"."bento_grids" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."flash_sale_products" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"flash_sale_id" uuid,
 	"product_id" uuid,
 	"discount_basis_points" integer NOT NULL,
@@ -777,7 +777,7 @@ CREATE TABLE IF NOT EXISTS "public"."flash_sale_products" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."flash_sales" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"end_time" timestamp with time zone NOT NULL,
@@ -787,7 +787,7 @@ CREATE TABLE IF NOT EXISTS "public"."flash_sales" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."newsletter_subscribers" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"unsubscribed_at" timestamp with time zone,
 	"is_active" boolean DEFAULT true,
@@ -796,14 +796,14 @@ CREATE TABLE IF NOT EXISTS "public"."newsletter_subscribers" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."search_analytics" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"query" varchar(255) NOT NULL,
 	"count" integer DEFAULT 1,
 	"last_searched_at" timestamp with time zone DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."import_errors" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"job_id" uuid,
 	"row_number" integer NOT NULL,
 	"row_data" jsonb,
@@ -812,7 +812,7 @@ CREATE TABLE IF NOT EXISTS "public"."import_errors" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."import_jobs" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"admin_id" uuid NOT NULL,
 	"filename" varchar(255) NOT NULL,
@@ -830,7 +830,7 @@ CREATE TABLE IF NOT EXISTS "public"."import_jobs" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."inventory_levels" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"location_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now(),
@@ -842,7 +842,7 @@ CREATE TABLE IF NOT EXISTS "public"."inventory_levels" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."inventory_movements" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
 	"created_by" uuid,
@@ -854,7 +854,7 @@ CREATE TABLE IF NOT EXISTS "public"."inventory_movements" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."inventory_reservations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -865,14 +865,14 @@ CREATE TABLE IF NOT EXISTS "public"."inventory_reservations" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."inventory_transfer_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"transfer_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"quantity" integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."inventory_transfers" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"from_location_id" uuid NOT NULL,
 	"to_location_id" uuid NOT NULL,
 	"created_by" uuid,
@@ -883,7 +883,7 @@ CREATE TABLE IF NOT EXISTS "public"."inventory_transfers" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."locations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"is_active" boolean DEFAULT true,
@@ -894,7 +894,7 @@ CREATE TABLE IF NOT EXISTS "public"."locations" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."kb_articles" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"category_id" uuid,
 	"slug" varchar(255) NOT NULL,
 	"title" varchar(255) NOT NULL,
@@ -907,7 +907,7 @@ CREATE TABLE IF NOT EXISTS "public"."kb_articles" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."kb_categories" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"slug" varchar(255) NOT NULL,
 	"icon" varchar(50),
@@ -917,7 +917,7 @@ CREATE TABLE IF NOT EXISTS "public"."kb_categories" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."store_locations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"address" text NOT NULL,
 	"coordinates" jsonb,
@@ -929,7 +929,7 @@ CREATE TABLE IF NOT EXISTS "public"."store_locations" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."loyalty_rules" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"points_per_currency" integer DEFAULT 1,
 	"min_redeem_points" integer DEFAULT 100,
@@ -941,7 +941,7 @@ CREATE TABLE IF NOT EXISTS "public"."loyalty_rules" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."notifications" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"title" varchar(255) NOT NULL,
 	"content" text NOT NULL,
@@ -952,14 +952,14 @@ CREATE TABLE IF NOT EXISTS "public"."notifications" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."fulfillment_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"fulfillment_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
 	"quantity" integer NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."fulfillments" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"location_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -972,7 +972,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."fulfillments" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."order_edits" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"line_item_id" uuid,
 	"edited_by" uuid,
@@ -985,7 +985,7 @@ CREATE TABLE IF NOT EXISTS "public"."order_edits" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."order_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"product_id" uuid,
 	"variant_id" uuid,
@@ -1005,7 +1005,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."order_items" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."orders" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid,
 	"market_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1043,7 +1043,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."orders" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."refund_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"refund_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
 	"quantity" integer NOT NULL,
@@ -1051,7 +1051,7 @@ CREATE TABLE IF NOT EXISTS "public"."refund_items" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."refunds" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"refunded_by" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1063,7 +1063,7 @@ CREATE TABLE IF NOT EXISTS "public"."refunds" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."rma_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"rma_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
 	"quantity" integer NOT NULL,
@@ -1074,7 +1074,7 @@ CREATE TABLE IF NOT EXISTS "public"."rma_items" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."payment_logs" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid,
 	"provider" varchar(50) NOT NULL,
 	"transaction_id" varchar(255),
@@ -1087,7 +1087,7 @@ CREATE TABLE IF NOT EXISTS "public"."payment_logs" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."back_in_stock_requests" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"product_id" uuid,
 	"customer_id" uuid,
 	"email" varchar(255) NOT NULL,
@@ -1097,7 +1097,7 @@ CREATE TABLE IF NOT EXISTS "public"."back_in_stock_requests" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."product_attributes" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"sort_order" integer DEFAULT 0,
 	"attribute_name" varchar(100) NOT NULL,
@@ -1106,14 +1106,14 @@ CREATE TABLE IF NOT EXISTS "public"."product_attributes" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."product_bundle_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"bundle_id" uuid NOT NULL,
 	"product_id" uuid NOT NULL,
 	"quantity" integer DEFAULT 1 NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."product_bundles" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"starts_at" timestamp with time zone,
 	"ends_at" timestamp with time zone,
@@ -1131,7 +1131,7 @@ CREATE TABLE IF NOT EXISTS "public"."product_category_mapping" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."product_images" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"is_primary" boolean DEFAULT false,
 	"sort_order" integer DEFAULT 0,
@@ -1146,7 +1146,7 @@ CREATE TABLE IF NOT EXISTS "public"."product_tags" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."_product_variants" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"deleted_at" timestamp with time zone,
 	"price" bigint NOT NULL,
@@ -1161,7 +1161,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."_product_variants" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."_products" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"brand_id" uuid,
 	"category_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1221,7 +1221,7 @@ CREATE TABLE IF NOT EXISTS "public"."related_products" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."referrals" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"referrer_id" uuid NOT NULL,
 	"referred_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1234,7 +1234,7 @@ CREATE TABLE IF NOT EXISTS "public"."referrals" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."reviews" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"product_id" uuid NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"order_id" uuid,
@@ -1248,7 +1248,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."reviews" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."rma_requests" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"order_item_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1261,7 +1261,7 @@ CREATE TABLE IF NOT EXISTS "public"."rma_requests" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."shipping_zones" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"base_price" bigint NOT NULL,
@@ -1277,7 +1277,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."shipping_zones" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."size_guides" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"name" varchar(255) NOT NULL,
 	"category_id" uuid,
 	"product_id" uuid,
@@ -1287,7 +1287,7 @@ CREATE TABLE IF NOT EXISTS "public"."size_guides" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."staff_members" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"user_id" uuid NOT NULL,
 	"role_id" uuid NOT NULL,
@@ -1301,7 +1301,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."staff_members" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."staff_roles" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"is_system" boolean DEFAULT false,
@@ -1310,7 +1310,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."staff_roles" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."staff_sessions" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"staff_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1323,7 +1323,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."staff_sessions" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."purchase_order_items" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"po_id" uuid NOT NULL,
 	"variant_id" uuid NOT NULL,
 	"quantity_ordered" integer NOT NULL,
@@ -1332,7 +1332,7 @@ CREATE TABLE IF NOT EXISTS "public"."purchase_order_items" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."purchase_orders" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"supplier_id" uuid NOT NULL,
 	"location_id" uuid NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1348,7 +1348,7 @@ CREATE TABLE IF NOT EXISTS "public"."purchase_orders" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."suppliers" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now(),
 	"updated_at" timestamp with time zone DEFAULT now(),
 	"is_active" boolean DEFAULT true,
@@ -1363,7 +1363,7 @@ CREATE TABLE IF NOT EXISTS "public"."suppliers" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "public"."order_timeline" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"order_id" uuid,
 	"updated_by" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),
@@ -1374,7 +1374,7 @@ CREATE TABLE IF NOT EXISTS "public"."order_timeline" (
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "storefront"."wallet_transactions" (
-	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+	"id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
 	"customer_id" uuid NOT NULL,
 	"order_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now(),

@@ -33,7 +33,7 @@ BEGIN
     -- Create partitioned table only if it doesn't exist or is not already partitioned
     IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs' AND c.relkind = 'p') THEN
         CREATE TABLE governance.audit_logs (
-            "id" uuid DEFAULT gen_ulid() NOT NULL,
+            "id" uuid DEFAULT public.gen_ulid() NOT NULL,
             "created_at" timestamp with time zone DEFAULT now() NOT NULL,
             "severity" "audit_severity" DEFAULT 'INFO' NOT NULL,
             "result" "audit_result" DEFAULT 'SUCCESS' NOT NULL,

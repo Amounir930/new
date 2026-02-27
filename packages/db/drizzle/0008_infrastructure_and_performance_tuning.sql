@@ -19,7 +19,7 @@ DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schem
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS public.outbox_events (
-    id UUID DEFAULT gen_ulid(),
+    id UUID DEFAULT public.gen_ulid(),
     tenant_id UUID NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     processed_at TIMESTAMPTZ,
@@ -51,7 +51,7 @@ DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schem
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS public.product_views (
-    id UUID DEFAULT gen_ulid(),
+    id UUID DEFAULT public.gen_ulid(),
     tenant_id UUID NOT NULL,
     product_id UUID NOT NULL,
     customer_id UUID,
@@ -82,7 +82,7 @@ DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schem
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS public.payment_logs (
-    id UUID DEFAULT gen_ulid(),
+    id UUID DEFAULT public.gen_ulid(),
     tenant_id UUID NOT NULL,
     order_id UUID,
     provider VARCHAR(50) NOT NULL,

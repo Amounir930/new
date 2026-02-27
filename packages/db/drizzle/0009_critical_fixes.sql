@@ -202,7 +202,7 @@ ALTER TABLE governance.dunning_events
 
 -- [A-06] Create order_fraud_scores table
 CREATE TABLE IF NOT EXISTS governance.order_fraud_scores (
-  id           UUID        NOT NULL DEFAULT gen_ulid() PRIMARY KEY,
+  id           UUID        NOT NULL DEFAULT public.gen_ulid() PRIMARY KEY,
   order_id     UUID        NOT NULL,
   tenant_id    UUID        NOT NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now(),

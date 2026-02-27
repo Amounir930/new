@@ -74,7 +74,7 @@ FOR EACH ROW EXECUTE FUNCTION storefront.check_refund_limit();
 -- Prevents race conditions bypassing max_uses_per_customer.
 
 CREATE TABLE IF NOT EXISTS storefront.coupon_usages (
-    id UUID PRIMARY KEY DEFAULT gen_ulid(),
+    id UUID PRIMARY KEY DEFAULT public.gen_ulid(),
     tenant_id UUID NOT NULL,
     coupon_id UUID NOT NULL REFERENCES storefront.coupons(id) ON DELETE RESTRICT,
     customer_id UUID NOT NULL REFERENCES storefront.customers(id) ON DELETE RESTRICT,

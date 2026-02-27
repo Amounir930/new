@@ -37,7 +37,7 @@ export const storefrontSchema = pgSchema('storefront');
  * REQUIRES: gen_ulid() function in PostgreSQL.
  */
 export const ulidId = (name = 'id') =>
-  uuid(name).default(sql`gen_ulid()`).primaryKey();
+  uuid(name).default(sql`public.gen_ulid()`).primaryKey();
 
 /**
  * Enterprise Decision #6: BYTEA for binary integrity.

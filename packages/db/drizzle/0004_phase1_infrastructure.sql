@@ -20,7 +20,7 @@ END $$;
 
 -- 3. Vault & Governance Tables
 CREATE TABLE IF NOT EXISTS "vault"."archival_vault" (
-    "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+    "id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
     "table_name" text NOT NULL,
     "original_id" text NOT NULL,
     "tenant_id" uuid NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS "vault"."archival_vault" (
 
 -- 4. Catalog Tables (Phase 3)
 CREATE TABLE IF NOT EXISTS "storefront"."product_images" (
-    "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+    "id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
     "product_id" uuid NOT NULL,
     "is_primary" boolean DEFAULT false NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."product_images" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."product_attributes" (
-    "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+    "id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
     "product_id" uuid NOT NULL,
     "name" text NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."product_attributes" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."entity_metafields" (
-    "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+    "id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
     "entity_type" text NOT NULL,
     "entity_id" uuid NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."entity_metafields" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."related_products" (
-    "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+    "id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
     "product_id" uuid NOT NULL,
     "related_product_id" uuid NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."related_products" (
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "storefront"."product_category_mapping" (
-    "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
+    "id" uuid PRIMARY KEY DEFAULT public.gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
     "product_id" uuid NOT NULL,
     "category_id" uuid NOT NULL,
