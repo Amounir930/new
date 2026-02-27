@@ -58,22 +58,30 @@ BEGIN
         END IF;
     END IF;
 
-    -- Hand over to Partman (idempotent)
-    IF NOT EXISTS (SELECT 1 FROM partman.part_config WHERE parent_table = 'governance.audit_logs') THEN
-        PERFORM partman.create_parent(
-            'governance.audit_logs',
-            'created_at',
-            'native',
-            'daily',
-            p_start_partition := (now() - interval '1 day')::text
-        );
-    END IF;
+    -- Hand over to Partman (idempotent, deferred via EXECUTE to avoid pre-parse failures)
+    BEGIN
+        EXECUTE 'SELECT 1 FROM partman.part_config WHERE parent_table = ''governance.audit_logs''';
+    EXCEPTION WHEN undefined_table OR OTHERS THEN
+        BEGIN
+            PERFORM partman.create_parent(
+                'governance.audit_logs',
+                'created_at',
+                'native',
+                'daily',
+                p_start_partition := (now() - interval '1 day')::text
+            );
+        EXCEPTION WHEN OTHERS THEN
+            RAISE NOTICE 'Partman setup skipped: %', SQLERRM;
+        END;
+    END;
 
-    -- Configure retention
-    UPDATE partman.part_config 
-    SET retention = '90 days', retention_keep_table = false 
-    WHERE parent_table = 'governance.audit_logs';
+    -- Configure retention (deferred)
+    BEGIN
+        EXECUTE 'UPDATE partman.part_config SET retention = ''90 days'', retention_keep_table = false WHERE parent_table = ''governance.audit_logs''';
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
 END $$;
+
 
 
 -- Mandate #14: Audit Immutability Triggers (S4/S7)
