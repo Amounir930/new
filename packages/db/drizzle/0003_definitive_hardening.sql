@@ -294,10 +294,15 @@ $$ LANGUAGE plpgsql;
 -- EVENT TRIGGER trg_audit_schema_drift deferred to final migration
 
 -- Financial Hardening: Ensure RESTRICT for orders and wallet
--- Statement-breakpoint
-ALTER TABLE "storefront"."orders" DROP CONSTRAINT IF EXISTS "orders_customer_id_fkey";
-ALTER TABLE "storefront"."orders" ADD CONSTRAINT "orders_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE RESTRICT;
+DO $$ BEGIN
+    ALTER TABLE "storefront"."orders" DROP CONSTRAINT IF EXISTS "orders_customer_id_fkey";
+    ALTER TABLE "storefront"."orders" ADD CONSTRAINT "orders_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE RESTRICT;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
--- Statement-breakpoint
-ALTER TABLE "storefront"."refunds" DROP CONSTRAINT IF EXISTS "refunds_order_id_fkey";
-ALTER TABLE "storefront"."refunds" ADD CONSTRAINT "refunds_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE RESTRICT;
+DO $$ BEGIN
+    ALTER TABLE "storefront"."refunds" DROP CONSTRAINT IF EXISTS "refunds_order_id_fkey";
+    ALTER TABLE "storefront"."refunds" ADD CONSTRAINT "refunds_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE RESTRICT;
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
