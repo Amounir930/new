@@ -4,7 +4,7 @@
 
 -- ─── 1. REGEX FINANCIAL LEAK FIX (S01-Extension) ────────────────
 -- Fixing oversight where subtotal, discount, etc. were skipped in the bulk conversion.
-DO $$$ 
+DO $$ 
 DECLARE 
     r RECORD;
 BEGIN
@@ -27,10 +27,11 @@ BEGIN
                         USING (ROW(%I, ''SAR'')::public.money_amount)', 
             r.table_schema, r.table_name, r.column_name, r.column_name);
 
-RAISE NOTICE 'Financial Fix: Converted %.%.% to money_amount', r.table_schema, r.table_name, r.column_name;
+        RAISE NOTICE 'Financial Fix: Converted %.%.% to money_amount', r.table_schema, r.table_name, r.column_name;
     END LOOP;
 END $$;
 --> statement-breakpoint
+
 -- ─── 2. UNBOUNDED REFUNDS PROTECTION ────────────────────────────
 -- Ensures SUM(refunds.amount) <= orders.total
 
@@ -59,12 +60,15 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_check_refund_limit ON storefront.refunds;
+--> statement-breakpoint
 
 CREATE TRIGGER trg_check_refund_limit
 BEFORE INSERT ON storefront.refunds
 FOR EACH ROW EXECUTE FUNCTION storefront.check_refund_limit();
+--> statement-breakpoint
 
 -- ─── 3. COUPON CONCURRENCY & USAGE TRACKING ─────────────────────
 -- Prevents race conditions bypassing max_uses_per_customer.
@@ -77,8 +81,10 @@ CREATE TABLE IF NOT EXISTS storefront.coupon_usages (
     order_id UUID NOT NULL REFERENCES storefront.orders(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS idx_coupon_usage_lookup ON storefront.coupon_usages (customer_id, coupon_id);
+--> statement-breakpoint
 
 CREATE OR REPLACE FUNCTION storefront.enforce_coupon_limits()
 RETURNS TRIGGER AS $$
@@ -104,12 +110,15 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_enforce_coupon_limits ON storefront.coupon_usages;
+--> statement-breakpoint
 
 CREATE TRIGGER trg_enforce_coupon_limits
 BEFORE INSERT ON storefront.coupon_usages
 FOR EACH ROW EXECUTE FUNCTION storefront.enforce_coupon_limits();
+--> statement-breakpoint
 
 -- ─── 4. INVENTORY LOG IMMUTABILITY (Audit Protection) ───────────
 -- Blocks UPDATE and DELETE on inventory_movements.
@@ -121,26 +130,33 @@ BEGIN
         USING ERRCODE = 'P0008';
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_block_inventory_update ON storefront.inventory_movements;
+--> statement-breakpoint
 
 CREATE TRIGGER trg_block_inventory_update
 BEFORE UPDATE ON storefront.inventory_movements
 FOR EACH ROW EXECUTE FUNCTION storefront.block_inventory_mutation();
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_block_inventory_delete ON storefront.inventory_movements;
+--> statement-breakpoint
 
 CREATE TRIGGER trg_block_inventory_delete
 BEFORE DELETE ON storefront.inventory_movements
 FOR EACH ROW EXECUTE FUNCTION storefront.block_inventory_mutation();
+--> statement-breakpoint
 
 -- ─── 5. B2B PRICING OVERLAP PREVENTION ──────────────────────────
 -- Uses EXCLUDE constraint to handle period/quantity collisions strictly.
 
 DROP INDEX IF EXISTS storefront.idx_b2b_tier_collision;
+--> statement-breakpoint
 
 ALTER TABLE storefront.b2b_pricing_tiers 
 DROP CONSTRAINT IF EXISTS exclude_b2b_pricing_overlap;
+--> statement-breakpoint
 
 ALTER TABLE storefront.b2b_pricing_tiers 
 ADD CONSTRAINT exclude_b2b_pricing_overlap 
@@ -150,6 +166,7 @@ EXCLUDE USING gist (
     product_id WITH =,
     int4range(min_quantity, COALESCE(max_quantity, 2147483647), '[]') WITH &&
 );
+--> statement-breakpoint
 
-DO $$$ BEGIN RAISE NOTICE 'Category 1 Remediation Complete.'; END $$;
+DO $$ BEGIN RAISE NOTICE 'Category 1 Remediation Complete.'; END $$;
 --> statement-breakpoint

@@ -1,13 +1,14 @@
 -- Phase 8 Commerce Completion Migration
 
-CREATE TABLE "storefront"."customer_segments" (
+CREATE TABLE IF NOT EXISTS "storefront"."customer_segments" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"name" text NOT NULL,
 	"query" text NOT NULL
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."affiliate_partners" (
+CREATE TABLE IF NOT EXISTS "storefront"."affiliate_partners" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
@@ -16,8 +17,9 @@ CREATE TABLE "storefront"."affiliate_partners" (
 	"email" text NOT NULL,
 	CONSTRAINT "affiliate_partners_code_unique" UNIQUE("code")
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."affiliate_transactions" (
+CREATE TABLE IF NOT EXISTS "storefront"."affiliate_transactions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"partner_id" uuid NOT NULL,
@@ -26,8 +28,9 @@ CREATE TABLE "storefront"."affiliate_transactions" (
 	"status" "affiliate_tx_status" DEFAULT 'pending' NOT NULL,
 	"reference_order_id" text
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."app_installations" (
+CREATE TABLE IF NOT EXISTS "storefront"."app_installations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"app_key" text NOT NULL,
@@ -35,8 +38,9 @@ CREATE TABLE "storefront"."app_installations" (
 	"scope" text NOT NULL,
 	"settings" jsonb DEFAULT '{}'::jsonb
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."b2b_companies" (
+CREATE TABLE IF NOT EXISTS "storefront"."b2b_companies" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"created_at" timestamp (6) with time zone DEFAULT now() NOT NULL,
@@ -47,8 +51,9 @@ CREATE TABLE "storefront"."b2b_companies" (
 	"tax_registration_number" text,
 	"billing_email" text
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."b2b_pricing_tiers" (
+CREATE TABLE IF NOT EXISTS "storefront"."b2b_pricing_tiers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"company_id" uuid NOT NULL,
@@ -59,8 +64,9 @@ CREATE TABLE "storefront"."b2b_pricing_tiers" (
 	"min_quantity" integer DEFAULT 0 NOT NULL,
 	"max_quantity" integer
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."b2b_users" (
+CREATE TABLE IF NOT EXISTS "storefront"."b2b_users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"company_id" uuid NOT NULL,
@@ -69,18 +75,20 @@ CREATE TABLE "storefront"."b2b_users" (
 	"unit_price" "money_amount" DEFAULT '(0,SAR)'::money_amount NOT NULL,
 	"role" text DEFAULT 'member' NOT NULL
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."webhook_subscriptions" (
+CREATE TABLE IF NOT EXISTS "storefront"."webhook_subscriptions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"topic" text NOT NULL,
 	"address" text NOT NULL,
 	"format" text DEFAULT 'json',
-	"secret" "bytea" NOT NULL
+	"secret" bytea NOT NULL
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."rma_items" (
+CREATE TABLE IF NOT EXISTS "storefront"."rma_items" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
@@ -90,8 +98,9 @@ CREATE TABLE "storefront"."rma_items" (
 	"status" text DEFAULT 'pending' NOT NULL,
 	CONSTRAINT "qty_positive" CHECK ("quantity" > 0)
 );
+--> statement-breakpoint
 
-CREATE TABLE "storefront"."rma_requests" (
+CREATE TABLE IF NOT EXISTS "storefront"."rma_requests" (
 	"id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
 	"order_id" uuid NOT NULL,
 	"order_item_id" uuid NOT NULL,
@@ -104,37 +113,41 @@ CREATE TABLE "storefront"."rma_requests" (
 	"description" text,
 	"evidence" jsonb DEFAULT '[]'::jsonb
 );
+--> statement-breakpoint
 
 -- ─── PATCH: STAFF SCHEMA (Building on 0001_baseline) ──────────────
 -- staff_members: Add missing audit/soft-delete columns
-DO $$$ BEGIN ALTER TABLE "storefront"."staff_members" 
+DO $$ BEGIN ALTER TABLE "storefront"."staff_members" 
 ADD COLUMN IF NOT EXISTS "last_login_at" timestamp (6) with time zone,
 ADD COLUMN IF NOT EXISTS "deleted_at" timestamp (6) with time zone; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 --> statement-breakpoint
+
 -- staff_roles: Add description and strict permission check
-DO $$$ BEGIN ALTER TABLE "storefront"."staff_roles"
-ADD CONSTRAINT "permissions_strict_keys" CHECK (
-      jsonb_typeof("permissions") = 'object' 
-      AND ("permissions" - array['products', 'orders', 'customers', 'settings', 'promotions', 'analytics'] = '{}'::jsonb)
+DO $$ BEGIN 
+    ALTER TABLE "storefront"."staff_roles" DROP CONSTRAINT IF EXISTS "permissions_strict_keys";
+    ALTER TABLE "storefront"."staff_roles"
+    ADD CONSTRAINT "permissions_strict_keys" CHECK (
+        jsonb_typeof("permissions") = 'object' 
+        AND ("permissions" - array['products', 'orders', 'customers', 'settings', 'promotions', 'analytics'] = '{}'::jsonb)
     );
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+--> statement-breakpoint
 
 -- staff_sessions: Ensure session salt version is present
-DO $$$ BEGIN ALTER TABLE "storefront"."staff_sessions" 
-ADD COLUMN IF NOT EXISTS "session_salt_version" integer DEFAULT 1 NOT NULL,
-ADD COLUMN IF NOT EXISTS "revoked_at" timestamp (6) with time zone; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN 
+    ALTER TABLE "storefront"."staff_sessions" ADD COLUMN IF NOT EXISTS "session_salt_version" integer DEFAULT 1 NOT NULL;
+    ALTER TABLE "storefront"."staff_sessions" ADD COLUMN IF NOT EXISTS "revoked_at" timestamp (6) with time zone; 
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 --> statement-breakpoint
--- staff_sessions table creation removed (redundant with 0001)
 
-CREATE INDEX "idx_aff_trans_created_brin" ON "storefront"."affiliate_transactions" USING brin ("created_at");
+CREATE INDEX IF NOT EXISTS "idx_aff_trans_created_brin" ON "storefront"."affiliate_transactions" USING brin ("created_at");
 --> statement-breakpoint
-CREATE INDEX "idx_b2b_tier_collision" ON "storefront"."b2b_pricing_tiers" USING gist (int4range("min_quantity", COALESCE("max_quantity", 2147483647), '[]'));
+CREATE INDEX IF NOT EXISTS "idx_b2b_tier_collision" ON "storefront"."b2b_pricing_tiers" USING gist (int4range("min_quantity", COALESCE("max_quantity", 2147483647), '[]'));
 --> statement-breakpoint
-CREATE INDEX "idx_rma_order" ON "storefront"."rma_requests" USING btree ("order_id");
+CREATE INDEX IF NOT EXISTS "idx_rma_order" ON "storefront"."rma_requests" USING btree ("order_id");
 --> statement-breakpoint
-CREATE INDEX "idx_rma_status" ON "storefront"."rma_requests" USING btree ("status");
+CREATE INDEX IF NOT EXISTS "idx_rma_status" ON "storefront"."rma_requests" USING btree ("status");
 --> statement-breakpoint
--- Redundant staff indexes removed (already in 0001)
-
 
 ALTER TABLE "storefront"."customers" ADD COLUMN IF NOT EXISTS "total_spent" "money_amount" DEFAULT '(0,SAR)'::money_amount NOT NULL;
 --> statement-breakpoint
@@ -178,17 +191,33 @@ ALTER TABLE "storefront"."abandoned_checkouts" ADD COLUMN IF NOT EXISTS "recover
 --> statement-breakpoint
 ALTER TABLE "storefront"."abandoned_checkouts" ADD COLUMN IF NOT EXISTS "recovered_at" timestamp (6) with time zone;
 --> statement-breakpoint
-ALTER TABLE "storefront"."affiliate_transactions" ADD CONSTRAINT "affiliate_transactions_partner_id_affiliate_partners_id_fk" FOREIGN KEY ("partner_id") REFERENCES "storefront"."affiliate_partners"("id") ON DELETE no action ON UPDATE no action;
---> statement-breakpoint
-ALTER TABLE "storefront"."b2b_pricing_tiers" ADD CONSTRAINT "b2b_pricing_tiers_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "storefront"."b2b_companies"("id") ON DELETE no action ON UPDATE no action;
---> statement-breakpoint
-ALTER TABLE "storefront"."b2b_users" ADD CONSTRAINT "b2b_users_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "storefront"."b2b_companies"("id") ON DELETE no action ON UPDATE no action;
---> statement-breakpoint
-ALTER TABLE "storefront"."rma_items" ADD CONSTRAINT "rma_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;
---> statement-breakpoint
-ALTER TABLE "storefront"."rma_requests" ADD CONSTRAINT "rma_requests_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE restrict ON UPDATE no action;
---> statement-breakpoint
-ALTER TABLE "storefront"."rma_requests" ADD CONSTRAINT "rma_requests_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE restrict ON UPDATE no action;
---> statement-breakpoint
--- Redundant staff constraints removed (already in 0001)
 
+ALTER TABLE "storefront"."affiliate_transactions" DROP CONSTRAINT IF EXISTS "affiliate_transactions_partner_id_affiliate_partners_id_fk";
+--> statement-breakpoint
+ALTER TABLE "storefront"."affiliate_transactions" ADD CONSTRAINT "affiliate_transactions_partner_id_affiliate_partners_id_fk" FOREIGN KEY ("partner_id") REFERENCES "storefront"."affiliate_partners"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+--> statement-breakpoint
+
+ALTER TABLE "storefront"."b2b_pricing_tiers" DROP CONSTRAINT IF EXISTS "b2b_pricing_tiers_company_id_b2b_companies_id_fk";
+--> statement-breakpoint
+ALTER TABLE "storefront"."b2b_pricing_tiers" ADD CONSTRAINT "b2b_pricing_tiers_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "storefront"."b2b_companies"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+--> statement-breakpoint
+
+ALTER TABLE "storefront"."b2b_users" DROP CONSTRAINT IF EXISTS "b2b_users_company_id_b2b_companies_id_fk";
+--> statement-breakpoint
+ALTER TABLE "storefront"."b2b_users" ADD CONSTRAINT "b2b_users_company_id_b2b_companies_id_fk" FOREIGN KEY ("company_id") REFERENCES "storefront"."b2b_companies"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+--> statement-breakpoint
+
+ALTER TABLE "storefront"."rma_items" DROP CONSTRAINT IF EXISTS "rma_items_order_item_id_order_items_id_fk";
+--> statement-breakpoint
+ALTER TABLE "storefront"."rma_items" ADD CONSTRAINT "rma_items_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+--> statement-breakpoint
+
+ALTER TABLE "storefront"."rma_requests" DROP CONSTRAINT IF EXISTS "rma_requests_order_id_orders_id_fk";
+--> statement-breakpoint
+ALTER TABLE "storefront"."rma_requests" ADD CONSTRAINT "rma_requests_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+--> statement-breakpoint
+
+ALTER TABLE "storefront"."rma_requests" DROP CONSTRAINT IF EXISTS "rma_requests_order_item_id_order_items_id_fk";
+--> statement-breakpoint
+ALTER TABLE "storefront"."rma_requests" ADD CONSTRAINT "rma_requests_order_item_id_order_items_id_fk" FOREIGN KEY ("order_item_id") REFERENCES "storefront"."order_items"("id") ON DELETE RESTRICT ON UPDATE NO ACTION;
+--> statement-breakpoint

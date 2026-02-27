@@ -1,23 +1,23 @@
 -- Audit 444 Mandate: Block UPDATE/DELETE on audit_logs
--- Statement-breakpoint
 CREATE OR REPLACE FUNCTION block_audit_mutation()
 RETURNS TRIGGER AS $$
 BEGIN
   RAISE EXCEPTION 'Audit Violation (S34): Mutations on audit_logs are forbidden';
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
--- Statement-breakpoint
--- NOTE: audit mutation triggers are applied AFTER partitioned table creation below
 -- Mandate #6: Audit Log Range Partitioning
 -- Ensures NVMe stability under high-volume write pressure.
 
 -- 1. Create partitioning schema if needed
 CREATE SCHEMA IF NOT EXISTS partman;
+--> statement-breakpoint
 
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
+--> statement-breakpoint
 
-DO $$$
+DO $$
 BEGIN
     -- Only rename if audit_logs is a regular table (not already partitioned)
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs' AND c.relkind = 'r') THEN
@@ -54,7 +54,7 @@ BEGIN
             PRIMARY KEY (id, created_at)
         ) PARTITION BY RANGE (created_at);
 
--- Migrate baseline data if it exists
+        -- Migrate baseline data if it exists
         IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs_baseline') THEN
             INSERT INTO governance.audit_logs SELECT * FROM governance.audit_logs_baseline;
         END IF;
@@ -72,8 +72,7 @@ BEGIN
                 'daily',
                 p_start_partition := (now() - interval '1 day')::text
             );
-
-EXCEPTION WHEN OTHERS THEN
+        EXCEPTION WHEN OTHERS THEN
             RAISE NOTICE 'Partman setup skipped: %', SQLERRM;
         END;
     END;
@@ -85,6 +84,7 @@ EXCEPTION WHEN OTHERS THEN
     END;
 END $$;
 --> statement-breakpoint
+
 -- Mandate #14: Audit Immutability Triggers (S4/S7)
 -- Prevents any modification of logs once written.
 
@@ -94,18 +94,23 @@ BEGIN
     RAISE EXCEPTION 'Audit Violation: Mutations forbidden' USING ERRCODE = 'P0005';
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_audit_immutable_update ON governance.audit_logs;
+--> statement-breakpoint
 
 CREATE TRIGGER trg_audit_immutable_update
 BEFORE UPDATE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
+--> statement-breakpoint
 
 DROP TRIGGER IF EXISTS trg_audit_immutable_delete ON governance.audit_logs;
+--> statement-breakpoint
 
 CREATE TRIGGER trg_audit_immutable_delete
 BEFORE DELETE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
+--> statement-breakpoint
 
 -- Mandate #7: Archival Vault & Cryptographic Tombstones
 -- Super Admin Hard Deletions move records to Vault instead of permanent loss.
@@ -118,7 +123,7 @@ BEGIN
     -- 1. Identify actor (Super Admin context)
     v_user_email := current_setting('app.current_user_email', true);
 
--- 2. Insert into vault
+    -- 2. Insert into vault
     INSERT INTO vault.archival_vault (
         table_name,
         original_id,
@@ -135,14 +140,10 @@ BEGIN
         encode(digest(to_jsonb(OLD)::text, 'sha256'), 'hex') -- Cryptographic Tombstone
     );
 
-RETURN OLD;
+    RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
-
--- Example: Apply to financial tables (to be expanded in final remediation)
--- CREATE TRIGGER trg_vault_delete_orders
--- BEFORE DELETE ON storefront.orders
--- FOR EACH ROW EXECUTE FUNCTION governance.move_to_archival_vault();
+--> statement-breakpoint
 
 -- Mandate #11: Tenant Isolation Bypass Validation
 -- Recursive CTE to detect cross-tenant leakage or missing RLS policies.
@@ -180,11 +181,12 @@ BEGIN
     AND t.table_type = 'BASE TABLE';
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 -- Mandate #12: Vault Schema Lockdown
 -- Strict REVOKE to prevent accidental exposure of DEKs.
 
-DO $$$
+DO $$
 BEGIN
     -- Revoke public access
     REVOKE ALL ON SCHEMA vault FROM PUBLIC;
@@ -201,15 +203,16 @@ BEGIN
         INSERT INTO governance.audit_logs (tenant_id, action, metadata)
         VALUES (p_tenant_id, ''DEK_ACCESS'', jsonb_build_object(''timestamp'', now()));
 
-SELECT encrypted_key INTO v_key
+        SELECT encrypted_key INTO v_key
         FROM vault.encryption_keys
         WHERE tenant_id = p_tenant_id AND is_active = true;
         
         RETURN v_key;
     END;
     $inner$ LANGUAGE plpgsql;';
-END;
-$$;
+END $$;
+--> statement-breakpoint
+
 -- Mandate #20: Universal Schema Drift Event Triggers
 -- Captures all DDL changes for forensic auditing.
 
@@ -234,19 +237,18 @@ BEGIN
                 'timestamp', now()
             )
         );
-
-END LOOP;
+    END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+--> statement-breakpoint
 
 -- EVENT TRIGGER trg_audit_schema_drift deferred to final migration
 
 -- Mandate #18: Global Soft Delete Scoping (Active Views)
--- Mandate #18: Global Soft Delete Scoping (Active Views)
 -- These reference the underlying base tables (prefixed with _) since
 -- the storefront.products view already filters deleted_at IS NULL.
 
-DO $$$ BEGIN
+DO $$ BEGIN
     -- Only create if the underlying table exists
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'storefront' AND c.relname = '_products') THEN
         BEGIN
@@ -264,50 +266,16 @@ DO $$$ BEGIN
     END;
 END $$;
 --> statement-breakpoint
--- Audit 444 Mandate: Deployment of trg_log_drift and Financial Restriction
--- Statement-breakpoint
-CREATE OR REPLACE FUNCTION log_schema_drift()
-RETURNS event_trigger AS $$
-DECLARE
-    obj record;
-BEGIN
-    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands()
-    LOOP
-        INSERT INTO governance.audit_logs (
-            tenant_id,
-            actor_type,
-            action,
-            entity_type,
-            entity_id,
-            metadata
-        ) VALUES (
-            'SYSTEM',
-            'system',
-            'SCHEMA_DRIFT_DETECTED',
-            'DATABASE',
-            obj.object_identity,
-            jsonb_build_object(
-                'command_tag', obj.command_tag,
-                'schema', obj.schema_name,
-                'object', obj.object_identity
-            )
-        );
-
-END LOOP;
-END;
-$$ LANGUAGE plpgsql;
-
--- Statement-breakpoint
--- EVENT TRIGGER trg_audit_schema_drift deferred to final migration
 
 -- Financial Hardening: Ensure RESTRICT for orders and wallet
-DO $$$ BEGIN
+DO $$ BEGIN
     ALTER TABLE "storefront"."orders" DROP CONSTRAINT IF EXISTS "orders_customer_id_fkey";
     ALTER TABLE "storefront"."orders" ADD CONSTRAINT "orders_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE RESTRICT;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 --> statement-breakpoint
-DO $$$ BEGIN
+
+DO $$ BEGIN
     ALTER TABLE "storefront"."refunds" DROP CONSTRAINT IF EXISTS "refunds_order_id_fkey";
     ALTER TABLE "storefront"."refunds" ADD CONSTRAINT "refunds_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE RESTRICT;
 EXCEPTION WHEN OTHERS THEN NULL;
