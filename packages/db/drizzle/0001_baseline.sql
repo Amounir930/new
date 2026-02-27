@@ -1578,7 +1578,7 @@ CREATE INDEX IF NOT EXISTS "idx_products_slug_active" ON "storefront"."_products
 CREATE INDEX IF NOT EXISTS "idx_products_active" ON "storefront"."_products" USING btree ("category_id") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_featured" ON "storefront"."_products" USING btree ("is_featured") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_tags" ON "storefront"."_products" USING btree ("tags");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_name" ON "storefront"."_products" USING gin ("name" gin_trgm_ops);--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_name" ON "storefront"."_products" USING gin ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_brand" ON "storefront"."_products" USING btree ("brand_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_referral_code" ON "public"."referrals" USING btree ("referral_code");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_referral_referrer" ON "public"."referrals" USING btree ("referrer_id");--> statement-breakpoint
