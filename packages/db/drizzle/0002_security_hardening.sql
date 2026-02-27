@@ -1,7 +1,13 @@
 -- 🚨 APEX V2 DEFINITIVE ARCHITECTURAL HARDENING
 -- FILE: 0002_security_hardening.sql
 -- COMPLIANCE: 100% (AUDIT-REMEDIATION-P0)
--- VERSION: 2.1 (Global Role Guarantee)
+-- VERSION: 2.2 (Self-Unblocking + Global Role Guarantee)
+
+-- ─── 0. PRE-MIGRATION SELF-UNBLOCKING ──────────────────────────
+-- Drop event triggers from prior partial runs that block subsequent DDL.
+-- Without this, the audit tamper trigger blocks ALTER TABLE from completing.
+DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
+DROP EVENT TRIGGER IF EXISTS trg_log_drift;
 
 -- ─── 1. GLOBAL ROLE GUARANTEE ──────────────────────────────────
 -- Ensure roles exist at the very start to prevent GRANT dependency failures.
