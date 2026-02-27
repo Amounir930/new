@@ -3,8 +3,11 @@ services:
   # Database Layer (PostgreSQL 15)
   # Tier: apex-data (ISOLATED – no public routing)
   # ═══════════════════════════════════════════════════════════════
-  postgres:
-    image: pgvector/pgvector:pg15
+  apex-postgres:
+    image: ${GITHUB_REPOSITORY:-amounir930/adel}/postgres:latest
+    build:
+      context: .
+      dockerfile: postgres.Dockerfile
     container_name: apex-postgres
     restart: always
     # Secrets are mounted as files; not exposed in docker inspect
@@ -152,14 +155,14 @@ services:
       - jwt_secret
       - cf_api_token
     depends_on:
-      postgres:
+      apex-postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     environment:
       NODE_ENV: production
       # DATABASE_URL without password (password resolved via POSTGRES_PASSWORD_FILE)
-      DATABASE_URL: postgresql://${POSTGRES_USER:-apex}@postgres:5432/${POSTGRES_DB:-apex_v2}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-apex}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       DB_SSL: ${DB_SSL:-false}
       REDIS_URL: redis://@redis:6379
@@ -590,7 +593,7 @@ services:
     healthcheck:
       disable: true
     depends_on:
-      postgres:
+      apex-postgres:
         condition: service_healthy
     networks:
       - apex-data
@@ -600,7 +603,7 @@ services:
   # Tier: apex-data (ISOLATED)
   # ═══════════════════════════════════════════════════════════════
   gitea-db:
-    image: postgres:15-alpine
+    image: postgis/postgis:15-3.3-alpine
     container_name: apex-gitea-db
     restart: always
     security_opt:
@@ -837,7 +840,7 @@ secrets:
 # To achieve S7 100% (internal TLS for Redis/Postgres):
 # 1. Generate internal CA: openssl req -x509 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 3650 -nodes
 # 2. Issue server certs for postgres and redis
-# 3. Add to postgres: -c ssl=on -c ssl_cert_file=... -c ssl_key_file=...
+# 3. Add to apex-postgres: -c ssl=on -c ssl_cert_file=... -c ssl_key_file=...
 # 4. Add to redis: --tls-port 6380 --port 0 --tls-cert-file ... --tls-key-file ...
 # 5. Update DATABASE_URL: ?sslmode=verify-full&sslrootcert=/run/secrets/ca_cert
 # This is deferred because it requires generating TLS certs on the server first.

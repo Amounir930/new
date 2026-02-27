@@ -55,7 +55,7 @@
     "glob": "^10.4.5",
     "rimraf": "^5.0.5",
     "lodash": "^4.17.21",
-    "fast-xml-parser": "^5.3.4",
+    "fast-xml-parser": "5.4.1",
     "tmp": "^0.2.4",
     "esbuild": "^0.25.0",
     "webpack": "^5.94.0",
@@ -75,6 +75,7 @@
   "dependencies": {
     "@nestjs/swagger": "11.2.6",
     "ajv": "8.18.0",
+    "fast-xml-parser": "5.4.1",
     "jose": "^6.1.3",
     "js-yaml": "4.1.1",
     "minimatch": "10.2.4",
