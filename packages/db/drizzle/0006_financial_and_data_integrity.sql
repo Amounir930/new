@@ -4,7 +4,7 @@
 
 -- ─── 1. REGEX FINANCIAL LEAK FIX (S01-Extension) ────────────────
 -- Fixing oversight where subtotal, discount, etc. were skipped in the bulk conversion.
-DO $$ 
+DO $$$ 
 DECLARE 
     r RECORD;
 BEGIN
@@ -151,5 +151,5 @@ EXCLUDE USING gist (
     int4range(min_quantity, COALESCE(max_quantity, 2147483647), '[]') WITH &&
 );
 
-DO $$ BEGIN RAISE NOTICE 'Category 1 Remediation Complete.'; END $$;
+DO $$$ BEGIN RAISE NOTICE 'Category 1 Remediation Complete.'; END $$;
 --> statement-breakpoint

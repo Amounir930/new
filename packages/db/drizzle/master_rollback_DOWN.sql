@@ -7,7 +7,7 @@
 -- ============================================================================
 -- 🚨 SAFETY GATE: BACKUP VERIFICATION (Order 5 Remediation)
 -- ============================================================================
-DO $$
+DO $$$
 BEGIN
     -- Simulation of a backup age check. In real environments, this would query a backup_logs table.
     -- Mandate: A rollback is forbidden unless a snapshot was taken in the last 24 hours.
@@ -171,7 +171,7 @@ DROP TABLE IF EXISTS storefront.shipping_rates;
 DROP FUNCTION IF EXISTS storefront.enforce_wallet_integrity_v4();
 --> statement-breakpoint
 -- Tenant Isolation (Revert)
-DO $$
+DO $$$
 DECLARE t TEXT;
 BEGIN
     FOR t IN SELECT table_name FROM information_schema.tables WHERE table_schema = 'storefront' LOOP
@@ -204,7 +204,7 @@ DROP TABLE IF EXISTS governance.schema_drift_log;
 GRANT ALL ON TABLE cron.job TO public;
 --> statement-breakpoint
 -- View Masking (Revert)
-DO $$
+DO $$$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relname = 'products' AND c.relkind = 'v' AND n.nspname = 'storefront') THEN
         DROP VIEW IF EXISTS storefront.products;
@@ -219,7 +219,7 @@ BEGIN
 END $$;
 --> statement-breakpoint
 -- FINANCIAL TYPES ROLLBACK LAST (Prevents column drop failures)
-DO $$ 
+DO $$$ 
 DECLARE r RECORD;
 BEGIN
     FOR r IN (

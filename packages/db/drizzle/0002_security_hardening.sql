@@ -9,7 +9,7 @@ DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
 DROP EVENT TRIGGER IF EXISTS trg_log_drift;
 --> statement-breakpoint
 -- ─── 1. GLOBAL ROLE GUARANTEE ──────────────────────────────────
-DO $$ 
+DO $$$ 
 BEGIN 
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN CREATE ROLE role_tenant_admin; END IF;
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_app_service') THEN CREATE ROLE role_app_service; END IF;
@@ -22,7 +22,7 @@ CREATE EXTENSION IF NOT EXISTS "vector";
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 --> statement-breakpoint
-DO $$ BEGIN PERFORM 1 FROM pg_available_extensions WHERE name = 'pg_cron'; IF FOUND THEN EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pg_cron"'; END IF; END $$;
+DO $$$ BEGIN PERFORM 1 FROM pg_available_extensions WHERE name = 'pg_cron'; IF FOUND THEN EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pg_cron"'; END IF; END $$;
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "postgis";
 --> statement-breakpoint
@@ -74,7 +74,7 @@ ALTER TABLE storefront.shipping_rates ADD CONSTRAINT exclude_weight_overlap EXCL
 );
 
 -- ─── 4. FORENSIC FINANCIAL REMEDIATION ──────────────────────────
-DO $$ 
+DO $$$ 
 DECLARE 
     r RECORD;
 BEGIN
@@ -126,7 +126,7 @@ EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON %I.%I; CR
 
 END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint
-DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $$;
+DO $$$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $$;
 --> statement-breakpoint
 -- ─── 7. AUDIT & LOGGING FUNCTIONS (Triggers installed in final migration) ────
 CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS event_trigger AS $$
@@ -138,7 +138,7 @@ CREATE OR REPLACE FUNCTION governance.log_schema_drift() RETURNS event_trigger A
 DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id) VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user); END LOOP; END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint
 -- ─── 8. SOFT DELETE ENFORCEMENT (State-Aware) ───────────────────
-DO $$
+DO $$$
 BEGIN
     -- 1. Products
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = 'products' AND table_type = 'BASE TABLE') THEN
@@ -167,5 +167,5 @@ BEGIN
     END IF;
 END $$;
 --> statement-breakpoint
-DO $$ BEGIN RAISE NOTICE '0002_security_hardening.sql: DEFINITIVE SUCCESS.'; END $$;
+DO $$$ BEGIN RAISE NOTICE '0002_security_hardening.sql: DEFINITIVE SUCCESS.'; END $$;
 --> statement-breakpoint

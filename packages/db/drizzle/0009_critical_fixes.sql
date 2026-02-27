@@ -216,7 +216,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_feature_tenant_key
 -- [A-05] Convert dunning_events.status to proper enum
 -- ============================================================
 -- Step 1: Create enum type if it doesn't already exist
-DO $$
+DO $$$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dunning_status') THEN
     CREATE TYPE dunning_status AS ENUM ('pending', 'retried', 'failed', 'recovered');

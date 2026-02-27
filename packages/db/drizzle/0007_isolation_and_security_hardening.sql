@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- ─── 1. RLS POLICY ENFORCEMENT ──────────────────────────────────
 -- Fixes "Deny All" state by providing explicit tenant-based policies.
 
-DO $$ 
+DO $$$ 
 DECLARE 
     t_name TEXT;
 BEGIN
@@ -59,7 +59,7 @@ DROP TABLE IF EXISTS public.staff_sessions CASCADE;
 -- ─── 3. SOFT DELETE ENFORCEMENT (RISK #8) ──────────────────────
 -- Move tables to internal names and create public-facing views.
 
-DO $$ 
+DO $$$ 
 DECLARE 
     target_tables TEXT[] := ARRAY['customers', 'orders', 'categories', 'brands', 'products', 'pages'];
     t TEXT;

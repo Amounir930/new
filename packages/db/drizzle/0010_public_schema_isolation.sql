@@ -39,7 +39,7 @@ CREATE SCHEMA IF NOT EXISTS legacy;
 -- These tables are intentionally cross-tenant (currency, tax, markets).
 -- They don't need tenant_id — they are global lookup tables.
 
-DO $$
+DO $$$
 BEGIN
   -- currency_rates
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'currency_rates') THEN
@@ -76,7 +76,7 @@ END $$;
 -- These tables NEED tenant_id — they are tenant data accidentally in public.
 -- They are moved to 'legacy' until they can be refactored into storefront schema.
 
-DO $$
+DO $$$
 BEGIN
   -- C-3 Primary targets: users / stores / settings / auth_logs / otp_codes
 
@@ -195,7 +195,7 @@ REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 --> statement-breakpoint
 -- Allow only the migration user (postgres / superuser) to create in public.
 -- Application roles should use governance/storefront/shared schemas only.
-DO $$
+DO $$$
 BEGIN
   IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_app_service') THEN
     REVOKE CREATE ON SCHEMA public FROM role_app_service;
@@ -206,7 +206,7 @@ BEGIN
 END $$;
 --> statement-breakpoint
 -- ── Step 5: Verify public schema is clean ────────────────────
-DO $$
+DO $$$
 DECLARE
   orphan_count INT;
 BEGIN

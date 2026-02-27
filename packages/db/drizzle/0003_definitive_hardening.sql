@@ -17,7 +17,7 @@ CREATE SCHEMA IF NOT EXISTS partman;
 
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
 
-DO $$
+DO $$$
 BEGIN
     -- Only rename if audit_logs is a regular table (not already partitioned)
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs' AND c.relkind = 'r') THEN
@@ -184,7 +184,7 @@ $$ LANGUAGE plpgsql;
 -- Mandate #12: Vault Schema Lockdown
 -- Strict REVOKE to prevent accidental exposure of DEKs.
 
-DO $$
+DO $$$
 BEGIN
     -- Revoke public access
     REVOKE ALL ON SCHEMA vault FROM PUBLIC;
@@ -246,7 +246,7 @@ $$ LANGUAGE plpgsql;
 -- These reference the underlying base tables (prefixed with _) since
 -- the storefront.products view already filters deleted_at IS NULL.
 
-DO $$ BEGIN
+DO $$$ BEGIN
     -- Only create if the underlying table exists
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'storefront' AND c.relname = '_products') THEN
         BEGIN
@@ -301,13 +301,13 @@ $$ LANGUAGE plpgsql;
 -- EVENT TRIGGER trg_audit_schema_drift deferred to final migration
 
 -- Financial Hardening: Ensure RESTRICT for orders and wallet
-DO $$ BEGIN
+DO $$$ BEGIN
     ALTER TABLE "storefront"."orders" DROP CONSTRAINT IF EXISTS "orders_customer_id_fkey";
     ALTER TABLE "storefront"."orders" ADD CONSTRAINT "orders_customer_id_fkey" FOREIGN KEY ("customer_id") REFERENCES "storefront"."customers"("id") ON DELETE RESTRICT;
 EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 --> statement-breakpoint
-DO $$ BEGIN
+DO $$$ BEGIN
     ALTER TABLE "storefront"."refunds" DROP CONSTRAINT IF EXISTS "refunds_order_id_fkey";
     ALTER TABLE "storefront"."refunds" ADD CONSTRAINT "refunds_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "storefront"."orders"("id") ON DELETE RESTRICT;
 EXCEPTION WHEN OTHERS THEN NULL;
