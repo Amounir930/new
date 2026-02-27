@@ -1,17 +1,15 @@
 -- 🚨 APEX V2 DEFINITIVE ARCHITECTURAL HARDENING
 -- FILE: 0002_security_hardening.sql
 -- COMPLIANCE: 100% (AUDIT-REMEDIATION-P0)
--- VERSION: 2.2 (Self-Unblocking + Global Role Guarantee)
+-- VERSION: 2.3 (Final Clean Restoration)
 
 -- ─── 0. PRE-MIGRATION SELF-UNBLOCKING ──────────────────────────
--- Drop event triggers from prior partial runs that block subsequent DDL.
--- Without this, the audit tamper trigger blocks ALTER TABLE from completing.
 DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
 --> statement-breakpoint
 DROP EVENT TRIGGER IF EXISTS trg_log_drift;
 --> statement-breakpoint
+
 -- ─── 1. GLOBAL ROLE GUARANTEE ──────────────────────────────────
--- Ensure roles exist at the very start to prevent GRANT dependency failures.
 DO $$ 
 BEGIN 
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN CREATE ROLE role_tenant_admin; END IF;
@@ -34,6 +32,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_partman" SCHEMA public;
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "btree_gist";
 --> statement-breakpoint
+
 -- ─── 3. MISSING SCHEMA RESTORATION (Truncation Fix) ─────────────
 CREATE TABLE IF NOT EXISTS storefront.shipping_zones (
     id UUID PRIMARY KEY DEFAULT gen_ulid(),
@@ -96,7 +95,6 @@ BEGIN
         BEGIN
             EXECUTE format('ALTER TABLE %I.%I ALTER COLUMN %I TYPE public.money_amount USING (ROW(%I, ''USD'')::public.money_amount)', 
                 r.table_schema, r.table_name, r.column_name, r.column_name);
---> statement-breakpoint
         EXCEPTION WHEN OTHERS THEN NULL; END;
     END LOOP;
 END $$;
@@ -109,7 +107,6 @@ BEGIN
     SELECT (wallet_balance).amount INTO v_current_amount FROM storefront.customers WHERE id = NEW.customer_id FOR UPDATE;
     IF (v_current_amount + NEW.amount) < 0 THEN RAISE EXCEPTION 'Financial Violation' USING ERRCODE = 'P0003'; END IF;
     DECLARE v_enc_key TEXT := current_setting('app.encryption_key', true);
---> statement-breakpoint
     BEGIN
         IF v_enc_key IS NULL OR v_enc_key = '' THEN RAISE EXCEPTION 'Security Key Missing' USING ERRCODE = 'P0004'; END IF;
         UPDATE storefront.customers SET wallet_balance = ROW((wallet_balance).amount + NEW.amount, (wallet_balance).currency)::public.money_amount,
@@ -125,15 +122,10 @@ END; $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION governance.enforce_tenant_hardening(target_table TEXT, target_schema TEXT DEFAULT 'public') RETURNS VOID AS $$
 BEGIN
     EXECUTE format('ALTER TABLE %I.%I ENABLE ROW LEVEL SECURITY', target_schema, target_table);
---> statement-breakpoint
     EXECUTE format('ALTER TABLE %I.%I FORCE ROW LEVEL SECURITY', target_schema, target_table);
---> statement-breakpoint
     EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I.%I; CREATE POLICY tenant_isolation ON %I.%I USING (tenant_id = current_setting(''app.current_tenant'', false)::uuid);', target_schema, target_table, target_schema, target_table);
---> statement-breakpoint
     EXECUTE format('CREATE OR REPLACE FUNCTION %I.verify_tenant_session_%I() RETURNS TRIGGER AS $inner$ BEGIN IF NEW.tenant_id::text <> current_setting(''app.current_tenant'', false) THEN RAISE EXCEPTION ''S2 Violation'' USING ERRCODE = ''P0002''; END IF; RETURN NEW; END; $inner$ LANGUAGE plpgsql;', target_schema, target_table);
---> statement-breakpoint
     EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON %I.%I; CREATE TRIGGER trg_verify_tenant_session_%I BEFORE INSERT OR UPDATE ON %I.%I FOR EACH ROW EXECUTE FUNCTION %I.verify_tenant_session_%I();', target_table, target_schema, target_table, target_table, target_schema, target_table, target_schema, target_table);
---> statement-breakpoint
 END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint
 
@@ -141,10 +133,6 @@ DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema
 --> statement-breakpoint
 
 -- ─── 7. AUDIT & LOGGING FUNCTIONS (Triggers installed in final migration) ────
--- Functions are defined here but event triggers are NOT activated yet.
--- They will be installed at the END of the entire migration chain (0010)
--- to prevent self-blocking during intermediate migrations that ALTER audit_logs.
-
 CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS event_trigger AS $$
 DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP IF obj.object_identity ~ 'audit_logs|super_admin_actions' THEN RAISE EXCEPTION 'Audit Tamper Forbidden' USING ERRCODE = 'P0005'; END IF; END LOOP; END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint

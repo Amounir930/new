@@ -289,4 +289,5 @@ INSERT INTO drizzle.__drizzle_migrations (hash, created_at)
   VALUES ('0009_critical_fixes', EXTRACT(EPOCH FROM NOW()) * 1000)
   ON CONFLICT DO NOTHING;
 
+DO 3532 BEGIN RAISE NOTICE 'Critical Fixes Complete.'; END 3532;
 COMMIT;

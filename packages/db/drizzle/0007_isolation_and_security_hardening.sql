@@ -95,8 +95,9 @@ WITH duplicates AS (
     SELECT id, ROW_NUMBER() OVER (PARTITION BY token_hash ORDER BY created_at DESC) as row_num
     FROM storefront.staff_sessions
 )
-DELETE FROM storefront.staff_sessions
-WHERE id IN (SELECT id FROM duplicates WHERE row_num > 1);
+DELETE FROM storefront.staff_sessions WHERE id IN (SELECT id FROM duplicates WHERE row_num > 1);
+--> statement-breakpoint
+DO 3532 BEGIN RAISE NOTICE 'Security Hardening Complete.'; END 3532;
 
 ALTER TABLE storefront.staff_sessions DROP CONSTRAINT IF EXISTS staff_sessions_token_hash_unique;
 --> statement-breakpoint

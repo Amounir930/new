@@ -154,4 +154,4 @@ EXCLUDE USING gist (
 --> statement-breakpoint
 
 
-RAISE NOTICE 'Category 1 Remediation Complete.';
+DO $$ BEGIN RAISE NOTICE 'Category 1 Remediation Complete.'; END $$;
