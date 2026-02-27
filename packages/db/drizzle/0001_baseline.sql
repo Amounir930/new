@@ -1613,8 +1613,7 @@ ALTER TABLE "storefront"."pages" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "storefront"."wallet_transactions" ENABLE ROW LEVEL SECURITY;
 
 -- Audit 444 #35: Revoke pg_cron public access
-REVOKE ALL ON TABLE cron.job FROM public;
-GRANT SELECT ON TABLE cron.job TO postgres;
+DO $ BEGIN IF EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'cron') THEN EXECUTE 'REVOKE ALL ON TABLE cron.job FROM public'; EXECUTE 'GRANT SELECT ON TABLE cron.job TO postgres'; END IF; END $;
 
 -- Risk #8: Soft Delete Enforcement Views
 CREATE OR REPLACE VIEW storefront.products AS SELECT * FROM storefront._products WHERE deleted_at IS NULL;
