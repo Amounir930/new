@@ -6,7 +6,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
-CREATE EXTENSION IF NOT EXISTS "pg_cron";
+DO $ BEGIN PERFORM 1 FROM pg_available_extensions WHERE name = 'pg_cron'; IF FOUND THEN EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pg_cron"'; END IF; END $;
 CREATE EXTENSION IF NOT EXISTS "postgis";
 CREATE EXTENSION IF NOT EXISTS "pg_partman" SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS "btree_gist";
@@ -173,7 +173,7 @@ BEGIN
 END $$;
 
 -- ─── 6. AUDIT IMMUTABILITY ──────────────────────────────────────
-CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS EVENT TRIGGER AS $$
+CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS event_trigger AS $$
 DECLARE
     obj record;
 BEGIN
@@ -240,8 +240,7 @@ $$ LANGUAGE plpgsql;
 
 -- ─── 9. PG_CRON LOCKDOWN ──────────────────────────────────────────
 -- Mandate #10: Revoke access to cron.job from public/app users.
-REVOKE ALL ON TABLE cron.job FROM public;
-GRANT SELECT ON TABLE cron.job TO postgres;
+DO $$ BEGIN IF EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'cron') THEN EXECUTE 'REVOKE ALL ON TABLE cron.job FROM public'; EXECUTE 'GRANT SELECT ON TABLE cron.job TO postgres'; END IF; END $$;
 
 -- ─── 10. SOFT DELETE ENFORCEMENT ──────────────────────────────────
 -- Mandate #5: Rename core tables to _table and expose only active Views.
