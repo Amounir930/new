@@ -187,7 +187,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE EVENT TRIGGER trg_audit_immutability_lockdown ON ddl_command_end
-WHEN TAG IN ('TRUNCATE', 'DROP TABLE', 'ALTER TABLE', 'DROP COLUMN', 'ALTER COLUMN')
+WHEN TAG IN ('DROP TABLE', 'ALTER TABLE')
 EXECUTE FUNCTION governance.block_audit_tamper_event();
 
 -- ─── 7. COMPLIANCE VERIFICATION ────────────────────────────────
