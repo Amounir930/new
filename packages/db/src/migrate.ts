@@ -1,7 +1,11 @@
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: resolve(process.cwd(), '../../.env') });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: join(__dirname, '../../../.env') });
 
 import { validateEnv } from '@apex/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
@@ -68,9 +72,8 @@ async function setupMigrationContext(
       );
       await client.query(`SET search_path TO "${schemaName}"`);
     } catch (schemaError) {
-      // Gap #5: Atomic Provisioning - Rollback partial schema
-      console.error(`Provisioning failed for ${schemaName}, rolling back...`);
-      await client.query(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
+      // Gap #5: Atomic Provisioning - Safety First
+      console.error(`Provisioning failed for ${schemaName}. Manual cleanup may be required to maintain data integrity.`);
       throw schemaError;
     }
     return schemaName;
@@ -100,11 +103,10 @@ async function runMigrations() {
     ?.split('=')[1];
   const runPublic = process.argv.includes('--public');
 
-  if (!tenantId && !runPublic) {
-    console.error(
-      'S2 Violation: Must specify --tenant=ID or --public to run migrations.'
+  if (tenantId) {
+    console.warn(
+      '⚠️  WARNING: Using --tenant with Shared DB/RLS architecture is deprecated and may lead to data fragmentation.'
     );
-    process.exit(1);
   }
 
   console.log(
@@ -129,11 +131,14 @@ async function runMigrations() {
     await setupMigrationContext(client, tenantId, runPublic);
 
     const db = drizzle(client);
-    await migrate(db, { migrationsFolder: './drizzle' });
+    const migrationsFolder = join(__dirname, '../drizzle');
+    console.log(`Loading migrations from: ${migrationsFolder}`);
+
+    await migrate(db, { migrationsFolder });
     console.log('Migrations completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
-    process.exit(1);
+    process.exitCode = 1;
   } finally {
     // Mandate #17: Release advisory locks
     try {

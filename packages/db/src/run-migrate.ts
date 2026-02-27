@@ -1,8 +1,11 @@
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import * as dotenv from 'dotenv';
 
 async function main() {
-  const envPath = resolve(process.cwd(), '../../.env');
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const envPath = join(__dirname, '../../../.env');
   console.log(`Loading environment from: ${envPath}`);
   dotenv.config({ path: envPath });
 
@@ -13,5 +16,5 @@ async function main() {
 
 main().catch((err) => {
   console.error('Fatal error in entry point:', err);
-  process.exit(1);
+  process.exitCode = 1;
 });
