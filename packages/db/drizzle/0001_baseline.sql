@@ -14,6 +14,8 @@ END $$;
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS vector;
 --> statement-breakpoint
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+--> statement-breakpoint
 CREATE SCHEMA IF NOT EXISTS "governance";
 --> statement-breakpoint
 CREATE SCHEMA IF NOT EXISTS "vault";
@@ -1554,7 +1556,7 @@ CREATE INDEX IF NOT EXISTS "idx_inv_res_active" ON "public"."inventory_reservati
 CREATE INDEX IF NOT EXISTS "idx_inv_res_expires" ON "public"."inventory_reservations" USING btree ("expires_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_transfer_items" ON "public"."inventory_transfer_items" USING btree ("transfer_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_kb_article_slug" ON "public"."kb_articles" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_location_name" ON "public"."store_locations" USING gin ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_location_name" ON "public"."store_locations" USING gin ("name" gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_fulfill_items" ON "public"."fulfillment_items" USING btree ("fulfillment_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_fulfillments_order" ON "storefront"."fulfillments" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_order_edits" ON "public"."order_edits" USING btree ("order_id");--> statement-breakpoint
@@ -1576,7 +1578,7 @@ CREATE INDEX IF NOT EXISTS "idx_products_slug_active" ON "storefront"."products"
 CREATE INDEX IF NOT EXISTS "idx_products_active" ON "storefront"."products" USING btree ("category_id") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_featured" ON "storefront"."products" USING btree ("is_featured") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_tags" ON "storefront"."products" USING btree ("tags");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "idx_products_name" ON "storefront"."products" USING gin ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_products_name" ON "storefront"."_products" USING gin ("name" gin_trgm_ops);--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_brand" ON "storefront"."products" USING btree ("brand_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_referral_code" ON "public"."referrals" USING btree ("referral_code");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_referral_referrer" ON "public"."referrals" USING btree ("referrer_id");--> statement-breakpoint
