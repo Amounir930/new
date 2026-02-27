@@ -26,16 +26,15 @@
 --   don't need tenant_id. Tables with customer/order data DO.
 -- ============================================================
 
-BEGIN;
-
+-- BEGIN; (Removed for Drizzle compatibility)
 -- ── Step 1: Create quarantine / shared schemas ────────────────
 
 -- 'shared' schema: global reference data used across all tenants (no tenant_id needed)
 CREATE SCHEMA IF NOT EXISTS shared;
---> statement-breakpoint
+
 -- 'legacy' schema: trap for orphaned public tables pending refactoring  
 CREATE SCHEMA IF NOT EXISTS legacy;
---> statement-breakpoint
+
 -- ── Step 2: Move global reference tables to 'shared' schema ──
 -- These tables are intentionally cross-tenant (currency, tax, markets).
 -- They don't need tenant_id — they are global lookup tables.
@@ -239,4 +238,4 @@ INSERT INTO drizzle.__drizzle_migrations (hash, created_at)
   VALUES ('0010_public_schema_isolation', EXTRACT(EPOCH FROM NOW()) * 1000)
   ON CONFLICT DO NOTHING;
 
-COMMIT;
+-- COMMIT; (Removed for Drizzle compatibility)

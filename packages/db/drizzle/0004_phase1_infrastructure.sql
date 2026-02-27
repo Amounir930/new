@@ -6,18 +6,16 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS postgis;
 --> statement-breakpoint
 -- 2. Define Custom Types
-DO $$
+DO $
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'money_amount') THEN
         CREATE TYPE money_amount AS (amount BIGINT, currency CHAR(3));
-
-END IF;
+    END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'actor_type') THEN
         CREATE TYPE "public"."actor_type" AS ENUM('super_admin', 'tenant_admin', 'system');
+    END IF;
+END $;
 
-END IF;
-END $$;
---> statement-breakpoint
 -- 3. Vault & Governance Tables
 CREATE TABLE IF NOT EXISTS "vault"."archival_vault" (
     "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
@@ -29,7 +27,7 @@ CREATE TABLE IF NOT EXISTS "vault"."archival_vault" (
     "payload" jsonb NOT NULL,
     "tombstone_hash" text NOT NULL
 );
---> statement-breakpoint
+
 -- 4. Catalog Tables (Phase 3)
 CREATE TABLE IF NOT EXISTS "storefront"."product_images" (
     "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
@@ -40,7 +38,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."product_images" (
     "url" text NOT NULL,
     "alt_text" text
 );
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS "storefront"."product_attributes" (
     "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
@@ -50,7 +48,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."product_attributes" (
     "group" text,
     "order" integer DEFAULT 0 NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS "storefront"."entity_metafields" (
     "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
@@ -61,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."entity_metafields" (
     "type" text DEFAULT 'string' NOT NULL,
     "value" jsonb NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS "storefront"."related_products" (
     "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
@@ -70,7 +68,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."related_products" (
     "relation_type" text DEFAULT 'similar' NOT NULL,
     "order" integer DEFAULT 0 NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS "storefront"."product_category_mapping" (
     "id" uuid PRIMARY KEY DEFAULT gen_ulid() NOT NULL,
     "tenant_id" uuid NOT NULL,
@@ -78,7 +76,7 @@ CREATE TABLE IF NOT EXISTS "storefront"."product_category_mapping" (
     "category_id" uuid NOT NULL,
     "is_primary" boolean DEFAULT false NOT NULL
 );
---> statement-breakpoint
+
 -- 5. Table Enhancements & Conversions
 -- Governance
 DO $$ BEGIN ALTER TABLE "governance"."plan_change_history" ALTER COLUMN "from_plan" TYPE "public"."tenant_plan" USING "from_plan"::"public"."tenant_plan", ALTER COLUMN "to_plan" TYPE "public"."tenant_plan" USING "to_plan"::"public"."tenant_plan"; EXCEPTION WHEN OTHERS THEN NULL; END $$;

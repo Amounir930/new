@@ -109,13 +109,13 @@ DROP TRIGGER IF EXISTS trg_block_auth_log_update ON public.auth_logs;
 CREATE TRIGGER trg_block_auth_log_update
 BEFORE UPDATE ON public.auth_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
---> statement-breakpoint
+
 DROP TRIGGER IF EXISTS trg_block_auth_log_delete ON public.auth_logs;
 --> statement-breakpoint
 CREATE TRIGGER trg_block_auth_log_delete
 BEFORE DELETE ON public.auth_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
---> statement-breakpoint
+
 -- ─── 5. PII ENCRYPTION (S7/GDPR) ────────────────────────────────
 -- Encrypting phone and names in customer-related tables.
 
@@ -163,11 +163,11 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_encrypt_app_secrets ON storefront.app_installations;
---> statement-breakpoint
+
 CREATE TRIGGER trg_encrypt_app_secrets
 BEFORE INSERT OR UPDATE ON storefront.app_installations
 FOR EACH ROW EXECUTE FUNCTION storefront.encrypt_app_secrets();
---> statement-breakpoint
+
 -- ─── 7. VAULT SHREDDING ENHANCEMENT (Audit Point #11) ────────────
 -- Overriding archival trigger to encrypt the payload before it hits the vault.
 

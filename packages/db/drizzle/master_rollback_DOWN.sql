@@ -84,7 +84,7 @@ DROP INDEX IF EXISTS "governance"."idx_audit_created_brin";
 -- C. Table Enhancements & Conversions Revert
 ALTER TABLE "governance"."plan_change_history" 
     ALTER COLUMN "from_plan" TYPE varchar(50), ALTER COLUMN "to_plan" TYPE varchar(50);
---> statement-breakpoint
+
 ALTER TABLE "governance"."leads" 
     DROP COLUMN IF EXISTS "landing_page_url", DROP COLUMN IF EXISTS "utm_source",
     DROP COLUMN IF EXISTS "utm_medium", DROP COLUMN IF EXISTS "utm_campaign";

@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS storefront.shipping_zones (
     is_active BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS storefront.shipping_methods (
     id UUID PRIMARY KEY DEFAULT gen_ulid(),
     zone_id UUID NOT NULL REFERENCES storefront.shipping_zones(id) ON DELETE CASCADE,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS storefront.shipping_methods (
     is_active BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS storefront.shipping_rates (
     id UUID PRIMARY KEY DEFAULT gen_ulid(),
     method_id UUID NOT NULL REFERENCES storefront.shipping_methods(id) ON DELETE RESTRICT,
@@ -66,13 +66,13 @@ CREATE TABLE IF NOT EXISTS storefront.shipping_rates (
     max_weight INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
---> statement-breakpoint
+
 ALTER TABLE storefront.shipping_rates DROP CONSTRAINT IF EXISTS exclude_weight_overlap;
 --> statement-breakpoint
 ALTER TABLE storefront.shipping_rates ADD CONSTRAINT exclude_weight_overlap EXCLUDE USING gist (
     tenant_id WITH =, method_id WITH =, numrange(min_weight::numeric, max_weight::numeric, '[]') WITH &&
 );
---> statement-breakpoint
+
 -- ─── 4. FORENSIC FINANCIAL REMEDIATION ──────────────────────────
 DO $$ 
 DECLARE 

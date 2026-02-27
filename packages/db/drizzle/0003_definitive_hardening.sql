@@ -14,9 +14,9 @@ $$ LANGUAGE plpgsql;
 
 -- 1. Create partitioning schema if needed
 CREATE SCHEMA IF NOT EXISTS partman;
---> statement-breakpoint
+
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
---> statement-breakpoint
+
 DO $$
 BEGIN
     -- Only rename if audit_logs is a regular table (not already partitioned)
@@ -96,17 +96,17 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_audit_immutable_update ON governance.audit_logs;
---> statement-breakpoint
+
 CREATE TRIGGER trg_audit_immutable_update
 BEFORE UPDATE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
---> statement-breakpoint
+
 DROP TRIGGER IF EXISTS trg_audit_immutable_delete ON governance.audit_logs;
---> statement-breakpoint
+
 CREATE TRIGGER trg_audit_immutable_delete
 BEFORE DELETE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
---> statement-breakpoint
+
 -- Mandate #7: Archival Vault & Cryptographic Tombstones
 -- Super Admin Hard Deletions move records to Vault instead of permanent loss.
 
@@ -143,7 +143,7 @@ $$ LANGUAGE plpgsql;
 -- CREATE TRIGGER trg_vault_delete_orders
 -- BEFORE DELETE ON storefront.orders
 -- FOR EACH ROW EXECUTE FUNCTION governance.move_to_archival_vault();
---> statement-breakpoint
+
 -- Mandate #11: Tenant Isolation Bypass Validation
 -- Recursive CTE to detect cross-tenant leakage or missing RLS policies.
 
