@@ -240,7 +240,7 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dunning_status') THEN
     CREATE TYPE dunning_status AS ENUM ('pending', 'retried', 'failed', 'recovered');
   END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 

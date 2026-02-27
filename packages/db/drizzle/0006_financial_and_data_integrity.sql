@@ -28,7 +28,7 @@ BEGIN
             r.table_schema, r.table_name, r.column_name, r.column_name);
         RAISE NOTICE 'Financial Fix: Converted %.%.% to money_amount', r.table_schema, r.table_name, r.column_name;
     END LOOP;
-END $;
+END $$;
 --> statement-breakpoint
 
 

@@ -71,7 +71,7 @@ BEGIN
     ALTER TABLE public.search_synonyms SET SCHEMA shared;
     RAISE NOTICE 'Moved public.search_synonyms -> shared.search_synonyms';
   END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 
@@ -188,7 +188,7 @@ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'app_installations') THEN
     ALTER TABLE public.app_installations SET SCHEMA legacy;
   END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 
@@ -208,7 +208,7 @@ BEGIN
   IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN
     REVOKE CREATE ON SCHEMA public FROM role_tenant_admin;
   END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 
@@ -228,7 +228,7 @@ BEGIN
   ELSE
     RAISE NOTICE 'C-3 Fix: public schema is clean. All tenant tables properly isolated.';
   END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 

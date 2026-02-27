@@ -16,7 +16,7 @@ DO $$
 BEGIN 
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN CREATE ROLE role_tenant_admin; END IF;
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_app_service') THEN CREATE ROLE role_app_service; END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- ─── 2. EXTENSIONS & SPATIAL CORE ────────────────────────────────
@@ -26,7 +26,7 @@ CREATE EXTENSION IF NOT EXISTS "vector";
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 --> statement-breakpoint
-DO $$ BEGIN PERFORM 1 FROM pg_available_extensions WHERE name = 'pg_cron'; IF FOUND THEN EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pg_cron"'; END IF; END $;
+DO $$ BEGIN PERFORM 1 FROM pg_available_extensions WHERE name = 'pg_cron'; IF FOUND THEN EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pg_cron"'; END IF; END $$;
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "postgis";
 --> statement-breakpoint
@@ -99,7 +99,7 @@ BEGIN
 --> statement-breakpoint
         EXCEPTION WHEN OTHERS THEN NULL; END;
     END LOOP;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- ─── 5. ATOMIC WALLET MUTEX ─────────────────────────────────────
@@ -118,7 +118,7 @@ BEGIN
     END;
     NEW.balance_after := ROW((v_current_amount + NEW.amount), (NEW.amount).currency)::public.money_amount;
     RETURN NEW;
-END; $ LANGUAGE plpgsql;
+END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint
 
 -- ─── 6. MERCHANT ISOLATION HARDENING ────────────────────────────────
@@ -134,10 +134,10 @@ BEGIN
 --> statement-breakpoint
     EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON %I.%I; CREATE TRIGGER trg_verify_tenant_session_%I BEFORE INSERT OR UPDATE ON %I.%I FOR EACH ROW EXECUTE FUNCTION %I.verify_tenant_session_%I();', target_table, target_schema, target_table, target_table, target_schema, target_table, target_schema, target_table);
 --> statement-breakpoint
-END; $ LANGUAGE plpgsql;
+END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint
 
-DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $;
+DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $$;
 --> statement-breakpoint
 
 -- ─── 7. AUDIT & LOGGING FUNCTIONS (Triggers installed in final migration) ────
@@ -146,13 +146,13 @@ DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema
 -- to prevent self-blocking during intermediate migrations that ALTER audit_logs.
 
 CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS event_trigger AS $$
-DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP IF obj.object_identity ~ 'audit_logs|super_admin_actions' THEN RAISE EXCEPTION 'Audit Tamper Forbidden' USING ERRCODE = 'P0005'; END IF; END LOOP; END; $ LANGUAGE plpgsql;
+DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP IF obj.object_identity ~ 'audit_logs|super_admin_actions' THEN RAISE EXCEPTION 'Audit Tamper Forbidden' USING ERRCODE = 'P0005'; END IF; END LOOP; END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS governance.schema_drift_log (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), command_tag TEXT, object_type TEXT, object_identity TEXT, actor_id TEXT, executed_at TIMESTAMP WITH TIME ZONE DEFAULT now());
 --> statement-breakpoint
 CREATE OR REPLACE FUNCTION governance.log_schema_drift() RETURNS event_trigger AS $$
-DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id) VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user); END LOOP; END; $ LANGUAGE plpgsql;
+DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id) VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user); END LOOP; END; $$ LANGUAGE plpgsql;
 --> statement-breakpoint
 
 
@@ -184,8 +184,8 @@ BEGIN
         GRANT SELECT, INSERT, UPDATE, DELETE ON storefront.pages TO role_tenant_admin;
         GRANT SELECT ON storefront.pages TO role_app_service;
     END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
-DO $$ BEGIN RAISE NOTICE '0002_security_hardening.sql: DEFINITIVE SUCCESS.'; END $;
+DO $$ BEGIN RAISE NOTICE '0002_security_hardening.sql: DEFINITIVE SUCCESS.'; END $$;
 --> statement-breakpoint
