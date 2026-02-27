@@ -1,9 +1,17 @@
 -- 🚨 APEX V2 DEFINITIVE ARCHITECTURAL HARDENING
 -- FILE: 0002_security_hardening.sql
 -- COMPLIANCE: 100% (AUDIT-REMEDIATION-P0)
--- VERSION: 2.0 (State-Aware Procedural Pattern)
+-- VERSION: 2.1 (Global Role Guarantee)
 
--- ─── 1. EXTENSIONS & SPATIAL CORE ────────────────────────────────
+-- ─── 1. GLOBAL ROLE GUARANTEE ──────────────────────────────────
+-- Ensure roles exist at the very start to prevent GRANT dependency failures.
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN CREATE ROLE role_tenant_admin; END IF;
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_app_service') THEN CREATE ROLE role_app_service; END IF;
+END $$;
+
+-- ─── 2. EXTENSIONS & SPATIAL CORE ────────────────────────────────
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
@@ -12,9 +20,7 @@ CREATE EXTENSION IF NOT EXISTS "postgis";
 CREATE EXTENSION IF NOT EXISTS "pg_partman" SCHEMA public;
 CREATE EXTENSION IF NOT EXISTS "btree_gist";
 
--- ─── 2. MISSING SCHEMA RESTORATION (Truncation Fix) ─────────────
--- Restore shipping tables which were omitted from baseline.
-
+-- ─── 3. MISSING SCHEMA RESTORATION (Truncation Fix) ─────────────
 CREATE TABLE IF NOT EXISTS storefront.shipping_zones (
     id UUID PRIMARY KEY DEFAULT gen_ulid(),
     tenant_id UUID NOT NULL,
@@ -51,21 +57,12 @@ CREATE TABLE IF NOT EXISTS storefront.shipping_rates (
     created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
--- Mandate #28: Prevents overlapping weight ranges within a zone.
-ALTER TABLE storefront.shipping_rates 
-DROP CONSTRAINT IF EXISTS exclude_weight_overlap;
-
-ALTER TABLE storefront.shipping_rates 
-ADD CONSTRAINT exclude_weight_overlap 
-EXCLUDE USING gist (
-    tenant_id WITH =,
-    method_id WITH =,
-    numrange(min_weight::numeric, max_weight::numeric, '[]') WITH &&
+ALTER TABLE storefront.shipping_rates DROP CONSTRAINT IF EXISTS exclude_weight_overlap;
+ALTER TABLE storefront.shipping_rates ADD CONSTRAINT exclude_weight_overlap EXCLUDE USING gist (
+    tenant_id WITH =, method_id WITH =, numrange(min_weight::numeric, max_weight::numeric, '[]') WITH &&
 );
 
--- ─── 3. FORENSIC FINANCIAL REMEDIATION ──────────────────────────
--- Vector #Money-S01: Massive BIGINT to money_amount conversion.
-
+-- ─── 4. FORENSIC FINANCIAL REMEDIATION ──────────────────────────
 DO $$ 
 DECLARE 
     r RECORD;
@@ -78,188 +75,82 @@ BEGIN
         AND table_schema IN ('public', 'storefront', 'governance')
     ) LOOP
         BEGIN
-            EXECUTE format('ALTER TABLE %I.%I ALTER COLUMN %I TYPE public.money_amount 
-                            USING (ROW(%I, ''USD'')::public.money_amount)', 
+            EXECUTE format('ALTER TABLE %I.%I ALTER COLUMN %I TYPE public.money_amount USING (ROW(%I, ''USD'')::public.money_amount)', 
                 r.table_schema, r.table_name, r.column_name, r.column_name);
-        EXCEPTION WHEN OTHERS THEN
-            NULL; -- Skip if already converted or incompatible
-        END;
+        EXCEPTION WHEN OTHERS THEN NULL; END;
     END LOOP;
 END $$;
 
--- ─── 4. ATOMIC WALLET MUTEX ─────────────────────────────────────
-CREATE OR REPLACE FUNCTION storefront.enforce_wallet_integrity_v4()
-RETURNS TRIGGER AS $$
-DECLARE
-    v_current_amount BIGINT;
+-- ─── 5. ATOMIC WALLET MUTEX ─────────────────────────────────────
+CREATE OR REPLACE FUNCTION storefront.enforce_wallet_integrity_v4() RETURNS TRIGGER AS $$
+DECLARE v_current_amount BIGINT;
 BEGIN
-    SELECT (wallet_balance).amount INTO v_current_amount 
-    FROM storefront.customers 
-    WHERE id = NEW.customer_id 
-    FOR UPDATE;
-
-    IF (v_current_amount + NEW.amount) < 0 THEN
-        RAISE EXCEPTION 'Financial Violation: Insufficient funds for wallet transaction.'
-            USING ERRCODE = 'P0003';
-    END IF;
-
-    DECLARE
-        v_enc_key TEXT := current_setting('app.encryption_key', true);
+    SELECT (wallet_balance).amount INTO v_current_amount FROM storefront.customers WHERE id = NEW.customer_id FOR UPDATE;
+    IF (v_current_amount + NEW.amount) < 0 THEN RAISE EXCEPTION 'Financial Violation' USING ERRCODE = 'P0003'; END IF;
+    DECLARE v_enc_key TEXT := current_setting('app.encryption_key', true);
     BEGIN
-        IF v_enc_key IS NULL OR v_enc_key = '' THEN
-            RAISE EXCEPTION 'CRITICAL SECURITY VIOLATION: Encryption key missing from environment.' USING ERRCODE = 'P0004';
-        END IF;
-
-        UPDATE storefront.customers 
-        SET wallet_balance = ROW((wallet_balance).amount + NEW.amount, (wallet_balance).currency)::public.money_amount,
-            wallet_checksum = public.calculate_wallet_checksum_v2(id, (wallet_balance).amount + NEW.amount, (wallet_balance).currency, v_enc_key)
+        IF v_enc_key IS NULL OR v_enc_key = '' THEN RAISE EXCEPTION 'Security Key Missing' USING ERRCODE = 'P0004'; END IF;
+        UPDATE storefront.customers SET wallet_balance = ROW((wallet_balance).amount + NEW.amount, (wallet_balance).currency)::public.money_amount,
+               wallet_checksum = public.calculate_wallet_checksum_v2(id, (wallet_balance).amount + NEW.amount, (wallet_balance).currency, v_enc_key)
         WHERE id = NEW.customer_id;
     END;
-
     NEW.balance_after := ROW((v_current_amount + NEW.amount), (NEW.amount).currency)::public.money_amount;
     RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+END; $$ LANGUAGE plpgsql;
 
--- ─── 5. MERCHANT ISOLATION HARDENING ────────────────────────────────
+-- ─── 6. MERCHANT ISOLATION HARDENING ────────────────────────────────
 CREATE OR REPLACE FUNCTION governance.enforce_tenant_hardening(target_table TEXT, target_schema TEXT DEFAULT 'public') RETURNS VOID AS $$
 BEGIN
     EXECUTE format('ALTER TABLE %I.%I ENABLE ROW LEVEL SECURITY', target_schema, target_table);
     EXECUTE format('ALTER TABLE %I.%I FORCE ROW LEVEL SECURITY', target_schema, target_table);
+    EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I.%I; CREATE POLICY tenant_isolation ON %I.%I USING (tenant_id = current_setting(''app.current_tenant'', false)::uuid);', target_schema, target_table, target_schema, target_table);
+    EXECUTE format('CREATE OR REPLACE FUNCTION %I.verify_tenant_session_%I() RETURNS TRIGGER AS $inner$ BEGIN IF NEW.tenant_id::text <> current_setting(''app.current_tenant'', false) THEN RAISE EXCEPTION ''S2 Violation'' USING ERRCODE = ''P0002''; END IF; RETURN NEW; END; $inner$ LANGUAGE plpgsql;', target_schema, target_table);
+    EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON %I.%I; CREATE TRIGGER trg_verify_tenant_session_%I BEFORE INSERT OR UPDATE ON %I.%I FOR EACH ROW EXECUTE FUNCTION %I.verify_tenant_session_%I();', target_table, target_schema, target_table, target_table, target_schema, target_table, target_schema, target_table);
+END; $$ LANGUAGE plpgsql;
 
-    EXECUTE format('
-        DROP POLICY IF EXISTS tenant_isolation ON %I.%I;
-        CREATE POLICY tenant_isolation ON %I.%I
-        USING (tenant_id = current_setting(''app.current_tenant'', false)::uuid);',
-        target_schema, target_table, target_schema, target_table);
+DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $$;
 
-    EXECUTE format('
-        CREATE OR REPLACE FUNCTION %I.verify_tenant_session_%I() RETURNS TRIGGER AS $inner$
-        BEGIN
-            IF NEW.tenant_id::text <> current_setting(''app.current_tenant'', false) THEN
-                RAISE EXCEPTION ''S2 Violation: Tenant ID mismatch.''
-                    USING ERRCODE = ''P0002'';
-            END IF;
-            RETURN NEW;
-        END;
-        $inner$ LANGUAGE plpgsql;', target_schema, target_table, target_schema, target_table);
-
-    EXECUTE format('
-        DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON %I.%I;
-        CREATE TRIGGER trg_verify_tenant_session_%I
-        BEFORE INSERT OR UPDATE ON %I.%I
-        FOR EACH ROW EXECUTE FUNCTION %I.verify_tenant_session_%I();', 
-        target_table, target_schema, target_table, 
-        target_table, target_schema, target_table, 
-        target_schema, target_table);
-END;
-$$ LANGUAGE plpgsql;
-
-DO $$
-DECLARE
-    t TEXT;
-BEGIN
-    FOR t IN SELECT t.table_name FROM information_schema.tables t 
-             WHERE t.table_schema = 'storefront' 
-             AND t.table_type = 'BASE TABLE' 
-             AND EXISTS (SELECT 1 FROM information_schema.columns c 
-                         WHERE c.table_name = t.table_name 
-                         AND c.table_schema = t.table_schema 
-                         AND c.column_name = 'tenant_id') LOOP
-        PERFORM governance.enforce_tenant_hardening(t, 'storefront');
-    END LOOP;
-END $$;
-
--- ─── 6. AUDIT IMMUTABILITY ──────────────────────────────────────────
+-- ─── 7. AUDIT & LOGGING ──────────────────────────────────────────
 CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS event_trigger AS $$
-DECLARE
-    obj record;
-BEGIN
-    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP
-        IF obj.object_identity ~ 'audit_logs|super_admin_actions' THEN
-            RAISE EXCEPTION 'Security Violation: Tampering with audit logs is forbidden.'
-                USING ERRCODE = 'P0005';
-        END IF;
-    END LOOP;
-END;
-$$ LANGUAGE plpgsql;
+DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP IF obj.object_identity ~ 'audit_logs|super_admin_actions' THEN RAISE EXCEPTION 'Audit Tamper Forbidden' USING ERRCODE = 'P0005'; END IF; END LOOP; END; $$ LANGUAGE plpgsql;
 
 DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
-CREATE EVENT TRIGGER trg_audit_immutability_lockdown ON ddl_command_end
-WHEN TAG IN ('DROP TABLE', 'ALTER TABLE')
-EXECUTE FUNCTION governance.block_audit_tamper_event();
+CREATE EVENT TRIGGER trg_audit_immutability_lockdown ON ddl_command_end WHEN TAG IN ('DROP TABLE', 'ALTER TABLE') EXECUTE FUNCTION governance.block_audit_tamper_event();
 
--- ─── 7. SCHEMA DRIFT LOGGING ────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS governance.schema_drift_log (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    command_tag TEXT,
-    object_type TEXT,
-    object_identity TEXT,
-    actor_id TEXT,
-    executed_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
-CREATE OR REPLACE FUNCTION governance.log_schema_drift()
-RETURNS event_trigger AS $$
-DECLARE
-    obj record;
-BEGIN
-    IF current_user != 'postgres' AND current_setting('app.role', true) != 'super_admin' THEN
-        RAISE EXCEPTION 'S1 Violation: Unauthorized DDL attempt.'
-        USING ERRCODE = 'P9999';
-    END IF;
-
-    FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP
-        INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id)
-        VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user);
-    END LOOP;
-END;
-$$ LANGUAGE plpgsql;
-
+CREATE TABLE IF NOT EXISTS governance.schema_drift_log (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), command_tag TEXT, object_type TEXT, object_identity TEXT, actor_id TEXT, executed_at TIMESTAMP WITH TIME ZONE DEFAULT now());
+CREATE OR REPLACE FUNCTION governance.log_schema_drift() RETURNS event_trigger AS $$
+DECLARE obj record; BEGIN IF current_user != 'postgres' AND current_setting('app.role', true) != 'super_admin' THEN RAISE EXCEPTION 'Unauthorized DDL' USING ERRCODE = 'P9999'; END IF; FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id) VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user); END LOOP; END; $$ LANGUAGE plpgsql;
 DROP EVENT TRIGGER IF EXISTS trg_log_drift;
 CREATE EVENT TRIGGER trg_log_drift ON ddl_command_end EXECUTE FUNCTION governance.log_schema_drift();
 
--- ─── 8. SOFT DELETE ENFORCEMENT (State-Aware Naming) ────────────────
+-- ─── 8. SOFT DELETE ENFORCEMENT (State-Aware) ───────────────────
 DO $$
 BEGIN
-    -- 1. Products Fix
-    -- Case A: products is a Table (Baseline mistake or first run)
+    -- 1. Products
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = 'products' AND table_type = 'BASE TABLE') THEN
         IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = '_products') THEN
             ALTER TABLE storefront.products RENAME TO _products;
-        ELSE
-            -- Destination exists, check if name collision is active
-            NULL; -- Logic for existing _products
         END IF;
     END IF;
-
-    -- Case B: Ensure Products View exists
     IF NOT EXISTS (SELECT 1 FROM information_schema.views WHERE table_schema = 'storefront' AND table_name = 'products') THEN
-        DROP TABLE IF EXISTS storefront.products; -- Cleanup if somehow a table remains
+        DROP TABLE IF EXISTS storefront.products;
         CREATE VIEW storefront.products AS SELECT * FROM storefront._products WHERE deleted_at IS NULL;
-        
-        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN CREATE ROLE role_tenant_admin; END IF;
-        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_app_service') THEN CREATE ROLE role_app_service; END IF;
-        
         GRANT SELECT, INSERT, UPDATE, DELETE ON storefront.products TO role_tenant_admin;
         GRANT SELECT ON storefront.products TO role_app_service;
     END IF;
 
-    -- 2. Pages Fix
+    -- 2. Pages
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = 'pages' AND table_type = 'BASE TABLE') THEN
         IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = '_pages') THEN
             ALTER TABLE storefront.pages RENAME TO _pages;
         END IF;
     END IF;
-
     IF NOT EXISTS (SELECT 1 FROM information_schema.views WHERE table_schema = 'storefront' AND table_name = 'pages') THEN
         DROP TABLE IF EXISTS storefront.pages;
         CREATE VIEW storefront.pages AS SELECT * FROM storefront._pages WHERE deleted_at IS NULL;
-        
         GRANT SELECT, INSERT, UPDATE, DELETE ON storefront.pages TO role_tenant_admin;
         GRANT SELECT ON storefront.pages TO role_app_service;
     END IF;
 END $$;
 
--- ─── 9. FINAL IDEMPOTENCY LOCKDOWN ──────────────────────────────
 DO $$ BEGIN RAISE NOTICE '0002_security_hardening.sql: DEFINITIVE SUCCESS.'; END $$;
