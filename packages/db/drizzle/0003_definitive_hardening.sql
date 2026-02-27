@@ -244,14 +244,19 @@ $$ LANGUAGE plpgsql;
 DO $$ BEGIN
     -- Only create if the underlying table exists
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'storefront' AND c.relname = '_products') THEN
-        CREATE OR REPLACE VIEW storefront.active_products AS SELECT * FROM storefront._products WHERE deleted_at IS NULL;
+        BEGIN
+            CREATE OR REPLACE VIEW storefront.active_products AS SELECT * FROM storefront._products WHERE deleted_at IS NULL;
+        EXCEPTION WHEN OTHERS THEN NULL;
+        END;
     END IF;
-    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'storefront' AND c.relname = 'orders') THEN
+    BEGIN
         CREATE OR REPLACE VIEW storefront.active_orders AS SELECT * FROM storefront.orders WHERE deleted_at IS NULL;
-    END IF;
-    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'tenants') THEN
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
+    BEGIN
         CREATE OR REPLACE VIEW governance.active_tenants AS SELECT * FROM governance.tenants WHERE deleted_at IS NULL;
-    END IF;
+    EXCEPTION WHEN OTHERS THEN NULL;
+    END;
 END $$;
 -- Audit 444 Mandate: Deployment of trg_log_drift and Financial Restriction
 -- Statement-breakpoint
