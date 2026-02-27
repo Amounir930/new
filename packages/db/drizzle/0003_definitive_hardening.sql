@@ -237,16 +237,22 @@ $$ LANGUAGE plpgsql;
 -- EVENT TRIGGER trg_audit_schema_drift deferred to final migration
 
 -- Mandate #18: Global Soft Delete Scoping (Active Views)
--- Ensures developers can't accidentally query deleted data.
+-- Mandate #18: Global Soft Delete Scoping (Active Views)
+-- These reference the underlying base tables (prefixed with _) since
+-- the storefront.products view already filters deleted_at IS NULL.
 
-CREATE OR REPLACE VIEW storefront.active_products AS
-SELECT * FROM storefront.products WHERE deleted_at IS NULL;
-
-CREATE OR REPLACE VIEW storefront.active_orders AS
-SELECT * FROM storefront.orders WHERE deleted_at IS NULL;
-
-CREATE OR REPLACE VIEW governance.active_tenants AS
-SELECT * FROM governance.tenants WHERE deleted_at IS NULL;
+DO $$ BEGIN
+    -- Only create if the underlying table exists
+    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'storefront' AND c.relname = '_products') THEN
+        CREATE OR REPLACE VIEW storefront.active_products AS SELECT * FROM storefront._products WHERE deleted_at IS NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'storefront' AND c.relname = 'orders') THEN
+        CREATE OR REPLACE VIEW storefront.active_orders AS SELECT * FROM storefront.orders WHERE deleted_at IS NULL;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'tenants') THEN
+        CREATE OR REPLACE VIEW governance.active_tenants AS SELECT * FROM governance.tenants WHERE deleted_at IS NULL;
+    END IF;
+END $$;
 -- Audit 444 Mandate: Deployment of trg_log_drift and Financial Restriction
 -- Statement-breakpoint
 CREATE OR REPLACE FUNCTION log_schema_drift()
