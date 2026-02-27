@@ -4,6 +4,7 @@
 
 -- ─── 0. PREREQUISITES ───────────────────────────────────────────
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
+--> statement-breakpoint
 
 -- ─── 1. RLS POLICY ENFORCEMENT ──────────────────────────────────
 -- Fixes "Deny All" state by providing explicit tenant-based policies.
@@ -29,21 +30,32 @@ BEGIN
             RAISE NOTICE 'RLS Policy Skip: storefront.% (Missing tenant_id?)', t_name;
         END;
     END LOOP;
-END $$;
+END $;
+--> statement-breakpoint
 
 -- ─── 2. SCHEMA UNIFICATION ──────────────────────────────────────
 -- Drop duplicates in public schema that should only be in storefront.
 
 DROP TABLE IF EXISTS public.affiliate_partners CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.affiliate_transactions CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.webhook_subscriptions CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.customer_segments CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.entity_metafields CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.price_lists CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.price_rules CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.staff_members CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.staff_roles CASCADE;
+--> statement-breakpoint
 DROP TABLE IF EXISTS public.staff_sessions CASCADE;
+--> statement-breakpoint
 
 -- ─── 3. SOFT DELETE ENFORCEMENT (RISK #8) ──────────────────────
 -- Move tables to internal names and create public-facing views.
@@ -73,7 +85,8 @@ BEGIN
             END IF;
         END IF;
     END LOOP;
-END $$;
+END $;
+--> statement-breakpoint
 
 -- ─── 4. SESSION & AUTH SECURITY ─────────────────────────────────
 -- Staff sessions must have unique token hashes.
@@ -86,15 +99,19 @@ DELETE FROM storefront.staff_sessions
 WHERE id IN (SELECT id FROM duplicates WHERE row_num > 1);
 
 ALTER TABLE storefront.staff_sessions DROP CONSTRAINT IF EXISTS staff_sessions_token_hash_unique;
+--> statement-breakpoint
 ALTER TABLE storefront.staff_sessions ADD CONSTRAINT staff_sessions_token_hash_unique UNIQUE (token_hash);
+--> statement-breakpoint
 
 -- Auth logs must be immutable.
 DROP TRIGGER IF EXISTS trg_block_auth_log_update ON public.auth_logs;
+--> statement-breakpoint
 CREATE TRIGGER trg_block_auth_log_update
 BEFORE UPDATE ON public.auth_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
 
 DROP TRIGGER IF EXISTS trg_block_auth_log_delete ON public.auth_logs;
+--> statement-breakpoint
 CREATE TRIGGER trg_block_auth_log_delete
 BEFORE DELETE ON public.auth_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
@@ -141,6 +158,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_encrypt_app_secrets ON storefront.app_installations;
+--> statement-breakpoint
 CREATE TRIGGER trg_encrypt_app_secrets
 BEFORE INSERT OR UPDATE ON storefront.app_installations
 FOR EACH ROW EXECUTE FUNCTION storefront.encrypt_app_secrets();

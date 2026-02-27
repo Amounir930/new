@@ -28,7 +28,8 @@ BEGIN
             r.table_schema, r.table_name, r.column_name, r.column_name);
         RAISE NOTICE 'Financial Fix: Converted %.%.% to money_amount', r.table_schema, r.table_name, r.column_name;
     END LOOP;
-END $$;
+END $;
+--> statement-breakpoint
 
 -- ─── 2. UNBOUNDED REFUNDS PROTECTION ────────────────────────────
 -- Ensures SUM(refunds.amount) <= orders.total
@@ -60,6 +61,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_check_refund_limit ON storefront.refunds;
+--> statement-breakpoint
 CREATE TRIGGER trg_check_refund_limit
 BEFORE INSERT ON storefront.refunds
 FOR EACH ROW EXECUTE FUNCTION storefront.check_refund_limit();
@@ -104,6 +106,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_enforce_coupon_limits ON storefront.coupon_usages;
+--> statement-breakpoint
 CREATE TRIGGER trg_enforce_coupon_limits
 BEFORE INSERT ON storefront.coupon_usages
 FOR EACH ROW EXECUTE FUNCTION storefront.enforce_coupon_limits();
@@ -120,11 +123,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_block_inventory_update ON storefront.inventory_movements;
+--> statement-breakpoint
 CREATE TRIGGER trg_block_inventory_update
 BEFORE UPDATE ON storefront.inventory_movements
 FOR EACH ROW EXECUTE FUNCTION storefront.block_inventory_mutation();
 
 DROP TRIGGER IF EXISTS trg_block_inventory_delete ON storefront.inventory_movements;
+--> statement-breakpoint
 CREATE TRIGGER trg_block_inventory_delete
 BEFORE DELETE ON storefront.inventory_movements
 FOR EACH ROW EXECUTE FUNCTION storefront.block_inventory_mutation();
@@ -133,9 +138,11 @@ FOR EACH ROW EXECUTE FUNCTION storefront.block_inventory_mutation();
 -- Uses EXCLUDE constraint to handle period/quantity collisions strictly.
 
 DROP INDEX IF EXISTS storefront.idx_b2b_tier_collision;
+--> statement-breakpoint
 
 ALTER TABLE storefront.b2b_pricing_tiers 
 DROP CONSTRAINT IF EXISTS exclude_b2b_pricing_overlap;
+--> statement-breakpoint
 
 ALTER TABLE storefront.b2b_pricing_tiers 
 ADD CONSTRAINT exclude_b2b_pricing_overlap 
@@ -145,5 +152,6 @@ EXCLUDE USING gist (
     product_id WITH =,
     int4range(min_quantity, COALESCE(max_quantity, 2147483647), '[]') WITH &&
 );
+--> statement-breakpoint
 
 RAISE NOTICE 'Category 1 Remediation Complete.';

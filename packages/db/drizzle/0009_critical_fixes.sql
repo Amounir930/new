@@ -42,6 +42,7 @@ ALTER TABLE governance.tenants
       AND ((owner_email::jsonb ->> 'enc')::boolean = true)
     )
   );
+--> statement-breakpoint
 
 -- governance.users.email
 ALTER TABLE governance.users
@@ -56,6 +57,7 @@ ALTER TABLE governance.users
       AND ((email::jsonb ->> 'enc')::boolean = true)
     )
   );
+--> statement-breakpoint
 
 -- governance.leads.email
 ALTER TABLE governance.leads
@@ -70,6 +72,7 @@ ALTER TABLE governance.leads
       AND ((email::jsonb ->> 'enc')::boolean = true)
     )
   );
+--> statement-breakpoint
 
 -- storefront.customers — email, phone, first_name, last_name
 ALTER TABLE storefront.customers
@@ -105,6 +108,7 @@ ALTER TABLE storefront.customers
       AND ((last_name::jsonb ->> 'enc')::boolean = true)
     )
   );
+--> statement-breakpoint
 
 -- ============================================================
 -- [C-02] Fix checkout_math_check — references actual columns
@@ -123,6 +127,7 @@ ALTER TABLE storefront.orders
         + ("tax_amount"->>'amount')::BIGINT
         - ("discount_amount"->>'amount')::BIGINT
   );
+--> statement-breakpoint
 
 -- ============================================================
 -- [C-03] Fix inventory_movements quantity check
@@ -132,6 +137,7 @@ ALTER TABLE storefront.orders
 ALTER TABLE storefront.inventory_movements
   DROP CONSTRAINT IF EXISTS qty_positive,
   ADD CONSTRAINT qty_nonzero CHECK (quantity <> 0);
+--> statement-breakpoint
 
 -- ============================================================
 -- [A-01] Add currency column to orders
@@ -139,6 +145,7 @@ ALTER TABLE storefront.inventory_movements
 -- ============================================================
 ALTER TABLE storefront.orders
   ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'SAR';
+--> statement-breakpoint
 
 ALTER TABLE storefront.orders
   DROP CONSTRAINT IF EXISTS currency_match_check,
@@ -146,6 +153,7 @@ ALTER TABLE storefront.orders
     currency = ("total"->>'currency')
     AND currency = ("subtotal"->>'currency')
   );
+--> statement-breakpoint
 
 -- ============================================================
 -- [A-02] Enforce S7 encryption on customer_addresses PII
@@ -176,12 +184,14 @@ ALTER TABLE storefront.customer_addresses
       AND ((phone::jsonb ->> 'enc')::boolean = true)
     )
   );
+--> statement-breakpoint
 
 -- ============================================================
 -- [A-03] Encrypt affiliate_partners.email + add blind index
 -- ============================================================
 ALTER TABLE storefront.affiliate_partners
   ADD COLUMN IF NOT EXISTS email_hash TEXT;
+--> statement-breakpoint
 
 -- Migrate existing emails to hash BEFORE adding constraint
 -- NOTE: @apex/security migration script must pre-encrypt existing rows.
@@ -195,6 +205,7 @@ ALTER TABLE storefront.affiliate_partners
       AND ((email::jsonb ->> 'enc')::boolean = true)
     )
   );
+--> statement-breakpoint
 
 CREATE INDEX IF NOT EXISTS idx_affiliate_email_hash
   ON storefront.affiliate_partners (email_hash);
@@ -222,7 +233,8 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dunning_status') THEN
     CREATE TYPE dunning_status AS ENUM ('pending', 'retried', 'failed', 'recovered');
   END IF;
-END $$;
+END $;
+--> statement-breakpoint
 
 -- Step 2: Normalize existing text values
 UPDATE governance.dunning_events
@@ -232,9 +244,11 @@ UPDATE governance.dunning_events
 ALTER TABLE governance.dunning_events
   ALTER COLUMN status TYPE dunning_status
   USING status::dunning_status;
+--> statement-breakpoint
 
 ALTER TABLE governance.dunning_events
   ALTER COLUMN status SET DEFAULT 'pending'::dunning_status;
+--> statement-breakpoint
 
 -- ============================================================
 -- [A-06] Create order_fraud_scores table (plan.md Admin-#39)
