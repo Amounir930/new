@@ -21,11 +21,11 @@ BEGIN
         -- Generic policy for all storefront tables assuming tenant_id column exists
         BEGIN
             EXECUTE format('DROP POLICY IF EXISTS tenant_isolation_policy ON storefront.%I', t_name);
---> statement-breakpoint
+
 EXECUTE format('CREATE POLICY tenant_isolation_policy ON storefront.%I 
                             USING (tenant_id = (current_setting(''app.current_tenant_id'', true))::uuid)
                             WITH CHECK (tenant_id = (current_setting(''app.current_tenant_id'', true))::uuid)', t_name);
---> statement-breakpoint
+
 RAISE NOTICE 'RLS Policy Applied: storefront.%', t_name;
         EXCEPTION WHEN OTHERS THEN
             RAISE NOTICE 'RLS Policy Skip: storefront.% (Missing tenant_id?)', t_name;
@@ -70,18 +70,18 @@ BEGIN
             -- Only rename if target doesn't exist yet
             IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = '_' || t) THEN
                 EXECUTE format('ALTER TABLE storefront.%I RENAME TO %I', t, '_' || t);
---> statement-breakpoint
+
 END IF;
             
             -- 2. Create view without deleted rows
             -- Using * is acceptable here as we want to mirror the original schema but filter data.
             EXECUTE format('CREATE OR REPLACE VIEW storefront.%I AS SELECT * FROM storefront.%I WHERE deleted_at IS NULL', t, '_' || t);
---> statement-breakpoint
+
 -- 3. Grant permissions (Role-based as per lead directive)
             EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON storefront.%I TO role_tenant_admin', t);
---> statement-breakpoint
+
 EXECUTE format('GRANT SELECT ON storefront.%I TO role_app_service', t);
---> statement-breakpoint
+
 RAISE NOTICE 'Soft Delete View Created: storefront.%', t;
             END IF;
         END IF;
@@ -124,7 +124,7 @@ CREATE OR REPLACE FUNCTION vault.pii_encrypt(plain_text TEXT)
 RETURNS TEXT AS $$
 DECLARE
     v_key TEXT := current_setting('app.encryption_key', true);
---> statement-breakpoint
+
 BEGIN
     IF plain_text IS NULL OR plain_text = '' THEN RETURN plain_text; END IF;
     IF v_key IS NULL OR v_key = '' THEN
@@ -133,7 +133,7 @@ BEGIN
     -- Note: This is a simplified demonstration of field-level encryption. 
     -- In production, pg_crypto with AES would be used with proper salts.
     RETURN encode(encrypt_iv(plain_text::bytea, v_key::bytea, '0123456789abcdef'::bytea, 'aes'), 'hex');
---> statement-breakpoint
+
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -147,16 +147,16 @@ CREATE OR REPLACE FUNCTION storefront.encrypt_app_secrets()
 RETURNS TRIGGER AS $$
 DECLARE
     v_key TEXT := current_setting('app.encryption_key', true);
---> statement-breakpoint
+
 BEGIN
     IF NEW.api_key IS NOT NULL THEN
         NEW.api_key := vault.pii_encrypt(NEW.api_key);
---> statement-breakpoint
+
 END IF;
     IF NEW.settings IS NOT NULL THEN
         -- Encrypting whole JSONB as a string for simplicity in this hardened layer
         NEW.settings := to_jsonb(vault.pii_encrypt(NEW.settings::text));
---> statement-breakpoint
+
 END IF;
     RETURN NEW;
 END;
@@ -177,7 +177,7 @@ DECLARE
     v_user_email TEXT;
 BEGIN
     v_user_email := current_setting('app.current_user_email', true);
---> statement-breakpoint
+
 INSERT INTO vault.archival_vault (
         table_name,
         original_id,
@@ -193,7 +193,7 @@ INSERT INTO vault.archival_vault (
         to_jsonb(vault.pii_encrypt(to_jsonb(OLD)::text)), -- Encrypted Payload
         encode(digest(to_jsonb(OLD)::text, 'sha256'), 'hex')
     );
---> statement-breakpoint
+
 RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;

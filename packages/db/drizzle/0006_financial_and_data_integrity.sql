@@ -26,7 +26,7 @@ BEGIN
         EXECUTE format('ALTER TABLE %I.%I ALTER COLUMN %I TYPE public.money_amount 
                         USING (ROW(%I, ''SAR'')::public.money_amount)', 
             r.table_schema, r.table_name, r.column_name, r.column_name);
---> statement-breakpoint
+
 RAISE NOTICE 'Financial Fix: Converted %.%.% to money_amount', r.table_schema, r.table_name, r.column_name;
     END LOOP;
 END $$;

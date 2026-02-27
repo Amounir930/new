@@ -14,6 +14,7 @@ $$ LANGUAGE plpgsql;
 
 -- 1. Create partitioning schema if needed
 CREATE SCHEMA IF NOT EXISTS partman;
+--> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
 --> statement-breakpoint
 DO $$
@@ -52,7 +53,7 @@ BEGIN
             "actor_type" text DEFAULT 'tenant_admin' NOT NULL,
             PRIMARY KEY (id, created_at)
         ) PARTITION BY RANGE (created_at);
---> statement-breakpoint
+
 -- Migrate baseline data if it exists
         IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs_baseline') THEN
             INSERT INTO governance.audit_logs SELECT * FROM governance.audit_logs_baseline;
@@ -71,7 +72,7 @@ BEGIN
                 'daily',
                 p_start_partition := (now() - interval '1 day')::text
             );
---> statement-breakpoint
+
 EXCEPTION WHEN OTHERS THEN
             RAISE NOTICE 'Partman setup skipped: %', SQLERRM;
         END;
@@ -116,7 +117,7 @@ DECLARE
 BEGIN
     -- 1. Identify actor (Super Admin context)
     v_user_email := current_setting('app.current_user_email', true);
---> statement-breakpoint
+
 -- 2. Insert into vault
     INSERT INTO vault.archival_vault (
         table_name,
@@ -133,7 +134,7 @@ BEGIN
         to_jsonb(OLD),
         encode(digest(to_jsonb(OLD)::text, 'sha256'), 'hex') -- Cryptographic Tombstone
     );
---> statement-breakpoint
+
 RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
@@ -199,7 +200,7 @@ BEGIN
         -- Audit the access (Mandate #4/S4)
         INSERT INTO governance.audit_logs (tenant_id, action, metadata)
         VALUES (p_tenant_id, ''DEK_ACCESS'', jsonb_build_object(''timestamp'', now()));
---> statement-breakpoint
+
 SELECT encrypted_key INTO v_key
         FROM vault.encryption_keys
         WHERE tenant_id = p_tenant_id AND is_active = true;
@@ -233,7 +234,7 @@ BEGIN
                 'timestamp', now()
             )
         );
---> statement-breakpoint
+
 END LOOP;
 END;
 $$ LANGUAGE plpgsql;
@@ -291,7 +292,7 @@ BEGIN
                 'object', obj.object_identity
             )
         );
---> statement-breakpoint
+
 END LOOP;
 END;
 $$ LANGUAGE plpgsql;

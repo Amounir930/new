@@ -88,7 +88,7 @@ BEGIN
         BEGIN
             EXECUTE format('ALTER TABLE %I.%I ALTER COLUMN %I TYPE public.money_amount USING (ROW(%I, ''USD'')::public.money_amount)', 
                 r.table_schema, r.table_name, r.column_name, r.column_name);
---> statement-breakpoint
+
 EXCEPTION WHEN OTHERS THEN NULL; END;
     END LOOP;
 END $$;
@@ -100,7 +100,7 @@ BEGIN
     SELECT (wallet_balance).amount INTO v_current_amount FROM storefront.customers WHERE id = NEW.customer_id FOR UPDATE;
     IF (v_current_amount + NEW.amount) < 0 THEN RAISE EXCEPTION 'Financial Violation' USING ERRCODE = 'P0003'; END IF;
     DECLARE v_enc_key TEXT := current_setting('app.encryption_key', true);
---> statement-breakpoint
+
 BEGIN
         IF v_enc_key IS NULL OR v_enc_key = '' THEN RAISE EXCEPTION 'Security Key Missing' USING ERRCODE = 'P0004'; END IF;
         UPDATE storefront.customers SET wallet_balance = ROW((wallet_balance).amount + NEW.amount, (wallet_balance).currency)::public.money_amount,
@@ -110,33 +110,33 @@ BEGIN
     NEW.balance_after := ROW((v_current_amount + NEW.amount), (NEW.amount).currency)::public.money_amount;
     RETURN NEW;
 END; $$ LANGUAGE plpgsql;
---> statement-breakpoint
+
 -- ─── 6. MERCHANT ISOLATION HARDENING ────────────────────────────────
 CREATE OR REPLACE FUNCTION governance.enforce_tenant_hardening(target_table TEXT, target_schema TEXT DEFAULT 'public') RETURNS VOID AS $$
 BEGIN
     EXECUTE format('ALTER TABLE %I.%I ENABLE ROW LEVEL SECURITY', target_schema, target_table);
---> statement-breakpoint
+
 EXECUTE format('ALTER TABLE %I.%I FORCE ROW LEVEL SECURITY', target_schema, target_table);
---> statement-breakpoint
+
 EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON %I.%I; CREATE POLICY tenant_isolation ON %I.%I USING (tenant_id = current_setting(''app.current_tenant'', false)::uuid);', target_schema, target_table, target_schema, target_table);
---> statement-breakpoint
+
 EXECUTE format('CREATE OR REPLACE FUNCTION %I.verify_tenant_session_%I() RETURNS TRIGGER AS $inner$ BEGIN IF NEW.tenant_id::text <> current_setting(''app.current_tenant'', false) THEN RAISE EXCEPTION ''S2 Violation'' USING ERRCODE = ''P0002''; END IF; RETURN NEW; END; $inner$ LANGUAGE plpgsql;', target_schema, target_table);
---> statement-breakpoint
+
 EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON %I.%I; CREATE TRIGGER trg_verify_tenant_session_%I BEFORE INSERT OR UPDATE ON %I.%I FOR EACH ROW EXECUTE FUNCTION %I.verify_tenant_session_%I();', target_table, target_schema, target_table, target_table, target_schema, target_table, target_schema, target_table);
---> statement-breakpoint
+
 END; $$ LANGUAGE plpgsql;
---> statement-breakpoint
+
 DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $$;
 --> statement-breakpoint
 -- ─── 7. AUDIT & LOGGING FUNCTIONS (Triggers installed in final migration) ────
 CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS event_trigger AS $$
 DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP IF obj.object_identity ~ 'audit_logs|super_admin_actions' THEN RAISE EXCEPTION 'Audit Tamper Forbidden' USING ERRCODE = 'P0005'; END IF; END LOOP; END; $$ LANGUAGE plpgsql;
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS governance.schema_drift_log (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), command_tag TEXT, object_type TEXT, object_identity TEXT, actor_id TEXT, executed_at TIMESTAMP WITH TIME ZONE DEFAULT now());
 --> statement-breakpoint
 CREATE OR REPLACE FUNCTION governance.log_schema_drift() RETURNS event_trigger AS $$
 DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id) VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user); END LOOP; END; $$ LANGUAGE plpgsql;
---> statement-breakpoint
+
 -- ─── 8. SOFT DELETE ENFORCEMENT (State-Aware) ───────────────────
 DO $$
 BEGIN

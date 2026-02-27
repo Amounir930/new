@@ -139,7 +139,7 @@ ALTER TABLE storefront.inventory_movements
 -- ============================================================
 ALTER TABLE storefront.orders
   ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'SAR';
---> statement-breakpoint
+
 ALTER TABLE storefront.orders
   DROP CONSTRAINT IF EXISTS currency_match_check,
   ADD CONSTRAINT currency_match_check CHECK (
@@ -182,7 +182,7 @@ ALTER TABLE storefront.customer_addresses
 -- ============================================================
 ALTER TABLE storefront.affiliate_partners
   ADD COLUMN IF NOT EXISTS email_hash TEXT;
---> statement-breakpoint
+
 -- Migrate existing emails to hash BEFORE adding constraint
 -- NOTE: @apex/security migration script must pre-encrypt existing rows.
 -- This constraint activates for new rows immediately.
@@ -221,7 +221,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'dunning_status') THEN
     CREATE TYPE dunning_status AS ENUM ('pending', 'retried', 'failed', 'recovered');
---> statement-breakpoint
+
 END IF;
 END $$;
 --> statement-breakpoint
@@ -233,10 +233,10 @@ UPDATE governance.dunning_events
 ALTER TABLE governance.dunning_events
   ALTER COLUMN status TYPE dunning_status
   USING status::dunning_status;
---> statement-breakpoint
+
 ALTER TABLE governance.dunning_events
   ALTER COLUMN status SET DEFAULT 'pending'::dunning_status;
---> statement-breakpoint
+
 -- ============================================================
 -- [A-06] Create order_fraud_scores table (plan.md Admin-#39)
 -- Cross-tenant in governance schema — visible to Super Admin

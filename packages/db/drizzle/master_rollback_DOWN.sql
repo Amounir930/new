@@ -176,13 +176,13 @@ DECLARE t TEXT;
 BEGIN
     FOR t IN SELECT table_name FROM information_schema.tables WHERE table_schema = 'storefront' LOOP
         EXECUTE format('DROP POLICY IF EXISTS tenant_isolation ON storefront.%I;', t);
---> statement-breakpoint
+
 EXECUTE format('ALTER TABLE storefront.%I DISABLE ROW LEVEL SECURITY;', t);
---> statement-breakpoint
+
 EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON storefront.%I;', t, t);
---> statement-breakpoint
+
 EXECUTE format('DROP FUNCTION IF EXISTS storefront.verify_tenant_session_%I();', t);
---> statement-breakpoint
+
 END LOOP;
 END $$;
 --> statement-breakpoint
@@ -202,7 +202,7 @@ DROP TABLE IF EXISTS governance.schema_drift_log;
 --> statement-breakpoint
 -- Cron (Revert)
 GRANT ALL ON TABLE cron.job TO public;
-
+--> statement-breakpoint
 -- View Masking (Revert)
 DO $$
 BEGIN
@@ -230,7 +230,7 @@ BEGIN
     ) LOOP
         BEGIN
             EXECUTE format('ALTER TABLE %I.%I ALTER COLUMN %I TYPE bigint USING ( (%I).amount )', r.table_schema, r.table_name, r.column_name, r.column_name);
---> statement-breakpoint
+
 EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'Rollback Skip: %.%.%', r.table_schema, r.table_name, r.column_name;
         END;
     END LOOP;

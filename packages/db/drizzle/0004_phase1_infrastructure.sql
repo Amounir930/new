@@ -10,11 +10,11 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'money_amount') THEN
         CREATE TYPE money_amount AS (amount BIGINT, currency CHAR(3));
---> statement-breakpoint
+
 END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'actor_type') THEN
         CREATE TYPE "public"."actor_type" AS ENUM('super_admin', 'tenant_admin', 'system');
---> statement-breakpoint
+
 END IF;
 END $$;
 --> statement-breakpoint

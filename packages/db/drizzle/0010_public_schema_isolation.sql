@@ -32,10 +32,10 @@ BEGIN;
 
 -- 'shared' schema: global reference data used across all tenants (no tenant_id needed)
 CREATE SCHEMA IF NOT EXISTS shared;
-
+--> statement-breakpoint
 -- 'legacy' schema: trap for orphaned public tables pending refactoring  
 CREATE SCHEMA IF NOT EXISTS legacy;
-
+--> statement-breakpoint
 -- ── Step 2: Move global reference tables to 'shared' schema ──
 -- These tables are intentionally cross-tenant (currency, tax, markets).
 -- They don't need tenant_id — they are global lookup tables.
@@ -193,7 +193,7 @@ END $$;
 -- Postgres 15+ default: no CREATE on public, but enforce explicitly.
 
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-
+--> statement-breakpoint
 -- Allow only the migration user (postgres / superuser) to create in public.
 -- Application roles should use governance/storefront/shared schemas only.
 DO $$

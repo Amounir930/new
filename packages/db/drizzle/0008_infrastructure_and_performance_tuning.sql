@@ -6,6 +6,7 @@
 CREATE EXTENSION IF NOT EXISTS postgis;
 --> statement-breakpoint
 CREATE SCHEMA IF NOT EXISTS partman;
+--> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
 --> statement-breakpoint
 -- ─── 1. CORRECTED PARTITIONING (High Volume Tables) ─────────────
