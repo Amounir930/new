@@ -1492,7 +1492,7 @@ CREATE INDEX IF NOT EXISTS "idx_leads_status" ON "governance"."leads" USING btre
 CREATE INDEX IF NOT EXISTS "idx_invoices_tenant" ON "governance"."tenant_invoices" USING btree ("tenant_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_invoices_status" ON "governance"."tenant_invoices" USING btree ("status");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "blueprint_niche_plan_idx" ON "governance"."onboarding_blueprints" USING btree ("niche_type","plan");--> statement-breakpoint
-CREATE INDEX "tenant_migrations_tenant_idx" ON "tenant_migrations" USING btree ("tenant_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "tenant_migrations_tenant_idx" ON "public"."tenant_migrations" USING btree ("tenant_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_brands_slug_active" ON "storefront"."brands" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_brands_active" ON "storefront"."brands" USING btree ("is_active") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_carts_customer" ON "storefront"."carts" USING btree ("customer_id");--> statement-breakpoint
@@ -1501,76 +1501,76 @@ CREATE INDEX IF NOT EXISTS "idx_carts_expires" ON "storefront"."carts" USING btr
 CREATE INDEX IF NOT EXISTS "idx_categories_slug_active" ON "storefront"."categories" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_categories_parent" ON "storefront"."categories" USING btree ("parent_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_categories_active" ON "storefront"."categories" USING btree ("is_active") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_metafields_lookup" ON "entity_metafields" USING btree ("entity_type","entity_id");--> statement-breakpoint
-CREATE INDEX "idx_smart_collections_slug" ON "smart_collections" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "idx_tax_rules_country" ON "tax_rules" USING btree ("country");--> statement-breakpoint
-CREATE INDEX "idx_discount_code" ON "discount_codes" USING btree ("code");--> statement-breakpoint
-CREATE INDEX "idx_price_list_market" ON "price_lists" USING btree ("market_id");--> statement-breakpoint
-CREATE INDEX "idx_price_list_product" ON "price_lists" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_price_rules_active" ON "price_rules" USING btree ("is_active") WHERE is_active = true;--> statement-breakpoint
-CREATE INDEX "idx_menu_items_type" ON "menu_items" USING btree ("menu_type");--> statement-breakpoint
-CREATE INDEX "idx_menu_items_parent" ON "menu_items" USING btree ("parent_id");--> statement-breakpoint
-CREATE INDEX "idx_menu_items_active" ON "menu_items" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_blog_slug_active" ON "blog_posts" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_blog_published" ON "blog_posts" USING btree ("is_published");--> statement-breakpoint
-CREATE INDEX "idx_blog_published_at" ON "blog_posts" USING btree ("published_at");--> statement-breakpoint
-CREATE INDEX "idx_blog_tags" ON "blog_posts" USING btree ("tags");--> statement-breakpoint
-CREATE INDEX "idx_pages_slug_active" ON "pages" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_pages_published" ON "pages" USING btree ("is_published");--> statement-breakpoint
-CREATE INDEX "idx_coupons_code" ON "coupons" USING btree ("code");--> statement-breakpoint
-CREATE INDEX "idx_coupons_active" ON "coupons" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_customer_addresses_customer" ON "customer_addresses" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_consent_customer" ON "customer_consents" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_metafields_lookup" ON "public"."entity_metafields" USING btree ("entity_type","entity_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_smart_collections_slug" ON "public"."smart_collections" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_tax_rules_country" ON "public"."tax_rules" USING btree ("country");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_discount_code" ON "public"."discount_codes" USING btree ("code");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_price_list_market" ON "public"."price_lists" USING btree ("market_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_price_list_product" ON "public"."price_lists" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_price_rules_active" ON "public"."price_rules" USING btree ("is_active") WHERE is_active = true;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_menu_items_type" ON "public"."menu_items" USING btree ("menu_type");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_menu_items_parent" ON "public"."menu_items" USING btree ("parent_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_menu_items_active" ON "public"."menu_items" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_blog_slug_active" ON "public"."blog_posts" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_blog_published" ON "public"."blog_posts" USING btree ("is_published");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_blog_published_at" ON "public"."blog_posts" USING btree ("published_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_blog_tags" ON "public"."blog_posts" USING btree ("tags");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_pages_slug_active" ON "storefront"."pages" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_pages_published" ON "storefront"."pages" USING btree ("is_published");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_coupons_code" ON "storefront"."coupons" USING btree ("code");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_coupons_active" ON "storefront"."coupons" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_customer_addresses_customer" ON "storefront"."customer_addresses" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_consent_customer" ON "storefront"."customer_consents" USING btree ("customer_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_customers_email_hash" ON "storefront"."customers" USING btree ("email_hash");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_customers_active" ON "storefront"."customers" USING btree ("created_at") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_customers_tags" ON "storefront"."customers" USING btree ("tags");--> statement-breakpoint
-CREATE INDEX "idx_payment_customer" ON "payment_methods" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_abandoned_created" ON "abandoned_checkouts" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "idx_aff_partner" ON "affiliate_transactions" USING btree ("partner_id");--> statement-breakpoint
-CREATE INDEX "idx_aff_order" ON "affiliate_transactions" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_b2b_pricing" ON "b2b_pricing_tiers" USING btree ("company_id","product_id");--> statement-breakpoint
-CREATE INDEX "idx_b2b_user" ON "b2b_users" USING btree ("company_id");--> statement-breakpoint
-CREATE INDEX "idx_outbox_pending" ON "outbox_events" USING btree ("status","created_at") WHERE status = 'pending';--> statement-breakpoint
-CREATE INDEX "idx_views_product" ON "product_views" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_views_created" ON "product_views" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "idx_webhook_app" ON "webhook_subscriptions" USING btree ("app_id");--> statement-breakpoint
-CREATE INDEX "idx_webhook_event" ON "webhook_subscriptions" USING btree ("event");--> statement-breakpoint
-CREATE INDEX "idx_faq_category" ON "faqs" USING btree ("category_id");--> statement-breakpoint
-CREATE INDEX "idx_faq_active" ON "faqs" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_banners_active" ON "banners" USING btree ("active");--> statement-breakpoint
-CREATE INDEX "idx_banners_priority" ON "banners" USING btree ("priority");--> statement-breakpoint
-CREATE INDEX "idx_fs_prod_campaign" ON "flash_sale_products" USING btree ("flash_sale_id");--> statement-breakpoint
-CREATE INDEX "idx_fs_prod_product" ON "flash_sale_products" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_flash_sales_status" ON "flash_sales" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "idx_flash_sales_end_time" ON "flash_sales" USING btree ("end_time");--> statement-breakpoint
-CREATE INDEX "idx_newsletter_active" ON "newsletter_subscribers" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_search_query" ON "search_analytics" USING btree ("query");--> statement-breakpoint
-CREATE INDEX "idx_import_errors_job" ON "import_errors" USING btree ("job_id");--> statement-breakpoint
-CREATE INDEX "idx_import_jobs_tenant" ON "import_jobs" USING btree ("tenant_id","created_at");--> statement-breakpoint
-CREATE INDEX "idx_inv_variant" ON "inventory_levels" USING btree ("variant_id");--> statement-breakpoint
-CREATE INDEX "idx_inv_mov_variant" ON "inventory_movements" USING btree ("variant_id");--> statement-breakpoint
-CREATE INDEX "idx_inv_mov_created" ON "inventory_movements" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "idx_inv_res_active" ON "inventory_reservations" USING btree ("status") WHERE status = 'active';--> statement-breakpoint
-CREATE INDEX "idx_inv_res_expires" ON "inventory_reservations" USING btree ("expires_at");--> statement-breakpoint
-CREATE INDEX "idx_transfer_items" ON "inventory_transfer_items" USING btree ("transfer_id");--> statement-breakpoint
-CREATE INDEX "idx_kb_article_slug" ON "kb_articles" USING btree ("slug");--> statement-breakpoint
-CREATE INDEX "idx_location_name" ON "store_locations" USING gin ("name");--> statement-breakpoint
-CREATE INDEX "idx_fulfill_items" ON "fulfillment_items" USING btree ("fulfillment_id");--> statement-breakpoint
-CREATE INDEX "idx_fulfillments_order" ON "fulfillments" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_order_edits" ON "order_edits" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_order_items_order" ON "order_items" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_payment_customer" ON "public"."payment_methods" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_abandoned_created" ON "public"."abandoned_checkouts" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_aff_partner" ON "public"."affiliate_transactions" USING btree ("partner_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_aff_order" ON "public"."affiliate_transactions" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_b2b_pricing" ON "public"."b2b_pricing_tiers" USING btree ("company_id","product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_b2b_user" ON "public"."b2b_users" USING btree ("company_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_outbox_pending" ON "public"."outbox_events" USING btree ("status","created_at") WHERE status = 'pending';--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_views_product" ON "public"."product_views" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_views_created" ON "public"."product_views" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_webhook_app" ON "public"."webhook_subscriptions" USING btree ("app_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_webhook_event" ON "public"."webhook_subscriptions" USING btree ("event");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_faq_category" ON "public"."faqs" USING btree ("category_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_faq_active" ON "public"."faqs" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_banners_active" ON "public"."banners" USING btree ("active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_banners_priority" ON "public"."banners" USING btree ("priority");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_fs_prod_campaign" ON "public"."flash_sale_products" USING btree ("flash_sale_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_fs_prod_product" ON "public"."flash_sale_products" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_flash_sales_status" ON "public"."flash_sales" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_flash_sales_end_time" ON "public"."flash_sales" USING btree ("end_time");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_newsletter_active" ON "public"."newsletter_subscribers" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_search_query" ON "public"."search_analytics" USING btree ("query");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_import_errors_job" ON "public"."import_errors" USING btree ("job_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_import_jobs_tenant" ON "public"."import_jobs" USING btree ("tenant_id","created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_inv_variant" ON "public"."inventory_levels" USING btree ("variant_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_inv_mov_variant" ON "public"."inventory_movements" USING btree ("variant_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_inv_mov_created" ON "public"."inventory_movements" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_inv_res_active" ON "public"."inventory_reservations" USING btree ("status") WHERE status = 'active';--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_inv_res_expires" ON "public"."inventory_reservations" USING btree ("expires_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_transfer_items" ON "public"."inventory_transfer_items" USING btree ("transfer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_kb_article_slug" ON "public"."kb_articles" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_location_name" ON "public"."store_locations" USING gin ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_fulfill_items" ON "public"."fulfillment_items" USING btree ("fulfillment_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_fulfillments_order" ON "storefront"."fulfillments" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_order_edits" ON "public"."order_edits" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_order_items_order" ON "storefront"."order_items" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_orders_number_active" ON "storefront"."orders" USING btree ("order_number") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_orders_admin" ON "storefront"."orders" USING btree ("status","created_at") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_orders_customer" ON "storefront"."orders" USING btree ("customer_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_orders_created" ON "storefront"."orders" USING brin ("created_at");--> statement-breakpoint
-CREATE INDEX "idx_refund_items" ON "refund_items" USING btree ("refund_id");--> statement-breakpoint
-CREATE INDEX "idx_refunds_order" ON "refunds" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_rma_items_rma" ON "rma_items" USING btree ("rma_id");--> statement-breakpoint
-CREATE INDEX "idx_attrs_product" ON "product_attributes" USING btree ("product_id","attribute_name");--> statement-breakpoint
-CREATE INDEX "idx_bundle_items" ON "product_bundle_items" USING btree ("bundle_id");--> statement-breakpoint
-CREATE INDEX "idx_product_images_product" ON "product_images" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_variant_sku_active" ON "product_variants" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_variants_product" ON "product_variants" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_refund_items" ON "public"."refund_items" USING btree ("refund_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_refunds_order" ON "public"."refunds" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_rma_items_rma" ON "public"."rma_items" USING btree ("rma_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_attrs_product" ON "public"."product_attributes" USING btree ("product_id","attribute_name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_bundle_items" ON "public"."product_bundle_items" USING btree ("bundle_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_product_images_product" ON "public"."product_images" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_variant_sku_active" ON "public"."product_variants" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_variants_product" ON "public"."product_variants" USING btree ("product_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_sku_active" ON "storefront"."products" USING btree ("sku") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_slug_active" ON "storefront"."products" USING btree ("slug") WHERE deleted_at IS NULL;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_active" ON "storefront"."products" USING btree ("category_id") WHERE is_active = true AND deleted_at IS NULL;--> statement-breakpoint
@@ -1578,24 +1578,24 @@ CREATE INDEX IF NOT EXISTS "idx_products_featured" ON "storefront"."products" US
 CREATE INDEX IF NOT EXISTS "idx_products_tags" ON "storefront"."products" USING btree ("tags");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_name" ON "storefront"."products" USING gin ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_products_brand" ON "storefront"."products" USING btree ("brand_id");--> statement-breakpoint
-CREATE INDEX "idx_referral_code" ON "referrals" USING btree ("referral_code");--> statement-breakpoint
-CREATE INDEX "idx_referral_referrer" ON "referrals" USING btree ("referrer_id");--> statement-breakpoint
-CREATE INDEX "idx_reviews_product" ON "reviews" USING btree ("product_id");--> statement-breakpoint
-CREATE INDEX "idx_reviews_approved" ON "reviews" USING btree ("is_approved") WHERE is_approved = true;--> statement-breakpoint
-CREATE INDEX "idx_reviews_customer" ON "reviews" USING btree ("customer_id");--> statement-breakpoint
-CREATE INDEX "idx_rma_order" ON "rma_requests" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_rma_status" ON "rma_requests" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "idx_shipping_region" ON "shipping_zones" USING btree ("region");--> statement-breakpoint
-CREATE INDEX "idx_shipping_active" ON "shipping_zones" USING btree ("is_active");--> statement-breakpoint
-CREATE INDEX "idx_staff_user" ON "staff_members" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "idx_staff_active" ON "staff_members" USING btree ("is_active") WHERE is_active = true;--> statement-breakpoint
-CREATE INDEX "idx_session_token" ON "staff_sessions" USING btree ("token_hash");--> statement-breakpoint
-CREATE INDEX "idx_session_active" ON "staff_sessions" USING btree ("staff_id") WHERE revoked_at IS NULL;--> statement-breakpoint
-CREATE INDEX "idx_po_items" ON "purchase_order_items" USING btree ("po_id");--> statement-breakpoint
-CREATE INDEX "idx_po_supplier" ON "purchase_orders" USING btree ("supplier_id");--> statement-breakpoint
-CREATE INDEX "idx_po_status" ON "purchase_orders" USING btree ("status");--> statement-breakpoint
-CREATE INDEX "idx_timeline_order" ON "order_timeline" USING btree ("order_id");--> statement-breakpoint
-CREATE INDEX "idx_timeline_created" ON "order_timeline" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_referral_code" ON "public"."referrals" USING btree ("referral_code");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_referral_referrer" ON "public"."referrals" USING btree ("referrer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_reviews_product" ON "storefront"."reviews" USING btree ("product_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_reviews_approved" ON "storefront"."reviews" USING btree ("is_approved") WHERE is_approved = true;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_reviews_customer" ON "storefront"."reviews" USING btree ("customer_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_rma_order" ON "public"."rma_requests" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_rma_status" ON "public"."rma_requests" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_shipping_region" ON "storefront"."shipping_zones" USING btree ("region");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_shipping_active" ON "storefront"."shipping_zones" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_staff_user" ON "storefront"."staff_members" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_staff_active" ON "storefront"."staff_members" USING btree ("is_active") WHERE is_active = true;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_session_token" ON "storefront"."staff_sessions" USING btree ("token_hash");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_session_active" ON "storefront"."staff_sessions" USING btree ("staff_id") WHERE revoked_at IS NULL;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_po_items" ON "public"."purchase_order_items" USING btree ("po_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_po_supplier" ON "public"."purchase_orders" USING btree ("supplier_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_po_status" ON "public"."purchase_orders" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_timeline_order" ON "public"."order_timeline" USING btree ("order_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_timeline_created" ON "public"."order_timeline" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_wallet_customer" ON "storefront"."wallet_transactions" USING btree ("customer_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "idx_wallet_created" ON "storefront"."wallet_transactions" USING btree ("created_at");--> statement-breakpoint
 CREATE POLICY "tenants_isolation" ON "governance"."tenants" AS PERMISSIVE FOR SELECT TO public USING (status = 'active');
