@@ -130,6 +130,18 @@ async function runMigrations() {
   try {
     await setupMigrationContext(client, tenantId, runPublic);
 
+    // ─── PRE-FLIGHT: Drop blocking event triggers from prior partial runs ───
+    // Drizzle sends each migration as ONE atomic query. Event triggers installed
+    // by prior partial runs block DDL in subsequent migrations. We must drop them
+    // BEFORE Drizzle processes any migration files.
+    console.log('Pre-flight: Dropping blocking event triggers from prior runs...');
+    await client.query(`
+      DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
+      DROP EVENT TRIGGER IF EXISTS trg_log_drift;
+      DROP EVENT TRIGGER IF EXISTS trg_audit_schema_drift;
+    `);
+    console.log('Pre-flight: Event triggers cleared.');
+
     const db = drizzle(client);
     const migrationsFolder = join(__dirname, '../drizzle');
     console.log(`Loading migrations from: ${migrationsFolder}`);

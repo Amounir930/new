@@ -55,9 +55,11 @@ DECLARE
 BEGIN
     FOREACH t IN ARRAY target_tables LOOP
         -- Skip if already renamed
-        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = t) THEN
-            -- 1. Rename original table to _table
-            EXECUTE format('ALTER TABLE storefront.%I RENAME TO %I', t, '_' || t);
+        IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = t AND table_type = 'BASE TABLE') THEN
+            -- Only rename if target doesn't exist yet
+            IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storefront' AND table_name = '_' || t) THEN
+                EXECUTE format('ALTER TABLE storefront.%I RENAME TO %I', t, '_' || t);
+            END IF;
             
             -- 2. Create view without deleted rows
             -- Using * is acceptable here as we want to mirror the original schema but filter data.
@@ -68,6 +70,7 @@ BEGIN
             EXECUTE format('GRANT SELECT ON storefront.%I TO role_app_service', t);
             
             RAISE NOTICE 'Soft Delete View Created: storefront.%', t;
+            END IF;
         END IF;
     END LOOP;
 END $$;

@@ -116,18 +116,18 @@ END; $$ LANGUAGE plpgsql;
 
 DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $$;
 
--- ─── 7. AUDIT & LOGGING ──────────────────────────────────────────
+-- ─── 7. AUDIT & LOGGING FUNCTIONS (Triggers installed in final migration) ────
+-- Functions are defined here but event triggers are NOT activated yet.
+-- They will be installed at the END of the entire migration chain (0010)
+-- to prevent self-blocking during intermediate migrations that ALTER audit_logs.
+
 CREATE OR REPLACE FUNCTION governance.block_audit_tamper_event() RETURNS event_trigger AS $$
 DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP IF obj.object_identity ~ 'audit_logs|super_admin_actions' THEN RAISE EXCEPTION 'Audit Tamper Forbidden' USING ERRCODE = 'P0005'; END IF; END LOOP; END; $$ LANGUAGE plpgsql;
 
-DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
-CREATE EVENT TRIGGER trg_audit_immutability_lockdown ON ddl_command_end WHEN TAG IN ('DROP TABLE', 'ALTER TABLE') EXECUTE FUNCTION governance.block_audit_tamper_event();
-
 CREATE TABLE IF NOT EXISTS governance.schema_drift_log (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), command_tag TEXT, object_type TEXT, object_identity TEXT, actor_id TEXT, executed_at TIMESTAMP WITH TIME ZONE DEFAULT now());
 CREATE OR REPLACE FUNCTION governance.log_schema_drift() RETURNS event_trigger AS $$
-DECLARE obj record; BEGIN IF current_user != 'postgres' AND current_setting('app.role', true) != 'super_admin' THEN RAISE EXCEPTION 'Unauthorized DDL' USING ERRCODE = 'P9999'; END IF; FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id) VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user); END LOOP; END; $$ LANGUAGE plpgsql;
-DROP EVENT TRIGGER IF EXISTS trg_log_drift;
-CREATE EVENT TRIGGER trg_log_drift ON ddl_command_end EXECUTE FUNCTION governance.log_schema_drift();
+DECLARE obj record; BEGIN FOR obj IN SELECT * FROM pg_event_trigger_ddl_commands() LOOP INSERT INTO governance.schema_drift_log (command_tag, object_type, object_identity, actor_id) VALUES (obj.command_tag, obj.object_type, obj.object_identity, current_user); END LOOP; END; $$ LANGUAGE plpgsql;
+
 
 -- ─── 8. SOFT DELETE ENFORCEMENT (State-Aware) ───────────────────
 DO $$

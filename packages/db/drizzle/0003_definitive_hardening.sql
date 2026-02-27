@@ -8,16 +8,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Statement-breakpoint
-DROP TRIGGER IF EXISTS trg_block_audit_update ON governance.audit_logs;
-CREATE TRIGGER trg_block_audit_update
-BEFORE UPDATE ON governance.audit_logs
-FOR EACH ROW EXECUTE FUNCTION block_audit_mutation();
-
--- Statement-breakpoint
-DROP TRIGGER IF EXISTS trg_block_audit_delete ON governance.audit_logs;
-CREATE TRIGGER trg_block_audit_delete
-BEFORE DELETE ON governance.audit_logs
-FOR EACH ROW EXECUTE FUNCTION block_audit_mutation();
+-- NOTE: audit mutation triggers are applied AFTER partitioned table creation below
 -- Mandate #6: Audit Log Range Partitioning
 -- Ensures NVMe stability under high-volume write pressure.
 
@@ -25,49 +16,65 @@ FOR EACH ROW EXECUTE FUNCTION block_audit_mutation();
 CREATE SCHEMA IF NOT EXISTS partman;
 CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
 
--- 2. Convert governance.audit_logs to a partitioned table
--- Step 1: Rename the standard table created in 0001
-ALTER TABLE governance.audit_logs RENAME TO audit_logs_baseline;
+-- 2. Convert governance.audit_logs to a partitioned table (State-Aware)
+DO $
+BEGIN
+    -- Only rename if audit_logs is a regular table (not already partitioned)
+    IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs' AND c.relkind = 'r') THEN
+        -- Only rename if target doesn't already exist
+        IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs_baseline') THEN
+            ALTER TABLE governance.audit_logs RENAME TO audit_logs_baseline;
+        ELSE
+            -- Both exist, drop the non-partitioned one
+            DROP TABLE governance.audit_logs;
+        END IF;
+    END IF;
 
--- Step 2: Create the partitioned table
-CREATE TABLE governance.audit_logs (
-	"id" uuid DEFAULT gen_ulid() NOT NULL,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"severity" "audit_severity" DEFAULT 'INFO' NOT NULL,
-	"result" "audit_result" DEFAULT 'SUCCESS' NOT NULL,
-	"tenant_id" text NOT NULL,
-	"user_id" text,
-	"user_email" text,
-	"action" text NOT NULL,
-	"entity_type" text NOT NULL,
-	"entity_id" text NOT NULL,
-	"ip_address" text,
-	"user_agent" text,
-	"old_values" jsonb,
-	"new_values" jsonb,
-	"metadata" jsonb,
-	"impersonator_id" text,
-	"checksum" text,
-	PRIMARY KEY (id, created_at)
-) PARTITION BY RANGE (created_at);
+    -- Create partitioned table only if it doesn't exist or is not already partitioned
+    IF NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs' AND c.relkind = 'p') THEN
+        CREATE TABLE governance.audit_logs (
+            "id" uuid DEFAULT gen_ulid() NOT NULL,
+            "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+            "severity" "audit_severity" DEFAULT 'INFO' NOT NULL,
+            "result" "audit_result" DEFAULT 'SUCCESS' NOT NULL,
+            "tenant_id" text NOT NULL,
+            "user_id" text,
+            "user_email" text,
+            "action" text NOT NULL,
+            "entity_type" text NOT NULL,
+            "entity_id" text NOT NULL,
+            "ip_address" text,
+            "user_agent" text,
+            "old_values" jsonb,
+            "new_values" jsonb,
+            "metadata" jsonb,
+            "impersonator_id" text,
+            "checksum" text,
+            PRIMARY KEY (id, created_at)
+        ) PARTITION BY RANGE (created_at);
 
--- Step 3: Migrate any existing baseline data
-INSERT INTO governance.audit_logs SELECT * FROM governance.audit_logs_baseline;
+        -- Migrate baseline data if it exists
+        IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'governance' AND c.relname = 'audit_logs_baseline') THEN
+            INSERT INTO governance.audit_logs SELECT * FROM governance.audit_logs_baseline;
+        END IF;
+    END IF;
 
--- Step 4: Hand over to Partman
-SELECT partman.create_parent(
-    'governance.audit_logs',
-    'created_at',
-    'native',
-    'daily',
-    p_start_partition := (now() - interval '1 day')::text
-);
+    -- Hand over to Partman (idempotent)
+    IF NOT EXISTS (SELECT 1 FROM partman.part_config WHERE parent_table = 'governance.audit_logs') THEN
+        PERFORM partman.create_parent(
+            'governance.audit_logs',
+            'created_at',
+            'native',
+            'daily',
+            p_start_partition := (now() - interval '1 day')::text
+        );
+    END IF;
 
--- 3. Configure retention (e.g., 90 days)
-UPDATE partman.part_config 
-SET retention = '90 days', 
-    retention_keep_table = false 
-WHERE parent_table = 'governance.audit_logs';
+    -- Configure retention
+    UPDATE partman.part_config 
+    SET retention = '90 days', retention_keep_table = false 
+    WHERE parent_table = 'governance.audit_logs';
+END $;
 
 -- Mandate #14: Audit Immutability Triggers (S4/S7)
 -- Prevents any modification of logs once written.
@@ -79,10 +86,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_audit_immutable_update ON governance.audit_logs;
 CREATE TRIGGER trg_audit_immutable_update
 BEFORE UPDATE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
 
+DROP TRIGGER IF EXISTS trg_audit_immutable_delete ON governance.audit_logs;
 CREATE TRIGGER trg_audit_immutable_delete
 BEFORE DELETE ON governance.audit_logs
 FOR EACH ROW EXECUTE FUNCTION governance.enforce_audit_immutability();
@@ -216,9 +225,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE EVENT TRIGGER trg_audit_schema_drift
-ON ddl_command_end
-EXECUTE FUNCTION governance.log_schema_drift();
+-- EVENT TRIGGER trg_audit_schema_drift deferred to final migration
 
 -- Mandate #18: Global Soft Delete Scoping (Active Views)
 -- Ensures developers can't accidentally query deleted data.
@@ -264,10 +271,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Statement-breakpoint
-DROP EVENT TRIGGER IF EXISTS trg_audit_schema_drift;
-CREATE EVENT TRIGGER trg_audit_schema_drift
-ON ddl_command_end
-EXECUTE FUNCTION log_schema_drift();
+-- EVENT TRIGGER trg_audit_schema_drift deferred to final migration
 
 -- Financial Hardening: Ensure RESTRICT for orders and wallet
 -- Statement-breakpoint

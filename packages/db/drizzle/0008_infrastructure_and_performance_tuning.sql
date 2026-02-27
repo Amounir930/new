@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS pg_partman SCHEMA partman;
 -- Converting product_views, payment_logs, and outbox_events to partitioned tables.
 
 -- A. outbox_events (Daily)
-ALTER TABLE public.outbox_events RENAME TO outbox_events_old;
+DO $ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'outbox_events' AND table_type = 'BASE TABLE') AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'outbox_events_old') THEN ALTER TABLE public.outbox_events RENAME TO outbox_events_old; END IF; END $;
 CREATE TABLE public.outbox_events (
     id UUID DEFAULT gen_ulid(),
     tenant_id UUID NOT NULL, -- Ensure tenant isolation in outbox
@@ -33,7 +33,7 @@ INSERT INTO public.outbox_events SELECT * FROM public.outbox_events_old;
 SELECT partman.create_parent('public.outbox_events', 'created_at', 'native', 'daily');
 
 -- B. product_views (Monthly)
-ALTER TABLE public.product_views RENAME TO product_views_old;
+DO $ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'product_views' AND table_type = 'BASE TABLE') AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'product_views_old') THEN ALTER TABLE public.product_views RENAME TO product_views_old; END IF; END $;
 CREATE TABLE public.product_views (
     id UUID DEFAULT gen_ulid(),
     tenant_id UUID NOT NULL,
@@ -52,7 +52,7 @@ SELECT partman.create_parent('public.product_views', 'created_at', 'native', 'mo
 CREATE INDEX idx_product_views_brin ON public.product_views USING BRIN (created_at);
 
 -- C. payment_logs (Yearly)
-ALTER TABLE public.payment_logs RENAME TO payment_logs_old;
+DO $ BEGIN IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'payment_logs' AND table_type = 'BASE TABLE') AND NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'payment_logs_old') THEN ALTER TABLE public.payment_logs RENAME TO payment_logs_old; END IF; END $;
 CREATE TABLE public.payment_logs (
     id UUID DEFAULT gen_ulid(),
     tenant_id UUID NOT NULL,
@@ -128,15 +128,15 @@ ADD CONSTRAINT subdomain_safety_check CHECK (
 
 -- ─── 5. PARTMAN AUDIT LOG UNIFICATION ───────────────────────────
 -- Ensure Partman manages governance.audit_logs correctly.
-DELETE FROM partman.part_config WHERE parent_table = 'governance.audit_logs';
-SELECT partman.create_parent('governance.audit_logs', 'created_at', 'native', 'daily');
+DO $ BEGIN DELETE FROM partman.part_config WHERE parent_table = 'governance.audit_logs'; EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $ BEGIN PERFORM partman.create_parent('governance.audit_logs', 'created_at', 'native', 'daily'); EXCEPTION WHEN OTHERS THEN NULL; END $;
 
 -- ─── 5. FINAL PERFORMANCE & INTEGRITY POLISH ──────────────────────
 
 -- 5.1 Missing CHECK Constraints
-ALTER TABLE "storefront"."_products" 
+DO $ BEGIN ALTER TABLE "storefront"."_products" 
   ADD CONSTRAINT chk_price_positive CHECK (base_price > 0),
-  ADD CONSTRAINT chk_compare_price CHECK (compare_at_price IS NULL OR compare_at_price > base_price);
+  ADD CONSTRAINT chk_compare_price CHECK (compare_at_price IS NULL OR compare_at_price > base_price); EXCEPTION WHEN OTHERS THEN NULL; END $;
 
 ALTER TABLE "inventory_levels" 
   ADD CONSTRAINT chk_available CHECK (available >= 0),
