@@ -30,7 +30,7 @@ BEGIN
             RAISE NOTICE 'RLS Policy Skip: storefront.% (Missing tenant_id?)', t_name;
         END;
     END LOOP;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- ─── 2. SCHEMA UNIFICATION ──────────────────────────────────────
@@ -85,7 +85,7 @@ BEGIN
             END IF;
         END IF;
     END LOOP;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- ─── 4. SESSION & AUTH SECURITY ─────────────────────────────────

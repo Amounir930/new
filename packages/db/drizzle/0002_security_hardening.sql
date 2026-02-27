@@ -17,7 +17,7 @@ DO $$
 BEGIN 
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN CREATE ROLE role_tenant_admin; END IF;
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_app_service') THEN CREATE ROLE role_app_service; END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- ─── 2. EXTENSIONS & SPATIAL CORE ────────────────────────────────
@@ -27,7 +27,7 @@ CREATE EXTENSION IF NOT EXISTS "vector";
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 --> statement-breakpoint
-DO $$ BEGIN PERFORM 1 FROM pg_available_extensions WHERE name = 'pg_cron'; IF FOUND THEN EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pg_cron"'; END IF; END $;
+DO $$ BEGIN PERFORM 1 FROM pg_available_extensions WHERE name = 'pg_cron'; IF FOUND THEN EXECUTE 'CREATE EXTENSION IF NOT EXISTS "pg_cron"'; END IF; END $$;
 --> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS "postgis";
 --> statement-breakpoint
@@ -101,7 +101,7 @@ BEGIN
 --> statement-breakpoint
         EXCEPTION WHEN OTHERS THEN NULL; END;
     END LOOP;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- ─── 5. ATOMIC WALLET MUTEX ─────────────────────────────────────
@@ -137,7 +137,7 @@ BEGIN
 --> statement-breakpoint
 END; $$ LANGUAGE plpgsql;
 
-DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $;
+DO $$ DECLARE t TEXT; BEGIN FOR t IN SELECT t.table_name FROM information_schema.tables t WHERE t.table_schema = 'storefront' AND t.table_type = 'BASE TABLE' AND EXISTS (SELECT 1 FROM information_schema.columns c WHERE c.table_name = t.table_name AND c.table_schema = t.table_schema AND c.column_name = 'tenant_id') LOOP PERFORM governance.enforce_tenant_hardening(t, 'storefront'); END LOOP; END $$;
 --> statement-breakpoint
 
 -- ─── 7. AUDIT & LOGGING FUNCTIONS (Triggers installed in final migration) ────
@@ -182,8 +182,8 @@ BEGIN
         GRANT SELECT, INSERT, UPDATE, DELETE ON storefront.pages TO role_tenant_admin;
         GRANT SELECT ON storefront.pages TO role_app_service;
     END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
-DO $$ BEGIN RAISE NOTICE '0002_security_hardening.sql: DEFINITIVE SUCCESS.'; END $;
+DO $$ BEGIN RAISE NOTICE '0002_security_hardening.sql: DEFINITIVE SUCCESS.'; END $$;
 --> statement-breakpoint

@@ -14,7 +14,7 @@ BEGIN
     IF current_setting('app.override_rollback_safety', true) != 'true' THEN
         RAISE EXCEPTION 'Rollback Procedure Aborted: Safety override (app.override_rollback_safety) not set. Verification of 24h backup snapshot required.';
     END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- ============================================================================
@@ -202,7 +202,7 @@ BEGIN
         EXECUTE format('DROP TRIGGER IF EXISTS trg_verify_tenant_session_%I ON storefront.%I;', t, t);
         EXECUTE format('DROP FUNCTION IF EXISTS storefront.verify_tenant_session_%I();', t);
     END LOOP;
-END $;
+END $$;
 --> statement-breakpoint
 DROP FUNCTION IF EXISTS governance.enforce_tenant_hardening(TEXT, TEXT);
 --> statement-breakpoint
@@ -237,7 +237,7 @@ BEGIN
         ALTER TABLE storefront._pages RENAME TO pages;
         GRANT ALL ON storefront.pages TO public;
     END IF;
-END $;
+END $$;
 --> statement-breakpoint
 
 -- FINANCIAL TYPES ROLLBACK LAST (Prevents column drop failures)
@@ -255,7 +255,7 @@ BEGIN
         EXCEPTION WHEN OTHERS THEN RAISE NOTICE 'Rollback Skip: %.%.%', r.table_schema, r.table_name, r.column_name;
         END;
     END LOOP;
-END $;
+END $$;
 --> statement-breakpoint
 
 RAISE NOTICE 'master_rollback_DOWN.sql: SUCCESS. Unified master rollback complete.';
