@@ -80,45 +80,22 @@ CREATE TABLE IF NOT EXISTS "storefront"."product_category_mapping" (
 -- Governance
 DO $$ BEGIN ALTER TABLE "governance"."plan_change_history" ALTER COLUMN "from_plan" TYPE "public"."tenant_plan" USING "from_plan"::"public"."tenant_plan", ALTER COLUMN "to_plan" TYPE "public"."tenant_plan" USING "to_plan"::"public"."tenant_plan"; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
-ALTER TABLE "governance"."leads" 
-    ADD COLUMN IF NOT EXISTS "landing_page_url" text,
-    ADD COLUMN IF NOT EXISTS "utm_source" varchar(100),
-    ADD COLUMN IF NOT EXISTS "utm_medium" varchar(100),
-    ADD COLUMN IF NOT EXISTS "utm_campaign" varchar(100);
+DO $$ BEGIN ALTER TABLE "governance"."leads" ADD COLUMN IF NOT EXISTS "landing_page_url" text, ADD COLUMN IF NOT EXISTS "utm_source" varchar(100), ADD COLUMN IF NOT EXISTS "utm_medium" varchar(100), ADD COLUMN IF NOT EXISTS "utm_campaign" varchar(100); EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 DO $$ BEGIN ALTER TABLE "governance"."audit_logs" ADD COLUMN IF NOT EXISTS "actor_type" "public"."actor_type" DEFAULT 'tenant_admin' NOT NULL; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- Supply Chain (Phase 4)
-ALTER TABLE "storefront"."suppliers" 
-    ADD COLUMN IF NOT EXISTS "lead_time_days" integer DEFAULT 7,
-    ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR',
-    ADD COLUMN IF NOT EXISTS "notes" text;
+DO $$ BEGIN ALTER TABLE "storefront"."suppliers" ADD COLUMN IF NOT EXISTS "lead_time_days" integer DEFAULT 7, ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR', ADD COLUMN IF NOT EXISTS "notes" text; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
-ALTER TABLE "storefront"."purchase_orders" 
-    ADD COLUMN IF NOT EXISTS "order_number" text,
-    ADD COLUMN IF NOT EXISTS "subtotal" money_amount,
-    ADD COLUMN IF NOT EXISTS "tax_amount" money_amount,
-    ADD COLUMN IF NOT EXISTS "shipping_amount" money_amount,
-    ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR',
-    ADD COLUMN IF NOT EXISTS "notes" text;
+DO $$ BEGIN ALTER TABLE "storefront"."purchase_orders" ADD COLUMN IF NOT EXISTS "order_number" text, ADD COLUMN IF NOT EXISTS "subtotal" money_amount, ADD COLUMN IF NOT EXISTS "tax_amount" money_amount, ADD COLUMN IF NOT EXISTS "shipping_amount" money_amount, ADD COLUMN IF NOT EXISTS "currency" text DEFAULT 'SAR', ADD COLUMN IF NOT EXISTS "notes" text; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- Discounts (Phase 4)
-ALTER TABLE "storefront"."price_rules" 
-    ADD COLUMN IF NOT EXISTS "applies_to" text DEFAULT 'all' NOT NULL,
-    ADD COLUMN IF NOT EXISTS "entitled_ids" jsonb DEFAULT '[]';
+DO $$ BEGIN ALTER TABLE "storefront"."price_rules" ADD COLUMN IF NOT EXISTS "applies_to" text DEFAULT 'all' NOT NULL, ADD COLUMN IF NOT EXISTS "entitled_ids" jsonb DEFAULT '[]'; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- Global Trade (Phase 5)
-ALTER TABLE "storefront"."commerce_markets" 
-    ADD COLUMN IF NOT EXISTS "is_primary" boolean DEFAULT false NOT NULL,
-    ADD COLUMN IF NOT EXISTS "countries" jsonb DEFAULT '[]';
+DO $$ BEGIN ALTER TABLE "storefront"."commerce_markets" ADD COLUMN IF NOT EXISTS "is_primary" boolean DEFAULT false NOT NULL, ADD COLUMN IF NOT EXISTS "countries" jsonb DEFAULT '[]'; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
-ALTER TABLE "storefront"."price_lists" 
-    ADD COLUMN IF NOT EXISTS "product_id" uuid,
-    ADD COLUMN IF NOT EXISTS "variant_id" uuid,
-    ADD COLUMN IF NOT EXISTS "price" money_amount,
-    ADD COLUMN IF NOT EXISTS "compare_at_price" money_amount,
-    ADD COLUMN IF NOT EXISTS "min_quantity" integer DEFAULT 1 NOT NULL,
-    ADD COLUMN IF NOT EXISTS "max_quantity" integer;
+DO $$ BEGIN ALTER TABLE "storefront"."price_lists" ADD COLUMN IF NOT EXISTS "product_id" uuid, ADD COLUMN IF NOT EXISTS "variant_id" uuid, ADD COLUMN IF NOT EXISTS "price" money_amount, ADD COLUMN IF NOT EXISTS "compare_at_price" money_amount, ADD COLUMN IF NOT EXISTS "min_quantity" integer DEFAULT 1 NOT NULL, ADD COLUMN IF NOT EXISTS "max_quantity" integer; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 DO $$ BEGIN ALTER TABLE "storefront"."currency_rates" ALTER COLUMN "rate" TYPE numeric(12,6); EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
@@ -127,36 +104,36 @@ DO $$ BEGIN ALTER TABLE "storefront"."currency_rates" ALTER COLUMN "rate" TYPE n
 CREATE INDEX IF NOT EXISTS "idx_audit_created_brin" ON "governance"."audit_logs" USING BRIN ("created_at") WITH (pages_per_range = 32);
 
 -- product_images
-CREATE INDEX IF NOT EXISTS "idx_images_product" ON "storefront"."product_images" ("product_id");
-DO $$ BEGIN ALTER TABLE "storefront"."product_images" ADD CONSTRAINT "product_images_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_images_product" ON "storefront"."product_images" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $$ BEGIN ALTER TABLE "storefront"."product_images" ADD CONSTRAINT "product_images_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- product_attributes
-CREATE INDEX IF NOT EXISTS "idx_attrs_product" ON "storefront"."product_attributes" ("product_id");
-CREATE INDEX IF NOT EXISTS "idx_attrs_name" ON "storefront"."product_attributes" ("name");
-DO $$ BEGIN ALTER TABLE "storefront"."product_attributes" ADD CONSTRAINT "product_attributes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_attrs_product" ON "storefront"."product_attributes" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_attrs_name" ON "storefront"."product_attributes" ("name"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $$ BEGIN ALTER TABLE "storefront"."product_attributes" ADD CONSTRAINT "product_attributes_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- entity_metafields
-CREATE UNIQUE INDEX IF NOT EXISTS "idx_meta_unique" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id", "namespace", "key");
-CREATE INDEX IF NOT EXISTS "idx_meta_lookup" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id");
-CREATE INDEX IF NOT EXISTS "idx_meta_value_gin" ON "storefront"."entity_metafields" USING GIN ("value");
+DO $ BEGIN CREATE UNIQUE INDEX IF NOT EXISTS "idx_meta_unique" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id", "namespace", "key"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_meta_lookup" ON "storefront"."entity_metafields" ("tenant_id", "entity_type", "entity_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_meta_value_gin" ON "storefront"."entity_metafields" USING GIN ("value"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 
 -- related_products
-CREATE INDEX IF NOT EXISTS "idx_related_main" ON "storefront"."related_products" ("product_id");
-DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_related_product_id_products_id_fk" FOREIGN KEY ("related_product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_related_main" ON "storefront"."related_products" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."related_products" ADD CONSTRAINT "related_products_related_product_id_products_id_fk" FOREIGN KEY ("related_product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- product_category_mapping
-CREATE INDEX IF NOT EXISTS "idx_cat_mapping_product" ON "storefront"."product_category_mapping" ("product_id");
-CREATE INDEX IF NOT EXISTS "idx_cat_mapping_category" ON "storefront"."product_category_mapping" ("category_id");
-DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
-DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE CASCADE; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_cat_mapping_product" ON "storefront"."product_category_mapping" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_cat_mapping_category" ON "storefront"."product_category_mapping" ("category_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "storefront"."products"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
+DO $$ BEGIN ALTER TABLE "storefront"."product_category_mapping" ADD CONSTRAINT "product_category_mapping_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "storefront"."categories"("id") ON DELETE CASCADE; EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
 -- purchase_orders
-CREATE UNIQUE INDEX IF NOT EXISTS "idx_po_number_unique" ON "storefront"."purchase_orders" ("tenant_id", "order_number");
+DO $ BEGIN CREATE UNIQUE INDEX IF NOT EXISTS "idx_po_number_unique" ON "storefront"."purchase_orders" ("tenant_id", "order_number"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 
 -- commercial
-CREATE INDEX IF NOT EXISTS "idx_price_list_product" ON "storefront"."price_lists" ("product_id");
-CREATE INDEX IF NOT EXISTS "idx_price_list_variant" ON "storefront"."price_lists" ("variant_id");
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_price_list_product" ON "storefront"."price_lists" ("product_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
+DO $ BEGIN CREATE INDEX IF NOT EXISTS "idx_price_list_variant" ON "storefront"."price_lists" ("variant_id"); EXCEPTION WHEN OTHERS THEN NULL; END $;
 
 -- 7. Performance Tuning (Autovacuum)
 DO $$ BEGIN ALTER TABLE storefront.outbox_events SET (
