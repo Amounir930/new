@@ -241,7 +241,7 @@ table "price_lists" {
   foreign_key "fk_pl_market" {
     columns     = [column.tenant_id, column.market_id]
     ref_columns = [table.markets.column.tenant_id, table.markets.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   check "chk_pl_price_inner" {
     expr = "(price).amount IS NOT NULL AND (price).currency IS NOT NULL"

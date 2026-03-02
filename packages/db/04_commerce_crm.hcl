@@ -263,7 +263,7 @@ table "customer_addresses" {
   foreign_key "fk_addr_cust" {
     columns     = [column.tenant_id, column.customer_id]
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "customer_consents" {
@@ -317,7 +317,7 @@ table "customer_consents" {
   foreign_key "fk_consent_cust" {
     columns     = [column.tenant_id, column.customer_id]
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "customer_segments" {
@@ -578,7 +578,7 @@ table "orders" {
   foreign_key "fk_ord_customer" {
     columns     = [column.tenant_id, column.customer_id]
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "order_items" {
@@ -690,12 +690,12 @@ table "order_items" {
   foreign_key "fk_oi_order" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_oi_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "order_edits" {
@@ -754,12 +754,12 @@ table "order_edits" {
   foreign_key "fk_oe_order" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_oe_line_item" {
     columns     = [column.line_item_id]
     ref_columns = [table.order_items.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "order_timeline" {
@@ -823,7 +823,7 @@ table "order_timeline" {
   foreign_key "fk_ot_order" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "fulfillments" {
@@ -879,7 +879,7 @@ table "fulfillments" {
   foreign_key "fk_ful_order" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "fulfillment_items" {
@@ -913,12 +913,12 @@ table "fulfillment_items" {
   foreign_key "fk_fi_fulfillment" {
     columns     = [column.fulfillment_id]
     ref_columns = [table.fulfillments.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_fi_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "refunds" {
@@ -976,7 +976,7 @@ table "refunds" {
   foreign_key "fk_ref_order" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "refund_items" {
@@ -1017,12 +1017,12 @@ table "refund_items" {
   foreign_key "fk_ri_refund" {
     columns     = [column.tenant_id, column.refund_id]
     ref_columns = [table.refunds.column.tenant_id, table.refunds.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_ri_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "rma_requests" {
@@ -1093,12 +1093,12 @@ table "rma_requests" {
   foreign_key "fk_rma_order" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_rma_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "rma_items" {
@@ -1149,12 +1149,12 @@ table "rma_items" {
   foreign_key "fk_rmai_rma" {
     columns     = [column.tenant_id, column.rma_id]
     ref_columns = [table.rma_requests.column.tenant_id, table.rma_requests.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_rmai_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "payment_logs" {
@@ -1234,7 +1234,7 @@ table "payment_logs" {
   foreign_key "fk_pl_order" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "carts" {
@@ -1308,7 +1308,7 @@ table "carts" {
   foreign_key "fk_cart_customer" {
     columns     = [column.tenant_id, column.customer_id]
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "cart_items" {
@@ -1353,7 +1353,7 @@ table "cart_items" {
   foreign_key "fk_ci_cart" {
     columns     = [column.tenant_id, column.cart_id]
     ref_columns = [table.carts.column.tenant_id, table.carts.column.id]
-    on_delete   = "CASCADE"
+    on_delete = CASCADE
   }
 }
 table "abandoned_checkouts" {
@@ -1418,7 +1418,7 @@ table "abandoned_checkouts" {
   foreign_key "fk_ac_customer" {
     columns     = [column.tenant_id, column.customer_id]
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 
@@ -1619,7 +1619,7 @@ table "tax_rules" {
   foreign_key "fk_tr_tax_category" {
     columns     = [column.tenant_id, column.tax_category_id]
     ref_columns = [table.tax_categories.column.tenant_id, table.tax_categories.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "reviews" {

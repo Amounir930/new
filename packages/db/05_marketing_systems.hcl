@@ -141,7 +141,7 @@ table "coupon_usages" {
   foreign_key "fk_cu_coupon" {
     columns     = [column.tenant_id, column.coupon_id]
     ref_columns = [table.coupons.column.tenant_id, table.coupons.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "price_rules" {
@@ -281,7 +281,7 @@ table "discount_codes" {
   foreign_key "fk_dc_price_rule" {
     columns     = [column.tenant_id, column.price_rule_id]
     ref_columns = [table.price_rules.column.tenant_id, table.price_rules.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "flash_sales" {
@@ -419,7 +419,7 @@ table "flash_sale_products" {
   foreign_key "fk_fsp_flash_sale" {
     columns     = [column.tenant_id, column.flash_sale_id]
     ref_columns = [table.flash_sales.column.tenant_id, table.flash_sales.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "product_bundles" {
@@ -504,7 +504,7 @@ table "product_bundle_items" {
   foreign_key "fk_pbi_bundle" {
     columns     = [column.tenant_id, column.bundle_id]
     ref_columns = [table.product_bundles.column.tenant_id, table.product_bundles.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "loyalty_rules" {
@@ -777,7 +777,7 @@ table "affiliate_transactions" {
   foreign_key "fk_afftx_partner" {
     columns     = [column.tenant_id, column.partner_id]
     ref_columns = [table.affiliate_partners.column.tenant_id, table.affiliate_partners.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 
@@ -919,7 +919,7 @@ table "staff_members" {
   foreign_key "fk_sm_role" {
     columns     = [column.role_id]
     ref_columns = [table.staff_roles.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "staff_sessions" {
@@ -997,12 +997,12 @@ table "staff_sessions" {
   foreign_key "fk_ss_tenant" {
     columns     = [column.tenant_id]
     ref_columns = [table.tenants.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_ss_staff" {
     columns     = [column.tenant_id, column.staff_id]
     ref_columns = [table.staff_members.column.tenant_id, table.staff_members.column.id]
-    on_delete   = "CASCADE"
+    on_delete = CASCADE
   }
 }
 
@@ -1150,7 +1150,7 @@ table "webhook_subscriptions" {
   foreign_key "fk_ws_app" {
     columns     = [column.tenant_id, column.app_id]
     ref_columns = [table.app_installations.column.tenant_id, table.app_installations.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 
@@ -1471,7 +1471,7 @@ table "faqs" {
   foreign_key "fk_faq_category" {
     columns     = [column.category_id]
     ref_columns = [table.faq_categories.column.id]
-    on_delete   = "SET NULL"
+    on_delete = SET_NULL
   }
 }
 table "kb_categories" {
@@ -1566,7 +1566,7 @@ table "kb_articles" {
   foreign_key "fk_kba_category" {
     columns     = [column.category_id]
     ref_columns = [table.kb_categories.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "banners" {

@@ -127,7 +127,7 @@ table "categories" {
   foreign_key "fk_cat_parent" {
     columns     = [column.tenant_id, column.parent_id]
     ref_columns = [table.categories.column.tenant_id, table.categories.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "brands" {
@@ -460,12 +460,12 @@ table "products" {
   foreign_key "fk_prod_brand" {
     columns     = [column.brand_id]
     ref_columns = [table.brands.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_prod_cat" {
     columns     = [column.category_id]
     ref_columns = [table.categories.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "product_variants" {
@@ -563,7 +563,7 @@ table "product_variants" {
   foreign_key "fk_var_prod" {
     columns     = [column.tenant_id, column.product_id]
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "product_images" {
@@ -611,7 +611,7 @@ table "product_images" {
   foreign_key "fk_img_prod" {
     columns     = [column.tenant_id, column.product_id]
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
-    on_delete   = "CASCADE"
+    on_delete = CASCADE
   }
 }
 table "product_attributes" {
@@ -665,7 +665,7 @@ table "product_attributes" {
   foreign_key "fk_attr_prod" {
     columns     = [column.tenant_id, column.product_id]
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
-    on_delete   = "CASCADE"
+    on_delete = CASCADE
   }
 }
 table "entity_metafields" {
@@ -913,12 +913,12 @@ table "inventory_levels" {
   foreign_key "fk_inv_loc" {
     columns     = [column.tenant_id, column.location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_inv_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "inventory_movements" {
@@ -985,12 +985,12 @@ table "inventory_movements" {
   foreign_key "fk_im_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_im_loc" {
     columns     = [column.tenant_id, column.location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "inventory_reservations" {
@@ -1056,12 +1056,12 @@ table "inventory_reservations" {
   foreign_key "fk_ir_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_ir_loc" {
     columns     = [column.tenant_id, column.location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "inventory_transfers" {
@@ -1119,12 +1119,12 @@ table "inventory_transfers" {
   foreign_key "fk_it_from_loc" {
     columns     = [column.tenant_id, column.from_location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_it_to_loc" {
     columns     = [column.tenant_id, column.to_location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "inventory_transfer_items" {
@@ -1158,12 +1158,12 @@ table "inventory_transfer_items" {
   foreign_key "fk_iti_transfer" {
     columns     = [column.transfer_id]
     ref_columns = [table.inventory_transfers.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_iti_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 
@@ -1318,12 +1318,12 @@ table "purchase_orders" {
   foreign_key "fk_po_supplier" {
     columns     = [column.supplier_id]
     ref_columns = [table.suppliers.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_po_location" {
     columns     = [column.tenant_id, column.location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "purchase_order_items" {
@@ -1372,12 +1372,12 @@ table "purchase_order_items" {
   foreign_key "fk_poi_po" {
     columns     = [column.po_id]
     ref_columns = [table.purchase_orders.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_poi_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "b2b_companies" {
@@ -1542,12 +1542,12 @@ table "b2b_pricing_tiers" {
   foreign_key "fk_b2bpt_company" {
     columns     = [column.company_id]
     ref_columns = [table.b2b_companies.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
   foreign_key "fk_b2bpt_product" {
     columns     = [column.tenant_id, column.product_id]
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 table "b2b_users" {
@@ -1601,7 +1601,7 @@ table "b2b_users" {
   foreign_key "fk_b2bu_company" {
     columns     = [column.company_id]
     ref_columns = [table.b2b_companies.column.id]
-    on_delete   = "RESTRICT"
+    on_delete = RESTRICT
   }
 }
 
