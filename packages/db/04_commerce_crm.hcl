@@ -224,7 +224,7 @@ table "customer_addresses" {
     null = true
   }
   column "coordinates" {
-    type = text
+    type = sql("public.geography(point, 4326)")
     null = true
   }
   primary_key {
@@ -1405,7 +1405,10 @@ table "abandoned_checkouts" {
   index "idx_abandoned_created" {
     columns = [column.created_at]
   }
-
+  index "idx_abandoned_items_gin" {
+    columns = [column.items]
+    type = "GIN"
+  }
   index "idx_abandoned_checkouts_tenant" {
     columns = [column.tenant_id]
   }
