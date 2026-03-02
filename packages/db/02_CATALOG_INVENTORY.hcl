@@ -98,16 +98,8 @@ table "categories" {
     columns = [column.is_active]
     where   = "deleted_at IS NULL"
   }
-  index "idx_cat_name_trgm" {
-    on {
-      expr = "((name->>'ar') gin_trgm_ops)"
-    }
-    type = "GIN"
-  }
-  index "idx_categories_path_gist" {
-    columns = [column.path]
-    type = "GIST"
-  }
+
+
   check "chk_categories_no_circular_ref" {
     expr = "(parent_id IS NULL OR parent_id != id)"
   }
@@ -189,12 +181,7 @@ table "brands" {
     columns = [column.is_active]
     where   = "deleted_at IS NULL"
   }
-  index "idx_brand_name_trgm" {
-    on {
-      expr = "((name->>'ar') gin_trgm_ops)"
-    }
-    type = "GIN"
-  }
+
   index "idx_brands_tenant" {
     columns = [column.tenant_id]
   }
@@ -643,10 +630,7 @@ table "product_attributes" {
   index "idx_attrs_product" {
     columns = [column.product_id, column.attribute_name]
   }
-  index "idx_attrs_value_trgm" {
-    columns = [column.attribute_value]
-    type = "GIN"
-  }
+
 
   // Strike 04: Text Bloat Protection (Limit 1024)
   check "chk_attr_val_len" {
@@ -700,10 +684,7 @@ table "entity_metafields" {
   index "idx_metafields_lookup" {
     columns = [column.entity_type, column.entity_id]
   }
-  index "idx_metafields_value_gin" {
-    columns = [column.value]
-    type = "GIN"
-  }
+
   check "chk_metafield_size" {
     expr = "(pg_column_size(value) <= 10240)"
   }
@@ -816,7 +797,7 @@ table "locations" {
     null = true
   }
   column "coordinates" {
-    type = sql("public.geography(point, 4326)")
+    type = text
     null = true
   }
   primary_key {

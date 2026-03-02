@@ -203,30 +203,7 @@ table "price_lists" {
 
 
   // ELITE: Prevent overlapping quantity ranges for same product/variant/market
-  exclude "idx_price_list_overlap_prevent" {
-    on {
-      column = column.tenant_id
-      op    = "="
-    }
-    on {
-      column = column.market_id
-      op    = "="
-    }
-    on {
-      column = column.product_id
-      op    = "="
-    }
-    on {
-      column = column.variant_id
-      op    = "="
-    }
-    on {
-      column = column.quantity_range
-      op    = "&&"
-    }
-    type = "GIST"
-    where   = "variant_id IS NOT NULL"
-  }
+
 
   // Strike 04: Cross-Tenant Pricing Fix (Composite FK)
   foreign_key "fk_pl_market" {

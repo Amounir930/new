@@ -397,21 +397,7 @@ table "flash_sale_products" {
     null = true
   }
 
-  exclude "idx_flash_prod_overlap_prevent" {
-    on {
-      column = column.tenant_id
-      op    = "="
-    }
-    on {
-      column = column.product_id
-      op    = "="
-    }
-    on {
-      column = column.valid_during
-      op    = "&&"
-    }
-    type = "GIST"
-  }
+
   index "idx_flash_sale_products_tenant" {
     columns = [column.tenant_id]
   }
