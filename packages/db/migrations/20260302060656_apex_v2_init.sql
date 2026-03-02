@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS "public";
+COMMENT ON SCHEMA "public" IS 'standard public schema';
 -- Required PostgreSQL Extensions
 CREATE EXTENSION IF NOT EXISTS "postgis" SCHEMA "public";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm" SCHEMA "public";
