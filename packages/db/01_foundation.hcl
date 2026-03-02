@@ -270,7 +270,7 @@ table "encryption_keys" {
   check"chk_key_material_s7"  {
   expr ="(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))"
 }
-  index"idx_encryption_keys_tenant"  {
+  index "idx_encryption_keys_tenant"  {
   columns =[column.tenant_id]
 }
 }
@@ -391,17 +391,17 @@ table "tenants" {
   primary_key {
   columns =[column.id]
 }
-  unique"tenants_subdomain_unique"  {
+  unique "tenants_subdomain_unique"  {
   columns =[column.subdomain]
   where ="deleted_at IS NULL"
 }
-  unique"tenants_custom_domain_unique"  {
+  unique "tenants_custom_domain_unique"  {
   columns =[column.custom_domain]
   where ="deleted_at IS NULL"
 }
   
   // FIX (P2): Index for Forensic Investigation AI
-  index"idx_tenants_email_hash"  {
+  index "idx_tenants_email_hash"  {
   columns =[column.owner_email_hash]
 }
 
@@ -492,20 +492,26 @@ table "audit_logs" {
   primary_key {
   columns =[column.id, column.created_at]
 }
-  partition { type = RANGE columns = [column.created_at] }
+    partition {
+    type = RANGE
+    columns = [column.created_at]
+  }
   
-  storage_param { name = "toast_tuple_target" value = "128" }
-  index"idx_audit_created_brin"  {
+    storage_param {
+    name = "toast_tuple_target"
+    value = "128"
+  }
+  index "idx_audit_created_brin"  {
   columns =[column.created_at]
   using =BRIN
 }
-  index"idx_audit_tenant"  {
+  index "idx_audit_tenant"  {
   columns =[column.tenant_id]
 }
-  index"idx_audit_entity"  {
+  index "idx_audit_entity"  {
   columns =[column.entity_type, column.entity_id]
 }
-  index"idx_audit_action"  {
+  index "idx_audit_action"  {
   columns =[column.action]
 }
   check"chk_audit_json_size"  {
@@ -589,13 +595,13 @@ table "leads" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_leads_email_hash"  {
+  index "idx_leads_email_hash"  {
   columns =[column.email_hash]
 }
-  index"idx_leads_status"  {
+  index "idx_leads_status"  {
   columns =[column.status]
 }
-  index"idx_leads_converted"  {
+  index "idx_leads_converted"  {
   columns =[column.converted_tenant_id]
 }
   
@@ -609,7 +615,7 @@ table "leads" {
   expr ="(notes IS NULL OR (jsonb_typeof(notes) = 'object' AND notes ? 'enc' AND notes ? 'iv' AND notes ? 'tag' AND notes ? 'data'))"
 }
   
-  index"idx_leads_tenant"  {
+  index "idx_leads_tenant"  {
   columns =[column.converted_tenant_id]
 }
 }
@@ -744,7 +750,7 @@ table "tenant_quotas" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_tenant_quotas_tenant"  {
+  index "idx_tenant_quotas_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -813,13 +819,13 @@ table "tenant_invoices" {
     expr = "COALESCE((total).amount, 0) = COALESCE((subscription_amount).amount, 0) + COALESCE((platform_commission).amount, 0) + COALESCE((app_charges).amount, 0)" 
   }
   
-  index"idx_invoices_tenant"  {
+  index "idx_invoices_tenant"  {
   columns =[column.tenant_id]
 }
-  index"idx_invoices_status"  {
+  index "idx_invoices_status"  {
   columns =[column.status]
 }
-  index"idx_tenant_invoices_tenant"  {
+  index "idx_tenant_invoices_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -875,13 +881,13 @@ table "feature_gates" {
   expr ="pg_column_size(metadata) <= 51200"
 }
   
-  index"idx_feature_key"  {
+  index "idx_feature_key"  {
   columns =[column.feature_key]
 }
-  index"idx_feature_tenant"  {
+  index "idx_feature_tenant"  {
   columns =[column.tenant_id]
 }
-  index"idx_feature_gates_tenant"  {
+  index "idx_feature_gates_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -933,7 +939,7 @@ table "dunning_events" {
   check"chk_dunning_amount"  {
   expr ="COALESCE((amount).amount, 0) > 0"
 }
-  index"idx_dunning_events_tenant"  {
+  index "idx_dunning_events_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -971,7 +977,7 @@ table "app_usage_records" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_app_usage_records_tenant"  {
+  index "idx_app_usage_records_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1006,7 +1012,7 @@ table "plan_change_history" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_plan_change_history_tenant"  {
+  index "idx_plan_change_history_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1119,7 +1125,7 @@ table "schema_drift_log" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_drift_time"  {
+  index "idx_drift_time"  {
   columns =[column.executed_at]
   using =BRIN
 }
@@ -1179,10 +1185,10 @@ table "order_fraud_scores" {
   check"chk_risk_score_range"  {
   expr ="(risk_score BETWEEN 0 AND 1000)"
 }
-  index"idx_fraud_order"  {
+  index "idx_fraud_order"  {
   columns =[column.order_id]
 }
-  index"idx_fraud_tenant"  {
+  index "idx_fraud_tenant"  {
   columns =[column.tenant_id]
 }
   index "idx_fraud_flagged" {
@@ -1190,7 +1196,7 @@ table "order_fraud_scores" {
     where   = "is_flagged = true AND is_reviewed = false"
   }
   
-  index"idx_order_fraud_scores_tenant"  {
+  index "idx_order_fraud_scores_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1249,13 +1255,13 @@ table "marketing_pages" {
   unique"uq_marketing_slug"  {
   columns =[column.slug]
 }
-  index"idx_mkt_slug"  {
+  index "idx_mkt_slug"  {
   columns =[column.slug]
 }
-  index"idx_mkt_published"  {
+  index "idx_mkt_published"  {
   columns =[column.is_published]
 }
-  index"idx_mkt_type"  {
+  index "idx_mkt_type"  {
   columns =[column.page_type]
 }
 }

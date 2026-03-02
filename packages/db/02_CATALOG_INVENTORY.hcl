@@ -92,17 +92,17 @@ table "categories" {
   columns =[column.tenant_id, column.slug]
   where ="deleted_at IS NULL"
 }
-  index"idx_categories_parent"  {
+  index "idx_categories_parent"  {
   columns =[column.parent_id]
 }
-  index"idx_categories_active"  {
+  index "idx_categories_active"  {
   columns =[column.is_active]
   where ="deleted_at IS NULL"
 }
-  index"idx_cat_name_trgm"  {
+  index "idx_cat_name_trgm"  {
   expr ="((name->>'ar') gin_trgm_ops)"
 } using = GIN }
-  index"idx_categories_path_gist"  {
+  index "idx_categories_path_gist"  {
   columns =[column.path]
   using =GIST
 }
@@ -116,7 +116,7 @@ table "categories" {
 
   // Strike 12: Cascading LTREE Update (Logic handled in 07-SECURITY via Trigger)
 
-  index"idx_categories_tenant"  {
+  index "idx_categories_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -184,14 +184,14 @@ table "brands" {
   columns =[column.tenant_id, column.slug]
   where ="deleted_at IS NULL"
 }
-  index"idx_brands_active"  {
+  index "idx_brands_active"  {
   columns =[column.is_active]
   where ="deleted_at IS NULL"
 }
-  index"idx_brand_name_trgm"  {
+  index "idx_brand_name_trgm"  {
   expr ="((name->>'ar') gin_trgm_ops)"
 } using = GIN }
-  index"idx_brands_tenant"  {
+  index "idx_brands_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -401,31 +401,37 @@ table "products" {
   columns =[column.tenant_id, column.sku]
   where ="deleted_at IS NULL"
 }
-  index"idx_products_active"  {
+  index "idx_products_active"  {
   columns =[column.category_id]
   where ="deleted_at IS NULL"
 }
-  index"idx_products_featured"  {
+  index "idx_products_featured"  {
   columns =[column.is_featured]
   where ="deleted_at IS NULL"
 }
-  index"idx_products_tags"  {
+  index "idx_products_tags"  {
   columns =[column.tags]
   using =GIN
 }
-  index"idx_products_name"  {
+  index "idx_products_name"  {
   columns =[column.name]
   using =GIN
 }
-  index"idx_products_brand"  {
+  index "idx_products_brand"  {
   columns =[column.brand_id]
 }
   index "idx_products_embedding_cosine" { 
     columns = [column.embedding]
     using = HNSW
     ops = [sql("public.vector_cosine_ops")]
-    storage_param { name = "m" value = "24" }
-    storage_param { name = "ef_construction" value = "128" }
+      storage_param {
+    name = "m"
+    value = "24"
+  }
+      storage_param {
+    name = "ef_construction"
+    value = "128"
+  }
   }
   
   // Strike 18: Digital/Shipping Logic Consistency
@@ -449,7 +455,7 @@ table "products" {
   expr ="(pg_column_size(specifications) <= 20480)"
 }
   
-  index"idx_products_tenant"  {
+  index "idx_products_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.products ENABLE ROW LEVEL SECURITY
@@ -530,15 +536,21 @@ table "product_variants" {
   columns =[column.tenant_id, column.sku]
   where ="deleted_at IS NULL"
 }
-  index"idx_variants_product"  {
+  index "idx_variants_product"  {
   columns =[column.product_id]
 }
   index "idx_variants_embedding_cosine" { 
     columns = [column.embedding]
     using = HNSW
     ops = [sql("public.vector_cosine_ops")]
-    storage_param { name = "m" value = "24" }
-    storage_param { name = "ef_construction" value = "128" }
+      storage_param {
+    name = "m"
+    value = "24"
+  }
+      storage_param {
+    name = "ef_construction"
+    value = "128"
+  }
   }
   
   check"chk_variant_options_obj"  {
@@ -551,7 +563,7 @@ table "product_variants" {
   expr ="(compare_at_price IS NULL OR (compare_at_price).amount IS NOT NULL)"
 }
 
-  index"idx_variants_tenant"  {
+  index "idx_variants_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.product_variants ENABLE ROW LEVEL SECURITY
@@ -592,7 +604,7 @@ table "product_images" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_product_images_product"  {
+  index "idx_product_images_product"  {
   columns =[column.product_id]
 }
   unique"uq_primary_image"  {
@@ -601,7 +613,7 @@ table "product_images" {
   is_primary =true"
 }
   
-  index"idx_product_images_tenant"  {
+  index "idx_product_images_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.product_images ENABLE ROW LEVEL SECURITY
@@ -644,10 +656,10 @@ table "product_attributes" {
   unique"uq_tenant_product_attr"  {
   columns =[column.tenant_id, column.product_id, column.attribute_name]
 }
-  index"idx_attrs_product"  {
+  index "idx_attrs_product"  {
   columns =[column.product_id, column.attribute_name]
 }
-  index"idx_attrs_value_trgm"  {
+  index "idx_attrs_value_trgm"  {
   columns =[column.attribute_value]
   using =GIN
 }
@@ -657,7 +669,7 @@ table "product_attributes" {
   expr ="length(attribute_value) <= 1024"
 }
   
-  index"idx_product_attributes_tenant"  {
+  index "idx_product_attributes_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.product_attributes ENABLE ROW LEVEL SECURITY
@@ -703,17 +715,17 @@ table "entity_metafields" {
   unique"uq_metafield"  {
   columns =[column.entity_type, column.entity_id, column.namespace, column.key]
 }
-  index"idx_metafields_lookup"  {
+  index "idx_metafields_lookup"  {
   columns =[column.entity_type, column.entity_id]
 }
-  index"idx_metafields_value_gin"  {
+  index "idx_metafields_value_gin"  {
   columns =[column.value]
   using =GIN
 }
   check"chk_metafield_size"  {
   expr ="(pg_column_size(value) <= 10240)"
 }
-  index"idx_metafields_tenant"  {
+  index "idx_metafields_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.entity_metafields ENABLE ROW LEVEL SECURITY
@@ -784,7 +796,7 @@ table "smart_collections" {
   unique"idx_smart_collections_slug"  {
   columns =[column.tenant_id, column.slug]
 }
-  index"idx_smart_collections_tenant"  {
+  index "idx_smart_collections_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.smart_collections ENABLE ROW LEVEL SECURITY
@@ -835,12 +847,12 @@ table "locations" {
   unique"uq_tenant_loc"  {
   columns =[column.tenant_id, column.id]
 }
-  index"idx_locations_gis"  {
+  index "idx_locations_gis"  {
   columns =[column.coordinates]
   using =GIST
 }
   
-  index"idx_locations_tenant"  {
+  index "idx_locations_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.locations ENABLE ROW LEVEL SECURITY
@@ -894,7 +906,7 @@ table "inventory_levels" {
   unique"uq_inventory_loc_var"  {
   columns =[column.location_id, column.variant_id]
 }
-  index"idx_inv_variant"  {
+  index "idx_inv_variant"  {
   columns =[column.variant_id]
 }
   check"chk_available"  {
@@ -910,8 +922,10 @@ table "inventory_levels" {
   expr ="reserved <= available"
 }
   
-  storage_param { fillfactor = 80 }
-  index"idx_inventory_tenant"  {
+    storage_param {
+    fillfactor = 80
+  }
+  index "idx_inventory_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.inventory_levels ENABLE ROW LEVEL SECURITY
@@ -967,10 +981,10 @@ table "inventory_movements" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_inv_mov_variant"  {
+  index "idx_inv_mov_variant"  {
   columns =[column.variant_id]
 }
-  index"idx_inv_mov_created"  {
+  index "idx_inv_mov_created"  {
   columns =[column.created_at]
   using =BRIN
 }
@@ -988,7 +1002,7 @@ table "inventory_movements" {
   expr ="(type != 'return' OR quantity > 0)"
 }
   
-  index"idx_inv_mov_tenant"  {
+  index "idx_inv_mov_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.inventory_movements ENABLE ROW LEVEL SECURITY
@@ -1049,18 +1063,20 @@ table "inventory_reservations" {
   primary_key {
   columns =[column.id]
 }
-  storage_param { fillfactor = 80 }
-  index"idx_inv_res_active"  {
+    storage_param {
+    fillfactor = 80
+  }
+  index "idx_inv_res_active"  {
   columns =[column.status]
   where ="
   status ='active'"
 }
-  index"idx_inv_res_cron"  {
+  index "idx_inv_res_cron"  {
   columns =[column.expires_at]
   where ="
   status ='active'"
 }
-  index"idx_inv_res_tenant"  {
+  index "idx_inv_res_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.inventory_reservations ENABLE ROW LEVEL SECURITY
@@ -1126,7 +1142,7 @@ table "inventory_transfers" {
   expr ="(expected_arrival IS NULL OR expected_arrival >= created_at)"
 }
   
-  index"idx_inv_tra_tenant"  {
+  index "idx_inv_tra_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.inventory_transfers ENABLE ROW LEVEL SECURITY
@@ -1163,10 +1179,10 @@ table "inventory_transfer_items" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_transfer_items"  {
+  index "idx_transfer_items"  {
   columns =[column.transfer_id]
 }
-  index"idx_inv_tra_items_tenant"  {
+  index "idx_inv_tra_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.inventory_transfer_items ENABLE ROW LEVEL SECURITY
@@ -1252,7 +1268,7 @@ table "suppliers" {
   expr ="(company IS NULL OR (jsonb_typeof(company) = 'object' AND company ? 'enc' AND company ? 'iv' AND company ? 'tag' AND company ? 'data'))"
 }
   
-  index"idx_suppliers_tenant"  {
+  index "idx_suppliers_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.suppliers ENABLE ROW LEVEL SECURITY
@@ -1316,10 +1332,10 @@ table "purchase_orders" {
   unique"idx_po_number_unique"  {
   columns =[column.tenant_id, column.order_number]
 }
-  index"idx_po_supplier"  {
+  index "idx_po_supplier"  {
   columns =[column.supplier_id]
 }
-  index"idx_po_status"  {
+  index "idx_po_status"  {
   columns =[column.status]
 }
   
@@ -1331,7 +1347,7 @@ table "purchase_orders" {
   expr ="(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL"
 }
   
-  index"idx_purchase_orders_tenant"  {
+  index "idx_purchase_orders_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.purchase_orders ENABLE ROW LEVEL SECURITY
@@ -1380,13 +1396,13 @@ table "purchase_order_items" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_po_items"  {
+  index "idx_po_items"  {
   columns =[column.po_id]
 }
   check"qty_positive"  {
   expr ="(quantity_ordered > 0)"
 }
-  index"idx_poi_tenant"  {
+  index "idx_poi_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.purchase_order_items ENABLE ROW LEVEL SECURITY
@@ -1466,7 +1482,7 @@ table "b2b_companies" {
   expr ="(tax_id IS NULL OR length(tax_id) >= 5)"
 }
 
-  index"idx_b2b_companies_tenant"  {
+  index "idx_b2b_companies_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.b2b_companies ENABLE ROW LEVEL SECURITY
@@ -1530,10 +1546,10 @@ table "b2b_pricing_tiers" {
     using   = GIST
     ops     = ["=", "=", "=", "&&"]
   }
-  index"idx_b2b_pricing"  {
+  index "idx_b2b_pricing"  {
   columns =[column.company_id, column.product_id]
 }
-  index"idx_b2b_tier_collision"  {
+  index "idx_b2b_tier_collision"  {
   columns =[column.min_quantity, column.max_quantity]
   using =GIST
 }
@@ -1547,7 +1563,7 @@ table "b2b_pricing_tiers" {
   expr ="(price IS NULL OR ((price).amount >= 0 AND (price).amount IS NOT NULL))"
 }
 
-  index"idx_b2bp_tenant"  {
+  index "idx_b2bp_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.b2b_pricing_tiers ENABLE ROW LEVEL SECURITY
@@ -1601,13 +1617,13 @@ table "b2b_users" {
   unique"uq_b2b_company_customer"  {
   columns =[column.tenant_id, column.company_id, column.customer_id]
 }
-  index"idx_b2b_user"  {
+  index "idx_b2b_user"  {
   columns =[column.company_id]
 }
   check"chk_b2b_unit_price_pos"  {
   expr ="COALESCE((unit_price).amount, 0) >= 0"
 }
-  index"idx_b2b_users_tenant"  {
+  index "idx_b2b_users_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.b2b_users ENABLE ROW LEVEL SECURITY

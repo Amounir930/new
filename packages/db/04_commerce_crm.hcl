@@ -140,14 +140,14 @@ table "customers" {
   columns =[column.tenant_id, column.phone_hash]
   where ="deleted_at IS NULL"
 }
-  index"idx_customers_active"  {
+  index "idx_customers_active"  {
   columns =[column.created_at]
   where ="deleted_at IS NULL"
 }
-  index"idx_customers_tags"  {
+  index "idx_customers_tags"  {
   columns =[column.tags]
 }
-  index"idx_customers_dob"  {
+  index "idx_customers_dob"  {
   columns =[column.date_of_birth]
 }
   
@@ -167,7 +167,7 @@ table "customers" {
   expr ="(date_of_birth IS NULL OR date_of_birth <= CURRENT_DATE)"
 }
   
-  index"idx_customers_tenant"  {
+  index "idx_customers_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -245,10 +245,10 @@ table "customer_addresses" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_customer_addresses_customer"  {
+  index "idx_customer_addresses_customer"  {
   columns =[column.customer_id]
 }
-  index"idx_customer_addresses_geo"  {
+  index "idx_customer_addresses_geo"  {
   columns =[column.coordinates]
   using =GIST
 }
@@ -266,7 +266,7 @@ table "customer_addresses" {
   expr ="(length(trim(city)) > 0)"
 }
   
-  index"idx_customer_addresses_tenant"  {
+  index "idx_customer_addresses_tenant"  {
   columns =[column.tenant_id]
 }
   // Strike 10: Prevent default address spam (one default per customer/tenant)
@@ -324,10 +324,10 @@ table "customer_consents" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_consent_customer"  {
+  index "idx_consent_customer"  {
   columns =[column.customer_id]
 }
-  index"idx_customer_consents_tenant"  {
+  index "idx_customer_consents_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.customer_consents ENABLE ROW LEVEL SECURITY
@@ -372,7 +372,7 @@ table "customer_segments" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_customer_segments_tenant"  {
+  index "idx_customer_segments_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.customer_segments ENABLE ROW LEVEL SECURITY
@@ -561,19 +561,19 @@ table "orders" {
     type = varchar(255)
     null = true
   }
-  index"idx_orders_payment_ref"  {
+  index "idx_orders_payment_ref"  {
   columns =[column.tenant_id, column.payment_gateway_reference]
   where ="payment_gateway_reference IS NOT NULL"
 }
 
-  index"idx_orders_admin"  {
+  index "idx_orders_admin"  {
   columns =[column.status, column.created_at]
   where ="deleted_at IS NULL"
 }
-  index"idx_orders_customer"  {
+  index "idx_orders_customer"  {
   columns =[column.customer_id]
 }
-  index"idx_orders_created"  {
+  index "idx_orders_created"  {
   columns =[column.created_at]
   using =BRIN
 }
@@ -589,7 +589,7 @@ table "orders" {
   expr ="COALESCE((refunded_amount).amount, 0) <= COALESCE((total).amount, 0)"
 }
   
-  index"idx_orders_tenant"  {
+  index "idx_orders_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -692,10 +692,10 @@ table "order_items" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_order_items_order"  {
+  index "idx_order_items_order"  {
   columns =[column.order_id]
 }
-  index"idx_oi_product"  {
+  index "idx_oi_product"  {
   columns =[column.tenant_id, column.product_id]
 }
   
@@ -718,7 +718,7 @@ table "order_items" {
   expr ="COALESCE((discount_amount).amount, 0) <= (COALESCE((price).amount, 0) * quantity)"
 }
   
-  index"idx_order_items_tenant"  {
+  index "idx_order_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.order_items ENABLE ROW LEVEL SECURITY
@@ -780,10 +780,10 @@ table "order_edits" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_order_edits"  {
+  index "idx_order_edits"  {
   columns =[column.order_id]
 }
-  index"idx_order_edits_tenant"  {
+  index "idx_order_edits_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.order_edits ENABLE ROW LEVEL SECURITY
@@ -847,14 +847,14 @@ table "order_timeline" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_timeline_order"  {
+  index "idx_timeline_order"  {
   columns =[column.order_id]
 }
-  index"idx_timeline_created"  {
+  index "idx_timeline_created"  {
   columns =[column.created_at]
   using =BRIN
 }
-  index"idx_order_timeline_tenant"  {
+  index "idx_order_timeline_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.order_timeline ENABLE ROW LEVEL SECURITY
@@ -908,10 +908,10 @@ table "fulfillments" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_fulfillments_order"  {
+  index "idx_fulfillments_order"  {
   columns =[column.order_id]
 }
-  index"idx_fulfillments_tenant"  {
+  index "idx_fulfillments_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.fulfillments ENABLE ROW LEVEL SECURITY
@@ -943,10 +943,10 @@ table "fulfillment_items" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_fulfill_items"  {
+  index "idx_fulfill_items"  {
   columns =[column.fulfillment_id]
 }
-  index"idx_fulfillment_items_tenant"  {
+  index "idx_fulfillment_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.fulfillment_items ENABLE ROW LEVEL SECURITY
@@ -1005,7 +1005,7 @@ table "refunds" {
   unique"uq_tenant_refund"  {
   columns =[column.tenant_id, column.id]
 }
-  index"idx_refunds_order"  {
+  index "idx_refunds_order"  {
   columns =[column.order_id]
 }
   
@@ -1013,7 +1013,7 @@ table "refunds" {
   expr ="COALESCE((amount).amount, 0) > 0"
 }
   
-  index"idx_refunds_tenant"  {
+  index "idx_refunds_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.refunds ENABLE ROW LEVEL SECURITY
@@ -1049,7 +1049,7 @@ table "refund_items" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_refund_items"  {
+  index "idx_refund_items"  {
   columns =[column.refund_id]
 }
   
@@ -1057,7 +1057,7 @@ table "refund_items" {
   expr ="(COALESCE((amount).amount, 0) > 0 AND quantity > 0)"
 }
   
-  index"idx_refund_items_tenant"  {
+  index "idx_refund_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.refund_items ENABLE ROW LEVEL SECURITY
@@ -1126,13 +1126,13 @@ table "rma_requests" {
   unique"uq_tenant_rma"  {
   columns =[column.tenant_id, column.id]
 }
-  index"idx_rma_order"  {
+  index "idx_rma_order"  {
   columns =[column.order_id]
 }
-  index"idx_rma_status"  {
+  index "idx_rma_status"  {
   columns =[column.status]
 }
-  index"idx_rma_requests_tenant"  {
+  index "idx_rma_requests_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1196,13 +1196,13 @@ table "rma_items" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_rma_items_rma"  {
+  index "idx_rma_items_rma"  {
   columns =[column.rma_id]
 }
   check"qty_positive"  {
   expr ="quantity > 0"
 }
-  index"idx_rma_items_tenant"  {
+  index "idx_rma_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.rma_items ENABLE ROW LEVEL SECURITY
@@ -1277,16 +1277,19 @@ table "payment_logs" {
   primary_key {
   columns =[column.id, column.created_at]
 }
-  partition { type = RANGE columns = [column.created_at] }
-  index"idx_payment_created_brin"  {
+    partition {
+    type = RANGE
+    columns = [column.created_at]
+  }
+  index "idx_payment_created_brin"  {
   columns =[column.created_at]
   using =BRIN with {
   pages_per_range =32
 } }
-  index"idx_payment_logs_order"  {
+  index "idx_payment_logs_order"  {
   columns =[column.order_id]
 }
-  index"idx_payment_logs_tenant"  {
+  index "idx_payment_logs_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.payment_logs ENABLE ROW LEVEL SECURITY
@@ -1347,16 +1350,18 @@ table "carts" {
   columns =[column.tenant_id, column.id]
 }
   
-  index"idx_carts_customer"  {
+  index "idx_carts_customer"  {
   columns =[column.customer_id]
 }
-  index"idx_carts_session"  {
+  index "idx_carts_session"  {
   columns =[column.session_id]
 }
-  index"idx_carts_expires"  {
+  index "idx_carts_expires"  {
   columns =[column.expires_at]
 }
-  storage_param { fillfactor = 80 }
+    storage_param {
+    fillfactor = 80
+  }
   
   check"chk_cart_items_size"  {
   expr ="(pg_column_size(items) <= 51200)"
@@ -1365,7 +1370,7 @@ table "carts" {
   expr ="subtotal IS NULL OR COALESCE((subtotal).amount, 0) >= 0"
 }
   
-  index"idx_carts_tenant"  {
+  index "idx_carts_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.carts ENABLE ROW LEVEL SECURITY
@@ -1405,7 +1410,7 @@ table "cart_items" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_cart_items_cart"  {
+  index "idx_cart_items_cart"  {
   columns =[column.cart_id]
 }
   
@@ -1413,7 +1418,7 @@ table "cart_items" {
   expr ="COALESCE((price).amount, 0) >= 0"
 }
   
-  index"idx_cart_items_tenant"  {
+  index "idx_cart_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.cart_items ENABLE ROW LEVEL SECURITY
@@ -1472,14 +1477,14 @@ table "abandoned_checkouts" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_abandoned_created"  {
+  index "idx_abandoned_created"  {
   columns =[column.created_at]
 }
-  index"idx_abandoned_items_gin"  {
+  index "idx_abandoned_items_gin"  {
   columns =[column.items]
   using =GIN
 }
-  index"idx_abandoned_checkouts_tenant"  {
+  index "idx_abandoned_checkouts_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.abandoned_checkouts ENABLE ROW LEVEL SECURITY
@@ -1550,10 +1555,10 @@ table "shipping_zones" {
   primary_key {
   columns =[column.id]
 }
-  index"idx_shipping_region"  {
+  index "idx_shipping_region"  {
   columns =[column.region]
 }
-  index"idx_shipping_active"  {
+  index "idx_shipping_active"  {
   columns =[column.is_active]
 }
   
@@ -1561,7 +1566,7 @@ table "shipping_zones" {
   expr ="(min_delivery_days >= 0 AND min_delivery_days <= max_delivery_days)"
 }
   
-  index"idx_shipping_zones_tenant"  {
+  index "idx_shipping_zones_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1616,7 +1621,7 @@ table "tax_categories" {
   columns =[column.tenant_id, column.id]
 }
   
-  index"idx_tax_categories_tenant"  {
+  index "idx_tax_categories_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.tax_categories ENABLE ROW LEVEL SECURITY
@@ -1695,14 +1700,14 @@ table "tax_rules" {
     nulls_not_distinct = true 
   }
   
-  index"idx_tax_rules_country"  {
+  index "idx_tax_rules_country"  {
   columns =[column.country]
 }
   check"chk_tax_rate_bounds"  {
   expr ="(rate >= 0 AND rate <= 10000)"
 }
   
-  index"idx_tax_rules_tenant"  {
+  index "idx_tax_rules_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.tax_rules ENABLE ROW LEVEL SECURITY
@@ -1774,15 +1779,21 @@ table "reviews" {
   expr ="(sentiment_score >= -1.00 AND sentiment_score <= 1.00)"
 }
   
-  index"idx_reviews_tenant"  {
+  index "idx_reviews_tenant"  {
   columns =[column.tenant_id]
 }
   index "idx_reviews_embedding_cosine" { 
     columns = [column.embedding]
     using = HNSW
     ops = [sql("public.vector_cosine_ops")]
-    storage_param { name = "m" value = "24" }
-    storage_param { name = "ef_construction" value = "128" }
+      storage_param {
+    name = "m"
+    value = "24"
+  }
+      storage_param {
+    name = "ef_construction"
+    value = "128"
+  }
   }
 }
 
