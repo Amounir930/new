@@ -107,10 +107,10 @@ table "categories" {
   using =GIST
 }
   
-  check"chk_categories_no_circular_ref"  {
+  check "chk_categories_no_circular_ref"  {
   expr ="(parent_id IS NULL OR parent_id != id)"
 }
-  check"chk_category_depth"  {
+  check "chk_category_depth"  {
   expr ="nlevel(path) <= 10"
 }
 
@@ -435,23 +435,23 @@ table "products" {
   }
   
   // Strike 18: Digital/Shipping Logic Consistency
-  check"chk_digital_shipping"  {
+  check "chk_digital_shipping"  {
   expr ="NOT (is_digital AND requires_shipping)"
 }
   check "chk_barcode_format" {
     expr = "barcode IS NULL OR barcode ~ '^[A-Z0-9-]{8,50}$'"
   }
   // ELITE: Alpha & Bravo applied
-  check"chk_price_positive"  {
+  check "chk_price_positive"  {
   expr ="COALESCE((base_price).amount, 0) >= 0 AND (base_price).amount IS NOT NULL AND (base_price).currency IS NOT NULL"
 }
-  check"chk_compare_price"  {
+  check "chk_compare_price"  {
   expr ="(compare_at_price IS NULL OR (COALESCE((compare_at_price).amount, 0) > COALESCE((base_price).amount, 0) AND (compare_at_price).amount IS NOT NULL))"
 }
-  check"chk_sale_price_math"  {
+  check "chk_sale_price_math"  {
   expr ="(sale_price IS NULL OR (COALESCE((sale_price).amount, 0) <= COALESCE((base_price).amount, 0) AND (sale_price).amount IS NOT NULL))"
 }
-  check"chk_specs_size"  {
+  check "chk_specs_size"  {
   expr ="(pg_column_size(specifications) <= 20480)"
 }
   
@@ -553,13 +553,13 @@ table "product_variants" {
   }
   }
   
-  check"chk_variant_options_obj"  {
+  check "chk_variant_options_obj"  {
   expr ="jsonb_typeof(options) = 'object'"
 }
-  check"chk_variant_price_pos"  {
+  check "chk_variant_price_pos"  {
   expr ="(price).amount >= 0 AND (price).amount IS NOT NULL AND (price).currency IS NOT NULL"
 }
-  check"chk_variant_compare_price"  {
+  check "chk_variant_compare_price"  {
   expr ="(compare_at_price IS NULL OR (compare_at_price).amount IS NOT NULL)"
 }
 
@@ -664,7 +664,7 @@ table "product_attributes" {
 }
   
   // Strike 04: Text Bloat Protection (Limit 1024)
-  check"chk_attr_val_len"  {
+  check "chk_attr_val_len"  {
   expr ="length(attribute_value) <= 1024"
 }
   
@@ -721,7 +721,7 @@ table "entity_metafields" {
   columns =[column.value]
   using =GIN
 }
-  check"chk_metafield_size"  {
+  check "chk_metafield_size"  {
   expr ="(pg_column_size(value) <= 10240)"
 }
   index "idx_metafields_tenant"  {
@@ -782,7 +782,7 @@ table "smart_collections" {
     type = jsonb
   }
   // Strike 25: Ensure conditions is a valid array of rules
-  check"chk_conditions_array"  {
+  check "chk_conditions_array"  {
   expr ="jsonb_typeof(conditions) = 'array'"
 }
   
@@ -908,16 +908,16 @@ table "inventory_levels" {
   index "idx_inv_variant"  {
   columns =[column.variant_id]
 }
-  check"chk_available"  {
+  check "chk_available"  {
   expr ="available >= 0"
 }
-  check"chk_reserved"  {
+  check "chk_reserved"  {
   expr ="reserved >= 0"
 }
-  check"chk_incoming_positive"  {
+  check "chk_incoming_positive"  {
   expr ="incoming >= 0"
 }
-  check"chk_reserved_logic"  {
+  check "chk_reserved_logic"  {
   expr ="reserved <= available"
 }
   
@@ -988,16 +988,14 @@ table "inventory_movements" {
   using =BRIN
 }
   
-  check"chk_movement_logic"  {
-  expr ="((
-  type ='in' AND quantity > 0) OR (
-  type ='out' AND quantity < 0) OR type IN ('adjustment', 'transfer', 'return'))"
+  check "chk_movement_logic"  {
+  expr = "(( type ='in' AND quantity > 0) OR ( type ='out' AND quantity < 0) OR type IN ('adjustment', 'transfer', 'return'))"
 }
   // Strike 17: Adjustment Reason Requirement
-  check"chk_adj_reason"  {
+  check "chk_adj_reason"  {
   expr ="type != 'adjustment' OR reference_id IS NOT NULL"
 }
-  check"chk_return_positive"  {
+  check "chk_return_positive"  {
   expr ="(type != 'return' OR quantity > 0)"
 }
   
@@ -1040,11 +1038,11 @@ table "inventory_reservations" {
     type = timestamptz
   }
   // Strike 14: Inventory Reservation Time Bound Guard (Max 7 days)
-  check"chk_res_time_bound"  {
+  check "chk_res_time_bound"  {
   expr ="expires_at <= (created_at + interval '7 days')"
 }
   // Strike 6: Hoarding DoS Protection
-  check"chk_res_qty_limit"  {
+  check "chk_res_qty_limit"  {
   expr ="quantity <= 100"
 }
   
@@ -1132,10 +1130,10 @@ table "inventory_transfers" {
   columns =[column.id]
 }
   
-  check"chk_transfer_locations"  {
+  check "chk_transfer_locations"  {
   expr ="(from_location_id != to_location_id)"
 } 
-  check"chk_transfer_future"  {
+  check "chk_transfer_future"  {
   expr ="(expected_arrival IS NULL OR expected_arrival >= created_at)"
 }
   
@@ -1255,13 +1253,13 @@ table "suppliers" {
   columns =[column.id]
 }
   
-  check"chk_sup_email_s7"  {
+  check "chk_sup_email_s7"  {
   expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
 }
-  check"chk_sup_phone_s7"  {
+  check "chk_sup_phone_s7"  {
   expr ="(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))"
 }
-  check"chk_sup_company_s7"  {
+  check "chk_sup_company_s7"  {
   expr ="(company IS NULL OR (jsonb_typeof(company) = 'object' AND company ? 'enc' AND company ? 'iv' AND company ? 'tag' AND company ? 'data'))"
 }
   
@@ -1337,10 +1335,10 @@ table "purchase_orders" {
 }
   
   // ELITE: Alpha & Bravo applied (Directive Bravo - Math Operator Fatal)
-  check"chk_po_math"  {
+  check "chk_po_math"  {
   expr ="(COALESCE((total).amount, 0) = COALESCE((subtotal).amount, 0) + COALESCE((tax).amount, 0) + COALESCE((shipping_cost).amount, 0))"
 }
-  check"chk_po_inner_not_null"  {
+  check "chk_po_inner_not_null"  {
   expr ="(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL"
 }
   
@@ -1383,7 +1381,7 @@ table "purchase_order_items" {
     default = 0
   }
   // Strike 14: Over-receiving Protection
-  check"chk_po_receive"  {
+  check "chk_po_receive"  {
   expr ="quantity_received <= quantity_ordered"
 }
   column "unit_cost" {
@@ -1471,11 +1469,11 @@ table "b2b_companies" {
   columns =[column.id]
 }
   
-  check"chk_credit_limit_positive"  {
+  check "chk_credit_limit_positive"  {
   expr ="COALESCE((credit_limit).amount, 0) >= 0"
 } 
   // ELITE PATCH: Removed chk_credit_utilization DB constraint to avoid Admin lockout when reducing limits. Enforced strictly at App Layer.
-  check"chk_tax_id_len"  {
+  check "chk_tax_id_len"  {
   expr ="(tax_id IS NULL OR length(tax_id) >= 5)"
 }
 
@@ -1550,13 +1548,13 @@ table "b2b_pricing_tiers" {
   columns =[column.min_quantity, column.max_quantity]
   using =GIST
 }
-  check"chk_b2b_price_xor"  {
+  check "chk_b2b_price_xor"  {
   expr ="((price IS NULL) != (discount_basis_points IS NULL))"
 }
-  check"chk_b2b_discount_max"  {
+  check "chk_b2b_discount_max"  {
   expr ="(discount_basis_points IS NULL OR discount_basis_points <= 10000)"
 }
-  check"chk_b2b_price_pos"  {
+  check "chk_b2b_price_pos"  {
   expr ="(price IS NULL OR ((price).amount >= 0 AND (price).amount IS NOT NULL))"
 }
 
@@ -1617,7 +1615,7 @@ table "b2b_users" {
   index "idx_b2b_user"  {
   columns =[column.company_id]
 }
-  check"chk_b2b_unit_price_pos"  {
+  check "chk_b2b_unit_price_pos"  {
   expr ="COALESCE((unit_price).amount, 0) >= 0"
 }
   index "idx_b2b_users_tenant"  {

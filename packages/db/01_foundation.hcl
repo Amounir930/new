@@ -267,7 +267,7 @@ table "encryption_keys" {
   primary_key {
   columns =[column.id]
 }
-  check"chk_key_material_s7"  {
+  check "chk_key_material_s7"  {
   expr ="(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))"
 }
   index "idx_encryption_keys_tenant"  {
@@ -306,7 +306,7 @@ table "archival_vault" {
   primary_key {
   columns =[column.id]
 }
-  check"chk_payload_size"  {
+  check "chk_payload_size"  {
   expr ="(pg_column_size(payload) <= 102400)"
 }
 }
@@ -405,10 +405,10 @@ table "tenants" {
   columns =[column.owner_email_hash]
 }
 
-  check"chk_owner_email_s7"  {
+  check "chk_owner_email_s7"  {
   expr ="(owner_email IS NULL OR (jsonb_typeof(owner_email) = 'object' AND owner_email ? 'enc' AND owner_email ? 'iv' AND owner_email ? 'tag' AND owner_email ? 'data'))"
 }
-  check"chk_ui_config_size"  {
+  check "chk_ui_config_size"  {
   expr ="(pg_column_size(ui_config) <= 204800)"
 }
   
@@ -514,7 +514,7 @@ table "audit_logs" {
   index "idx_audit_action"  {
   columns =[column.action]
 }
-  check"chk_audit_json_size"  {
+  check "chk_audit_json_size"  {
   expr ="(pg_column_size(old_values) <= 102400 AND pg_column_size(new_values) <= 102400)"
 }
   check "chk_audit_email_s7" { 
@@ -605,13 +605,13 @@ table "leads" {
   columns =[column.converted_tenant_id]
 }
   
-  check"chk_leads_email_s7"  {
+  check "chk_leads_email_s7"  {
   expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
 }
-  check"chk_leads_name_s7"  {
+  check "chk_leads_name_s7"  {
   expr ="(name IS NULL OR (jsonb_typeof(name) = 'object' AND name ? 'enc' AND name ? 'iv' AND name ? 'tag' AND name ? 'data'))"
 }
-  check"chk_leads_notes_s7"  {
+  check "chk_leads_notes_s7"  {
   expr ="(notes IS NULL OR (jsonb_typeof(notes) = 'object' AND notes ? 'enc' AND notes ? 'iv' AND notes ? 'tag' AND notes ? 'data'))"
 }
   
@@ -697,7 +697,7 @@ table "subscription_plans" {
     type = sql("public.money_amount")
     null = false
   }
-  check"chk_plan_price"  {
+  check "chk_plan_price"  {
   expr ="COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0"
 }
 }
@@ -810,7 +810,7 @@ table "tenant_invoices" {
   primary_key {
   columns =[column.id]
 }
-  check"chk_invoice_period"  {
+  check "chk_invoice_period"  {
   expr ="period_end >= period_start"
 }
   
@@ -866,7 +866,7 @@ table "feature_gates" {
     null = true
   }
   
-  check"chk_rollout_range"  {
+  check "chk_rollout_range"  {
   expr ="rollout_percentage >= 0 AND rollout_percentage <= 100"
 }
   primary_key {
@@ -877,7 +877,7 @@ table "feature_gates" {
 }
   
   // FIX (P2): OOM Bomb Protection for Metadata
-  check"chk_fg_meta_size"  {
+  check "chk_fg_meta_size"  {
   expr ="pg_column_size(metadata) <= 51200"
 }
   
@@ -933,10 +933,10 @@ table "dunning_events" {
   primary_key {
   columns =[column.id]
 }
-  check"chk_dunning_attempts"  {
+  check "chk_dunning_attempts"  {
   expr ="(attempt_number <= 5)"
 }
-  check"chk_dunning_amount"  {
+  check "chk_dunning_amount"  {
   expr ="COALESCE((amount).amount, 0) > 0"
 }
   index "idx_dunning_events_tenant"  {
@@ -1182,7 +1182,7 @@ table "order_fraud_scores" {
   primary_key {
   columns =[column.id]
 }
-  check"chk_risk_score_range"  {
+  check "chk_risk_score_range"  {
   expr ="(risk_score BETWEEN 0 AND 1000)"
 }
   index "idx_fraud_order"  {

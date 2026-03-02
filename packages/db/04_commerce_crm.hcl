@@ -44,10 +44,10 @@ table "customers" {
     null = false
     default = sql("ROW(0, 'SAR')::public.money_amount")
   }
-  check"chk_wallet_bal_pos"  {
+  check "chk_wallet_bal_pos"  {
   expr ="COALESCE((wallet_balance).amount, 0) >= 0 AND (wallet_balance).amount IS NOT NULL AND (wallet_balance).currency IS NOT NULL"
 }
-  check"chk_total_spent_pos"  {
+  check "chk_total_spent_pos"  {
   expr ="COALESCE((total_spent_amount).amount, 0) >= 0 AND (total_spent_amount).amount IS NOT NULL"
 }
   column "loyalty_points" {
@@ -77,7 +77,7 @@ table "customers" {
     null = true
   }
   // SECURITY (Feedback Loop): Enforce Bcrypt prefix to avoid plaintext or weak hash storage
-  check"chk_cust_pwd_hash"   {
+  check "chk_cust_pwd_hash"   {
   expr ="(password_hash IS NULL OR password_hash ~ '^\\$2[ayb]\\$.+$')"
 }
   column "first_name" {
@@ -151,19 +151,19 @@ table "customers" {
   columns =[column.date_of_birth]
 }
   
-  check"chk_cust_email_s7"  {
+  check "chk_cust_email_s7"  {
   expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
 }
-  check"chk_cust_phone_s7"  {
+  check "chk_cust_phone_s7"  {
   expr ="(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))"
 }
-  check"chk_cust_firstname_s7"  {
+  check "chk_cust_firstname_s7"  {
   expr ="(first_name IS NULL OR (jsonb_typeof(first_name) = 'object' AND first_name ? 'enc' AND first_name ? 'iv' AND first_name ? 'tag' AND first_name ? 'data'))"
 }
-  check"chk_cust_lastname_s7"  {
+  check "chk_cust_lastname_s7"  {
   expr ="(last_name IS NULL OR (jsonb_typeof(last_name) = 'object' AND last_name ? 'enc' AND last_name ? 'iv' AND last_name ? 'tag' AND last_name ? 'data'))"
 }
-  check"chk_dob_past"  {
+  check "chk_dob_past"  {
   expr ="(date_of_birth IS NULL OR date_of_birth <= CURRENT_DATE)"
 }
   
@@ -253,16 +253,16 @@ table "customer_addresses" {
   using =GIST
 }
   
-  check"chk_line1_encrypted"  {
+  check "chk_line1_encrypted"  {
   expr ="(line1 IS NULL OR (jsonb_typeof(line1) = 'object' AND line1 ? 'enc' AND line1 ? 'iv' AND line1 ? 'tag' AND line1 ? 'data'))"
 }
-  check"chk_postal_code_encrypted"  {
+  check "chk_postal_code_encrypted"  {
   expr ="(postal_code IS NULL OR (jsonb_typeof(postal_code) = 'object' AND postal_code ? 'enc' AND postal_code ? 'iv' AND postal_code ? 'tag' AND postal_code ? 'data'))"
 }
-  check"chk_addr_phone_encrypted"  {
+  check "chk_addr_phone_encrypted"  {
   expr ="(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))"
 }
-  check"chk_city_not_empty"  {
+  check "chk_city_not_empty"  {
   expr ="(length(trim(city)) > 0)"
 }
   
@@ -450,7 +450,7 @@ table "orders" {
     type = sql("public.money_amount")
     default = sql("ROW(0, 'SAR')::public.money_amount")
   }
-  check"chk_order_total_inner"  {
+  check "chk_order_total_inner"  {
   expr ="(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL"
 }
   column "risk_score" {
@@ -582,10 +582,10 @@ table "orders" {
   check "chk_checkout_math" { 
     expr = "(COALESCE((total).amount, 0) = COALESCE((subtotal).amount, 0) + COALESCE((tax).amount, 0) + COALESCE((shipping).amount, 0) - COALESCE((discount).amount, 0) - COALESCE((coupon_discount).amount, 0))" 
   }
-  check"chk_positive_costs"  {
+  check "chk_positive_costs"  {
   expr ="(COALESCE((shipping).amount, 0) >= 0 AND COALESCE((tax).amount, 0) >= 0)"
 }
-  check"chk_refund_cap"  {
+  check "chk_refund_cap"  {
   expr ="COALESCE((refunded_amount).amount, 0) <= COALESCE((total).amount, 0)"
 }
   
@@ -702,19 +702,19 @@ table "order_items" {
   check"qty_positive"  {
   expr ="quantity > 0"
 }
-  check"chk_returned_qty"  {
+  check "chk_returned_qty"  {
   expr ="(returned_quantity <= fulfilled_quantity)"
 }
-  check"chk_fulfill_qty"  {
+  check "chk_fulfill_qty"  {
   expr ="(fulfilled_quantity <= quantity)"
 }
   check "chk_item_math" { 
     expr = "(COALESCE((total).amount, 0) = (COALESCE((price).amount, 0) * quantity) - COALESCE((discount_amount).amount, 0) + COALESCE((tax_amount).amount, 0))" 
   }
-  check"chk_item_inner_not_null"  {
+  check "chk_item_inner_not_null"  {
   expr ="(price).amount IS NOT NULL AND (total).amount IS NOT NULL"
 }
-  check"chk_item_discount_logic"  {
+  check "chk_item_discount_logic"  {
   expr ="COALESCE((discount_amount).amount, 0) <= (COALESCE((price).amount, 0) * quantity)"
 }
   
@@ -1009,7 +1009,7 @@ table "refunds" {
   columns =[column.order_id]
 }
   
-  check"chk_refund_positive"  {
+  check "chk_refund_positive"  {
   expr ="COALESCE((amount).amount, 0) > 0"
 }
   
@@ -1053,7 +1053,7 @@ table "refund_items" {
   columns =[column.refund_id]
 }
   
-  check"chk_refund_item_amt"  {
+  check "chk_refund_item_amt"  {
   expr ="(COALESCE((amount).amount, 0) > 0 AND quantity > 0)"
 }
   
@@ -1363,10 +1363,10 @@ table "carts" {
     fillfactor = 80
   }
   
-  check"chk_cart_items_size"  {
+  check "chk_cart_items_size"  {
   expr ="(pg_column_size(items) <= 51200)"
 }
-  check"chk_cart_subtotal_pos"  {
+  check "chk_cart_subtotal_pos"  {
   expr ="subtotal IS NULL OR COALESCE((subtotal).amount, 0) >= 0"
 }
   
@@ -1414,7 +1414,7 @@ table "cart_items" {
   columns =[column.cart_id]
 }
   
-  check"chk_cart_item_price"  {
+  check "chk_cart_item_price"  {
   expr ="COALESCE((price).amount, 0) >= 0"
 }
   
@@ -1562,7 +1562,7 @@ table "shipping_zones" {
   columns =[column.is_active]
 }
   
-  check"chk_delivery_logic"  {
+  check "chk_delivery_logic"  {
   expr ="(min_delivery_days >= 0 AND min_delivery_days <= max_delivery_days)"
 }
   
@@ -1686,7 +1686,7 @@ table "tax_rules" {
     type = varchar(20)
     default = "half_even"
   }
-  check"chk_tax_rounding"  {
+  check "chk_tax_rounding"  {
   expr ="rounding_rule IN ('half_even', 'half_up', 'half_down')"
 }
 
@@ -1703,7 +1703,7 @@ table "tax_rules" {
   index "idx_tax_rules_country"  {
   columns =[column.country]
 }
-  check"chk_tax_rate_bounds"  {
+  check "chk_tax_rate_bounds"  {
   expr ="(rate >= 0 AND rate <= 10000)"
 }
   
@@ -1767,7 +1767,7 @@ table "reviews" {
   primary_key {
   columns =[column.id]
 }
-  check"chk_rating_bounds"  {
+  check "chk_rating_bounds"  {
   expr ="(rating >= 1 AND rating <= 5)"
 }
   // Strike 21: AI Sentiment Confidence
@@ -1775,7 +1775,7 @@ table "reviews" {
     type = numeric(3,2)
     null = true
   }
-  check"chk_sentiment_bounds"  {
+  check "chk_sentiment_bounds"  {
   expr ="(sentiment_score >= -1.00 AND sentiment_score <= 1.00)"
 }
   

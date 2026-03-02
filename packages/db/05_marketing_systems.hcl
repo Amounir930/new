@@ -87,13 +87,13 @@ table "coupons" {
   expr ="used_count <= max_uses"
 }
   
-  check"chk_coupon_val_positive"  {
+  check "chk_coupon_val_positive"  {
   expr ="COALESCE((value).amount, 0) > 0"
 }
-  check"chk_coupon_pct"  {
+  check "chk_coupon_pct"  {
   expr ="(type != 'percentage' OR COALESCE((value).amount, 0) <= 10000)"
 }
-  check"chk_coupon_min_amount"  {
+  check "chk_coupon_min_amount"  {
   expr ="COALESCE((min_order_amount).amount, 0) >= 0"
 }
   
@@ -232,14 +232,14 @@ table "price_rules" {
   columns =[column.is_active]
 }
   
-  check"chk_pr_dates"  {
+  check "chk_pr_dates"  {
   expr ="(ends_at IS NULL OR ends_at > starts_at)"
 }
-  check"chk_entitled_array"  {
+  check "chk_entitled_array"  {
   expr ="(entitled_ids IS NULL OR jsonb_typeof(entitled_ids) = 'array')"
 }
   // Strike 30: Collection Bloat Protection (Limit 5000)
-  check"chk_entitled_len"  {
+  check "chk_entitled_len"  {
   expr ="(entitled_ids IS NULL OR jsonb_array_length(entitled_ids) <= 5000)"
 }
   
@@ -281,9 +281,8 @@ table "discount_codes" {
   index "idx_discount_code"  {
   columns =[column.code]
 }
-  check"chk_code_strict"  {
-  expr ="(
-  code =upper(code) AND code ~ '^[A-Z0-9_-]+$')"
+  check "chk_code_strict"  {
+  expr = "( code =upper(code) AND code ~ '^[A-Z0-9_-]+$')"
 }
   index "idx_discount_codes_tenant"  {
   columns =[column.tenant_id]
@@ -352,7 +351,7 @@ table "flash_sales" {
   columns =[column.end_time]
 }
   
-  check"chk_flash_time"  {
+  check "chk_flash_time"  {
   expr ="(end_time > starts_at)"
 }
   
@@ -416,7 +415,7 @@ table "flash_sale_products" {
   columns =[column.product_id]
 }
   
-  check"chk_flash_limit"  {
+  check "chk_flash_limit"  {
   expr ="(sold_quantity <= quantity_limit)"
 }
   
@@ -487,7 +486,7 @@ table "product_bundles" {
   columns =[column.tenant_id, column.id]
 }
   
-  check"chk_bundle_discount_positive"  {
+  check "chk_bundle_discount_positive"  {
   expr ="COALESCE((discount_value).amount, 0) >= 0"
 }
   
@@ -578,10 +577,10 @@ table "loyalty_rules" {
   columns =[column.id]
 }
   
-  check"chk_points_expiry"  {
+  check "chk_points_expiry"  {
   expr ="(points_expiry_days IS NULL OR points_expiry_days > 0)"
 }
-  check"chk_loyalty_math"  {
+  check "chk_loyalty_math"  {
   expr ="points_per_currency > 0 AND min_redeem_points > 0"
 }
   
@@ -666,7 +665,7 @@ table "wallet_transactions" {
   using =BRIN
 }
   
-  check"chk_wallet_math"  {
+  check "chk_wallet_math"  {
   expr ="COALESCE((balance_after).amount, 0) = COALESCE((balance_before).amount, 0) + COALESCE((amount).amount, 0)"
 }
   check"wallet_non_negative_balance"  {
@@ -742,17 +741,16 @@ table "affiliate_partners" {
   columns =[column.email_hash]
 }
   
-  check"chk_aff_email_s7"  {
+  check "chk_aff_email_s7"  {
   expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
 }
-  check"chk_aff_payout_s7"  {
+  check "chk_aff_payout_s7"  {
   expr ="(payout_details IS NULL OR (jsonb_typeof(payout_details) = 'object' AND payout_details ? 'enc' AND payout_details ? 'iv' AND payout_details ? 'tag' AND payout_details ? 'data'))"
 }
-  check"chk_ref_code_upper"  {
-  expr ="(
-  referral_code =upper(referral_code))"
+  check "chk_ref_code_upper"  {
+  expr = "( referral_code =upper(referral_code))"
 }
-  check"chk_aff_rate_cap"  {
+  check "chk_aff_rate_cap"  {
   expr ="commission_rate >= 0 AND commission_rate <= 10000"
 }
   
@@ -817,7 +815,7 @@ table "affiliate_transactions" {
   using =BRIN
 }
   
-  check"chk_aff_comm_positive"  {
+  check "chk_aff_comm_positive"  {
   expr ="COALESCE((commission_amount).amount, 0) > 0"
 }
   
@@ -957,13 +955,13 @@ table "staff_members" {
   where ="is_active =true"
 }
   
-  check"chk_staff_email_s7"  {
+  check "chk_staff_email_s7"  {
   expr ="(jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data')"
 }
-  check"chk_staff_phone_s7"  {
+  check "chk_staff_phone_s7"  {
   expr ="(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))"
 }
-  check"chk_staff_2fa_s7"  {
+  check "chk_staff_2fa_s7"  {
   expr ="(two_factor_secret IS NULL OR (jsonb_typeof(two_factor_secret) = 'object' AND two_factor_secret ? 'enc' AND two_factor_secret ? 'iv' AND two_factor_secret ? 'tag' AND two_factor_secret ? 'data'))"
 }
   
@@ -1107,7 +1105,7 @@ table "app_installations" {
     null = true
   }
   // Strike 17: App Scope Integrity (Must be a JSONB array)
-  check"chk_scopes_structure"  {
+  check "chk_scopes_structure"  {
   expr ="(scopes IS NULL OR jsonb_typeof(scopes) = 'array')"
 }
   
@@ -1123,10 +1121,10 @@ table "app_installations" {
   columns =[column.tenant_id, column.id]
 }
   
-  check"chk_app_key_s7"  {
+  check "chk_app_key_s7"  {
   expr ="(api_key IS NULL OR (jsonb_typeof(api_key) = 'object' AND api_key ? 'enc' AND api_key ? 'iv' AND api_key ? 'tag' AND api_key ? 'data'))"
 }
-  check"chk_app_token_s7"  {
+  check "chk_app_token_s7"  {
   expr ="(access_token IS NULL OR (jsonb_typeof(access_token) = 'object' AND access_token ? 'enc' AND access_token ? 'iv' AND access_token ? 'tag' AND access_token ? 'data'))"
 }
   
@@ -1189,22 +1187,22 @@ table "webhook_subscriptions" {
   columns =[column.event]
 }
   
-  check"chk_retry_limit"  {
+  check "chk_retry_limit"  {
   expr ="(retry_count <= max_retries)"
 }
   check"webhook_secret_min_length"  {
   expr ="(secret IS NULL OR octet_length(secret->>'enc') >= 32)"
 }
-  check"chk_webhook_secret_s7"  {
+  check "chk_webhook_secret_s7"  {
   expr ="(secret IS NULL OR (jsonb_typeof(secret) = 'object' AND secret ? 'enc' AND secret ? 'iv' AND secret ? 'tag' AND secret ? 'data'))"
 }
-  check"chk_https_only"  {
+  check "chk_https_only"  {
   expr ="(target_url ~ '^https://')"
 }
   // Strike 08.5: SSRF Hardening (Regex on IPs is bypassable App Layer must resolve DNS and block private ranges)
   
   // ELITE PATCH: Prevent OOM on Webhook Worker via URL Overflow
-  check"chk_url_length"  {
+  check "chk_url_length"  {
   expr ="(length(target_url) <= 2048)"
 }
   
@@ -1283,7 +1281,7 @@ table "pages" {
   columns =[column.is_published]
 }
   
-  check"chk_page_slug"  {
+  check "chk_page_slug"  {
   expr ="(slug ~ '^[a-z0-9-]+$')"
 }
   
@@ -1818,7 +1816,7 @@ table "search_synonyms" {
   unique"search_synonyms_term_unique"  {
   columns =[column.tenant_id, column.term]
 }
-  check"chk_synonym_no_self_loop"  {
+  check "chk_synonym_no_self_loop"  {
   expr ="NOT (synonyms ? term)"
 }
 }
