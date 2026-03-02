@@ -130,11 +130,13 @@ table "customers" {
   unique "uq_tenant_customer" {
     columns = [column.tenant_id, column.id]
   }
-  unique "idx_customer_email_hash" {
+  index "idx_customer_email_hash" {
+    unique  = true
     columns = [column.tenant_id, column.email_hash]
     where   = "deleted_at IS NULL"
   }
-  unique "idx_customer_phone_hash" {
+  index "idx_customer_phone_hash" {
+    unique  = true
     columns = [column.tenant_id, column.phone_hash]
     where   = "deleted_at IS NULL"
   }
@@ -261,7 +263,8 @@ table "customer_addresses" {
     columns = [column.tenant_id]
   }
   // Strike 10: Prevent default address spam (one default per customer/tenant)
-  unique "uq_cust_default_addr" {
+  index "uq_cust_default_addr" {
+    unique  = true
     columns = [column.tenant_id, column.customer_id]
     where   = "is_default = true"
   }
@@ -534,11 +537,13 @@ table "orders" {
   unique "uq_tenant_order" {
     columns = [column.tenant_id, column.id]
   }
-  unique "idx_orders_number_active" {
+  index "idx_orders_number_active" {
+    unique  = true
     columns = [column.tenant_id, column.order_number]
     where   = "deleted_at IS NULL"
   }
-  unique "idx_orders_idempotency" {
+  index "idx_orders_idempotency" {
+    unique  = true
     columns = [column.tenant_id, column.idempotency_key]
     where   = "idempotency_key IS NOT NULL"
   }

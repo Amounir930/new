@@ -90,11 +90,11 @@ composite "money_amount" {
 
 // ELITE DIRECTIVE: Application-level role configuration activated via sql.elite_server_config
 
-enum "severity_enum " {
+enum "severity_enum" {
   schema = schema.public
   values = ["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"]
 }
-enum "audit_result_enum " {
+enum "audit_result_enum" {
   schema = schema.public
   values = ["SUCCESS", "FAILURE"]
 }
@@ -388,11 +388,13 @@ table "tenants" {
   primary_key {
     columns = [column.id]
   }
-  unique "tenants_subdomain_unique " {
+  index "tenants_subdomain_unique" {
+    unique  = true
     columns = [column.subdomain]
     where   = "deleted_at IS NULL"
   }
-  unique "tenants_custom_domain_unique " {
+  index "tenants_custom_domain_unique" {
+    unique  = true
     columns = [column.custom_domain]
     where   = "deleted_at IS NULL"
   }
@@ -671,7 +673,7 @@ table "subscription_plans" {
   primary_key {
     columns = [column.id]
   }
-  unique "subscription_plans_code_unique " {
+  unique "subscription_plans_code_unique" {
     columns = [column.code]
   }
   // ELITE: money_amount used for pricing
