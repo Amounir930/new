@@ -9,22 +9,22 @@
 // ==========================================
 table "coupons" {
   schema = schema.storefront
-  column "id"                { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"         { type = uuid }
-  column "created_at"        { type = timestamptz; default = sql("now()") }
-  column "starts_at"         { type = timestamptz; null = true }
-  column "expires_at"        { type = timestamptz; null = true }
-  column "value"             { type = sql("public.money_amount"); null = false }
-  column "min_order_amount"  { type = sql("public.money_amount"); null = false; default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "max_uses"          { type = int; null = true }
-  column "used_count"        { type = int; default = 0 }
-  column "max_uses_per_customer" { type = int; null = true }
-  column "is_active"         { type = boolean; default = true }
+  column "created_at"        { type = timestamptz default = sql("now()") }
+  column "starts_at"         { type = timestamptz null = true }
+  column "expires_at"        { type = timestamptz null = true }
+  column "value"             { type = sql("public.money_amount") null = false }
+  column "min_order_amount"  { type = sql("public.money_amount") null = false default = sql("ROW(0, 'SAR')::public.money_amount") }
+  column "max_uses"          { type = int null = true }
+  column "used_count"        { type = int default = 0 }
+  column "max_uses_per_customer" { type = int null = true }
+  column "is_active"         { type = boolean default = true }
   column "code"              { type = varchar(50) }
   column "type"              { type = varchar(20) }
   // Strike 16: Optimistic Locking for Coupon Redemptions
-  column "lock_version"       { type = int; default = 1 }
-  column "version"           { type = int; default = 1 }
+  column "lock_version"       { type = int default = 1 }
+  column "version"           { type = int default = 1 }
   primary_key { columns = [column.id] }
   unique "coupons_code_unique" { columns = [column.tenant_id, column.code] }
   index "idx_coupons_code" { columns = [column.code] }
@@ -43,12 +43,12 @@ table "coupons" {
 // Strike 03: Coupon Usage Tracking (Enforce max_uses_per_customer)
 table "coupon_usages" {
   schema = schema.storefront
-  column "id"           { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"           { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"    { type = uuid }
   column "coupon_id"    { type = uuid }
   column "customer_id"  { type = uuid }
-  column "order_id"     { type = uuid; null = true }
-  column "created_at"   { type = timestamptz; default = sql("now()") }
+  column "order_id"     { type = uuid null = true }
+  column "created_at"   { type = timestamptz default = sql("now()") }
   
   primary_key { columns = [column.id] }
   unique "uq_coupon_cust_order" { columns = [column.tenant_id, column.coupon_id, column.customer_id, column.order_id] }
@@ -65,24 +65,24 @@ table "coupon_usages" {
 
 table "price_rules" {
   schema = schema.storefront
-  column "id"                { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"         { type = uuid }
-  column "created_at"        { type = timestamptz; default = sql("now()") }
-  column "starts_at"         { type = timestamptz; null = true }
-  column "ends_at"           { type = timestamptz; null = true }
-  column "value"             { type = sql("public.money_amount"); null = false }
-  column "min_purchase_amount" { type = sql("public.money_amount"); null = true }
-  column "min_quantity"      { type = int; null = true }
-  column "max_uses"          { type = int; null = true }
-  column "max_uses_per_customer" { type = int; null = true }
-  column "used_count"        { type = int; default = 0 }
-  column "is_active"         { type = boolean; default = true }
+  column "created_at"        { type = timestamptz default = sql("now()") }
+  column "starts_at"         { type = timestamptz null = true }
+  column "ends_at"           { type = timestamptz null = true }
+  column "value"             { type = sql("public.money_amount") null = false }
+  column "min_purchase_amount" { type = sql("public.money_amount") null = true }
+  column "min_quantity"      { type = int null = true }
+  column "max_uses"          { type = int null = true }
+  column "max_uses_per_customer" { type = int null = true }
+  column "used_count"        { type = int default = 0 }
+  column "is_active"         { type = boolean default = true }
   column "type"              { type = enum.discount_type }
-  column "applies_to"        { type = enum.discount_applies_to; default = "all" }
+  column "applies_to"        { type = enum.discount_applies_to default = "all" }
   column "title"             { type = jsonb }
-  column "entitled_ids"      { type = jsonb; null = true }
-  column "combines_with"     { type = jsonb; null = true }
-  column "lock_version"      { type = int; default = 1 }
+  column "entitled_ids"      { type = jsonb null = true }
+  column "combines_with"     { type = jsonb null = true }
+  column "lock_version"      { type = int default = 1 }
   primary_key { columns = [column.id] }
   
   unique "uq_tenant_price_rule" { columns = [column.tenant_id, column.id] }
@@ -100,11 +100,11 @@ table "price_rules" {
 
 table "discount_codes" {
   schema = schema.storefront
-  column "id"            { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"            { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"     { type = uuid }
   column "price_rule_id" { type = uuid }
-  column "created_at"    { type = timestamptz; default = sql("now()") }
-  column "used_count"    { type = int; default = 0 }
+  column "created_at"    { type = timestamptz default = sql("now()") }
+  column "used_count"    { type = int default = 0 }
   column "code"          { type = varchar(50) }
   primary_key { columns = [column.id] }
   unique "discount_codes_code_unique" { columns = [column.tenant_id, column.code] }
@@ -121,18 +121,18 @@ table "discount_codes" {
 
 table "flash_sales" {
   schema = schema.storefront
-  column "id"         { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"         { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"  { type = uuid }
-  column "created_at" { type = timestamptz; default = sql("now()") }
-  column "updated_at" { type = timestamptz; default = sql("now()") }
-  column "starts_at"  { type = timestamptz; default = sql("now()") }
+  column "created_at" { type = timestamptz default = sql("now()") }
+  column "updated_at" { type = timestamptz default = sql("now()") }
+  column "starts_at"  { type = timestamptz default = sql("now()") }
   column "end_time"   { type = timestamptz }
   // Strike 27: Accuracy of Global Flash Sales
-  column "timezone"   { type = varchar(50); default = "UTC" }
+  column "timezone"   { type = varchar(50) default = "UTC" }
   
-  column "is_active"  { type = boolean; default = true }
+  column "is_active"  { type = boolean default = true }
   column "name"       { type = jsonb }
-  column "status"     { type = varchar(20); default = "active" }
+  column "status"     { type = varchar(20) default = "active" }
   primary_key { columns = [column.id] }
   
   unique "uq_tenant_flash_sale" { columns = [column.tenant_id, column.id] }
@@ -161,14 +161,14 @@ table "flash_sales" {
 
 table "flash_sale_products" {
   schema = schema.storefront
-  column "id"                    { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                    { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"             { type = uuid }
-  column "flash_sale_id"         { type = uuid; null = true }
-  column "product_id"            { type = uuid; null = true }
+  column "flash_sale_id"         { type = uuid null = true }
+  column "product_id"            { type = uuid null = true }
   column "discount_basis_points" { type = int }
   column "quantity_limit"        { type = int }
-  column "sold_quantity"         { type = int; default = 0 }
-  column "sort_order"            { type = int; default = 0 }
+  column "sold_quantity"         { type = int default = 0 }
+  column "sort_order"            { type = int default = 0 }
   primary_key { columns = [column.id] }
   index "idx_fs_prod_campaign" { columns = [column.flash_sale_id] }
   index "idx_fs_prod_product" { columns = [column.product_id] }
@@ -176,7 +176,7 @@ table "flash_sale_products" {
   check "chk_flash_limit" { expr = "(sold_quantity <= quantity_limit)" }
   
   // Strike 5: Prevent product overlap in multiple flash sales via denormalized range
-  column "valid_during" { type = sql("tstzrange"); null = true }
+  column "valid_during" { type = sql("tstzrange") null = true }
   
   exclude "idx_flash_prod_overlap_prevent" {
     columns = [column.tenant_id, column.product_id, column.valid_during]
@@ -195,14 +195,14 @@ table "flash_sale_products" {
 
 table "product_bundles" {
   schema = schema.storefront
-  column "id"             { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"             { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"      { type = uuid }
-  column "created_at"     { type = timestamptz; default = sql("now()") }
-  column "starts_at"      { type = timestamptz; null = true }
-  column "ends_at"        { type = timestamptz; null = true }
-  column "discount_value" { type = sql("public.money_amount"); default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "is_active"      { type = boolean; default = true }
-  column "discount_type"  { type = varchar(20); default = "percentage" }
+  column "created_at"     { type = timestamptz default = sql("now()") }
+  column "starts_at"      { type = timestamptz null = true }
+  column "ends_at"        { type = timestamptz null = true }
+  column "discount_value" { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") }
+  column "is_active"      { type = boolean default = true }
+  column "discount_type"  { type = varchar(20) default = "percentage" }
   column "name"           { type = jsonb }
   
   primary_key { columns = [column.id] }
@@ -216,11 +216,11 @@ table "product_bundles" {
 
 table "product_bundle_items" {
   schema = schema.storefront
-  column "id"         { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"         { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"  { type = uuid }
   column "bundle_id"  { type = uuid }
   column "product_id" { type = uuid }
-  column "quantity"   { type = int; default = 1 }
+  column "quantity"   { type = int default = 1 }
   primary_key { columns = [column.id] }
   index "idx_bundle_items" { columns = [column.bundle_id] }
   index "idx_product_bundle_items_tenant" { columns = [column.tenant_id] }
@@ -234,17 +234,17 @@ table "product_bundle_items" {
 
 table "loyalty_rules" {
   schema = schema.storefront
-  column "id"                  { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                  { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"           { type = uuid }
   column "name"                { type = varchar(100) }
   // Strike 07: Fractional Loyalty Points Support
-  column "points_per_currency" { type = decimal(10,4); default = 1.0 }
-  column "min_redeem_points"   { type = int; default = 100 }
-  column "points_expiry_days"  { type = int; null = true }
-  column "rewards"             { type = jsonb; default = sql("'[]'::jsonb") }
-  column "is_active"           { type = int; default = 1 }
-  column "created_at"          { type = timestamptz; default = sql("now()") }
-  column "updated_at"          { type = timestamptz; default = sql("now()") }
+  column "points_per_currency" { type = decimal(10,4) default = 1.0 }
+  column "min_redeem_points"   { type = int default = 100 }
+  column "points_expiry_days"  { type = int null = true }
+  column "rewards"             { type = jsonb default = sql("'[]'::jsonb") }
+  column "is_active"           { type = int default = 1 }
+  column "created_at"          { type = timestamptz default = sql("now()") }
+  column "updated_at"          { type = timestamptz default = sql("now()") }
   primary_key { columns = [column.id] }
   
   check "chk_points_expiry" { expr = "(points_expiry_days IS NULL OR points_expiry_days > 0)" }
@@ -269,23 +269,23 @@ table "loyalty_rules" {
 
 table "wallet_transactions" {
   schema = schema.storefront
-  column "id"              { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"              { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"       { type = uuid }
   column "customer_id"     { type = uuid }
-  column "order_id"        { type = uuid; null = true }
-  column "created_at"      { type = timestamptz; default = sql("now()") }
-  column "amount"          { type = sql("public.money_amount"); null = false }
-  column "balance_before"  { type = sql("public.money_amount"); null = false }
-  column "balance_after"   { type = sql("public.money_amount"); null = false }
+  column "order_id"        { type = uuid null = true }
+  column "created_at"      { type = timestamptz default = sql("now()") }
+  column "amount"          { type = sql("public.money_amount") null = false }
+  column "balance_before"  { type = sql("public.money_amount") null = false }
+  column "balance_after"   { type = sql("public.money_amount") null = false }
   column "type"            { type = varchar(20) }
   column "reason"          { type = varchar(100) }
-  column "description"     { type = text; null = true }
-  column "idempotency_key" { type = varchar(100); null = true }
+  column "description"     { type = text null = true }
+  column "idempotency_key" { type = varchar(100) null = true }
   
   primary_key { columns = [column.id] }
-  unique "wallet_tx_idempotency" { columns = [column.tenant_id, column.idempotency_key]; where = "idempotency_key IS NOT NULL" }
+  unique "wallet_tx_idempotency" { columns = [column.tenant_id, column.idempotency_key] where = "idempotency_key IS NOT NULL" }
   index "idx_wallet_customer" { columns = [column.customer_id] }
-  index "idx_wallet_created" { columns = [column.created_at]; using = BRIN }
+  index "idx_wallet_created" { columns = [column.created_at] using = BRIN }
   
   check "chk_wallet_math" { expr = "COALESCE((balance_after).amount, 0) = COALESCE((balance_before).amount, 0) + COALESCE((amount).amount, 0)" }
   check "wallet_non_negative_balance" { expr = "COALESCE((balance_after).amount, 0) >= 0" }
@@ -298,19 +298,19 @@ table "wallet_transactions" {
 
 table "affiliate_partners" {
   schema = schema.storefront
-  column "id"              { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"              { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"       { type = uuid }
   column "customer_id"     { type = uuid }
-  column "created_at"      { type = timestamptz; default = sql("now()") }
-  column "commission_rate" { type = int; default = 500 }
-  column "total_earned"    { type = sql("public.money_amount"); default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "total_paid"      { type = sql("public.money_amount"); default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "status"          { type = enum.affiliate_status; default = "pending" }
+  column "created_at"      { type = timestamptz default = sql("now()") }
+  column "commission_rate" { type = int default = 500 }
+  column "total_earned"    { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") }
+  column "total_paid"      { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") }
+  column "status"          { type = enum.affiliate_status default = "pending" }
   column "referral_code"   { type = varchar(50) }
   column "email"           { type = jsonb }
-  column "email_hash"      { type = text; null = true }
+  column "email_hash"      { type = text null = true }
   // Strike 11: Payout Details (Masked/Encrypted PII for Ibans/Paypal)
-  column "payout_details"  { type = jsonb; null = true }
+  column "payout_details"  { type = jsonb null = true }
   
   primary_key { columns = [column.id] }
   unique "uq_tenant_affiliate" { columns = [column.tenant_id, column.id] }
@@ -328,22 +328,22 @@ table "affiliate_partners" {
 
 table "affiliate_transactions" {
   schema = schema.storefront
-  column "id"                { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"         { type = uuid }
   column "partner_id"        { type = uuid }
   column "order_id"          { type = uuid }
-  column "created_at"        { type = timestamptz; default = sql("now()") }
-  column "paid_at"           { type = timestamptz; null = true }
-  column "commission_amount" { type = sql("public.money_amount"); null = false }
+  column "created_at"        { type = timestamptz default = sql("now()") }
+  column "paid_at"           { type = timestamptz null = true }
+  column "commission_amount" { type = sql("public.money_amount") null = false }
   // Strike 12: Escrow Commission (Prevent payout during return window)
-  column "hold_period_ends_at" { type = timestamptz; null = true }
-  column "status"            { type = enum.affiliate_tx_status; default = "pending" }
-  column "payout_reference"  { type = varchar(100); null = true }
+  column "hold_period_ends_at" { type = timestamptz null = true }
+  column "status"            { type = enum.affiliate_tx_status default = "pending" }
+  column "payout_reference"  { type = varchar(100) null = true }
   
   primary_key { columns = [column.id] }
   index "idx_aff_trans_partner" { columns = [column.partner_id] }
   index "idx_aff_trans_order" { columns = [column.order_id] }
-  index "idx_aff_trans_created_brin" { columns = [column.created_at]; using = BRIN }
+  index "idx_aff_trans_created_brin" { columns = [column.created_at] using = BRIN }
   
   check "chk_aff_comm_positive" { expr = "COALESCE((commission_amount).amount, 0) > 0" }
   
@@ -360,12 +360,12 @@ table "affiliate_transactions" {
 // ==========================================
 table "staff_roles" {
   schema = schema.storefront
-  column "id"          { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"   { type = uuid }
-  column "created_at"  { type = timestamptz; default = sql("now()") }
-  column "is_system"   { type = boolean; default = false }
+  column "created_at"  { type = timestamptz default = sql("now()") }
+  column "is_system"   { type = boolean default = false }
   column "name"        { type = varchar(100) }
-  column "description" { type = text; null = true }
+  column "description" { type = text null = true }
   column "permissions" { type = jsonb }
   primary_key { columns = [column.id] }
   check "permissions_strict_keys" { expr = "(jsonb_typeof(permissions) = 'object' AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys(permissions) AS k WHERE k NOT IN ('products', 'orders', 'customers', 'settings', 'promotions', 'analytics')))" }
@@ -375,31 +375,31 @@ table "staff_roles" {
 
 table "staff_members" {
   schema = schema.storefront
-  column "id"                { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"         { type = uuid }
   column "user_id"           { type = uuid }
   column "role_id"           { type = uuid }
-  column "created_at"        { type = timestamptz; default = sql("now()") }
-  column "last_login_at"     { type = timestamptz; null = true }
-  column "deleted_at"        { type = timestamptz; null = true }
-  column "is_active"         { type = boolean; default = true }
+  column "created_at"        { type = timestamptz default = sql("now()") }
+  column "last_login_at"     { type = timestamptz null = true }
+  column "deleted_at"        { type = timestamptz null = true }
+  column "is_active"         { type = boolean default = true }
   
-  column "deactivated_at"    { type = timestamptz; null = true }
-  column "deactivated_by"    { type = uuid; null = true }
+  column "deactivated_at"    { type = timestamptz null = true }
+  column "deactivated_by"    { type = uuid null = true }
   
   column "email"             { type = jsonb }
   
-  column "first_name"        { type = varchar(100); null = true }
-  column "last_name"         { type = varchar(100); null = true }
-  column "avatar_url"        { type = text; null = true }
-  column "phone"             { type = jsonb; null = true }
-  column "is_2fa_enabled"    { type = boolean; default = false }
-  column "two_factor_secret" { type = jsonb; null = true }
+  column "first_name"        { type = varchar(100) null = true }
+  column "last_name"         { type = varchar(100) null = true }
+  column "avatar_url"        { type = text null = true }
+  column "phone"             { type = jsonb null = true }
+  column "is_2fa_enabled"    { type = boolean default = false }
+  column "two_factor_secret" { type = jsonb null = true }
   
   primary_key { columns = [column.id] }
   unique "uq_tenant_staff" { columns = [column.tenant_id, column.id] }
   index "idx_staff_user" { columns = [column.user_id] }
-  index "idx_staff_active" { columns = [column.is_active]; where = "is_active = true" }
+  index "idx_staff_active" { columns = [column.is_active] where = "is_active = true" }
   
   check "chk_staff_email_s7" { expr = "(jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data')" }
   check "chk_staff_phone_s7" { expr = "(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))" }
@@ -416,26 +416,26 @@ table "staff_members" {
 
 table "staff_sessions" {
   schema = schema.storefront
-  column "id"                   { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                   { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"            { type = uuid }
   column "staff_id"             { type = uuid }
-  column "created_at"           { type = timestamptz; default = sql("now()") }
+  column "created_at"           { type = timestamptz default = sql("now()") }
   // Strike 18: Session Expiry (Last Active tracking)
-  column "last_active_at"       { type = timestamptz; default = sql("now()") }
+  column "last_active_at"       { type = timestamptz default = sql("now()") }
   column "expires_at"           { type = timestamptz }
-  column "revoked_at"           { type = timestamptz; null = true }
+  column "revoked_at"           { type = timestamptz null = true }
   column "token_hash"           { type = char(64) }
-  column "device_fingerprint"   { type = varchar(64); null = true }
-  column "ip_address"           { type = inet; null = true }
-  column "asn"                  { type = varchar(50); null = true }
-  column "ip_country"           { type = char(2); null = true }
-  column "user_agent"           { type = text; null = true }
-  column "session_salt_version" { type = int; default = 1 }
+  column "device_fingerprint"   { type = varchar(64) null = true }
+  column "ip_address"           { type = inet null = true }
+  column "asn"                  { type = varchar(50) null = true }
+  column "ip_country"           { type = char(2) null = true }
+  column "user_agent"           { type = text null = true }
+  column "session_salt_version" { type = int default = 1 }
   
   primary_key { columns = [column.id] }
   unique "staff_sessions_token_hash_unique" { columns = [column.tenant_id, column.token_hash] }
-  index "idx_session_token" { columns = [column.token_hash]; using = HASH }
-  index "idx_session_active" { columns = [column.staff_id]; where = "revoked_at IS NULL" }
+  index "idx_session_token" { columns = [column.token_hash] using = HASH }
+  index "idx_session_active" { columns = [column.staff_id] where = "revoked_at IS NULL" }
   index "idx_session_revocation_lookup" { columns = [column.staff_id, column.device_fingerprint, column.revoked_at] }
   
   foreign_key "fk_ss_tenant" {
@@ -454,20 +454,20 @@ table "staff_sessions" {
 // ==========================================
 table "app_installations" {
   schema = schema.storefront
-  column "id"              { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"              { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"       { type = uuid }
-  column "installed_at"    { type = timestamptz; default = sql("now()") }
-  column "is_active"       { type = boolean; default = true }
+  column "installed_at"    { type = timestamptz default = sql("now()") }
+  column "is_active"       { type = boolean default = true }
   column "app_name"        { type = varchar(255) }
-  column "api_key"         { type = jsonb; null = true }
-  column "access_token"    { type = jsonb; null = true }
-  column "api_secret_hash" { type = char(64); null = true }
-  column "webhook_url"     { type = text; null = true }
-  column "scopes"          { type = jsonb; null = true }
+  column "api_key"         { type = jsonb null = true }
+  column "access_token"    { type = jsonb null = true }
+  column "api_secret_hash" { type = char(64) null = true }
+  column "webhook_url"     { type = text null = true }
+  column "scopes"          { type = jsonb null = true }
   // Strike 17: App Scope Integrity (Must be a JSONB array)
   check "chk_scopes_structure" { expr = "(scopes IS NULL OR jsonb_typeof(scopes) = 'array')" }
   
-  column "key_rotated_at"  { type = timestamptz; null = true }
+  column "key_rotated_at"  { type = timestamptz null = true }
   
   primary_key { columns = [column.id] }
   unique "uq_tenant_app" { columns = [column.tenant_id, column.id] }
@@ -481,20 +481,20 @@ table "app_installations" {
 
 table "webhook_subscriptions" {
   schema = schema.storefront
-  column "id"          { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"   { type = uuid }
   column "app_id"      { type = uuid }
-  column "is_active"   { type = boolean; default = true }
+  column "is_active"   { type = boolean default = true }
   column "event"       { type = varchar(100) }
   
   // SECURITY: App layer MUST block private/local IPs in target_url to prevent SSRF
   column "target_url"  { type = text }
   
-  column "secret"      { type = jsonb; null = true }
-  column "max_retries" { type = int; default = 3 }
-  column "retry_count" { type = int; default = 0 }
+  column "secret"      { type = jsonb null = true }
+  column "max_retries" { type = int default = 3 }
+  column "retry_count" { type = int default = 0 }
   // Strike 08: Suspension of failed/dead Webhooks
-  column "suspended_at" { type = timestamptz; null = true }
+  column "suspended_at" { type = timestamptz null = true }
   
   primary_key { columns = [column.id] }
   index "idx_webhook_app" { columns = [column.app_id] }
@@ -504,7 +504,7 @@ table "webhook_subscriptions" {
   check "webhook_secret_min_length" { expr = "(secret IS NULL OR octet_length(secret->>'enc') >= 32)" }
   check "chk_webhook_secret_s7" { expr = "(secret IS NULL OR (jsonb_typeof(secret) = 'object' AND secret ? 'enc' AND secret ? 'iv' AND secret ? 'tag' AND secret ? 'data'))" }
   check "chk_https_only" { expr = "(target_url ~ '^https://')" }
-  // Strike 08.5: SSRF Hardening (Regex on IPs is bypassable; App Layer must resolve DNS and block private ranges)
+  // Strike 08.5: SSRF Hardening (Regex on IPs is bypassable App Layer must resolve DNS and block private ranges)
   
   // ELITE PATCH: Prevent OOM on Webhook Worker via URL Overflow
   check "chk_url_length" { expr = "(length(target_url) <= 2048)" }
@@ -522,21 +522,21 @@ table "webhook_subscriptions" {
 // ==========================================
 table "pages" {
   schema = schema.storefront
-  column "id"               { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"        { type = uuid }
-  column "created_at"       { type = timestamptz; default = sql("now()") }
-  column "updated_at"       { type = timestamptz; default = sql("now()") }
-  column "deleted_at"       { type = timestamptz; null = true }
-  column "is_published"     { type = boolean; default = false }
+  column "created_at"       { type = timestamptz default = sql("now()") }
+  column "updated_at"       { type = timestamptz default = sql("now()") }
+  column "deleted_at"       { type = timestamptz null = true }
+  column "is_published"     { type = boolean default = false }
   column "slug"             { type = varchar(255) }
-  column "page_type"        { type = varchar(50); default = "custom" }
-  column "template"         { type = varchar(50); default = "default" }
-  column "meta_title"       { type = varchar(70); null = true }
-  column "meta_description" { type = varchar(160); null = true }
+  column "page_type"        { type = varchar(50) default = "custom" }
+  column "template"         { type = varchar(50) default = "default" }
+  column "meta_title"       { type = varchar(70) null = true }
+  column "meta_description" { type = varchar(160) null = true }
   column "title"            { type = jsonb }
-  column "content"          { type = jsonb; null = true }
+  column "content"          { type = jsonb null = true }
   primary_key { columns = [column.id] }
-  unique "idx_pages_slug_active" { columns = [column.tenant_id, column.slug]; where = "deleted_at IS NULL" }
+  unique "idx_pages_slug_active" { columns = [column.tenant_id, column.slug] where = "deleted_at IS NULL" }
   index "idx_pages_published" { columns = [column.is_published] }
   
   check "chk_page_slug" { expr = "(slug ~ '^[a-z0-9-]+$')" }
@@ -560,30 +560,30 @@ table "pages" {
 
 table "blog_posts" {
   schema = schema.storefront
-  column "id"               { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"        { type = uuid }
-  column "created_at"       { type = timestamptz; default = sql("now()") }
-  column "updated_at"       { type = timestamptz; default = sql("now()") }
-  column "published_at"     { type = timestamptz; null = true }
-  column "deleted_at"       { type = timestamptz; null = true }
-  column "read_time_min"    { type = int; null = true }
-  column "view_count"       { type = int; default = 0 }
-  column "is_published"     { type = boolean; default = false }
+  column "created_at"       { type = timestamptz default = sql("now()") }
+  column "updated_at"       { type = timestamptz default = sql("now()") }
+  column "published_at"     { type = timestamptz null = true }
+  column "deleted_at"       { type = timestamptz null = true }
+  column "read_time_min"    { type = int null = true }
+  column "view_count"       { type = int default = 0 }
+  column "is_published"     { type = boolean default = false }
   column "slug"             { type = varchar(255) }
-  column "category"         { type = varchar(100); null = true }
-  column "author_name"      { type = varchar(100); null = true }
-  column "meta_title"       { type = varchar(70); null = true }
-  column "meta_description" { type = varchar(160); null = true }
-  column "featured_image"   { type = text; null = true }
-  column "tags"             { type = sql("text[]"); null = true }
+  column "category"         { type = varchar(100) null = true }
+  column "author_name"      { type = varchar(100) null = true }
+  column "meta_title"       { type = varchar(70) null = true }
+  column "meta_description" { type = varchar(160) null = true }
+  column "featured_image"   { type = text null = true }
+  column "tags"             { type = sql("text[]") null = true }
   column "title"            { type = jsonb }
-  column "excerpt"          { type = jsonb; null = true }
+  column "excerpt"          { type = jsonb null = true }
   column "content"          { type = jsonb }
   primary_key { columns = [column.id] }
-  unique "idx_blog_slug_active" { columns = [column.tenant_id, column.slug]; where = "deleted_at IS NULL" }
+  unique "idx_blog_slug_active" { columns = [column.tenant_id, column.slug] where = "deleted_at IS NULL" }
   index "idx_blog_published" { columns = [column.is_published] }
   index "idx_blog_published_at" { columns = [column.published_at] }
-  index "idx_blog_tags" { columns = [column.tags]; using = GIN }
+  index "idx_blog_tags" { columns = [column.tags] using = GIN }
   index "idx_blog_posts_tenant" { columns = [column.tenant_id] }
 
   trigger "trg_blog_posts_updated_at" {
@@ -603,14 +603,14 @@ table "blog_posts" {
 
 table "legal_pages" {
   schema = schema.storefront
-  column "id"             { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"             { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"      { type = uuid }
-  column "created_at"     { type = timestamptz; default = sql("now()") }
-  column "updated_at"     { type = timestamptz; default = sql("now()") }
-  column "version"        { type = int; default = 1 }
-  column "is_published"   { type = boolean; default = false }
+  column "created_at"     { type = timestamptz default = sql("now()") }
+  column "updated_at"     { type = timestamptz default = sql("now()") }
+  column "version"        { type = int default = 1 }
+  column "is_published"   { type = boolean default = false }
   column "page_type"      { type = text }
-  column "last_edited_by" { type = text; null = true }
+  column "last_edited_by" { type = text null = true }
   column "title"          { type = jsonb }
   column "content"        { type = jsonb }
   primary_key { columns = [column.id] }
@@ -625,12 +625,12 @@ table "legal_pages" {
 
 table "faq_categories" {
   schema = schema.storefront
-  column "id"         { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"         { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"  { type = uuid }
   column "name"       { type = varchar(100) }
-  column "order"      { type = int; default = 0 }
-  column "is_active"  { type = boolean; default = true }
-  column "created_at" { type = timestamptz; default = sql("now()") }
+  column "order"      { type = int default = 0 }
+  column "is_active"  { type = boolean default = true }
+  column "created_at" { type = timestamptz default = sql("now()") }
   primary_key { columns = [column.id] }
   index "idx_faq_categories_tenant" { columns = [column.tenant_id] }
   // ALTER TABLE storefront.faq_categories ENABLE ROW LEVEL SECURITY;
@@ -638,15 +638,15 @@ table "faq_categories" {
 
 table "faqs" {
   schema = schema.storefront
-  column "id"          { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"   { type = uuid }
-  column "category_id" { type = uuid; null = true }
+  column "category_id" { type = uuid null = true }
   column "question"    { type = varchar(500) }
   column "answer"      { type = text }
-  column "order"       { type = int; default = 0 }
-  column "is_active"   { type = boolean; default = true }
-  column "created_at"  { type = timestamptz; default = sql("now()") }
-  column "updated_at"  { type = timestamptz; default = sql("now()") }
+  column "order"       { type = int default = 0 }
+  column "is_active"   { type = boolean default = true }
+  column "created_at"  { type = timestamptz default = sql("now()") }
+  column "updated_at"  { type = timestamptz default = sql("now()") }
   primary_key { columns = [column.id] }
   index "idx_faq_category" { columns = [column.category_id] }
   index "idx_faq_active" { columns = [column.is_active] }
@@ -661,13 +661,13 @@ table "faqs" {
 
 table "kb_categories" {
   schema = schema.storefront
-  column "id"         { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"         { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"  { type = uuid }
   column "name"       { type = varchar(255) }
   column "slug"       { type = varchar(255) }
-  column "icon"       { type = varchar(50); null = true }
-  column "order"      { type = int; default = 0 }
-  column "created_at" { type = timestamptz; default = sql("now()") }
+  column "icon"       { type = varchar(50) null = true }
+  column "order"      { type = int default = 0 }
+  column "created_at" { type = timestamptz default = sql("now()") }
   primary_key { columns = [column.id] }
   unique "kb_categories_slug_unique" { columns = [column.tenant_id, column.slug] }
   index "idx_kb_categories_tenant" { columns = [column.tenant_id] }
@@ -676,16 +676,16 @@ table "kb_categories" {
 
 table "kb_articles" {
   schema = schema.storefront
-  column "id"           { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"           { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"    { type = uuid }
-  column "category_id"  { type = uuid; null = true }
+  column "category_id"  { type = uuid null = true }
   column "slug"         { type = varchar(255) }
   column "title"        { type = varchar(255) }
   column "content"      { type = text }
-  column "is_published" { type = boolean; default = true }
-  column "view_count"   { type = int; default = 0 }
-  column "created_at"   { type = timestamptz; default = sql("now()") }
-  column "updated_at"   { type = timestamptz; default = sql("now()") }
+  column "is_published" { type = boolean default = true }
+  column "view_count"   { type = int default = 0 }
+  column "created_at"   { type = timestamptz default = sql("now()") }
+  column "updated_at"   { type = timestamptz default = sql("now()") }
   primary_key { columns = [column.id] }
   unique "kb_articles_slug_unique" { columns = [column.tenant_id, column.slug] }
   index "idx_kb_article_slug" { columns = [column.slug] }
@@ -699,16 +699,16 @@ table "kb_articles" {
 }
 table "banners" {
   schema = schema.storefront
-  column "id"          { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"   { type = uuid }
-  column "created_at"  { type = timestamptz; default = sql("now()") }
-  column "is_active"   { type = boolean; default = true }
-  column "sort_order"  { type = int; default = 0 }
-  column "location"    { type = varchar(50); default = "home_top" }
+  column "created_at"  { type = timestamptz default = sql("now()") }
+  column "is_active"   { type = boolean default = true }
+  column "sort_order"  { type = int default = 0 }
+  column "location"    { type = varchar(50) default = "home_top" }
   column "image_url"   { type = text }
-  column "link_url"    { type = text; null = true }
-  column "title"       { type = jsonb; null = true }
-  column "content"     { type = jsonb; null = true }
+  column "link_url"    { type = text null = true }
+  column "title"       { type = jsonb null = true }
+  column "content"     { type = jsonb null = true }
   primary_key { columns = [column.id] }
   index "idx_banners_tenant" { columns = [column.tenant_id] }
   index "idx_banners_active" { columns = [column.is_active, column.location] }
@@ -716,25 +716,25 @@ table "banners" {
 
 table "announcement_bars" {
   schema = schema.storefront
-  column "id"          { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"   { type = uuid }
-  column "created_at"  { type = timestamptz; default = sql("now()") }
-  column "is_active"   { type = boolean; default = true }
-  column "bg_color"    { type = varchar(20); default = "#000000" }
-  column "text_color"  { type = varchar(20); default = "#ffffff" }
+  column "created_at"  { type = timestamptz default = sql("now()") }
+  column "is_active"   { type = boolean default = true }
+  column "bg_color"    { type = varchar(20) default = "#000000" }
+  column "text_color"  { type = varchar(20) default = "#ffffff" }
   column "content"     { type = jsonb }
-  column "link_url"    { type = text; null = true }
+  column "link_url"    { type = text null = true }
   primary_key { columns = [column.id] }
   index "idx_announcements_tenant" { columns = [column.tenant_id] }
 }
 
 table "popups" {
   schema = schema.storefront
-  column "id"          { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"   { type = uuid }
-  column "created_at"  { type = timestamptz; default = sql("now()") }
-  column "is_active"   { type = boolean; default = true }
-  column "trigger_type" { type = varchar(20); default = "time_on_page" }
+  column "created_at"  { type = timestamptz default = sql("now()") }
+  column "is_active"   { type = boolean default = true }
+  column "trigger_type" { type = varchar(20) default = "time_on_page" }
   column "content"     { type = jsonb }
   column "settings"    { type = jsonb }
   primary_key { columns = [column.id] }
@@ -743,13 +743,13 @@ table "popups" {
 
 table "search_synonyms" {
   schema = schema.storefront
-  column "id"               { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"        { type = uuid }
   column "term"             { type = varchar(100) }
   column "synonyms"         { type = jsonb }
   // Strike 24: Linguistic Disambiguation
-  column "language_code"    { type = char(2); default = "ar" }
-  column "is_bidirectional" { type = boolean; default = true }
+  column "language_code"    { type = char(2) default = "ar" }
+  column "is_bidirectional" { type = boolean default = true }
   primary_key { columns = [column.id] }
   unique "search_synonyms_term_unique" { columns = [column.tenant_id, column.term] }
   check "chk_synonym_no_self_loop" { expr = "NOT (synonyms ? term)" }
@@ -758,15 +758,15 @@ table "search_synonyms" {
 // Requires pg_partman retention policy: 90 days.
 table "product_views" {
   schema = schema.storefront
-  column "id"                 { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                 { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"          { type = uuid }
   column "product_id"         { type = uuid }
-  column "customer_id"        { type = uuid; null = true }
-  column "session_id"         { type = varchar(64); null = true }
-  column "created_at"         { type = timestamptz; default = sql("now()") }
-  column "dwell_time_seconds" { type = int; default = 0 }
+  column "customer_id"        { type = uuid null = true }
+  column "session_id"         { type = varchar(64) null = true }
+  column "created_at"         { type = timestamptz default = sql("now()") }
+  column "dwell_time_seconds" { type = int default = 0 }
   // Strike 23: Traffic Sourcing for Recommendation attribution
-  column "source_medium"      { type = varchar(100); null = true }
+  column "source_medium"      { type = varchar(100) null = true }
   
   primary_key { columns = [column.id] }
   index "idx_pv_product" { columns = [column.product_id] }

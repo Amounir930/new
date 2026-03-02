@@ -126,16 +126,16 @@ enum "blueprint_status" { schema = schema.public values = ["active", "paused"] }
 
 table "encryption_keys" {
   schema        = schema.vault
-  column "id"           { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"           { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"     { type = uuid }
-  column "created_at"    { type = timestamptz; default = sql("now()") }
-  column "rotated_at"    { type = timestamptz; null = true }
-  column "expires_at"    { type = timestamptz; null = true }
-  column "key_version"   { type = int; default = 1 }
-  column "is_active"     { type = boolean; default = true }
-  column "algorithm"     { type = varchar(20); default = "AES-256-GCM" }
+  column "created_at"    { type = timestamptz default = sql("now()") }
+  column "rotated_at"    { type = timestamptz null = true }
+  column "expires_at"    { type = timestamptz null = true }
+  column "key_version"   { type = int default = 1 }
+  column "is_active"     { type = boolean default = true }
+  column "algorithm"     { type = varchar(20) default = "AES-256-GCM" }
   // Strike 16: Key Fingerprint for forensic tracking
-  column "key_fingerprint" { type = varchar(64); null = true }
+  column "key_fingerprint" { type = varchar(64) null = true }
   column "key_material"  { type = jsonb }
   primary_key { columns = [column.id] }
   check "chk_key_material_s7" { expr = "(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))" }
@@ -144,11 +144,11 @@ table "encryption_keys" {
 
 table "archival_vault" {
   schema         = schema.vault
-  column "id"            { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"            { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "table_name"    { type = text }
   column "original_id"   { type = text }
   column "tenant_id"     { type = uuid }
-  column "deleted_at"    { type = timestamptz; default = sql("now()") }
+  column "deleted_at"    { type = timestamptz default = sql("now()") }
   column "deleted_by"    { type = text }
   column "payload"       { type = jsonb }
   column "tombstone_hash" { type = text }
@@ -158,29 +158,29 @@ table "archival_vault" {
 
 table "tenants" {
   schema               = schema.governance
-  column "id"                { type = uuid; default = sql("public.gen_ulid()::uuid") }
-  column "created_at"        { type = timestamptz; default = sql("now()") }
-  column "updated_at"        { type = timestamptz; default = sql("now()") }
-  column "deleted_at"        { type = timestamptz; null = true }
-  column "trial_ends_at"     { type = timestamptz; null = true }
-  column "suspended_at"      { type = timestamptz; null = true }
-  column "plan"              { type = enum.tenant_plan; default = "free" }
-  column "status"            { type = enum.tenant_status; default = "active" }
+  column "id"                { type = uuid default = sql("public.gen_ulid()::uuid") }
+  column "created_at"        { type = timestamptz default = sql("now()") }
+  column "updated_at"        { type = timestamptz default = sql("now()") }
+  column "deleted_at"        { type = timestamptz null = true }
+  column "trial_ends_at"     { type = timestamptz null = true }
+  column "suspended_at"      { type = timestamptz null = true }
+  column "plan"              { type = enum.tenant_plan default = "free" }
+  column "status"            { type = enum.tenant_status default = "active" }
   column "subdomain"         { type = text }
-  column "custom_domain"     { type = text; null = true }
+  column "custom_domain"     { type = text null = true }
   column "name"              { type = text }
-  column "owner_email"       { type = jsonb; null = true }
-  column "owner_email_hash"  { type = text; null = true }
-  column "suspended_reason"  { type = text; null = true }
-  column "niche_type"        { type = text; default = "retail" }
-  column "niche_type_hash"   { type = text; null = true }
-  column "ui_config"         { type = jsonb; default = sql("'{}'::jsonb") }
-  column "data_region"       { type = char(2); default = "SA" } 
-  column "timezone"          { type = varchar(50); default = "UTC" }
+  column "owner_email"       { type = jsonb null = true }
+  column "owner_email_hash"  { type = text null = true }
+  column "suspended_reason"  { type = text null = true }
+  column "niche_type"        { type = text default = "retail" }
+  column "niche_type_hash"   { type = text null = true }
+  column "ui_config"         { type = jsonb default = sql("'{}'::jsonb") }
+  column "data_region"       { type = char(2) default = "SA" } 
+  column "timezone"          { type = varchar(50) default = "UTC" }
 
   primary_key { columns = [column.id] }
-  unique "tenants_subdomain_unique" { columns = [column.subdomain]; where = "deleted_at IS NULL" }
-  unique "tenants_custom_domain_unique" { columns = [column.custom_domain]; where = "deleted_at IS NULL" }
+  unique "tenants_subdomain_unique" { columns = [column.subdomain] where = "deleted_at IS NULL" }
+  unique "tenants_custom_domain_unique" { columns = [column.custom_domain] where = "deleted_at IS NULL" }
   
   // FIX (P2): Index for Forensic Investigation AI
   index "idx_tenants_email_hash" { columns = [column.owner_email_hash] }
@@ -194,30 +194,30 @@ table "tenants" {
 
 table "audit_logs" {
   schema          = schema.governance
-  column "id"             { type = uuid; default = sql("public.gen_ulid()::uuid") }
-  column "created_at"     { type = timestamptz; default = sql("now"); null = false }
-  column "severity"       { type = enum.severity_enum; default = "INFO" }
-  column "result"         { type = enum.audit_result_enum; default = "SUCCESS" }
+  column "id"             { type = uuid default = sql("public.gen_ulid()::uuid") }
+  column "created_at"     { type = timestamptz default = sql("now") null = false }
+  column "severity"       { type = enum.severity_enum default = "INFO" }
+  column "result"         { type = enum.audit_result_enum default = "SUCCESS" }
   column "tenant_id"      { type = uuid }
-  column "actor_type"     { type = enum.actor_type; default = "tenant_admin" }
-  column "user_id"        { type = text; null = true }
-  column "user_email"     { type = jsonb; null = true }
+  column "actor_type"     { type = enum.actor_type default = "tenant_admin" }
+  column "user_id"        { type = text null = true }
+  column "user_email"     { type = jsonb null = true }
   column "action"         { type = text }
   column "public_key"    { type = text }
-  column "encrypted_key" { type = bytea; null = false }
-  column "version"       { type = int; default = 1 }
-  column "user_agent"     { type = text; null = true }
-  column "old_values"     { type = jsonb; null = true }
-  column "new_values"     { type = jsonb; null = true }
-  column "metadata"       { type = jsonb; null = true }
-  column "impersonator_id" { type = uuid; null = true }
-  column "checksum"       { type = text; null = true }
+  column "encrypted_key" { type = bytea null = false }
+  column "version"       { type = int default = 1 }
+  column "user_agent"     { type = text null = true }
+  column "old_values"     { type = jsonb null = true }
+  column "new_values"     { type = jsonb null = true }
+  column "metadata"       { type = jsonb null = true }
+  column "impersonator_id" { type = uuid null = true }
+  column "checksum"       { type = text null = true }
   
   primary_key { columns = [column.id, column.created_at] }
-  partition { type = RANGE; columns = [column.created_at] }
+  partition { type = RANGE columns = [column.created_at] }
   
-  storage_param { name = "toast_tuple_target"; value = "128" }
-  index "idx_audit_created_brin" { columns = [column.created_at]; using = BRIN }
+  storage_param { name = "toast_tuple_target" value = "128" }
+  index "idx_audit_created_brin" { columns = [column.created_at] using = BRIN }
   index "idx_audit_tenant" { columns = [column.tenant_id] }
   index "idx_audit_entity" { columns = [column.entity_type, column.entity_id] }
   index "idx_audit_action" { columns = [column.action] }
@@ -234,25 +234,25 @@ table "audit_logs" {
 
 table "leads" {
   schema               = schema.governance
-  column "id"                 { type = uuid; default = sql("public.gen_ulid()::uuid") }
-  column "created_at"         { type = timestamptz; default = sql("now()") }
+  column "id"                 { type = uuid default = sql("public.gen_ulid()::uuid") }
+  column "created_at"         { type = timestamptz default = sql("now()") }
   // Strike 21: AI Lead Scoring for sales prioritization
-  column "lead_score"          { type = int; null = true }
-  column "converted_tenant_id" { type = uuid; null = true }
-  column "status"             { type = enum.lead_status; default = "new" }
+  column "lead_score"          { type = int null = true }
+  column "converted_tenant_id" { type = uuid null = true }
+  column "status"             { type = enum.lead_status default = "new" }
   column "email"              { type = jsonb }
   column "email_hash"         { type = text }
   
   // FIX (P2): Encrypting AI Training Sales Data PII
-  column "name"               { type = jsonb; null = true }
-  column "notes"              { type = jsonb; null = true }
+  column "name"               { type = jsonb null = true }
+  column "notes"              { type = jsonb null = true }
   
-  column "source"             { type = varchar(50); null = true }
-  column "landing_page_url"   { type = text; null = true }
-  column "utm_source"         { type = varchar(100); null = true }
-  column "utm_medium"         { type = varchar(100); null = true }
-  column "utm_campaign"       { type = varchar(100); null = true }
-  column "tags"               { type = jsonb; default = sql("'[]'::jsonb") }
+  column "source"             { type = varchar(50) null = true }
+  column "landing_page_url"   { type = text null = true }
+  column "utm_source"         { type = varchar(100) null = true }
+  column "utm_medium"         { type = varchar(100) null = true }
+  column "utm_campaign"       { type = varchar(100) null = true }
+  column "tags"               { type = jsonb default = sql("'[]'::jsonb") }
   
   primary_key { columns = [column.id] }
   index "idx_leads_email_hash" { columns = [column.email_hash] }
@@ -268,43 +268,43 @@ table "leads" {
 
 table "subscription_plans" {
   schema               = schema.governance
-  column "id"                     { type = uuid; default = sql("public.gen_ulid()::uuid") }
-  column "created_at"             { type = timestamptz; default = sql("now()") }
-  column "updated_at"             { type = timestamptz; default = sql("now()") }
+  column "id"                     { type = uuid default = sql("public.gen_ulid()::uuid") }
+  column "created_at"             { type = timestamptz default = sql("now()") }
+  column "updated_at"             { type = timestamptz default = sql("now()") }
   column "price_monthly"          { type = bigint }
   column "price_yearly"           { type = bigint }
-  column "default_max_products"   { type = int; default = 50 }
-  column "default_max_orders"     { type = int; default = 100 }
-  column "default_max_pages"      { type = int; default = 5 }
-  column "default_max_staff"      { type = int; default = 3 }
-  column "default_max_storage_gb" { type = int; default = 1 }
-  column "sort_order"             { type = int; default = 0 }
-  column "is_active"              { type = boolean; default = true }
+  column "default_max_products"   { type = int default = 50 }
+  column "default_max_orders"     { type = int default = 100 }
+  column "default_max_pages"      { type = int default = 5 }
+  column "default_max_staff"      { type = int default = 3 }
+  column "default_max_storage_gb" { type = int default = 1 }
+  column "sort_order"             { type = int default = 0 }
+  column "is_active"              { type = boolean default = true }
   column "code"                   { type = varchar(50) }
   column "name"                   { type = varchar(100) }
-  column "currency"               { type = varchar(3); default = "USD" }
-  column "description"            { type = text; null = true }
+  column "currency"               { type = varchar(3) default = "USD" }
+  column "description"            { type = text null = true }
   primary_key { columns = [column.id] }
   unique "subscription_plans_code_unique" { columns = [column.code] }
   // ELITE: money_amount used for pricing
-  column "price_monthly_v2" { type = sql("public.money_amount"); null = false }
-  column "price_yearly_v2"  { type = sql("public.money_amount"); null = false }
+  column "price_monthly_v2" { type = sql("public.money_amount") null = false }
+  column "price_yearly_v2"  { type = sql("public.money_amount") null = false }
   check "chk_plan_price" { expr = "COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0" }
 }
 
 table "tenant_quotas" {
   schema            = schema.governance
-  column "id"               { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"        { type = uuid }
-  column "updated_at"       { type = timestamptz; default = sql("now()") }
-  column "max_products"     { type = int; null = true }
-  column "max_orders"       { type = int; null = true }
-  column "max_pages"        { type = int; null = true }
-  column "max_staff"        { type = int; null = true }
-  column "max_categories"   { type = int; null = true }
-  column "max_coupons"      { type = int; null = true }
-  column "storage_limit_gb" { type = int; default = 1 }
-  column "api_rate_limit"   { type = int; null = true }
+  column "updated_at"       { type = timestamptz default = sql("now()") }
+  column "max_products"     { type = int null = true }
+  column "max_orders"       { type = int null = true }
+  column "max_pages"        { type = int null = true }
+  column "max_staff"        { type = int null = true }
+  column "max_categories"   { type = int null = true }
+  column "max_coupons"      { type = int null = true }
+  column "storage_limit_gb" { type = int default = 1 }
+  column "api_rate_limit"   { type = int null = true }
   primary_key { columns = [column.id] }
   index "idx_tenant_quotas_tenant" { columns = [column.tenant_id] }
 
@@ -312,19 +312,19 @@ table "tenant_quotas" {
 
 table "tenant_invoices" {
   schema               = schema.governance
-  column "id"                  { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"                  { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"           { type = uuid }
-  column "created_at"          { type = timestamptz; default = sql("now()") }
-  column "paid_at"             { type = timestamptz; null = true }
+  column "created_at"          { type = timestamptz default = sql("now()") }
+  column "paid_at"             { type = timestamptz null = true }
   column "period_start"        { type = date }
   column "period_end"          { type = date }
-  column "subscription_amount" { type = sql("public.money_amount"); default = sql("ROW(0, 'USD')::public.money_amount") }
-  column "platform_commission" { type = sql("public.money_amount"); default = sql("ROW(0, 'USD')::public.money_amount") }
-  column "app_charges"         { type = sql("public.money_amount"); default = sql("ROW(0, 'USD')::public.money_amount") }
-  column "total"               { type = sql("public.money_amount"); null = false }
-  column "status"              { type = enum.invoice_status; default = "draft" }
-  column "currency"            { type = char(3); default = "USD" }
-  column "pdf_url"             { type = text; null = true }
+  column "subscription_amount" { type = sql("public.money_amount") default = sql("ROW(0, 'USD')::public.money_amount") }
+  column "platform_commission" { type = sql("public.money_amount") default = sql("ROW(0, 'USD')::public.money_amount") }
+  column "app_charges"         { type = sql("public.money_amount") default = sql("ROW(0, 'USD')::public.money_amount") }
+  column "total"               { type = sql("public.money_amount") null = false }
+  column "status"              { type = enum.invoice_status default = "draft" }
+  column "currency"            { type = char(3) default = "USD" }
+  column "pdf_url"             { type = text null = true }
   primary_key { columns = [column.id] }
   check "chk_invoice_period" { expr = "period_end >= period_start" }
   
@@ -341,15 +341,15 @@ table "tenant_invoices" {
 
 table "feature_gates" {
   schema          = schema.governance
-  column "id"          { type = uuid; default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid; null = true }
-  column "created_at"  { type = timestamptz; default = sql("now()") }
-  column "is_enabled"  { type = boolean; default = false }
-  column "plan_code"   { type = varchar(50); null = true }
+  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
+  column "tenant_id"   { type = uuid null = true }
+  column "created_at"  { type = timestamptz default = sql("now()") }
+  column "is_enabled"  { type = boolean default = false }
+  column "plan_code"   { type = varchar(50) null = true }
   column "feature_key" { type = varchar(100) }
   // Strike 26: Percent-based rollouts for Canary Releases
-  column "rollout_percentage" { type = int; default = 100 }
-  column "metadata"    { type = jsonb; null = true }
+  column "rollout_percentage" { type = int default = 100 }
+  column "metadata"    { type = jsonb null = true }
   
   check "chk_rollout_range" { expr = "rollout_percentage >= 0 AND rollout_percentage <= 100" }
   primary_key { columns = [column.id] }
@@ -366,15 +366,15 @@ table "feature_gates" {
 
 table "dunning_events" {
   schema          = schema.governance
-  column "id"             { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"             { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"      { type = uuid }
-  column "created_at"     { type = timestamptz; default = sql("now()") }
-  column "attempt_number" { type = int; default = 1 }
-  column "status"         { type = enum.dunning_status; default = "pending" }
-  column "amount"         { type = sql("public.money_amount"); null = false }
-  column "next_retry_at"  { type = timestamptz; null = true }
-  column "payment_method" { type = text; null = true }
-  column "error_message"  { type = text; null = true }
+  column "created_at"     { type = timestamptz default = sql("now()") }
+  column "attempt_number" { type = int default = 1 }
+  column "status"         { type = enum.dunning_status default = "pending" }
+  column "amount"         { type = sql("public.money_amount") null = false }
+  column "next_retry_at"  { type = timestamptz null = true }
+  column "payment_method" { type = text null = true }
+  column "error_message"  { type = text null = true }
   primary_key { columns = [column.id] }
   check "chk_dunning_attempts" { expr = "(attempt_number <= 5)" }
   check "chk_dunning_amount" { expr = "COALESCE((amount).amount, 0) > 0" }
@@ -384,13 +384,13 @@ table "dunning_events" {
 
 table "app_usage_records" {
   schema          = schema.governance
-  column "id"         { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"         { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"  { type = uuid }
-  column "created_at" { type = timestamptz; default = sql("now()") }
+  column "created_at" { type = timestamptz default = sql("now()") }
   column "app_id"     { type = uuid }
   column "quantity"   { type = int }
   column "unit_price" { type = sql("public.money_amount") }
-  column "currency"   { type = char(3); default = "USD" } 
+  column "currency"   { type = char(3) default = "USD" } 
   column "metric"     { type = varchar(50) }
   primary_key { columns = [column.id] }
   index "idx_app_usage_records_tenant" { columns = [column.tenant_id] }
@@ -399,12 +399,12 @@ table "app_usage_records" {
 
 table "plan_change_history" {
   schema          = schema.governance
-  column "id"         { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"         { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "tenant_id"  { type = uuid }
-  column "created_at" { type = timestamptz; default = sql("now()") }
+  column "created_at" { type = timestamptz default = sql("now()") }
   column "from_plan"  { type = varchar(50) }
   column "to_plan"    { type = varchar(50) }
-  column "reason"     { type = text; null = true }
+  column "reason"     { type = text null = true }
   column "changed_by" { type = text }
   primary_key { columns = [column.id] }
   index "idx_plan_change_history_tenant" { columns = [column.tenant_id] }
@@ -413,17 +413,17 @@ table "plan_change_history" {
 
 table "onboarding_blueprints" {
   schema          = schema.governance
-  column "id"           { type = uuid; default = sql("public.gen_ulid()::uuid") }
-  column "created_at"   { type = timestamptz; default = sql("now()") }
-  column "updated_at"   { type = timestamptz; default = sql("now()") }
-  column "plan"         { type = enum.tenant_plan; default = "free" }
-  column "niche_type"   { type = enum.tenant_niche; default = "retail" }
-  column "status"       { type = enum.blueprint_status; default = "active" }
-  column "is_default"   { type = boolean; default = false }
+  column "id"           { type = uuid default = sql("public.gen_ulid()::uuid") }
+  column "created_at"   { type = timestamptz default = sql("now()") }
+  column "updated_at"   { type = timestamptz default = sql("now()") }
+  column "plan"         { type = enum.tenant_plan default = "free" }
+  column "niche_type"   { type = enum.tenant_niche default = "retail" }
+  column "status"       { type = enum.blueprint_status default = "active" }
+  column "is_default"   { type = boolean default = false }
   column "name"         { type = text }
-  column "description"  { type = text; null = true }
+  column "description"  { type = text null = true }
   column "blueprint"    { type = jsonb }
-  column "ui_config"    { type = jsonb; default = sql("'{}'::jsonb") }
+  column "ui_config"    { type = jsonb default = sql("'{}'::jsonb") }
   primary_key { columns = [column.id] }
   index "blueprint_niche_plan_idx" { columns = [column.niche_type, column.plan] }
 }
@@ -431,46 +431,46 @@ table "onboarding_blueprints" {
 table "system_config" {
   schema          = schema.governance
   column "key"        { type = varchar(100) }
-  column "updated_at" { type = timestamptz; default = sql("now()") }
+  column "updated_at" { type = timestamptz default = sql("now()") }
   column "value"      { type = jsonb }
   primary_key { columns = [column.key] }
 }
 
 table "schema_drift_log" {
   schema             = schema.governance
-  column "id"              { type = uuid; default = sql("gen_random_uuid()::uuid") }
-  column "command_tag"     { type = text; null = true }
-  column "object_type"     { type = text; null = true }
-  column "object_identity" { type = text; null = true }
-  column "actor_id"        { type = text; null = true }
+  column "id"              { type = uuid default = sql("gen_random_uuid()::uuid") }
+  column "command_tag"     { type = text null = true }
+  column "object_type"     { type = text null = true }
+  column "object_identity" { type = text null = true }
+  column "actor_id"        { type = text null = true }
   // Strike 19: Forensic Analysis Columns for Schema Drift
-  column "ip_address"      { type = inet; null = true }
-  column "user_agent"      { type = text; null = true }
-  column "executed_at"     { type = timestamptz; default = sql("now()") }
+  column "ip_address"      { type = inet null = true }
+  column "user_agent"      { type = text null = true }
+  column "executed_at"     { type = timestamptz default = sql("now()") }
   primary_key { columns = [column.id] }
-  index "idx_drift_time" { columns = [column.executed_at]; using = BRIN }
+  index "idx_drift_time" { columns = [column.executed_at] using = BRIN }
 }
 
 table "order_fraud_scores" {
   schema          = schema.governance
-  column "id"           { type = uuid; default = sql("public.gen_ulid()::uuid") }
+  column "id"           { type = uuid default = sql("public.gen_ulid()::uuid") }
   column "order_id"     { type = uuid }
   column "tenant_id"    { type = uuid }
-  column "created_at"   { type = timestamptz; default = sql("now()") }
+  column "created_at"   { type = timestamptz default = sql("now()") }
   column "risk_score"   { type = int }
-  column "is_flagged"   { type = boolean; default = false }
-  column "is_reviewed"  { type = boolean; default = false }
-  column "reviewed_by"  { type = text; null = true }
-  column "decision"     { type = text; null = true }
-  column "provider"     { type = text; default = "internal" }
+  column "is_flagged"   { type = boolean default = false }
+  column "is_reviewed"  { type = boolean default = false }
+  column "reviewed_by"  { type = text null = true }
+  column "decision"     { type = text null = true }
+  column "provider"     { type = text default = "internal" }
   // Strike 28: Model Versioning for Fraud Detection
-  column "ml_model_version" { type = varchar(50); default = "v1.0.0" }
-  column "signals"      { type = jsonb; default = sql("'{}'::jsonb") }
+  column "ml_model_version" { type = varchar(50) default = "v1.0.0" }
+  column "signals"      { type = jsonb default = sql("'{}'::jsonb") }
   primary_key { columns = [column.id] }
   check "chk_risk_score_range" { expr = "(risk_score BETWEEN 0 AND 1000)" }
   index "idx_fraud_order" { columns = [column.order_id] }
   index "idx_fraud_tenant" { columns = [column.tenant_id] }
-  index "idx_fraud_flagged" { columns = [column.is_flagged]; where = "is_flagged = true AND is_reviewed = false" }
+  index "idx_fraud_flagged" { columns = [column.is_flagged] where = "is_flagged = true AND is_reviewed = false" }
   
   index "idx_order_fraud_scores_tenant" { columns = [column.tenant_id] }
 
@@ -478,16 +478,16 @@ table "order_fraud_scores" {
 
 table "marketing_pages" {
   schema               = schema.governance
-  column "id"                { type = uuid; default = sql("public.gen_ulid()::uuid") }
-  column "created_at"        { type = timestamptz; default = sql("now()") }
-  column "updated_at"        { type = timestamptz; default = sql("now()") }
-  column "published_at"      { type = timestamptz; null = true }
-  column "is_published"      { type = boolean; default = false }
+  column "id"                { type = uuid default = sql("public.gen_ulid()::uuid") }
+  column "created_at"        { type = timestamptz default = sql("now()") }
+  column "updated_at"        { type = timestamptz default = sql("now()") }
+  column "published_at"      { type = timestamptz null = true }
+  column "is_published"      { type = boolean default = false }
   column "slug"              { type = text }
-  column "page_type"         { type = text; default = "landing" }
-  column "meta_title"        { type = text; null = true }
-  column "meta_description"  { type = text; null = true }
-  column "created_by"        { type = text; null = true }
+  column "page_type"         { type = text default = "landing" }
+  column "meta_title"        { type = text null = true }
+  column "meta_description"  { type = text null = true }
+  column "created_by"        { type = text null = true }
   column "title"             { type = jsonb }
   column "content"           { type = jsonb }
   primary_key { columns = [column.id] }
