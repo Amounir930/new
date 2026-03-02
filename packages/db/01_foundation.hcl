@@ -12,13 +12,7 @@ schema "vault" {}
 schema "shared" {}
 schema "legacy" {}
 
-extension "postgis" { schema = schema.public }
-extension "pg_trgm" { schema = schema.public }
-extension "vector" { schema = schema.public }
-extension "pg_partman" { schema = schema.public }
-extension "pgcrypto" { schema = schema.public }
-extension "ltree" { schema = schema.public }
-extension "btree_gist" { schema = schema.public }
+
 
 function "gen_ulid" {
   schema = schema.public
