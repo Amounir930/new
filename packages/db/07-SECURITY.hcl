@@ -6,7 +6,8 @@ sql "webhook_https_enforcement" {
 CREATE OR REPLACE FUNCTION storefront.validate_webhook_https()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.target_url IS NOT NULL AND (NEW.target_url !~ '^https://' OR NEW.target_url ~ '^https?://(10\\.|192\\.168\\.|127\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\\.|169\\.254\\.|0?\\d{1,3}\\.0?\\d{1,3}\\.|\\[::1\\]|localhost|\\.local|\\.internal)') THEN
+IF NEW.target_url IS NOT NULL AND (NEW.target_url !~ '^https://' OR NEW.target_url ~ '^https?://(10\\.|192\\.168\\.|127\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\\.|169\\.254\\.|0?\\d{1,3}
+  \\.0?\\d{1,3}\\.|\\[::1\\]|localhost|\\.local|\\.internal)') THEN
     RAISE EXCEPTION 'Security Violation: Webhook URLs must use HTTPS and public IPs only' USING ERRCODE = 'P0009';
   END IF;
   RETURN NEW;
@@ -18,7 +19,6 @@ BEFORE INSERT OR UPDATE ON storefront.webhook_subscriptions
 FOR EACH ROW EXECUTE FUNCTION storefront.validate_webhook_https();
 SQL
 }
-
 sql "outbox_event_processing_rule" {
   depends_on = [table.outbox_events]
   exec = <<SQL
@@ -50,7 +50,6 @@ END;
 $$ LANGUAGE plpgsql;
 SQL
 }
-
 sql "rls_04_marketing_systems" {
   schema = schema.storefront
   as = <<SQL

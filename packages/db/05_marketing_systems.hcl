@@ -343,8 +343,7 @@ check "chk_flash_time"  {
 index "idx_flash_sales_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_flash_sales_updated_at" {
+trigger "trg_flash_sales_updated_at" {
     on {
       table = table.flash_sales
     }
@@ -354,7 +353,7 @@ index "idx_flash_sales_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.flash_sales ENABLE ROW LEVEL SECURITY
 }
@@ -561,8 +560,7 @@ check "chk_loyalty_math"  {
 index "idx_loyalty_rules_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_loyalty_rules_updated_at" {
+trigger "trg_loyalty_rules_updated_at" {
     on {
       table = table.loyalty_rules
     }
@@ -572,7 +570,7 @@ index "idx_loyalty_rules_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.loyalty_rules ENABLE ROW LEVEL SECURITY
 }
@@ -1234,8 +1232,7 @@ check "chk_page_slug"  {
 index "idx_pages_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_pages_updated_at" {
+trigger "trg_pages_updated_at" {
     on {
       table = table.pages
     }
@@ -1245,7 +1242,7 @@ index "idx_pages_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.pages ENABLE ROW LEVEL SECURITY
 }
@@ -1343,8 +1340,7 @@ index "idx_blog_tags"  {
 index "idx_blog_posts_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_blog_posts_updated_at" {
+trigger "trg_blog_posts_updated_at" {
     on {
       table = table.blog_posts
     }
@@ -1354,7 +1350,7 @@ index "idx_blog_posts_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.blog_posts ENABLE ROW LEVEL SECURITY
 }

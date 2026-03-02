@@ -166,8 +166,7 @@ check "chk_dob_past"  {
 index "idx_customers_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_customers_updated_at" {
+trigger "trg_customers_updated_at" {
     on {
       table = table.customers
     }
@@ -177,7 +176,7 @@ index "idx_customers_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.customers ENABLE ROW LEVEL SECURITY
 }
@@ -578,8 +577,7 @@ check "chk_refund_cap"  {
 index "idx_orders_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_orders_updated_at" {
+trigger "trg_orders_updated_at" {
     on {
       table = table.orders
     }
@@ -589,7 +587,7 @@ index "idx_orders_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.orders ENABLE ROW LEVEL SECURITY
   foreign_key "fk_ord_customer" {
@@ -1104,8 +1102,7 @@ index "idx_rma_status"  {
 index "idx_rma_requests_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_rma_requests_updated_at" {
+trigger "trg_rma_requests_updated_at" {
     on {
       table = table.rma_requests
     }
@@ -1115,7 +1112,7 @@ index "idx_rma_requests_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.rma_requests ENABLE ROW LEVEL SECURITY
   foreign_key "fk_rma_order" {
@@ -1252,7 +1249,8 @@ index "idx_payment_created_brin"  {
   columns =[column.created_at]
   using =BRIN with {
   pages_per_range =32
-} }
+}
+}
 index "idx_payment_logs_order"  {
   columns =[column.order_id]
 }
@@ -1522,8 +1520,7 @@ check "chk_delivery_logic"  {
 index "idx_shipping_zones_tenant"  {
   columns =[column.tenant_id]
 }
-
-  trigger "trg_shipping_zones_updated_at" {
+trigger "trg_shipping_zones_updated_at" {
     on {
       table = table.shipping_zones
     }
@@ -1533,7 +1530,7 @@ index "idx_shipping_zones_tenant"  {
     execute {
       function = function.set_current_timestamp_updated_at
     }
-  }
+}
 
   // ALTER TABLE storefront.shipping_zones ENABLE ROW LEVEL SECURITY
 }
@@ -1737,7 +1734,7 @@ storage_param {
     name = "ef_construction"
     value = "128"
   }
-  }
+}
 }
 
 // ==========================================

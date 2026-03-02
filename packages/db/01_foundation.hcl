@@ -12,13 +12,13 @@ schema "vault" {}
 schema "shared" {}
 schema "legacy" {}
 
-extension "postgis"    { schema = schema.public }
-extension "pg_trgm"    { schema = schema.public }
-extension "vector"     { schema = schema.public }
-extension "pg_partman" { schema = schema.public }
-extension "pgcrypto"   { schema = schema.public }
-extension "ltree"      { schema = schema.public }
-extension "btree_gist" { schema = schema.public }
+extension "postgis"    { schema = schema.public}
+extension "pg_trgm"    { schema = schema.public}
+extension "vector"     { schema = schema.public}
+extension "pg_partman" { schema = schema.public}
+extension "pgcrypto"   { schema = schema.public}
+extension "ltree"      { schema = schema.public}
+extension "btree_gist" { schema = schema.public}
 
 function "gen_ulid" {
   schema = schema.public
@@ -41,7 +41,7 @@ SQL
 function "set_current_timestamp_updated_at" {
   schema = schema.public
   lang   = "plpgsql "
-  return = "trigger"
+  return = "trigger "
   as     = <<SQL
 BEGIN
   -- ELITE: Support manual overrides for audit/migration purposes
@@ -56,7 +56,7 @@ SQL
 function "prevent_tenant_hijacking" {
   schema = schema.public
   lang   = "plpgsql "
-  return = "trigger"
+  return = "trigger "
   as     = <<SQL
 BEGIN
   IF OLD.tenant_id IS DISTINCT FROM NEW.tenant_id THEN
@@ -70,10 +70,11 @@ SQL
 function "validate_price_currency" {
   schema = schema.public
   lang   = "plpgsql "
-  return = "trigger"
+  return = "trigger "
   as     = <<SQL
 BEGIN
-  IF (NEW.price).currency IS NULL OR (NEW.price).currency !~ '^[A-Z]{3}$' THEN
+IF (NEW.price).currency IS NULL OR (NEW.price).currency !~ '^[A-Z]{3}
+  $' THEN
     RAISE EXCEPTION 'Data Integrity Violation: Invalid currency format in price' USING ERRCODE = 'P0002';
   END IF;
   RETURN NEW;
@@ -83,8 +84,8 @@ SQL
 
 composite_type "money_amount" {
   schema = schema.public
-  field "amount"   { type = bigint }
-  field "currency" { type = char(3) }
+field "amount"   { type = bigint}
+field "currency" { type = char(3)}
 }
 
 // ELITE DIRECTIVE: Application-level role configuration activated via sql.elite_server_config
@@ -374,7 +375,8 @@ table "tenants" {
   }
   column "ui_config" {
     type = jsonb
-    default = sql("'{}'::jsonb")
+default = sql("'{}
+  '::jsonb")
   }
   column "data_region" {
     type = char(2)
@@ -738,7 +740,6 @@ primary_key {
 index "idx_tenant_quotas_tenant"  {
   columns =[column.tenant_id]
 }
-
 }
 table "tenant_invoices" {
   schema               = schema.governance
@@ -811,7 +812,6 @@ index "idx_invoices_status"  {
 index "idx_tenant_invoices_tenant"  {
   columns =[column.tenant_id]
 }
-
 }
 table "feature_gates" {
   schema          = schema.governance
@@ -870,7 +870,6 @@ index "idx_feature_tenant"  {
 index "idx_feature_gates_tenant"  {
   columns =[column.tenant_id]
 }
-
 }
 table "dunning_events" {
   schema          = schema.governance
@@ -921,7 +920,6 @@ check "chk_dunning_amount"  {
 index "idx_dunning_events_tenant"  {
   columns =[column.tenant_id]
 }
-
 }
 table "app_usage_records" {
   schema          = schema.governance
@@ -958,7 +956,6 @@ primary_key {
 index "idx_app_usage_records_tenant"  {
   columns =[column.tenant_id]
 }
-
 }
 table "plan_change_history" {
   schema          = schema.governance
@@ -992,7 +989,6 @@ primary_key {
 index "idx_plan_change_history_tenant"  {
   columns =[column.tenant_id]
 }
-
 }
 table "onboarding_blueprints" {
   schema          = schema.governance
@@ -1036,7 +1032,8 @@ table "onboarding_blueprints" {
   }
   column "ui_config" {
     type = jsonb
-    default = sql("'{}'::jsonb")
+default = sql("'{}
+  '::jsonb")
   }
 primary_key {
   columns =[column.id]
@@ -1150,7 +1147,8 @@ table "order_fraud_scores" {
   }
   column "signals" {
     type = jsonb
-    default = sql("'{}'::jsonb")
+default = sql("'{}
+  '::jsonb")
   }
 primary_key {
   columns =[column.id]
@@ -1171,7 +1169,6 @@ index "idx_fraud_flagged" {
 index "idx_order_fraud_scores_tenant"  {
   columns =[column.tenant_id]
 }
-
 }
 table "marketing_pages" {
   schema               = schema.governance

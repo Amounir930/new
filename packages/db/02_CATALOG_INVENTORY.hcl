@@ -356,7 +356,8 @@ table "products" {
   }
   column "specifications" {
     type = jsonb
-    default = sql("'{}'::jsonb")
+default = sql("'{}
+  '::jsonb")
   }
   column "dimensions" {
     type = jsonb
@@ -427,14 +428,15 @@ storage_param {
     name = "ef_construction"
     value = "128"
   }
-  }
+}
   
   // Strike 18: Digital/Shipping Logic Consistency
   check "chk_digital_shipping"  {
   expr ="NOT (is_digital AND requires_shipping)"
 }
 check "chk_barcode_format" {
-    expr = "barcode IS NULL OR barcode ~ '^[A-Z0-9-]{8,50}$'"
+expr = "barcode IS NULL OR barcode ~ '^[A-Z0-9-]{8,50}
+  $'"
   }
   // ELITE: Alpha & Bravo applied
   check "chk_price_positive"  {
@@ -543,7 +545,7 @@ storage_param {
     name = "ef_construction"
     value = "128"
   }
-  }
+}
 check "chk_variant_options_obj"  {
   expr ="jsonb_typeof(options) = 'object'"
 }
