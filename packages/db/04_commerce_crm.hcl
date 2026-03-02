@@ -1664,7 +1664,7 @@ table "reviews" {
     default = false
   }
   column "embedding" {
-    type = text
+    type = sql("public.vector(1536)")
     null = true
   }
   primary_key {
@@ -1684,7 +1684,11 @@ table "reviews" {
   index "idx_reviews_tenant" {
     columns = [column.tenant_id]
   }
-
+  index "idx_reviews_embedding_cosine" {
+    on {
+      column = column.embedding
+      ops    = sql("public.vector_cosine_ops")
+    }
     type = "HNSW"
     storage_params {
       m = 24
