@@ -431,8 +431,7 @@ table "audit_logs" {
     columns = [column.created_at]
   }
   storage_params {
-    name  = "toast_tuple_target"
-    value = "128"
+    toast_tuple_target = 128
   }
   index "idx_audit_created_brin" {
     columns = [column.created_at]

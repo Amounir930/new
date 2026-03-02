@@ -64,8 +64,7 @@ table "outbox_events" {
     columns = [column.created_at]
   }
   storage_params {
-    name                            = "toast_tuple_target"
-    value                           = "128"
+    toast_tuple_target = 128
     fillfactor                      = 70
     autovacuum_vacuum_scale_factor  = 0.01
     autovacuum_analyze_scale_factor = 0.005
@@ -78,8 +77,7 @@ table "outbox_events" {
     columns = [column.created_at]
     type = "BRIN"
     storage_params {
-      name  = "pages_per_range"
-      value = "32"
+      pages_per_range = 32
     }
   }
   index "idx_outbox_events_tenant_active" {
