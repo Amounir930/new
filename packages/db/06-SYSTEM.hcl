@@ -64,7 +64,6 @@ table "outbox_events" {
     columns = [column.created_at]
   }
   storage_params {
-    toast_tuple_target = 128
     fillfactor                      = 70
     autovacuum_vacuum_scale_factor  = 0.01
     autovacuum_analyze_scale_factor = 0.005

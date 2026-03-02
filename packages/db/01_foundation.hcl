@@ -430,9 +430,7 @@ table "audit_logs" {
     type    = RANGE
     columns = [column.created_at]
   }
-  storage_params {
-    toast_tuple_target = 128
-  }
+
   index "idx_audit_created_brin" {
     columns = [column.created_at]
     type = "BRIN"
