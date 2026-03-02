@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface Product {
   id: string;
   name: string;
@@ -16,13 +18,14 @@ export default function ProductGrid({ products }: { products: Product[] }) {
           className="group bg-white rounded-3xl p-4 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
         >
           <div className="relative aspect-square mb-4 rounded-2xl overflow-hidden bg-gray-50">
-            <img
+            <Image
               src={
                 product.imageUrl ||
                 `https://placehold.co/400x400?text=${product.name}`
               }
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <button
               type="button"

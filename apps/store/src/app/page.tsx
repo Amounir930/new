@@ -1,6 +1,5 @@
 import { headers } from 'next/headers';
 
-
 /**
  * Root page — only reached when there's no subdomain (direct domain access).
  * Tenants are served via /m/[subdomain]/ (middleware rewrite).

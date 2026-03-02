@@ -89,10 +89,11 @@ export default function BannerCarousel({ banners }: { banners: Banner[] }) {
             key={_banner.id}
             type="button"
             onClick={() => setCurrentIndex(i)}
-            className={`transition-all duration-300 rounded-full ${i === currentIndex
-              ? 'w-8 h-2 bg-white'
-              : 'w-2 h-2 bg-white/40 hover:bg-white/60'
-              }`}
+            className={`transition-all duration-300 rounded-full ${
+              i === currentIndex
+                ? 'w-8 h-2 bg-white'
+                : 'w-2 h-2 bg-white/40 hover:bg-white/60'
+            }`}
             aria-label={`Go to slide ${i + 1}`}
           />
         ))}
