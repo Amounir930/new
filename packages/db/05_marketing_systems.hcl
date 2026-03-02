@@ -68,36 +68,34 @@ table "coupons" {
     type = int
     default = 1
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"coupons_code_unique"  {
+unique "coupons_code_unique "  {
   columns =[column.tenant_id, column.code]
 }
-  index "idx_coupons_code"  {
+index "idx_coupons_code"  {
   columns =[column.code]
 }
-  index "idx_coupons_active"  {
+index "idx_coupons_active"  {
   columns =[column.is_active]
 }
-  check"coupon_code_upper_check"  {
+check "coupon_code_upper_check "  {
   expr ="code =UPPER(code)"
 }
-  check"coupon_usage_exhaustion_check"  {
+check "coupon_usage_exhaustion_check "  {
   expr ="used_count <= max_uses"
 }
-  
-  check "chk_coupon_val_positive"  {
+check "chk_coupon_val_positive"  {
   expr ="COALESCE((value).amount, 0) > 0"
 }
-  check "chk_coupon_pct"  {
+check "chk_coupon_pct"  {
   expr ="(type != 'percentage' OR COALESCE((value).amount, 0) <= 10000)"
 }
-  check "chk_coupon_min_amount"  {
+check "chk_coupon_min_amount"  {
   expr ="COALESCE((min_order_amount).amount, 0) >= 0"
 }
-  
-  index "idx_coupons_tenant"  {
+index "idx_coupons_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.coupons ENABLE ROW LEVEL SECURITY
@@ -127,18 +125,16 @@ table "coupon_usages" {
     type = timestamptz
     default = sql("now()")
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_coupon_cust_order"  {
+unique "uq_coupon_cust_order"  {
   columns =[column.tenant_id, column.coupon_id, column.customer_id, column.order_id]
 }
-  index "idx_coupon_usages_lookup"  {
+index "idx_coupon_usages_lookup"  {
   columns =[column.coupon_id, column.customer_id]
 }
-  
-  index "idx_coupon_usages_tenant"  {
+index "idx_coupon_usages_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.coupon_usages ENABLE ROW LEVEL SECURITY
@@ -148,7 +144,6 @@ table "coupon_usages" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "price_rules" {
   schema = schema.storefront
   column "id" {
@@ -220,35 +215,30 @@ table "price_rules" {
     type = int
     default = 1
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  
-  unique"uq_tenant_price_rule"  {
+unique "uq_tenant_price_rule"  {
   columns =[column.tenant_id, column.id]
 }
-  
-  index "idx_price_rules_active"  {
+index "idx_price_rules_active"  {
   columns =[column.is_active]
 }
-  
-  check "chk_pr_dates"  {
+check "chk_pr_dates"  {
   expr ="(ends_at IS NULL OR ends_at > starts_at)"
 }
-  check "chk_entitled_array"  {
+check "chk_entitled_array"  {
   expr ="(entitled_ids IS NULL OR jsonb_typeof(entitled_ids) = 'array')"
 }
   // Strike 30: Collection Bloat Protection (Limit 5000)
   check "chk_entitled_len"  {
   expr ="(entitled_ids IS NULL OR jsonb_array_length(entitled_ids) <= 5000)"
 }
-  
-  index "idx_price_rules_tenant"  {
+index "idx_price_rules_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.price_rules ENABLE ROW LEVEL SECURITY
 }
-
 table "discount_codes" {
   schema = schema.storefront
   column "id" {
@@ -272,19 +262,19 @@ table "discount_codes" {
   column "code" {
     type = varchar(50)
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"discount_codes_code_unique"  {
+unique "discount_codes_code_unique "  {
   columns =[column.tenant_id, column.code]
 }
-  index "idx_discount_code"  {
+index "idx_discount_code"  {
   columns =[column.code]
 }
-  check "chk_code_strict"  {
+check "chk_code_strict"  {
   expr = "( code =upper(code) AND code ~ '^[A-Z0-9_-]+$')"
 }
-  index "idx_discount_codes_tenant"  {
+index "idx_discount_codes_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.discount_codes ENABLE ROW LEVEL SECURITY
@@ -294,7 +284,6 @@ table "discount_codes" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "flash_sales" {
   schema = schema.storefront
   column "id" {
@@ -336,26 +325,22 @@ table "flash_sales" {
     type = varchar(20)
     default = "active"
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  
-  unique"uq_tenant_flash_sale"  {
+unique "uq_tenant_flash_sale"  {
   columns =[column.tenant_id, column.id]
 }
-  
-  index "idx_flash_sales_status"  {
+index "idx_flash_sales_status"  {
   columns =[column.status]
 }
-  index "idx_flash_sales_end_time"  {
+index "idx_flash_sales_end_time"  {
   columns =[column.end_time]
 }
-  
-  check "chk_flash_time"  {
+check "chk_flash_time"  {
   expr ="(end_time > starts_at)"
 }
-  
-  index "idx_flash_sales_tenant"  {
+index "idx_flash_sales_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -373,7 +358,6 @@ table "flash_sales" {
 
   // ALTER TABLE storefront.flash_sales ENABLE ROW LEVEL SECURITY
 }
-
 table "flash_sale_products" {
   schema = schema.storefront
   column "id" {
@@ -405,17 +389,16 @@ table "flash_sale_products" {
     type = int
     default = 0
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_fs_prod_campaign"  {
+index "idx_fs_prod_campaign"  {
   columns =[column.flash_sale_id]
 }
-  index "idx_fs_prod_product"  {
+index "idx_fs_prod_product"  {
   columns =[column.product_id]
 }
-  
-  check "chk_flash_limit"  {
+check "chk_flash_limit"  {
   expr ="(sold_quantity <= quantity_limit)"
 }
   
@@ -430,8 +413,7 @@ table "flash_sale_products" {
     using   = GIST
     ops     = ["=", "=", "&&"]
   }
-
-  index "idx_flash_sale_products_tenant"  {
+index "idx_flash_sale_products_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.flash_sale_products ENABLE ROW LEVEL SECURITY
@@ -441,7 +423,6 @@ table "flash_sale_products" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "product_bundles" {
   schema = schema.storefront
   column "id" {
@@ -478,24 +459,20 @@ table "product_bundles" {
   column "name" {
     type = jsonb
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_tenant_bundle"  {
+unique "uq_tenant_bundle"  {
   columns =[column.tenant_id, column.id]
 }
-  
-  check "chk_bundle_discount_positive"  {
+check "chk_bundle_discount_positive"  {
   expr ="COALESCE((discount_value).amount, 0) >= 0"
 }
-  
-  index "idx_product_bundles_tenant"  {
+index "idx_product_bundles_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.product_bundles ENABLE ROW LEVEL SECURITY
 }
-
 table "product_bundle_items" {
   schema = schema.storefront
   column "id" {
@@ -515,13 +492,13 @@ table "product_bundle_items" {
     type = int
     default = 1
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_bundle_items"  {
+index "idx_bundle_items"  {
   columns =[column.bundle_id]
 }
-  index "idx_product_bundle_items_tenant"  {
+index "idx_product_bundle_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.product_bundle_items ENABLE ROW LEVEL SECURITY
@@ -531,7 +508,6 @@ table "product_bundle_items" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "loyalty_rules" {
   schema = schema.storefront
   column "id" {
@@ -573,18 +549,16 @@ table "loyalty_rules" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  
-  check "chk_points_expiry"  {
+check "chk_points_expiry"  {
   expr ="(points_expiry_days IS NULL OR points_expiry_days > 0)"
 }
-  check "chk_loyalty_math"  {
+check "chk_loyalty_math"  {
   expr ="points_per_currency > 0 AND min_redeem_points > 0"
 }
-  
-  index "idx_loyalty_rules_tenant"  {
+index "idx_loyalty_rules_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -602,7 +576,6 @@ table "loyalty_rules" {
 
   // ALTER TABLE storefront.loyalty_rules ENABLE ROW LEVEL SECURITY
 }
-
 table "wallet_transactions" {
   schema = schema.storefront
   column "id" {
@@ -649,37 +622,33 @@ table "wallet_transactions" {
     type = varchar(100)
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"wallet_tx_idempotency"  {
+unique "wallet_tx_idempotency"  {
   columns =[column.tenant_id, column.idempotency_key]
   where ="idempotency_key IS NOT NULL"
 }
-  index "idx_wallet_customer"  {
+index "idx_wallet_customer"  {
   columns =[column.customer_id]
 }
-  index "idx_wallet_created"  {
+index "idx_wallet_created"  {
   columns =[column.created_at]
   using =BRIN
 }
-  
-  check "chk_wallet_math"  {
+check "chk_wallet_math"  {
   expr ="COALESCE((balance_after).amount, 0) = COALESCE((balance_before).amount, 0) + COALESCE((amount).amount, 0)"
 }
-  check"wallet_non_negative_balance"  {
+check "wallet_non_negative_balance"  {
   expr ="COALESCE((balance_after).amount, 0) >= 0"
 }
-  
-  index "idx_wallet_transactions_tenant"  {
+index "idx_wallet_transactions_tenant"  {
   columns =[column.tenant_id]
 }
   // Strike 27: Immutable Wallet Transactions
   // Trigger logic: Prevent Update/Delete on this table (Mandatory for financial audit)
   // ALTER TABLE storefront.wallet_transactions ENABLE ROW LEVEL SECURITY
 }
-
 table "affiliate_partners" {
   schema = schema.storefront
   column "id" {
@@ -727,39 +696,35 @@ table "affiliate_partners" {
     type = jsonb
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_tenant_affiliate"  {
+unique "uq_tenant_affiliate"  {
   columns =[column.tenant_id, column.id]
 }
-  unique"affiliate_partners_referral_code_unique"  {
+unique "affiliate_partners_referral_code_unique "  {
   columns =[column.tenant_id, column.referral_code]
 }
-  index "idx_affiliate_email_hash"  {
+index "idx_affiliate_email_hash"  {
   columns =[column.email_hash]
 }
-  
-  check "chk_aff_email_s7"  {
+check "chk_aff_email_s7"  {
   expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
 }
-  check "chk_aff_payout_s7"  {
+check "chk_aff_payout_s7"  {
   expr ="(payout_details IS NULL OR (jsonb_typeof(payout_details) = 'object' AND payout_details ? 'enc' AND payout_details ? 'iv' AND payout_details ? 'tag' AND payout_details ? 'data'))"
 }
-  check "chk_ref_code_upper"  {
+check "chk_ref_code_upper"  {
   expr = "( referral_code =upper(referral_code))"
 }
-  check "chk_aff_rate_cap"  {
+check "chk_aff_rate_cap"  {
   expr ="commission_rate >= 0 AND commission_rate <= 10000"
 }
-  
-  index "idx_affiliate_partners_tenant"  {
+index "idx_affiliate_partners_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.affiliate_partners ENABLE ROW LEVEL SECURITY
 }
-
 table "affiliate_transactions" {
   schema = schema.storefront
   column "id" {
@@ -800,26 +765,23 @@ table "affiliate_transactions" {
     type = varchar(100)
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_aff_trans_partner"  {
+index "idx_aff_trans_partner"  {
   columns =[column.partner_id]
 }
-  index "idx_aff_trans_order"  {
+index "idx_aff_trans_order"  {
   columns =[column.order_id]
 }
-  index "idx_aff_trans_created_brin"  {
+index "idx_aff_trans_created_brin"  {
   columns =[column.created_at]
   using =BRIN
 }
-  
-  check "chk_aff_comm_positive"  {
+check "chk_aff_comm_positive"  {
   expr ="COALESCE((commission_amount).amount, 0) > 0"
 }
-  
-  index "idx_affiliate_transactions_tenant"  {
+index "idx_affiliate_transactions_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.affiliate_transactions ENABLE ROW LEVEL SECURITY
@@ -859,18 +821,17 @@ table "staff_roles" {
   column "permissions" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  check"permissions_strict_keys"  {
+check "permissions_strict_keys"  {
   expr ="(jsonb_typeof(permissions) = 'object' AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys(permissions) AS k WHERE k NOT IN ('products', 'orders', 'customers', 'settings', 'promotions', 'analytics')))"
 }
-  index "idx_staff_roles_tenant"  {
+index "idx_staff_roles_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.staff_roles ENABLE ROW LEVEL SECURITY
 }
-
 table "staff_members" {
   schema = schema.storefront
   column "id" {
@@ -940,32 +901,29 @@ table "staff_members" {
     type = jsonb
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_tenant_staff"  {
+unique "uq_tenant_staff"  {
   columns =[column.tenant_id, column.id]
 }
-  index "idx_staff_user"  {
+index "idx_staff_user"  {
   columns =[column.user_id]
 }
-  index "idx_staff_active"  {
+index "idx_staff_active"  {
   columns =[column.is_active]
   where ="is_active =true"
 }
-  
-  check "chk_staff_email_s7"  {
+check "chk_staff_email_s7"  {
   expr ="(jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data')"
 }
-  check "chk_staff_phone_s7"  {
+check "chk_staff_phone_s7"  {
   expr ="(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))"
 }
-  check "chk_staff_2fa_s7"  {
+check "chk_staff_2fa_s7"  {
   expr ="(two_factor_secret IS NULL OR (jsonb_typeof(two_factor_secret) = 'object' AND two_factor_secret ? 'enc' AND two_factor_secret ? 'iv' AND two_factor_secret ? 'tag' AND two_factor_secret ? 'data'))"
 }
-  
-  index "idx_staff_members_tenant"  {
+index "idx_staff_members_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.staff_members ENABLE ROW LEVEL SECURITY
@@ -975,7 +933,6 @@ table "staff_members" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "staff_sessions" {
   schema = schema.storefront
   column "id" {
@@ -1031,31 +988,29 @@ table "staff_sessions" {
     type = int
     default = 1
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"staff_sessions_token_hash_unique"  {
+unique "staff_sessions_token_hash_unique "  {
   columns =[column.tenant_id, column.token_hash]
 }
-  index "idx_session_token"  {
+index "idx_session_token"  {
   columns =[column.token_hash]
   using =HASH
 }
-  index "idx_session_active"  {
+index "idx_session_active"  {
   columns =[column.staff_id]
   where ="revoked_at IS NULL"
 }
-  index "idx_session_revocation_lookup"  {
+index "idx_session_revocation_lookup"  {
   columns =[column.staff_id, column.device_fingerprint, column.revoked_at]
 }
-  
-  foreign_key "fk_ss_tenant" {
+foreign_key "fk_ss_tenant" {
     columns     = [column.tenant_id]
     ref_columns = [table.tenants.column.id]
     on_delete   = "RESTRICT"
   }
-  foreign_key "fk_ss_staff" {
+foreign_key "fk_ss_staff" {
     columns     = [column.tenant_id, column.staff_id]
     ref_columns = [table.staff_members.column.tenant_id, table.staff_members.column.id]
     on_delete   = "CASCADE"
@@ -1113,27 +1068,23 @@ table "app_installations" {
     type = timestamptz
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_tenant_app"  {
+unique "uq_tenant_app"  {
   columns =[column.tenant_id, column.id]
 }
-  
-  check "chk_app_key_s7"  {
+check "chk_app_key_s7"  {
   expr ="(api_key IS NULL OR (jsonb_typeof(api_key) = 'object' AND api_key ? 'enc' AND api_key ? 'iv' AND api_key ? 'tag' AND api_key ? 'data'))"
 }
-  check "chk_app_token_s7"  {
+check "chk_app_token_s7"  {
   expr ="(access_token IS NULL OR (jsonb_typeof(access_token) = 'object' AND access_token ? 'enc' AND access_token ? 'iv' AND access_token ? 'tag' AND access_token ? 'data'))"
 }
-  
-  index "idx_app_installations_tenant"  {
+index "idx_app_installations_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.app_installations ENABLE ROW LEVEL SECURITY
 }
-
 table "webhook_subscriptions" {
   schema = schema.storefront
   column "id" {
@@ -1176,27 +1127,25 @@ table "webhook_subscriptions" {
     type = timestamptz
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_webhook_app"  {
+index "idx_webhook_app"  {
   columns =[column.app_id]
 }
-  index "idx_webhook_event"  {
+index "idx_webhook_event"  {
   columns =[column.event]
 }
-  
-  check "chk_retry_limit"  {
+check "chk_retry_limit"  {
   expr ="(retry_count <= max_retries)"
 }
-  check"webhook_secret_min_length"  {
+check "webhook_secret_min_length"  {
   expr ="(secret IS NULL OR octet_length(secret->>'enc') >= 32)"
 }
-  check "chk_webhook_secret_s7"  {
+check "chk_webhook_secret_s7"  {
   expr ="(secret IS NULL OR (jsonb_typeof(secret) = 'object' AND secret ? 'enc' AND secret ? 'iv' AND secret ? 'tag' AND secret ? 'data'))"
 }
-  check "chk_https_only"  {
+check "chk_https_only"  {
   expr ="(target_url ~ '^https://')"
 }
   // Strike 08.5: SSRF Hardening (Regex on IPs is bypassable App Layer must resolve DNS and block private ranges)
@@ -1205,8 +1154,7 @@ table "webhook_subscriptions" {
   check "chk_url_length"  {
   expr ="(length(target_url) <= 2048)"
 }
-  
-  index "idx_webhook_subscriptions_tenant"  {
+index "idx_webhook_subscriptions_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.webhook_subscriptions ENABLE ROW LEVEL SECURITY
@@ -1270,22 +1218,20 @@ table "pages" {
     type = jsonb
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"idx_pages_slug_active"  {
+unique "idx_pages_slug_active"  {
   columns =[column.tenant_id, column.slug]
   where ="deleted_at IS NULL"
 }
-  index "idx_pages_published"  {
+index "idx_pages_published"  {
   columns =[column.is_published]
 }
-  
-  check "chk_page_slug"  {
+check "chk_page_slug"  {
   expr ="(slug ~ '^[a-z0-9-]+$')"
 }
-  
-  index "idx_pages_tenant"  {
+index "idx_pages_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1303,7 +1249,6 @@ table "pages" {
 
   // ALTER TABLE storefront.pages ENABLE ROW LEVEL SECURITY
 }
-
 table "blog_posts" {
   schema = schema.storefront
   column "id" {
@@ -1378,24 +1323,24 @@ table "blog_posts" {
   column "content" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"idx_blog_slug_active"  {
+unique "idx_blog_slug_active"  {
   columns =[column.tenant_id, column.slug]
   where ="deleted_at IS NULL"
 }
-  index "idx_blog_published"  {
+index "idx_blog_published"  {
   columns =[column.is_published]
 }
-  index "idx_blog_published_at"  {
+index "idx_blog_published_at"  {
   columns =[column.published_at]
 }
-  index "idx_blog_tags"  {
+index "idx_blog_tags"  {
   columns =[column.tags]
   using =GIN
 }
-  index "idx_blog_posts_tenant"  {
+index "idx_blog_posts_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1413,7 +1358,6 @@ table "blog_posts" {
 
   // ALTER TABLE storefront.blog_posts ENABLE ROW LEVEL SECURITY
 }
-
 table "legal_pages" {
   schema = schema.storefront
   column "id" {
@@ -1452,30 +1396,29 @@ table "legal_pages" {
   column "content" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_legal_page_type"  {
+unique "uq_legal_page_type"  {
   columns =[column.tenant_id, column.page_type]
 }
-  index "idx_legal_tenant"  {
+index "idx_legal_tenant"  {
   columns =[column.tenant_id]
 }
-  index "idx_legal_published"  {
+index "idx_legal_published"  {
   columns =[column.is_published]
 }
-  check"ck_legal_page_type"  {
+check "ck_legal_page_type"  {
   expr ="(page_type IN ('privacy_policy', 'terms_of_service', 'shipping_policy', 'return_policy', 'cookie_policy'))"
 }
-  check"ck_legal_version_positive"  {
+check "ck_legal_version_positive"  {
   expr ="(version > 0)"
 }
-  index "idx_legal_pages_tenant"  {
+index "idx_legal_pages_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.legal_pages ENABLE ROW LEVEL SECURITY
 }
-
 table "faq_categories" {
   schema = schema.storefront
   column "id" {
@@ -1500,15 +1443,14 @@ table "faq_categories" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_faq_categories_tenant"  {
+index "idx_faq_categories_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.faq_categories ENABLE ROW LEVEL SECURITY
 }
-
 table "faqs" {
   schema = schema.storefront
   column "id" {
@@ -1544,16 +1486,16 @@ table "faqs" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_faq_category"  {
+index "idx_faq_category"  {
   columns =[column.category_id]
 }
-  index "idx_faq_active"  {
+index "idx_faq_active"  {
   columns =[column.is_active]
 }
-  index "idx_faqs_tenant"  {
+index "idx_faqs_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.faqs ENABLE ROW LEVEL SECURITY
@@ -1563,7 +1505,6 @@ table "faqs" {
     on_delete   = "SET NULL"
   }
 }
-
 table "kb_categories" {
   schema = schema.storefront
   column "id" {
@@ -1591,18 +1532,17 @@ table "kb_categories" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"kb_categories_slug_unique"  {
+unique "kb_categories_slug_unique "  {
   columns =[column.tenant_id, column.slug]
 }
-  index "idx_kb_categories_tenant"  {
+index "idx_kb_categories_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.kb_categories ENABLE ROW LEVEL SECURITY
 }
-
 table "kb_articles" {
   schema = schema.storefront
   column "id" {
@@ -1641,16 +1581,16 @@ table "kb_articles" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"kb_articles_slug_unique"  {
+unique "kb_articles_slug_unique "  {
   columns =[column.tenant_id, column.slug]
 }
-  index "idx_kb_article_slug"  {
+index "idx_kb_article_slug"  {
   columns =[column.slug]
 }
-  index "idx_kb_articles_tenant"  {
+index "idx_kb_articles_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.kb_articles ENABLE ROW LEVEL SECURITY
@@ -1700,17 +1640,16 @@ table "banners" {
     type = jsonb
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_banners_tenant"  {
+index "idx_banners_tenant"  {
   columns =[column.tenant_id]
 }
-  index "idx_banners_active"  {
+index "idx_banners_active"  {
   columns =[column.is_active, column.location]
 }
 }
-
 table "announcement_bars" {
   schema = schema.storefront
   column "id" {
@@ -1743,14 +1682,13 @@ table "announcement_bars" {
     type = text
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_announcements_tenant"  {
+index "idx_announcements_tenant"  {
   columns =[column.tenant_id]
 }
 }
-
 table "popups" {
   schema = schema.storefront
   column "id" {
@@ -1778,14 +1716,13 @@ table "popups" {
   column "settings" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_popups_tenant"  {
+index "idx_popups_tenant"  {
   columns =[column.tenant_id]
 }
 }
-
 table "search_synonyms" {
   schema = schema.storefront
   column "id" {
@@ -1810,13 +1747,13 @@ table "search_synonyms" {
     type = boolean
     default = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"search_synonyms_term_unique"  {
+unique "search_synonyms_term_unique "  {
   columns =[column.tenant_id, column.term]
 }
-  check "chk_synonym_no_self_loop"  {
+check "chk_synonym_no_self_loop"  {
   expr ="NOT (synonyms ? term)"
 }
 }
@@ -1855,18 +1792,16 @@ table "product_views" {
     type = varchar(100)
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_pv_product"  {
+index "idx_pv_product"  {
   columns =[column.product_id]
 }
-  index "idx_pv_tenant"  {
+index "idx_pv_tenant"  {
   columns =[column.tenant_id]
 }
-  
-  index "idx_product_views_tenant"  {
+index "idx_product_views_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.product_views ENABLE ROW LEVEL SECURITY

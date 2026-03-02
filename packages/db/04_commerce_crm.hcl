@@ -44,10 +44,10 @@ table "customers" {
     null = false
     default = sql("ROW(0, 'SAR')::public.money_amount")
   }
-  check "chk_wallet_bal_pos"  {
+check "chk_wallet_bal_pos"  {
   expr ="COALESCE((wallet_balance).amount, 0) >= 0 AND (wallet_balance).amount IS NOT NULL AND (wallet_balance).currency IS NOT NULL"
 }
-  check "chk_total_spent_pos"  {
+check "chk_total_spent_pos"  {
   expr ="COALESCE((total_spent_amount).amount, 0) >= 0 AND (total_spent_amount).amount IS NOT NULL"
 }
   column "loyalty_points" {
@@ -124,50 +124,46 @@ table "customers" {
     type = int
     default = 1
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  
-  unique"uq_tenant_customer"  {
+unique "uq_tenant_customer"  {
   columns =[column.tenant_id, column.id]
 }
-  unique"idx_customer_email_hash"  {
+unique "idx_customer_email_hash"  {
   columns =[column.tenant_id, column.email_hash]
   where ="deleted_at IS NULL"
 }
-  unique"idx_customer_phone_hash"  {
+unique "idx_customer_phone_hash"  {
   columns =[column.tenant_id, column.phone_hash]
   where ="deleted_at IS NULL"
 }
-  index "idx_customers_active"  {
+index "idx_customers_active"  {
   columns =[column.created_at]
   where ="deleted_at IS NULL"
 }
-  index "idx_customers_tags"  {
+index "idx_customers_tags"  {
   columns =[column.tags]
 }
-  index "idx_customers_dob"  {
+index "idx_customers_dob"  {
   columns =[column.date_of_birth]
 }
-  
-  check "chk_cust_email_s7"  {
+check "chk_cust_email_s7"  {
   expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
 }
-  check "chk_cust_phone_s7"  {
+check "chk_cust_phone_s7"  {
   expr ="(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))"
 }
-  check "chk_cust_firstname_s7"  {
+check "chk_cust_firstname_s7"  {
   expr ="(first_name IS NULL OR (jsonb_typeof(first_name) = 'object' AND first_name ? 'enc' AND first_name ? 'iv' AND first_name ? 'tag' AND first_name ? 'data'))"
 }
-  check "chk_cust_lastname_s7"  {
+check "chk_cust_lastname_s7"  {
   expr ="(last_name IS NULL OR (jsonb_typeof(last_name) = 'object' AND last_name ? 'enc' AND last_name ? 'iv' AND last_name ? 'tag' AND last_name ? 'data'))"
 }
-  check "chk_dob_past"  {
+check "chk_dob_past"  {
   expr ="(date_of_birth IS NULL OR date_of_birth <= CURRENT_DATE)"
 }
-  
-  index "idx_customers_tenant"  {
+index "idx_customers_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -185,7 +181,6 @@ table "customers" {
 
   // ALTER TABLE storefront.customers ENABLE ROW LEVEL SECURITY
 }
-
 table "customer_addresses" {
   schema = schema.storefront
   column "id" {
@@ -241,32 +236,29 @@ table "customer_addresses" {
     type = sql("public.geography(point, 4326)")
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_customer_addresses_customer"  {
+index "idx_customer_addresses_customer"  {
   columns =[column.customer_id]
 }
-  index "idx_customer_addresses_geo"  {
+index "idx_customer_addresses_geo"  {
   columns =[column.coordinates]
   using =GIST
 }
-  
-  check "chk_line1_encrypted"  {
+check "chk_line1_encrypted"  {
   expr ="(line1 IS NULL OR (jsonb_typeof(line1) = 'object' AND line1 ? 'enc' AND line1 ? 'iv' AND line1 ? 'tag' AND line1 ? 'data'))"
 }
-  check "chk_postal_code_encrypted"  {
+check "chk_postal_code_encrypted"  {
   expr ="(postal_code IS NULL OR (jsonb_typeof(postal_code) = 'object' AND postal_code ? 'enc' AND postal_code ? 'iv' AND postal_code ? 'tag' AND postal_code ? 'data'))"
 }
-  check "chk_addr_phone_encrypted"  {
+check "chk_addr_phone_encrypted"  {
   expr ="(phone IS NULL OR (jsonb_typeof(phone) = 'object' AND phone ? 'enc' AND phone ? 'iv' AND phone ? 'tag' AND phone ? 'data'))"
 }
-  check "chk_city_not_empty"  {
+check "chk_city_not_empty"  {
   expr ="(length(trim(city)) > 0)"
 }
-  
-  index "idx_customer_addresses_tenant"  {
+index "idx_customer_addresses_tenant"  {
   columns =[column.tenant_id]
 }
   // Strike 10: Prevent default address spam (one default per customer/tenant)
@@ -282,7 +274,6 @@ table "customer_addresses" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "customer_consents" {
   schema = schema.storefront
   column "id" {
@@ -321,13 +312,13 @@ table "customer_consents" {
     type = text
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_consent_customer"  {
+index "idx_consent_customer"  {
   columns =[column.customer_id]
 }
-  index "idx_customer_consents_tenant"  {
+index "idx_customer_consents_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.customer_consents ENABLE ROW LEVEL SECURITY
@@ -337,7 +328,6 @@ table "customer_consents" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "customer_segments" {
   schema = schema.storefront
   column "id" {
@@ -369,15 +359,14 @@ table "customer_segments" {
   column "conditions" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_customer_segments_tenant"  {
+index "idx_customer_segments_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.customer_segments ENABLE ROW LEVEL SECURITY
 }
-
 table "orders" {
   schema = schema.storefront
   column "id" {
@@ -450,7 +439,7 @@ table "orders" {
     type = sql("public.money_amount")
     default = sql("ROW(0, 'SAR')::public.money_amount")
   }
-  check "chk_order_total_inner"  {
+check "chk_order_total_inner"  {
   expr ="(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL"
 }
   column "risk_score" {
@@ -540,18 +529,17 @@ table "orders" {
     type = varchar(64)
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_tenant_order"  {
+unique "uq_tenant_order"  {
   columns =[column.tenant_id, column.id]
 }
-  unique"idx_orders_number_active"  {
+unique "idx_orders_number_active"  {
   columns =[column.tenant_id, column.order_number]
   where ="deleted_at IS NULL"
 }
-  unique"idx_orders_idempotency"  {
+unique "idx_orders_idempotency"  {
   columns =[column.tenant_id, column.idempotency_key]
   where ="idempotency_key IS NOT NULL"
 }
@@ -561,19 +549,18 @@ table "orders" {
     type = varchar(255)
     null = true
   }
-  index "idx_orders_payment_ref"  {
+index "idx_orders_payment_ref"  {
   columns =[column.tenant_id, column.payment_gateway_reference]
   where ="payment_gateway_reference IS NOT NULL"
 }
-
-  index "idx_orders_admin"  {
+index "idx_orders_admin"  {
   columns =[column.status, column.created_at]
   where ="deleted_at IS NULL"
 }
-  index "idx_orders_customer"  {
+index "idx_orders_customer"  {
   columns =[column.customer_id]
 }
-  index "idx_orders_created"  {
+index "idx_orders_created"  {
   columns =[column.created_at]
   using =BRIN
 }
@@ -582,14 +569,13 @@ table "orders" {
   check "chk_checkout_math" { 
     expr = "(COALESCE((total).amount, 0) = COALESCE((subtotal).amount, 0) + COALESCE((tax).amount, 0) + COALESCE((shipping).amount, 0) - COALESCE((discount).amount, 0) - COALESCE((coupon_discount).amount, 0))" 
   }
-  check "chk_positive_costs"  {
+check "chk_positive_costs"  {
   expr ="(COALESCE((shipping).amount, 0) >= 0 AND COALESCE((tax).amount, 0) >= 0)"
 }
-  check "chk_refund_cap"  {
+check "chk_refund_cap"  {
   expr ="COALESCE((refunded_amount).amount, 0) <= COALESCE((total).amount, 0)"
 }
-  
-  index "idx_orders_tenant"  {
+index "idx_orders_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -612,7 +598,6 @@ table "orders" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "order_items" {
   schema = schema.storefront
   column "id" {
@@ -688,37 +673,34 @@ table "order_items" {
     type = jsonb
     default = sql("'[]'::jsonb")
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_order_items_order"  {
+index "idx_order_items_order"  {
   columns =[column.order_id]
 }
-  index "idx_oi_product"  {
+index "idx_oi_product"  {
   columns =[column.tenant_id, column.product_id]
 }
-  
-  check"qty_positive"  {
+check "qty_positive"  {
   expr ="quantity > 0"
 }
-  check "chk_returned_qty"  {
+check "chk_returned_qty"  {
   expr ="(returned_quantity <= fulfilled_quantity)"
 }
-  check "chk_fulfill_qty"  {
+check "chk_fulfill_qty"  {
   expr ="(fulfilled_quantity <= quantity)"
 }
-  check "chk_item_math" { 
+check "chk_item_math" { 
     expr = "(COALESCE((total).amount, 0) = (COALESCE((price).amount, 0) * quantity) - COALESCE((discount_amount).amount, 0) + COALESCE((tax_amount).amount, 0))" 
   }
-  check "chk_item_inner_not_null"  {
+check "chk_item_inner_not_null"  {
   expr ="(price).amount IS NOT NULL AND (total).amount IS NOT NULL"
 }
-  check "chk_item_discount_logic"  {
+check "chk_item_discount_logic"  {
   expr ="COALESCE((discount_amount).amount, 0) <= (COALESCE((price).amount, 0) * quantity)"
 }
-  
-  index "idx_order_items_tenant"  {
+index "idx_order_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.order_items ENABLE ROW LEVEL SECURITY
@@ -727,13 +709,12 @@ table "order_items" {
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
     on_delete   = "RESTRICT"
   }
-  foreign_key "fk_oi_variant" {
+foreign_key "fk_oi_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
     on_delete   = "RESTRICT"
   }
 }
-
 table "order_edits" {
   schema = schema.storefront
   column "id" {
@@ -777,13 +758,13 @@ table "order_edits" {
     type = jsonb
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_order_edits"  {
+index "idx_order_edits"  {
   columns =[column.order_id]
 }
-  index "idx_order_edits_tenant"  {
+index "idx_order_edits_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.order_edits ENABLE ROW LEVEL SECURITY
@@ -792,13 +773,12 @@ table "order_edits" {
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
     on_delete   = "RESTRICT"
   }
-  foreign_key "fk_oe_line_item" {
+foreign_key "fk_oe_line_item" {
     columns     = [column.line_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete   = "RESTRICT"
   }
 }
-
 table "order_timeline" {
   schema = schema.storefront
   column "id" {
@@ -843,18 +823,17 @@ table "order_timeline" {
     type = text
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_timeline_order"  {
+index "idx_timeline_order"  {
   columns =[column.order_id]
 }
-  index "idx_timeline_created"  {
+index "idx_timeline_created"  {
   columns =[column.created_at]
   using =BRIN
 }
-  index "idx_order_timeline_tenant"  {
+index "idx_order_timeline_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.order_timeline ENABLE ROW LEVEL SECURITY
@@ -864,7 +843,6 @@ table "order_timeline" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "fulfillments" {
   schema = schema.storefront
   column "id" {
@@ -905,13 +883,13 @@ table "fulfillments" {
     type = jsonb
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_fulfillments_order"  {
+index "idx_fulfillments_order"  {
   columns =[column.order_id]
 }
-  index "idx_fulfillments_tenant"  {
+index "idx_fulfillments_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.fulfillments ENABLE ROW LEVEL SECURITY
@@ -921,7 +899,6 @@ table "fulfillments" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "fulfillment_items" {
   schema = schema.storefront
   column "id" {
@@ -940,13 +917,13 @@ table "fulfillment_items" {
   column "quantity" {
     type = int
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_fulfill_items"  {
+index "idx_fulfill_items"  {
   columns =[column.fulfillment_id]
 }
-  index "idx_fulfillment_items_tenant"  {
+index "idx_fulfillment_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.fulfillment_items ENABLE ROW LEVEL SECURITY
@@ -955,13 +932,12 @@ table "fulfillment_items" {
     ref_columns = [table.fulfillments.column.id]
     on_delete   = "RESTRICT"
   }
-  foreign_key "fk_fi_order_item" {
+foreign_key "fk_fi_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete   = "RESTRICT"
   }
 }
-
 table "refunds" {
   schema = schema.storefront
   column "id" {
@@ -998,22 +974,19 @@ table "refunds" {
     type = text
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_tenant_refund"  {
+unique "uq_tenant_refund"  {
   columns =[column.tenant_id, column.id]
 }
-  index "idx_refunds_order"  {
+index "idx_refunds_order"  {
   columns =[column.order_id]
 }
-  
-  check "chk_refund_positive"  {
+check "chk_refund_positive"  {
   expr ="COALESCE((amount).amount, 0) > 0"
 }
-  
-  index "idx_refunds_tenant"  {
+index "idx_refunds_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.refunds ENABLE ROW LEVEL SECURITY
@@ -1023,7 +996,6 @@ table "refunds" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "refund_items" {
   schema = schema.storefront
   column "id" {
@@ -1046,18 +1018,16 @@ table "refund_items" {
     type = sql("public.money_amount")
     null = false
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_refund_items"  {
+index "idx_refund_items"  {
   columns =[column.refund_id]
 }
-  
-  check "chk_refund_item_amt"  {
+check "chk_refund_item_amt"  {
   expr ="(COALESCE((amount).amount, 0) > 0 AND quantity > 0)"
 }
-  
-  index "idx_refund_items_tenant"  {
+index "idx_refund_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.refund_items ENABLE ROW LEVEL SECURITY
@@ -1066,13 +1036,12 @@ table "refund_items" {
     ref_columns = [table.refunds.column.tenant_id, table.refunds.column.id]
     on_delete   = "RESTRICT"
   }
-  foreign_key "fk_ri_order_item" {
+foreign_key "fk_ri_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete   = "RESTRICT"
   }
 }
-
 table "rma_requests" {
   schema = schema.storefront
   column "id" {
@@ -1120,19 +1089,19 @@ table "rma_requests" {
     type = jsonb
     default = sql("'[]'::jsonb")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_tenant_rma"  {
+unique "uq_tenant_rma"  {
   columns =[column.tenant_id, column.id]
 }
-  index "idx_rma_order"  {
+index "idx_rma_order"  {
   columns =[column.order_id]
 }
-  index "idx_rma_status"  {
+index "idx_rma_status"  {
   columns =[column.status]
 }
-  index "idx_rma_requests_tenant"  {
+index "idx_rma_requests_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1154,13 +1123,12 @@ table "rma_requests" {
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
     on_delete   = "RESTRICT"
   }
-  foreign_key "fk_rma_order_item" {
+foreign_key "fk_rma_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete   = "RESTRICT"
   }
 }
-
 table "rma_items" {
   schema = schema.storefront
   column "id" {
@@ -1193,16 +1161,16 @@ table "rma_items" {
     type = varchar(20)
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_rma_items_rma"  {
+index "idx_rma_items_rma"  {
   columns =[column.rma_id]
 }
-  check"qty_positive"  {
+check "qty_positive"  {
   expr ="quantity > 0"
 }
-  index "idx_rma_items_tenant"  {
+index "idx_rma_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.rma_items ENABLE ROW LEVEL SECURITY
@@ -1211,13 +1179,12 @@ table "rma_items" {
     ref_columns = [table.rma_requests.column.tenant_id, table.rma_requests.column.id]
     on_delete   = "RESTRICT"
   }
-  foreign_key "fk_rmai_order_item" {
+foreign_key "fk_rmai_order_item" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete   = "RESTRICT"
   }
 }
-
 table "payment_logs" {
   schema = schema.storefront
   column "id" {
@@ -1274,22 +1241,22 @@ table "payment_logs" {
     type = inet
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id, column.created_at]
 }
-    partition {
+partition {
     type = RANGE
     columns = [column.created_at]
   }
-  index "idx_payment_created_brin"  {
+index "idx_payment_created_brin"  {
   columns =[column.created_at]
   using =BRIN with {
   pages_per_range =32
 } }
-  index "idx_payment_logs_order"  {
+index "idx_payment_logs_order"  {
   columns =[column.order_id]
 }
-  index "idx_payment_logs_tenant"  {
+index "idx_payment_logs_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.payment_logs ENABLE ROW LEVEL SECURITY
@@ -1299,8 +1266,6 @@ table "payment_logs" {
     on_delete   = "RESTRICT"
   }
 }
-
-
 table "carts" {
   schema = schema.storefront
   column "id" {
@@ -1341,36 +1306,31 @@ table "carts" {
     type = int
     default = 1
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  
-  unique"uq_tenant_cart"  {
+unique "uq_tenant_cart"  {
   columns =[column.tenant_id, column.id]
 }
-  
-  index "idx_carts_customer"  {
+index "idx_carts_customer"  {
   columns =[column.customer_id]
 }
-  index "idx_carts_session"  {
+index "idx_carts_session"  {
   columns =[column.session_id]
 }
-  index "idx_carts_expires"  {
+index "idx_carts_expires"  {
   columns =[column.expires_at]
 }
-    storage_param {
+storage_param {
     fillfactor = 80
   }
-  
-  check "chk_cart_items_size"  {
+check "chk_cart_items_size"  {
   expr ="(pg_column_size(items) <= 51200)"
 }
-  check "chk_cart_subtotal_pos"  {
+check "chk_cart_subtotal_pos"  {
   expr ="subtotal IS NULL OR COALESCE((subtotal).amount, 0) >= 0"
 }
-  
-  index "idx_carts_tenant"  {
+index "idx_carts_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.carts ENABLE ROW LEVEL SECURITY
@@ -1380,7 +1340,6 @@ table "carts" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "cart_items" {
   schema = schema.storefront
   column "id" {
@@ -1407,18 +1366,16 @@ table "cart_items" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_cart_items_cart"  {
+index "idx_cart_items_cart"  {
   columns =[column.cart_id]
 }
-  
-  check "chk_cart_item_price"  {
+check "chk_cart_item_price"  {
   expr ="COALESCE((price).amount, 0) >= 0"
 }
-  
-  index "idx_cart_items_tenant"  {
+index "idx_cart_items_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.cart_items ENABLE ROW LEVEL SECURITY
@@ -1428,7 +1385,6 @@ table "cart_items" {
     on_delete   = "CASCADE"
   }
 }
-
 table "abandoned_checkouts" {
   schema = schema.storefront
   column "id" {
@@ -1474,17 +1430,17 @@ table "abandoned_checkouts" {
     type = sql("public.money_amount")
     default = sql("ROW(0, 'SAR')::public.money_amount")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_abandoned_created"  {
+index "idx_abandoned_created"  {
   columns =[column.created_at]
 }
-  index "idx_abandoned_items_gin"  {
+index "idx_abandoned_items_gin"  {
   columns =[column.items]
   using =GIN
 }
-  index "idx_abandoned_checkouts_tenant"  {
+index "idx_abandoned_checkouts_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.abandoned_checkouts ENABLE ROW LEVEL SECURITY
@@ -1551,22 +1507,19 @@ table "shipping_zones" {
     type = varchar(50)
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_shipping_region"  {
+index "idx_shipping_region"  {
   columns =[column.region]
 }
-  index "idx_shipping_active"  {
+index "idx_shipping_active"  {
   columns =[column.is_active]
 }
-  
-  check "chk_delivery_logic"  {
+check "chk_delivery_logic"  {
   expr ="(min_delivery_days >= 0 AND min_delivery_days <= max_delivery_days)"
 }
-  
-  index "idx_shipping_zones_tenant"  {
+index "idx_shipping_zones_tenant"  {
   columns =[column.tenant_id]
 }
 
@@ -1584,7 +1537,6 @@ table "shipping_zones" {
 
   // ALTER TABLE storefront.shipping_zones ENABLE ROW LEVEL SECURITY
 }
-
 table "tax_categories" {
   schema = schema.storefront
   column "id" {
@@ -1613,20 +1565,17 @@ table "tax_categories" {
     type = text
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  
-  unique"uq_tenant_tax_category"  {
+unique "uq_tenant_tax_category"  {
   columns =[column.tenant_id, column.id]
 }
-  
-  index "idx_tax_categories_tenant"  {
+index "idx_tax_categories_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.tax_categories ENABLE ROW LEVEL SECURITY
 }
-
 table "tax_rules" {
   schema = schema.storefront
   column "id" {
@@ -1686,11 +1635,10 @@ table "tax_rules" {
     type = varchar(20)
     default = "half_even"
   }
-  check "chk_tax_rounding"  {
+check "chk_tax_rounding"  {
   expr ="rounding_rule IN ('half_even', 'half_up', 'half_down')"
 }
-
-  primary_key {
+primary_key {
   columns =[column.id]
 }
   
@@ -1699,15 +1647,13 @@ table "tax_rules" {
     columns = [column.tenant_id, column.country, column.state, column.zip_code, column.tax_type]
     nulls_not_distinct = true 
   }
-  
-  index "idx_tax_rules_country"  {
+index "idx_tax_rules_country"  {
   columns =[column.country]
 }
-  check "chk_tax_rate_bounds"  {
+check "chk_tax_rate_bounds"  {
   expr ="(rate >= 0 AND rate <= 10000)"
 }
-  
-  index "idx_tax_rules_tenant"  {
+index "idx_tax_rules_tenant"  {
   columns =[column.tenant_id]
 }
   // ALTER TABLE storefront.tax_rules ENABLE ROW LEVEL SECURITY
@@ -1717,7 +1663,6 @@ table "tax_rules" {
     on_delete   = "RESTRICT"
   }
 }
-
 table "reviews" {
   schema = schema.storefront
   column "id" {
@@ -1763,11 +1708,10 @@ table "reviews" {
     type = sql("public.vector(1536)")
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  check "chk_rating_bounds"  {
+check "chk_rating_bounds"  {
   expr ="(rating >= 1 AND rating <= 5)"
 }
   // Strike 21: AI Sentiment Confidence
@@ -1775,14 +1719,13 @@ table "reviews" {
     type = numeric(3,2)
     null = true
   }
-  check "chk_sentiment_bounds"  {
+check "chk_sentiment_bounds"  {
   expr ="(sentiment_score >= -1.00 AND sentiment_score <= 1.00)"
 }
-  
-  index "idx_reviews_tenant"  {
+index "idx_reviews_tenant"  {
   columns =[column.tenant_id]
 }
-  index "idx_reviews_embedding_cosine" { 
+index "idx_reviews_embedding_cosine" { 
     columns = [column.embedding]
     using = HNSW
     ops = [sql("public.vector_cosine_ops")]
@@ -1790,7 +1733,7 @@ table "reviews" {
     name = "m"
     value = "24"
   }
-      storage_param {
+storage_param {
     name = "ef_construction"
     value = "128"
   }

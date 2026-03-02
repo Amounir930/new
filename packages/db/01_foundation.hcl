@@ -22,7 +22,7 @@ extension "btree_gist" { schema = schema.public }
 
 function "gen_ulid" {
   schema = schema.public
-  lang   = "plpgsql"
+  lang   = "plpgsql "
   return = "uuid"
   as     = <<SQL
 DECLARE
@@ -40,7 +40,7 @@ SQL
 
 function "set_current_timestamp_updated_at" {
   schema = schema.public
-  lang   = "plpgsql"
+  lang   = "plpgsql "
   return = "trigger"
   as     = <<SQL
 BEGIN
@@ -55,7 +55,7 @@ SQL
 
 function "prevent_tenant_hijacking" {
   schema = schema.public
-  lang   = "plpgsql"
+  lang   = "plpgsql "
   return = "trigger"
   as     = <<SQL
 BEGIN
@@ -69,7 +69,7 @@ SQL
 
 function "validate_price_currency" {
   schema = schema.public
-  lang   = "plpgsql"
+  lang   = "plpgsql "
   return = "trigger"
   as     = <<SQL
 BEGIN
@@ -89,11 +89,11 @@ composite_type "money_amount" {
 
 // ELITE DIRECTIVE: Application-level role configuration activated via sql.elite_server_config
 
-enum "severity_enum" {
+enum "severity_enum " {
   schema =schema.public
   values =["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"]
 }
-enum "audit_result_enum" {
+enum "audit_result_enum " {
   schema =schema.public
   values =["SUCCESS", "FAILURE"]
 }
@@ -222,7 +222,6 @@ enum "blueprint_status" {
   schema =schema.public
   values =["active", "paused"]
 }
-
 table "encryption_keys" {
   schema        = schema.vault
   column "id" {
@@ -264,17 +263,16 @@ table "encryption_keys" {
   column "key_material" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  check "chk_key_material_s7"  {
+check "chk_key_material_s7"  {
   expr ="(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))"
 }
-  index "idx_encryption_keys_tenant"  {
+index "idx_encryption_keys_tenant"  {
   columns =[column.tenant_id]
 }
 }
-
 table "archival_vault" {
   schema         = schema.vault
   column "id" {
@@ -303,14 +301,13 @@ table "archival_vault" {
   column "tombstone_hash" {
     type = text
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  check "chk_payload_size"  {
+check "chk_payload_size"  {
   expr ="(pg_column_size(payload) <= 102400)"
 }
 }
-
 table "tenants" {
   schema               = schema.governance
   column "id" {
@@ -387,15 +384,14 @@ table "tenants" {
     type = varchar(50)
     default = "UTC"
   }
-
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique "tenants_subdomain_unique"  {
+unique "tenants_subdomain_unique "  {
   columns =[column.subdomain]
   where ="deleted_at IS NULL"
 }
-  unique "tenants_custom_domain_unique"  {
+unique "tenants_custom_domain_unique "  {
   columns =[column.custom_domain]
   where ="deleted_at IS NULL"
 }
@@ -404,18 +400,16 @@ table "tenants" {
   index "idx_tenants_email_hash"  {
   columns =[column.owner_email_hash]
 }
-
-  check "chk_owner_email_s7"  {
+check "chk_owner_email_s7"  {
   expr ="(owner_email IS NULL OR (jsonb_typeof(owner_email) = 'object' AND owner_email ? 'enc' AND owner_email ? 'iv' AND owner_email ? 'tag' AND owner_email ? 'data'))"
 }
-  check "chk_ui_config_size"  {
+check "chk_ui_config_size"  {
   expr ="(pg_column_size(ui_config) <= 204800)"
 }
   
   // ELITE: RLS POLICY BASE
   // CREATE POLICY tenant_isolation ON storefront... USING (tenant_id = current_setting('app.current_tenant')::uuid)
 }
-
 table "audit_logs" {
   schema          = schema.governance
   column "id" {
@@ -488,36 +482,34 @@ table "audit_logs" {
     type = text
     null = true
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id, column.created_at]
 }
-    partition {
+partition {
     type = RANGE
     columns = [column.created_at]
   }
-  
-    storage_param {
+storage_param {
     name = "toast_tuple_target"
     value = "128"
   }
-  index "idx_audit_created_brin"  {
+index "idx_audit_created_brin"  {
   columns =[column.created_at]
   using =BRIN
 }
-  index "idx_audit_tenant"  {
+index "idx_audit_tenant"  {
   columns =[column.tenant_id]
 }
-  index "idx_audit_entity"  {
+index "idx_audit_entity"  {
   columns =[column.entity_type, column.entity_id]
 }
-  index "idx_audit_action"  {
+index "idx_audit_action"  {
   columns =[column.action]
 }
-  check "chk_audit_json_size"  {
+check "chk_audit_json_size"  {
   expr ="(pg_column_size(old_values) <= 102400 AND pg_column_size(new_values) <= 102400)"
 }
-  check "chk_audit_email_s7" { 
+check "chk_audit_email_s7" { 
     expr = "(user_email IS NULL OR (jsonb_typeof(user_email) = 'object' AND user_email ? 'enc' AND user_email ? 'iv' AND user_email ? 'tag' AND user_email ? 'data'))" 
   }
   // SECURITY (Feedback Loop): Ensure sensitive keys are NOT stored in plaintext within audit jsonb blocks
@@ -525,8 +517,6 @@ table "audit_logs" {
     expr = "(old_values IS NULL OR NOT (old_values ?| array['password', 'secret', 'token', 'cvv', 'card_number'])) AND (new_values IS NULL OR NOT (new_values ?| array['password', 'secret', 'token', 'cvv', 'card_number']))"
   }
 }
-
-
 table "leads" {
   schema               = schema.governance
   column "id" {
@@ -591,35 +581,31 @@ table "leads" {
     type = jsonb
     default = sql("'[]'::jsonb")
   }
-  
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_leads_email_hash"  {
+index "idx_leads_email_hash"  {
   columns =[column.email_hash]
 }
-  index "idx_leads_status"  {
+index "idx_leads_status"  {
   columns =[column.status]
 }
-  index "idx_leads_converted"  {
+index "idx_leads_converted"  {
   columns =[column.converted_tenant_id]
 }
-  
-  check "chk_leads_email_s7"  {
+check "chk_leads_email_s7"  {
   expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
 }
-  check "chk_leads_name_s7"  {
+check "chk_leads_name_s7"  {
   expr ="(name IS NULL OR (jsonb_typeof(name) = 'object' AND name ? 'enc' AND name ? 'iv' AND name ? 'tag' AND name ? 'data'))"
 }
-  check "chk_leads_notes_s7"  {
+check "chk_leads_notes_s7"  {
   expr ="(notes IS NULL OR (jsonb_typeof(notes) = 'object' AND notes ? 'enc' AND notes ? 'iv' AND notes ? 'tag' AND notes ? 'data'))"
 }
-  
-  index "idx_leads_tenant"  {
+index "idx_leads_tenant"  {
   columns =[column.converted_tenant_id]
 }
 }
-
 table "subscription_plans" {
   schema               = schema.governance
   column "id" {
@@ -682,10 +668,10 @@ table "subscription_plans" {
     type = text
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"subscription_plans_code_unique"  {
+unique "subscription_plans_code_unique "  {
   columns =[column.code]
 }
   // ELITE: money_amount used for pricing
@@ -697,11 +683,10 @@ table "subscription_plans" {
     type = sql("public.money_amount")
     null = false
   }
-  check "chk_plan_price"  {
+check "chk_plan_price"  {
   expr ="COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0"
 }
 }
-
 table "tenant_quotas" {
   schema            = schema.governance
   column "id" {
@@ -747,15 +732,14 @@ table "tenant_quotas" {
     type = int
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_tenant_quotas_tenant"  {
+index "idx_tenant_quotas_tenant"  {
   columns =[column.tenant_id]
 }
 
 }
-
 table "tenant_invoices" {
   schema               = schema.governance
   column "id" {
@@ -807,10 +791,10 @@ table "tenant_invoices" {
     type = text
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  check "chk_invoice_period"  {
+check "chk_invoice_period"  {
   expr ="period_end >= period_start"
 }
   
@@ -818,19 +802,17 @@ table "tenant_invoices" {
   check "chk_invoice_math" { 
     expr = "COALESCE((total).amount, 0) = COALESCE((subscription_amount).amount, 0) + COALESCE((platform_commission).amount, 0) + COALESCE((app_charges).amount, 0)" 
   }
-  
-  index "idx_invoices_tenant"  {
+index "idx_invoices_tenant"  {
   columns =[column.tenant_id]
 }
-  index "idx_invoices_status"  {
+index "idx_invoices_status"  {
   columns =[column.status]
 }
-  index "idx_tenant_invoices_tenant"  {
+index "idx_tenant_invoices_tenant"  {
   columns =[column.tenant_id]
 }
 
 }
-
 table "feature_gates" {
   schema          = schema.governance
   column "id" {
@@ -865,14 +847,13 @@ table "feature_gates" {
     type = jsonb
     null = true
   }
-  
-  check "chk_rollout_range"  {
+check "chk_rollout_range"  {
   expr ="rollout_percentage >= 0 AND rollout_percentage <= 100"
 }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_feature_tenant_key"  {
+unique "uq_feature_tenant_key"  {
   columns =[column.tenant_id, column.feature_key]
 }
   
@@ -880,19 +861,17 @@ table "feature_gates" {
   check "chk_fg_meta_size"  {
   expr ="pg_column_size(metadata) <= 51200"
 }
-  
-  index "idx_feature_key"  {
+index "idx_feature_key"  {
   columns =[column.feature_key]
 }
-  index "idx_feature_tenant"  {
+index "idx_feature_tenant"  {
   columns =[column.tenant_id]
 }
-  index "idx_feature_gates_tenant"  {
+index "idx_feature_gates_tenant"  {
   columns =[column.tenant_id]
 }
 
 }
-
 table "dunning_events" {
   schema          = schema.governance
   column "id" {
@@ -930,21 +909,20 @@ table "dunning_events" {
     type = text
     null = true
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  check "chk_dunning_attempts"  {
+check "chk_dunning_attempts"  {
   expr ="(attempt_number <= 5)"
 }
-  check "chk_dunning_amount"  {
+check "chk_dunning_amount"  {
   expr ="COALESCE((amount).amount, 0) > 0"
 }
-  index "idx_dunning_events_tenant"  {
+index "idx_dunning_events_tenant"  {
   columns =[column.tenant_id]
 }
 
 }
-
 table "app_usage_records" {
   schema          = schema.governance
   column "id" {
@@ -974,15 +952,14 @@ table "app_usage_records" {
   column "metric" {
     type = varchar(50)
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_app_usage_records_tenant"  {
+index "idx_app_usage_records_tenant"  {
   columns =[column.tenant_id]
 }
 
 }
-
 table "plan_change_history" {
   schema          = schema.governance
   column "id" {
@@ -1009,15 +986,14 @@ table "plan_change_history" {
   column "changed_by" {
     type = text
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_plan_change_history_tenant"  {
+index "idx_plan_change_history_tenant"  {
   columns =[column.tenant_id]
 }
 
 }
-
 table "onboarding_blueprints" {
   schema          = schema.governance
   column "id" {
@@ -1062,14 +1038,13 @@ table "onboarding_blueprints" {
     type = jsonb
     default = sql("'{}'::jsonb")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index"blueprint_niche_plan_idx"  {
+index "blueprint_niche_plan_idx"  {
   columns =[column.niche_type, column.plan]
 }
 }
-
 table "system_config" {
   schema          = schema.governance
   column "key" {
@@ -1082,11 +1057,10 @@ table "system_config" {
   column "value" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.key]
 }
 }
-
 table "schema_drift_log" {
   schema             = schema.governance
   column "id" {
@@ -1122,15 +1096,14 @@ table "schema_drift_log" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  index "idx_drift_time"  {
+index "idx_drift_time"  {
   columns =[column.executed_at]
   using =BRIN
 }
 }
-
 table "order_fraud_scores" {
   schema          = schema.governance
   column "id" {
@@ -1179,29 +1152,27 @@ table "order_fraud_scores" {
     type = jsonb
     default = sql("'{}'::jsonb")
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  check "chk_risk_score_range"  {
+check "chk_risk_score_range"  {
   expr ="(risk_score BETWEEN 0 AND 1000)"
 }
-  index "idx_fraud_order"  {
+index "idx_fraud_order"  {
   columns =[column.order_id]
 }
-  index "idx_fraud_tenant"  {
+index "idx_fraud_tenant"  {
   columns =[column.tenant_id]
 }
-  index "idx_fraud_flagged" {
+index "idx_fraud_flagged" {
     columns = [column.is_flagged]
     where   = "is_flagged = true AND is_reviewed = false"
   }
-  
-  index "idx_order_fraud_scores_tenant"  {
+index "idx_order_fraud_scores_tenant"  {
   columns =[column.tenant_id]
 }
 
 }
-
 table "marketing_pages" {
   schema               = schema.governance
   column "id" {
@@ -1249,19 +1220,19 @@ table "marketing_pages" {
   column "content" {
     type = jsonb
   }
-  primary_key {
+primary_key {
   columns =[column.id]
 }
-  unique"uq_marketing_slug"  {
+unique "uq_marketing_slug"  {
   columns =[column.slug]
 }
-  index "idx_mkt_slug"  {
+index "idx_mkt_slug"  {
   columns =[column.slug]
 }
-  index "idx_mkt_published"  {
+index "idx_mkt_published"  {
   columns =[column.is_published]
 }
-  index "idx_mkt_type"  {
+index "idx_mkt_type"  {
   columns =[column.page_type]
 }
 }
@@ -1278,7 +1249,6 @@ ALTER SYSTEM SET wal_level = 'logical';
 ALTER SYSTEM SET max_slot_wal_keep_size = '2048MB';
 SQL
 }
-
 sql "init_partman" {
   depends_on = [table.audit_logs, table.outbox_events]
   exec = <<SQL
@@ -1288,7 +1258,6 @@ sql "init_partman" {
   SELECT partman.create_parent('storefront.outbox_events', 'created_at', 'native', 'daily');
   SQL
 }
-
 sql "enforce_app_user_limits" {
   exec = <<SQL
   ALTER ROLE app_user NOBYPASSRLS;
