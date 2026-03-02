@@ -23,7 +23,7 @@ extension "btree_gist" { schema = schema.public }
 function "gen_ulid" {
   schema = schema.public
   lang   = "plpgsql "
-  return = "uuid"
+  return = uuid
   as     = <<SQL
 DECLARE
   v_time bytea;
@@ -41,7 +41,7 @@ SQL
 function "set_current_timestamp_updated_at" {
   schema = schema.public
   lang   = "plpgsql "
-  return = "trigger "
+  return = trigger
   as     = <<SQL
 BEGIN
   -- ELITE: Support manual overrides for audit/migration purposes
@@ -56,7 +56,7 @@ SQL
 function "prevent_tenant_hijacking" {
   schema = schema.public
   lang   = "plpgsql "
-  return = "trigger "
+  return = trigger
   as     = <<SQL
 BEGIN
   IF OLD.tenant_id IS DISTINCT FROM NEW.tenant_id THEN
@@ -70,7 +70,7 @@ SQL
 function "validate_price_currency" {
   schema = schema.public
   lang   = "plpgsql "
-  return = "trigger "
+  return = trigger
   as     = <<SQL
 BEGIN
 IF (NEW.price).currency IS NULL OR (NEW.price).currency !~ '^[A-Z]{3}
@@ -82,7 +82,7 @@ END;
 SQL
 }
 
-composite_type "money_amount" {
+composite "money_amount" {
   schema = schema.public
   field "amount" { type = bigint }
   field "currency" { type = char(3) }
