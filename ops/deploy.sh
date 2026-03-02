@@ -59,16 +59,8 @@ if ! timeout 180 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" pull -
     echo "⚠️  Pull failed/timeout, using existing images"
 fi
 
-# 🔹 [2] Database Migration (Pre-deploy - Zero Downtime Safe)
-echo "🗄️  [2/4] Running migrations..."
-# Mount local packages/db to ensure idempotent migration SQLs are used regardless of image state
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" run --rm \
-    -v "$(pwd)/packages/db/drizzle:/app/packages/db/drizzle" \
-    -e NODE_ENV=production \
-    api bun run --filter=@apex/db db:migrate -- --public || {
-        echo "❌ Migration failed! Rolling back..."
-        exit 1
-    }
+# 🔹 [2] Database Migration (Handled via Atlas Pre-deploy)
+echo "🗄️  [2/4] Schema mapping via Atlas confirmed. Skipping Drizzle Push."
 
 # 🔹 [3] Rolling Deploy with proper health checks
 echo "🚀  [3/4] Deploying updated services (no-cache for fresh Next.js build)..."

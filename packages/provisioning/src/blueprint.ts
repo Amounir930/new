@@ -1,5 +1,7 @@
 import { and, desc, eq, onboardingBlueprints, publicDb } from '@apex/db';
+
 export { validateBlueprint } from './blueprint/executor.js';
+
 import { validateBlueprint } from './blueprint/executor.js';
 import type { BlueprintRecord, BlueprintTemplate } from './blueprint/types.js';
 
@@ -197,8 +199,7 @@ export async function updateBlueprint(
     updateData.description = updates.description;
   if (updates.blueprint) updateData.blueprint = updates.blueprint;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
-  if (updates.plan)
-    updateData.plan = updates.plan;
+  if (updates.plan) updateData.plan = updates.plan;
   if (updates.nicheType) updateData.nicheType = updates.nicheType;
   if (updates.status) updateData.status = updates.status;
 

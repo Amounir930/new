@@ -158,6 +158,12 @@ BEGIN
   IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_tenant_admin') THEN
     REVOKE CREATE ON SCHEMA public FROM role_tenant_admin;
   END IF;
+
+  -- ── Step 4.1: Secure legacy schema ──
+  REVOKE ALL ON SCHEMA legacy FROM PUBLIC;
+  IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'role_app_service') THEN
+    REVOKE ALL ON ALL TABLES IN SCHEMA legacy FROM role_app_service;
+  END IF;
 END $$;
 --> statement-breakpoint
 

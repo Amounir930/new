@@ -124,8 +124,10 @@ mock.module('@apex/db', () => {
     })),
   };
 });
+
 // Add sql.raw separately since it's a property of the function
 import { sql } from '@apex/db';
+
 (sql as any).raw = mock().mockImplementation((s: string) => s);
 
 describe('Tenant Overview Service', () => {

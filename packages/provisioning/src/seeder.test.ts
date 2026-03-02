@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { isSeeded, seedTenantData } from './seeder.js';
 
 // Define mockDb first
-const mockDb: any = {
+const mockDb = {
   insert: mock().mockReturnThis(),
   values: mock().mockReturnThis(),
   returning: mock().mockReturnValue([{ id: 'mock-id' }]),
@@ -16,8 +16,9 @@ const mockDb: any = {
   select: mock().mockReturnThis(),
   from: mock().mockReturnThis(),
   limit: mock().mockReturnThis(),
-  then: (onfulfilled: any) => Promise.resolve([{ id: 'mock-id', count: '1' }]).then(onfulfilled),
-  transaction: mock((cb: any) => cb(mockDb)),
+  then: (onfulfilled: (value: unknown) => void) =>
+    Promise.resolve([{ id: 'mock-id', count: '1' }]).then(onfulfilled),
+  transaction: mock((cb: (db: typeof mockDb) => Promise<unknown>) => cb(mockDb)),
 };
 
 // Mock dependencies manually at the top level
@@ -36,7 +37,6 @@ mock.module('@apex/db', () => ({
   },
   sql: mock().mockReturnValue('count(*)'),
 }));
-
 
 // Mock config for encryption key
 mock.module('@apex/config', () => ({
@@ -63,6 +63,22 @@ mock.module('./blueprint.js', () => ({
     createdAt: new Date(),
     updatedAt: new Date(),
   }),
+}));
+
+// Mock encryption to avoid scrypt memory issues in tests
+mock.module('@apex/security', () => ({
+  encrypt: mock((plaintext: string) => ({
+    encrypted: `enc_${plaintext}`,
+    iv: 'mock-iv',
+    tag: 'mock-tag',
+    salt: 'mock-salt',
+    version: 1,
+  })),
+  decrypt: mock((data: any) =>
+    typeof data === 'string' && data.startsWith('enc_')
+      ? data.slice(4)
+      : data
+  ),
 }));
 
 describe('seedTenantData', () => {
@@ -94,20 +110,26 @@ describe('seedTenantData', () => {
     mockDb.transaction.mockRejectedValueOnce(new Error('DB Timeout'));
 
     await expect(
-      seedTenantData({ subdomain: 'valid-sub', storeName: 'X', adminEmail: 'x@x.com' })
+      seedTenantData({
+        subdomain: 'valid-sub',
+        storeName: 'X',
+        adminEmail: 'x@x.com',
+      })
     ).rejects.toThrow(/Seeding Failure:.*DB Timeout/);
   });
 });
 
 describe('isSeeded', () => {
   it('should return true if count > 0', async () => {
-    mockDb.then = (onfulfilled: any) => Promise.resolve([{ count: '1' }]).then(onfulfilled);
+    mockDb.then = (onfulfilled: (value: unknown) => void) =>
+      Promise.resolve([{ count: '1' }]).then(onfulfilled);
     const result = await isSeeded('alpha');
     expect(result).toBe(true);
   });
 
   it('should return false if count is 0', async () => {
-    mockDb.then = (onfulfilled: any) => Promise.resolve([{ count: '0' }]).then(onfulfilled);
+    mockDb.then = (onfulfilled: (value: unknown) => void) =>
+      Promise.resolve([{ count: '0' }]).then(onfulfilled);
     const result = await isSeeded('empty');
     expect(result).toBe(false);
   });
@@ -115,8 +137,10 @@ describe('isSeeded', () => {
   it('should return false if query fails', async () => {
     // Correctly mock a failing thenable to simulate query error
     const failingQuery = {
-      then: (onfulfilled: any, onrejected: any) => Promise.reject(new Error('Table missing')).catch(onrejected),
-      catch: (onrejected: any) => Promise.reject(new Error('Table missing')).catch(onrejected)
+      then: (_onfulfilled: unknown, onrejected: (reason: Error) => void) =>
+        Promise.reject(new Error('Table missing')).catch(onrejected),
+      catch: (onrejected: (reason: Error) => void) =>
+        Promise.reject(new Error('Table missing')).catch(onrejected),
     };
     mockDb.select.mockReturnValue(failingQuery);
 

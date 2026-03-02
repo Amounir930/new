@@ -40,7 +40,7 @@ describe('StorageManager', () => {
   beforeEach(() => {
     mock.restore();
     // Clear call history for all mocks in the shared client
-    Object.values(mockMinioClient).forEach(m => {
+    Object.values(mockMinioClient).forEach((m) => {
       if ((m as any).mockClear) (m as any).mockClear();
     });
     resetMinioClient();
@@ -113,7 +113,9 @@ describe('StorageManager', () => {
     it('should throw if bucket not empty and force is false', async () => {
       mockMinioClient.bucketExists.mockResolvedValueOnce(true);
       // Simulate MinIO error when deleting non-empty bucket
-      mockMinioClient.removeBucket.mockRejectedValueOnce(new Error('Bucket not empty'));
+      mockMinioClient.removeBucket.mockRejectedValueOnce(
+        new Error('Bucket not empty')
+      );
 
       await expect(deleteStorageBucket('full-tenant')).rejects.toThrow(
         /Bucket not empty/

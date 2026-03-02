@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 interface Product {
   id: string;
   name: string;
@@ -18,13 +20,14 @@ export default function BestSellers({ products }: { products: Product[] }) {
           className="group block space-y-3"
         >
           <div className="relative aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all group-hover:shadow-md">
-            <img
+            <Image
               src={
                 product.imageUrl ||
                 `https://placehold.co/400x500?text=${product.name}`
               }
               alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              fill
+              className="object-cover group-hover:scale-110 transition-transform duration-500"
             />
             <div className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-sm text-[10px] font-bold rounded uppercase tracking-wider">
               Best Seller

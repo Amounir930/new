@@ -7,13 +7,16 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { publicDb } from '@apex/db';
 import {
+  MASTER_FEATURE_LIST,
+  MASTER_QUOTA_LIST,
+} from './blueprint/constants.js';
+import {
   createBlueprint,
   getAllBlueprints,
   getBlueprintById,
   getDefaultBlueprint,
   validateBlueprint,
 } from './blueprint.js';
-import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST } from './blueprint/constants.js';
 
 // Mock DB
 mock.module('@apex/db', () => ({
@@ -54,7 +57,7 @@ const createValidBlueprint = (overrides = {}) => {
     modules,
     quotas,
     settings: {}, // Add settings to avoid missing errors
-    ...overrides
+    ...overrides,
   };
 };
 
@@ -86,19 +89,25 @@ describe('BlueprintManager', () => {
 
     it('should throw if name is missing', () => {
       const blueprint = createValidBlueprint({ name: undefined });
-      expect(() => validateBlueprint(blueprint)).toThrow(/must have a valid name/);
+      expect(() => validateBlueprint(blueprint)).toThrow(
+        /must have a valid name/
+      );
     });
 
     it('should throw if modules are missing one feature', () => {
       const blueprint = createValidBlueprint();
       delete (blueprint.modules as any).home;
-      expect(() => validateBlueprint(blueprint)).toThrow(/Missing required feature 'home'/);
+      expect(() => validateBlueprint(blueprint)).toThrow(
+        /Missing required feature 'home'/
+      );
     });
 
     it('should throw if quotas are missing one quota', () => {
       const blueprint = createValidBlueprint();
       delete (blueprint.quotas as any).max_products;
-      expect(() => validateBlueprint(blueprint)).toThrow(/Missing required quota 'max_products'/);
+      expect(() => validateBlueprint(blueprint)).toThrow(
+        /Missing required quota 'max_products'/
+      );
     });
   });
 
@@ -114,7 +123,10 @@ describe('BlueprintManager', () => {
     it('should create a blueprint', async () => {
       (publicDb.returning as any).mockResolvedValue([mockRecord]);
 
-      const result = await createBlueprint('Test', createValidBlueprint({ name: 'Test' }));
+      const result = await createBlueprint(
+        'Test',
+        createValidBlueprint({ name: 'Test' })
+      );
 
       expect(result.id).toBe('uuid-1');
       expect(result.isDefault).toBe(true);

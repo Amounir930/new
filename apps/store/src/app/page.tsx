@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+
 
 /**
  * Root page — only reached when there's no subdomain (direct domain access).

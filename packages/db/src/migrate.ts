@@ -1,5 +1,5 @@
-import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as dotenv from 'dotenv';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -50,7 +50,6 @@ async function setupMigrationContext(
     if (res.rowCount === 0) throw new Error(`Tenant ${tenantId} not found`);
     const schemaName = sanitizeSchemaName(res.rows[0].subdomain);
 
-    console.log(`Acquiring advisory lock for tenant: ${tenantId}`);
     const lockRes = await client.query(
       'SELECT pg_try_advisory_lock(hashtext($1)) as acquired',
       [tenantId]
@@ -62,8 +61,6 @@ async function setupMigrationContext(
         `S2 Violation: Migration already in progress for tenant ${tenantId}${lockInfo}`
       );
     }
-
-    console.log(`Switching to schema: ${schemaName}`);
     try {
       await client.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName}"`);
       // Audit 777 Point #5: Ensure extensions are available in tenant scope
@@ -73,14 +70,15 @@ async function setupMigrationContext(
       await client.query(`SET search_path TO "${schemaName}"`);
     } catch (schemaError) {
       // Gap #5: Atomic Provisioning - Safety First
-      console.error(`Provisioning failed for ${schemaName}. Manual cleanup may be required to maintain data integrity.`);
+      console.error(
+        `Provisioning failed for ${schemaName}. Manual cleanup may be required to maintain data integrity.`
+      );
       throw schemaError;
     }
     return schemaName;
   }
 
   if (runPublic) {
-    console.log('Running on PUBLIC schema');
     const lockRes = await client.query(
       "SELECT pg_try_advisory_lock(hashtext('public_migration')) as acquired"
     );
@@ -109,10 +107,6 @@ async function runMigrations() {
     );
   }
 
-  console.log(
-    `Running migrations for ${tenantId ? `tenant: ${tenantId}` : 'PUBLIC schema'}...`
-  );
-
   let env: ReturnType<typeof validateEnv>;
   try {
     env = validateEnv();
@@ -134,20 +128,16 @@ async function runMigrations() {
     // Drizzle sends each migration as ONE atomic query. Event triggers installed
     // by prior partial runs block DDL in subsequent migrations. We must drop them
     // BEFORE Drizzle processes any migration files.
-    console.log('Pre-flight: Dropping blocking event triggers from prior runs...');
     await client.query(`
       DROP EVENT TRIGGER IF EXISTS trg_audit_immutability_lockdown;
       DROP EVENT TRIGGER IF EXISTS trg_log_drift;
       DROP EVENT TRIGGER IF EXISTS trg_audit_schema_drift;
     `);
-    console.log('Pre-flight: Event triggers cleared.');
 
-    const db = drizzle(client);
-    const migrationsFolder = join(__dirname, '../drizzle');
-    console.log(`Loading migrations from: ${migrationsFolder}`);
-
-    await migrate(db, { migrationsFolder });
-    console.log('Migrations completed successfully');
+    // ─── DRIZZLE MIGRATIONS: DISABLED (Query-Only Policy) ───
+    // Per USER Objective: Drizzle is for Querying only.
+    // Schema changes are managed exclusively via Atlas.
+    // await migrate(db, { migrationsFolder });
   } catch (error) {
     console.error('Migration failed:', error);
     process.exitCode = 1;
@@ -174,11 +164,13 @@ async function runMigrations() {
         "SELECT 1 FROM information_schema.schemata WHERE schema_name = 'governance'"
       );
       if (schemaCheck.rows.length > 0) {
-        console.log('Forensic: Running post-migration compliance scan...');
-        await client.query('SELECT governance.verify_compliance()');
-        console.log('S2/S5 Verification: ALL COMPLIANCE CHECKS PASSED.');
-      } else {
-        console.log('Forensic: Skipping compliance scan (schema not initialized yet)');
+        const scanRes = await client.query(
+          'SELECT * FROM governance.check_rls_integrity()'
+        );
+        if (scanRes && scanRes.rowCount && scanRes.rowCount > 0) {
+          console.warn('⚠️  COMPLIANCE WARNING: Tables missing RLS detected!');
+          console.table(scanRes.rows);
+        }
       }
     } catch (forensicError) {
       console.warn('Compliance scan failed (optional check):', forensicError);

@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 
 interface Banner {
@@ -39,10 +40,11 @@ export default function BannerCarousel({ banners }: { banners: Banner[] }) {
       >
         {banners.map((banner) => (
           <div key={banner.id} className="relative w-full h-full flex-shrink-0">
-            <img
+            <Image
               src={banner.imageUrl}
               alt={banner.title}
-              className="absolute inset-0 w-full h-full object-cover opacity-60 scale-105"
+              fill
+              className="object-cover opacity-60 scale-105"
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-6">
               <h2 className="text-4xl md:text-6xl font-black mb-4 drop-shadow-2xl tracking-tight animate-fade-in-up">
@@ -87,11 +89,10 @@ export default function BannerCarousel({ banners }: { banners: Banner[] }) {
             key={_banner.id}
             type="button"
             onClick={() => setCurrentIndex(i)}
-            className={`transition-all duration-300 rounded-full ${
-              i === currentIndex
-                ? 'w-8 h-2 bg-white'
-                : 'w-2 h-2 bg-white/40 hover:bg-white/60'
-            }`}
+            className={`transition-all duration-300 rounded-full ${i === currentIndex
+              ? 'w-8 h-2 bg-white'
+              : 'w-2 h-2 bg-white/40 hover:bg-white/60'
+              }`}
             aria-label={`Go to slide ${i + 1}`}
           />
         ))}

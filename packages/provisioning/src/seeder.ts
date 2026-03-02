@@ -4,9 +4,9 @@
  */
 
 import {
-  NodePgDatabase,
   drizzle,
   eq,
+  type NodePgDatabase,
   onboardingBlueprints,
   publicPool,
   sql,

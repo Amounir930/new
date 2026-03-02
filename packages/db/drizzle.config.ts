@@ -13,6 +13,7 @@ export default {
     './src/schema/tenant.ts',
     './src/schema/vault.ts',
   ],
+  schemaFilter: ['public', 'storefront', 'governance', 'vault', 'shared'],
   // Risk #1: Enforce Single Source of Truth.
   // Keep ORM from managing tables defined in raw SQL baseline.
   tablesFilter: ['!pg_cron', '!audit_logs_partition_*', '!outbox_events'],
