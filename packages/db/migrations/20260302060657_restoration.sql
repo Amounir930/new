@@ -14,6 +14,18 @@ ALTER TABLE storefront.customer_addresses ALTER COLUMN coordinates TYPE public.g
 ALTER TABLE storefront.locations ALTER COLUMN coordinates TYPE public.geography(point, 4326) USING coordinates::public.geography;
 
 -- 3. Restore Complex Indices (GIN/GIST/HNSW)
+-- Drop existing BTREE placeholders first
+DROP INDEX IF EXISTS storefront.idx_cat_name_trgm;
+DROP INDEX IF EXISTS storefront.idx_categories_path_gist;
+DROP INDEX IF EXISTS storefront.idx_brand_name_trgm;
+DROP INDEX IF EXISTS storefront.idx_attrs_value_trgm;
+DROP INDEX IF EXISTS storefront.idx_metafields_value_gin;
+DROP INDEX IF EXISTS storefront.idx_locations_coordinates_gist;
+DROP INDEX IF EXISTS storefront.idx_customer_addresses_location_gist;
+DROP INDEX IF EXISTS storefront.idx_abandoned_items_gin;
+DROP INDEX IF EXISTS storefront.idx_products_embedding_cosine;
+DROP INDEX IF EXISTS storefront.idx_variants_embedding_cosine;
+
 CREATE INDEX idx_cat_name_trgm ON storefront.categories USING GIN ((name->>'ar') gin_trgm_ops);
 CREATE INDEX idx_categories_path_gist ON storefront.categories USING GIST (path);
 CREATE INDEX idx_brand_name_trgm ON storefront.brands USING GIN ((name->>'ar') gin_trgm_ops);
