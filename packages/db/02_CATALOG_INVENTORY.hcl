@@ -1756,3 +1756,4 @@ CREATE POLICY tenant_isolation_policy ON storefront.b2b_users
   AS RESTRICTIVE FOR ALL 
   USING (tenant_id = current_setting('app.current_tenant', true)::uuid);
 SQL
+}
