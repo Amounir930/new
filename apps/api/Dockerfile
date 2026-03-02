@@ -29,6 +29,8 @@ RUN bun install
 
 # 🧪 S4: Copy source and build
 COPY . .
+# S1 FIX: Increase memory for build to prevent OOM (137)
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN bun run build --filter=@apex/api
 
 # ═══════════════════════════════════════════════════════════════
