@@ -76,11 +76,7 @@ END;
 SQL
 }
 
-composite "money_amount" {
-  schema = schema.public
-  field "amount" { type = bigint }
-  field "currency" { type = char(3) }
-}
+
 
 // ELITE DIRECTIVE: Application-level role configuration activated via sql.elite_server_config
 
