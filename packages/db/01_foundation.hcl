@@ -264,9 +264,15 @@ table "encryption_keys" {
   column "key_material" {
     type = jsonb
   }
-  primary_key { columns = [column.id] }
-  check "chk_key_material_s7" { expr = "(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))" }
-  index "idx_encryption_keys_tenant" { columns = [column.tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  check"chk_key_material_s7"  {
+  expr ="(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))"
+}
+  index"idx_encryption_keys_tenant"  {
+  columns =[column.tenant_id]
+}
 }
 
 table "archival_vault" {
@@ -297,8 +303,12 @@ table "archival_vault" {
   column "tombstone_hash" {
     type = text
   }
-  primary_key { columns = [column.id] }
-  check "chk_payload_size" { expr = "(pg_column_size(payload) <= 102400)" }
+  primary_key {
+  columns =[column.id]
+}
+  check"chk_payload_size"  {
+  expr ="(pg_column_size(payload) <= 102400)"
+}
 }
 
 table "tenants" {
@@ -378,15 +388,29 @@ table "tenants" {
     default = "UTC"
   }
 
-  primary_key { columns = [column.id] }
-  unique "tenants_subdomain_unique" { columns = [column.subdomain] where = "deleted_at IS NULL" }
-  unique "tenants_custom_domain_unique" { columns = [column.custom_domain] where = "deleted_at IS NULL" }
+  primary_key {
+  columns =[column.id]
+}
+  unique"tenants_subdomain_unique"  {
+  columns =[column.subdomain]
+  where ="deleted_at IS NULL"
+}
+  unique"tenants_custom_domain_unique"  {
+  columns =[column.custom_domain]
+  where ="deleted_at IS NULL"
+}
   
   // FIX (P2): Index for Forensic Investigation AI
-  index "idx_tenants_email_hash" { columns = [column.owner_email_hash] }
+  index"idx_tenants_email_hash"  {
+  columns =[column.owner_email_hash]
+}
 
-  check "chk_owner_email_s7" { expr = "(owner_email IS NULL OR (jsonb_typeof(owner_email) = 'object' AND owner_email ? 'enc' AND owner_email ? 'iv' AND owner_email ? 'tag' AND owner_email ? 'data'))" }
-  check "chk_ui_config_size" { expr = "(pg_column_size(ui_config) <= 204800)" }
+  check"chk_owner_email_s7"  {
+  expr ="(owner_email IS NULL OR (jsonb_typeof(owner_email) = 'object' AND owner_email ? 'enc' AND owner_email ? 'iv' AND owner_email ? 'tag' AND owner_email ? 'data'))"
+}
+  check"chk_ui_config_size"  {
+  expr ="(pg_column_size(ui_config) <= 204800)"
+}
   
   // ELITE: RLS POLICY BASE
   // CREATE POLICY tenant_isolation ON storefront... USING (tenant_id = current_setting('app.current_tenant')::uuid)
@@ -465,15 +489,28 @@ table "audit_logs" {
     null = true
   }
   
-  primary_key { columns = [column.id, column.created_at] }
+  primary_key {
+  columns =[column.id, column.created_at]
+}
   partition { type = RANGE columns = [column.created_at] }
   
   storage_param { name = "toast_tuple_target" value = "128" }
-  index "idx_audit_created_brin" { columns = [column.created_at] using = BRIN }
-  index "idx_audit_tenant" { columns = [column.tenant_id] }
-  index "idx_audit_entity" { columns = [column.entity_type, column.entity_id] }
-  index "idx_audit_action" { columns = [column.action] }
-  check "chk_audit_json_size" { expr = "(pg_column_size(old_values) <= 102400 AND pg_column_size(new_values) <= 102400)" }
+  index"idx_audit_created_brin"  {
+  columns =[column.created_at]
+  using =BRIN
+}
+  index"idx_audit_tenant"  {
+  columns =[column.tenant_id]
+}
+  index"idx_audit_entity"  {
+  columns =[column.entity_type, column.entity_id]
+}
+  index"idx_audit_action"  {
+  columns =[column.action]
+}
+  check"chk_audit_json_size"  {
+  expr ="(pg_column_size(old_values) <= 102400 AND pg_column_size(new_values) <= 102400)"
+}
   check "chk_audit_email_s7" { 
     expr = "(user_email IS NULL OR (jsonb_typeof(user_email) = 'object' AND user_email ? 'enc' AND user_email ? 'iv' AND user_email ? 'tag' AND user_email ? 'data'))" 
   }
@@ -549,16 +586,32 @@ table "leads" {
     default = sql("'[]'::jsonb")
   }
   
-  primary_key { columns = [column.id] }
-  index "idx_leads_email_hash" { columns = [column.email_hash] }
-  index "idx_leads_status" { columns = [column.status] }
-  index "idx_leads_converted" { columns = [column.converted_tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  index"idx_leads_email_hash"  {
+  columns =[column.email_hash]
+}
+  index"idx_leads_status"  {
+  columns =[column.status]
+}
+  index"idx_leads_converted"  {
+  columns =[column.converted_tenant_id]
+}
   
-  check "chk_leads_email_s7" { expr = "(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))" }
-  check "chk_leads_name_s7" { expr = "(name IS NULL OR (jsonb_typeof(name) = 'object' AND name ? 'enc' AND name ? 'iv' AND name ? 'tag' AND name ? 'data'))" }
-  check "chk_leads_notes_s7" { expr = "(notes IS NULL OR (jsonb_typeof(notes) = 'object' AND notes ? 'enc' AND notes ? 'iv' AND notes ? 'tag' AND notes ? 'data'))" }
+  check"chk_leads_email_s7"  {
+  expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
+}
+  check"chk_leads_name_s7"  {
+  expr ="(name IS NULL OR (jsonb_typeof(name) = 'object' AND name ? 'enc' AND name ? 'iv' AND name ? 'tag' AND name ? 'data'))"
+}
+  check"chk_leads_notes_s7"  {
+  expr ="(notes IS NULL OR (jsonb_typeof(notes) = 'object' AND notes ? 'enc' AND notes ? 'iv' AND notes ? 'tag' AND notes ? 'data'))"
+}
   
-  index "idx_leads_tenant" { columns = [column.converted_tenant_id] }
+  index"idx_leads_tenant"  {
+  columns =[column.converted_tenant_id]
+}
 }
 
 table "subscription_plans" {
@@ -623,8 +676,12 @@ table "subscription_plans" {
     type = text
     null = true
   }
-  primary_key { columns = [column.id] }
-  unique "subscription_plans_code_unique" { columns = [column.code] }
+  primary_key {
+  columns =[column.id]
+}
+  unique"subscription_plans_code_unique"  {
+  columns =[column.code]
+}
   // ELITE: money_amount used for pricing
   column "price_monthly_v2" {
     type = sql("public.money_amount")
@@ -634,7 +691,9 @@ table "subscription_plans" {
     type = sql("public.money_amount")
     null = false
   }
-  check "chk_plan_price" { expr = "COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0" }
+  check"chk_plan_price"  {
+  expr ="COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0"
+}
 }
 
 table "tenant_quotas" {
@@ -682,8 +741,12 @@ table "tenant_quotas" {
     type = int
     null = true
   }
-  primary_key { columns = [column.id] }
-  index "idx_tenant_quotas_tenant" { columns = [column.tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  index"idx_tenant_quotas_tenant"  {
+  columns =[column.tenant_id]
+}
 
 }
 
@@ -738,17 +801,27 @@ table "tenant_invoices" {
     type = text
     null = true
   }
-  primary_key { columns = [column.id] }
-  check "chk_invoice_period" { expr = "period_end >= period_start" }
+  primary_key {
+  columns =[column.id]
+}
+  check"chk_invoice_period"  {
+  expr ="period_end >= period_start"
+}
   
   // ELITE: Directives Alpha & Bravo applied
   check "chk_invoice_math" { 
     expr = "COALESCE((total).amount, 0) = COALESCE((subscription_amount).amount, 0) + COALESCE((platform_commission).amount, 0) + COALESCE((app_charges).amount, 0)" 
   }
   
-  index "idx_invoices_tenant" { columns = [column.tenant_id] }
-  index "idx_invoices_status" { columns = [column.status] }
-  index "idx_tenant_invoices_tenant" { columns = [column.tenant_id] }
+  index"idx_invoices_tenant"  {
+  columns =[column.tenant_id]
+}
+  index"idx_invoices_status"  {
+  columns =[column.status]
+}
+  index"idx_tenant_invoices_tenant"  {
+  columns =[column.tenant_id]
+}
 
 }
 
@@ -787,16 +860,30 @@ table "feature_gates" {
     null = true
   }
   
-  check "chk_rollout_range" { expr = "rollout_percentage >= 0 AND rollout_percentage <= 100" }
-  primary_key { columns = [column.id] }
-  unique "uq_feature_tenant_key" { columns = [column.tenant_id, column.feature_key] }
+  check"chk_rollout_range"  {
+  expr ="rollout_percentage >= 0 AND rollout_percentage <= 100"
+}
+  primary_key {
+  columns =[column.id]
+}
+  unique"uq_feature_tenant_key"  {
+  columns =[column.tenant_id, column.feature_key]
+}
   
   // FIX (P2): OOM Bomb Protection for Metadata
-  check "chk_fg_meta_size" { expr = "pg_column_size(metadata) <= 51200" }
+  check"chk_fg_meta_size"  {
+  expr ="pg_column_size(metadata) <= 51200"
+}
   
-  index "idx_feature_key" { columns = [column.feature_key] }
-  index "idx_feature_tenant" { columns = [column.tenant_id] }
-  index "idx_feature_gates_tenant" { columns = [column.tenant_id] }
+  index"idx_feature_key"  {
+  columns =[column.feature_key]
+}
+  index"idx_feature_tenant"  {
+  columns =[column.tenant_id]
+}
+  index"idx_feature_gates_tenant"  {
+  columns =[column.tenant_id]
+}
 
 }
 
@@ -837,10 +924,18 @@ table "dunning_events" {
     type = text
     null = true
   }
-  primary_key { columns = [column.id] }
-  check "chk_dunning_attempts" { expr = "(attempt_number <= 5)" }
-  check "chk_dunning_amount" { expr = "COALESCE((amount).amount, 0) > 0" }
-  index "idx_dunning_events_tenant" { columns = [column.tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  check"chk_dunning_attempts"  {
+  expr ="(attempt_number <= 5)"
+}
+  check"chk_dunning_amount"  {
+  expr ="COALESCE((amount).amount, 0) > 0"
+}
+  index"idx_dunning_events_tenant"  {
+  columns =[column.tenant_id]
+}
 
 }
 
@@ -873,8 +968,12 @@ table "app_usage_records" {
   column "metric" {
     type = varchar(50)
   }
-  primary_key { columns = [column.id] }
-  index "idx_app_usage_records_tenant" { columns = [column.tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  index"idx_app_usage_records_tenant"  {
+  columns =[column.tenant_id]
+}
 
 }
 
@@ -904,8 +1003,12 @@ table "plan_change_history" {
   column "changed_by" {
     type = text
   }
-  primary_key { columns = [column.id] }
-  index "idx_plan_change_history_tenant" { columns = [column.tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  index"idx_plan_change_history_tenant"  {
+  columns =[column.tenant_id]
+}
 
 }
 
@@ -953,8 +1056,12 @@ table "onboarding_blueprints" {
     type = jsonb
     default = sql("'{}'::jsonb")
   }
-  primary_key { columns = [column.id] }
-  index "blueprint_niche_plan_idx" { columns = [column.niche_type, column.plan] }
+  primary_key {
+  columns =[column.id]
+}
+  index"blueprint_niche_plan_idx"  {
+  columns =[column.niche_type, column.plan]
+}
 }
 
 table "system_config" {
@@ -969,7 +1076,9 @@ table "system_config" {
   column "value" {
     type = jsonb
   }
-  primary_key { columns = [column.key] }
+  primary_key {
+  columns =[column.key]
+}
 }
 
 table "schema_drift_log" {
@@ -1007,8 +1116,13 @@ table "schema_drift_log" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key { columns = [column.id] }
-  index "idx_drift_time" { columns = [column.executed_at] using = BRIN }
+  primary_key {
+  columns =[column.id]
+}
+  index"idx_drift_time"  {
+  columns =[column.executed_at]
+  using =BRIN
+}
 }
 
 table "order_fraud_scores" {
@@ -1059,13 +1173,28 @@ table "order_fraud_scores" {
     type = jsonb
     default = sql("'{}'::jsonb")
   }
-  primary_key { columns = [column.id] }
-  check "chk_risk_score_range" { expr = "(risk_score BETWEEN 0 AND 1000)" }
-  index "idx_fraud_order" { columns = [column.order_id] }
-  index "idx_fraud_tenant" { columns = [column.tenant_id] }
-  index "idx_fraud_flagged" { columns = [column.is_flagged] where = "is_flagged = true AND is_reviewed = false" }
+  primary_key {
+  columns =[column.id]
+}
+  check"chk_risk_score_range"  {
+  expr ="(risk_score BETWEEN 0 AND 1000)"
+}
+  index"idx_fraud_order"  {
+  columns =[column.order_id]
+}
+  index"idx_fraud_tenant"  {
+  columns =[column.tenant_id]
+}
+  index"idx_fraud_flagged"  {
+  columns =[column.is_flagged]
+  where ="
+  is_flagged =true AND
+  is_reviewed =false"
+}
   
-  index "idx_order_fraud_scores_tenant" { columns = [column.tenant_id] }
+  index"idx_order_fraud_scores_tenant"  {
+  columns =[column.tenant_id]
+}
 
 }
 
@@ -1116,11 +1245,21 @@ table "marketing_pages" {
   column "content" {
     type = jsonb
   }
-  primary_key { columns = [column.id] }
-  unique "uq_marketing_slug" { columns = [column.slug] }
-  index "idx_mkt_slug" { columns = [column.slug] }
-  index "idx_mkt_published" { columns = [column.is_published] }
-  index "idx_mkt_type" { columns = [column.page_type] }
+  primary_key {
+  columns =[column.id]
+}
+  unique"uq_marketing_slug"  {
+  columns =[column.slug]
+}
+  index"idx_mkt_slug"  {
+  columns =[column.slug]
+}
+  index"idx_mkt_published"  {
+  columns =[column.is_published]
+}
+  index"idx_mkt_type"  {
+  columns =[column.page_type]
+}
 }
 
 // ==========================================

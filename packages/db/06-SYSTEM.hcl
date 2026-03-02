@@ -54,9 +54,13 @@ table "outbox_events" {
     null = true
   }
   
-  check "chk_payload_size" { expr = "(pg_column_size(payload) <= 524288)" }
+  check"chk_payload_size"  {
+  expr ="(pg_column_size(payload) <= 524288)"
+}
   
-  primary_key { columns = [column.id, column.created_at] }
+  primary_key {
+  columns =[column.id, column.created_at]
+}
   partition { type = RANGE columns = [column.created_at] }
   
   storage_param {
@@ -66,14 +70,20 @@ table "outbox_events" {
     autovacuum_analyze_scale_factor = 0.005
   }
   
-  index "idx_outbox_pending" { columns = [column.status, column.created_at] where = "status = 'pending'" }
+  index"idx_outbox_pending"  {
+  columns =[column.status, column.created_at]
+  where ="
+  status ='pending'"
+}
   index "idx_outbox_created_brin" { 
     columns = [column.created_at]
     using = BRIN
     storage_param { name = "pages_per_range" value = "32" }
   }
   
-  index "idx_outbox_events_tenant_active" { columns = [column.tenant_id] }
+  index"idx_outbox_events_tenant_active"  {
+  columns =[column.tenant_id]
+}
 
   trigger "trg_outbox_prevent_hijack" {
     on {
@@ -104,11 +114,19 @@ table "tenant_config" {
     type = timestamptz
     default = sql("now()")
   }
-  primary_key { columns = [column.key, column.tenant_id] }
+  primary_key {
+  columns =[column.key, column.tenant_id]
+}
   // Strike 05: Key Injection Protection
-  check "chk_config_key" { expr = "key ~ '^[a-zA-Z0-9_]+$'" }
-  check "chk_tc_value_size" { expr = "pg_column_size(value) <= 102400" }
-  index "idx_tenant_config_tenant_active" { columns = [column.tenant_id] }
+  check"chk_config_key"  {
+  expr ="key ~ '^[a-zA-Z0-9_]+$'"
+}
+  check"chk_tc_value_size"  {
+  expr ="pg_column_size(value) <= 102400"
+}
+  index"idx_tenant_config_tenant_active"  {
+  columns =[column.tenant_id]
+}
 
   trigger "trg_tenant_config_updated_at" {
     on {
@@ -168,9 +186,17 @@ table "markets" {
   column "countries" {
     type = jsonb
   }
-  primary_key { columns = [column.id] }
-  unique "uq_tenant_primary_market" { columns = [column.tenant_id] where = "is_primary = true" }
-  index "idx_markets_tenant_active" { columns = [column.tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  unique"uq_tenant_primary_market"  {
+  columns =[column.tenant_id]
+  where ="
+  is_primary =true"
+}
+  index"idx_markets_tenant_active"  {
+  columns =[column.tenant_id]
+}
   // ALTER TABLE storefront.markets ENABLE ROW LEVEL SECURITY
 
   trigger "trg_markets_prevent_hijack" {
@@ -220,10 +246,16 @@ table "price_lists" {
     null = true
   }
   
-  primary_key { columns = [column.id] }
+  primary_key {
+  columns =[column.id]
+}
   
-  check "chk_pl_inner_not_null" { expr = "(price).amount IS NOT NULL AND (price).currency IS NOT NULL" }
-  index "idx_price_lists_tenant_active" { columns = [column.tenant_id] }
+  check"chk_pl_inner_not_null"  {
+  expr ="(price).amount IS NOT NULL AND (price).currency IS NOT NULL"
+}
+  index"idx_price_lists_tenant_active"  {
+  columns =[column.tenant_id]
+}
 
   trigger "trg_price_lists_validate_currency" {
     on {
@@ -253,7 +285,9 @@ table "price_lists" {
     on_delete   = "RESTRICT"
   }
 
-  check "chk_pl_price_inner" { expr = "(price).amount IS NOT NULL AND (price).currency IS NOT NULL" }
+  check"chk_pl_price_inner"  {
+  expr ="(price).amount IS NOT NULL AND (price).currency IS NOT NULL"
+}
 
   trigger "trg_price_lists_prevent_hijack" {
     on {
@@ -292,9 +326,15 @@ table "currency_rates" {
     precision = 12
     scale = 6
   }
-  primary_key { columns = [column.id] }
-  unique "uq_tenant_currency_pair" { columns = [column.tenant_id, column.from_currency, column.to_currency] }
-  index "idx_currency_rates_tenant_active" { columns = [column.tenant_id] }
+  primary_key {
+  columns =[column.id]
+}
+  unique"uq_tenant_currency_pair"  {
+  columns =[column.tenant_id, column.from_currency, column.to_currency]
+}
+  index"idx_currency_rates_tenant_active"  {
+  columns =[column.tenant_id]
+}
 
   trigger "trg_currency_rates_updated_at" {
     on {
