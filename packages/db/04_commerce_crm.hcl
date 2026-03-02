@@ -1707,7 +1707,7 @@ trigger "trg_customers_updated_at" {
     table = table.customers
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }
@@ -1720,7 +1720,7 @@ trigger "trg_orders_updated_at" {
     table = table.orders
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }
@@ -1733,7 +1733,7 @@ trigger "trg_rma_requests_updated_at" {
     table = table.rma_requests
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }
@@ -1746,7 +1746,7 @@ trigger "trg_shipping_zones_updated_at" {
     table = table.shipping_zones
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }

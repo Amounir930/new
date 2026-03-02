@@ -1781,7 +1781,7 @@ trigger "trg_flash_sales_updated_at" {
     table = table.flash_sales
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }
@@ -1794,7 +1794,7 @@ trigger "trg_loyalty_rules_updated_at" {
     table = table.loyalty_rules
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }
@@ -1807,7 +1807,7 @@ trigger "trg_pages_updated_at" {
     table = table.pages
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }
@@ -1820,7 +1820,7 @@ trigger "trg_blog_posts_updated_at" {
     table = table.blog_posts
   }
   timing = "BEFORE"
-  for_each = "ROW"
+  for_each = ROW
 execute {
     function = function.set_current_timestamp_updated_at
   }
