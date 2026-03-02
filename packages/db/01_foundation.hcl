@@ -89,40 +89,40 @@ composite_type "money_amount" {
 
 // ELITE DIRECTIVE: Application-level role configuration activated via sql.elite_server_config
 
-enum "severity_enum" { schema = schema.public; values = ["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"] }
-enum "audit_result_enum" { schema = schema.public; values = ["SUCCESS", "FAILURE"] }
-enum "tenant_plan" { schema = schema.public; values = ["free", "basic", "pro", "enterprise"] }
-enum "tenant_status" { schema = schema.public; values = ["active", "suspended", "pending", "archived"] }
-enum "tenant_niche" { schema = schema.public; values = ["retail", "wellness", "education", "services", "hospitality", "real-estate", "creative"] }
+enum "severity_enum" { schema = schema.public values = ["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"] }
+enum "audit_result_enum" { schema = schema.public values = ["SUCCESS", "FAILURE"] }
+enum "tenant_plan" { schema = schema.public values = ["free", "basic", "pro", "enterprise"] }
+enum "tenant_status" { schema = schema.public values = ["active", "suspended", "pending", "archived"] }
+enum "tenant_niche" { schema = schema.public values = ["retail", "wellness", "education", "services", "hospitality", "real-estate", "creative"] }
 // FIX (P1): Enterprise B2B lifecycle added
-enum "order_status" { schema = schema.public; values = ["draft", "awaiting_approval", "pending", "processing", "shipped", "delivered", "cancelled", "returned"] }
-enum "payment_status" { schema = schema.public; values = ["pending", "paid", "partially_refunded", "refunded", "failed"] }
-enum "payment_method" { schema = schema.public; values = ["card", "cod", "wallet", "bnpl", "bank_transfer"] }
-enum "fulfillment_status" { schema = schema.public; values = ["pending", "shipped", "in_transit", "delivered", "failed"] }
-enum "order_source" { schema = schema.public; values = ["web", "mobile", "b2b", "pos"] }
-enum "discount_type" { schema = schema.public; values = ["percentage", "fixed", "buy_x_get_y", "free_shipping"] }
-enum "discount_applies_to" { schema = schema.public; values = ["all", "specific_products", "specific_categories", "specific_customers"] }
-enum "rma_status" { schema = schema.public; values = ["requested", "approved", "shipped", "received", "completed", "rejected"] }
-enum "rma_reason_code" { schema = schema.public; values = ["defective", "wrong_item", "changed_mind", "not_as_described", "damaged_in_transit"] }
-enum "rma_condition" { schema = schema.public; values = ["new", "opened", "damaged"] }
-enum "rma_resolution" { schema = schema.public; values = ["refund", "exchange", "store_credit"] }
-enum "refund_status" { schema = schema.public; values = ["pending", "processed", "failed"] }
-enum "inventory_movement_type" { schema = schema.public; values = ["in", "out", "adjustment", "return", "transfer"] }
-enum "reservation_status" { schema = schema.public; values = ["active", "converted", "expired"] }
-enum "transfer_status" { schema = schema.public; values = ["draft", "in_transit", "received", "cancelled"] }
-enum "location_type" { schema = schema.public; values = ["warehouse", "retail", "dropship"] }
-enum "purchase_order_status" { schema = schema.public; values = ["draft", "ordered", "partial", "received", "cancelled"] }
-enum "invoice_status" { schema = schema.public; values = ["draft", "issued", "paid", "overdue"] }
-enum "lead_status" { schema = schema.public; values = ["new", "contacted", "qualified", "converted"] }
-enum "dunning_status" { schema = schema.public; values = ["pending", "retried", "failed", "recovered"] }
-enum "outbox_status" { schema = schema.public; values = ["pending", "processing", "completed", "failed"] }
-enum "affiliate_status" { schema = schema.public; values = ["active", "pending", "suspended"] }
-enum "affiliate_tx_status" { schema = schema.public; values = ["pending", "approved", "paid", "rejected"] }
-enum "b2b_company_status" { schema = schema.public; values = ["active", "pending", "suspended"] }
-enum "b2b_user_role" { schema = schema.public; values = ["admin", "buyer", "viewer"] }
-enum "consent_channel" { schema = schema.public; values = ["email", "sms", "push", "whatsapp"] }
-enum "actor_type" { schema = schema.public; values = ["super_admin", "tenant_admin", "system"] }
-enum "blueprint_status" { schema = schema.public; values = ["active", "paused"] }
+enum "order_status" { schema = schema.public values = ["draft", "awaiting_approval", "pending", "processing", "shipped", "delivered", "cancelled", "returned"] }
+enum "payment_status" { schema = schema.public values = ["pending", "paid", "partially_refunded", "refunded", "failed"] }
+enum "payment_method" { schema = schema.public values = ["card", "cod", "wallet", "bnpl", "bank_transfer"] }
+enum "fulfillment_status" { schema = schema.public values = ["pending", "shipped", "in_transit", "delivered", "failed"] }
+enum "order_source" { schema = schema.public values = ["web", "mobile", "b2b", "pos"] }
+enum "discount_type" { schema = schema.public values = ["percentage", "fixed", "buy_x_get_y", "free_shipping"] }
+enum "discount_applies_to" { schema = schema.public values = ["all", "specific_products", "specific_categories", "specific_customers"] }
+enum "rma_status" { schema = schema.public values = ["requested", "approved", "shipped", "received", "completed", "rejected"] }
+enum "rma_reason_code" { schema = schema.public values = ["defective", "wrong_item", "changed_mind", "not_as_described", "damaged_in_transit"] }
+enum "rma_condition" { schema = schema.public values = ["new", "opened", "damaged"] }
+enum "rma_resolution" { schema = schema.public values = ["refund", "exchange", "store_credit"] }
+enum "refund_status" { schema = schema.public values = ["pending", "processed", "failed"] }
+enum "inventory_movement_type" { schema = schema.public values = ["in", "out", "adjustment", "return", "transfer"] }
+enum "reservation_status" { schema = schema.public values = ["active", "converted", "expired"] }
+enum "transfer_status" { schema = schema.public values = ["draft", "in_transit", "received", "cancelled"] }
+enum "location_type" { schema = schema.public values = ["warehouse", "retail", "dropship"] }
+enum "purchase_order_status" { schema = schema.public values = ["draft", "ordered", "partial", "received", "cancelled"] }
+enum "invoice_status" { schema = schema.public values = ["draft", "issued", "paid", "overdue"] }
+enum "lead_status" { schema = schema.public values = ["new", "contacted", "qualified", "converted"] }
+enum "dunning_status" { schema = schema.public values = ["pending", "retried", "failed", "recovered"] }
+enum "outbox_status" { schema = schema.public values = ["pending", "processing", "completed", "failed"] }
+enum "affiliate_status" { schema = schema.public values = ["active", "pending", "suspended"] }
+enum "affiliate_tx_status" { schema = schema.public values = ["pending", "approved", "paid", "rejected"] }
+enum "b2b_company_status" { schema = schema.public values = ["active", "pending", "suspended"] }
+enum "b2b_user_role" { schema = schema.public values = ["admin", "buyer", "viewer"] }
+enum "consent_channel" { schema = schema.public values = ["email", "sms", "push", "whatsapp"] }
+enum "actor_type" { schema = schema.public values = ["super_admin", "tenant_admin", "system"] }
+enum "blueprint_status" { schema = schema.public values = ["active", "paused"] }
 
 table "encryption_keys" {
   schema        = schema.vault
