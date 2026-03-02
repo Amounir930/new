@@ -76,7 +76,7 @@ table "outbox_events" {
   }
   index "idx_outbox_created_brin" {
     columns = [column.created_at]
-    using = "BRIN"
+    type = "BRIN"
     storage_params {
       name  = "pages_per_range"
       value = "32"
@@ -265,7 +265,7 @@ table "price_lists" {
   // ELITE: Prevent overlapping quantity ranges for same product/variant/market
   exclude "idx_price_list_overlap_prevent" {
     columns = [column.tenant_id, column.market_id, column.product_id, column.variant_id, column.quantity_range]
-    using = "GIST"
+    type = "GIST"
     ops     = ["=", "=", "=", "=", "&&"]
     where   = "variant_id IS NOT NULL"
   }

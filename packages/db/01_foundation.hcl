@@ -447,6 +447,14 @@ table "audit_logs" {
     type = jsonb
     null = true
   }
+  column "entity_type" {
+    type = varchar(100)
+    null = true
+  }
+  column "entity_id" {
+    type = varchar(100)
+    null = true
+  }
   column "action" {
     type = text
   }
@@ -498,7 +506,7 @@ table "audit_logs" {
   }
   index "idx_audit_created_brin" {
     columns = [column.created_at]
-    using = "BRIN"
+    type = "BRIN"
   }
   index "idx_audit_tenant" {
     columns = [column.tenant_id]
@@ -1096,7 +1104,7 @@ table "schema_drift_log" {
   }
   index "idx_drift_time" {
     columns = [column.executed_at]
-    using = "BRIN"
+    type = "BRIN"
   }
 }
 table "order_fraud_scores" {

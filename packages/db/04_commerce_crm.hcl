@@ -245,7 +245,7 @@ table "customer_addresses" {
   }
   index "idx_customer_addresses_geo" {
     columns = [column.coordinates]
-    using = "GIST"
+    type = "GIST"
   }
   check "chk_line1_encrypted" {
     expr = "(line1 IS NULL OR (jsonb_typeof(line1) = 'object' AND line1 ? 'enc' AND line1 ? 'iv' AND line1 ? 'tag' AND line1 ? 'data'))"
@@ -566,7 +566,7 @@ table "orders" {
   }
   index "idx_orders_created" {
     columns = [column.created_at]
-    using = "BRIN"
+    type = "BRIN"
   }
 
   // ELITE: Alpha & Bravo applied (Directive Charlie - Logic Integrity)
@@ -834,7 +834,7 @@ table "order_timeline" {
   }
   index "idx_timeline_created" {
     columns = [column.created_at]
-    using = "BRIN"
+    type = "BRIN"
   }
   index "idx_order_timeline_tenant" {
     columns = [column.tenant_id]
@@ -1252,7 +1252,7 @@ table "payment_logs" {
   }
   index "idx_payment_created_brin" {
     columns = [column.created_at]
-    using = "BRIN"
+    type = "BRIN"
     with {
       pages_per_range = 32
     }
@@ -1442,7 +1442,7 @@ table "abandoned_checkouts" {
   }
   index "idx_abandoned_items_gin" {
     columns = [column.items]
-    using = "GIN"
+    type = "GIN"
   }
   index "idx_abandoned_checkouts_tenant" {
     columns = [column.tenant_id]
@@ -1730,7 +1730,7 @@ table "reviews" {
   }
   index "idx_reviews_embedding_cosine" {
     columns = [column.embedding]
-    using = "HNSW"
+    type = "HNSW"
     ops     = [sql("public.vector_cosine_ops")]
     storage_params {
       name  = "m"

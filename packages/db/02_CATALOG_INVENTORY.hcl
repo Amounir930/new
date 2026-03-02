@@ -100,11 +100,11 @@ table "categories" {
   }
   index "idx_cat_name_trgm" {
     expr  = "((name->>'ar') gin_trgm_ops)"
-    using = "GIN"
+    type = "GIN"
   }
   index "idx_categories_path_gist" {
     columns = [column.path]
-    using = "GIST"
+    type = "GIST"
   }
   check "chk_categories_no_circular_ref" {
     expr = "(parent_id IS NULL OR parent_id != id)"
@@ -189,7 +189,7 @@ table "brands" {
   }
   index "idx_brand_name_trgm" {
     expr  = "((name->>'ar') gin_trgm_ops)"
-    using = "GIN"
+    type = "GIN"
   }
   index "idx_brands_tenant" {
     columns = [column.tenant_id]
@@ -410,18 +410,18 @@ table "products" {
   }
   index "idx_products_tags" {
     columns = [column.tags]
-    using = "GIN"
+    type = "GIN"
   }
   index "idx_products_name" {
     columns = [column.name]
-    using = "GIN"
+    type = "GIN"
   }
   index "idx_products_brand" {
     columns = [column.brand_id]
   }
   index "idx_products_embedding_cosine" {
     columns = [column.embedding]
-    using = "HNSW"
+    type = "HNSW"
     ops     = [sql("public.vector_cosine_ops")]
     storage_params {
       name  = "m"
@@ -538,7 +538,7 @@ table "product_variants" {
   }
   index "idx_variants_embedding_cosine" {
     columns = [column.embedding]
-    using = "HNSW"
+    type = "HNSW"
     ops     = [sql("public.vector_cosine_ops")]
     storage_params {
       name  = "m"
@@ -653,7 +653,7 @@ table "product_attributes" {
   }
   index "idx_attrs_value_trgm" {
     columns = [column.attribute_value]
-    using = "GIN"
+    type = "GIN"
   }
 
   // Strike 04: Text Bloat Protection (Limit 1024)
@@ -710,7 +710,7 @@ table "entity_metafields" {
   }
   index "idx_metafields_value_gin" {
     columns = [column.value]
-    using = "GIN"
+    type = "GIN"
   }
   check "chk_metafield_size" {
     expr = "(pg_column_size(value) <= 10240)"
@@ -835,7 +835,7 @@ table "locations" {
   }
   index "idx_locations_gis" {
     columns = [column.coordinates]
-    using = "GIST"
+    type = "GIST"
   }
   index "idx_locations_tenant" {
     columns = [column.tenant_id]
@@ -968,7 +968,7 @@ table "inventory_movements" {
   }
   index "idx_inv_mov_created" {
     columns = [column.created_at]
-    using = "BRIN"
+    type = "BRIN"
   }
   check "chk_movement_logic" {
     expr = "(( type ='in' AND quantity > 0) OR ( type ='out' AND quantity < 0) OR type IN ('adjustment', 'transfer', 'return'))"
@@ -1504,7 +1504,7 @@ table "b2b_pricing_tiers" {
   }
   exclude "idx_b2b_overlap_prevent" {
     columns = [column.tenant_id, column.company_id, column.product_id, column.quantity_range]
-    using = "GIST"
+    type = "GIST"
     ops     = ["=", "=", "=", "&&"]
   }
   index "idx_b2b_pricing" {
@@ -1512,7 +1512,7 @@ table "b2b_pricing_tiers" {
   }
   index "idx_b2b_tier_collision" {
     columns = [column.min_quantity, column.max_quantity]
-    using = "GIST"
+    type = "GIST"
   }
   check "chk_b2b_price_xor" {
     expr = "((price IS NULL) != (discount_basis_points IS NULL))"
