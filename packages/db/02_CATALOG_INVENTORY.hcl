@@ -103,9 +103,7 @@ table "categories" {
   check "chk_categories_no_circular_ref" {
     expr = "(parent_id IS NULL OR parent_id != id)"
   }
-  check "chk_category_depth" {
-    expr = "nlevel(path) <= 10"
-  }
+
 
   // Strike 12: Cascading LTREE Update (Logic handled in 07-SECURITY via Trigger)
 
