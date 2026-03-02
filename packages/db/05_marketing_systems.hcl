@@ -71,7 +71,7 @@ table "coupons" {
   primary_key {
     columns = [column.id]
   }
-  unique "coupons_code_unique " {
+  unique "coupons_code_unique" {
     columns = [column.tenant_id, column.code]
   }
   index "idx_coupons_code" {
@@ -80,10 +80,10 @@ table "coupons" {
   index "idx_coupons_active" {
     columns = [column.is_active]
   }
-  check "coupon_code_upper_check " {
+  check "coupon_code_upper_check" {
     expr = "code =UPPER(code)"
   }
-  check "coupon_usage_exhaustion_check " {
+  check "coupon_usage_exhaustion_check" {
     expr = "used_count <= max_uses"
   }
   check "chk_coupon_val_positive" {
@@ -265,7 +265,7 @@ table "discount_codes" {
   primary_key {
     columns = [column.id]
   }
-  unique "discount_codes_code_unique " {
+  unique "discount_codes_code_unique" {
     columns = [column.tenant_id, column.code]
   }
   index "idx_discount_code" {
@@ -623,10 +623,11 @@ table "wallet_transactions" {
   primary_key {
     columns = [column.id]
   }
-  unique "wallet_tx_idempotency" {
+  index "wallet_tx_idempotency" {
+    unique  = true
     columns = [column.tenant_id, column.idempotency_key]
     where   = "idempotency_key IS NOT NULL"
-  }
+  
   index "idx_wallet_customer" {
     columns = [column.customer_id]
   }
@@ -700,7 +701,7 @@ table "affiliate_partners" {
   unique "uq_tenant_affiliate" {
     columns = [column.tenant_id, column.id]
   }
-  unique "affiliate_partners_referral_code_unique " {
+  unique "affiliate_partners_referral_code_unique" {
     columns = [column.tenant_id, column.referral_code]
   }
   index "idx_affiliate_email_hash" {
@@ -989,7 +990,7 @@ table "staff_sessions" {
   primary_key {
     columns = [column.id]
   }
-  unique "staff_sessions_token_hash_unique " {
+  unique "staff_sessions_token_hash_unique" {
     columns = [column.tenant_id, column.token_hash]
   }
   index "idx_session_token" {
@@ -1219,10 +1220,11 @@ table "pages" {
   primary_key {
     columns = [column.id]
   }
-  unique "idx_pages_slug_active" {
+  index "idx_pages_slug_active" {
+    unique  = true
     columns = [column.tenant_id, column.slug]
     where   = "deleted_at IS NULL"
-  }
+  
   index "idx_pages_published" {
     columns = [column.is_published]
   }
@@ -1323,10 +1325,11 @@ table "blog_posts" {
   primary_key {
     columns = [column.id]
   }
-  unique "idx_blog_slug_active" {
+  index "idx_blog_slug_active" {
+    unique  = true
     columns = [column.tenant_id, column.slug]
     where   = "deleted_at IS NULL"
-  }
+  
   index "idx_blog_published" {
     columns = [column.is_published]
   }
@@ -1531,7 +1534,7 @@ table "kb_categories" {
   primary_key {
     columns = [column.id]
   }
-  unique "kb_categories_slug_unique " {
+  unique "kb_categories_slug_unique" {
     columns = [column.tenant_id, column.slug]
   }
   index "idx_kb_categories_tenant" {
@@ -1580,7 +1583,7 @@ table "kb_articles" {
   primary_key {
     columns = [column.id]
   }
-  unique "kb_articles_slug_unique " {
+  unique "kb_articles_slug_unique" {
     columns = [column.tenant_id, column.slug]
   }
   index "idx_kb_article_slug" {
@@ -1746,7 +1749,7 @@ table "search_synonyms" {
   primary_key {
     columns = [column.id]
   }
-  unique "search_synonyms_term_unique " {
+  unique "search_synonyms_term_unique" {
     columns = [column.tenant_id, column.term]
   }
   check "chk_synonym_no_self_loop" {

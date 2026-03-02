@@ -86,10 +86,11 @@ table "categories" {
   unique "uq_tenant_cat" {
     columns = [column.tenant_id, column.id]
   }
-  unique "idx_categories_slug_active" {
+  index "idx_categories_slug_active" {
+    unique  = true
     columns = [column.tenant_id, column.slug]
     where   = "deleted_at IS NULL"
-  }
+  
   index "idx_categories_parent" {
     columns = [column.parent_id]
   }
@@ -177,10 +178,11 @@ table "brands" {
   primary_key {
     columns = [column.id]
   }
-  unique "idx_brands_slug_active" {
+  index "idx_brands_slug_active" {
+    unique  = true
     columns = [column.tenant_id, column.slug]
     where   = "deleted_at IS NULL"
-  }
+  
   index "idx_brands_active" {
     columns = [column.is_active]
     where   = "deleted_at IS NULL"
@@ -388,14 +390,16 @@ table "products" {
   unique "uq_tenant_product" {
     columns = [column.tenant_id, column.id]
   }
-  unique "idx_products_slug_active" {
+  index "idx_products_slug_active" {
+    unique  = true
     columns = [column.tenant_id, column.slug]
     where   = "deleted_at IS NULL"
-  }
-  unique "idx_products_sku_active" {
+  
+  index "idx_products_sku_active" {
+    unique  = true
     columns = [column.tenant_id, column.sku]
     where   = "deleted_at IS NULL"
-  }
+  
   index "idx_products_active" {
     columns = [column.category_id]
     where   = "deleted_at IS NULL"
@@ -524,10 +528,11 @@ table "product_variants" {
   unique "uq_tenant_variant" {
     columns = [column.tenant_id, column.id]
   }
-  unique "idx_variant_sku_active" {
+  index "idx_variant_sku_active" {
+    unique  = true
     columns = [column.tenant_id, column.sku]
     where   = "deleted_at IS NULL"
-  }
+  
   index "idx_variants_product" {
     columns = [column.product_id]
   }
@@ -596,10 +601,11 @@ table "product_images" {
   index "idx_product_images_product" {
     columns = [column.product_id]
   }
-  unique "uq_primary_image" {
+  index "uq_primary_image" {
+    unique  = true
     columns = [column.tenant_id, column.product_id]
     where   = "is_primary =true"
-  }
+  
   index "idx_product_images_tenant" {
     columns = [column.tenant_id]
   }
@@ -1290,7 +1296,7 @@ table "purchase_orders" {
   primary_key {
     columns = [column.id]
   }
-  unique "idx_po_number_unique " {
+  unique "idx_po_number_unique" {
     columns = [column.tenant_id, column.order_number]
   }
   index "idx_po_supplier" {
