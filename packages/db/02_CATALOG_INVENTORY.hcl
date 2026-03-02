@@ -371,7 +371,7 @@ table "products" {
     default = sql("'[]'::jsonb")
   }
   column "embedding" {
-    type = sql("public.vector(1536)")
+    type = text
     null = true
   }
   column "version" {
@@ -424,13 +424,10 @@ table "products" {
   index "idx_products_embedding_cosine" {
     on {
       column = column.embedding
-      ops    = sql("public.vector_cosine_ops")
+      
     }
-    type = "HNSW"
-    storage_params {
-      m = 24
-      ef_construction = 128
-    }
+    type = "BTREE"
+
   }
 
   // Strike 18: Digital/Shipping Logic Consistency
@@ -519,7 +516,7 @@ table "product_variants" {
     type = jsonb
   }
   column "embedding" {
-    type = sql("public.vector(1536)")
+    type = text
     null = true
   }
   primary_key {
@@ -539,13 +536,10 @@ table "product_variants" {
   index "idx_variants_embedding_cosine" {
     on {
       column = column.embedding
-      ops    = sql("public.vector_cosine_ops")
+      
     }
-    type = "HNSW"
-    storage_params {
-      m = 24
-      ef_construction = 128
-    }
+    type = "BTREE"
+
   }
   check "chk_variant_options_obj" {
     expr = "jsonb_typeof(options) = 'object'"
