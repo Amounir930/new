@@ -35,12 +35,12 @@ table "customers" {
     null = true
   }
   column "wallet_balance" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     null    = false
     default = 0.0000
   }
   column "total_spent_amount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     null    = false
     default = 0.0000
   }
@@ -405,17 +405,17 @@ table "orders" {
     null = false
   }
   column "discount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     null    = false
     default = 0.0000
   }
   column "shipping" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     null    = false
     default = 0.0000
   }
   column "tax" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     null    = false
     default = 0.0000
   }
@@ -424,11 +424,11 @@ table "orders" {
     null = false
   }
   column "coupon_discount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "refunded_amount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   check "chk_order_total_inner" {
@@ -615,11 +615,11 @@ table "order_items" {
     null = false
   }
   column "discount_amount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "tax_amount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "quantity" {
@@ -723,7 +723,7 @@ table "order_edits" {
     default = sql("now()")
   }
   column "amount_change" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "edit_type" {
@@ -1120,7 +1120,7 @@ table "rma_items" {
     type = int
   }
   column "restocking_fee" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "reason_code" {
@@ -1398,7 +1398,7 @@ table "abandoned_checkouts" {
     null = true
   }
   column "recovered_amount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   primary_key {

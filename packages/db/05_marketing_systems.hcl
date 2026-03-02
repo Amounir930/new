@@ -33,7 +33,7 @@ table "coupons" {
     null = false
   }
   column "min_order_amount" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     null    = false
     default = 0.0000
   }
@@ -444,7 +444,7 @@ table "product_bundles" {
     null = true
   }
   column "discount_value" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "is_active" {
@@ -659,11 +659,11 @@ table "affiliate_partners" {
     default = 500
   }
   column "total_earned" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "total_paid" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "status" {

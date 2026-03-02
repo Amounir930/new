@@ -1272,11 +1272,11 @@ table "purchase_orders" {
     null = false
   }
   column "tax" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "shipping_cost" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "total" {
@@ -1402,11 +1402,11 @@ table "b2b_companies" {
     null = true
   }
   column "credit_limit" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "credit_used" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
   }
   column "payment_terms_days" {
@@ -1574,7 +1574,7 @@ table "b2b_users" {
     default = "buyer"
   }
   column "unit_price" {
-    type    = sql("public.money_amount")
+    type = decimal(12,4)
     default = 0.0000
     null    = false
   }

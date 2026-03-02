@@ -703,16 +703,16 @@ table "tenant_invoices" {
     type = date
   }
   column "subscription_amount" {
-    type    = sql("public.money_amount")
-    default = sql("ROW(0, 'USD')::public.money_amount")
+    type = decimal(12,4)
+    default = 0.0000
   }
   column "platform_commission" {
-    type    = sql("public.money_amount")
-    default = sql("ROW(0, 'USD')::public.money_amount")
+    type = decimal(12,4)
+    default = 0.0000
   }
   column "app_charges" {
-    type    = sql("public.money_amount")
-    default = sql("ROW(0, 'USD')::public.money_amount")
+    type = decimal(12,4)
+    default = 0.0000
   }
   column "total" {
     type = decimal(12,4)
