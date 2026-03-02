@@ -41,6 +41,6 @@ CREATE INDEX idx_variants_embedding_cosine ON storefront.product_variants USING 
 
 -- 5. Restore Exclusion Constraints (Requires btree_gist)
 ALTER TABLE storefront.flash_sale_products ADD CONSTRAINT idx_flash_prod_overlap_prevent EXCLUDE USING GIST (flash_sale_id WITH =, product_id WITH =, tenant_id WITH =);
-ALTER TABLE storefront.price_list_items ADD CONSTRAINT idx_price_list_overlap_prevent EXCLUDE USING GIST (price_list_id WITH =, product_id WITH =, tenant_id WITH =);
+ALTER TABLE storefront.price_lists ADD CONSTRAINT idx_price_list_overlap_prevent EXCLUDE USING GIST (market_id WITH =, product_id WITH =, tenant_id WITH =);
 ALTER TABLE storefront.b2b_pricing_tiers ADD CONSTRAINT idx_b2b_overlap_prevent EXCLUDE USING GIST (tenant_id WITH =, company_id WITH =, product_id WITH =, quantity_range WITH &&);
 CREATE INDEX idx_b2b_tier_collision ON storefront.b2b_pricing_tiers USING GIST (min_quantity, max_quantity);
