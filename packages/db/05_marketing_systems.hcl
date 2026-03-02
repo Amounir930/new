@@ -81,8 +81,7 @@ table "coupons" {
   columns =[column.is_active]
 }
   check"coupon_code_upper_check"  {
-  expr ="
-  code =UPPER(code)"
+  expr ="code =UPPER(code)"
 }
   check"coupon_usage_exhaustion_check"  {
   expr ="used_count <= max_uses"
@@ -955,8 +954,7 @@ table "staff_members" {
 }
   index "idx_staff_active"  {
   columns =[column.is_active]
-  where ="
-  is_active =true"
+  where ="is_active =true"
 }
   
   check"chk_staff_email_s7"  {

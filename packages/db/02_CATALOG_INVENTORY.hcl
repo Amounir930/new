@@ -609,8 +609,7 @@ table "product_images" {
 }
   unique"uq_primary_image"  {
   columns =[column.tenant_id, column.product_id]
-  where ="
-  is_primary =true"
+  where ="is_primary =true"
 }
   
   index "idx_product_images_tenant"  {
@@ -1068,13 +1067,11 @@ table "inventory_reservations" {
   }
   index "idx_inv_res_active"  {
   columns =[column.status]
-  where ="
-  status ='active'"
+  where ="status ='active'"
 }
   index "idx_inv_res_cron"  {
   columns =[column.expires_at]
-  where ="
-  status ='active'"
+  where ="status ='active'"
 }
   index "idx_inv_res_tenant"  {
   columns =[column.tenant_id]
