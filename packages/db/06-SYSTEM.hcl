@@ -2,21 +2,57 @@
 // ==========================================
 table "outbox_events" {
   schema = schema.storefront
-  column "id"             { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"      { type = uuid }
-  column "created_at"     { type = timestamptz default = sql("now()") }
-  column "processed_at"   { type = timestamptz null = true }
-  column "retry_count"    { type = int default = 0 }
-  column "status"         { type = enum.outbox_status default = "pending" }
-  column "event_type"     { type = varchar(100) }
-  column "aggregate_type" { type = varchar(50) null = true }
-  column "aggregate_id"   { type = uuid null = true }
-  column "payload"        { type = jsonb }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "processed_at" {
+    type = timestamptz
+    null = true
+  }
+  column "retry_count" {
+    type = int
+    default = 0
+  }
+  column "status" {
+    type = enum.outbox_status
+    default = "pending"
+  }
+  column "event_type" {
+    type = varchar(100)
+  }
+  column "aggregate_type" {
+    type = varchar(50)
+    null = true
+  }
+  column "aggregate_id" {
+    type = uuid
+    null = true
+  }
+  column "payload" {
+    type = jsonb
+  }
   // Strike 20: OpenTelemetry Trace ID for distributed AI training
-  column "trace_id"       { type = varchar(100) null = true }
+  column "trace_id" {
+    type = varchar(100)
+    null = true
+  }
   // Strike 09: Outbox Locking for horizontal scaling
-  column "locked_by"      { type = varchar(100) null = true }
-  column "locked_at"      { type = timestamptz null = true }
+  column "locked_by" {
+    type = varchar(100)
+    null = true
+  }
+  column "locked_at" {
+    type = timestamptz
+    null = true
+  }
   
   check "chk_payload_size" { expr = "(pg_column_size(payload) <= 524288)" }
   
@@ -55,10 +91,19 @@ table "outbox_events" {
 
 table "tenant_config" {
   schema = schema.storefront
-  column "key"        { type = varchar(100) }
-  column "tenant_id"  { type = uuid }
-  column "value"      { type = jsonb }
-  column "updated_at" { type = timestamptz default = sql("now()") }
+  column "key" {
+    type = varchar(100)
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "value" {
+    type = jsonb
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
   primary_key { columns = [column.key, column.tenant_id] }
   // Strike 05: Key Injection Protection
   check "chk_config_key" { expr = "key ~ '^[a-zA-Z0-9_]+$'" }
@@ -91,19 +136,42 @@ table "tenant_config" {
 
 table "markets" {
   schema = schema.storefront
-  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"        { type = uuid }
-  column "created_at"       { type = timestamptz default = sql("now()") }
-  column "is_primary"       { type = boolean default = false }
-  column "is_active"        { type = boolean default = true }
-  column "default_currency" { type = char(3) }
-  column "default_language" { type = char(2) default = "ar" }
-  column "name"             { type = jsonb }
-  column "countries"        { type = jsonb }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "is_primary" {
+    type = boolean
+    default = false
+  }
+  column "is_active" {
+    type = boolean
+    default = true
+  }
+  column "default_currency" {
+    type = char(3)
+  }
+  column "default_language" {
+    type = char(2)
+    default = "ar"
+  }
+  column "name" {
+    type = jsonb
+  }
+  column "countries" {
+    type = jsonb
+  }
   primary_key { columns = [column.id] }
   unique "uq_tenant_primary_market" { columns = [column.tenant_id] where = "is_primary = true" }
   index "idx_markets_tenant_active" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.markets ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.markets ENABLE ROW LEVEL SECURITY
 
   trigger "trg_markets_prevent_hijack" {
     on {
@@ -120,16 +188,37 @@ table "markets" {
 
 table "price_lists" {
   schema = schema.storefront
-  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"        { type = uuid }
-  column "market_id"        { type = uuid }
-  column "product_id"       { type = uuid null = true }
-  column "variant_id"       { type = uuid null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "market_id" {
+    type = uuid
+  }
+  column "product_id" {
+    type = uuid
+    null = true
+  }
+  column "variant_id" {
+    type = uuid
+    null = true
+  }
   
-  column "quantity_range"   { type = sql("int4range") null = false }
+  column "quantity_range" {
+    type = sql("int4range")
+    null = false
+  }
   
-  column "price"            { type = sql("public.money_amount") }
-  column "compare_at_price" { type = sql("public.money_amount") null = true }
+  column "price" {
+    type = sql("public.money_amount")
+  }
+  column "compare_at_price" {
+    type = sql("public.money_amount")
+    null = true
+  }
   
   primary_key { columns = [column.id] }
   
@@ -181,12 +270,28 @@ table "price_lists" {
 
 table "currency_rates" {
   schema = schema.storefront
-  column "id"            { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"     { type = uuid }
-  column "updated_at"    { type = timestamptz default = sql("now()") }
-  column "from_currency" { type = char(3) }
-  column "to_currency"   { type = char(3) }
-  column "rate"          { type = numeric precision = 12 scale = 6 }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "from_currency" {
+    type = char(3)
+  }
+  column "to_currency" {
+    type = char(3)
+  }
+  column "rate" {
+    type = numeric
+    precision = 12
+    scale = 6
+  }
   primary_key { columns = [column.id] }
   unique "uq_tenant_currency_pair" { columns = [column.tenant_id, column.from_currency, column.to_currency] }
   index "idx_currency_rates_tenant_active" { columns = [column.tenant_id] }

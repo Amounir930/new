@@ -11,24 +11,75 @@ table "categories" {
   schema = schema.storefront
   // Strike 13: LTREE path recursion safety
   // (Placeholder for trigger - will be implemented in security.hcl if needed, but adding column check here)
-  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"        { type = uuid }
-  column "parent_id"        { type = uuid null = true }
-  column "created_at"       { type = timestamptz default = sql("now()") }
-  column "updated_at"       { type = timestamptz default = sql("now()") }
-  column "deleted_at"       { type = timestamptz null = true }
-  column "sort_order"       { type = int default = 0 }
-  column "products_count"   { type = int default = 0 }
-  column "is_active"        { type = boolean default = true }
-  column "slug"             { type = varchar(255) }
-  column "icon"             { type = varchar(100) null = true }
-  column "meta_title"       { type = varchar(150) null = true }
-  column "meta_description" { type = varchar(255) null = true }
-  column "image_url"        { type = text null = true }
-  column "banner_url"       { type = text null = true }
-  column "name"             { type = jsonb }
-  column "description"      { type = jsonb null = true }
-  column "path"             { type = sql("public.ltree") null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "parent_id" {
+    type = uuid
+    null = true
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "deleted_at" {
+    type = timestamptz
+    null = true
+  }
+  column "sort_order" {
+    type = int
+    default = 0
+  }
+  column "products_count" {
+    type = int
+    default = 0
+  }
+  column "is_active" {
+    type = boolean
+    default = true
+  }
+  column "slug" {
+    type = varchar(255)
+  }
+  column "icon" {
+    type = varchar(100)
+    null = true
+  }
+  column "meta_title" {
+    type = varchar(150)
+    null = true
+  }
+  column "meta_description" {
+    type = varchar(255)
+    null = true
+  }
+  column "image_url" {
+    type = text
+    null = true
+  }
+  column "banner_url" {
+    type = text
+    null = true
+  }
+  column "name" {
+    type = jsonb
+  }
+  column "description" {
+    type = jsonb
+    null = true
+  }
+  column "path" {
+    type = sql("public.ltree")
+    null = true
+  }
   primary_key { columns = [column.id] }
   
   unique "uq_tenant_cat" { columns = [column.tenant_id, column.id] }
@@ -47,7 +98,7 @@ table "categories" {
   index "idx_categories_tenant" { columns = [column.tenant_id] }
 
   // ELITE: RLS POLICY
-  // ALTER TABLE storefront.categories ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.categories ENABLE ROW LEVEL SECURITY
   
   foreign_key "fk_cat_parent" {
     columns     = [column.tenant_id, column.parent_id]
@@ -58,76 +109,247 @@ table "categories" {
 
 table "brands" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "created_at"  { type = timestamptz default = sql("now()") }
-  column "updated_at"  { type = timestamptz default = sql("now()") }
-  column "deleted_at"  { type = timestamptz null = true }
-  column "is_active"   { type = boolean default = true }
-  column "slug"        { type = varchar(255) }
-  column "country"     { type = char(2) null = true }
-  column "website_url" { type = text null = true }
-  column "logo_url"    { type = text null = true }
-  column "name"        { type = jsonb }
-  column "description" { type = jsonb null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "deleted_at" {
+    type = timestamptz
+    null = true
+  }
+  column "is_active" {
+    type = boolean
+    default = true
+  }
+  column "slug" {
+    type = varchar(255)
+  }
+  column "country" {
+    type = char(2)
+    null = true
+  }
+  column "website_url" {
+    type = text
+    null = true
+  }
+  column "logo_url" {
+    type = text
+    null = true
+  }
+  column "name" {
+    type = jsonb
+  }
+  column "description" {
+    type = jsonb
+    null = true
+  }
   primary_key { columns = [column.id] }
   unique "idx_brands_slug_active" { columns = [column.tenant_id, column.slug] where = "deleted_at IS NULL" }
   index "idx_brands_active" { columns = [column.is_active] where = "deleted_at IS NULL" }
   index "idx_brand_name_trgm" { on { expr = "((name->>'ar') gin_trgm_ops)" } using = GIN }
   index "idx_brands_tenant" { columns = [column.tenant_id] }
 
-  // ALTER TABLE storefront.brands ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.brands ENABLE ROW LEVEL SECURITY
 }
 
 table "products" {
   schema = schema.storefront
-  column "id"                 { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"          { type = uuid }
-  column "brand_id"           { type = uuid null = true }
-  column "category_id"        { type = uuid null = true }
-  column "created_at"         { type = timestamptz default = sql("now()") }
-  column "updated_at"         { type = timestamptz default = sql("now()") }
-  column "published_at"       { type = timestamptz null = true }
-  column "deleted_at"         { type = timestamptz null = true }
-  column "base_price"         { type = sql("public.money_amount") null = false }
-  column "sale_price"         { type = sql("public.money_amount") null = true }
-  column "cost_price"         { type = sql("public.money_amount") null = true }
-  column "compare_at_price"   { type = sql("public.money_amount") null = true }
-  column "tax_basis_points"   { type = int default = 0 }
-  column "low_stock_threshold" { type = int default = 5 }
-  column "sold_count"         { type = int default = 0 }
-  column "view_count"         { type = int default = 0 }
-  column "review_count"       { type = int default = 0 }
-  column "weight"             { type = int null = true }
-  column "min_order_qty"      { type = int default = 1 }
-  column "is_active"          { type = boolean default = true }
-  column "is_featured"        { type = boolean default = false }
-  column "is_returnable"      { type = boolean default = true }
-  column "requires_shipping"  { type = boolean default = true }
-  column "is_digital"         { type = boolean default = false }
-  column "track_inventory"    { type = boolean default = true }
-  column "slug"               { type = varchar(255) }
-  column "sku"                { type = varchar(100) }
-  column "barcode"            { type = varchar(50) null = true }
-  column "country_of_origin"  { type = varchar(100) null = true }
-  column "meta_title"         { type = varchar(70) null = true }
-  column "meta_description"   { type = varchar(160) null = true }
-  column "main_image"         { type = text }
-  column "video_url"          { type = text null = true }
-  column "digital_file_url"   { type = text null = true }
-  column "keywords"           { type = text null = true }
-  column "avg_rating"         { type = numeric precision = 3 scale = 2 default = 0 }
-  column "tags"               { type = sql("text[]") null = true }
-  column "name"               { type = jsonb }
-  column "short_description"  { type = jsonb null = true }
-  column "long_description"   { type = jsonb null = true }
-  column "specifications"     { type = jsonb default = sql("'{}'::jsonb") }
-  column "dimensions"         { type = jsonb null = true }
-  column "gallery_images"     { type = jsonb default = sql("'[]'::jsonb") }
-  column "embedding"          { type = sql("public.vector(1536)") null = true }
-  column "version"            { type = bigint default = 1 }
-  column "warranty_period"    { type = int null = true }
-  column "warranty_unit"      { type = varchar(10) null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "brand_id" {
+    type = uuid
+    null = true
+  }
+  column "category_id" {
+    type = uuid
+    null = true
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "published_at" {
+    type = timestamptz
+    null = true
+  }
+  column "deleted_at" {
+    type = timestamptz
+    null = true
+  }
+  column "base_price" {
+    type = sql("public.money_amount")
+    null = false
+  }
+  column "sale_price" {
+    type = sql("public.money_amount")
+    null = true
+  }
+  column "cost_price" {
+    type = sql("public.money_amount")
+    null = true
+  }
+  column "compare_at_price" {
+    type = sql("public.money_amount")
+    null = true
+  }
+  column "tax_basis_points" {
+    type = int
+    default = 0
+  }
+  column "low_stock_threshold" {
+    type = int
+    default = 5
+  }
+  column "sold_count" {
+    type = int
+    default = 0
+  }
+  column "view_count" {
+    type = int
+    default = 0
+  }
+  column "review_count" {
+    type = int
+    default = 0
+  }
+  column "weight" {
+    type = int
+    null = true
+  }
+  column "min_order_qty" {
+    type = int
+    default = 1
+  }
+  column "is_active" {
+    type = boolean
+    default = true
+  }
+  column "is_featured" {
+    type = boolean
+    default = false
+  }
+  column "is_returnable" {
+    type = boolean
+    default = true
+  }
+  column "requires_shipping" {
+    type = boolean
+    default = true
+  }
+  column "is_digital" {
+    type = boolean
+    default = false
+  }
+  column "track_inventory" {
+    type = boolean
+    default = true
+  }
+  column "slug" {
+    type = varchar(255)
+  }
+  column "sku" {
+    type = varchar(100)
+  }
+  column "barcode" {
+    type = varchar(50)
+    null = true
+  }
+  column "country_of_origin" {
+    type = varchar(100)
+    null = true
+  }
+  column "meta_title" {
+    type = varchar(70)
+    null = true
+  }
+  column "meta_description" {
+    type = varchar(160)
+    null = true
+  }
+  column "main_image" {
+    type = text
+  }
+  column "video_url" {
+    type = text
+    null = true
+  }
+  column "digital_file_url" {
+    type = text
+    null = true
+  }
+  column "keywords" {
+    type = text
+    null = true
+  }
+  column "avg_rating" {
+    type = numeric
+    precision = 3
+    scale = 2
+    default = 0
+  }
+  column "tags" {
+    type = sql("text[]")
+    null = true
+  }
+  column "name" {
+    type = jsonb
+  }
+  column "short_description" {
+    type = jsonb
+    null = true
+  }
+  column "long_description" {
+    type = jsonb
+    null = true
+  }
+  column "specifications" {
+    type = jsonb
+    default = sql("'{
+  }'::jsonb") }
+  column "dimensions" {
+    type = jsonb
+    null = true
+  }
+  column "gallery_images" {
+    type = jsonb
+    default = sql("'[]'::jsonb")
+  }
+  column "embedding" {
+    type = sql("public.vector(1536)")
+    null = true
+  }
+  column "version" {
+    type = bigint
+    default = 1
+  }
+  column "warranty_period" {
+    type = int
+    null = true
+  }
+  column "warranty_unit" {
+    type = varchar(10)
+    null = true
+  }
   
   primary_key { columns = [column.id] }
   
@@ -157,7 +379,7 @@ table "products" {
   check "chk_specs_size" { expr = "(pg_column_size(specifications) <= 20480)" }
   
   index "idx_products_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.products ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.products ENABLE ROW LEVEL SECURITY
   foreign_key "fk_prod_brand" {
     columns     = [column.brand_id]
     ref_columns = [table.brands.column.id]
@@ -172,20 +394,58 @@ table "products" {
 
 table "product_variants" {
   schema = schema.storefront
-  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"        { type = uuid }
-  column "product_id"       { type = uuid }
-  column "deleted_at"       { type = timestamptz null = true }
-  column "price"            { type = sql("public.money_amount") null = false }
-  column "compare_at_price" { type = sql("public.money_amount") null = true }
-  column "weight"           { type = int null = true }
-  column "version"          { type = int default = 1 }
-  column "sku"              { type = varchar(100) }
-  column "barcode"          { type = varchar(50) null = true }
-  column "weight_unit"      { type = varchar(5) default = "g" }
-  column "image_url"        { type = text null = true }
-  column "options"          { type = jsonb }
-  column "embedding"        { type = sql("public.vector(1536)") null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "product_id" {
+    type = uuid
+  }
+  column "deleted_at" {
+    type = timestamptz
+    null = true
+  }
+  column "price" {
+    type = sql("public.money_amount")
+    null = false
+  }
+  column "compare_at_price" {
+    type = sql("public.money_amount")
+    null = true
+  }
+  column "weight" {
+    type = int
+    null = true
+  }
+  column "version" {
+    type = int
+    default = 1
+  }
+  column "sku" {
+    type = varchar(100)
+  }
+  column "barcode" {
+    type = varchar(50)
+    null = true
+  }
+  column "weight_unit" {
+    type = varchar(5)
+    default = "g"
+  }
+  column "image_url" {
+    type = text
+    null = true
+  }
+  column "options" {
+    type = jsonb
+  }
+  column "embedding" {
+    type = sql("public.vector(1536)")
+    null = true
+  }
   
   primary_key { columns = [column.id] }
   unique "uq_tenant_variant" { columns = [column.tenant_id, column.id] }
@@ -204,7 +464,7 @@ table "product_variants" {
   check "chk_variant_compare_price" { expr = "(compare_at_price IS NULL OR (compare_at_price).amount IS NOT NULL)" }
 
   index "idx_variants_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.product_variants ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.product_variants ENABLE ROW LEVEL SECURITY
   foreign_key "fk_var_prod" {
     columns     = [column.tenant_id, column.product_id]
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
@@ -214,19 +474,37 @@ table "product_variants" {
 
 table "product_images" {
   schema = schema.storefront
-  column "id"         { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"  { type = uuid }
-  column "product_id" { type = uuid }
-  column "is_primary" { type = boolean default = false }
-  column "sort_order" { type = int default = 0 }
-  column "url"        { type = text }
-  column "alt_text"   { type = varchar(255) null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "product_id" {
+    type = uuid
+  }
+  column "is_primary" {
+    type = boolean
+    default = false
+  }
+  column "sort_order" {
+    type = int
+    default = 0
+  }
+  column "url" {
+    type = text
+  }
+  column "alt_text" {
+    type = varchar(255)
+    null = true
+  }
   primary_key { columns = [column.id] }
   index "idx_product_images_product" { columns = [column.product_id] }
   unique "uq_primary_image" { columns = [column.tenant_id, column.product_id] where = "is_primary = true" }
   
   index "idx_product_images_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.product_images ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.product_images ENABLE ROW LEVEL SECURITY
   foreign_key "fk_img_prod" {
     columns     = [column.tenant_id, column.product_id]
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
@@ -236,13 +514,30 @@ table "product_images" {
 
 table "product_attributes" {
   schema = schema.storefront
-  column "id"              { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"       { type = uuid }
-  column "product_id"      { type = uuid }
-  column "sort_order"      { type = int default = 0 }
-  column "attribute_name"  { type = varchar(100) }
-  column "attribute_value" { type = text }
-  column "attribute_group" { type = varchar(100) null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "product_id" {
+    type = uuid
+  }
+  column "sort_order" {
+    type = int
+    default = 0
+  }
+  column "attribute_name" {
+    type = varchar(100)
+  }
+  column "attribute_value" {
+    type = text
+  }
+  column "attribute_group" {
+    type = varchar(100)
+    null = true
+  }
   primary_key { columns = [column.id] }
   unique "uq_tenant_product_attr" { columns = [column.tenant_id, column.product_id, column.attribute_name] }
   index "idx_attrs_product" { columns = [column.product_id, column.attribute_name] }
@@ -252,7 +547,7 @@ table "product_attributes" {
   check "chk_attr_val_len" { expr = "length(attribute_value) <= 1024" }
   
   index "idx_product_attributes_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.product_attributes ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.product_attributes ENABLE ROW LEVEL SECURITY
   foreign_key "fk_attr_prod" {
     columns     = [column.tenant_id, column.product_id]
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
@@ -262,39 +557,93 @@ table "product_attributes" {
 
 table "entity_metafields" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "entity_type" { type = varchar(50) }
-  column "entity_id"   { type = uuid }
-  column "namespace"   { type = varchar(100) default = "global" }
-  column "key"         { type = varchar(100) }
-  column "type"        { type = varchar(20) default = "string" }
-  column "value"       { type = jsonb }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "entity_type" {
+    type = varchar(50)
+  }
+  column "entity_id" {
+    type = uuid
+  }
+  column "namespace" {
+    type = varchar(100)
+    default = "global"
+  }
+  column "key" {
+    type = varchar(100)
+  }
+  column "type" {
+    type = varchar(20)
+    default = "string"
+  }
+  column "value" {
+    type = jsonb
+  }
   primary_key { columns = [column.id] }
   unique "uq_metafield" { columns = [column.entity_type, column.entity_id, column.namespace, column.key] }
   index "idx_metafields_lookup" { columns = [column.entity_type, column.entity_id] }
   index "idx_metafields_value_gin" { columns = [column.value] using = GIN }
   check "chk_metafield_size" { expr = "(pg_column_size(value) <= 10240)" }
   index "idx_metafields_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.entity_metafields ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.entity_metafields ENABLE ROW LEVEL SECURITY
 }
 
 
 table "smart_collections" {
   schema = schema.storefront
-  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"        { type = uuid }
-  column "created_at"       { type = timestamptz default = sql("now()") }
-  column "updated_at"       { type = timestamptz default = sql("now()") }
-  column "is_active"        { type = boolean default = true }
-  column "slug"             { type = varchar(255) }
-  column "match_type"       { type = varchar(5) default = "all" }
-  column "sort_by"          { type = varchar(50) default = "best_selling" }
-  column "image_url"        { type = text null = true }
-  column "meta_title"       { type = varchar(70) null = true }
-  column "meta_description" { type = varchar(160) null = true }
-  column "title"            { type = jsonb }
-  column "conditions"       { type = jsonb }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "is_active" {
+    type = boolean
+    default = true
+  }
+  column "slug" {
+    type = varchar(255)
+  }
+  column "match_type" {
+    type = varchar(5)
+    default = "all"
+  }
+  column "sort_by" {
+    type = varchar(50)
+    default = "best_selling"
+  }
+  column "image_url" {
+    type = text
+    null = true
+  }
+  column "meta_title" {
+    type = varchar(70)
+    null = true
+  }
+  column "meta_description" {
+    type = varchar(160)
+    null = true
+  }
+  column "title" {
+    type = jsonb
+  }
+  column "conditions" {
+    type = jsonb
+  }
   // Strike 25: Ensure conditions is a valid array of rules
   check "chk_conditions_array" { expr = "jsonb_typeof(conditions) = 'array'" }
   
@@ -302,43 +651,98 @@ table "smart_collections" {
   check "conditions_size" { expr = "(pg_column_size(conditions) <= 10240)" }
   unique "idx_smart_collections_slug" { columns = [column.tenant_id, column.slug] }
   index "idx_smart_collections_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.smart_collections ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.smart_collections ENABLE ROW LEVEL SECURITY
 }
 
 // 2. INVENTORY SCHEMA (Storefront)
 // ==========================================
 table "locations" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "created_at"  { type = timestamptz default = sql("now()") }
-  column "updated_at"  { type = timestamptz default = sql("now()") }
-  column "is_active"   { type = boolean default = true }
-  column "type"        { type = enum.location_type default = "warehouse" }
-  column "name"        { type = jsonb }
-  column "address"     { type = jsonb null = true }
-  column "coordinates" { type = sql("public.geography(point, 4326)") null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "is_active" {
+    type = boolean
+    default = true
+  }
+  column "type" {
+    type = enum.location_type
+    default = "warehouse"
+  }
+  column "name" {
+    type = jsonb
+  }
+  column "address" {
+    type = jsonb
+    null = true
+  }
+  column "coordinates" {
+    type = sql("public.geography(point, 4326)")
+    null = true
+  }
   
   primary_key { columns = [column.id] }
   unique "uq_tenant_loc" { columns = [column.tenant_id, column.id] }
   index "idx_locations_gis" { columns = [column.coordinates] using = GIST }
   
   index "idx_locations_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.locations ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.locations ENABLE ROW LEVEL SECURITY
 }
 
 table "inventory_levels" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "location_id" { type = uuid }
-  column "variant_id"  { type = uuid }
-  column "created_at"  { type = timestamptz default = sql("now()") }
-  column "updated_at"  { type = timestamptz default = sql("now()") }
-  column "available"   { type = int null = false default = 0 }
-  column "reserved"    { type = int null = false default = 0 }
-  column "incoming"    { type = int null = false default = 0 }
-  column "version"     { type = int default = 1 }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "location_id" {
+    type = uuid
+  }
+  column "variant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "available" {
+    type = int
+    null = false
+    default = 0
+  }
+  column "reserved" {
+    type = int
+    null = false
+    default = 0
+  }
+  column "incoming" {
+    type = int
+    null = false
+    default = 0
+  }
+  column "version" {
+    type = int
+    default = 1
+  }
   primary_key { columns = [column.id] }
   unique "uq_inventory_loc_var" { columns = [column.location_id, column.variant_id] }
   index "idx_inv_variant" { columns = [column.variant_id] }
@@ -349,7 +753,7 @@ table "inventory_levels" {
   
   storage_param { fillfactor = 80 }
   index "idx_inventory_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.inventory_levels ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.inventory_levels ENABLE ROW LEVEL SECURITY
   foreign_key "fk_inv_loc" {
     columns     = [column.tenant_id, column.location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
@@ -364,16 +768,41 @@ table "inventory_levels" {
 
 table "inventory_movements" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "variant_id"  { type = uuid }
-  column "location_id" { type = uuid }
-  column "created_by"  { type = uuid null = true }
-  column "created_at"  { type = timestamptz default = sql("now()") }
-  column "type"        { type = enum.inventory_movement_type }
-  column "quantity"    { type = int }
-  column "reason"      { type = text null = true }
-  column "reference_id" { type = uuid null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "variant_id" {
+    type = uuid
+  }
+  column "location_id" {
+    type = uuid
+  }
+  column "created_by" {
+    type = uuid
+    null = true
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "type" {
+    type = enum.inventory_movement_type
+  }
+  column "quantity" {
+    type = int
+  }
+  column "reason" {
+    type = text
+    null = true
+  }
+  column "reference_id" {
+    type = uuid
+    null = true
+  }
   primary_key { columns = [column.id] }
   index "idx_inv_mov_variant" { columns = [column.variant_id] }
   index "idx_inv_mov_created" { columns = [column.created_at] using = BRIN }
@@ -384,7 +813,7 @@ table "inventory_movements" {
   check "chk_return_positive" { expr = "(type != 'return' OR quantity > 0)" }
   
   index "idx_inv_mov_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.inventory_movements ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.inventory_movements ENABLE ROW LEVEL SECURITY
   foreign_key "fk_im_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
@@ -399,26 +828,48 @@ table "inventory_movements" {
 
 table "inventory_reservations" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "variant_id"  { type = uuid }
-  column "location_id" { type = uuid }
-  column "created_at"  { type = timestamptz default = sql("now()") }
-  column "expires_at"  { type = timestamptz }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "variant_id" {
+    type = uuid
+  }
+  column "location_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "expires_at" {
+    type = timestamptz
+  }
   // Strike 14: Inventory Reservation Time Bound Guard (Max 7 days)
   check "chk_res_time_bound" { expr = "expires_at <= (created_at + interval '7 days')" }
   // Strike 6: Hoarding DoS Protection
   check "chk_res_qty_limit" { expr = "quantity <= 100" }
   
-  column "status"      { type = enum.reservation_status default = "active" }
-  column "cart_id"     { type = uuid null = true }
-  column "quantity"    { type = int }
+  column "status" {
+    type = enum.reservation_status
+    default = "active"
+  }
+  column "cart_id" {
+    type = uuid
+    null = true
+  }
+  column "quantity" {
+    type = int
+  }
   primary_key { columns = [column.id] }
   storage_param { fillfactor = 80 }
   index "idx_inv_res_active" { columns = [column.status] where = "status = 'active'" }
   index "idx_inv_res_cron" { columns = [column.expires_at] where = "status = 'active'" }
   index "idx_inv_res_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.inventory_reservations ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.inventory_reservations ENABLE ROW LEVEL SECURITY
   foreign_key "fk_ir_variant" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
@@ -433,23 +884,50 @@ table "inventory_reservations" {
 
 table "inventory_transfers" {
   schema = schema.storefront
-  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"        { type = uuid }
-  column "from_location_id" { type = uuid }
-  column "to_location_id"   { type = uuid }
-  column "created_by"       { type = uuid null = true }
-  column "created_at"       { type = timestamptz default = sql("now()") }
-  column "expected_arrival" { type = timestamptz null = true }
-  column "status"           { type = enum.transfer_status default = "draft" }
-  column "notes"            { type = text null = true }
-  column "version"          { type = int default = 1 } 
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "from_location_id" {
+    type = uuid
+  }
+  column "to_location_id" {
+    type = uuid
+  }
+  column "created_by" {
+    type = uuid
+    null = true
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "expected_arrival" {
+    type = timestamptz
+    null = true
+  }
+  column "status" {
+    type = enum.transfer_status
+    default = "draft"
+  }
+  column "notes" {
+    type = text
+    null = true
+  }
+  column "version" {
+    type = int
+    default = 1
+  } 
   primary_key { columns = [column.id] }
   
   check "chk_transfer_locations" { expr = "(from_location_id != to_location_id)" } 
   check "chk_transfer_future" { expr = "(expected_arrival IS NULL OR expected_arrival >= created_at)" }
   
   index "idx_inv_tra_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.inventory_transfers ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.inventory_transfers ENABLE ROW LEVEL SECURITY
   foreign_key "fk_it_from_loc" {
     columns     = [column.tenant_id, column.from_location_id]
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
@@ -464,15 +942,26 @@ table "inventory_transfers" {
 
 table "inventory_transfer_items" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "transfer_id" { type = uuid }
-  column "variant_id"  { type = uuid }
-  column "quantity"    { type = int }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "transfer_id" {
+    type = uuid
+  }
+  column "variant_id" {
+    type = uuid
+  }
+  column "quantity" {
+    type = int
+  }
   primary_key { columns = [column.id] }
   index "idx_transfer_items" { columns = [column.transfer_id] }
   index "idx_inv_tra_items_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.inventory_transfer_items ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.inventory_transfer_items ENABLE ROW LEVEL SECURITY
   foreign_key "fk_iti_transfer" {
     columns     = [column.transfer_id]
     ref_columns = [table.inventory_transfers.column.id]
@@ -489,21 +978,58 @@ table "inventory_transfer_items" {
 // ==========================================
 table "suppliers" {
   schema = schema.storefront
-  column "id"             { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"      { type = uuid }
-  column "created_at"     { type = timestamptz default = sql("now()") }
-  column "updated_at"     { type = timestamptz default = sql("now()") }
-  column "is_active"      { type = boolean default = true }
-  column "lead_time_days" { type = int default = 7 }
-  column "currency"       { type = char(3) default = "USD" }
-  column "name"           { type = text }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "is_active" {
+    type = boolean
+    default = true
+  }
+  column "lead_time_days" {
+    type = int
+    default = 7
+  }
+  column "currency" {
+    type = char(3)
+    default = "USD"
+  }
+  column "name" {
+    type = text
+  }
   
-  column "email"          { type = jsonb null = true }
-  column "phone"          { type = jsonb null = true }
-  column "company"        { type = jsonb null = true }
+  column "email" {
+    type = jsonb
+    null = true
+  }
+  column "phone" {
+    type = jsonb
+    null = true
+  }
+  column "company" {
+    type = jsonb
+    null = true
+  }
   
-  column "notes"          { type = text null = true }
-  column "address"        { type = jsonb null = true }
+  column "notes" {
+    type = text
+    null = true
+  }
+  column "address" {
+    type = jsonb
+    null = true
+  }
   primary_key { columns = [column.id] }
   
   check "chk_sup_email_s7" { expr = "(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))" }
@@ -511,24 +1037,60 @@ table "suppliers" {
   check "chk_sup_company_s7" { expr = "(company IS NULL OR (jsonb_typeof(company) = 'object' AND company ? 'enc' AND company ? 'iv' AND company ? 'tag' AND company ? 'data'))" }
   
   index "idx_suppliers_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.suppliers ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.suppliers ENABLE ROW LEVEL SECURITY
 }
 
 table "purchase_orders" {
   schema = schema.storefront
-  column "id"               { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"        { type = uuid }
-  column "supplier_id"      { type = uuid }
-  column "location_id"      { type = uuid }
-  column "created_at"       { type = timestamptz default = sql("now()") }
-  column "expected_arrival" { type = timestamptz null = true }
-  column "status"           { type = enum.purchase_order_status default = "draft" }
-  column "subtotal"         { type = sql("public.money_amount") null = false }
-  column "tax"              { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "shipping_cost"    { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "total"            { type = sql("public.money_amount") null = false }
-  column "order_number"     { type = varchar(20) null = true }
-  column "notes"            { type = text null = true }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "supplier_id" {
+    type = uuid
+  }
+  column "location_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "expected_arrival" {
+    type = timestamptz
+    null = true
+  }
+  column "status" {
+    type = enum.purchase_order_status
+    default = "draft"
+  }
+  column "subtotal" {
+    type = sql("public.money_amount")
+    null = false
+  }
+  column "tax" {
+    type = sql("public.money_amount")
+    default = sql("ROW(0, 'SAR')::public.money_amount")
+  }
+  column "shipping_cost" {
+    type = sql("public.money_amount")
+    default = sql("ROW(0, 'SAR')::public.money_amount")
+  }
+  column "total" {
+    type = sql("public.money_amount")
+    null = false
+  }
+  column "order_number" {
+    type = varchar(20)
+    null = true
+  }
+  column "notes" {
+    type = text
+    null = true
+  }
   
   primary_key { columns = [column.id] }
   unique "idx_po_number_unique" { columns = [column.tenant_id, column.order_number] }
@@ -540,7 +1102,7 @@ table "purchase_orders" {
   check "chk_po_inner_not_null" { expr = "(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL" }
   
   index "idx_purchase_orders_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.purchase_orders ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.purchase_orders ENABLE ROW LEVEL SECURITY
   foreign_key "fk_po_supplier" {
     columns     = [column.supplier_id]
     ref_columns = [table.suppliers.column.id]
@@ -555,20 +1117,37 @@ table "purchase_orders" {
 
 table "purchase_order_items" {
   schema = schema.storefront
-  column "id"                { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"         { type = uuid }
-  column "po_id"             { type = uuid }
-  column "variant_id"        { type = uuid }
-  column "quantity_ordered"  { type = int }
-  column "quantity_received" { type = int default = 0 }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "po_id" {
+    type = uuid
+  }
+  column "variant_id" {
+    type = uuid
+  }
+  column "quantity_ordered" {
+    type = int
+  }
+  column "quantity_received" {
+    type = int
+    default = 0
+  }
   // Strike 14: Over-receiving Protection
   check "chk_po_receive" { expr = "quantity_received <= quantity_ordered" }
-  column "unit_cost"         { type = sql("public.money_amount") null = false }
+  column "unit_cost" {
+    type = sql("public.money_amount")
+    null = false
+  }
   primary_key { columns = [column.id] }
   index "idx_po_items" { columns = [column.po_id] }
   check "qty_positive" { expr = "(quantity_ordered > 0)" }
   index "idx_poi_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.purchase_order_items ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.purchase_order_items ENABLE ROW LEVEL SECURITY
   foreign_key "fk_poi_po" {
     columns     = [column.po_id]
     ref_columns = [table.purchase_orders.column.id]
@@ -583,19 +1162,56 @@ table "purchase_order_items" {
 
 table "b2b_companies" {
   schema = schema.storefront
-  column "id"                 { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"          { type = uuid }
-  column "created_at"         { type = timestamptz default = sql("now()") }
-  column "updated_at"         { type = timestamptz default = sql("now()") }
-  column "deleted_at"         { type = timestamptz null = true }
-  column "credit_limit"       { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "credit_used"        { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") }
-  column "payment_terms_days" { type = int default = 30 }
-  column "status"             { type = enum.b2b_company_status default = "pending" }
-  column "name"               { type = varchar(255) }
-  column "tax_id"             { type = varchar(50) null = true }
-  column "industry"           { type = varchar(100) null = true }
-  column "lock_version"       { type = int default = 1 }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "deleted_at" {
+    type = timestamptz
+    null = true
+  }
+  column "credit_limit" {
+    type = sql("public.money_amount")
+    default = sql("ROW(0, 'SAR')::public.money_amount")
+  }
+  column "credit_used" {
+    type = sql("public.money_amount")
+    default = sql("ROW(0, 'SAR')::public.money_amount")
+  }
+  column "payment_terms_days" {
+    type = int
+    default = 30
+  }
+  column "status" {
+    type = enum.b2b_company_status
+    default = "pending"
+  }
+  column "name" {
+    type = varchar(255)
+  }
+  column "tax_id" {
+    type = varchar(50)
+    null = true
+  }
+  column "industry" {
+    type = varchar(100)
+    null = true
+  }
+  column "lock_version" {
+    type = int
+    default = 1
+  }
   primary_key { columns = [column.id] }
   
   check "chk_credit_limit_positive" { expr = "COALESCE((credit_limit).amount, 0) >= 0" } 
@@ -603,24 +1219,59 @@ table "b2b_companies" {
   check "chk_tax_id_len" { expr = "(tax_id IS NULL OR length(tax_id) >= 5)" }
 
   index "idx_b2b_companies_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.b2b_companies ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.b2b_companies ENABLE ROW LEVEL SECURITY
 }
 
 table "b2b_pricing_tiers" {
   schema = schema.storefront
-  column "id"                   { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"            { type = uuid }
-  column "company_id"           { type = uuid }
-  column "product_id"           { type = uuid }
-  column "created_at"           { type = timestamptz default = sql("now()") }
-  column "discount_basis_points" { type = int null = true } 
-  column "name"                 { type = text }
-  column "min_quantity"         { type = int default = 1 }
-  column "max_quantity"         { type = int null = true }
-  column "price"                { type = sql("public.money_amount") null = true } 
-  column "currency"             { type = char(3) default = "SAR" }
-  column "quantity_range"       { type = sql("int4range") null = false }
-  column "lock_version"         { type = int default = 1 }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "company_id" {
+    type = uuid
+  }
+  column "product_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "discount_basis_points" {
+    type = int
+    null = true
+  } 
+  column "name" {
+    type = text
+  }
+  column "min_quantity" {
+    type = int
+    default = 1
+  }
+  column "max_quantity" {
+    type = int
+    null = true
+  }
+  column "price" {
+    type = sql("public.money_amount")
+    null = true
+  } 
+  column "currency" {
+    type = char(3)
+    default = "SAR"
+  }
+  column "quantity_range" {
+    type = sql("int4range")
+    null = false
+  }
+  column "lock_version" {
+    type = int
+    default = 1
+  }
   primary_key { columns = [column.id] }
   exclude "idx_b2b_overlap_prevent" {
     columns = [column.tenant_id, column.company_id, column.product_id, column.quantity_range]
@@ -634,7 +1285,7 @@ table "b2b_pricing_tiers" {
   check "chk_b2b_price_pos" { expr = "(price IS NULL OR ((price).amount >= 0 AND (price).amount IS NOT NULL))" }
 
   index "idx_b2bp_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.b2b_pricing_tiers ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.b2b_pricing_tiers ENABLE ROW LEVEL SECURITY
   foreign_key "fk_b2bpt_company" {
     columns     = [column.company_id]
     ref_columns = [table.b2b_companies.column.id]
@@ -649,20 +1300,42 @@ table "b2b_pricing_tiers" {
 
 table "b2b_users" {
   schema = schema.storefront
-  column "id"          { type = uuid default = sql("public.gen_ulid()::uuid") }
-  column "tenant_id"   { type = uuid }
-  column "company_id"  { type = uuid }
-  column "customer_id" { type = uuid }
-  column "created_at"  { type = timestamptz default = sql("now()") }
-  column "role"        { type = enum.b2b_user_role default = "buyer" }
-  column "unit_price"  { type = sql("public.money_amount") default = sql("ROW(0, 'SAR')::public.money_amount") null = false }
-  column "currency"    { type = char(3) default = "SAR" }
+  column "id" {
+    type = uuid
+    default = sql("public.gen_ulid()::uuid")
+  }
+  column "tenant_id" {
+    type = uuid
+  }
+  column "company_id" {
+    type = uuid
+  }
+  column "customer_id" {
+    type = uuid
+  }
+  column "created_at" {
+    type = timestamptz
+    default = sql("now()")
+  }
+  column "role" {
+    type = enum.b2b_user_role
+    default = "buyer"
+  }
+  column "unit_price" {
+    type = sql("public.money_amount")
+    default = sql("ROW(0, 'SAR')::public.money_amount")
+    null = false
+  }
+  column "currency" {
+    type = char(3)
+    default = "SAR"
+  }
   primary_key { columns = [column.id] }
   unique "uq_b2b_company_customer" { columns = [column.tenant_id, column.company_id, column.customer_id] }
   index "idx_b2b_user" { columns = [column.company_id] }
   check "chk_b2b_unit_price_pos" { expr = "COALESCE((unit_price).amount, 0) >= 0" }
   index "idx_b2b_users_tenant" { columns = [column.tenant_id] }
-  // ALTER TABLE storefront.b2b_users ENABLE ROW LEVEL SECURITY;
+  // ALTER TABLE storefront.b2b_users ENABLE ROW LEVEL SECURITY
   foreign_key "fk_b2bu_company" {
     columns     = [column.company_id]
     ref_columns = [table.b2b_companies.column.id]
