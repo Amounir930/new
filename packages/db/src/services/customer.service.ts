@@ -1,4 +1,4 @@
-import type { EncryptionService } from '@apex/security';
+import { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { withTenantConnection } from '../core.js';
@@ -7,7 +7,7 @@ import {
   customers,
   type NewCustomer,
 } from '../schema/storefront/customers.js';
-import type { TenantRegistryService } from '../tenant-registry.service.js';
+import { TenantRegistryService } from '../tenant-registry.service.js';
 
 /**
  * Extended tenant type for salt-rotation window.
@@ -26,7 +26,7 @@ export class CustomerService {
   constructor(
     private readonly encryptionService: EncryptionService,
     private readonly tenantRegistry: TenantRegistryService
-  ) {}
+  ) { }
 
   /**
    * Create a new customer with encrypted PII.

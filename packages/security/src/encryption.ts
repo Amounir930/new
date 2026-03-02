@@ -157,7 +157,7 @@ export function maskSensitive(value: string, visibleChars = 4): string {
 /**
  * NestJS Injectable Encryption Service
  */
-import type { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

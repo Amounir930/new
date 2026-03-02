@@ -4,7 +4,7 @@
  * Enforces resource-level quotas (max products, max orders, etc.)
  */
 
-import type { GovernanceService } from '@apex/db';
+import { GovernanceService } from '@apex/db';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -32,7 +32,7 @@ export class QuotaInterceptor implements NestInterceptor {
   constructor(
     private reflector: Reflector,
     private governanceService: GovernanceService
-  ) {}
+  ) { }
 
   async intercept(
     context: ExecutionContext,
