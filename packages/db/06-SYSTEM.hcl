@@ -311,9 +311,7 @@ table "currency_rates" {
     type = char(3)
   }
   column "rate" {
-    type      = numeric
-    precision = 12
-    scale     = 6
+    type = numeric(12,6)
   }
   primary_key {
     columns = [column.id]

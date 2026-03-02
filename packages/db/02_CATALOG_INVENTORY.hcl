@@ -99,7 +99,9 @@ table "categories" {
     where   = "deleted_at IS NULL"
   }
   index "idx_cat_name_trgm" {
-    expr  = "((name->>'ar') gin_trgm_ops)"
+    on {
+      expr = "((name->>'ar') gin_trgm_ops)"
+    }
     type = "GIN"
   }
   index "idx_categories_path_gist" {
@@ -336,10 +338,8 @@ table "products" {
     null = true
   }
   column "avg_rating" {
-    type      = numeric
-    precision = 3
-    scale     = 2
-    default   = 0
+    type    = numeric(3,2)
+    default = 0
   }
   column "tags" {
     type = sql("text[]")
