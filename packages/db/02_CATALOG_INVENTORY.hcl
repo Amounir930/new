@@ -356,8 +356,7 @@ table "products" {
   }
   column "specifications" {
     type = jsonb
-default = sql("'{}
-  '::jsonb")
+    default = sql(\"'{}'::jsonb\")
   }
   column "dimensions" {
     type = jsonb
@@ -435,8 +434,7 @@ storage_param {
   expr ="NOT (is_digital AND requires_shipping)"
 }
 check "chk_barcode_format" {
-expr = "barcode IS NULL OR barcode ~ '^[A-Z0-9-]{8,50}
-  $'"
+expr = "barcode IS NULL OR barcode ~ '^[A-Z0-9-]{8,50} $'"
   }
   // ELITE: Alpha & Bravo applied
   check "chk_price_positive"  {

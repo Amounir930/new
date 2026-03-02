@@ -68,8 +68,7 @@ storage_param {
   }
 index "idx_outbox_pending"  {
   columns =[column.status, column.created_at]
-  where ="
-  status ='pending'"
+  where ="status ='pending'"
 }
 index "idx_outbox_created_brin" { 
     columns = [column.created_at]
@@ -181,8 +180,7 @@ primary_key {
 }
 unique "uq_tenant_primary_market"  {
   columns =[column.tenant_id]
-  where ="
-  is_primary =true"
+  where ="is_primary =true"
 }
 index "idx_markets_tenant_active"  {
   columns =[column.tenant_id]
