@@ -351,7 +351,7 @@ table "audit_logs" {
   }
   column "created_at" {
     type    = timestamptz
-    default = sql("now")
+    default = sql("now()")
     null    = false
   }
   column "severity" {
