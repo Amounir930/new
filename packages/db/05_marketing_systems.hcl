@@ -409,7 +409,7 @@ table "flash_sale_products" {
 
   exclude "idx_flash_prod_overlap_prevent" {
     columns = [column.tenant_id, column.product_id, column.valid_during]
-    using   = GIST
+    using = "GIST"
     ops     = ["=", "=", "&&"]
   }
   index "idx_flash_sale_products_tenant" {
@@ -633,7 +633,7 @@ table "wallet_transactions" {
   }
   index "idx_wallet_created" {
     columns = [column.created_at]
-    using   = BRIN
+    using = "BRIN"
   }
   check "chk_wallet_math" {
     expr = "COALESCE((balance_after).amount, 0) = COALESCE((balance_before).amount, 0) + COALESCE((amount).amount, 0)"
@@ -775,7 +775,7 @@ table "affiliate_transactions" {
   }
   index "idx_aff_trans_created_brin" {
     columns = [column.created_at]
-    using   = BRIN
+    using = "BRIN"
   }
   check "chk_aff_comm_positive" {
     expr = "COALESCE((commission_amount).amount, 0) > 0"
@@ -995,7 +995,7 @@ table "staff_sessions" {
   }
   index "idx_session_token" {
     columns = [column.token_hash]
-    using   = HASH
+    using = "HASH"
   }
   index "idx_session_active" {
     columns = [column.staff_id]
@@ -1338,7 +1338,7 @@ table "blog_posts" {
   }
   index "idx_blog_tags" {
     columns = [column.tags]
-    using   = GIN
+    using = "GIN"
   }
   index "idx_blog_posts_tenant" {
     columns = [column.tenant_id]

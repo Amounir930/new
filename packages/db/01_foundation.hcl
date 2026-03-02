@@ -492,13 +492,13 @@ table "audit_logs" {
     type    = RANGE
     columns = [column.created_at]
   }
-  storage_param {
+  storage_params {
     name  = "toast_tuple_target"
     value = "128"
   }
   index "idx_audit_created_brin" {
     columns = [column.created_at]
-    using   = BRIN
+    using = "BRIN"
   }
   index "idx_audit_tenant" {
     columns = [column.tenant_id]
@@ -1096,7 +1096,7 @@ table "schema_drift_log" {
   }
   index "idx_drift_time" {
     columns = [column.executed_at]
-    using   = BRIN
+    using = "BRIN"
   }
 }
 table "order_fraud_scores" {
