@@ -264,9 +264,27 @@ table "price_lists" {
 
   // ELITE: Prevent overlapping quantity ranges for same product/variant/market
   exclude "idx_price_list_overlap_prevent" {
-    columns = [column.tenant_id, column.market_id, column.product_id, column.variant_id, column.quantity_range]
+    on {
+      column = column.tenant_id
+      ops    = "="
+    }
+    on {
+      column = column.market_id
+      ops    = "="
+    }
+    on {
+      column = column.product_id
+      ops    = "="
+    }
+    on {
+      column = column.variant_id
+      ops    = "="
+    }
+    on {
+      column = column.quantity_range
+      ops    = "&&"
+    }
     type = "GIST"
-    ops     = ["=", "=", "=", "=", "&&"]
     where   = "variant_id IS NOT NULL"
   }
 

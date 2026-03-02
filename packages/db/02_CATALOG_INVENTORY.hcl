@@ -428,12 +428,8 @@ table "products" {
     }
     type = "HNSW"
     storage_params {
-      name  = "m"
-      value = "24"
-    }
-    storage_params {
-      name  = "ef_construction"
-      value = "128"
+      m = 24
+      ef_construction = 128
     }
   }
 
@@ -547,12 +543,8 @@ table "product_variants" {
     }
     type = "HNSW"
     storage_params {
-      name  = "m"
-      value = "24"
-    }
-    storage_params {
-      name  = "ef_construction"
-      value = "128"
+      m = 24
+      ef_construction = 128
     }
   }
   check "chk_variant_options_obj" {
@@ -1509,9 +1501,23 @@ table "b2b_pricing_tiers" {
     columns = [column.id]
   }
   exclude "idx_b2b_overlap_prevent" {
-    columns = [column.tenant_id, column.company_id, column.product_id, column.quantity_range]
+    on {
+      column = column.tenant_id
+      ops    = "="
+    }
+    on {
+      column = column.company_id
+      ops    = "="
+    }
+    on {
+      column = column.product_id
+      ops    = "="
+    }
+    on {
+      column = column.quantity_range
+      ops    = "&&"
+    }
     type = "GIST"
-    ops     = ["=", "=", "=", "&&"]
   }
   index "idx_b2b_pricing" {
     columns = [column.company_id, column.product_id]

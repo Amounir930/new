@@ -1735,12 +1735,8 @@ table "reviews" {
     }
     type = "HNSW"
     storage_params {
-      name  = "m"
-      value = "24"
-    }
-    storage_params {
-      name  = "ef_construction"
-      value = "128"
+      m = 24
+      ef_construction = 128
     }
   }
 }
