@@ -35,25 +35,22 @@ mock.module('@apex/db', () => {
 
   return {
     sql: sqlMock,
-    return {
-      sql: sqlMock,
-      getTenantDb: mock(async (_tenantId: string) => {
-        return {
-          db: mockClient,
-          release: mockClient.release,
-        };
-      }),
-      adminDb: {
-        select: mock().mockReturnThis(),
-        from: mock().mockReturnThis(),
-        where: mock().mockReturnThis(),
-        limit: mock().mockResolvedValue([{ id: 'mock-tenant' }]),
-      },
-      eq: mock(),
-      tenantsInGovernance: { id: 'mock-id' },
-    };
+    getTenantDb: mock(async (_tenantId: string) => {
+      return {
+        db: mockClient,
+        release: mockClient.release,
+      };
+    }),
+    adminDb: {
+      select: mock().mockReturnThis(),
+      from: mock().mockReturnThis(),
+      where: mock().mockReturnThis(),
+      limit: mock().mockResolvedValue([{ id: 'mock-tenant' }]),
+    },
+    eq: mock(),
+    tenantsInGovernance: { id: 'mock-id' },
   };
-})
+});
 
 const mockAuditService = {
   log: mock().mockResolvedValue(true),

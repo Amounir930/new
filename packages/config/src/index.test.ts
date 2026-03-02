@@ -65,7 +65,7 @@ describe('Config Package', () => {
 
     it('should enforce production security constraints (JWT_SECRET)', () => {
       process.env.NODE_ENV = 'production';
-      process.env.JWT_SECRET = 'aA1!_Just_Long_Enough_But_Simple_Secret'; // gitleaks:allow
+      process.env.JWT_SECRET = 'test_secret_value_for_testing_only_123'; // gitleaks:allow - contains 'test' pattern
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db?ssl=require';
       process.env.ENCRYPTION_MASTER_KEY =
         'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
@@ -81,14 +81,14 @@ describe('Config Package', () => {
       process.env.INTERNAL_API_SECRET = 'InternalApiSecret123!A_Long_32_Chars'; // gitleaks:allow
 
       expect(() => validateEnv()).toThrow(
-        /S1 Violation: JWT_SECRET lacks required complexity/
+        /S1 Violation: JWT_SECRET appears to be a default\/test value/
       );
     });
 
     it('should enforce production security constraints (SSL)', () => {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'aA1'.repeat(11);
-      process.env.DATABASE_URL = 'postgresql://localhost:5432/db';
+      process.env.DATABASE_URL = 'postgresql://localhost:5432/db'; // Missing ssl=require
       process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!_Long_Enough_32'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
@@ -102,7 +102,7 @@ describe('Config Package', () => {
       process.env.INTERNAL_API_SECRET = 'InternalApiSecret123!A_Long_32_Chars'; // gitleaks:allow
 
       expect(() => validateEnv()).toThrow(
-        /DATABASE_URL must require SSL in production/
+        /S1 Violation: Production database must use SSL/
       );
     });
   });

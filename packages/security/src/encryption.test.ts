@@ -14,7 +14,8 @@ const mockConfig = (envVars: Record<string, string>) =>
   }) as any;
 
 describe('Encryption Utilities', () => {
-  const masterKey = 'test-key-must-be-32-bytes-long!!';
+  // Must be at least 32 characters for AES-256
+  const masterKey = 'test-key-must-be-at-least-32-bytes!!';
 
   it('should encrypt and decrypt correctly', () => {
     const plaintext = 'sensitive-data';
@@ -25,7 +26,7 @@ describe('Encryption Utilities', () => {
     expect(encrypted).toHaveProperty('tag');
     expect(encrypted).toHaveProperty('salt');
 
-    const decrypted = decrypt(encrypted, masterKey);
+    const decrypted = decrypt(encrypted, masterKey, undefined);
     expect(decrypted).toBe(plaintext);
   });
 
@@ -38,7 +39,7 @@ describe('Encryption Utilities', () => {
     };
 
     // Should throw due to structural check or decryption failure
-    expect(() => decrypt(malformedData as any, masterKey)).toThrow(
+    expect(() => decrypt(malformedData as any, masterKey, undefined)).toThrow(
       'S7 Violation'
     );
   });
@@ -49,7 +50,7 @@ describe('Encryption Utilities', () => {
       iv: 'def',
     };
 
-    expect(() => decrypt(incompleteData as any, masterKey)).toThrow(
+    expect(() => decrypt(incompleteData as any, masterKey, undefined)).toThrow(
       'Malformed encrypted data structure'
     );
   });
@@ -79,15 +80,15 @@ describe('Encryption Utilities', () => {
   });
 
   it('should support Key Rotation (re-encrypting with new key)', () => {
-    const oldKey = 'old-master-key-must-be-32-chars!!';
-    const newKey = 'new-master-key-must-be-32-chars!!';
+    const oldKey = 'old-master-key-must-be-32-chars-long!!';
+    const newKey = 'new-master-key-must-be-32-chars-long!!';
     const plaintext = 'top-secret-data';
 
     // 1. Encrypt with old key
     const encryptedWithOld = encrypt(plaintext, oldKey);
 
     // 2. Decrypt with old key
-    const decrypted = decrypt(encryptedWithOld, oldKey);
+    const decrypted = decrypt(encryptedWithOld, oldKey, undefined);
     expect(decrypted).toBe(plaintext);
 
     // 3. Re-encrypt with new key
@@ -95,7 +96,7 @@ describe('Encryption Utilities', () => {
     expect(encryptedWithNew.encrypted).not.toBe(encryptedWithOld.encrypted);
 
     // 4. Verify new key works
-    expect(decrypt(encryptedWithNew, newKey)).toBe(plaintext);
+    expect(decrypt(encryptedWithNew, newKey, undefined)).toBe(plaintext);
   });
 });
 
