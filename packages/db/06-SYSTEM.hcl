@@ -63,11 +63,7 @@ table "outbox_events" {
     type    = RANGE
     columns = [column.created_at]
   }
-  storage_params {
-    fillfactor                      = 70
-    autovacuum_vacuum_scale_factor  = 0.01
-    autovacuum_analyze_scale_factor = 0.005
-  }
+
   index "idx_outbox_pending" {
     columns = [column.status, column.created_at]
     where   = "status ='pending'"
@@ -75,9 +71,7 @@ table "outbox_events" {
   index "idx_outbox_created_brin" {
     columns = [column.created_at]
     type = "BRIN"
-    storage_params {
-      pages_per_range = 32
-    }
+
   }
   index "idx_outbox_events_tenant_active" {
     columns = [column.tenant_id]

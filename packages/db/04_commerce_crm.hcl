@@ -1292,9 +1292,7 @@ table "carts" {
   index "idx_carts_expires" {
     columns = [column.expires_at]
   }
-  storage_params {
-    fillfactor = 80
-  }
+
   check "chk_cart_items_size" {
     expr = "(pg_column_size(items) <= 51200)"
   }

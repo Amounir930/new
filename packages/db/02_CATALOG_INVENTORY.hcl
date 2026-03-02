@@ -897,9 +897,7 @@ table "inventory_levels" {
   check "chk_reserved_logic" {
     expr = "reserved <= available"
   }
-  storage_params {
-    fillfactor = 80
-  }
+
   index "idx_inventory_tenant" {
     columns = [column.tenant_id]
   }
@@ -1032,9 +1030,7 @@ table "inventory_reservations" {
   primary_key {
     columns = [column.id]
   }
-  storage_params {
-    fillfactor = 80
-  }
+
   index "idx_inv_res_active" {
     columns = [column.status]
     where   = "status ='active'"
