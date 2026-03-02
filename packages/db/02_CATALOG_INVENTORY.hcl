@@ -819,10 +819,7 @@ table "locations" {
   unique "uq_tenant_loc" {
     columns = [column.tenant_id, column.id]
   }
-  index "idx_locations_gis" {
-    columns = [column.coordinates]
-    type = "GIST"
-  }
+
   index "idx_locations_tenant" {
     columns = [column.tenant_id]
   }
