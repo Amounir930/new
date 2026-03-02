@@ -1,9 +1,9 @@
-import type { EncryptionService } from '@apex/security';
+import { EncryptionService } from '@apex/security';
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq, or, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { publicDb } from '../connection.js';
-import type { RedisService } from '../redis.service.js';
+import { RedisService } from '../redis.service.js';
 import {
   featureGates,
   subscriptionPlans,
@@ -27,8 +27,9 @@ interface FeatureGateResult {
 
 @Injectable()
 export class GovernanceService {
+  private readonly db = publicDb as unknown as NodePgDatabase<typeof schema>;
+
   constructor(
-    @Inject(publicDb) private readonly db: NodePgDatabase<typeof schema>,
     private readonly redisService: RedisService,
     private readonly encryptionService: EncryptionService
   ) {

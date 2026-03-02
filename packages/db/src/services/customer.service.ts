@@ -242,10 +242,6 @@ export class CustomerService {
   }
 
   /**
-   * Fatal Mandate #24: Chunked/Shifted Decryption
-   * Prevents event-loop blocking when processing thousands of PII records.
-   */
-  /**
    * Risk #21: Memory-Safe Decryption Stream
    * Converting batch decryption to an async generator to prevent low-RAM DoS.
    */

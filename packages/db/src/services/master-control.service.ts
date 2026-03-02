@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { publicDb } from '../connection.js';
-import type { RedisService } from '../redis.service.js';
+import { RedisService } from '../redis.service.js';
 import { systemSettings as systemConfig } from '../schema/governance.js';
 
 @Injectable()
 export class MasterControlService {
-  constructor(private readonly redisService: RedisService) {}
+  constructor(private readonly redisService: RedisService) { }
 
   /**
    * Set a global system configuration
@@ -59,7 +59,7 @@ export class MasterControlService {
 
 // Stub for legacy/non-DI consumers — matches governance.service.ts pattern.
 export const masterControlService = new MasterControlService({
-  subscribe: async () => {},
+  subscribe: async () => { },
   publish: async () => 0,
   getClient: () => ({}) as any,
 } as any);
