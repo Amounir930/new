@@ -1711,7 +1711,8 @@ trigger "trg_customers_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_orders_updated_at" {
@@ -1723,7 +1724,8 @@ trigger "trg_orders_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_rma_requests_updated_at" {
@@ -1735,7 +1737,8 @@ trigger "trg_rma_requests_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_shipping_zones_updated_at" {
@@ -1747,5 +1750,6 @@ trigger "trg_shipping_zones_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 

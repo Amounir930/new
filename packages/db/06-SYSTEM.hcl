@@ -292,7 +292,8 @@ trigger "trg_outbox_prevent_hijack" {
 execute {
     function = function.prevent_tenant_hijacking
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_tenant_config_updated_at" {
@@ -304,7 +305,8 @@ trigger "trg_tenant_config_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_tenant_config_prevent_hijack" {
@@ -316,7 +318,8 @@ trigger "trg_tenant_config_prevent_hijack" {
 execute {
     function = function.prevent_tenant_hijacking
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_markets_prevent_hijack" {
@@ -328,7 +331,8 @@ trigger "trg_markets_prevent_hijack" {
 execute {
     function = function.prevent_tenant_hijacking
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_price_lists_validate_currency" {
@@ -340,7 +344,8 @@ trigger "trg_price_lists_validate_currency" {
 execute {
     function = function.validate_price_currency
   }
-}  events = ["INSERT", "UPDATE"]
+  events = ["INSERT", "UPDATE"]
+}
 
 
 trigger "trg_price_lists_prevent_hijack" {
@@ -352,7 +357,8 @@ trigger "trg_price_lists_prevent_hijack" {
 execute {
     function = function.prevent_tenant_hijacking
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_currency_rates_updated_at" {
@@ -364,7 +370,8 @@ trigger "trg_currency_rates_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_currency_rates_prevent_hijack" {
@@ -376,5 +383,6 @@ trigger "trg_currency_rates_prevent_hijack" {
 execute {
     function = function.prevent_tenant_hijacking
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 

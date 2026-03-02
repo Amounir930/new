@@ -1785,7 +1785,8 @@ trigger "trg_flash_sales_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_loyalty_rules_updated_at" {
@@ -1797,7 +1798,8 @@ trigger "trg_loyalty_rules_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_pages_updated_at" {
@@ -1809,7 +1811,8 @@ trigger "trg_pages_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
 
 trigger "trg_blog_posts_updated_at" {
@@ -1821,5 +1824,6 @@ trigger "trg_blog_posts_updated_at" {
 execute {
     function = function.set_current_timestamp_updated_at
   }
-}  events = ["UPDATE"]
+  events = ["UPDATE"]
+}
 
