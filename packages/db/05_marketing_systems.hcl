@@ -823,9 +823,7 @@ table "staff_roles" {
   primary_key {
     columns = [column.id]
   }
-  check "permissions_strict_keys" {
-    expr = "(jsonb_typeof(permissions) = 'object' AND NOT EXISTS (SELECT 1 FROM jsonb_object_keys(permissions) AS k WHERE k NOT IN ('products', 'orders', 'customers', 'settings', 'promotions', 'analytics')))"
-  }
+
   index "idx_staff_roles_tenant" {
     columns = [column.tenant_id]
   }
