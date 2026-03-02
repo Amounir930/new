@@ -371,7 +371,7 @@ table "products" {
     default = sql("'[]'::jsonb")
   }
   column "embedding" {
-    type = sql("public.vector(1536)")
+    type = text
     null = true
   }
   column "version" {
@@ -421,11 +421,7 @@ table "products" {
   index "idx_products_brand" {
     columns = [column.brand_id]
   }
-  index "idx_products_embedding_cosine" {
-    on {
-      column = column.embedding
-      ops    = sql("public.vector_cosine_ops")
-    }
+
     type = "HNSW"
     storage_params {
       m = 24
@@ -519,7 +515,7 @@ table "product_variants" {
     type = jsonb
   }
   column "embedding" {
-    type = sql("public.vector(1536)")
+    type = text
     null = true
   }
   primary_key {
@@ -536,11 +532,7 @@ table "product_variants" {
   index "idx_variants_product" {
     columns = [column.product_id]
   }
-  index "idx_variants_embedding_cosine" {
-    on {
-      column = column.embedding
-      ops    = sql("public.vector_cosine_ops")
-    }
+
     type = "HNSW"
     storage_params {
       m = 24
