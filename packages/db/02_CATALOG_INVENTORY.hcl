@@ -438,9 +438,9 @@ table "products" {
   check"chk_digital_shipping"  {
   expr ="NOT (is_digital AND requires_shipping)"
 }
-  check"chk_barcode_format"  {
-  expr ="barcode IS NULL OR barcode ~ '^[A-Z0-9-]{8,50
-}$'" }
+  check "chk_barcode_format" {
+    expr = "barcode IS NULL OR barcode ~ '^[A-Z0-9-]{8,50}$'"
+  }
   // ELITE: Alpha & Bravo applied
   check"chk_price_positive"  {
   expr ="COALESCE((base_price).amount, 0) >= 0 AND (base_price).amount IS NOT NULL AND (base_price).currency IS NOT NULL"
