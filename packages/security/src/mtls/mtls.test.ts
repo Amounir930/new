@@ -15,7 +15,7 @@ import {
   SecretsManager,
   verifySecret,
 } from '../secrets/index.js';
-import { loadCertificates, MTLSServer } from './index.js';
+import { MTLSServer } from './index.js';
 
 describe('mTLS Implementation', () => {
   const testDir = join(tmpdir(), `mtls-test-${Date.now()}`);

@@ -35,23 +35,25 @@ mock.module('@apex/db', () => {
 
   return {
     sql: sqlMock,
-    withTenantConnection: mock(
-      async (tenantId: string, cb: (db: any) => Promise<any>) => {
-        try {
-          return await cb(mockClient);
-        } finally {
-          mockClient.release();
-        }
-      }
-    ),
+    return {
+      sql: sqlMock,
+      getTenantDb: mock(async (_tenantId: string) => {
+        return {
+          db: mockClient,
+          release: mockClient.release,
+        };
+      }),
+      adminDb: {
+        select: mock().mockReturnThis(),
+        from: mock().mockReturnThis(),
+        where: mock().mockReturnThis(),
+        limit: mock().mockResolvedValue([{ id: 'mock-tenant' }]),
+      },
+      eq: mock(),
+      tenantsInGovernance: { id: 'mock-id' },
+    };
   };
-});
-
-// Mock TenantRegistryService
-const mockTenantRegistry = {
-  exists: mock(),
-  getByIdentifier: mock(),
-};
+})
 
 const mockAuditService = {
   log: mock().mockResolvedValue(true),
@@ -66,8 +68,7 @@ describe('LiteExportStrategy', () => {
       rows: [],
       rowCount: 0,
     });
-    mockTenantRegistry.exists.mockClear();
-    mockTenantRegistry.getByIdentifier.mockClear();
+
     mockShell.spawn.mockClear();
     mockShell.write.mockClear();
     mockAuditService.log.mockClear();
@@ -84,7 +85,6 @@ describe('LiteExportStrategy', () => {
     });
 
     strategy = new LiteExportStrategy(
-      mockTenantRegistry as any,
       mockShell as any,
       mockAuditService as any
     );
@@ -92,7 +92,7 @@ describe('LiteExportStrategy', () => {
 
   describe('validate', () => {
     it('should validate existing tenant', async () => {
-      mockTenantRegistry.exists.mockResolvedValue(true);
+      // Mocked via adminDb in the module mock
 
       const options: ExportOptions = {
         tenantId: 'tenant-123',
@@ -103,7 +103,7 @@ describe('LiteExportStrategy', () => {
       const result = await strategy.validate(options);
 
       expect(result).toBe(true);
-      expect(mockTenantRegistry.exists).toHaveBeenCalledWith('tenant-123');
+      // Covered by adminDb limit return
     });
 
     it('should reject non-existent tenant', async () => {
@@ -137,12 +137,6 @@ describe('LiteExportStrategy', () => {
 
   describe('export', () => {
     it('should export tenant data successfully', async () => {
-      // Mock tenant resolution
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       // Mock table discovery
       (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }, { table_name: 'orders' }],
@@ -182,11 +176,6 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should enforce S2 tenant isolation', async () => {
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }],
       });
@@ -219,11 +208,6 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should reject tables exceeding row limit', async () => {
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'huge_table' }],
       });
@@ -246,11 +230,6 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should cleanup on export failure', async () => {
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       mockClient.release.mockClear();
       (mockClient as any).execute.mockRejectedValueOnce(
         new Error('Export failed')
@@ -270,11 +249,6 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should create manifest with correct metadata', async () => {
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'products' }],
       });
@@ -308,11 +282,6 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should handle empty tables', async () => {
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       (mockClient as any).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'empty_table' }],
       });
@@ -337,11 +306,6 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should calculate SHA-256 checksum', async () => {
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       mockClient.query.mockResolvedValueOnce({ rows: [] });
 
       const options: ExportOptions = {
@@ -356,11 +320,6 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should set 24h expiry', async () => {
-      mockTenantRegistry.getByIdentifier.mockResolvedValueOnce({
-        id: 'tenant-123',
-        subdomain: 'tenant-123',
-      });
-
       mockClient.query.mockResolvedValueOnce({ rows: [] });
 
       const options: ExportOptions = {

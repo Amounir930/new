@@ -6,7 +6,6 @@ import {
   Globe,
   Plus,
   RefreshCcw,
-  Search,
   ShieldCheck,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';

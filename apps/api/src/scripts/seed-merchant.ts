@@ -4,15 +4,11 @@
  * Usage: bun run src/scripts/seed-merchant.ts
  */
 
-import { publicDb as db, eq, publicPool as pool, sql, tenants } from '@apex/db';
+import { publicDb as db, eq, publicPool as pool, tenants } from '@apex/db';
 import { categories } from '@apex/db/schema/storefront/categories';
 
 import { banners } from '@apex/db/schema/storefront/home';
-import {
-  productImages,
-  products,
-  productVariants,
-} from '@apex/db/schema/storefront/products';
+import { productImages, products } from '@apex/db/schema/storefront/products';
 
 const TENANT_SUBDOMAIN = 'adel';
 // S2 FIX: Use less predictable schema name prefix

@@ -1,13 +1,13 @@
 import {
+  adminDb,
   count,
   eq,
-  onboardingBlueprints,
-  publicDb,
+  onboardingBlueprintsInGovernance,
   sql,
-  tenants,
+  tenantsInGovernance,
 } from '@apex/db';
 import type { RedisRateLimitStore } from '@apex/middleware';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class GovernanceService {
@@ -15,10 +15,10 @@ export class GovernanceService {
 
   async getPlatformStats() {
     // 1. Total Active Tenants
-    const [tenantCount] = await publicDb
+    const [tenantCount] = await adminDb
       .select({ value: count() })
-      .from(tenants)
-      .where(eq(tenants.status, 'active'));
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.status, 'active'));
 
     // 2. Resolve System Load (Simulated based on context or actual CPU if available)
     // For now, we use a placeholder or check Redis health as proxy
@@ -28,9 +28,9 @@ export class GovernanceService {
       : false;
 
     // 3. Blueprint Count
-    const [blueprintCount] = await publicDb
+    const [blueprintCount] = await adminDb
       .select({ value: count() })
-      .from(onboardingBlueprints);
+      .from(onboardingBlueprintsInGovernance);
 
     return {
       activeTenants: tenantCount?.value || 0,
@@ -47,7 +47,7 @@ export class GovernanceService {
       : 'Down';
 
     // Simple health check for SQL
-    const dbHealthy = await publicDb
+    const dbHealthy = await adminDb
       .execute(sql`SELECT 1`)
       .then(() => 'Healthy')
       .catch(() => 'Down');

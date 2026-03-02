@@ -1,11 +1,11 @@
-import { AuditModule, AuditService } from '@apex/audit';
-import { DbModule, TenantRegistryService } from '@apex/db';
+import { AuditModule } from '@apex/audit';
+
 import { Module } from '@nestjs/common';
 import { ProvisioningController } from './provisioning.controller.js';
 import { ProvisioningService } from './provisioning.service.js';
 
 @Module({
-  imports: [DbModule, AuditModule],
+  imports: [AuditModule],
   controllers: [ProvisioningController],
   providers: [
     ProvisioningService,

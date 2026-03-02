@@ -1,16 +1,10 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { AuditService } from '@apex/audit';
-import {
-  drizzle,
-  eq,
-  type NodePgDatabase,
-  onboardingBlueprints,
-  sql,
-} from '@apex/db';
+import { adminDb, eq, onboardingBlueprintsInGovernance } from '@apex/db';
 import type { BlueprintRecord, BlueprintTemplate } from '@apex/provisioning';
-import { SnapshotManager, validateBlueprint } from '@apex/provisioning';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { Pool } from 'pg';
+import { createSnapshot, validateBlueprint } from '@apex/provisioning';
+import { Injectable, NotFoundException } from '@nestjs/common';
+
 import type {
   CreateBlueprintDto,
   UpdateBlueprintDto,
@@ -18,26 +12,23 @@ import type {
 
 @Injectable()
 export class BlueprintsService {
-  private db: NodePgDatabase<Record<string, unknown>>;
+  private db = adminDb;
 
-  constructor(
-    @Inject('DATABASE_POOL') private readonly pool: Pool,
-    private readonly audit: AuditService
-  ) {
-    this.db = drizzle(this.pool);
-  }
+  constructor(private readonly audit: AuditService) {}
 
   async findAll(): Promise<BlueprintRecord[]> {
     return (await this.db
       .select()
-      .from(onboardingBlueprints)) as BlueprintRecord[];
+      .from(onboardingBlueprintsInGovernance)) as unknown as BlueprintRecord[];
   }
 
   async findOne(id: string): Promise<BlueprintRecord> {
     const [blueprint] = (await this.db
       .select()
-      .from(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.id, id))) as BlueprintRecord[];
+      .from(onboardingBlueprintsInGovernance)
+      .where(
+        eq(onboardingBlueprintsInGovernance.id, id)
+      )) as unknown as BlueprintRecord[];
 
     if (!blueprint) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
@@ -60,7 +51,7 @@ export class BlueprintsService {
     }
 
     const [newBlueprint] = (await this.db
-      .insert(onboardingBlueprints)
+      .insert(onboardingBlueprintsInGovernance)
       .values({
         name: dto.name,
         description: dto.description || null,
@@ -71,7 +62,7 @@ export class BlueprintsService {
         isDefault: dto.isDefault,
         blueprint: blueprintData,
       })
-      .returning()) as BlueprintRecord[];
+      .returning()) as unknown as BlueprintRecord[];
 
     this.audit.log({
       userId,
@@ -106,17 +97,17 @@ export class BlueprintsService {
     }
 
     const [updatedBlueprint] = (await this.db
-      .update(onboardingBlueprints)
+      .update(onboardingBlueprintsInGovernance)
       .set({
         plan: dto.plan,
         nicheType: (dto.nicheType ?? undefined) as any,
         status: dto.status as 'active' | 'paused' | undefined,
         blueprint: dto.blueprint as unknown as BlueprintTemplate,
         isDefault: dto.isDefault,
-        updatedAt: new Date(),
+        updatedAt: new Date().toISOString(),
       })
-      .where(eq(onboardingBlueprints.id, id))
-      .returning()) as BlueprintRecord[];
+      .where(eq(onboardingBlueprintsInGovernance.id, id))
+      .returning()) as unknown as BlueprintRecord[];
 
     if (!updatedBlueprint) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
@@ -136,9 +127,9 @@ export class BlueprintsService {
 
   async remove(userId: string, id: string): Promise<BlueprintRecord> {
     const [deleted] = (await this.db
-      .delete(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.id, id))
-      .returning()) as BlueprintRecord[];
+      .delete(onboardingBlueprintsInGovernance)
+      .where(eq(onboardingBlueprintsInGovernance.id, id))
+      .returning()) as unknown as BlueprintRecord[];
 
     if (!deleted) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
@@ -161,39 +152,31 @@ export class BlueprintsService {
     subdomain: string,
     name: string,
     description?: string,
-    nicheType?: string
+    _nicheType?: string
   ): Promise<BlueprintRecord> {
     try {
-      const manager = new SnapshotManager();
-      const template = await manager.createSnapshot(subdomain);
+      const blueprintId = await createSnapshot(subdomain, {
+        name,
+        description,
+        isDefault: false,
+        plan: 'pro',
+      });
 
-      await this.db.execute(sql`SET search_path TO public`);
-
-      const [newBlueprint] = (await this.db
-        .insert(onboardingBlueprints)
-        .values({
-          name: name,
-          description: description || template.description || null,
-          plan: 'custom' as any,
-          nicheType: (nicheType || 'retail') as any,
-          status: 'active' as const,
-          isDefault: false,
-          blueprint: template as any as BlueprintTemplate, // Type bridge for snapshot
-        })
-        .returning()) as BlueprintRecord[];
+      const blueprint = await this.findOne(blueprintId);
 
       await this.audit.log({
         action: 'BLUEPRINT_SNAPSHOT',
-        entityType: 'BLUEPRINT',
-        entityId: newBlueprint.id,
+        entityType: 'onboarding_blueprints',
+        entityId: blueprintId,
         userId: userId,
+        tenantId: 'system',
         metadata: {
           sourceSubdomain: subdomain,
           snapshotName: name,
         },
       });
 
-      return newBlueprint;
+      return blueprint;
     } catch (error) {
       console.error(
         `[BlueprintsService] Snapshot FAILED for ${subdomain}:`,

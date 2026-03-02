@@ -1,7 +1,7 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { AuditLog, AuditService } from '@apex/audit';
+import { AuditService } from '@apex/audit';
 import { AuthService, type AuthUser } from '@apex/auth';
-import { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config';
 import {
   Body,
   Controller,
@@ -14,7 +14,7 @@ import {
   UseGuards,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
@@ -35,7 +35,7 @@ export class AuthController {
     private readonly config: ConfigService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) { }
+  ) {}
 
   @Post('login')
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force

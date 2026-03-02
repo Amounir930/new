@@ -21,8 +21,8 @@ const mockDb = {
 };
 
 mock.module('@apex/db', () => ({
-  publicDb: mockDb,
-  publicPool: {
+  adminDb: mockDb,
+  adminPool: {
     connect: mock().mockResolvedValue({
       query: mock().mockResolvedValue(undefined),
       release: mock(),
@@ -31,7 +31,7 @@ mock.module('@apex/db', () => ({
   redis: {
     exists: mock().mockResolvedValue(0),
   },
-  tenants: {
+  tenantsInGovernance: {
     id: 'id-col',
     subdomain: 'sub-col',
     plan: 'plan-col',

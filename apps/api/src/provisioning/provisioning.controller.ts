@@ -21,7 +21,6 @@ import {
 import type { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
-import { ProvisionRequestSchema } from './dto/provision-request.dto.js';
 import type { ProvisioningService } from './provisioning.service.js';
 
 @Controller('provision')

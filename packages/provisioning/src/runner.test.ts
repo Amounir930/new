@@ -4,7 +4,6 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { runTenantMigrations } from './runner.js';
 
 // Mock DB
@@ -14,7 +13,7 @@ const mockDb = {
 };
 
 mock.module('@apex/db', () => ({
-  publicPool: {
+  adminPool: {
     connect: mock().mockResolvedValue(mockDb),
   },
   createTenantDb: mock().mockReturnValue(mockDb),

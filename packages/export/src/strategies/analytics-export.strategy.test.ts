@@ -40,15 +40,12 @@ mock.module('@apex/db', () => {
 
   return {
     sql: sqlMock,
-    withTenantConnection: mock(
-      async (tenantId: string, cb: (db: any) => Promise<any>) => {
-        try {
-          return await cb(mockClient);
-        } finally {
-          mockClient.release();
-        }
-      }
-    ),
+    getTenantDb: mock(async (_tenantId: string) => {
+      return {
+        db: mockClient,
+        release: mockClient.release,
+      };
+    }),
     publicPool: {
       connect: mock().mockResolvedValue(mockClient),
       query: mock().mockResolvedValue({
@@ -202,7 +199,7 @@ describe('AnalyticsExportStrategy', () => {
 
       const executeCalls = (mockClient as any).execute.mock.calls;
       for (const call of executeCalls) {
-        const queryText = call[0].strings
+        const _queryText = call[0].strings
           ? call[0].strings.join('')
           : call[0].toString();
         // Since we are mocking withTenantConnection to call cb(mockClient),

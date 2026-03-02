@@ -1,12 +1,11 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { AuditLog, AuditService } from '@apex/audit';
+import { AuditLog } from '@apex/audit';
 import { CurrentUser, JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import {
   Body,
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   Post,
   Put,
@@ -27,11 +26,7 @@ import {
 @Controller('admin/blueprints')
 @UseGuards(JwtAuthGuard, SuperAdminGuard) // Super-#21: Super Admin ONLY
 export class BlueprintsController {
-  constructor(
-    private readonly blueprintsService: BlueprintsService,
-    @Inject('AUDIT_SERVICE')
-    private readonly audit: AuditService
-  ) {}
+  constructor(private readonly blueprintsService: BlueprintsService) {}
 
   @Get()
   findAll() {

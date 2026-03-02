@@ -4,7 +4,17 @@
  * Enforces resource-level quotas (max products, max orders, etc.)
  */
 
-import { GovernanceService } from '@apex/db';
+import {
+  adminDb,
+  count,
+  eq,
+  ordersInStorefront,
+  productsInStorefront,
+  staffMembersInStorefront,
+  subscriptionPlansInGovernance,
+  tenantQuotasInGovernance,
+  tenantsInGovernance,
+} from '@apex/db';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -29,10 +39,7 @@ export const CheckQuota = (resource: 'products' | 'orders' | 'staff') =>
 
 @Injectable()
 export class QuotaInterceptor implements NestInterceptor {
-  constructor(
-    private reflector: Reflector,
-    private governanceService: GovernanceService
-  ) { }
+  constructor(private reflector: Reflector) {}
 
   async intercept(
     context: ExecutionContext,
@@ -50,28 +57,70 @@ export class QuotaInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<TenantRequest>();
     const user = request.user;
     const tenantId = request.tenantContext?.tenantId;
-    const subdomain = request.tenantContext?.subdomain;
 
     // Super Admin Bypass
     if (user?.role === 'super_admin') {
       return next.handle();
     }
 
-    if (!tenantId || !subdomain) {
+    if (!tenantId) {
       throw new ForbiddenException(
         'Tenant context required for quota validation'
       );
     }
 
-    const result = await this.governanceService.checkQuota(
-      tenantId,
-      resource,
-      subdomain
-    );
+    // 1. Fetch Limits (Plan Defaults + Overrides)
+    const [quotaData] = await adminDb
+      .select({
+        planMaxProducts: subscriptionPlansInGovernance.defaultMaxProducts,
+        planMaxOrders: subscriptionPlansInGovernance.defaultMaxOrders,
+        planMaxStaff: subscriptionPlansInGovernance.defaultMaxStaff,
+        overrideMaxProducts: tenantQuotasInGovernance.maxProducts,
+        overrideMaxOrders: tenantQuotasInGovernance.maxOrders,
+        overrideMaxStaff: tenantQuotasInGovernance.maxStaff,
+      })
+      .from(tenantsInGovernance)
+      .innerJoin(
+        subscriptionPlansInGovernance,
+        eq(subscriptionPlansInGovernance.code, tenantsInGovernance.plan)
+      )
+      .leftJoin(
+        tenantQuotasInGovernance,
+        eq(tenantQuotasInGovernance.tenantId, tenantsInGovernance.id)
+      )
+      .where(eq(tenantsInGovernance.id, tenantId))
+      .limit(1);
 
-    if (!result.allowed) {
+    if (!quotaData) {
+      throw new ForbiddenException('Unable to resolve quota data for tenant');
+    }
+
+    // 2. Resolve Maximum Limit and Target Table
+    let max = 0;
+    let targetTable: any;
+
+    if (resource === 'products') {
+      max = quotaData.overrideMaxProducts ?? quotaData.planMaxProducts;
+      targetTable = productsInStorefront;
+    } else if (resource === 'orders') {
+      max = quotaData.overrideMaxOrders ?? quotaData.planMaxOrders;
+      targetTable = ordersInStorefront;
+    } else if (resource === 'staff') {
+      max = quotaData.overrideMaxStaff ?? quotaData.planMaxStaff;
+      targetTable = staffMembersInStorefront;
+    }
+
+    // 3. Check Current Usage
+    const [usage] = await adminDb
+      .select({ count: count() })
+      .from(targetTable)
+      .where(eq(targetTable.tenantId, tenantId));
+
+    const current = usage?.count ?? 0;
+
+    if (current >= max) {
       throw new ForbiddenException(
-        `Quota exceeded for '${resource}'. Limit: ${result.limit}, Current: ${result.current}. Please upgrade your plan.`
+        `Quota exceeded for '${resource}'. Limit: ${max}, Current: ${current}. Please upgrade your plan.`
       );
     }
 

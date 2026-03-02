@@ -8,12 +8,7 @@ import { rm } from 'node:fs/promises';
 import path from 'node:path';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
-import {
-  sql,
-  // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-  type TenantRegistryService,
-  withTenantConnection,
-} from '@apex/db';
+import { adminDb, eq, getTenantDb, sql, tenantsInGovernance } from '@apex/db';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,
@@ -30,13 +25,17 @@ export class LiteExportStrategy implements ExportStrategy {
   private readonly logger = new Logger(LiteExportStrategy.name);
 
   constructor(
-    private readonly tenantRegistry: TenantRegistryService,
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
   ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
-    return this.tenantRegistry.exists(options.tenantId);
+    const tenants = await adminDb
+      .select({ id: tenantsInGovernance.id })
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.id, options.tenantId))
+      .limit(1);
+    return tenants.length > 0;
   }
 
   private readonly MAX_ROWS_PER_TABLE = 100000; // 100K rows limit
@@ -53,16 +52,18 @@ export class LiteExportStrategy implements ExportStrategy {
       // Create work directory
       await this.shell.spawn(['mkdir', '-p', `${workDir}/database`]).exited;
 
-      return await withTenantConnection(options.tenantId, async (db) => {
-        // S2: Hard Isolation. Inside withTenantConnection, the search_path is set to the tenant schema.
+      const { db, release } = await getTenantDb(options.tenantId);
+      try {
+        // S2: Hard Isolation. Using the scoped tenant db.
 
-        // 1. Get tables from current schema
-        const tablesResult = await db.execute(sql`
+        // 1. Get tables from current schema (which is forced to the tenant's exact schema)
+        const tablesResult: any = await db.execute(sql`
           SELECT table_name FROM information_schema.tables 
           WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'
         `);
 
-        const tables = tablesResult.rows.map((r: any) => r.table_name);
+        // S1 FIX 3B: Explicitly access rows property from Node.js pg
+        const tables = (tablesResult.rows || []).map((r: any) => r.table_name);
         let totalRows = 0;
 
         // 2. Export each table as JSON
@@ -76,7 +77,7 @@ export class LiteExportStrategy implements ExportStrategy {
           this.logger.debug(`Exporting table: ${table}`);
 
           // Check row count limit
-          const countResult = await db.execute(
+          const countResult: any = await db.execute(
             sql`SELECT COUNT(*) FROM ${safeTable}`
           );
           const rowCount = Number(countResult.rows[0].count);
@@ -87,13 +88,15 @@ export class LiteExportStrategy implements ExportStrategy {
             );
           }
 
-          const dataResult = await db.execute(sql`SELECT * FROM ${safeTable}`);
+          const dataResult: any = await db.execute(
+            sql`SELECT * FROM ${safeTable}`
+          );
           totalRows += dataResult.rowCount || 0;
 
           // Write to JSON file
           await this.writeTableToFile(
             `${workDir}/database/${table}.json`,
-            dataResult.rows
+            dataResult.rows || []
           );
         }
 
@@ -141,7 +144,9 @@ export class LiteExportStrategy implements ExportStrategy {
           checksum: checksumHex,
           manifest,
         };
-      });
+      } finally {
+        release();
+      }
     } catch (error) {
       // Cleanup on error
       await this.secureCleanup(workDir);

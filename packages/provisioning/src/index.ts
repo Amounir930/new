@@ -14,7 +14,7 @@ export * from './quota-service.js';
 export * from './runner.js';
 export * from './schema-manager.js';
 export * from './seeder.js';
-export { SnapshotManager } from './snapshot-manager.js';
+export * from './snapshot-manager.js';
 export * from './storage-manager.js';
 export * from './tenant-overview.js';
 

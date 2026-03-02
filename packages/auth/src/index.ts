@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Observable } from 'rxjs';
-import { AuthService, type AuthUser } from './auth.service.js';
+import type { AuthUser } from './auth.service.js';
 
 export * from './auth.module.js';
 export * from './auth.service.js';

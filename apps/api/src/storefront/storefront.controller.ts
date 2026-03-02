@@ -13,7 +13,6 @@ import {
   UsePipes,
   VERSION_NEUTRAL,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 import type { NewsletterSubscriptionDto } from './dto/newsletter.dto.js';

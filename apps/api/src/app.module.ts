@@ -3,9 +3,8 @@
  * Configures S1-S8 Security Protocols
  */
 
-import { AuditInterceptor, AuditModule, AuditService } from '@apex/audit';
+import { AuditModule } from '@apex/audit';
 import { ConfigModule } from '@apex/config';
-import { DbModule } from '@apex/db';
 import { ExportModule } from '@apex/export';
 import {
   ActiveDefenseMiddleware,
@@ -28,7 +27,6 @@ import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
 import { GovernanceModule } from './governance/governance.module.js';
 import { HealthModule } from './health/health.module.js';
-import { BulkExportController } from './products/bulk-export.controller.js';
 import { BulkImportController } from './products/bulk-import.controller.js';
 import { ProductsController } from './products/products.controller.js';
 import { ProvisioningModule } from './provisioning/provisioning.module.js';
@@ -43,8 +41,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     // S15: Security Module (Global) - Register FIRST
     SecurityModule,
 
-    // Core Data Module
-    DbModule,
+    // Core Data Module removed in favor of Drizzle connection pools
 
     // S1: Configuration
     ConfigModule,

@@ -1,22 +1,14 @@
 import {
   and,
-  banners,
-  db,
-  dbContextStorage,
+  bannersInStorefront,
   desc,
   eq,
-  gte,
-  isNull,
-  lte,
-  // mvBestSellers,
-  newsletterSubscribers,
-  orderItems,
-  orders,
-  products,
-  // productImages,
-  productVariants,
+  getTenantDb,
+  newsletterSubscribersInStorefront,
+  productsInStorefront,
+  productVariantsInStorefront,
   sql,
-  tenantConfig,
+  tenantConfigInStorefront,
 } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { RedisRateLimitStore } from '@apex/middleware';
@@ -30,57 +22,56 @@ export class StorefrontService {
     private readonly crypto: EncryptionService
   ) {}
 
-  // S2 FIX 19C: Get pre-configured DB executor from middleware (no second connection)
-  private getDb() {
-    const db = dbContextStorage.getStore();
-    if (!db)
-      throw new Error(
-        'S2 CRITICAL: Database context missing! Request not routed through TenantIsolationMiddleware.'
-      );
-    return db;
-  }
-
   async getTenantConfig(tenantId: string) {
-    const db = this.getDb();
-    const cacheKey = `storefront:config:${tenantId}`;
-    const client = await this.redisStore.getClient();
+    const { db, release } = await getTenantDb(tenantId);
+    try {
+      const cacheKey = `storefront:config:${tenantId}`;
+      const client = await this.redisStore.getClient();
 
-    if (client) {
-      const cachedData = await client.get(cacheKey);
-      if (cachedData) return JSON.parse(cachedData);
+      if (client) {
+        const cachedData = await client.get(cacheKey);
+        if (cachedData) return JSON.parse(cachedData);
+      }
+
+      // Fetch config from tenant_config table
+      const configEntries = await db.select().from(tenantConfigInStorefront);
+      const config = configEntries.reduce(
+        (acc: Record<string, unknown>, curr: any) => {
+          acc[curr.key] = curr.value;
+          return acc;
+        },
+        {} as Record<string, unknown>
+      );
+
+      // Fetch hero banners
+      const heroBanners = await db
+        .select()
+        .from(bannersInStorefront)
+        .where(
+          and(
+            eq(bannersInStorefront.isActive, true),
+            eq(bannersInStorefront.location, 'hero')
+          )
+        )
+        .orderBy(desc(bannersInStorefront.sortOrder))
+        .limit(1);
+
+      const result = {
+        storeName: (config.store_name as string) || 'APEX STORE',
+        logoUrl: config.logo_url as string | undefined,
+        primaryColor: (config.primary_color as string) || '#000000',
+        heroBanner: heroBanners[0],
+        ...(config as Record<string, unknown>),
+      };
+
+      if (client) {
+        await client.setEx(cacheKey, 3600, JSON.stringify(result));
+      }
+
+      return result;
+    } finally {
+      release();
     }
-
-    // Fetch config from tenant_config table
-    const configEntries = await db.select().from(tenantConfig);
-    const config = configEntries.reduce(
-      (acc: Record<string, unknown>, curr) => {
-        acc[curr.key] = curr.value;
-        return acc;
-      },
-      {} as Record<string, unknown>
-    );
-
-    // Fetch hero banners
-    const heroBanners = await db
-      .select()
-      .from(banners)
-      .where(and(eq(banners.isActive, true), eq(banners.position, 'hero')))
-      .orderBy(desc(banners.priority))
-      .limit(1);
-
-    const result = {
-      storeName: (config.store_name as string) || 'APEX STORE',
-      logoUrl: config.logo_url as string | undefined,
-      primaryColor: (config.primary_color as string) || '#000000',
-      heroBanner: heroBanners[0],
-      ...(config as Record<string, unknown>),
-    };
-
-    if (client) {
-      await client.setEx(cacheKey, 3600, JSON.stringify(result));
-    }
-
-    return result;
   }
 
   async getProducts(
@@ -92,78 +83,85 @@ export class StorefrontService {
       sort?: 'newest' | 'price_asc' | 'price_desc';
     }
   ) {
-    const db = this.getDb();
-    const conditions = [eq(products.isActive, true)];
+    const { db, release } = await getTenantDb(_tenantId);
+    try {
+      const conditions = [eq(productsInStorefront.isActive, true)];
 
-    if (params.featured) {
-      conditions.push(eq(products.isFeatured, true));
+      if (params.featured) {
+        conditions.push(eq(productsInStorefront.isFeatured, true));
+      }
+
+      if (params.category) {
+        conditions.push(eq(productsInStorefront.categoryId, params.category));
+      }
+
+      let query = db
+        .select({
+          id: productsInStorefront.id,
+          slug: productsInStorefront.slug,
+          name: productsInStorefront.name,
+          price: productsInStorefront.basePrice,
+          compareAtPrice: productsInStorefront.salePrice,
+          rating: sql<number>`4.5`,
+          imageUrl: productsInStorefront.mainImage,
+        })
+        .from(productsInStorefront)
+        .where(and(...conditions))
+        .$dynamic();
+
+      if (params.sort === 'newest') {
+        query = query.orderBy(desc(productsInStorefront.createdAt));
+      } else if (params.sort === 'price_asc') {
+        query = query.orderBy(productsInStorefront.basePrice);
+      } else if (params.sort === 'price_desc') {
+        query = query.orderBy(desc(productsInStorefront.basePrice));
+      }
+
+      return await query.limit(params.limit || 20);
+    } finally {
+      release();
     }
-
-    if (params.category) {
-      conditions.push(eq(products.categoryId, params.category));
-    }
-
-    let query = db
-      .select({
-        id: products.id,
-        slug: products.slug,
-        name: products.name,
-        price: products.basePrice,
-        compareAtPrice: products.salePrice,
-        rating: sql<number>`4.5`,
-        imageUrl: products.mainImage,
-      })
-      .from(products)
-      .where(and(...conditions))
-      .$dynamic();
-
-    if (params.sort === 'newest') {
-      query = query.orderBy(desc(products.createdAt));
-    } else if (params.sort === 'price_asc') {
-      query = query.orderBy(products.basePrice);
-    } else if (params.sort === 'price_desc') {
-      query = query.orderBy(desc(products.basePrice));
-    }
-
-    return query.limit(params.limit || 20);
   }
 
   async getProductBySlug(_tenantId: string, slug: string) {
-    const db = this.getDb();
-    const productData = await db
-      .select()
-      .from(products)
-      .where(and(eq(products.slug, slug), eq(products.isActive, true)))
-      .limit(1);
-
-    if (productData.length === 0) return null;
-
-    const product = productData[0];
-
-    const [/* images */ , variants] = await Promise.all([
-      /* db
+    const { db, release } = await getTenantDb(_tenantId);
+    try {
+      const productData = await db
         .select()
-        .from(productImages)
-        .where(eq(productImages.productId, product.id))
-        .orderBy(productImages.order), */
-      Promise.resolve([]),
-      db
-        .select()
-        .from(productVariants)
-        .where(eq(productVariants.productId, product.id)),
-    ]);
+        .from(productsInStorefront)
+        .where(
+          and(
+            eq(productsInStorefront.slug, slug),
+            eq(productsInStorefront.isActive, true)
+          )
+        )
+        .limit(1);
 
-    return {
-      ...product,
-      images: [], // images,
-      variants,
-      rating: 4.5,
-      reviewCount: 12,
-    };
+      if (productData.length === 0) return null;
+
+      const product = productData[0];
+
+      const [, variants] = await Promise.all([
+        Promise.resolve([]),
+        db
+          .select()
+          .from(productVariantsInStorefront)
+          .where(eq(productVariantsInStorefront.productId, product.id)),
+      ]);
+
+      return {
+        ...product,
+        images: [], // images,
+        variants,
+        rating: 4.5,
+        reviewCount: 12,
+      };
+    } finally {
+      release();
+    }
   }
 
   async getHomeData(_tenantId: string) {
-    const db = this.getDb();
     const cacheKey = `storefront:home:${_tenantId}`;
     const client = await this.redisStore.getClient();
 
@@ -174,41 +172,42 @@ export class StorefrontService {
       }
     }
 
-    const now = new Date();
+    const { db, release } = await getTenantDb(_tenantId);
+    try {
+      const now = new Date();
 
-    const [/* bestSellers */ , activeBanners] = await Promise.all([
-      /* db.select().from(mvBestSellers).limit(8), */
-      Promise.resolve([]),
-      db
-        .select()
-        .from(banners)
-        .where(
-          and(
-            eq(banners.isActive, true),
-            eq(banners.position, 'hero'),
-            sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR 
-                            (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now}) OR
-                            (${banners.startDate} <= ${now} AND ${banners.endDate} IS NULL)`
+      const [, activeBanners] = await Promise.all([
+        Promise.resolve([]),
+        db
+          .select()
+          .from(bannersInStorefront)
+          .where(
+            and(
+              eq(bannersInStorefront.isActive, true),
+              eq(bannersInStorefront.location, 'hero')
+            )
           )
-        )
-        .limit(5)
-        .orderBy(desc(banners.priority)),
-    ]);
+          .limit(5)
+          .orderBy(desc(bannersInStorefront.sortOrder)),
+      ]);
 
-    const homeData = {
-      banners: activeBanners,
-      bestSellers: [], // bestSellers,
-      meta: {
-        lastUpdated: now.toISOString(),
-        tenantId: _tenantId,
-      },
-    };
+      const homeData = {
+        banners: activeBanners,
+        bestSellers: [], // bestSellers,
+        meta: {
+          lastUpdated: now.toISOString(),
+          tenantId: _tenantId,
+        },
+      };
 
-    if (client) {
-      await client.setEx(cacheKey, 10, JSON.stringify(homeData));
+      if (client) {
+        await client.setEx(cacheKey, 10, JSON.stringify(homeData));
+      }
+
+      return homeData;
+    } finally {
+      release();
     }
-
-    return homeData;
   }
 
   // S12 FIX 19C: Aggregated Bootstrap (uses middleware connection, no second pool hit)
@@ -236,73 +235,88 @@ export class StorefrontService {
 
   /** Internal helpers — use middleware-provided DB context */
   private async fetchConfigInternal(_tenantId: string) {
-    const db = this.getDb();
-    const configEntries = await db.select().from(tenantConfig);
-    const config = configEntries.reduce(
-      (acc: Record<string, unknown>, curr) => {
-        acc[curr.key] = curr.value;
-        return acc;
-      },
-      {} as Record<string, unknown>
-    );
+    const { db, release } = await getTenantDb(_tenantId);
+    try {
+      const configEntries = await db.select().from(tenantConfigInStorefront);
+      const config = configEntries.reduce(
+        (acc: Record<string, unknown>, curr: any) => {
+          acc[curr.key] = curr.value;
+          return acc;
+        },
+        {} as Record<string, unknown>
+      );
 
-    const heroBanners = await db
-      .select()
-      .from(banners)
-      .where(and(eq(banners.isActive, true), eq(banners.position, 'hero')))
-      .orderBy(desc(banners.priority))
-      .limit(1);
+      const heroBanners = await db
+        .select()
+        .from(bannersInStorefront)
+        .where(
+          and(
+            eq(bannersInStorefront.isActive, true),
+            eq(bannersInStorefront.location, 'hero')
+          )
+        )
+        .orderBy(desc(bannersInStorefront.sortOrder))
+        .limit(1);
 
-    return {
-      storeName: (config.store_name as string) || 'APEX STORE',
-      logoUrl: config.logo_url as string | undefined,
-      primaryColor: (config.primary_color as string) || '#000000',
-      heroBanner: heroBanners[0],
-      ...(config as Record<string, unknown>),
-    };
+      return {
+        storeName: (config.store_name as string) || 'APEX STORE',
+        logoUrl: config.logo_url as string | undefined,
+        primaryColor: (config.primary_color as string) || '#000000',
+        heroBanner: heroBanners[0],
+        ...(config as Record<string, unknown>),
+      };
+    } finally {
+      release();
+    }
   }
 
   private async fetchHomeInternal(_tenantId: string) {
-    const db = this.getDb();
-    const now = new Date();
-    const [/* bestSellers */ , activeBanners] = await Promise.all([
-      /* db.select().from(mvBestSellers).limit(8), */
-      Promise.resolve([]),
-      db
-        .select()
-        .from(banners)
-        .where(
-          and(
-            eq(banners.isActive, true),
-            eq(banners.position, 'hero'),
-            sql`(${banners.startDate} IS NULL AND ${banners.endDate} IS NULL) OR (${banners.startDate} <= ${now} AND ${banners.endDate} >= ${now})`
+    const { db, release } = await getTenantDb(_tenantId);
+    try {
+      const now = new Date();
+      const [, activeBanners] = await Promise.all([
+        Promise.resolve([]),
+        db
+          .select()
+          .from(bannersInStorefront)
+          .where(
+            and(
+              eq(bannersInStorefront.isActive, true),
+              eq(bannersInStorefront.location, 'hero')
+            )
           )
-        )
-        .limit(5)
-        .orderBy(desc(banners.priority)),
-    ]);
-    return {
-      banners: activeBanners,
-      bestSellers: [], // bestSellers,
-      meta: { lastUpdated: now.toISOString(), tenantId: _tenantId },
-    };
+          .limit(5)
+          .orderBy(desc(bannersInStorefront.sortOrder)),
+      ]);
+      return {
+        banners: activeBanners,
+        bestSellers: [], // bestSellers,
+        meta: { lastUpdated: now.toISOString(), tenantId: _tenantId },
+      };
+    } finally {
+      release();
+    }
   }
 
   async subscribeToNewsletter(_tenantId: string, email: string) {
-    const db = this.getDb();
-    // S7: Encrypt PII before storage
-    const encryptedEmail = this.crypto.encrypt(email).encrypted;
+    const { db, release } = await getTenantDb(_tenantId);
+    try {
+      // S7: Encrypt PII before storage
+      const encryptedEmail = this.crypto.encrypt(email).encrypted;
 
-    // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure
-    return db.transaction(async (tx) => {
-      return tx
-        .insert(newsletterSubscribers)
-        .values({ email: encryptedEmail })
-        .onConflictDoUpdate({
-          target: newsletterSubscribers.email,
-          set: { isActive: true },
-        })
-        .returning();
-    });
+      // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure
+      return await db.transaction(async (tx: any) => {
+        return (await tx
+          .insert(newsletterSubscribersInStorefront)
+          .values({ email: encryptedEmail })
+          .onConflictDoUpdate({
+            target: newsletterSubscribersInStorefront.email,
+            set: { isActive: true },
+          })
+          .returning()) as any;
+      });
+    } finally {
+      release();
+    }
   }
 }

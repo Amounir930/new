@@ -1,4 +1,4 @@
-import { ConfigService, env } from '@apex/config';
+import { env } from '@apex/config';
 import { createClient } from 'redis';
 
 /**

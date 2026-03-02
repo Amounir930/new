@@ -2,7 +2,6 @@
  * Provision Request DTO
  */
 
-import { NicheSchema } from '@apex/validators';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 

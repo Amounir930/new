@@ -1,10 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'bun:test';
 import {
   decrypt,
   EncryptionService,
   encrypt,
   generateApiKey,
-  hashApiKey,
   maskSensitive,
 } from './encryption.js';
 

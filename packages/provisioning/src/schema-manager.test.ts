@@ -5,7 +5,7 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { publicPool } from '@apex/db';
+import { adminPool } from '@apex/db';
 import {
   createTenantSchema,
   dropTenantSchema,
@@ -14,7 +14,7 @@ import {
 } from './schema-manager.js';
 
 mock.module('@apex/db', () => ({
-  publicPool: {
+  adminPool: {
     connect: mock(),
   },
 }));
@@ -28,7 +28,7 @@ describe('SchemaManager', () => {
       query: mock(),
       release: mock(),
     };
-    (publicPool.connect as any).mockResolvedValue(mockClient);
+    (adminPool.connect as any).mockResolvedValue(mockClient);
   });
 
   describe('sanitizeSchemaName', () => {

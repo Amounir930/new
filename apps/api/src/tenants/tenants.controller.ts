@@ -1,8 +1,12 @@
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { AuditLog, AuditService } from '@apex/audit';
+import { AuditLog } from '@apex/audit';
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
-// biome-ignore lint/style/useImportType: Dependency Injection token
-import { GovernanceService, TenantRegistryService } from '@apex/db';
+import {
+  adminDb,
+  and,
+  eq,
+  featureGatesInGovernance,
+  tenantsInGovernance,
+} from '@apex/db';
 import {
   Body,
   Controller,
@@ -32,22 +36,21 @@ const UpdateFeatureSchema = z.object({
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
   constructor(
-    private readonly tenantRegistry: TenantRegistryService,
-    private readonly governance: GovernanceService,
     @Inject(forwardRef(() => SecurityService))
-    private readonly security: SecurityService,
-    @Inject('AUDIT_SERVICE')
-    private readonly audit: AuditService
+    private readonly security: SecurityService
   ) {}
 
   @Get()
   async findAll() {
-    return this.tenantRegistry.findAll();
+    return adminDb.select().from(tenantsInGovernance);
   }
 
   @Get(':id/features')
   async getFeatures(@Param('id') id: string) {
-    const gates = await this.governance.getTenantFeatureGates(id);
+    const gates = await adminDb
+      .select()
+      .from(featureGatesInGovernance)
+      .where(eq(featureGatesInGovernance.tenantId, id));
 
     // Resolve effective state
     const features: Record<
@@ -88,7 +91,33 @@ export class TenantsController {
       throw new Error(`Invalid feature key: ${key}`);
     }
 
-    return this.governance.updateTenantFeatureGate(id, key, body.isEnabled);
+    const [existing] = await adminDb
+      .select()
+      .from(featureGatesInGovernance)
+      .where(
+        and(
+          eq(featureGatesInGovernance.tenantId, id),
+          eq(featureGatesInGovernance.featureKey, key)
+        )
+      )
+      .limit(1);
+
+    if (existing) {
+      return adminDb
+        .update(featureGatesInGovernance)
+        .set({ isEnabled: body.isEnabled })
+        .where(eq(featureGatesInGovernance.id, existing.id))
+        .returning();
+    }
+
+    return adminDb
+      .insert(featureGatesInGovernance)
+      .values({
+        tenantId: id,
+        featureKey: key,
+        isEnabled: body.isEnabled,
+      })
+      .returning();
   }
 
   @Patch(':id')
@@ -103,7 +132,11 @@ export class TenantsController {
       nicheType?: string;
     }
   ) {
-    const updated = await this.tenantRegistry.update(id, body);
+    const [updated] = await adminDb
+      .update(tenantsInGovernance)
+      .set({ ...body, updatedAt: new Date() } as any)
+      .where(eq(tenantsInGovernance.id, id))
+      .returning();
 
     // S15: Steel Control Sync
     // If status changed, update the global Redis lock for instant enforcement

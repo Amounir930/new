@@ -17,7 +17,7 @@
     "test:coverage": "bun test --coverage",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun x tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {

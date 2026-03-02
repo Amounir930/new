@@ -92,7 +92,7 @@ mock.module('@apex/db', () => {
   mockQuery.returning = mock().mockResolvedValue([mockTenants[0]]);
 
   return {
-    tenants: {
+    tenantsInGovernance: {
       id: 'id',
       subdomain: 'subdomain',
       name: 'name',
@@ -101,7 +101,7 @@ mock.module('@apex/db', () => {
       createdAt: 'created_at',
       updatedAt: 'updated_at',
     },
-    publicDb: {
+    adminDb: {
       select: mock().mockImplementation(() => {
         const selectMock = {
           from: mock().mockReturnValue(mockQuery),
@@ -117,6 +117,12 @@ mock.module('@apex/db', () => {
       delete: mock().mockReturnValue({
         where: mock().mockReturnThis(),
         returning: mock().mockResolvedValue([{ id: 'deleted' }]),
+      }),
+    },
+    adminPool: {
+      connect: mock().mockResolvedValue({
+        query: mock().mockResolvedValue({ rows: [] }),
+        release: mock(),
       }),
     },
     sql: mock().mockImplementation(() => ({
@@ -183,8 +189,8 @@ describe('Tenant Overview Service', () => {
     });
 
     it('should handle empty count result in getTenantList', async () => {
-      const { publicDb } = await import('@apex/db');
-      (publicDb.select as any).mockReturnValueOnce({
+      const { adminDb } = await import('@apex/db');
+      (adminDb.select as any).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockResolvedValue([]), // Empty count array
         }),
@@ -203,8 +209,8 @@ describe('Tenant Overview Service', () => {
 
     it('should return null for non-existent id', async () => {
       // Ensure the mock for this specific case resolves to empty array
-      const { publicDb } = await import('@apex/db');
-      (publicDb.select as any).mockReturnValueOnce({
+      const { adminDb } = await import('@apex/db');
+      (adminDb.select as any).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([]),
@@ -223,8 +229,8 @@ describe('Tenant Overview Service', () => {
     });
 
     it('should return null for non-existent subdomain', async () => {
-      const { publicDb } = await import('@apex/db');
-      (publicDb.select as any).mockReturnValueOnce({
+      const { adminDb } = await import('@apex/db');
+      (adminDb.select as any).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([]),
@@ -243,8 +249,8 @@ describe('Tenant Overview Service', () => {
     });
 
     it('should return null for non-existent tenant', async () => {
-      const { publicDb } = await import('@apex/db');
-      (publicDb.update as any).mockReturnValueOnce({
+      const { adminDb } = await import('@apex/db');
+      (adminDb.update as any).mockReturnValueOnce({
         set: mock().mockReturnThis(),
         where: mock().mockReturnThis(),
         returning: mock().mockResolvedValue([]),
@@ -283,8 +289,8 @@ describe('Tenant Overview Service', () => {
 
     it('should allow deletion of suspended tenants', async () => {
       // Mock getTenantById to return a suspended tenant
-      const { publicDb } = await import('@apex/db');
-      (publicDb.select as any).mockReturnValueOnce({
+      const { adminDb } = await import('@apex/db');
+      (adminDb.select as any).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([mockTenants[1]]), // tenant-2 is suspended
@@ -292,7 +298,7 @@ describe('Tenant Overview Service', () => {
       } as any);
 
       // Also mock delete to return success
-      (publicDb.delete as any).mockReturnValueOnce({
+      (adminDb.delete as any).mockReturnValueOnce({
         where: mock().mockReturnThis(),
         returning: mock().mockResolvedValue([{ id: 'tenant-2' }]),
       } as any);
@@ -302,9 +308,9 @@ describe('Tenant Overview Service', () => {
     });
 
     it('should handle non-Error objects in deleteTenant catch block', async () => {
-      const { publicDb } = await import('@apex/db');
+      const { adminDb } = await import('@apex/db');
       // Mock existing tenant
-      (publicDb.select as any).mockReturnValueOnce({
+      (adminDb.select as any).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([mockTenants[1]]), // Suspended
@@ -312,7 +318,7 @@ describe('Tenant Overview Service', () => {
       } as any);
 
       // Mock delete to throw raw string
-      (publicDb.delete as any).mockImplementation(() => {
+      (adminDb.delete as any).mockImplementation(() => {
         throw 'Raw Delete Fail';
       });
 
@@ -338,8 +344,8 @@ describe('Tenant Overview Service', () => {
     });
 
     it('should handle records with missing dates in getTenantStats', async () => {
-      const { publicDb } = await import('@apex/db');
-      (publicDb.select as any).mockReturnValueOnce({
+      const { adminDb } = await import('@apex/db');
+      (adminDb.select as any).mockReturnValueOnce({
         from: mock().mockResolvedValue([
           { status: 'active', plan: 'free' }, // Missing createdAt
         ]),
@@ -358,8 +364,8 @@ describe('Tenant Overview Service', () => {
 
     it('should return false for non-existent subdomain', async () => {
       // Setup mock to return empty array for non-existent subdomain search
-      const { publicDb } = await import('@apex/db');
-      (publicDb.select as any).mockReturnValueOnce({
+      const { adminDb } = await import('@apex/db');
+      (adminDb.select as any).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([]),

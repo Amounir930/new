@@ -510,7 +510,7 @@ export const spatialRefSys = pgTable(
     srtext: varchar({ length: 2048 }),
     proj4Text: varchar({ length: 2048 }),
   },
-  (table) => [
+  (_table) => [
     check('spatial_ref_sys_srid_check', sql`(srid > 0) AND (srid <= 998999)`),
   ]
 );
@@ -1344,10 +1344,7 @@ export const categoriesInStorefront = storefront.table(
     ),
     foreignKey({
       columns: [table.parentId, table.tenantId],
-      foreignColumns: [
-        categoriesInStorefront.id,
-        categoriesInStorefront.tenantId,
-      ],
+      foreignColumns: [table.id, table.tenantId],
       name: 'fk_cat_parent',
     }).onDelete('restrict'),
     unique('uq_tenant_cat').on(table.id, table.tenantId),
@@ -4257,10 +4254,7 @@ export const webhookSubscriptionsInStorefront = storefront.table(
     ),
     foreignKey({
       columns: [table.tenantId, table.appId],
-      foreignColumns: [
-        appInstallationsInStorefront.id,
-        appInstallationsInStorefront.tenantId,
-      ],
+      foreignColumns: [table.id, table.tenantId],
       name: 'fk_ws_app',
     }).onDelete('restrict'),
     unique('uq_tenant_webhook_subscriptions_composite').on(
@@ -5466,7 +5460,79 @@ export const activeTenantsInGovernance = governance
     sql`SELECT tenants.id, tenants.created_at, tenants.updated_at, tenants.deleted_at, tenants.trial_ends_at, tenants.suspended_at, tenants.plan, tenants.status, tenants.subdomain, tenants.custom_domain, tenants.name, tenants.owner_email, tenants.owner_email_hash, tenants.suspended_reason, tenants.niche_type, tenants.niche_type_hash, tenants.ui_config, tenants.data_region, tenants.timezone FROM governance.tenants WHERE tenants.deleted_at IS NULL`
   );
 
-export const categoriesInStorefront = storefront
+export const importJobsInStorefront = storefront.table(
+  'import_jobs',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    tenantId: uuid('tenant_id').notNull(),
+    adminId: uuid('admin_id').notNull(),
+    status: varchar({ length: 20 }).default('pending').notNull(),
+    fileUrl: text('file_url').notNull(),
+    fileName: varchar('file_name', { length: 255 }).notNull(),
+    totalRows: integer('total_rows').default(0).notNull(),
+    processedRows: integer('processed_rows').default(0).notNull(),
+    successRows: integer('success_rows').default(0).notNull(),
+    errorRows: integer('error_rows').default(0).notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true, mode: 'string' }),
+    completedAt: timestamp('completed_at', {
+      withTimezone: true,
+      mode: 'string',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    index('idx_import_jobs_tenant').using(
+      'btree',
+      table.tenantId.asc().nullsLast().op('uuid_ops')
+    ),
+    unique('uq_tenant_import_jobs_composite').on(table.id, table.tenantId),
+    pgPolicy('tenant_isolation', {
+      as: 'permissive',
+      for: 'all',
+      to: ['public'],
+      using: sql`(tenant_id = (current_setting('app.current_tenant'::text, false))::uuid)`,
+    }),
+    pgPolicy('tenant_isolation_policy', {
+      as: 'permissive',
+      for: 'all',
+      to: ['public'],
+    }),
+  ]
+);
+
+export const newsletterSubscribersInStorefront = storefront.table(
+  'newsletter_subscribers',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    tenantId: uuid('tenant_id').notNull(),
+    email: varchar({ length: 255 }).notNull(),
+    isActive: boolean('is_active').default(true).notNull(),
+    subscribedAt: timestamp('subscribed_at', {
+      withTimezone: true,
+      mode: 'string',
+    })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique('uq_tenant_subscriber_email').on(table.tenantId, table.email),
+    pgPolicy('tenant_isolation', {
+      as: 'permissive',
+      for: 'all',
+      to: ['public'],
+      using: sql`(tenant_id = (current_setting('app.current_tenant'::text, false))::uuid)`,
+    }),
+    pgPolicy('tenant_isolation_policy', {
+      as: 'permissive',
+      for: 'all',
+      to: ['public'],
+    }),
+  ]
+);
+
+export const categoriesInStorefrontView = storefront
   .view('categories', {
     id: uuid(),
     tenantId: uuid('tenant_id'),
@@ -5492,7 +5558,7 @@ export const categoriesInStorefront = storefront
     sql`SELECT _categories.id, _categories.tenant_id, _categories.parent_id, _categories.created_at, _categories.updated_at, _categories.deleted_at, _categories.sort_order, _categories.products_count, _categories.is_active, _categories.slug, _categories.icon, _categories.meta_title, _categories.meta_description, _categories.image_url, _categories.banner_url, _categories.name, _categories.description, _categories.path FROM storefront._categories WHERE _categories.deleted_at IS NULL`
   );
 
-export const productsInStorefront = storefront
+export const productsInStorefrontView = storefront
   .view('products', {
     id: uuid(),
     tenantId: uuid('tenant_id'),
@@ -5550,7 +5616,7 @@ export const productsInStorefront = storefront
     sql`SELECT _products.id, _products.tenant_id, _products.brand_id, _products.category_id, _products.created_at, _products.updated_at, _products.published_at, _products.deleted_at, _products.base_price, _products.sale_price, _products.cost_price, _products.compare_at_price, _products.tax_basis_points, _products.low_stock_threshold, _products.sold_count, _products.view_count, _products.review_count, _products.weight, _products.min_order_qty, _products.is_active, _products.is_featured, _products.is_returnable, _products.requires_shipping, _products.is_digital, _products.track_inventory, _products.slug, _products.sku, _products.barcode, _products.country_of_origin, _products.meta_title, _products.meta_description, _products.main_image, _products.video_url, _products.digital_file_url, _products.keywords, _products.avg_rating, _products.tags, _products.name, _products.short_description, _products.long_description, _products.specifications, _products.dimensions, _products.gallery_images, _products.embedding, _products.version, _products.warranty_period, _products.warranty_unit FROM storefront._products WHERE _products.deleted_at IS NULL`
   );
 
-export const pagesInStorefront = storefront
+export const pagesInStorefrontView = storefront
   .view('pages', {
     id: uuid(),
     tenantId: uuid('tenant_id'),
@@ -5570,7 +5636,7 @@ export const pagesInStorefront = storefront
     sql`SELECT _pages.id, _pages.tenant_id, _pages.created_at, _pages.updated_at, _pages.deleted_at, _pages.is_published, _pages.slug, _pages.page_type, _pages.template, _pages.meta_title, _pages.meta_description, _pages.title, _pages.content FROM storefront._pages WHERE _pages.deleted_at IS NULL`
   );
 
-export const customersInStorefront = storefront
+export const customersInStorefrontView = storefront
   .view('customers', {
     id: uuid(),
     tenantId: uuid('tenant_id'),
@@ -5610,7 +5676,7 @@ export const customersInStorefront = storefront
     sql`SELECT _customers.id, _customers.tenant_id, _customers.created_at, _customers.updated_at, _customers.last_login_at, _customers.deleted_at, _customers.date_of_birth, _customers.wallet_balance, _customers.total_spent_amount, _customers.loyalty_points, _customers.total_orders_count, _customers.is_verified, _customers.accepts_marketing, _customers.email, _customers.email_hash, _customers.password_hash, _customers.first_name, _customers.last_name, _customers.phone, _customers.phone_hash, _customers.avatar_url, _customers.gender, _customers.language, _customers.notes, _customers.tags, _customers.version, _customers.lock_version FROM storefront._customers WHERE _customers.deleted_at IS NULL`
   );
 
-export const ordersInStorefront = storefront
+export const ordersInStorefrontView = storefront
   .view('orders', {
     id: uuid(),
     tenantId: uuid('tenant_id'),
@@ -5666,7 +5732,7 @@ export const ordersInStorefront = storefront
     sql`SELECT _orders.id, _orders.tenant_id, _orders.customer_id, _orders.market_id, _orders.created_at, _orders.updated_at, _orders.shipped_at, _orders.delivered_at, _orders.cancelled_at, _orders.deleted_at, _orders.subtotal, _orders.discount, _orders.shipping, _orders.tax, _orders.total, _orders.coupon_discount, _orders.refunded_amount, _orders.risk_score, _orders.is_flagged, _orders.status, _orders.payment_status, _orders.payment_method, _orders.source, _orders.order_number, _orders.coupon_code, _orders.tracking_number, _orders.guest_email, _orders.cancel_reason, _orders.ip_address, _orders.user_agent, _orders.tracking_url, _orders.notes, _orders.tags, _orders.shipping_address, _orders.billing_address, _orders.version, _orders.lock_version, _orders.idempotency_key, _orders.device_fingerprint, _orders.payment_gateway_reference FROM storefront._orders WHERE _orders.deleted_at IS NULL`
   );
 
-export const brandsInStorefront = storefront
+export const brandsInStorefrontView = storefront
   .view('brands', {
     id: uuid(),
     tenantId: uuid('tenant_id'),

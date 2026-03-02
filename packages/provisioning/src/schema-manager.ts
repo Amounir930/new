@@ -3,7 +3,7 @@
  * Handles PostgreSQL schema lifecycle for tenant isolation (S2)
  */
 
-import { publicPool } from '@apex/db';
+import { adminPool } from '@apex/db';
 
 export interface SchemaCreationResult {
   schemaName: string;
@@ -29,7 +29,7 @@ export async function createTenantSchema(
   const schemaName = sanitizeSchemaName(subdomain);
   const startTime = performance.now();
 
-  const client = await publicPool.connect();
+  const client = await adminPool.connect();
 
   try {
     // Check if schema already exists
@@ -74,7 +74,7 @@ export async function verifySchemaExists(
   subdomain: string
 ): Promise<SchemaVerificationResult> {
   const schemaName = sanitizeSchemaName(subdomain);
-  const client = await publicPool.connect();
+  const client = await adminPool.connect();
 
   try {
     const schemaCheck = await client.query(
@@ -122,7 +122,7 @@ export async function dropTenantSchema(
   verifyEmpty = false
 ): Promise<boolean> {
   const schemaName = sanitizeSchemaName(subdomain);
-  const client = await publicPool.connect();
+  const client = await adminPool.connect();
 
   try {
     // Check existence first
@@ -179,8 +179,7 @@ export function sanitizeSchemaName(subdomain: string): string {
     throw new Error('Invalid subdomain');
   }
 
-  // PG identifiers can't start with numbers (but we prefix with tenant_ so it's usually safe,
-  // but let's keep the internal logic consistent)
+  // PG identifiers can't start with numbers
   const sanitized = clean.replace(/^[0-9]/, '_$&');
 
   if (sanitized.length < 3) {
@@ -199,7 +198,7 @@ export function sanitizeSchemaName(subdomain: string): string {
  * @returns Array of schema names
  */
 export async function listTenantSchemas(): Promise<string[]> {
-  const client = await publicPool.connect();
+  const client = await adminPool.connect();
 
   try {
     const result = await client.query(`
@@ -209,7 +208,7 @@ export async function listTenantSchemas(): Promise<string[]> {
       ORDER BY schema_name
     `);
 
-    return result.rows.map((row) => row.schema_name as string);
+    return result.rows.map((row: any) => row.schema_name as string);
   } finally {
     client.release();
   }

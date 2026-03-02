@@ -12,12 +12,12 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
+    "build": "bun x tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun x tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {

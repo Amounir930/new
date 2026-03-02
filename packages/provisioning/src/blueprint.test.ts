@@ -5,7 +5,7 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { publicDb } from '@apex/db';
+import { adminDb } from '@apex/db';
 import {
   MASTER_FEATURE_LIST,
   MASTER_QUOTA_LIST,
@@ -20,7 +20,7 @@ import {
 
 // Mock DB
 mock.module('@apex/db', () => ({
-  publicDb: {
+  adminDb: {
     select: mock().mockReturnThis(),
     from: mock().mockReturnThis(),
     where: mock().mockReturnThis(),
@@ -33,7 +33,7 @@ mock.module('@apex/db', () => ({
     returning: mock(),
     delete: mock().mockReturnThis(),
   },
-  onboardingBlueprints: {
+  onboardingBlueprintsInGovernance: {
     id: 'id',
     name: 'name',
     plan: 'plan',
@@ -121,7 +121,7 @@ describe('BlueprintManager', () => {
     };
 
     it('should create a blueprint', async () => {
-      (publicDb.returning as any).mockResolvedValue([mockRecord]);
+      (adminDb.returning as any).mockResolvedValue([mockRecord]);
 
       const result = await createBlueprint(
         'Test',
@@ -130,11 +130,11 @@ describe('BlueprintManager', () => {
 
       expect(result.id).toBe('uuid-1');
       expect(result.isDefault).toBe(true);
-      expect(publicDb.insert).toHaveBeenCalled();
+      expect(adminDb.insert).toHaveBeenCalled();
     });
 
     it('should get all blueprints', async () => {
-      (publicDb.select().from().orderBy as any).mockResolvedValue([mockRecord]);
+      (adminDb.select().from().orderBy as any).mockResolvedValue([mockRecord]);
 
       const results = await getAllBlueprints();
 
@@ -143,7 +143,7 @@ describe('BlueprintManager', () => {
     });
 
     it('should get blueprint by ID', async () => {
-      (publicDb.limit as any).mockResolvedValue([mockRecord]);
+      (adminDb.limit as any).mockResolvedValue([mockRecord]);
 
       const result = await getBlueprintById('uuid-1');
 
@@ -151,7 +151,7 @@ describe('BlueprintManager', () => {
     });
 
     it('should return null if blueprint ID not found', async () => {
-      (publicDb.limit as any).mockResolvedValue([]);
+      (adminDb.limit as any).mockResolvedValue([]);
 
       const result = await getBlueprintById('missing');
 
@@ -167,7 +167,7 @@ describe('BlueprintManager', () => {
         isDefault: 'true',
         plan: 'free',
       };
-      (publicDb.limit as any).mockResolvedValue([mockDefault]);
+      (adminDb.limit as any).mockResolvedValue([mockDefault]);
 
       const result = await getDefaultBlueprint('free');
 
@@ -176,8 +176,8 @@ describe('BlueprintManager', () => {
     });
 
     it('should fallback to any blueprint if no default is found', async () => {
-      (publicDb.limit as any).mockResolvedValueOnce([]); // No default
-      (publicDb.limit as any).mockResolvedValueOnce([
+      (adminDb.limit as any).mockResolvedValueOnce([]); // No default
+      (adminDb.limit as any).mockResolvedValueOnce([
         {
           name: 'Fallback',
           blueprint: JSON.stringify(createValidBlueprint({ name: 'F' })),

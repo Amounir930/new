@@ -1,18 +1,24 @@
-// biome-ignore lint/style/useImportType: Dependency Injection token
-import { TenantRegistryService } from '@apex/db';
+import {
+  adminDb,
+  eq,
+  onboardingBlueprintsInGovernance,
+  tenantsInGovernance,
+} from '@apex/db';
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 
 @Controller('public/tenants')
 export class TenantsPublicController {
-  constructor(private readonly tenantRegistry: TenantRegistryService) {}
-
   /**
    * S2.5: Discovery API for Storefronts
    * Returns metadata required for SDUI and Theme initialization
    */
   @Get('discovery/:subdomain')
   async discover(@Param('subdomain') subdomain: string) {
-    const tenant = await this.tenantRegistry.getBySubdomain(subdomain);
+    const [tenant] = await adminDb
+      .select()
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.subdomain, subdomain))
+      .limit(1);
 
     if (!tenant) {
       throw new NotFoundException(
@@ -26,10 +32,14 @@ export class TenantsPublicController {
     // S2.5: Registry Join Logic
     // If tenant has no custom config, fallback to the global blueprint for that niche
     if ((!uiConfig || Object.keys(uiConfig).length === 0) && nicheType) {
-      const blueprintConfig =
-        await this.tenantRegistry.getBlueprintConfig(nicheType);
-      if (blueprintConfig) {
-        uiConfig = blueprintConfig;
+      const [blueprint] = await adminDb
+        .select({ uiConfig: onboardingBlueprintsInGovernance.uiConfig })
+        .from(onboardingBlueprintsInGovernance)
+        .where(eq(onboardingBlueprintsInGovernance.nicheType, nicheType as any))
+        .limit(1);
+
+      if (blueprint?.uiConfig) {
+        uiConfig = blueprint.uiConfig as Record<string, unknown>;
       }
     }
 

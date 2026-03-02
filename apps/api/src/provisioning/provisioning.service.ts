@@ -3,15 +3,13 @@ import { AuditService } from '@apex/audit';
 import { env } from '@apex/config';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import {
+  adminDb,
   and,
   eq,
-  featureGates,
-  onboardingBlueprints,
-  publicDb,
-  sql,
-  TenantRegistryService,
-  tenantQuotas,
-  tenants,
+  featureGatesInGovernance,
+  onboardingBlueprintsInGovernance,
+  tenantQuotasInGovernance,
+  tenantsInGovernance,
 } from '@apex/db';
 import {
   createStorageBucket,
@@ -50,11 +48,7 @@ interface ProvisioningStep {
 export class ProvisioningService {
   private readonly logger = new Logger(ProvisioningService.name);
 
-  constructor(
-    @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
-    @Inject('TENANT_REGISTRY')
-    private readonly tenantRegistry: TenantRegistryService
-  ) {}
+  constructor(@Inject('AUDIT_SERVICE') private readonly audit: AuditService) {}
 
   /**
    * Provision a new store in under 60 seconds
@@ -185,13 +179,13 @@ export class ProvisioningService {
       this.logger.log(
         `Fetching specific blueprint by ID: ${options.blueprintId}`
       );
-      const [dbBlueprint] = await publicDb
+      const [dbBlueprint] = await adminDb
         .select({
-          blueprint: onboardingBlueprints.blueprint,
-          status: onboardingBlueprints.status,
+          blueprint: onboardingBlueprintsInGovernance.blueprint,
+          status: onboardingBlueprintsInGovernance.status,
         })
-        .from(onboardingBlueprints)
-        .where(eq(onboardingBlueprints.id, options.blueprintId))
+        .from(onboardingBlueprintsInGovernance)
+        .where(eq(onboardingBlueprintsInGovernance.id, options.blueprintId))
         .limit(1);
 
       if (!dbBlueprint) {
@@ -216,19 +210,19 @@ export class ProvisioningService {
     this.logger.log(
       `Resolving default blueprint for niche: ${options.nicheType}, plan: ${options.plan}`
     );
-    const [dbBlueprint] = await publicDb
+    const [dbBlueprint] = await adminDb
       .select({
-        blueprint: onboardingBlueprints.blueprint,
-        status: onboardingBlueprints.status,
+        blueprint: onboardingBlueprintsInGovernance.blueprint,
+        status: onboardingBlueprintsInGovernance.status,
       })
-      .from(onboardingBlueprints)
+      .from(onboardingBlueprintsInGovernance)
       .where(
         and(
           eq(
-            onboardingBlueprints.nicheType,
+            onboardingBlueprintsInGovernance.nicheType,
             (options.nicheType || 'retail') as any
           ),
-          eq(onboardingBlueprints.plan, options.plan)
+          eq(onboardingBlueprintsInGovernance.plan, options.plan)
         )
       )
       .limit(1);
@@ -248,9 +242,12 @@ export class ProvisioningService {
   private async registerTenant(options: ProvisioningOptions, _adminId: string) {
     try {
       // Idempotency Check: Don't fail if already registered (e.g. retry)
-      const exists = await this.tenantRegistry.existsBySubdomain(
-        options.subdomain
-      );
+      const [exists] = await adminDb
+        .select({ id: tenantsInGovernance.id })
+        .from(tenantsInGovernance)
+        .where(eq(tenantsInGovernance.subdomain, options.subdomain))
+        .limit(1);
+
       if (exists) {
         this.logger.log(
           `Tenant ${options.subdomain} already registered. Skipping registry insert.`
@@ -258,7 +255,7 @@ export class ProvisioningService {
         return;
       }
 
-      await this.tenantRegistry.register({
+      await adminDb.insert(tenantsInGovernance).values({
         subdomain: options.subdomain,
         name: options.storeName,
         plan: options.plan,
@@ -321,10 +318,10 @@ export class ProvisioningService {
     if (!blueprint || typeof blueprint !== 'object') return;
 
     // Resolve Tenant ID
-    const [tenant] = await publicDb
-      .select({ id: tenants.id })
-      .from(tenants)
-      .where(eq(tenants.subdomain, subdomain))
+    const [tenant] = await adminDb
+      .select({ id: tenantsInGovernance.id })
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.subdomain, subdomain))
       .limit(1);
 
     if (!tenant) {
@@ -343,7 +340,10 @@ export class ProvisioningService {
       }));
 
       if (gates.length > 0) {
-        await publicDb.insert(featureGates).values(gates).onConflictDoNothing();
+        await adminDb
+          .insert(featureGatesInGovernance)
+          .values(gates)
+          .onConflictDoNothing();
       }
     }
 
@@ -360,8 +360,8 @@ export class ProvisioningService {
 
       const normalizedQuotas = QuotaSchema.parse(blueprint.quotas);
 
-      await publicDb
-        .insert(tenantQuotas)
+      await adminDb
+        .insert(tenantQuotasInGovernance)
         .values({
           tenantId: tenant.id,
           maxProducts: normalizedQuotas.max_products,

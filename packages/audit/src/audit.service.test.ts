@@ -27,7 +27,7 @@ const mockPool = {
 };
 
 mock.module('@apex/db', () => ({
-  publicPool: mockPool,
+  adminPool: mockPool,
 }));
 
 describe('AuditService & Helpers', () => {

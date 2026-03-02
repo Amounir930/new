@@ -24,9 +24,9 @@ export async function runTenantMigrations(
   const schemaName = sanitizeSchemaName(subdomain);
 
   // 🔒 S2 Protocol: Use isolated connection with explicit search_path
-  const { publicPool } = await import('@apex/db');
+  const { adminPool } = await import('@apex/db');
   const { drizzle } = await import('drizzle-orm/node-postgres');
-  const client = await publicPool.connect();
+  const client = await adminPool.connect();
 
   try {
     // 1. Force search_path to isolated schema ONLY (S2 Hard Isolation)

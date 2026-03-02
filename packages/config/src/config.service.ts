@@ -4,7 +4,7 @@ import { Global, Injectable, Module } from '@nestjs/common';
  */
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { EnvConfig } from './schema.js';
-import { enforceS1Compliance, validateEnv } from './validator.js';
+import { validateEnv } from './validator.js';
 
 /**
  * NestJS-compatible ConfigService

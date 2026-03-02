@@ -1,7 +1,6 @@
 import { AuditLog } from '@apex/audit';
 import { type AuthenticatedRequest, JwtAuthGuard } from '@apex/auth';
-// biome-ignore lint/style/useImportType: DI
-import { ProductsService } from '@apex/db';
+import { and, eq, getTenantDb, productsInStorefront } from '@apex/db';
 import {
   CheckQuota,
   GovernanceGuard,
@@ -29,12 +28,15 @@ import type {
 @UseGuards(JwtAuthGuard, GovernanceGuard)
 @UseInterceptors(QuotaInterceptor)
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
-
   @Get()
   @RequireFeature('ecommerce')
   async findAll(@Req() req: AuthenticatedRequest) {
-    return this.productsService.findAll(req.user.tenantId!);
+    const { db, release } = await getTenantDb(req.user.tenantId!);
+    try {
+      return await db.select().from(productsInStorefront);
+    } finally {
+      release();
+    }
   }
 
   @Post()
@@ -54,14 +56,20 @@ export class ProductsController {
       tenantId,
     };
 
-    const product = await this.productsService.create(
-      tenantId,
-      productData as any
-    );
-    return {
-      success: true,
-      data: product,
-    };
+    const { db, release } = await getTenantDb(tenantId);
+    try {
+      const [product] = await db
+        .insert(productsInStorefront)
+        .values(productData as any)
+        .returning();
+
+      return {
+        success: true,
+        data: product,
+      };
+    } finally {
+      release();
+    }
   }
 
   @Patch(':id')
@@ -81,26 +89,45 @@ export class ProductsController {
       mappedData.name = { ar: body.nameAr, en: body.nameEn };
     }
 
-    const product = await this.productsService.update(
-      tenantId,
-      id,
-      version,
-      mappedData
-    );
-    return {
-      success: true,
-      data: product,
-    };
+    const { db, release } = await getTenantDb(tenantId);
+    try {
+      const [product] = await db
+        .update(productsInStorefront)
+        .set({ ...mappedData, version: version + 1 })
+        .where(
+          and(
+            eq(productsInStorefront.id, id),
+            eq(productsInStorefront.version, version)
+          )
+        )
+        .returning();
+
+      return {
+        success: true,
+        data: product,
+      };
+    } finally {
+      release();
+    }
   }
 
   @Delete(':id')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_DELETED', entityType: 'product' })
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
-    await this.productsService.delete(req.user.tenantId!, id);
-    return {
-      success: true,
-      message: 'Product deleted successfully',
-    };
+    const { db, release } = await getTenantDb(req.user.tenantId!);
+    try {
+      await db
+        .update(productsInStorefront)
+        .set({ isActive: false })
+        .where(eq(productsInStorefront.id, id));
+
+      return {
+        success: true,
+        message: 'Product deleted successfully',
+      };
+    } finally {
+      release();
+    }
   }
 }

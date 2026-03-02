@@ -1,4 +1,9 @@
-import { createCipheriv, createDecipheriv, randomBytes, createHmac } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHmac,
+  randomBytes,
+} from 'node:crypto';
 import { ConfigService } from '@apex/config';
 import { Injectable } from '@nestjs/common';
 
@@ -28,13 +33,18 @@ export class EncryptionService {
 
     // S1: Strict Environment Validation
     if (this.isProduction) {
-      if (!key) throw new Error('S1 Violation: ENCRYPTION_MASTER_KEY is required');
-      if (!pepper) throw new Error('S1 Violation: BLIND_INDEX_PEPPER is required');
+      if (!key)
+        throw new Error('S1 Violation: ENCRYPTION_MASTER_KEY is required');
+      if (!pepper)
+        throw new Error('S1 Violation: BLIND_INDEX_PEPPER is required');
       if (!secret) throw new Error('S1 Violation: API_KEY_SECRET is required');
     }
 
     // Key must be 32 bytes for AES-256
-    this.masterKey = Buffer.from(key || 'test-key-32-characters-long-12345', 'utf8').slice(0, 32);
+    this.masterKey = Buffer.from(
+      key || 'test-key-32-characters-long-12345',
+      'utf8'
+    ).slice(0, 32);
     this.blindIndexPepper = pepper || 'test-pepper';
     this.apiKeySecret = secret || 'test-secret';
   }
@@ -79,7 +89,9 @@ export class EncryptionService {
    * Generates a deterministic hash for searching encrypted fields (Blind Index).
    */
   hashSensitiveData(value: string, salt?: string): string {
-    const finalSalt = salt ? `${this.blindIndexPepper}:${salt}` : this.blindIndexPepper;
+    const finalSalt = salt
+      ? `${this.blindIndexPepper}:${salt}`
+      : this.blindIndexPepper;
     return createHmac('sha256', finalSalt)
       .update(value.toLowerCase().trim())
       .digest('hex');
@@ -96,9 +108,7 @@ export class EncryptionService {
    * Hashes an API key for storage.
    */
   hashApiKey(apiKey: string): string {
-    return createHmac('sha256', this.apiKeySecret)
-      .update(apiKey)
-      .digest('hex');
+    return createHmac('sha256', this.apiKeySecret).update(apiKey).digest('hex');
   }
 
   /**
@@ -118,7 +128,7 @@ const globalConfig = new ConfigService();
 const globalEncryption = new EncryptionService(globalConfig);
 
 /**
- * Legacy top-level encrypt. 
+ * Legacy top-level encrypt.
  * Optional key is ignored as EncryptionService handles it via S1 Config.
  */
 export function encrypt(value: string, _key?: string): EncryptedData {
@@ -137,7 +147,11 @@ export function decrypt(data: EncryptedData, _key?: string): string {
  * Top-level hashSensitiveData.
  * Salt is supported as second argument.
  */
-export function hashSensitiveData(value: string, salt?: string, _pepper?: string): string {
+export function hashSensitiveData(
+  value: string,
+  salt?: string,
+  _pepper?: string
+): string {
   return globalEncryption.hashSensitiveData(value, salt);
 }
 

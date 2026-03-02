@@ -1,6 +1,13 @@
-import { env } from '@apex/config';
-import { pages, settings, users } from '@apex/db';
-import { encrypt, hashSensitiveData } from '@apex/security';
+/**
+ * Core Module
+ * Seeds admin users, default settings, and basic pages
+ */
+
+import {
+  pagesInStorefront,
+  staffMembersInStorefront,
+  tenantConfigInStorefront,
+} from '@apex/db';
 import type {
   BlueprintConfig,
   BlueprintContext,
@@ -9,94 +16,53 @@ import type {
 
 export class CoreModule implements SeederModule {
   name = 'core';
-  allowedPlans: ('free' | 'basic' | 'pro' | 'enterprise')[] | '*' = '*'; // Core is allowed for all plans
 
-  async run(ctx: BlueprintContext, config: BlueprintConfig) {
-    if (!config.modules.core) {
-      console.log('[CoreModule] Skipping Core module (not requested).');
-      return;
-    }
+  async run(context: BlueprintContext, config: BlueprintConfig): Promise<void> {
+    const { db, adminEmail, password, storeId } = context;
 
-    // 1. Ensure Store Record Exists
-    // Note: Store might be created by Runner, but we check/update here
-    // For now we assume runner created it, or we rely on the implementation in seeder.ts to have done it
-    // But in a pure modular approach, Core should handle it.
-    // However, runner.ts inserts store to get storeId.
-    // Let's focus on Admin User and Settings for now as per original `seeder.ts` refactoring plan.
-
-    // 2. Admin User
-    await this.seedAdminUser(ctx);
-
-    // 3. Settings & Branding (S2.5 Compliance)
-    const brandingSettings: Record<string, any> = {
-      ...(config.settings || {}),
-      site_name: ctx.uiConfig?.name || config.settings?.site_name || 'My Store',
-      primary_color: ctx.uiConfig?.primaryColor || '#3B82F6',
-      logo_url: ctx.uiConfig?.logo || '',
-      currency: ctx.uiConfig?.currency || 'USD',
-    };
-    await this.seedSettings(ctx, brandingSettings);
-
-    // 4. Pages (Legacy support from config.pages)
-    if (config.pages && config.pages.length > 0) {
-      await this.seedPages(ctx, config.pages);
-    }
-  }
-
-  private async seedAdminUser(ctx: BlueprintContext) {
-    // S7: Encrypting PII (Email)
-    // We expect adminEmail to be present in the context
-
-    const masterKey = env.ENCRYPTION_MASTER_KEY;
-    const pepper = env.BLIND_INDEX_PEPPER;
-    const encryptedEmail = JSON.stringify(encrypt(ctx.adminEmail, masterKey));
-    const emailHash = hashSensitiveData(ctx.adminEmail, pepper!);
-
-    // S7/S15: Secure Merchant Password Hashing (12 rounds)
-    let hashedPassword = null;
-    if (ctx.password) {
-      const bcrypt = await import('bcrypt');
-      hashedPassword = await bcrypt.hash(ctx.password, 12);
-    }
-
-    await (ctx.db as any)
-      .insert(users)
-      .values({
-        email: encryptedEmail,
-        emailHash: emailHash,
-        password: hashedPassword,
-        role: 'admin',
-        status: 'active',
-      })
-      .onConflictDoNothing(); // Idempotent
-  }
-
-  private async seedSettings(
-    ctx: BlueprintContext,
-    settingsData: Record<string, any>
-  ) {
-    const settingsToSeed = Object.entries(settingsData).map(([key, value]) => ({
-      key,
-      value: String(value),
-    }));
-
-    if (settingsToSeed.length > 0) {
-      await ctx.db
-        .insert(settings)
-        .values(settingsToSeed)
+    // 1. Create Admin User (S2/S7 Protocol)
+    if (adminEmail && storeId) {
+      await db
+        .insert(staffMembersInStorefront)
+        .values({
+          email: adminEmail,
+          password: password || 'change-me-later', // Password should be hashed before calling seeder
+          role: 'admin',
+          status: 'active',
+          tenantId: storeId, // Ensure tenant affiliation
+        } as any)
         .onConflictDoNothing();
     }
-  }
 
-  private async seedPages(ctx: BlueprintContext, pagesList: any[]) {
-    await ctx.db
-      .insert(pages)
-      .values(
-        pagesList.map((p) => ({
-          ...p,
-          content: p.content || '',
-        }))
-      )
-      .onConflictDoNothing();
+    // 2. Initial Settings (S21 Protocol)
+    if (config.settings) {
+      const settingsEntries = Object.entries(config.settings).map(
+        ([key, value]) => ({
+          key,
+          value: String(value),
+          tenantId: storeId,
+        })
+      );
+
+      if (settingsEntries.length > 0) {
+        await db
+          .insert(tenantConfigInStorefront)
+          .values(settingsEntries as any)
+          .onConflictDoNothing();
+      }
+    }
+
+    // 3. Essential Pages (Legal, About)
+    if (config.pages && config.pages.length > 0) {
+      const pageEntries = (config.pages as any[]).map((p: any) => ({
+        ...p,
+        tenantId: storeId,
+      }));
+
+      await db
+        .insert(pagesInStorefront)
+        .values(pageEntries as any)
+        .onConflictDoNothing();
+    }
   }
 }

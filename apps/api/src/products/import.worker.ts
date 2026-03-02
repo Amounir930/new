@@ -1,12 +1,6 @@
-import { db, importErrors, importJobs, products } from '@apex/db';
+import { getTenantDb, importJobsInStorefront } from '@apex/db';
 import type { EncryptionService } from '@apex/security';
-import {
-  OnQueueActive,
-  OnQueueCompleted,
-  OnQueueFailed,
-  Process,
-  Processor,
-} from '@nestjs/bull';
+import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import type { Job } from 'bull';
 import { eq } from 'drizzle-orm';
@@ -14,17 +8,22 @@ import { eq } from 'drizzle-orm';
 @Processor('import-queue')
 @Injectable()
 export class ImportWorker {
-  constructor(private readonly crypto: EncryptionService) {}
+  constructor(readonly _crypto: EncryptionService) {}
 
   @Process('product-import')
   async handleImport(job: Job) {
     const { tenantId, _adminId, _fileData, _options } = job.data;
 
     // 1. Update job status to processing
-    await db
-      .update(importJobs)
-      .set({ status: 'processing', startedAt: new Date() })
-      .where(eq(importJobs.id as any, job.id as string) as any);
+    const { db, release } = await getTenantDb(tenantId);
+    try {
+      await db
+        .update(importJobsInStorefront)
+        .set({ status: 'processing', startedAt: new Date().toISOString() })
+        .where(eq(importJobsInStorefront.id, job.id as string));
+    } finally {
+      release();
+    }
 
     // 2. Mock processing (Row-by-row)
     // In a real app, parse CSV and iterate
@@ -34,15 +33,20 @@ export class ImportWorker {
     await job.progress(50);
 
     // 3. Mark as completed
-    await db
-      .update(importJobs)
-      .set({
-        status: 'completed',
-        completedAt: new Date(),
-        processedRows: 10,
-        successRows: 10,
-      })
-      .where(eq(importJobs.id as any, job.id as string) as any);
+    const { db: dbEnd, release: releaseEnd } = await getTenantDb(tenantId);
+    try {
+      await dbEnd
+        .update(importJobsInStorefront)
+        .set({
+          status: 'completed',
+          completedAt: new Date().toISOString(),
+          processedRows: 10,
+          successRows: 10,
+        })
+        .where(eq(importJobsInStorefront.id, job.id as string));
+    } finally {
+      releaseEnd();
+    }
 
     return { status: 'success' };
   }
@@ -55,9 +59,16 @@ export class ImportWorker {
   @OnQueueFailed()
   async onFailed(job: Job, error: Error) {
     console.error(`Job ${job.id} failed: ${error.message}`);
-    await db
-      .update(importJobs)
-      .set({ status: 'failed', completedAt: new Date() })
-      .where(eq(importJobs.id as any, job.id as string) as any);
+    const tenantId = job.data?.tenantId;
+    if (!tenantId) return;
+    const { db, release } = await getTenantDb(tenantId);
+    try {
+      await db
+        .update(importJobsInStorefront)
+        .set({ status: 'failed', completedAt: new Date().toISOString() })
+        .where(eq(importJobsInStorefront.id, job.id as string));
+    } finally {
+      release();
+    }
   }
 }

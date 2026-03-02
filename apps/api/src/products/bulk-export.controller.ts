@@ -1,8 +1,8 @@
 import { AuditLog } from '@apex/audit';
 import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
-import { db, products } from '@apex/db';
-import { Controller, Get, Res, UseGuards } from '@nestjs/common';
-import type { Response } from 'express';
+import { getTenantDb, productsInStorefront } from '@apex/db';
+import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { Parser } from 'json2csv';
 
 @Controller('admin/products/export')
@@ -10,8 +10,22 @@ import { Parser } from 'json2csv';
 export class BulkExportController {
   @Get()
   @AuditLog({ action: 'PRODUCT_BULK_EXPORT', entityType: 'product' })
-  async exportProducts(@Res() res: Response) {
-    const allProducts = await db.select().from(products);
+  async exportProducts(
+    @Req() req: Request & { user?: any },
+    @Res() res: Response
+  ) {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId) {
+      return res.status(401).send('Unauthorized');
+    }
+
+    const { db, release } = await getTenantDb(tenantId);
+    let allProducts: any[];
+    try {
+      allProducts = await db.select().from(productsInStorefront);
+    } finally {
+      release();
+    }
 
     const fields = [
       'id',

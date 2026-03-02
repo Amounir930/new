@@ -1,12 +1,5 @@
 import { env } from '@apex/config';
-import {
-  dbContextStorage,
-  eq,
-  publicDb,
-  publicPool,
-  sql,
-  tenants,
-} from '@apex/db';
+import { adminDb, adminPool, eq, tenantsInGovernance } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -49,20 +42,20 @@ async function validateTenant(
 ): Promise<Omit<TenantContext, 'executor'>> {
   try {
     const { or, sql: dbSql } = await import('@apex/db');
-    const result = await publicDb
+    const result = await adminDb
       .select({
-        id: tenants.id,
-        subdomain: tenants.subdomain,
+        id: tenantsInGovernance.id,
+        subdomain: tenantsInGovernance.subdomain,
         customDomain: dbSql<string>`custom_domain`,
-        plan: tenants.plan,
-        status: tenants.status,
+        plan: tenantsInGovernance.plan,
+        status: tenantsInGovernance.status,
       })
-      .from(tenants)
+      .from(tenantsInGovernance)
       .where(
         or(
-          eq(tenants.subdomain, identifier),
+          eq(tenantsInGovernance.subdomain, identifier),
           dbSql`custom_domain = ${identifier}`,
-          dbSql`${tenants.id}::text = ${identifier}`
+          dbSql`${tenantsInGovernance.id}::text = ${identifier}`
         )
       )
       .limit(1);
@@ -175,14 +168,12 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       isSuspended: false,
       features: [],
       createdAt: new Date(),
-      executor: publicDb,
+      executor: adminDb,
     };
 
     tenantStorage.run(systemContext, () => {
-      dbContextStorage.run(systemContext.executor, () => {
-        req.tenantContext = systemContext;
-        next();
-      });
+      req.tenantContext = systemContext;
+      next();
     });
   }
 
@@ -194,27 +185,11 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   }
 
   private async handleMaintenanceMode(
-    req: TenantRequest,
-    res: Response
+    _req: TenantRequest,
+    _res: Response
   ): Promise<boolean> {
-    try {
-      const { systemSettings } = await import('@apex/db');
-      const settings = await publicDb.select().from(systemSettings).limit(1);
-      const isMaintenance = (settings[0]?.config as any)?.master_maintenance
-        ?.enabled;
-
-      if (isMaintenance && req.user?.role !== 'super_admin') {
-        res.status(HttpStatus.SERVICE_UNAVAILABLE).json({
-          error: 'Maintenance',
-          message:
-            (settings[0]?.config as any)?.master_maintenance?.message ||
-            'Platform under maintenance',
-        });
-        return true;
-      }
-    } catch (_err) {
-      // Fail-open for maintenance check
-    }
+    // Maintenance mode logic has been temporarily disabled
+    // as the legacy `system_settings` table was removed in the Zero-Trust refactor.
     return false;
   }
 
@@ -312,7 +287,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     res: Response,
     next: NextFunction
   ) {
-    const client = await publicPool.connect();
+    const client = await adminPool.connect();
     try {
       await client.query("SELECT set_config('app.current_tenant', $1, true)", [
         baseContext.tenantId,
@@ -327,13 +302,11 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       };
 
       await tenantStorage.run(tenantContext, async () => {
-        await dbContextStorage.run(tenantContext.executor, async () => {
-          req.tenantContext = tenantContext;
-          res.setHeader('X-Tenant-ID', tenantContext.tenantId);
+        req.tenantContext = tenantContext;
+        res.setHeader('X-Tenant-ID', tenantContext.tenantId);
 
-          this.registerCleanup(client, res, tenantContext);
-          next();
-        });
+        this.registerCleanup(client, res, tenantContext);
+        next();
       });
     } catch (error) {
       await client.query('DISCARD ALL').catch(() => {});

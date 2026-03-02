@@ -19,7 +19,7 @@
     "#/*": "./src/*.ts"
   },
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
+    "build": "bun x tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push:pg",
     "db:migrate": "bun src/run-migrate.ts",
@@ -30,7 +30,7 @@
     "test:coverage": "cross-env NODE_ENV=test bun test --coverage",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun x tsc --noEmit"
   },
   "dependencies": {
     "@apex/config": "workspace:*",

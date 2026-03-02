@@ -2,7 +2,7 @@ import { rm } from 'node:fs/promises';
 import path from 'node:path';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
-import { sql, withTenantConnection } from '@apex/db';
+import { getTenantDb, sql } from '@apex/db';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,
@@ -40,12 +40,13 @@ export class AnalyticsExportStrategy implements ExportStrategy {
     try {
       await this.shell.spawn(['mkdir', '-p', `${workDir}/analytics`]).exited;
 
-      return await withTenantConnection(options.tenantId, async (db) => {
+      const { db, release } = await getTenantDb(options.tenantId);
+      try {
         // S2: Hard Isolation. search_path is already set.
         const exportedFiles: string[] = [];
 
         // Export orders summary
-        const ordersResult = await db.execute(sql`
+        const ordersResult: any = await db.execute(sql`
           SELECT 
             DATE(created_at) as date,
             COUNT(*) as order_count,
@@ -59,13 +60,13 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
         await this.writeCSV(
           `${workDir}/analytics/orders_summary.csv`,
-          ordersResult.rows,
+          ordersResult.rows || [],
           ['date', 'order_count', 'total_revenue', 'avg_order_value']
         );
         exportedFiles.push('orders_summary.csv');
 
         // Export products performance
-        const productsResult = await db.execute(sql`
+        const productsResult: any = await db.execute(sql`
           SELECT 
             p.name,
             p.sku,
@@ -80,7 +81,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
         await this.writeCSV(
           `${workDir}/analytics/products_performance.csv`,
-          productsResult.rows,
+          productsResult.rows || [],
           ['name', 'sku', 'times_ordered', 'total_quantity']
         );
         exportedFiles.push('products_performance.csv');
@@ -136,7 +137,9 @@ export class AnalyticsExportStrategy implements ExportStrategy {
           checksum: checksumHex,
           manifest,
         };
-      });
+      } finally {
+        release();
+      }
     } catch (error) {
       // Cleanup on error
       await this.secureCleanup(workDir);

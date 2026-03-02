@@ -24,7 +24,7 @@
     "test:coverage": "bun test --coverage --timeout 15000",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun x tsc --noEmit",
     "security-scan": "bun run src/utils/scanner-cli.ts",
     "sentinel": "bun run src/utils/ci-sentinel.ts"
   },

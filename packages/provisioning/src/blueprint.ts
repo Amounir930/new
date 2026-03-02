@@ -1,4 +1,10 @@
-import { and, desc, eq, onboardingBlueprints, publicDb } from '@apex/db';
+import {
+  adminDb,
+  and,
+  desc,
+  eq,
+  onboardingBlueprintsInGovernance,
+} from '@apex/db';
 
 export { validateBlueprint } from './blueprint/executor.js';
 
@@ -29,6 +35,7 @@ export async function createBlueprint(
     plan?: 'free' | 'basic' | 'pro' | 'enterprise';
     nicheType?: string;
     status?: 'active' | 'paused';
+    uiConfig?: Record<string, unknown>;
   } = {}
 ): Promise<BlueprintRecord> {
   // Validate blueprint structure
@@ -36,22 +43,23 @@ export async function createBlueprint(
 
   // If this is set as default, unset previous default for this plan
   if (options.isDefault) {
-    await publicDb
-      .update(onboardingBlueprints)
+    await adminDb
+      .update(onboardingBlueprintsInGovernance)
       .set({ isDefault: false })
-      .where(eq(onboardingBlueprints.plan, options.plan || 'free'));
+      .where(eq(onboardingBlueprintsInGovernance.plan, options.plan || 'free'));
   }
 
-  const result = await publicDb
-    .insert(onboardingBlueprints)
+  const result = await adminDb
+    .insert(onboardingBlueprintsInGovernance)
     .values({
       name,
       description: options.description || null,
-      blueprint: blueprint as unknown as BlueprintTemplate,
+      blueprint: blueprint as any,
       isDefault: !!options.isDefault,
-      plan: options.plan || 'free',
-      nicheType: options.nicheType || 'retail',
-      status: options.status || 'active',
+      plan: (options.plan || 'free') as any,
+      nicheType: (options.nicheType || 'retail') as any,
+      status: (options.status || 'active') as any,
+      uiConfig: options.uiConfig || {}, // Ensure mandatory field is provided
     })
     .returning();
 
@@ -60,24 +68,28 @@ export async function createBlueprint(
     blueprint: result[0].blueprint as unknown as BlueprintTemplate,
     uiConfig: result[0].uiConfig as Record<string, unknown> | null,
     isDefault: !!result[0].isDefault,
-  } as BlueprintRecord;
+    createdAt: result[0].createdAt ? new Date(result[0].createdAt) : null,
+    updatedAt: result[0].updatedAt ? new Date(result[0].updatedAt) : null,
+  } as unknown as BlueprintRecord;
 }
 
 /**
  * Get all blueprints
  */
 export async function getAllBlueprints(): Promise<BlueprintRecord[]> {
-  const results = await publicDb
+  const results = await adminDb
     .select()
-    .from(onboardingBlueprints)
-    .orderBy(desc(onboardingBlueprints.createdAt));
+    .from(onboardingBlueprintsInGovernance)
+    .orderBy(desc(onboardingBlueprintsInGovernance.createdAt));
 
   return results.map((r) => ({
     ...r,
     blueprint: r.blueprint as unknown as BlueprintTemplate,
     uiConfig: r.uiConfig as Record<string, unknown> | null,
     isDefault: !!r.isDefault,
-  })) as BlueprintRecord[];
+    createdAt: r.createdAt ? new Date(r.createdAt) : null,
+    updatedAt: r.updatedAt ? new Date(r.updatedAt) : null,
+  })) as unknown as BlueprintRecord[];
 }
 
 /**
@@ -86,10 +98,10 @@ export async function getAllBlueprints(): Promise<BlueprintRecord[]> {
 export async function getBlueprintById(
   id: string
 ): Promise<BlueprintRecord | null> {
-  const results = await publicDb
+  const results = await adminDb
     .select()
-    .from(onboardingBlueprints)
-    .where(eq(onboardingBlueprints.id, id))
+    .from(onboardingBlueprintsInGovernance)
+    .where(eq(onboardingBlueprintsInGovernance.id, id))
     .limit(1);
 
   if (results.length === 0) {
@@ -102,7 +114,9 @@ export async function getBlueprintById(
     blueprint: res.blueprint as unknown as BlueprintTemplate,
     uiConfig: res.uiConfig as Record<string, unknown> | null,
     isDefault: !!res.isDefault,
-  } as BlueprintRecord;
+    createdAt: res.createdAt ? new Date(res.createdAt) : null,
+    updatedAt: res.updatedAt ? new Date(res.updatedAt) : null,
+  } as unknown as BlueprintRecord;
 }
 
 /**
@@ -111,23 +125,23 @@ export async function getBlueprintById(
 export async function getDefaultBlueprint(
   plan: 'free' | 'basic' | 'pro' | 'enterprise' = 'free'
 ): Promise<BlueprintRecord | null> {
-  const results = await publicDb
+  const results = await adminDb
     .select()
-    .from(onboardingBlueprints)
+    .from(onboardingBlueprintsInGovernance)
     .where(
       and(
-        eq(onboardingBlueprints.isDefault, true),
-        eq(onboardingBlueprints.plan, plan)
+        eq(onboardingBlueprintsInGovernance.isDefault, true),
+        eq(onboardingBlueprintsInGovernance.plan, plan)
       )
     )
     .limit(1);
 
   if (results.length === 0) {
     // Return any blueprint for this plan if no default
-    const anyBlueprint = await publicDb
+    const anyBlueprint = await adminDb
       .select()
-      .from(onboardingBlueprints)
-      .where(eq(onboardingBlueprints.plan, plan))
+      .from(onboardingBlueprintsInGovernance)
+      .where(eq(onboardingBlueprintsInGovernance.plan, plan))
       .limit(1);
 
     if (anyBlueprint.length === 0) {
@@ -154,7 +168,9 @@ export async function getDefaultBlueprint(
       blueprint: first.blueprint as unknown as BlueprintTemplate,
       uiConfig: first.uiConfig as Record<string, unknown> | null,
       isDefault: !!first.isDefault,
-    } as BlueprintRecord;
+      createdAt: first.createdAt ? new Date(first.createdAt) : null,
+      updatedAt: first.updatedAt ? new Date(first.updatedAt) : null,
+    } as unknown as BlueprintRecord;
   }
 
   const res = results[0];
@@ -163,7 +179,9 @@ export async function getDefaultBlueprint(
     blueprint: res.blueprint as unknown as BlueprintTemplate,
     uiConfig: res.uiConfig as Record<string, unknown> | null,
     isDefault: !!res.isDefault,
-  } as BlueprintRecord;
+    createdAt: res.createdAt ? new Date(res.createdAt) : null,
+    updatedAt: res.updatedAt ? new Date(res.updatedAt) : null,
+  } as unknown as BlueprintRecord;
 }
 
 /**
@@ -179,6 +197,7 @@ export async function updateBlueprint(
     plan?: 'free' | 'basic' | 'pro' | 'enterprise';
     nicheType?: string;
     status?: 'active' | 'paused';
+    uiConfig?: Record<string, unknown>;
   }
 ): Promise<BlueprintRecord | null> {
   // Validate if blueprint is being updated
@@ -187,26 +206,29 @@ export async function updateBlueprint(
   }
 
   if (updates.isDefault && updates.plan) {
-    await publicDb
-      .update(onboardingBlueprints)
+    await adminDb
+      .update(onboardingBlueprintsInGovernance)
       .set({ isDefault: false })
-      .where(eq(onboardingBlueprints.plan, updates.plan));
+      .where(eq(onboardingBlueprintsInGovernance.plan, updates.plan));
   }
 
-  const updateData: Partial<typeof onboardingBlueprints.$inferInsert> = {};
+  const updateData: Partial<
+    typeof onboardingBlueprintsInGovernance.$inferInsert
+  > = {};
   if (updates.name) updateData.name = updates.name;
   if (updates.description !== undefined)
     updateData.description = updates.description;
-  if (updates.blueprint) updateData.blueprint = updates.blueprint;
+  if (updates.blueprint) updateData.blueprint = updates.blueprint as any;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
-  if (updates.plan) updateData.plan = updates.plan;
-  if (updates.nicheType) updateData.nicheType = updates.nicheType;
-  if (updates.status) updateData.status = updates.status;
+  if (updates.plan) updateData.plan = updates.plan as any;
+  if (updates.nicheType) updateData.nicheType = updates.nicheType as any;
+  if (updates.status) updateData.status = updates.status as any;
+  if (updates.uiConfig) updateData.uiConfig = updates.uiConfig as any;
 
-  const result = await publicDb
-    .update(onboardingBlueprints)
+  const result = await adminDb
+    .update(onboardingBlueprintsInGovernance)
     .set(updateData)
-    .where(eq(onboardingBlueprints.id, id))
+    .where(eq(onboardingBlueprintsInGovernance.id, id))
     .returning();
 
   if (result.length === 0) {
@@ -219,17 +241,19 @@ export async function updateBlueprint(
     blueprint: res.blueprint as unknown as BlueprintTemplate,
     uiConfig: res.uiConfig as Record<string, unknown> | null,
     isDefault: !!res.isDefault,
-  } as BlueprintRecord;
+    createdAt: res.createdAt ? new Date(res.createdAt) : null,
+    updatedAt: res.updatedAt ? new Date(res.updatedAt) : null,
+  } as unknown as BlueprintRecord;
 }
 
 /**
  * Delete a blueprint
  */
 export async function deleteBlueprint(id: string): Promise<boolean> {
-  const result = await publicDb
-    .delete(onboardingBlueprints)
-    .where(eq(onboardingBlueprints.id, id))
-    .returning({ id: onboardingBlueprints.id });
+  const result = await adminDb
+    .delete(onboardingBlueprintsInGovernance)
+    .where(eq(onboardingBlueprintsInGovernance.id, id))
+    .returning({ id: onboardingBlueprintsInGovernance.id });
 
   return result.length > 0;
 }

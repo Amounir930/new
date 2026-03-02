@@ -25,13 +25,19 @@ const mockDb = {
 
 // Mock dependencies manually at the top level
 mock.module('@apex/db', () => ({
-  createTenantDb: mock().mockReturnValue(mockDb),
-  users: { id: 'users.id' },
-  stores: { id: 'stores.id' },
-  settings: { key: 'settings.key', value: 'settings.value' },
-  pages: { id: 'pages.id', title: 'pages.title' },
+  getTenantDb: mock().mockReturnValue(mockDb),
+  staffMembersInStorefront: { id: 'staffMembersInStorefront.id' },
+  tenantsInGovernance: { id: 'tenantsInGovernance.id' },
+  tenantConfigInStorefront: {
+    key: 'tenantConfigInStorefront.key',
+    value: 'tenantConfigInStorefront.value',
+  },
+  pagesInStorefront: {
+    id: 'pagesInStorefront.id',
+    title: 'pagesInStorefront.title',
+  },
   drizzle: mock().mockReturnValue(mockDb),
-  publicPool: {
+  adminPool: {
     connect: mock().mockResolvedValue({
       query: mock().mockResolvedValue({}),
       release: mock(),

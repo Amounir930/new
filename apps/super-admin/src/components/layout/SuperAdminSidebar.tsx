@@ -1,9 +1,7 @@
 'use client';
 
 import {
-  Activity,
   Box, // Added
-  Database,
   LayoutDashboard, // Added
   Server,
   Settings,

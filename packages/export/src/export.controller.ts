@@ -55,8 +55,7 @@ export class ExportController {
   constructor(
     private readonly exportService: ExportService,
     private readonly exportWorker: ExportWorker,
-    @Inject('AUDIT_SERVICE')
-    private readonly audit: AuditService
+    @Inject('AUDIT_SERVICE') readonly _audit: AuditService
   ) {}
 
   /**

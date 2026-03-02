@@ -386,18 +386,18 @@ export const locationsInStorefrontRelations = relations(
     inventoryLevelsInStorefronts: many(inventoryLevelsInStorefront),
     inventoryReservationsInStorefronts: many(inventoryReservationsInStorefront),
     inventoryMovementsInStorefronts: many(inventoryMovementsInStorefront),
-    inventoryTransfersInStorefronts_tenantId: many(
+    inventoryTransfersInStorefronts_fromLocationId: many(
       inventoryTransfersInStorefront,
       {
         relationName:
-          'inventoryTransfersInStorefront_tenantId_locationsInStorefront_id',
+          'inventoryTransfersInStorefront_fromLocationId_locationsInStorefront_id',
       }
     ),
-    inventoryTransfersInStorefronts_tenantId: many(
+    inventoryTransfersInStorefronts_toLocationId: many(
       inventoryTransfersInStorefront,
       {
         relationName:
-          'inventoryTransfersInStorefront_tenantId_locationsInStorefront_id',
+          'inventoryTransfersInStorefront_toLocationId_locationsInStorefront_id',
       }
     ),
     purchaseOrdersInStorefronts: many(purchaseOrdersInStorefront),
@@ -791,7 +791,7 @@ export const staffSessionsInStorefrontRelations = relations(
     staffMembersInStorefront: one(staffMembersInStorefront, {
       fields: [
         staffSessionsInStorefront.tenantId,
-        staffSessionsInStorefront.memberId,
+        staffSessionsInStorefront.staffId,
       ],
       references: [
         staffMembersInStorefront.tenantId,
@@ -816,7 +816,10 @@ export const taxRulesInStorefrontRelations = relations(
   taxRulesInStorefront,
   ({ one }) => ({
     taxCategoriesInStorefront: one(taxCategoriesInStorefront, {
-      fields: [taxRulesInStorefront.tenantId, taxRulesInStorefront.categoryId],
+      fields: [
+        taxRulesInStorefront.tenantId,
+        taxRulesInStorefront.taxCategoryId,
+      ],
       references: [
         taxCategoriesInStorefront.tenantId,
         taxCategoriesInStorefront.id,

@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ProductForm } from '@/components/products/product-form';
 import { apiFetch } from '@/lib/api';
 

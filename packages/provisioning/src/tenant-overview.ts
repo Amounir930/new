@@ -5,16 +5,17 @@
  */
 
 import {
+  adminDb,
   and,
   asc,
   count,
   desc,
   eq,
-  publicDb,
   sql,
-  type Tenant,
-  tenants,
+  tenantsInGovernance,
 } from '@apex/db';
+
+export type Tenant = typeof tenantsInGovernance.$inferSelect;
 
 export type TenantStatus = 'active' | 'suspended' | 'archived';
 export type TenantPlan = 'free' | 'basic' | 'pro' | 'enterprise';
@@ -81,18 +82,18 @@ export async function getTenantList(
   const conditions = [];
 
   if (status) {
-    conditions.push(eq(tenants.status, status));
+    conditions.push(eq(tenantsInGovernance.status, status));
   }
 
   if (plan) {
-    conditions.push(eq(tenants.plan, plan));
+    conditions.push(eq(tenantsInGovernance.plan, plan));
   }
 
   if (search) {
     // Search in name or subdomain
     const searchPattern = `%${search}%`;
     conditions.push(
-      sql`(${tenants.name} ILIKE ${searchPattern} OR ${tenants.subdomain} ILIKE ${searchPattern})`
+      sql`(${tenantsInGovernance.name} ILIKE ${searchPattern} OR ${tenantsInGovernance.subdomain} ILIKE ${searchPattern})`
     );
   }
 
@@ -101,29 +102,29 @@ export async function getTenantList(
   // Build order by
   const orderByColumn =
     sortBy === 'name'
-      ? tenants.name
+      ? tenantsInGovernance.name
       : sortBy === 'subdomain'
-        ? tenants.subdomain
+        ? tenantsInGovernance.subdomain
         : sortBy === 'plan'
-          ? tenants.plan
-          : tenants.createdAt;
+          ? tenantsInGovernance.plan
+          : tenantsInGovernance.createdAt;
 
   const orderBy =
     sortOrder === 'asc' ? asc(orderByColumn) : desc(orderByColumn);
 
   // Get total count
-  const countResult = await publicDb
+  const countResult = await adminDb
     .select({ total: count() })
-    .from(tenants)
+    .from(tenantsInGovernance)
     .where(whereClause);
 
   const total = countResult[0]?.total || 0;
 
   // Get paginated results
   const offset = (page - 1) * limit;
-  const results = await publicDb
+  const results = await adminDb
     .select()
-    .from(tenants)
+    .from(tenantsInGovernance)
     .where(whereClause)
     .orderBy(orderBy)
     .limit(limit)
@@ -146,10 +147,10 @@ export async function getTenantList(
 export async function getTenantById(
   id: string
 ): Promise<TenantOverviewRecord | null> {
-  const results = await publicDb
+  const results = await adminDb
     .select()
-    .from(tenants)
-    .where(eq(tenants.id, id))
+    .from(tenantsInGovernance)
+    .where(eq(tenantsInGovernance.id, id))
     .limit(1);
 
   if (results.length === 0) {
@@ -165,10 +166,10 @@ export async function getTenantById(
 export async function getTenantBySubdomain(
   subdomain: string
 ): Promise<TenantOverviewRecord | null> {
-  const results = await publicDb
+  const results = await adminDb
     .select()
-    .from(tenants)
-    .where(eq(tenants.subdomain, subdomain))
+    .from(tenantsInGovernance)
+    .where(eq(tenantsInGovernance.subdomain, subdomain))
     .limit(1);
 
   if (results.length === 0) {
@@ -185,13 +186,13 @@ export async function updateTenantStatus(
   id: string,
   status: TenantStatus
 ): Promise<TenantOverviewRecord | null> {
-  const result = await publicDb
-    .update(tenants)
+  const result = await adminDb
+    .update(tenantsInGovernance)
     .set({
       status,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
-    .where(eq(tenants.id, id))
+    .where(eq(tenantsInGovernance.id, id))
     .returning();
 
   if (result.length === 0) {
@@ -208,13 +209,13 @@ export async function updateTenantPlan(
   id: string,
   plan: TenantPlan
 ): Promise<TenantOverviewRecord | null> {
-  const result = await publicDb
-    .update(tenants)
+  const result = await adminDb
+    .update(tenantsInGovernance)
     .set({
       plan,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     })
-    .where(eq(tenants.id, id))
+    .where(eq(tenantsInGovernance.id, id))
     .returning();
 
   if (result.length === 0) {
@@ -236,8 +237,8 @@ export async function updateTenant(
     status?: TenantStatus;
   }
 ): Promise<TenantOverviewRecord | null> {
-  const updateData: Record<string, string | Date> = {
-    updatedAt: new Date(),
+  const updateData: Record<string, any> = {
+    updatedAt: new Date().toISOString(),
   };
 
   if (updates.name) updateData.name = updates.name;
@@ -245,10 +246,10 @@ export async function updateTenant(
   if (updates.plan) updateData.plan = updates.plan;
   if (updates.status) updateData.status = updates.status;
 
-  const result = await publicDb
-    .update(tenants)
-    .set(updateData)
-    .where(eq(tenants.id, id))
+  const result = await adminDb
+    .update(tenantsInGovernance)
+    .set(updateData as any)
+    .where(eq(tenantsInGovernance.id, id))
     .returning();
 
   if (result.length === 0) {
@@ -271,7 +272,7 @@ export async function deleteTenant(
       return { success: false, error: 'Tenant not found' };
     }
 
-    // Prevent deletion of active tenants (must suspend first)
+    // Prevent deletion of active tenantsInGovernance (must suspend first)
     if (existing.status === 'active') {
       return {
         success: false,
@@ -279,7 +280,9 @@ export async function deleteTenant(
       };
     }
 
-    await publicDb.delete(tenants).where(eq(tenants.id, id));
+    await adminDb
+      .delete(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.id, id));
 
     return { success: true };
   } catch (error) {
@@ -299,7 +302,7 @@ export async function getTenantStats(): Promise<{
   byPlan: Record<TenantPlan, number>;
   recent: number; // Created in last 7 days
 }> {
-  const allTenants = await publicDb.select().from(tenants);
+  const allTenants = await adminDb.select().from(tenantsInGovernance);
 
   const byStatus: Record<string, number> = {
     active: 0,
@@ -359,7 +362,7 @@ function mapToOverviewRecord(dbRecord: Tenant): TenantOverviewRecord {
     name: dbRecord.name,
     plan: dbRecord.plan as TenantPlan,
     status: dbRecord.status as TenantStatus,
-    createdAt: dbRecord.createdAt ?? new Date(),
-    updatedAt: dbRecord.updatedAt ?? new Date(),
+    createdAt: dbRecord.createdAt ? new Date(dbRecord.createdAt) : new Date(),
+    updatedAt: dbRecord.updatedAt ? new Date(dbRecord.updatedAt) : new Date(),
   };
 }

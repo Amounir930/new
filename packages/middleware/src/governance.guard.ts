@@ -4,7 +4,7 @@
  * Enforces feature-level access control based on plan and tenant specific gates.
  */
 
-import { GovernanceService } from '@apex/db';
+import { adminDb, and, eq, featureGatesInGovernance } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -27,10 +27,7 @@ export const RequireFeature = (feature: string) =>
 
 @Injectable()
 export class GovernanceGuard implements CanActivate {
-  constructor(
-    private reflector: Reflector,
-    private governanceService: GovernanceService
-  ) { }
+  constructor(private reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const feature = this.reflector.get<string>(
@@ -58,10 +55,25 @@ export class GovernanceGuard implements CanActivate {
       );
     }
 
-    const isEnabled = await this.governanceService.isFeatureEnabled(
-      tenantId,
-      feature
-    );
+    // Direct check against Drizzle definitive schema
+    const [gate] = await adminDb
+      .select({ isEnabled: featureGatesInGovernance.isEnabled })
+      .from(featureGatesInGovernance)
+      .where(
+        and(
+          eq(featureGatesInGovernance.tenantId, tenantId),
+          eq(featureGatesInGovernance.featureKey, feature)
+        )
+      )
+      .limit(1);
+
+    const isEnabled = gate?.isEnabled || false;
+
+    if (!isEnabled) {
+      throw new ForbiddenException(
+        `Feature '${feature}' is not enabled for your current plan.`
+      );
+    }
 
     if (!isEnabled) {
       throw new ForbiddenException(

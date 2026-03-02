@@ -4,14 +4,13 @@
  */
 
 import {
+  adminDb,
+  adminPool,
   drizzle,
   eq,
   type NodePgDatabase,
-  onboardingBlueprints,
-  publicPool,
   sql,
-  tenantQuotas,
-  tenants,
+  tenantsInGovernance,
 } from '@apex/db';
 import { BlueprintExecutor } from './blueprint/executor';
 import { CatalogModule } from './blueprint/modules/catalog';
@@ -43,25 +42,39 @@ export async function seedTenantData(
   options: SeedOptions
 ): Promise<SeedResult> {
   const schemaName = sanitizeSchemaName(options.subdomain);
-  const client = await publicPool.connect();
+
+  // S2/Arch-Core-04: Use adminPool for global provisioning but specify tenant during seed
+  const client = await adminPool.connect();
 
   try {
+    // S2 Protocol: Strict Usage of Search Path for tenant creation
     await client.query(`SET search_path TO "${schemaName}"`);
-    const db = drizzle(client);
+
+    // For seeding, we use high-privilege admin context but scoped to schema
+    const _db = adminDb; // Reuse adminDb instance but it uses the pool's client when pooled?
+    // Actually, drizzle(client) is safer when manually setting search_path on a specific client
+    const tenantScopedAdminDb = drizzle(client);
 
     const template = await resolveTemplate(options);
     const config = buildBlueprintConfig(options, template);
-    const storeId = await resolveStore(db, options);
+
+    // Note: resolveStore needs to check governance/public registry
+    const storeId = await resolveStore(tenantScopedAdminDb, options);
 
     const executor = new BlueprintExecutor();
     executor.register(new CoreModule());
     executor.register(new CatalogModule());
 
-    await db.transaction(async (tx) => {
+    await tenantScopedAdminDb.transaction(async (tx) => {
+      // S2/Auth-04: Ensure the transaction also knows about the tenant context for RLS-protected tables
+      await tx.execute(
+        sql`SELECT set_config('app.current_tenant', ${storeId}, true)`
+      );
+
       await executor.execute(
         {
           subdomain: options.subdomain,
-          db: tx as any, // Use transaction client
+          db: tx as any,
           schema: schemaName,
           plan: (options.plan || 'free') as
             | 'free'
@@ -78,8 +91,11 @@ export async function seedTenantData(
       );
     });
 
-    const { users } = await import('@apex/db');
-    const firstUser = await db.select({ id: users.id }).from(users).limit(1);
+    const { staffMembersInStorefront } = await import('@apex/db');
+    const firstUser = await tenantScopedAdminDb
+      .select({ id: staffMembersInStorefront.id })
+      .from(staffMembersInStorefront)
+      .limit(1);
 
     if (!firstUser || firstUser.length === 0) {
       throw new Error('CoreModule failed to create Admin User.');
@@ -149,28 +165,31 @@ function buildBlueprintConfig(
  * Helper to resolve store record (Idempotency)
  */
 async function resolveStore(
-  db: NodePgDatabase<Record<string, unknown>>,
+  _db: NodePgDatabase<Record<string, unknown>>,
   options: SeedOptions
 ): Promise<string> {
-  const { stores } = await import('@apex/db');
-  const existingStore = await db
-    .select({ id: stores.id })
-    .from(stores)
+  // Check global registry first
+  const [existingTenant] = await adminDb
+    .select({ id: tenantsInGovernance.id })
+    .from(tenantsInGovernance)
+    .where(eq(tenantsInGovernance.subdomain, options.subdomain))
     .limit(1);
 
-  if (existingStore.length > 0) {
-    return existingStore[0].id;
+  if (existingTenant) {
+    return existingTenant.id;
   }
 
-  const [newStore] = await db
-    .insert(stores)
+  // If not in registry, create it (Provisioning flow)
+  const [newStore] = await adminDb
+    .insert(tenantsInGovernance)
     .values({
       name: options.storeName,
       subdomain: options.subdomain,
       status: 'active',
       plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
+      nicheType: (options.nicheType || 'retail') as any,
     })
-    .returning({ id: stores.id });
+    .returning({ id: tenantsInGovernance.id });
 
   return newStore.id;
 }
@@ -180,14 +199,16 @@ async function resolveStore(
  * @param subdomain - Tenant subdomain
  */
 export async function isSeeded(subdomain: string): Promise<boolean> {
-  const { users } = await import('@apex/db');
   const schemaName = sanitizeSchemaName(subdomain);
-  const client = await publicPool.connect();
-  const db = drizzle(client);
+  const client = await adminPool.connect();
 
   try {
+    const { drizzle, staffMembersInStorefront } = await import('@apex/db');
     await client.query(`SET search_path TO "${schemaName}"`);
-    const result = await db.select({ count: sql`count(*)` }).from(users);
+    const db = drizzle(client);
+    const result = await db
+      .select({ count: sql`count(*)` })
+      .from(staffMembersInStorefront);
     return Number(result[0].count) > 0;
   } catch (_e) {
     return false;

@@ -1,16 +1,9 @@
 'use client';
 
-import {
-  Edit,
-  MoreHorizontal,
-  Package,
-  Plus,
-  Search,
-  Trash2,
-} from 'lucide-react';
+import { Edit, Package, Plus, Search, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

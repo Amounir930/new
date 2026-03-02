@@ -1,26 +1,15 @@
 import 'reflect-metadata';
 import { describe, expect, it, mock } from 'bun:test';
-import { ConfigModule, ConfigService } from '@apex/config';
-import { StaffService } from '@apex/db';
+import { ConfigService } from '@apex/config';
 import { Global, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from './auth.module.js';
 import { AuthService } from './auth.service.js';
 
-const mockStaffService = {
-  validateSession: mock(),
-  findOne: mock(),
-};
-
 @Global()
 @Module({
-  providers: [
-    {
-      provide: StaffService,
-      useValue: mockStaffService,
-    },
-  ],
-  exports: [StaffService],
+  providers: [],
+  exports: [],
 })
 class MockDbModule {}
 

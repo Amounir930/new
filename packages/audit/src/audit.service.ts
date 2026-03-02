@@ -3,7 +3,7 @@
  * S4 Protocol: Immutable Audit Logs
  */
 
-import { publicPool } from '@apex/db';
+import { adminPool } from '@apex/db';
 import { getCurrentTenantId } from '@apex/middleware';
 import { EncryptionService } from '@apex/security';
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -71,7 +71,7 @@ export class AuditService {
     @Inject('DATABASE_POOL') pool: any,
     @Inject(EncryptionService) encryption: EncryptionService
   ) {
-    this.pool = pool || publicPool;
+    this.pool = pool || adminPool;
     this.encryption = encryption;
   }
 
@@ -290,7 +290,7 @@ function getService(): AuditService {
   if (!defaultService) {
     const config = new ConfigService();
     const encryption = new EncryptionService(config);
-    defaultService = new AuditService(publicPool, encryption);
+    defaultService = new AuditService(adminPool, encryption);
   }
   return defaultService;
 }
@@ -338,7 +338,7 @@ export async function logSecurityEvent(
 }
 
 export async function query(options: AuditQueryOptions): Promise<any[]> {
-  const client = await publicPool.connect();
+  const client = await adminPool.connect();
   try {
     // S2: Using schema-qualified query — no SET search_path needed
     const { rows } = await client.query(

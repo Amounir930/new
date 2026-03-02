@@ -1,73 +1,78 @@
-import { drizzle, pages, publicPool, settings } from '@apex/db';
-import type { BlueprintTemplate } from './blueprint/types';
-import { sanitizeSchemaName } from './schema-manager';
+/**
+ * Snapshot Manager
+ * Creates blueprint snapshots from live tenants
+ */
 
-export class SnapshotManager {
-  /**
-   * Create a blueprint snapshot from a live tenant (Privacy-Focused)
-   * @param subdomain - Tenant subdomain to snapshot
-   * @param nicheType - Optional industry niche classification
-   */
-  async createSnapshot(
-    subdomain: string,
-    _nicheType?: string
-  ): Promise<BlueprintTemplate> {
-    const schemaName = sanitizeSchemaName(subdomain);
-    const client = await publicPool.connect();
+import {
+  adminDb,
+  getTenantDb,
+  onboardingBlueprintsInGovernance,
+  pagesInStorefront,
+  tenantConfigInStorefront,
+} from '@apex/db';
+import type { BlueprintTemplate } from './blueprint/types.js';
 
-    try {
-      // 🔒 S2 Protocol: Strict Usage of Search Path
-      await client.query(`SET search_path TO "${schemaName}"`);
-      const db = drizzle(client);
+/**
+ * Capture a snapshot of current tenant state
+ */
+export async function createSnapshot(
+  tenantId: string,
+  options: {
+    name: string;
+    description?: string;
+    isDefault?: boolean;
+    plan?: 'free' | 'basic' | 'pro' | 'enterprise';
+  }
+): Promise<string> {
+  const { db, release } = await getTenantDb(tenantId);
 
-      // 1. Settings (Anonymized: Exclude emails and phones)
-      const settingsData = await db.select().from(settings);
-      const settingsMap: Record<string, string> = {};
-      for (const s of settingsData) {
-        if (!s.key.includes('email') && !s.key.includes('phone')) {
-          settingsMap[s.key] = s.value;
-        }
-      }
+  try {
+    // 1. Capture Settings
+    const settingsRows = await db.select().from(tenantConfigInStorefront);
+    const settingsMap: Record<string, any> = {};
+    settingsRows.forEach((row: any) => {
+      settingsMap[row.key] = row.value;
+    });
 
-      // 2. Pages (Structure-Only: Headers only, empty content)
-      const pagesData = await db.select().from(pages);
-      const pagesMapped = pagesData.map((p) => ({
-        slug: p.slug,
-        title: p.title,
-        content: '', // Anonymized: Protect client content
-        isPublished: p.isPublished || false,
-      }));
+    // 2. Capture Pages
+    const pagesRows = await db.select().from(pagesInStorefront);
+    const pagesMapped = pagesRows.map((p: any) => ({
+      title: p.title,
+      slug: p.slug,
+      content: p.content,
+      isPublished: p.isPublished,
+    }));
 
-      // 3. Categories & Products (Empty: Protect Intellectual Property)
-      // We return empty arrays to ensure the blueprint is a reusable structure, not a copy of business data.
-      const categoriesMapped: unknown[] = [];
-      const productsMapped: unknown[] = [];
-
-      // 4. Construct Template
-      return {
-        name: `Structure-Only Snapshot of ${subdomain}`,
-        version: '1.0',
-        description: `Generic blueprint generated on ${new Date().toISOString()}`,
-        modules: {
-          core: {
-            siteName: subdomain, // Default site name
-          },
+    // 3. Construct Blueprint
+    const blueprint: BlueprintTemplate = {
+      name: options.name,
+      version: '1.0',
+      modules: {
+        core: {
+          siteName: settingsMap.site_name || 'My Store',
+          currency: settingsMap.currency || 'USD',
         },
-        settings: settingsMap,
-        pages: pagesMapped,
-        categories: categoriesMapped,
-        products: productsMapped,
-      };
-    } catch (error) {
-      console.error(
-        `[SnapshotManager] Failed to snapshot ${subdomain}:`,
-        error
-      );
-      throw error;
-    } finally {
-      // Item 45: Ensure search_path is reset even on failure to prevent bleed
-      await client.query('RESET search_path').catch(() => {});
-      client.release();
-    }
+      },
+      settings: settingsMap,
+      pages: pagesMapped,
+    };
+
+    // 4. Save to Governance
+    const [result] = await adminDb
+      .insert(onboardingBlueprintsInGovernance)
+      .values({
+        name: options.name,
+        description: options.description || `Snapshot of ${tenantId}`,
+        blueprint: blueprint as any,
+        plan: (options.plan || 'pro') as any,
+        isDefault: !!options.isDefault,
+        status: 'active',
+        uiConfig: {},
+      })
+      .returning({ id: onboardingBlueprintsInGovernance.id });
+
+    return result.id;
+  } finally {
+    release();
   }
 }
