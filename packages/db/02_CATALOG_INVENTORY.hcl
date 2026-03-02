@@ -77,7 +77,7 @@ table "categories" {
     null = true
   }
   column "path" {
-    type = sql("public.ltree")
+    type = text
     null = true
   }
   primary_key {
