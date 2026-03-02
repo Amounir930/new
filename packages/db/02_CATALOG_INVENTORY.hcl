@@ -185,6 +185,9 @@ table "brands" {
   }
 
   // ALTER TABLE storefront.brands ENABLE ROW LEVEL SECURITY
+  unique "uq_tenant_brands_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "products" {
   schema = schema.storefront
@@ -592,6 +595,9 @@ table "product_images" {
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
     on_delete = CASCADE
   }
+  unique "uq_tenant_product_images_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "product_attributes" {
   schema = schema.storefront
@@ -643,6 +649,9 @@ table "product_attributes" {
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
     on_delete = CASCADE
   }
+  unique "uq_tenant_product_attributes_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "entity_metafields" {
   schema = schema.storefront
@@ -690,6 +699,9 @@ table "entity_metafields" {
     columns = [column.tenant_id]
   }
   // ALTER TABLE storefront.entity_metafields ENABLE ROW LEVEL SECURITY
+  unique "uq_tenant_entity_metafields_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "smart_collections" {
   schema = schema.storefront
@@ -758,6 +770,9 @@ table "smart_collections" {
     columns = [column.tenant_id]
   }
   // ALTER TABLE storefront.smart_collections ENABLE ROW LEVEL SECURITY
+  unique "uq_tenant_smart_collections_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 
 // 2. INVENTORY SCHEMA (Storefront)
@@ -891,6 +906,9 @@ table "inventory_levels" {
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_inventory_levels_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "inventory_movements" {
   schema = schema.storefront
@@ -963,6 +981,9 @@ table "inventory_movements" {
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_inventory_movements_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "inventory_reservations" {
   schema = schema.storefront
@@ -1032,6 +1053,9 @@ table "inventory_reservations" {
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_inventory_reservations_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "inventory_transfers" {
   schema = schema.storefront
@@ -1095,6 +1119,9 @@ table "inventory_transfers" {
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_inventory_transfers_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "inventory_transfer_items" {
   schema = schema.storefront
@@ -1133,6 +1160,9 @@ table "inventory_transfer_items" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_inventory_transfer_items_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 
@@ -1208,6 +1238,9 @@ table "suppliers" {
     columns = [column.tenant_id]
   }
   // ALTER TABLE storefront.suppliers ENABLE ROW LEVEL SECURITY
+  unique "uq_tenant_suppliers_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "purchase_orders" {
   schema = schema.storefront
@@ -1294,6 +1327,9 @@ table "purchase_orders" {
     ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_purchase_orders_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "purchase_order_items" {
   schema = schema.storefront
@@ -1347,6 +1383,9 @@ table "purchase_order_items" {
     columns     = [column.tenant_id, column.variant_id]
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_purchase_order_items_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "b2b_companies" {
@@ -1415,6 +1454,9 @@ table "b2b_companies" {
     columns = [column.tenant_id]
   }
   // ALTER TABLE storefront.b2b_companies ENABLE ROW LEVEL SECURITY
+  unique "uq_tenant_b2b_companies_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "b2b_pricing_tiers" {
   schema = schema.storefront
@@ -1497,6 +1539,9 @@ table "b2b_pricing_tiers" {
     ref_columns = [table.products.column.tenant_id, table.products.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_b2b_pricing_tiers_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "b2b_users" {
   schema = schema.storefront
@@ -1550,6 +1595,9 @@ table "b2b_users" {
     columns     = [column.company_id]
     ref_columns = [table.b2b_companies.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_b2b_users_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 

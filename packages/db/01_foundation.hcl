@@ -203,6 +203,9 @@ table "encryption_keys" {
   index "idx_encryption_keys_tenant" {
     columns = [column.tenant_id]
   }
+  unique "uq_tenant_encryption_keys_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "archival_vault" {
   schema = schema.vault
@@ -237,6 +240,9 @@ table "archival_vault" {
   }
   check "chk_payload_size" {
     expr = "(pg_column_size(payload) <= 102400)"
+  }
+  unique "uq_tenant_archival_vault_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "tenants" {
@@ -453,6 +459,9 @@ table "audit_logs" {
   // SECURITY (Feedback Loop): Ensure sensitive keys are NOT stored in plaintext within audit jsonb blocks
   check "chk_audit_sanitization" {
     expr = "(old_values IS NULL OR NOT (old_values ?| array['password', 'secret', 'token', 'cvv', 'card_number'])) AND (new_values IS NULL OR NOT (new_values ?| array['password', 'secret', 'token', 'cvv', 'card_number']))"
+  }
+  unique "uq_tenant_audit_logs_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "leads" {
@@ -675,6 +684,9 @@ table "tenant_quotas" {
   index "idx_tenant_quotas_tenant" {
     columns = [column.tenant_id]
   }
+  unique "uq_tenant_tenant_quotas_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "tenant_invoices" {
   schema = schema.governance
@@ -747,6 +759,9 @@ table "tenant_invoices" {
   index "idx_tenant_invoices_tenant" {
     columns = [column.tenant_id]
   }
+  unique "uq_tenant_tenant_invoices_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "feature_gates" {
   schema = schema.governance
@@ -805,6 +820,9 @@ table "feature_gates" {
   index "idx_feature_gates_tenant" {
     columns = [column.tenant_id]
   }
+  unique "uq_tenant_feature_gates_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "dunning_events" {
   schema = schema.governance
@@ -855,6 +873,9 @@ table "dunning_events" {
   index "idx_dunning_events_tenant" {
     columns = [column.tenant_id]
   }
+  unique "uq_tenant_dunning_events_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "app_usage_records" {
   schema = schema.governance
@@ -891,6 +912,9 @@ table "app_usage_records" {
   index "idx_app_usage_records_tenant" {
     columns = [column.tenant_id]
   }
+  unique "uq_tenant_app_usage_records_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "plan_change_history" {
   schema = schema.governance
@@ -923,6 +947,9 @@ table "plan_change_history" {
   }
   index "idx_plan_change_history_tenant" {
     columns = [column.tenant_id]
+  }
+  unique "uq_tenant_plan_change_history_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "onboarding_blueprints" {
@@ -1099,6 +1126,9 @@ table "order_fraud_scores" {
   }
   index "idx_order_fraud_scores_tenant" {
     columns = [column.tenant_id]
+  }
+  unique "uq_tenant_order_fraud_scores_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "marketing_pages" {

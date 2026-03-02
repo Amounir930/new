@@ -262,6 +262,9 @@ table "customer_addresses" {
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_customer_addresses_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "customer_consents" {
   schema = schema.storefront
@@ -316,6 +319,9 @@ table "customer_consents" {
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_customer_consents_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "customer_segments" {
   schema = schema.storefront
@@ -355,6 +361,9 @@ table "customer_segments" {
     columns = [column.tenant_id]
   }
   // ALTER TABLE storefront.customer_segments ENABLE ROW LEVEL SECURITY
+  unique "uq_tenant_customer_segments_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "orders" {
   schema = schema.storefront
@@ -694,6 +703,9 @@ table "order_items" {
     ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_order_items_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "order_edits" {
   schema = schema.storefront
@@ -757,6 +769,9 @@ table "order_edits" {
     columns     = [column.line_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_order_edits_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "order_timeline" {
@@ -822,6 +837,9 @@ table "order_timeline" {
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_order_timeline_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "fulfillments" {
   schema = schema.storefront
@@ -878,6 +896,9 @@ table "fulfillments" {
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_fulfillments_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "fulfillment_items" {
   schema = schema.storefront
@@ -916,6 +937,9 @@ table "fulfillment_items" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_fulfillment_items_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "refunds" {
@@ -1020,6 +1044,9 @@ table "refund_items" {
     columns     = [column.order_item_id]
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_refund_items_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "rma_requests" {
@@ -1153,6 +1180,9 @@ table "rma_items" {
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_rma_items_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "payment_logs" {
   schema = schema.storefront
@@ -1232,6 +1262,9 @@ table "payment_logs" {
     columns     = [column.tenant_id, column.order_id]
     ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_payment_logs_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 table "carts" {
@@ -1350,6 +1383,9 @@ table "cart_items" {
     ref_columns = [table.carts.column.tenant_id, table.carts.column.id]
     on_delete = CASCADE
   }
+  unique "uq_tenant_cart_items_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "abandoned_checkouts" {
   schema = schema.storefront
@@ -1411,6 +1447,9 @@ table "abandoned_checkouts" {
     columns     = [column.tenant_id, column.customer_id]
     ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
     on_delete = RESTRICT
+  }
+  unique "uq_tenant_abandoned_checkouts_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 
@@ -1488,6 +1527,9 @@ table "shipping_zones" {
 
 
   // ALTER TABLE storefront.shipping_zones ENABLE ROW LEVEL SECURITY
+  unique "uq_tenant_shipping_zones_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "tax_categories" {
   schema = schema.storefront
@@ -1613,6 +1655,9 @@ table "tax_rules" {
     ref_columns = [table.tax_categories.column.tenant_id, table.tax_categories.column.id]
     on_delete = RESTRICT
   }
+  unique "uq_tenant_tax_rules_composite" {
+    columns = [column.tenant_id, column.id]
+  }
 }
 table "reviews" {
   schema = schema.storefront
@@ -1683,6 +1728,9 @@ table "reviews" {
     }
     type = "BTREE"
 
+  }
+  unique "uq_tenant_reviews_composite" {
+    columns = [column.tenant_id, column.id]
   }
 }
 
