@@ -190,7 +190,9 @@ table "brands" {
     where   = "deleted_at IS NULL"
   }
   index "idx_brand_name_trgm" {
-    expr  = "((name->>'ar') gin_trgm_ops)"
+    on {
+      expr = "((name->>'ar') gin_trgm_ops)"
+    }
     type = "GIN"
   }
   index "idx_brands_tenant" {
@@ -420,9 +422,11 @@ table "products" {
     columns = [column.brand_id]
   }
   index "idx_products_embedding_cosine" {
-    columns = [column.embedding]
+    on {
+      column = column.embedding
+      ops    = sql("public.vector_cosine_ops")
+    }
     type = "HNSW"
-    ops     = [sql("public.vector_cosine_ops")]
     storage_params {
       name  = "m"
       value = "24"
@@ -537,9 +541,11 @@ table "product_variants" {
     columns = [column.product_id]
   }
   index "idx_variants_embedding_cosine" {
-    columns = [column.embedding]
+    on {
+      column = column.embedding
+      ops    = sql("public.vector_cosine_ops")
+    }
     type = "HNSW"
-    ops     = [sql("public.vector_cosine_ops")]
     storage_params {
       name  = "m"
       value = "24"

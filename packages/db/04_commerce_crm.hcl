@@ -1729,9 +1729,11 @@ table "reviews" {
     columns = [column.tenant_id]
   }
   index "idx_reviews_embedding_cosine" {
-    columns = [column.embedding]
+    on {
+      column = column.embedding
+      ops    = sql("public.vector_cosine_ops")
+    }
     type = "HNSW"
-    ops     = [sql("public.vector_cosine_ops")]
     storage_params {
       name  = "m"
       value = "24"
