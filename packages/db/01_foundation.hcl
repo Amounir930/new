@@ -374,9 +374,8 @@ table "tenants" {
     null = true
   }
   column "ui_config" {
-    type = jsonb
-default = sql("'{}
-  '::jsonb")
+    type    = jsonb
+    default = sql("'{}'::jsonb")
   }
   column "data_region" {
     type = char(2)
@@ -581,7 +580,6 @@ table "leads" {
   }
   column "tags" {
     type = jsonb
-    default = sql("'[]'::jsonb")
   }
 primary_key {
   columns =[column.id]
@@ -1032,8 +1030,6 @@ table "onboarding_blueprints" {
   }
   column "ui_config" {
     type = jsonb
-default = sql("'{}
-  '::jsonb")
   }
 primary_key {
   columns =[column.id]
@@ -1147,8 +1143,6 @@ table "order_fraud_scores" {
   }
   column "signals" {
     type = jsonb
-default = sql("'{}
-  '::jsonb")
   }
 primary_key {
   columns =[column.id]
