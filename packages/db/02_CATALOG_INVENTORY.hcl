@@ -1469,32 +1469,11 @@ table "b2b_pricing_tiers" {
   primary_key {
     columns = [column.id]
   }
-  exclude "idx_b2b_overlap_prevent" {
-    on {
-      column = column.tenant_id
-      op    = "="
-    }
-    on {
-      column = column.company_id
-      op    = "="
-    }
-    on {
-      column = column.product_id
-      op    = "="
-    }
-    on {
-      column = column.quantity_range
-      op    = "&&"
-    }
-    type = "GIST"
-  }
+
   index "idx_b2b_pricing" {
     columns = [column.company_id, column.product_id]
   }
-  index "idx_b2b_tier_collision" {
-    columns = [column.min_quantity, column.max_quantity]
-    type = "GIST"
-  }
+
   check "chk_b2b_price_xor" {
     expr = "((price IS NULL) != (discount_basis_points IS NULL))"
   }

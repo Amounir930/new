@@ -233,10 +233,7 @@ table "customer_addresses" {
   index "idx_customer_addresses_customer" {
     columns = [column.customer_id]
   }
-  index "idx_customer_addresses_geo" {
-    columns = [column.coordinates]
-    type = "GIST"
-  }
+
   check "chk_line1_encrypted" {
     expr = "(line1 IS NULL OR (jsonb_typeof(line1) = 'object' AND line1 ? 'enc' AND line1 ? 'iv' AND line1 ? 'tag' AND line1 ? 'data'))"
   }
