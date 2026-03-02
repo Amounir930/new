@@ -5,7 +5,7 @@
 
 sql "rls_02_catalog_inventory" {
   schema = schema.storefront
-  as = <<SQL
+  as     = <<SQL
 -- Categories
 ALTER TABLE storefront.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE storefront.categories FORCE ROW LEVEL SECURITY;

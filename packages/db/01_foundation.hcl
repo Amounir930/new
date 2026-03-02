@@ -12,13 +12,13 @@ schema "vault" {}
 schema "shared" {}
 schema "legacy" {}
 
-extension "postgis"    { schema = schema.public}
-extension "pg_trgm"    { schema = schema.public}
-extension "vector"     { schema = schema.public}
-extension "pg_partman" { schema = schema.public}
-extension "pgcrypto"   { schema = schema.public}
-extension "ltree"      { schema = schema.public}
-extension "btree_gist" { schema = schema.public}
+extension "postgis" { schema = schema.public }
+extension "pg_trgm" { schema = schema.public }
+extension "vector" { schema = schema.public }
+extension "pg_partman" { schema = schema.public }
+extension "pgcrypto" { schema = schema.public }
+extension "ltree" { schema = schema.public }
+extension "btree_gist" { schema = schema.public }
 
 function "gen_ulid" {
   schema = schema.public
@@ -84,156 +84,156 @@ SQL
 
 composite_type "money_amount" {
   schema = schema.public
-field "amount"   { type = bigint}
-field "currency" { type = char(3)}
+  field "amount" { type = bigint }
+  field "currency" { type = char(3) }
 }
 
 // ELITE DIRECTIVE: Application-level role configuration activated via sql.elite_server_config
 
 enum "severity_enum " {
-  schema =schema.public
-  values =["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"]
+  schema = schema.public
+  values = ["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"]
 }
 enum "audit_result_enum " {
-  schema =schema.public
-  values =["SUCCESS", "FAILURE"]
+  schema = schema.public
+  values = ["SUCCESS", "FAILURE"]
 }
 enum "tenant_plan" {
-  schema =schema.public
-  values =["free", "basic", "pro", "enterprise"]
+  schema = schema.public
+  values = ["free", "basic", "pro", "enterprise"]
 }
 enum "tenant_status" {
-  schema =schema.public
-  values =["active", "suspended", "pending", "archived"]
+  schema = schema.public
+  values = ["active", "suspended", "pending", "archived"]
 }
 enum "tenant_niche" {
-  schema =schema.public
-  values =["retail", "wellness", "education", "services", "hospitality", "real-estate", "creative"]
+  schema = schema.public
+  values = ["retail", "wellness", "education", "services", "hospitality", "real-estate", "creative"]
 }
 // FIX (P1): Enterprise B2B lifecycle added
 enum "order_status" {
-  schema =schema.public
-  values =["draft", "awaiting_approval", "pending", "processing", "shipped", "delivered", "cancelled", "returned"]
+  schema = schema.public
+  values = ["draft", "awaiting_approval", "pending", "processing", "shipped", "delivered", "cancelled", "returned"]
 }
 enum "payment_status" {
-  schema =schema.public
-  values =["pending", "paid", "partially_refunded", "refunded", "failed"]
+  schema = schema.public
+  values = ["pending", "paid", "partially_refunded", "refunded", "failed"]
 }
 enum "payment_method" {
-  schema =schema.public
-  values =["card", "cod", "wallet", "bnpl", "bank_transfer"]
+  schema = schema.public
+  values = ["card", "cod", "wallet", "bnpl", "bank_transfer"]
 }
 enum "fulfillment_status" {
-  schema =schema.public
-  values =["pending", "shipped", "in_transit", "delivered", "failed"]
+  schema = schema.public
+  values = ["pending", "shipped", "in_transit", "delivered", "failed"]
 }
 enum "order_source" {
-  schema =schema.public
-  values =["web", "mobile", "b2b", "pos"]
+  schema = schema.public
+  values = ["web", "mobile", "b2b", "pos"]
 }
 enum "discount_type" {
-  schema =schema.public
-  values =["percentage", "fixed", "buy_x_get_y", "free_shipping"]
+  schema = schema.public
+  values = ["percentage", "fixed", "buy_x_get_y", "free_shipping"]
 }
 enum "discount_applies_to" {
-  schema =schema.public
-  values =["all", "specific_products", "specific_categories", "specific_customers"]
+  schema = schema.public
+  values = ["all", "specific_products", "specific_categories", "specific_customers"]
 }
 enum "rma_status" {
-  schema =schema.public
-  values =["requested", "approved", "shipped", "received", "completed", "rejected"]
+  schema = schema.public
+  values = ["requested", "approved", "shipped", "received", "completed", "rejected"]
 }
 enum "rma_reason_code" {
-  schema =schema.public
-  values =["defective", "wrong_item", "changed_mind", "not_as_described", "damaged_in_transit"]
+  schema = schema.public
+  values = ["defective", "wrong_item", "changed_mind", "not_as_described", "damaged_in_transit"]
 }
 enum "rma_condition" {
-  schema =schema.public
-  values =["new", "opened", "damaged"]
+  schema = schema.public
+  values = ["new", "opened", "damaged"]
 }
 enum "rma_resolution" {
-  schema =schema.public
-  values =["refund", "exchange", "store_credit"]
+  schema = schema.public
+  values = ["refund", "exchange", "store_credit"]
 }
 enum "refund_status" {
-  schema =schema.public
-  values =["pending", "processed", "failed"]
+  schema = schema.public
+  values = ["pending", "processed", "failed"]
 }
 enum "inventory_movement_type" {
-  schema =schema.public
-  values =["in", "out", "adjustment", "return", "transfer"]
+  schema = schema.public
+  values = ["in", "out", "adjustment", "return", "transfer"]
 }
 enum "reservation_status" {
-  schema =schema.public
-  values =["active", "converted", "expired"]
+  schema = schema.public
+  values = ["active", "converted", "expired"]
 }
 enum "transfer_status" {
-  schema =schema.public
-  values =["draft", "in_transit", "received", "cancelled"]
+  schema = schema.public
+  values = ["draft", "in_transit", "received", "cancelled"]
 }
 enum "location_type" {
-  schema =schema.public
-  values =["warehouse", "retail", "dropship"]
+  schema = schema.public
+  values = ["warehouse", "retail", "dropship"]
 }
 enum "purchase_order_status" {
-  schema =schema.public
-  values =["draft", "ordered", "partial", "received", "cancelled"]
+  schema = schema.public
+  values = ["draft", "ordered", "partial", "received", "cancelled"]
 }
 enum "invoice_status" {
-  schema =schema.public
-  values =["draft", "issued", "paid", "overdue"]
+  schema = schema.public
+  values = ["draft", "issued", "paid", "overdue"]
 }
 enum "lead_status" {
-  schema =schema.public
-  values =["new", "contacted", "qualified", "converted"]
+  schema = schema.public
+  values = ["new", "contacted", "qualified", "converted"]
 }
 enum "dunning_status" {
-  schema =schema.public
-  values =["pending", "retried", "failed", "recovered"]
+  schema = schema.public
+  values = ["pending", "retried", "failed", "recovered"]
 }
 enum "outbox_status" {
-  schema =schema.public
-  values =["pending", "processing", "completed", "failed"]
+  schema = schema.public
+  values = ["pending", "processing", "completed", "failed"]
 }
 enum "affiliate_status" {
-  schema =schema.public
-  values =["active", "pending", "suspended"]
+  schema = schema.public
+  values = ["active", "pending", "suspended"]
 }
 enum "affiliate_tx_status" {
-  schema =schema.public
-  values =["pending", "approved", "paid", "rejected"]
+  schema = schema.public
+  values = ["pending", "approved", "paid", "rejected"]
 }
 enum "b2b_company_status" {
-  schema =schema.public
-  values =["active", "pending", "suspended"]
+  schema = schema.public
+  values = ["active", "pending", "suspended"]
 }
 enum "b2b_user_role" {
-  schema =schema.public
-  values =["admin", "buyer", "viewer"]
+  schema = schema.public
+  values = ["admin", "buyer", "viewer"]
 }
 enum "consent_channel" {
-  schema =schema.public
-  values =["email", "sms", "push", "whatsapp"]
+  schema = schema.public
+  values = ["email", "sms", "push", "whatsapp"]
 }
 enum "actor_type" {
-  schema =schema.public
-  values =["super_admin", "tenant_admin", "system"]
+  schema = schema.public
+  values = ["super_admin", "tenant_admin", "system"]
 }
 enum "blueprint_status" {
-  schema =schema.public
-  values =["active", "paused"]
+  schema = schema.public
+  values = ["active", "paused"]
 }
 table "encryption_keys" {
-  schema        = schema.vault
+  schema = schema.vault
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "tenant_id" {
     type = uuid
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "rotated_at" {
@@ -245,15 +245,15 @@ table "encryption_keys" {
     null = true
   }
   column "key_version" {
-    type = int
+    type    = int
     default = 1
   }
   column "is_active" {
-    type = boolean
+    type    = boolean
     default = true
   }
   column "algorithm" {
-    type = varchar(20)
+    type    = varchar(20)
     default = "AES-256-GCM"
   }
   // Strike 16: Key Fingerprint for forensic tracking
@@ -264,20 +264,20 @@ table "encryption_keys" {
   column "key_material" {
     type = jsonb
   }
-primary_key {
-  columns =[column.id]
-}
-check "chk_key_material_s7"  {
-  expr ="(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))"
-}
-index "idx_encryption_keys_tenant"  {
-  columns =[column.tenant_id]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  check "chk_key_material_s7" {
+    expr = "(key_material IS NULL OR (jsonb_typeof(key_material) = 'object' AND key_material ? 'enc' AND key_material ? 'iv' AND key_material ? 'tag' AND key_material ? 'data'))"
+  }
+  index "idx_encryption_keys_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "archival_vault" {
-  schema         = schema.vault
+  schema = schema.vault
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "table_name" {
@@ -290,7 +290,7 @@ table "archival_vault" {
     type = uuid
   }
   column "deleted_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "deleted_by" {
@@ -302,25 +302,25 @@ table "archival_vault" {
   column "tombstone_hash" {
     type = text
   }
-primary_key {
-  columns =[column.id]
-}
-check "chk_payload_size"  {
-  expr ="(pg_column_size(payload) <= 102400)"
-}
+  primary_key {
+    columns = [column.id]
+  }
+  check "chk_payload_size" {
+    expr = "(pg_column_size(payload) <= 102400)"
+  }
 }
 table "tenants" {
-  schema               = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "updated_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "deleted_at" {
@@ -336,11 +336,11 @@ table "tenants" {
     null = true
   }
   column "plan" {
-    type = enum.tenant_plan
+    type    = enum.tenant_plan
     default = "free"
   }
   column "status" {
-    type = enum.tenant_status
+    type    = enum.tenant_status
     default = "active"
   }
   column "subdomain" {
@@ -366,7 +366,7 @@ table "tenants" {
     null = true
   }
   column "niche_type" {
-    type = text
+    type    = text
     default = "retail"
   }
   column "niche_type_hash" {
@@ -378,63 +378,63 @@ table "tenants" {
     default = sql("'{}'::jsonb")
   }
   column "data_region" {
-    type = char(2)
+    type    = char(2)
     default = "SA"
-  } 
+  }
   column "timezone" {
-    type = varchar(50)
+    type    = varchar(50)
     default = "UTC"
   }
-primary_key {
-  columns =[column.id]
-}
-unique "tenants_subdomain_unique "  {
-  columns =[column.subdomain]
-  where ="deleted_at IS NULL"
-}
-unique "tenants_custom_domain_unique "  {
-  columns =[column.custom_domain]
-  where ="deleted_at IS NULL"
-}
-  
+  primary_key {
+    columns = [column.id]
+  }
+  unique "tenants_subdomain_unique " {
+    columns = [column.subdomain]
+    where   = "deleted_at IS NULL"
+  }
+  unique "tenants_custom_domain_unique " {
+    columns = [column.custom_domain]
+    where   = "deleted_at IS NULL"
+  }
+
   // FIX (P2): Index for Forensic Investigation AI
-  index "idx_tenants_email_hash"  {
-  columns =[column.owner_email_hash]
-}
-check "chk_owner_email_s7"  {
-  expr ="(owner_email IS NULL OR (jsonb_typeof(owner_email) = 'object' AND owner_email ? 'enc' AND owner_email ? 'iv' AND owner_email ? 'tag' AND owner_email ? 'data'))"
-}
-check "chk_ui_config_size"  {
-  expr ="(pg_column_size(ui_config) <= 204800)"
-}
-  
+  index "idx_tenants_email_hash" {
+    columns = [column.owner_email_hash]
+  }
+  check "chk_owner_email_s7" {
+    expr = "(owner_email IS NULL OR (jsonb_typeof(owner_email) = 'object' AND owner_email ? 'enc' AND owner_email ? 'iv' AND owner_email ? 'tag' AND owner_email ? 'data'))"
+  }
+  check "chk_ui_config_size" {
+    expr = "(pg_column_size(ui_config) <= 204800)"
+  }
+
   // ELITE: RLS POLICY BASE
   // CREATE POLICY tenant_isolation ON storefront... USING (tenant_id = current_setting('app.current_tenant')::uuid)
 }
 table "audit_logs" {
-  schema          = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now")
-    null = false
+    null    = false
   }
   column "severity" {
-    type = enum.severity_enum
+    type    = enum.severity_enum
     default = "INFO"
   }
   column "result" {
-    type = enum.audit_result_enum
+    type    = enum.audit_result_enum
     default = "SUCCESS"
   }
   column "tenant_id" {
     type = uuid
   }
   column "actor_type" {
-    type = enum.actor_type
+    type    = enum.actor_type
     default = "tenant_admin"
   }
   column "user_id" {
@@ -456,7 +456,7 @@ table "audit_logs" {
     null = false
   }
   column "version" {
-    type = int
+    type    = int
     default = 1
   }
   column "user_agent" {
@@ -483,35 +483,35 @@ table "audit_logs" {
     type = text
     null = true
   }
-primary_key {
-  columns =[column.id, column.created_at]
-}
-partition {
-    type = RANGE
+  primary_key {
+    columns = [column.id, column.created_at]
+  }
+  partition {
+    type    = RANGE
     columns = [column.created_at]
   }
-storage_param {
-    name = "toast_tuple_target"
+  storage_param {
+    name  = "toast_tuple_target"
     value = "128"
   }
-index "idx_audit_created_brin"  {
-  columns =[column.created_at]
-  using =BRIN
-}
-index "idx_audit_tenant"  {
-  columns =[column.tenant_id]
-}
-index "idx_audit_entity"  {
-  columns =[column.entity_type, column.entity_id]
-}
-index "idx_audit_action"  {
-  columns =[column.action]
-}
-check "chk_audit_json_size"  {
-  expr ="(pg_column_size(old_values) <= 102400 AND pg_column_size(new_values) <= 102400)"
-}
-check "chk_audit_email_s7" { 
-    expr = "(user_email IS NULL OR (jsonb_typeof(user_email) = 'object' AND user_email ? 'enc' AND user_email ? 'iv' AND user_email ? 'tag' AND user_email ? 'data'))" 
+  index "idx_audit_created_brin" {
+    columns = [column.created_at]
+    using   = BRIN
+  }
+  index "idx_audit_tenant" {
+    columns = [column.tenant_id]
+  }
+  index "idx_audit_entity" {
+    columns = [column.entity_type, column.entity_id]
+  }
+  index "idx_audit_action" {
+    columns = [column.action]
+  }
+  check "chk_audit_json_size" {
+    expr = "(pg_column_size(old_values) <= 102400 AND pg_column_size(new_values) <= 102400)"
+  }
+  check "chk_audit_email_s7" {
+    expr = "(user_email IS NULL OR (jsonb_typeof(user_email) = 'object' AND user_email ? 'enc' AND user_email ? 'iv' AND user_email ? 'tag' AND user_email ? 'data'))"
   }
   // SECURITY (Feedback Loop): Ensure sensitive keys are NOT stored in plaintext within audit jsonb blocks
   check "chk_audit_sanitization" {
@@ -519,13 +519,13 @@ check "chk_audit_email_s7" {
   }
 }
 table "leads" {
-  schema               = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   // Strike 21: AI Lead Scoring for sales prioritization
@@ -538,7 +538,7 @@ table "leads" {
     null = true
   }
   column "status" {
-    type = enum.lead_status
+    type    = enum.lead_status
     default = "new"
   }
   column "email" {
@@ -547,7 +547,7 @@ table "leads" {
   column "email_hash" {
     type = text
   }
-  
+
   // FIX (P2): Encrypting AI Training Sales Data PII
   column "name" {
     type = jsonb
@@ -557,7 +557,7 @@ table "leads" {
     type = jsonb
     null = true
   }
-  
+
   column "source" {
     type = varchar(50)
     null = true
@@ -581,43 +581,43 @@ table "leads" {
   column "tags" {
     type = jsonb
   }
-primary_key {
-  columns =[column.id]
-}
-index "idx_leads_email_hash"  {
-  columns =[column.email_hash]
-}
-index "idx_leads_status"  {
-  columns =[column.status]
-}
-index "idx_leads_converted"  {
-  columns =[column.converted_tenant_id]
-}
-check "chk_leads_email_s7"  {
-  expr ="(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
-}
-check "chk_leads_name_s7"  {
-  expr ="(name IS NULL OR (jsonb_typeof(name) = 'object' AND name ? 'enc' AND name ? 'iv' AND name ? 'tag' AND name ? 'data'))"
-}
-check "chk_leads_notes_s7"  {
-  expr ="(notes IS NULL OR (jsonb_typeof(notes) = 'object' AND notes ? 'enc' AND notes ? 'iv' AND notes ? 'tag' AND notes ? 'data'))"
-}
-index "idx_leads_tenant"  {
-  columns =[column.converted_tenant_id]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  index "idx_leads_email_hash" {
+    columns = [column.email_hash]
+  }
+  index "idx_leads_status" {
+    columns = [column.status]
+  }
+  index "idx_leads_converted" {
+    columns = [column.converted_tenant_id]
+  }
+  check "chk_leads_email_s7" {
+    expr = "(email IS NULL OR (jsonb_typeof(email) = 'object' AND email ? 'enc' AND email ? 'iv' AND email ? 'tag' AND email ? 'data'))"
+  }
+  check "chk_leads_name_s7" {
+    expr = "(name IS NULL OR (jsonb_typeof(name) = 'object' AND name ? 'enc' AND name ? 'iv' AND name ? 'tag' AND name ? 'data'))"
+  }
+  check "chk_leads_notes_s7" {
+    expr = "(notes IS NULL OR (jsonb_typeof(notes) = 'object' AND notes ? 'enc' AND notes ? 'iv' AND notes ? 'tag' AND notes ? 'data'))"
+  }
+  index "idx_leads_tenant" {
+    columns = [column.converted_tenant_id]
+  }
 }
 table "subscription_plans" {
-  schema               = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "updated_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "price_monthly" {
@@ -627,31 +627,31 @@ table "subscription_plans" {
     type = bigint
   }
   column "default_max_products" {
-    type = int
+    type    = int
     default = 50
   }
   column "default_max_orders" {
-    type = int
+    type    = int
     default = 100
   }
   column "default_max_pages" {
-    type = int
+    type    = int
     default = 5
   }
   column "default_max_staff" {
-    type = int
+    type    = int
     default = 3
   }
   column "default_max_storage_gb" {
-    type = int
+    type    = int
     default = 1
   }
   column "sort_order" {
-    type = int
+    type    = int
     default = 0
   }
   column "is_active" {
-    type = boolean
+    type    = boolean
     default = true
   }
   column "code" {
@@ -661,19 +661,19 @@ table "subscription_plans" {
     type = varchar(100)
   }
   column "currency" {
-    type = varchar(3)
+    type    = varchar(3)
     default = "USD"
   }
   column "description" {
     type = text
     null = true
   }
-primary_key {
-  columns =[column.id]
-}
-unique "subscription_plans_code_unique "  {
-  columns =[column.code]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  unique "subscription_plans_code_unique " {
+    columns = [column.code]
+  }
   // ELITE: money_amount used for pricing
   column "price_monthly_v2" {
     type = sql("public.money_amount")
@@ -683,21 +683,21 @@ unique "subscription_plans_code_unique "  {
     type = sql("public.money_amount")
     null = false
   }
-check "chk_plan_price"  {
-  expr ="COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0"
-}
+  check "chk_plan_price" {
+    expr = "COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0"
+  }
 }
 table "tenant_quotas" {
-  schema            = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "tenant_id" {
     type = uuid
   }
   column "updated_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "max_products" {
@@ -725,31 +725,31 @@ table "tenant_quotas" {
     null = true
   }
   column "storage_limit_gb" {
-    type = int
+    type    = int
     default = 1
   }
   column "api_rate_limit" {
     type = int
     null = true
   }
-primary_key {
-  columns =[column.id]
-}
-index "idx_tenant_quotas_tenant"  {
-  columns =[column.tenant_id]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  index "idx_tenant_quotas_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "tenant_invoices" {
-  schema               = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "tenant_id" {
     type = uuid
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "paid_at" {
@@ -763,15 +763,15 @@ table "tenant_invoices" {
     type = date
   }
   column "subscription_amount" {
-    type = sql("public.money_amount")
+    type    = sql("public.money_amount")
     default = sql("ROW(0, 'USD')::public.money_amount")
   }
   column "platform_commission" {
-    type = sql("public.money_amount")
+    type    = sql("public.money_amount")
     default = sql("ROW(0, 'USD')::public.money_amount")
   }
   column "app_charges" {
-    type = sql("public.money_amount")
+    type    = sql("public.money_amount")
     default = sql("ROW(0, 'USD')::public.money_amount")
   }
   column "total" {
@@ -779,42 +779,42 @@ table "tenant_invoices" {
     null = false
   }
   column "status" {
-    type = enum.invoice_status
+    type    = enum.invoice_status
     default = "draft"
   }
   column "currency" {
-    type = char(3)
+    type    = char(3)
     default = "USD"
   }
   column "pdf_url" {
     type = text
     null = true
   }
-primary_key {
-  columns =[column.id]
-}
-check "chk_invoice_period"  {
-  expr ="period_end >= period_start"
-}
-  
-  // ELITE: Directives Alpha & Bravo applied
-  check "chk_invoice_math" { 
-    expr = "COALESCE((total).amount, 0) = COALESCE((subscription_amount).amount, 0) + COALESCE((platform_commission).amount, 0) + COALESCE((app_charges).amount, 0)" 
+  primary_key {
+    columns = [column.id]
   }
-index "idx_invoices_tenant"  {
-  columns =[column.tenant_id]
-}
-index "idx_invoices_status"  {
-  columns =[column.status]
-}
-index "idx_tenant_invoices_tenant"  {
-  columns =[column.tenant_id]
-}
+  check "chk_invoice_period" {
+    expr = "period_end >= period_start"
+  }
+
+  // ELITE: Directives Alpha & Bravo applied
+  check "chk_invoice_math" {
+    expr = "COALESCE((total).amount, 0) = COALESCE((subscription_amount).amount, 0) + COALESCE((platform_commission).amount, 0) + COALESCE((app_charges).amount, 0)"
+  }
+  index "idx_invoices_tenant" {
+    columns = [column.tenant_id]
+  }
+  index "idx_invoices_status" {
+    columns = [column.status]
+  }
+  index "idx_tenant_invoices_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "feature_gates" {
-  schema          = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "tenant_id" {
@@ -822,11 +822,11 @@ table "feature_gates" {
     null = true
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "is_enabled" {
-    type = boolean
+    type    = boolean
     default = false
   }
   column "plan_code" {
@@ -838,56 +838,56 @@ table "feature_gates" {
   }
   // Strike 26: Percent-based rollouts for Canary Releases
   column "rollout_percentage" {
-    type = int
+    type    = int
     default = 100
   }
   column "metadata" {
     type = jsonb
     null = true
   }
-check "chk_rollout_range"  {
-  expr ="rollout_percentage >= 0 AND rollout_percentage <= 100"
-}
-primary_key {
-  columns =[column.id]
-}
-unique "uq_feature_tenant_key"  {
-  columns =[column.tenant_id, column.feature_key]
-}
-  
+  check "chk_rollout_range" {
+    expr = "rollout_percentage >= 0 AND rollout_percentage <= 100"
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  unique "uq_feature_tenant_key" {
+    columns = [column.tenant_id, column.feature_key]
+  }
+
   // FIX (P2): OOM Bomb Protection for Metadata
-  check "chk_fg_meta_size"  {
-  expr ="pg_column_size(metadata) <= 51200"
-}
-index "idx_feature_key"  {
-  columns =[column.feature_key]
-}
-index "idx_feature_tenant"  {
-  columns =[column.tenant_id]
-}
-index "idx_feature_gates_tenant"  {
-  columns =[column.tenant_id]
-}
+  check "chk_fg_meta_size" {
+    expr = "pg_column_size(metadata) <= 51200"
+  }
+  index "idx_feature_key" {
+    columns = [column.feature_key]
+  }
+  index "idx_feature_tenant" {
+    columns = [column.tenant_id]
+  }
+  index "idx_feature_gates_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "dunning_events" {
-  schema          = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "tenant_id" {
     type = uuid
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "attempt_number" {
-    type = int
+    type    = int
     default = 1
   }
   column "status" {
-    type = enum.dunning_status
+    type    = enum.dunning_status
     default = "pending"
   }
   column "amount" {
@@ -906,30 +906,30 @@ table "dunning_events" {
     type = text
     null = true
   }
-primary_key {
-  columns =[column.id]
-}
-check "chk_dunning_attempts"  {
-  expr ="(attempt_number <= 5)"
-}
-check "chk_dunning_amount"  {
-  expr ="COALESCE((amount).amount, 0) > 0"
-}
-index "idx_dunning_events_tenant"  {
-  columns =[column.tenant_id]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  check "chk_dunning_attempts" {
+    expr = "(attempt_number <= 5)"
+  }
+  check "chk_dunning_amount" {
+    expr = "COALESCE((amount).amount, 0) > 0"
+  }
+  index "idx_dunning_events_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "app_usage_records" {
-  schema          = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "tenant_id" {
     type = uuid
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "app_id" {
@@ -942,30 +942,30 @@ table "app_usage_records" {
     type = sql("public.money_amount")
   }
   column "currency" {
-    type = char(3)
+    type    = char(3)
     default = "USD"
-  } 
+  }
   column "metric" {
     type = varchar(50)
   }
-primary_key {
-  columns =[column.id]
-}
-index "idx_app_usage_records_tenant"  {
-  columns =[column.tenant_id]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  index "idx_app_usage_records_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "plan_change_history" {
-  schema          = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "tenant_id" {
     type = uuid
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "from_plan" {
@@ -981,41 +981,41 @@ table "plan_change_history" {
   column "changed_by" {
     type = text
   }
-primary_key {
-  columns =[column.id]
-}
-index "idx_plan_change_history_tenant"  {
-  columns =[column.tenant_id]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  index "idx_plan_change_history_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "onboarding_blueprints" {
-  schema          = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "updated_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "plan" {
-    type = enum.tenant_plan
+    type    = enum.tenant_plan
     default = "free"
   }
   column "niche_type" {
-    type = enum.tenant_niche
+    type    = enum.tenant_niche
     default = "retail"
   }
   column "status" {
-    type = enum.blueprint_status
+    type    = enum.blueprint_status
     default = "active"
   }
   column "is_default" {
-    type = boolean
+    type    = boolean
     default = false
   }
   column "name" {
@@ -1031,33 +1031,33 @@ table "onboarding_blueprints" {
   column "ui_config" {
     type = jsonb
   }
-primary_key {
-  columns =[column.id]
-}
-index "blueprint_niche_plan_idx"  {
-  columns =[column.niche_type, column.plan]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  index "blueprint_niche_plan_idx" {
+    columns = [column.niche_type, column.plan]
+  }
 }
 table "system_config" {
-  schema          = schema.governance
+  schema = schema.governance
   column "key" {
     type = varchar(100)
   }
   column "updated_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "value" {
     type = jsonb
   }
-primary_key {
-  columns =[column.key]
-}
+  primary_key {
+    columns = [column.key]
+  }
 }
 table "schema_drift_log" {
-  schema             = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("gen_random_uuid()::uuid")
   }
   column "command_tag" {
@@ -1086,21 +1086,21 @@ table "schema_drift_log" {
     null = true
   }
   column "executed_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
-primary_key {
-  columns =[column.id]
-}
-index "idx_drift_time"  {
-  columns =[column.executed_at]
-  using =BRIN
-}
+  primary_key {
+    columns = [column.id]
+  }
+  index "idx_drift_time" {
+    columns = [column.executed_at]
+    using   = BRIN
+  }
 }
 table "order_fraud_scores" {
-  schema          = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "order_id" {
@@ -1110,18 +1110,18 @@ table "order_fraud_scores" {
     type = uuid
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "risk_score" {
     type = int
   }
   column "is_flagged" {
-    type = boolean
+    type    = boolean
     default = false
   }
   column "is_reviewed" {
-    type = boolean
+    type    = boolean
     default = false
   }
   column "reviewed_by" {
@@ -1133,49 +1133,49 @@ table "order_fraud_scores" {
     null = true
   }
   column "provider" {
-    type = text
+    type    = text
     default = "internal"
   }
   // Strike 28: Model Versioning for Fraud Detection
   column "ml_model_version" {
-    type = varchar(50)
+    type    = varchar(50)
     default = "v1.0.0"
   }
   column "signals" {
     type = jsonb
   }
-primary_key {
-  columns =[column.id]
-}
-check "chk_risk_score_range"  {
-  expr ="(risk_score BETWEEN 0 AND 1000)"
-}
-index "idx_fraud_order"  {
-  columns =[column.order_id]
-}
-index "idx_fraud_tenant"  {
-  columns =[column.tenant_id]
-}
-index "idx_fraud_flagged" {
+  primary_key {
+    columns = [column.id]
+  }
+  check "chk_risk_score_range" {
+    expr = "(risk_score BETWEEN 0 AND 1000)"
+  }
+  index "idx_fraud_order" {
+    columns = [column.order_id]
+  }
+  index "idx_fraud_tenant" {
+    columns = [column.tenant_id]
+  }
+  index "idx_fraud_flagged" {
     columns = [column.is_flagged]
     where   = "is_flagged = true AND is_reviewed = false"
   }
-index "idx_order_fraud_scores_tenant"  {
-  columns =[column.tenant_id]
-}
+  index "idx_order_fraud_scores_tenant" {
+    columns = [column.tenant_id]
+  }
 }
 table "marketing_pages" {
-  schema               = schema.governance
+  schema = schema.governance
   column "id" {
-    type = uuid
+    type    = uuid
     default = sql("public.gen_ulid()::uuid")
   }
   column "created_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "updated_at" {
-    type = timestamptz
+    type    = timestamptz
     default = sql("now()")
   }
   column "published_at" {
@@ -1183,14 +1183,14 @@ table "marketing_pages" {
     null = true
   }
   column "is_published" {
-    type = boolean
+    type    = boolean
     default = false
   }
   column "slug" {
     type = text
   }
   column "page_type" {
-    type = text
+    type    = text
     default = "landing"
   }
   column "meta_title" {
@@ -1211,21 +1211,21 @@ table "marketing_pages" {
   column "content" {
     type = jsonb
   }
-primary_key {
-  columns =[column.id]
-}
-unique "uq_marketing_slug"  {
-  columns =[column.slug]
-}
-index "idx_mkt_slug"  {
-  columns =[column.slug]
-}
-index "idx_mkt_published"  {
-  columns =[column.is_published]
-}
-index "idx_mkt_type"  {
-  columns =[column.page_type]
-}
+  primary_key {
+    columns = [column.id]
+  }
+  unique "uq_marketing_slug" {
+    columns = [column.slug]
+  }
+  index "idx_mkt_slug" {
+    columns = [column.slug]
+  }
+  index "idx_mkt_published" {
+    columns = [column.is_published]
+  }
+  index "idx_mkt_type" {
+    columns = [column.page_type]
+  }
 }
 
 // ==========================================
@@ -1242,7 +1242,7 @@ SQL
 }
 sql "init_partman" {
   depends_on = [table.audit_logs, table.outbox_events]
-  exec = <<SQL
+  exec       = <<SQL
   -- Initialize Partman for Audit Logs (Monthly)
   SELECT partman.create_parent('governance.audit_logs', 'created_at', 'native', 'monthly');
   -- Initialize Partman for Outbox (Daily)

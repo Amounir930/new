@@ -2,7 +2,7 @@
 // ==========================================
 sql "webhook_https_enforcement" {
   depends_on = [table.webhook_subscriptions]
-  exec = <<SQL
+  exec       = <<SQL
 CREATE OR REPLACE FUNCTION storefront.validate_webhook_https()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -21,7 +21,7 @@ SQL
 }
 sql "outbox_event_processing_rule" {
   depends_on = [table.outbox_events]
-  exec = <<SQL
+  exec       = <<SQL
 CREATE OR REPLACE FUNCTION storefront.process_outbox_batch()
 RETURNS void AS $$
 DECLARE
@@ -52,7 +52,7 @@ SQL
 }
 sql "rls_04_marketing_systems" {
   schema = schema.storefront
-  as = <<SQL
+  as     = <<SQL
 -- Coupons
 ALTER TABLE storefront.coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE storefront.coupons FORCE ROW LEVEL SECURITY;
