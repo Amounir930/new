@@ -25,11 +25,11 @@ mock.module('@aws-sdk/client-s3', () => ({
   S3Client: class {
     send = mock().mockResolvedValue({});
   },
-  PutObjectCommand: class { },
-  GetObjectCommand: class { },
-  HeadBucketCommand: class { },
-  CreateBucketCommand: class { },
-  DeleteObjectCommand: class { },
+  PutObjectCommand: class {},
+  GetObjectCommand: class {},
+  HeadBucketCommand: class {},
+  CreateBucketCommand: class {},
+  DeleteObjectCommand: class {},
 }));
 
 mock.module('@aws-sdk/s3-request-presigner', () => ({

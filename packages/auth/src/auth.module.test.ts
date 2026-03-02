@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { describe, expect, it, mock } from 'bun:test';
-import { ConfigService, ConfigModule } from '@apex/config';
+import { ConfigModule, ConfigService } from '@apex/config';
+import { StaffService } from '@apex/db';
+import { Global, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from './auth.module.js';
 import { AuthService } from './auth.service.js';
-import { StaffService } from '@apex/db';
-import { Module, Global } from '@nestjs/common';
 
 const mockStaffService = {
   validateSession: mock(),
@@ -22,7 +22,7 @@ const mockStaffService = {
   ],
   exports: [StaffService],
 })
-class MockDbModule { }
+class MockDbModule {}
 
 describe('AuthModule', () => {
   it('should be defined', async () => {
@@ -67,4 +67,3 @@ describe('AuthModule', () => {
     expect(authService).toBeDefined();
   });
 });
-

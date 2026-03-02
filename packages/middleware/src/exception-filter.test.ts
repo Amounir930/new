@@ -50,8 +50,8 @@ describe('GlobalExceptionFilter', () => {
     filter = new GlobalExceptionFilter();
 
     // Spy on logger
-    spyOn(Logger.prototype, 'error').mockImplementation(() => { });
-    spyOn(Logger.prototype, 'warn').mockImplementation(() => { });
+    spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+    spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
 
     mockJson = mock();
     mockStatus = mock().mockReturnValue({ json: mockJson });
@@ -199,7 +199,7 @@ describe('GlobalExceptionFilter', () => {
     expect(mockJson).toHaveBeenCalledWith(
       expect.objectContaining({
         // In test mode, GlobalExceptionFilter preserves messages. Stack is only added if options.includeStackTrace is true.
-        // The implementation does NOT add a 'stack' property to the JSON response itself, 
+        // The implementation does NOT add a 'stack' property to the JSON response itself,
         // it just logs it internally or adds it if the response object has it.
         // We verify the message sanitization for 500s.
         message: 'Internal server error',
@@ -211,7 +211,7 @@ describe('GlobalExceptionFilter', () => {
     mockEnv.NODE_ENV = 'production';
     mockEnv.GLITCHTIP_DSN = ''; // Trigger fallback logging
     const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(
-      () => { }
+      () => {}
     );
 
     const exception = new Error('Production 500');
@@ -356,7 +356,7 @@ describe('GlobalExceptionFilter', () => {
     mockEnv.NODE_ENV = 'production';
     mockEnv.GLITCHTIP_DSN = ''; // Trigger fallback logging
     const loggerErrorSpy = spyOn(Logger.prototype, 'error').mockImplementation(
-      () => { }
+      () => {}
     );
 
     const exception = new Error('Critical Failure');

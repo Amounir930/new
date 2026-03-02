@@ -92,8 +92,8 @@ describe('RateLimitGuard', () => {
         getRequest: () => mockRequest,
         getResponse: () => mockResponse,
       }),
-      getHandler: () => function testHandler() { },
-      getClass: () => class TestController { },
+      getHandler: () => function testHandler() {},
+      getClass: () => class TestController {},
     } as any;
   });
 

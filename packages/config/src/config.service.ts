@@ -1,10 +1,10 @@
 import { Global, Injectable, Module } from '@nestjs/common';
-import { validateEnv, enforceS1Compliance } from './validator.js';
 /**
  * S1: Configuration Service
  */
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { EnvConfig } from './schema.js';
+import { enforceS1Compliance, validateEnv } from './validator.js';
 
 /**
  * NestJS-compatible ConfigService
@@ -50,4 +50,4 @@ export class ConfigService {
   providers: [ConfigService],
   exports: [ConfigService],
 })
-export class ConfigModule { }
+export class ConfigModule {}

@@ -4,8 +4,8 @@
  * Rule: Application MUST crash on invalid environment configuration
  */
 
-import { EnvSchema, type EnvConfig } from './schema.js';
-import { validateEnv, enforceS1Compliance } from './validator.js';
+import { type EnvConfig, EnvSchema } from './schema.js';
+import { enforceS1Compliance, validateEnv } from './validator.js';
 
 export * from './schema.js';
 export { validateEnv, enforceS1Compliance };

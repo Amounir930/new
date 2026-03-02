@@ -16,7 +16,10 @@ const mockClient = {
 mock.module('@apex/db', () => ({
   publicPool: {
     connect: mock(() => Promise.resolve(mockClient)),
-    query: mock().mockResolvedValue({ rowCount: 1, rows: [{ id: 'tenant-123', status: 'active', subdomain: 'tenant-123' }] }),
+    query: mock().mockResolvedValue({
+      rowCount: 1,
+      rows: [{ id: 'tenant-123', status: 'active', subdomain: 'tenant-123' }],
+    }),
   },
 }));
 

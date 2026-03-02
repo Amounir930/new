@@ -30,21 +30,25 @@ const mockAuditService = {
 };
 
 mock.module('@apex/db', () => {
-  const sqlMock: any = mock((strings: TemplateStringsArray, ...values: any[]) => ({
-    strings,
-    values,
-  }));
+  const sqlMock: any = mock(
+    (strings: TemplateStringsArray, ...values: any[]) => ({
+      strings,
+      values,
+    })
+  );
   sqlMock.identifier = mock((val: string) => `"${val}"`);
 
   return {
     sql: sqlMock,
-    withTenantConnection: mock(async (tenantId: string, cb: (db: any) => Promise<any>) => {
-      try {
-        return await cb(mockClient);
-      } finally {
-        mockClient.release();
+    withTenantConnection: mock(
+      async (tenantId: string, cb: (db: any) => Promise<any>) => {
+        try {
+          return await cb(mockClient);
+        } finally {
+          mockClient.release();
+        }
       }
-    }),
+    ),
     publicPool: {
       connect: mock().mockResolvedValue(mockClient),
       query: mock().mockResolvedValue({
@@ -61,7 +65,10 @@ describe('AnalyticsExportStrategy', () => {
   beforeEach(() => {
     mockClient.query.mockClear();
     mockClient.release.mockClear();
-    (mockClient as any).execute = mock().mockResolvedValue({ rows: [], rowCount: 0 });
+    (mockClient as any).execute = mock().mockResolvedValue({
+      rows: [],
+      rowCount: 0,
+    });
     mockShell.spawn.mockClear();
     mockShell.write.mockClear();
     mockAuditService.log.mockClear();
@@ -77,7 +84,10 @@ describe('AnalyticsExportStrategy', () => {
       stat: mock().mockResolvedValue({ size: 512 }),
     });
 
-    strategy = new AnalyticsExportStrategy(mockShell as any, mockAuditService as any);
+    strategy = new AnalyticsExportStrategy(
+      mockShell as any,
+      mockAuditService as any
+    );
   });
 
   describe('validate', () => {
@@ -122,7 +132,9 @@ describe('AnalyticsExportStrategy', () => {
 
     it('should export analytics tables as CSV', async () => {
       (mockClient as any).execute.mockImplementation((query: any) => {
-        const queryText = query.strings ? query.strings.join('') : query.toString();
+        const queryText = query.strings
+          ? query.strings.join('')
+          : query.toString();
         if (queryText.includes('orders')) {
           return Promise.resolve({
             rows: [
@@ -170,12 +182,12 @@ describe('AnalyticsExportStrategy', () => {
       await strategy.export(defaultOptions);
 
       const executeCalls = (mockClient as any).execute.mock.calls;
-      const ordersCall = executeCalls.find(
-        (call: any) => {
-          const queryText = call[0].strings ? call[0].strings.join('') : call[0].toString();
-          return queryText.includes('orders') && queryText.includes('BETWEEN');
-        }
-      );
+      const ordersCall = executeCalls.find((call: any) => {
+        const queryText = call[0].strings
+          ? call[0].strings.join('')
+          : call[0].toString();
+        return queryText.includes('orders') && queryText.includes('BETWEEN');
+      });
       expect(ordersCall).toBeDefined();
       expect(ordersCall?.[0].values).toEqual([
         defaultOptions.dateRange?.from,
@@ -190,18 +202,22 @@ describe('AnalyticsExportStrategy', () => {
 
       const executeCalls = (mockClient as any).execute.mock.calls;
       for (const call of executeCalls) {
-        const queryText = call[0].strings ? call[0].strings.join('') : call[0].toString();
-        // Since we are mocking withTenantConnection to call cb(mockClient), 
-        // and AnalyticsExportStrategy uses withTenantConnection, 
+        const queryText = call[0].strings
+          ? call[0].strings.join('')
+          : call[0].toString();
+        // Since we are mocking withTenantConnection to call cb(mockClient),
+        // and AnalyticsExportStrategy uses withTenantConnection,
         // the S2 check in the strategy itself (via template literals) should be verified if applied.
-        // Actually, the strategy doesn't explicitly add schema prefix to tables in SQL, 
+        // Actually, the strategy doesn't explicitly add schema prefix to tables in SQL,
         // it relies on search_path. The test was checking for 'tenant_tenant-123' in query.
       }
     });
 
     it('should convert rows to CSV format', async () => {
       (mockClient as any).execute.mockImplementation((query: any) => {
-        const queryText = query.strings ? query.strings.join('') : query.toString();
+        const queryText = query.strings
+          ? query.strings.join('')
+          : query.toString();
         if (queryText.includes('orders')) {
           return Promise.resolve({ rows: [], rowCount: 0 });
         }
@@ -252,7 +268,9 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     it('should cleanup on error', async () => {
-      (mockClient as any).execute.mockRejectedValueOnce(new Error('Query failed'));
+      (mockClient as any).execute.mockRejectedValueOnce(
+        new Error('Query failed')
+      );
 
       await expect(strategy.export(defaultOptions)).rejects.toThrow(
         'Query failed'

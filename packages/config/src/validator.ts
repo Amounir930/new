@@ -73,8 +73,8 @@ export function validateEnv(): EnvConfig {
   } catch (error) {
     if (error instanceof z.ZodError) {
       const issues = error.issues
-         .map((i) => `${i.path.join('.')}: ${i.message}`)
-         .join('; ');
+        .map((i) => `${i.path.join('.')}: ${i.message}`)
+        .join('; ');
       throw new Error(
         `S1 Violation: Environment validation failed - ${issues}`
       );

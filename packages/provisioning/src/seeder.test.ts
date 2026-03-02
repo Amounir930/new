@@ -18,7 +18,9 @@ const mockDb = {
   limit: mock().mockReturnThis(),
   then: (onfulfilled: (value: unknown) => void) =>
     Promise.resolve([{ id: 'mock-id', count: '1' }]).then(onfulfilled),
-  transaction: mock((cb: (db: typeof mockDb) => Promise<unknown>) => cb(mockDb)),
+  transaction: mock((cb: (db: typeof mockDb) => Promise<unknown>) =>
+    cb(mockDb)
+  ),
 };
 
 // Mock dependencies manually at the top level
@@ -75,9 +77,7 @@ mock.module('@apex/security', () => ({
     version: 1,
   })),
   decrypt: mock((data: any) =>
-    typeof data === 'string' && data.startsWith('enc_')
-      ? data.slice(4)
-      : data
+    typeof data === 'string' && data.startsWith('enc_') ? data.slice(4) : data
   ),
 }));
 

@@ -1,5 +1,5 @@
+import { ConfigService, env } from '@apex/config';
 import { createClient } from 'redis';
-import { env, ConfigService } from '@apex/config';
 
 /**
  * S6: Redis Health Verification Script
@@ -23,7 +23,8 @@ async function verifyRedis() {
     }
   } catch (error) {
     console.error(
-      `❌ S6: Redis connectivity failed: ${error instanceof Error ? error.message : 'Unknown error'
+      `❌ S6: Redis connectivity failed: ${
+        error instanceof Error ? error.message : 'Unknown error'
       }`
     );
     process.exit(1);

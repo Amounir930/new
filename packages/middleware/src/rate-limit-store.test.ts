@@ -42,7 +42,8 @@ describe('RedisRateLimitStore', () => {
 
     const mockConfigService = {
       get: mock((key: string) => {
-        if (key === 'NODE_ENV') return (store as any)._mockNodeEnv || 'development';
+        if (key === 'NODE_ENV')
+          return (store as any)._mockNodeEnv || 'development';
         if (key === 'REDIS_URL') return 'redis://localhost:6379';
         return null;
       }),

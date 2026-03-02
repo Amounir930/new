@@ -4,7 +4,7 @@ import {
   tenantQuotas,
   tenants,
 } from '@apex/db';
-import { describe, beforeAll, it, expect } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 // S1-S15 Protocols: Environment Handshake
 process.env.NODE_ENV = 'test';
@@ -21,8 +21,8 @@ import { GovernanceService } from '@apex/db';
 
 // Mock dependencies for GovernanceService
 const mockRedisService = {
-  subscribe: async () => { },
-  publish: async () => { },
+  subscribe: async () => {},
+  publish: async () => {},
 } as any;
 
 const mockEncryptionService = {
@@ -34,7 +34,11 @@ let governanceService: GovernanceService;
 describe('Blueprint Governance E2E (Logic Verification)', () => {
   beforeAll(async () => {
     console.log('🏁 Ensuring DB Connection for Governance Logic...');
-    governanceService = new GovernanceService(publicDb as any, mockRedisService, mockEncryptionService);
+    governanceService = new GovernanceService(
+      publicDb as any,
+      mockRedisService,
+      mockEncryptionService
+    );
   });
 
   it('should block product creation when blueprint max_products is 0 (Stage 1 & 2 logic)', async () => {
@@ -47,7 +51,7 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
       maxOrders: 10,
       maxPages: 5,
       storageLimitGb: 1,
-      ownerEmail: 'test@example.com'
+      ownerEmail: 'test@example.com',
     });
 
     // Mock getResourceCount
@@ -80,7 +84,7 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
       maxOrders: 1000,
       maxPages: 50,
       storageLimitGb: 10,
-      ownerEmail: 'test@example.com'
+      ownerEmail: 'test@example.com',
     });
 
     // Mock getResourceCount
@@ -101,5 +105,4 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
       '✅ PASS: Governance System correctly allows product creation for Pro Plan.'
     );
   });
-
 });

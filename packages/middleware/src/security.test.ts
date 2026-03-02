@@ -118,7 +118,7 @@ describe('CORS Configuration', () => {
       process.env.ALLOWED_ORIGINS = 'https://myapp.com,https://api.myapp.com';
 
       // Force reload or re-evaluating originFn if it was closed over?
-      // Actually, originFn is defaultCorsConfig.origin which is likely 
+      // Actually, originFn is defaultCorsConfig.origin which is likely
       // already initialized. For testing, we might need a different approach.
       // But let's see if process.env works if not already closed over.
       const callback = mock();
@@ -126,7 +126,10 @@ describe('CORS Configuration', () => {
 
       // If the above fails, it's because the whitelisting is fixed at startup.
       // In that case, we should skip this test or fix the implementation to be dynamic.
-      if (callback.mock.calls.length > 0 && callback.mock.calls[0][0] instanceof Error) {
+      if (
+        callback.mock.calls.length > 0 &&
+        callback.mock.calls[0][0] instanceof Error
+      ) {
         // Skip or handle appropriately - for now let's try to match reality
       } else {
         expect(callback).toHaveBeenCalledWith(null, true);
@@ -136,7 +139,7 @@ describe('CORS Configuration', () => {
 
     it('should block non-whitelisted origins', () => {
       const callback = mock();
-      const consoleSpy = spyOn(console, 'warn').mockImplementation(() => { });
+      const consoleSpy = spyOn(console, 'warn').mockImplementation(() => {});
       originFn('http://evil.com', callback);
       expect(callback).toHaveBeenCalledWith(expect.any(Error));
       expect(consoleSpy).toHaveBeenCalled();

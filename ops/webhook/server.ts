@@ -1,6 +1,5 @@
-import { serve } from 'bun';
-import { spawn } from 'bun';
 import { readFileSync } from 'node:fs';
+import { serve, spawn } from 'bun';
 
 // S1: Standalone Secret Resolver (No dependencies)
 function resolveSecrets() {

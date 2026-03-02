@@ -41,11 +41,13 @@ export const ProductVariantSchema = z.object({
     .min(0, 'Quantity cannot be negative'),
 
   attributes: z
-    .array(z.object({
-      name: z.string().min(1),
-      value: z.string().min(1),
-      group: z.string().optional(),
-    }))
+    .array(
+      z.object({
+        name: z.string().min(1),
+        value: z.string().min(1),
+        group: z.string().optional(),
+      })
+    )
     .optional()
     .describe('Variant-specific attributes'),
 
@@ -84,7 +86,10 @@ export const ProductSchema = z.object({
 
   name: z.record(z.string()).describe('Localized names (ar, en, etc.)'),
 
-  description: z.record(z.string()).nullable().describe('Localized descriptions'),
+  description: z
+    .record(z.string())
+    .nullable()
+    .describe('Localized descriptions'),
 
   shortDescription: z
     .string()
@@ -136,19 +141,23 @@ export const ProductSchema = z.object({
     .nullable(),
 
   attributes: z
-    .array(z.object({
-      name: z.string().min(1),
-      value: z.string().min(1),
-      group: z.string().optional(),
-    }))
+    .array(
+      z.object({
+        name: z.string().min(1),
+        value: z.string().min(1),
+        group: z.string().optional(),
+      })
+    )
     .optional(),
 
   metafields: z
-    .array(z.object({
-      namespace: z.string().default('global'),
-      key: z.string().min(1),
-      value: z.unknown(),
-    }))
+    .array(
+      z.object({
+        namespace: z.string().default('global'),
+        key: z.string().min(1),
+        value: z.unknown(),
+      })
+    )
     .optional(),
 
   // ═══════════════════════════════════════════════════════════

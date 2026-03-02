@@ -34,7 +34,8 @@ describe('Config Package', () => {
     it('should validate correctly with valid env', () => {
       process.env.JWT_SECRET = 'aA1'.repeat(11);
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db?ssl=require';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
+      process.env.ENCRYPTION_MASTER_KEY =
+        'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
@@ -66,7 +67,8 @@ describe('Config Package', () => {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'aA1!_Just_Long_Enough_But_Simple_Secret'; // gitleaks:allow
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db?ssl=require';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
+      process.env.ENCRYPTION_MASTER_KEY =
+        'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';
@@ -109,7 +111,8 @@ describe('Config Package', () => {
     it('should retrieve values correctly', async () => {
       process.env.JWT_SECRET = 'aA1'.repeat(11);
       process.env.DATABASE_URL = 'postgresql://localhost:5432/db?ssl=require';
-      process.env.ENCRYPTION_MASTER_KEY = 'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
+      process.env.ENCRYPTION_MASTER_KEY =
+        'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       process.env.MINIO_ENDPOINT = 'localhost';

@@ -1,11 +1,9 @@
-import { env } from '../../packages/config/src/index.ts';
 import { serve } from 'bun';
+import { env } from '../../packages/config/src/index.ts';
 
 const PORT = 8080;
 const COOKIE_NAME = 'apex_auth_session';
-const SESSION_VALUE = Bun.hash(
-  env.JWT_SECRET || 'default_secret'
-).toString();
+const SESSION_VALUE = Bun.hash(env.JWT_SECRET || 'default_secret').toString();
 
 const EMAIL = env.SUPER_ADMIN_EMAIL || 'admin@60sec.shop';
 const PASSWORD = env.SUPER_ADMIN_PASSWORD || 'Admin@60SecShop!2026';

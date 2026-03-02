@@ -32,12 +32,13 @@ describe('BotProtectionMiddleware', () => {
         nextFunction
       )
     ).toThrow(ForbiddenException);
-    expect(async () =>
-      await middleware.use(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      )
+    expect(
+      async () =>
+        await middleware.use(
+          mockRequest as Request,
+          mockResponse as Response,
+          nextFunction
+        )
     ).toThrow('S11 Violation: User-Agent header required');
   });
 
@@ -50,23 +51,25 @@ describe('BotProtectionMiddleware', () => {
         nextFunction
       )
     ).toThrow(ForbiddenException);
-    expect(async () =>
-      await middleware.use(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      )
+    expect(
+      async () =>
+        await middleware.use(
+          mockRequest as Request,
+          mockResponse as Response,
+          nextFunction
+        )
     ).toThrow('S11 Violation: Automated access blocked');
   });
 
   it('should block known bot User-Agents (python-requests)', () => {
     mockRequest.headers = { 'user-agent': 'python-requests/2.25.1' };
-    expect(async () =>
-      await middleware.use(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      )
+    expect(
+      async () =>
+        await middleware.use(
+          mockRequest as Request,
+          mockResponse as Response,
+          nextFunction
+        )
     ).toThrow(ForbiddenException);
   });
 
@@ -82,12 +85,13 @@ describe('BotProtectionMiddleware', () => {
         nextFunction
       )
     ).toThrow(ForbiddenException);
-    expect(async () =>
-      await middleware.use(
-        mockRequest as Request,
-        mockResponse as Response,
-        nextFunction
-      )
+    expect(
+      async () =>
+        await middleware.use(
+          mockRequest as Request,
+          mockResponse as Response,
+          nextFunction
+        )
     ).toThrow('S11 Violation: Security violation detected');
   });
 
