@@ -356,7 +356,7 @@ table "products" {
   }
   column "specifications" {
     type = jsonb
-    default = sql(\"'{}'::jsonb\")
+    default = sql("'{}'::jsonb")
   }
   column "dimensions" {
     type = jsonb
