@@ -367,8 +367,8 @@ table "tenants" {
   }
   column "ui_config" {
     type = jsonb
-    default = sql("'{
-  }'::jsonb") }
+    default = sql("\'{}\'::jsonb")
+  }
   column "data_region" {
     type = char(2)
     default = "SA"
@@ -951,8 +951,8 @@ table "onboarding_blueprints" {
   }
   column "ui_config" {
     type = jsonb
-    default = sql("'{
-  }'::jsonb") }
+    default = sql("\'{}\'::jsonb")
+  }
   primary_key { columns = [column.id] }
   index "blueprint_niche_plan_idx" { columns = [column.niche_type, column.plan] }
 }
@@ -1057,8 +1057,8 @@ table "order_fraud_scores" {
   }
   column "signals" {
     type = jsonb
-    default = sql("'{
-  }'::jsonb") }
+    default = sql("\'{}\'::jsonb")
+  }
   primary_key { columns = [column.id] }
   check "chk_risk_score_range" { expr = "(risk_score BETWEEN 0 AND 1000)" }
   index "idx_fraud_order" { columns = [column.order_id] }
