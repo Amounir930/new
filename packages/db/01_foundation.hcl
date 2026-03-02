@@ -1242,25 +1242,3 @@ table "marketing_pages" {
 // ELITE INFRASTRUCTURE: ENGINE HARDENING
 // Protocols: DoS Protection & WAL Safety
 // ==========================================
-sql "elite_server_config" {
-  exec = <<SQL
-ALTER ROLE app_user SET statement_timeout = '5000ms';
-ALTER ROLE app_user SET lock_timeout = '2000ms';
-ALTER SYSTEM SET wal_level = 'logical';
-ALTER SYSTEM SET max_slot_wal_keep_size = '2048MB';
-SQL
-}
-sql "init_partman" {
-  depends_on = [table.audit_logs, table.outbox_events]
-  exec       = <<SQL
-  -- Initialize Partman for Audit Logs (Monthly)
-  SELECT partman.create_parent('governance.audit_logs', 'created_at', 'native', 'monthly');
-  -- Initialize Partman for Outbox (Daily)
-  SELECT partman.create_parent('storefront.outbox_events', 'created_at', 'native', 'daily');
-  SQL
-}
-sql "enforce_app_user_limits" {
-  exec = <<SQL
-  ALTER ROLE app_user NOBYPASSRLS;
-  SQL
-}
