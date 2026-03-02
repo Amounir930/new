@@ -14,67 +14,7 @@ schema "legacy" {}
 
 
 
-function "gen_ulid" {
-  schema = schema.public
-  lang   = "plpgsql "
-  return = uuid
-  as     = <<SQL
-DECLARE
-  v_time bytea;
-  v_rnd  bytea;
-BEGIN
-  -- ULID format (128 bits): 48-bit timestamp + 80-bit randomness
-  -- 1,000,000 multiplier for true Microsecond Precision
-  v_time := decode(lpad(to_hex(floor(extract(epoch from clock_timestamp()) * 1000000)::bigint), 12, '0'), 'hex');
-  v_rnd  := gen_random_bytes(10);
-  RETURN (encode(v_time || v_rnd, 'hex'))::uuid;
-END;
-SQL
-}
 
-function "set_current_timestamp_updated_at" {
-  schema = schema.public
-  lang   = "plpgsql "
-  return = trigger
-  as     = <<SQL
-BEGIN
-  -- ELITE: Support manual overrides for audit/migration purposes
-  IF NEW.updated_at IS NOT DISTINCT FROM OLD.updated_at THEN
-    NEW.updated_at := clock_timestamp();
-  END IF;
-  RETURN NEW;
-END;
-SQL
-}
-
-function "prevent_tenant_hijacking" {
-  schema = schema.public
-  lang   = "plpgsql "
-  return = trigger
-  as     = <<SQL
-BEGIN
-  IF OLD.tenant_id IS DISTINCT FROM NEW.tenant_id THEN
-    RAISE EXCEPTION 'Security Breach: Tenant ID modification is strictly forbidden' USING ERRCODE = 'P0001';
-  END IF;
-  RETURN NEW;
-END;
-SQL
-}
-
-function "validate_price_currency" {
-  schema = schema.public
-  lang   = "plpgsql "
-  return = trigger
-  as     = <<SQL
-BEGIN
-IF (NEW.price).currency IS NULL OR (NEW.price).currency !~ '^[A-Z]{3}
-  $' THEN
-    RAISE EXCEPTION 'Data Integrity Violation: Invalid currency format in price' USING ERRCODE = 'P0002';
-  END IF;
-  RETURN NEW;
-END;
-SQL
-}
 
 
 
