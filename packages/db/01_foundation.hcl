@@ -624,7 +624,7 @@ table "subscription_plans" {
     null = false
   }
   check "chk_plan_price" {
-    expr = "COALESCE((price_monthly_v2).amount, 0) >= 0 AND COALESCE((price_yearly_v2).amount, 0) >= 0"
+    expr = "COALESCE((price_monthly_v2), 0) >= 0 AND COALESCE((price_yearly_v2), 0) >= 0"
   }
 }
 table "tenant_quotas" {
@@ -739,7 +739,7 @@ table "tenant_invoices" {
 
   // ELITE: Directives Alpha & Bravo applied
   check "chk_invoice_math" {
-    expr = "COALESCE((total).amount, 0) = COALESCE((subscription_amount).amount, 0) + COALESCE((platform_commission).amount, 0) + COALESCE((app_charges).amount, 0)"
+    expr = "COALESCE((total), 0) = COALESCE((subscription_amount), 0) + COALESCE((platform_commission), 0) + COALESCE((app_charges), 0)"
   }
   index "idx_invoices_tenant" {
     columns = [column.tenant_id]
@@ -853,7 +853,7 @@ table "dunning_events" {
     expr = "(attempt_number <= 5)"
   }
   check "chk_dunning_amount" {
-    expr = "COALESCE((amount).amount, 0) > 0"
+    expr = "COALESCE((amount), 0) > 0"
   }
   index "idx_dunning_events_tenant" {
     columns = [column.tenant_id]

@@ -204,7 +204,7 @@ table "price_lists" {
     columns = [column.id]
   }
   check "chk_pl_inner_not_null" {
-    expr = "(price).amount IS NOT NULL AND (price).currency IS NOT NULL"
+    expr = "(price) IS NOT NULL AND (price) IS NOT NULL"
   }
   index "idx_price_lists_tenant_active" {
     columns = [column.tenant_id]
@@ -244,7 +244,7 @@ table "price_lists" {
     on_delete = RESTRICT
   }
   check "chk_pl_price_inner" {
-    expr = "(price).amount IS NOT NULL AND (price).currency IS NOT NULL"
+    expr = "(price) IS NOT NULL AND (price) IS NOT NULL"
   }
 
 }

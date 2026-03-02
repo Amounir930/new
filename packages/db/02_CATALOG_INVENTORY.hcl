@@ -442,13 +442,13 @@ table "products" {
   }
   // ELITE: Alpha & Bravo applied
   check "chk_price_positive" {
-    expr = "COALESCE((base_price).amount, 0) >= 0 AND (base_price).amount IS NOT NULL AND (base_price).currency IS NOT NULL"
+    expr = "COALESCE((base_price), 0) >= 0 AND (base_price) IS NOT NULL AND (base_price) IS NOT NULL"
   }
   check "chk_compare_price" {
-    expr = "(compare_at_price IS NULL OR (COALESCE((compare_at_price).amount, 0) > COALESCE((base_price).amount, 0) AND (compare_at_price).amount IS NOT NULL))"
+    expr = "(compare_at_price IS NULL OR (COALESCE((compare_at_price), 0) > COALESCE((base_price), 0) AND (compare_at_price) IS NOT NULL))"
   }
   check "chk_sale_price_math" {
-    expr = "(sale_price IS NULL OR (COALESCE((sale_price).amount, 0) <= COALESCE((base_price).amount, 0) AND (sale_price).amount IS NOT NULL))"
+    expr = "(sale_price IS NULL OR (COALESCE((sale_price), 0) <= COALESCE((base_price), 0) AND (sale_price) IS NOT NULL))"
   }
   check "chk_specs_size" {
     expr = "(pg_column_size(specifications) <= 20480)"
@@ -551,10 +551,10 @@ table "product_variants" {
     expr = "jsonb_typeof(options) = 'object'"
   }
   check "chk_variant_price_pos" {
-    expr = "(price).amount >= 0 AND (price).amount IS NOT NULL AND (price).currency IS NOT NULL"
+    expr = "(price) >= 0 AND (price) IS NOT NULL AND (price) IS NOT NULL"
   }
   check "chk_variant_compare_price" {
-    expr = "(compare_at_price IS NULL OR (compare_at_price).amount IS NOT NULL)"
+    expr = "(compare_at_price IS NULL OR (compare_at_price) IS NOT NULL)"
   }
   index "idx_variants_tenant" {
     columns = [column.tenant_id]
@@ -1306,10 +1306,10 @@ table "purchase_orders" {
 
   // ELITE: Alpha & Bravo applied (Directive Bravo - Math Operator Fatal)
   check "chk_po_math" {
-    expr = "(COALESCE((total).amount, 0) = COALESCE((subtotal).amount, 0) + COALESCE((tax).amount, 0) + COALESCE((shipping_cost).amount, 0))"
+    expr = "(COALESCE((total), 0) = COALESCE((subtotal), 0) + COALESCE((tax), 0) + COALESCE((shipping_cost), 0))"
   }
   check "chk_po_inner_not_null" {
-    expr = "(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL"
+    expr = "(total) IS NOT NULL AND (subtotal) IS NOT NULL"
   }
   index "idx_purchase_orders_tenant" {
     columns = [column.tenant_id]
@@ -1436,7 +1436,7 @@ table "b2b_companies" {
     columns = [column.id]
   }
   check "chk_credit_limit_positive" {
-    expr = "COALESCE((credit_limit).amount, 0) >= 0"
+    expr = "COALESCE((credit_limit), 0) >= 0"
   }
   // ELITE PATCH: Removed chk_credit_utilization DB constraint to avoid Admin lockout when reducing limits. Enforced strictly at App Layer.
   check "chk_tax_id_len" {
@@ -1533,7 +1533,7 @@ table "b2b_pricing_tiers" {
     expr = "(discount_basis_points IS NULL OR discount_basis_points <= 10000)"
   }
   check "chk_b2b_price_pos" {
-    expr = "(price IS NULL OR ((price).amount >= 0 AND (price).amount IS NOT NULL))"
+    expr = "(price IS NULL OR ((price) >= 0 AND (price) IS NOT NULL))"
   }
   index "idx_b2bp_tenant" {
     columns = [column.tenant_id]
@@ -1592,7 +1592,7 @@ table "b2b_users" {
     columns = [column.company_id]
   }
   check "chk_b2b_unit_price_pos" {
-    expr = "COALESCE((unit_price).amount, 0) >= 0"
+    expr = "COALESCE((unit_price), 0) >= 0"
   }
   index "idx_b2b_users_tenant" {
     columns = [column.tenant_id]

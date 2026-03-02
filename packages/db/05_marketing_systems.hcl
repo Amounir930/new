@@ -87,13 +87,13 @@ table "coupons" {
     expr = "used_count <= max_uses"
   }
   check "chk_coupon_val_positive" {
-    expr = "COALESCE((value).amount, 0) > 0"
+    expr = "COALESCE((value), 0) > 0"
   }
   check "chk_coupon_pct" {
-    expr = "(type != 'percentage' OR COALESCE((value).amount, 0) <= 10000)"
+    expr = "(type != 'percentage' OR COALESCE((value), 0) <= 10000)"
   }
   check "chk_coupon_min_amount" {
-    expr = "COALESCE((min_order_amount).amount, 0) >= 0"
+    expr = "COALESCE((min_order_amount), 0) >= 0"
   }
   index "idx_coupons_tenant" {
     columns = [column.tenant_id]
@@ -465,7 +465,7 @@ table "product_bundles" {
     columns = [column.tenant_id, column.id]
   }
   check "chk_bundle_discount_positive" {
-    expr = "COALESCE((discount_value).amount, 0) >= 0"
+    expr = "COALESCE((discount_value), 0) >= 0"
   }
   index "idx_product_bundles_tenant" {
     columns = [column.tenant_id]
@@ -626,10 +626,10 @@ table "wallet_transactions" {
     type = "BRIN"
   }
   check "chk_wallet_math" {
-    expr = "COALESCE((balance_after).amount, 0) = COALESCE((balance_before).amount, 0) + COALESCE((amount).amount, 0)"
+    expr = "COALESCE((balance_after), 0) = COALESCE((balance_before), 0) + COALESCE((amount), 0)"
   }
   check "wallet_non_negative_balance" {
-    expr = "COALESCE((balance_after).amount, 0) >= 0"
+    expr = "COALESCE((balance_after), 0) >= 0"
   }
   index "idx_wallet_transactions_tenant" {
     columns = [column.tenant_id]
@@ -768,7 +768,7 @@ table "affiliate_transactions" {
     type = "BRIN"
   }
   check "chk_aff_comm_positive" {
-    expr = "COALESCE((commission_amount).amount, 0) > 0"
+    expr = "COALESCE((commission_amount), 0) > 0"
   }
   index "idx_affiliate_transactions_tenant" {
     columns = [column.tenant_id]

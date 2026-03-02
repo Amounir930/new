@@ -45,10 +45,10 @@ table "customers" {
     default = 0.0000
   }
   check "chk_wallet_bal_pos" {
-    expr = "COALESCE((wallet_balance).amount, 0) >= 0 AND (wallet_balance).amount IS NOT NULL AND (wallet_balance).currency IS NOT NULL"
+    expr = "COALESCE((wallet_balance), 0) >= 0 AND (wallet_balance) IS NOT NULL AND (wallet_balance) IS NOT NULL"
   }
   check "chk_total_spent_pos" {
-    expr = "COALESCE((total_spent_amount).amount, 0) >= 0 AND (total_spent_amount).amount IS NOT NULL"
+    expr = "COALESCE((total_spent_amount), 0) >= 0 AND (total_spent_amount) IS NOT NULL"
   }
   column "loyalty_points" {
     type    = int
@@ -432,7 +432,7 @@ table "orders" {
     default = 0.0000
   }
   check "chk_order_total_inner" {
-    expr = "(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL"
+    expr = "(total) IS NOT NULL AND (subtotal) IS NOT NULL"
   }
   column "risk_score" {
     type = int
@@ -561,13 +561,13 @@ table "orders" {
 
   // ELITE: Alpha & Bravo applied (Directive Charlie - Logic Integrity)
   check "chk_checkout_math" {
-    expr = "(COALESCE((total).amount, 0) = COALESCE((subtotal).amount, 0) + COALESCE((tax).amount, 0) + COALESCE((shipping).amount, 0) - COALESCE((discount).amount, 0) - COALESCE((coupon_discount).amount, 0))"
+    expr = "(COALESCE((total), 0) = COALESCE((subtotal), 0) + COALESCE((tax), 0) + COALESCE((shipping), 0) - COALESCE((discount), 0) - COALESCE((coupon_discount), 0))"
   }
   check "chk_positive_costs" {
-    expr = "(COALESCE((shipping).amount, 0) >= 0 AND COALESCE((tax).amount, 0) >= 0)"
+    expr = "(COALESCE((shipping), 0) >= 0 AND COALESCE((tax), 0) >= 0)"
   }
   check "chk_refund_cap" {
-    expr = "COALESCE((refunded_amount).amount, 0) <= COALESCE((total).amount, 0)"
+    expr = "COALESCE((refunded_amount), 0) <= COALESCE((total), 0)"
   }
   index "idx_orders_tenant" {
     columns = [column.tenant_id]
@@ -675,13 +675,13 @@ table "order_items" {
     expr = "(fulfilled_quantity <= quantity)"
   }
   check "chk_item_math" {
-    expr = "(COALESCE((total).amount, 0) = (COALESCE((price).amount, 0) * quantity) - COALESCE((discount_amount).amount, 0) + COALESCE((tax_amount).amount, 0))"
+    expr = "(COALESCE((total), 0) = (COALESCE((price), 0) * quantity) - COALESCE((discount_amount), 0) + COALESCE((tax_amount), 0))"
   }
   check "chk_item_inner_not_null" {
-    expr = "(price).amount IS NOT NULL AND (total).amount IS NOT NULL"
+    expr = "(price) IS NOT NULL AND (total) IS NOT NULL"
   }
   check "chk_item_discount_logic" {
-    expr = "COALESCE((discount_amount).amount, 0) <= (COALESCE((price).amount, 0) * quantity)"
+    expr = "COALESCE((discount_amount), 0) <= (COALESCE((price), 0) * quantity)"
   }
   index "idx_order_items_tenant" {
     columns = [column.tenant_id]
@@ -967,7 +967,7 @@ table "refunds" {
     columns = [column.order_id]
   }
   check "chk_refund_positive" {
-    expr = "COALESCE((amount).amount, 0) > 0"
+    expr = "COALESCE((amount), 0) > 0"
   }
   index "idx_refunds_tenant" {
     columns = [column.tenant_id]
@@ -1008,7 +1008,7 @@ table "refund_items" {
     columns = [column.refund_id]
   }
   check "chk_refund_item_amt" {
-    expr = "(COALESCE((amount).amount, 0) > 0 AND quantity > 0)"
+    expr = "(COALESCE((amount), 0) > 0 AND quantity > 0)"
   }
   index "idx_refund_items_tenant" {
     columns = [column.tenant_id]
@@ -1299,7 +1299,7 @@ table "carts" {
     expr = "(pg_column_size(items) <= 51200)"
   }
   check "chk_cart_subtotal_pos" {
-    expr = "subtotal IS NULL OR COALESCE((subtotal).amount, 0) >= 0"
+    expr = "subtotal IS NULL OR COALESCE((subtotal), 0) >= 0"
   }
   index "idx_carts_tenant" {
     columns = [column.tenant_id]
@@ -1344,7 +1344,7 @@ table "cart_items" {
     columns = [column.cart_id]
   }
   check "chk_cart_item_price" {
-    expr = "COALESCE((price).amount, 0) >= 0"
+    expr = "COALESCE((price), 0) >= 0"
   }
   index "idx_cart_items_tenant" {
     columns = [column.tenant_id]
