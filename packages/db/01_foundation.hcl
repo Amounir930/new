@@ -157,7 +157,7 @@ table "encryption_keys" {
   schema = schema.vault
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -208,7 +208,7 @@ table "archival_vault" {
   schema = schema.vault
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "table_name" {
     type = text
@@ -243,7 +243,7 @@ table "tenants" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "created_at" {
     type    = timestamptz
@@ -347,7 +347,7 @@ table "audit_logs" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "created_at" {
     type    = timestamptz
@@ -462,7 +462,7 @@ table "leads" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "created_at" {
     type    = timestamptz
@@ -550,7 +550,7 @@ table "subscription_plans" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "created_at" {
     type    = timestamptz
@@ -616,11 +616,11 @@ table "subscription_plans" {
   }
   // ELITE: money_amount used for pricing
   column "price_monthly_v2" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "price_yearly_v2" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   check "chk_plan_price" {
@@ -631,7 +631,7 @@ table "tenant_quotas" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -683,7 +683,7 @@ table "tenant_invoices" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -715,7 +715,7 @@ table "tenant_invoices" {
     default = sql("ROW(0, 'USD')::public.money_amount")
   }
   column "total" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "status" {
@@ -755,7 +755,7 @@ table "feature_gates" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -813,7 +813,7 @@ table "dunning_events" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -831,7 +831,7 @@ table "dunning_events" {
     default = "pending"
   }
   column "amount" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "next_retry_at" {
@@ -863,7 +863,7 @@ table "app_usage_records" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -879,7 +879,7 @@ table "app_usage_records" {
     type = int
   }
   column "unit_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
   }
   column "currency" {
     type    = char(3)
@@ -899,7 +899,7 @@ table "plan_change_history" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -932,7 +932,7 @@ table "onboarding_blueprints" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "created_at" {
     type    = timestamptz
@@ -1041,7 +1041,7 @@ table "order_fraud_scores" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "order_id" {
     type = uuid
@@ -1108,7 +1108,7 @@ table "marketing_pages" {
   schema = schema.governance
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "created_at" {
     type    = timestamptz

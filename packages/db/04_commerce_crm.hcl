@@ -9,7 +9,7 @@ table "customers" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -37,12 +37,12 @@ table "customers" {
   column "wallet_balance" {
     type    = sql("public.money_amount")
     null    = false
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "total_spent_amount" {
     type    = sql("public.money_amount")
     null    = false
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   check "chk_wallet_bal_pos" {
     expr = "COALESCE((wallet_balance).amount, 0) >= 0 AND (wallet_balance).amount IS NOT NULL AND (wallet_balance).currency IS NOT NULL"
@@ -176,7 +176,7 @@ table "customer_addresses" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -270,7 +270,7 @@ table "customer_consents" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -324,7 +324,7 @@ table "customer_segments" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -363,7 +363,7 @@ table "orders" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -401,35 +401,35 @@ table "orders" {
     null = true
   }
   column "subtotal" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "discount" {
     type    = sql("public.money_amount")
     null    = false
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "shipping" {
     type    = sql("public.money_amount")
     null    = false
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "tax" {
     type    = sql("public.money_amount")
     null    = false
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "total" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "coupon_discount" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "refunded_amount" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   check "chk_order_total_inner" {
     expr = "(total).amount IS NOT NULL AND (subtotal).amount IS NOT NULL"
@@ -585,7 +585,7 @@ table "order_items" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -602,25 +602,25 @@ table "order_items" {
     null = true
   }
   column "price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   // Strike 01: Historical COGS (Cost Price at time of purchase)
   column "cost_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "total" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "discount_amount" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "tax_amount" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "quantity" {
     type = int
@@ -702,7 +702,7 @@ table "order_edits" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -724,7 +724,7 @@ table "order_edits" {
   }
   column "amount_change" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "edit_type" {
     type = varchar(30)
@@ -766,7 +766,7 @@ table "order_timeline" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -830,7 +830,7 @@ table "fulfillments" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -886,7 +886,7 @@ table "fulfillment_items" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -925,7 +925,7 @@ table "refunds" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -942,7 +942,7 @@ table "refunds" {
     default = sql("now()")
   }
   column "amount" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "status" {
@@ -983,7 +983,7 @@ table "refund_items" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -998,7 +998,7 @@ table "refund_items" {
     type = int
   }
   column "amount" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   primary_key {
@@ -1029,7 +1029,7 @@ table "rma_requests" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1105,7 +1105,7 @@ table "rma_items" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1121,7 +1121,7 @@ table "rma_items" {
   }
   column "restocking_fee" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "reason_code" {
     type = varchar(50)
@@ -1161,7 +1161,7 @@ table "payment_logs" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1190,7 +1190,7 @@ table "payment_logs" {
   }
   // Strike 10: Strict Financial Logging (Actual amount attempted/captured)
   column "amount" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "error_code" {
@@ -1241,7 +1241,7 @@ table "carts" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1259,7 +1259,7 @@ table "carts" {
     null = true
   }
   column "subtotal" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "session_id" {
@@ -1315,7 +1315,7 @@ table "cart_items" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1331,7 +1331,7 @@ table "cart_items" {
     default = 1
   }
   column "price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
   }
   column "added_at" {
     type    = timestamptz
@@ -1360,7 +1360,7 @@ table "abandoned_checkouts" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1378,7 +1378,7 @@ table "abandoned_checkouts" {
     null = true
   }
   column "subtotal" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "recovery_email_sent" {
@@ -1399,7 +1399,7 @@ table "abandoned_checkouts" {
   }
   column "recovered_amount" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   primary_key {
     columns = [column.id]
@@ -1428,7 +1428,7 @@ table "shipping_zones" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1442,10 +1442,10 @@ table "shipping_zones" {
     default = sql("now()")
   }
   column "base_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
   }
   column "free_shipping_threshold" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "min_delivery_days" {
@@ -1501,7 +1501,7 @@ table "tax_categories" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1540,7 +1540,7 @@ table "tax_rules" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1626,7 +1626,7 @@ table "reviews" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid

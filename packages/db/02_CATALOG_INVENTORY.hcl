@@ -13,7 +13,7 @@ table "categories" {
   // (Placeholder for trigger - will be implemented in security.hcl if needed, but adding column check here)
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -134,7 +134,7 @@ table "brands" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -205,7 +205,7 @@ table "products" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -235,19 +235,19 @@ table "products" {
     null = true
   }
   column "base_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "sale_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "cost_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "compare_at_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "tax_basis_points" {
@@ -472,7 +472,7 @@ table "product_variants" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -485,11 +485,11 @@ table "product_variants" {
     null = true
   }
   column "price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "compare_at_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "weight" {
@@ -570,7 +570,7 @@ table "product_images" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -618,7 +618,7 @@ table "product_attributes" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -672,7 +672,7 @@ table "entity_metafields" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -722,7 +722,7 @@ table "smart_collections" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -793,7 +793,7 @@ table "locations" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -844,7 +844,7 @@ table "inventory_levels" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -925,7 +925,7 @@ table "inventory_movements" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -997,7 +997,7 @@ table "inventory_reservations" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1068,7 +1068,7 @@ table "inventory_transfers" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1131,7 +1131,7 @@ table "inventory_transfer_items" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1173,7 +1173,7 @@ table "suppliers" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1244,7 +1244,7 @@ table "purchase_orders" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1268,19 +1268,19 @@ table "purchase_orders" {
     default = "draft"
   }
   column "subtotal" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "tax" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "shipping_cost" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "total" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   column "order_number" {
@@ -1330,7 +1330,7 @@ table "purchase_order_items" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1353,7 +1353,7 @@ table "purchase_order_items" {
     expr = "quantity_received <= quantity_ordered"
   }
   column "unit_cost" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = false
   }
   primary_key {
@@ -1384,7 +1384,7 @@ table "b2b_companies" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1403,11 +1403,11 @@ table "b2b_companies" {
   }
   column "credit_limit" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "credit_used" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
   }
   column "payment_terms_days" {
     type    = int
@@ -1451,7 +1451,7 @@ table "b2b_pricing_tiers" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1482,7 +1482,7 @@ table "b2b_pricing_tiers" {
     null = true
   }
   column "price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   column "currency" {
@@ -1554,7 +1554,7 @@ table "b2b_users" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -1575,7 +1575,7 @@ table "b2b_users" {
   }
   column "unit_price" {
     type    = sql("public.money_amount")
-    default = sql("ROW(0, 'SAR')::public.money_amount")
+    default = 0.0000
     null    = false
   }
   column "currency" {

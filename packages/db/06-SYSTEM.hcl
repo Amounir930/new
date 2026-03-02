@@ -4,7 +4,7 @@ table "outbox_events" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -122,7 +122,7 @@ table "markets" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -171,7 +171,7 @@ table "price_lists" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
@@ -194,10 +194,10 @@ table "price_lists" {
   }
 
   column "price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
   }
   column "compare_at_price" {
-    type = sql("public.money_amount")
+    type = decimal(12,4)
     null = true
   }
   primary_key {
@@ -252,7 +252,7 @@ table "currency_rates" {
   schema = schema.storefront
   column "id" {
     type    = uuid
-    default = sql("public.gen_ulid()::uuid")
+    default = sql("gen_random_uuid()")
   }
   column "tenant_id" {
     type = uuid
