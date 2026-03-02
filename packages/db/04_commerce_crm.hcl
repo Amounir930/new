@@ -1702,54 +1702,10 @@ table "reviews" {
 // Protocol: RESTRICTIVE | Scope: STOREFRONT
 // ==========================================
 
-trigger "trg_customers_updated_at" {
-  on {
-    table = table.customers
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_orders_updated_at" {
-  on {
-    table = table.orders
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_rma_requests_updated_at" {
-  on {
-    table = table.rma_requests
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_shipping_zones_updated_at" {
-  on {
-    table = table.shipping_zones
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 

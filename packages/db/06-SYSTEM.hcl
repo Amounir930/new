@@ -283,106 +283,18 @@ table "currency_rates" {
 
 }
 
-trigger "trg_outbox_prevent_hijack" {
-  on {
-    table = table.outbox_events
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.prevent_tenant_hijacking
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_tenant_config_updated_at" {
-  on {
-    table = table.tenant_config
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_tenant_config_prevent_hijack" {
-  on {
-    table = table.tenant_config
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.prevent_tenant_hijacking
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_markets_prevent_hijack" {
-  on {
-    table = table.markets
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.prevent_tenant_hijacking
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_price_lists_validate_currency" {
-  on {
-    table = table.price_lists
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.validate_price_currency
-  }
-  events = ["INSERT", "UPDATE"]
-}
 
 
-trigger "trg_price_lists_prevent_hijack" {
-  on {
-    table = table.price_lists
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.prevent_tenant_hijacking
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_currency_rates_updated_at" {
-  on {
-    table = table.currency_rates
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_currency_rates_prevent_hijack" {
-  on {
-    table = table.currency_rates
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.prevent_tenant_hijacking
-  }
-  events = ["UPDATE"]
-}
 

@@ -1776,54 +1776,10 @@ table "product_views" {
   // ALTER TABLE storefront.product_views ENABLE ROW LEVEL SECURITY
 }
 
-trigger "trg_flash_sales_updated_at" {
-  on {
-    table = table.flash_sales
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_loyalty_rules_updated_at" {
-  on {
-    table = table.loyalty_rules
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_pages_updated_at" {
-  on {
-    table = table.pages
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
 
-trigger "trg_blog_posts_updated_at" {
-  on {
-    table = table.blog_posts
-  }
-  timing = "BEFORE"
-  for = ROW
-execute {
-    function = function.set_current_timestamp_updated_at
-  }
-  events = ["UPDATE"]
-}
 
