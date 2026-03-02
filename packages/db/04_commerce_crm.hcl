@@ -1223,10 +1223,7 @@ table "payment_logs" {
   index "idx_payment_created_brin" {
     columns = [column.created_at]
     type = "BRIN"
-    with {
-      pages_per_range = 32
-    }
-  }
+}
   index "idx_payment_logs_order" {
     columns = [column.order_id]
   }
@@ -1608,8 +1605,7 @@ table "tax_rules" {
   // ELITE PATCH: Include zip_code in rule uniqueness constraints
   unique "uq_tax_rule" {
     columns            = [column.tenant_id, column.country, column.state, column.zip_code, column.tax_type]
-    nulls_not_distinct = true
-  }
+}
   index "idx_tax_rules_country" {
     columns = [column.country]
   }
@@ -1710,46 +1706,46 @@ trigger "trg_customers_updated_at" {
   on {
     table = table.customers
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_orders_updated_at" {
   on {
     table = table.orders
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_rma_requests_updated_at" {
   on {
     table = table.rma_requests
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_shipping_zones_updated_at" {
   on {
     table = table.shipping_zones
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+

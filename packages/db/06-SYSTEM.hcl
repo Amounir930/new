@@ -287,95 +287,94 @@ trigger "trg_outbox_prevent_hijack" {
   on {
     table = table.outbox_events
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.prevent_tenant_hijacking
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_tenant_config_updated_at" {
   on {
     table = table.tenant_config
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_tenant_config_prevent_hijack" {
   on {
     table = table.tenant_config
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.prevent_tenant_hijacking
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_markets_prevent_hijack" {
   on {
     table = table.markets
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.prevent_tenant_hijacking
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_price_lists_validate_currency" {
   on {
     table = table.price_lists
   }
-  before  = true
-  insert  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.validate_price_currency
   }
-}
+}  events = ["INSERT", "UPDATE"]
+
 
 trigger "trg_price_lists_prevent_hijack" {
   on {
     table = table.price_lists
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.prevent_tenant_hijacking
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_currency_rates_updated_at" {
   on {
     table = table.currency_rates
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_currency_rates_prevent_hijack" {
   on {
     table = table.currency_rates
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.prevent_tenant_hijacking
   }
-}
+}  events = ["UPDATE"]
+

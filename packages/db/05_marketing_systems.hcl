@@ -1780,46 +1780,46 @@ trigger "trg_flash_sales_updated_at" {
   on {
     table = table.flash_sales
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_loyalty_rules_updated_at" {
   on {
     table = table.loyalty_rules
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_pages_updated_at" {
   on {
     table = table.pages
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
 
 trigger "trg_blog_posts_updated_at" {
   on {
     table = table.blog_posts
   }
-  before  = true
-  update  = true
-  foreach = ROW
-  execute {
+  timing = "BEFORE"
+  for_each = "ROW"
+execute {
     function = function.set_current_timestamp_updated_at
   }
-}
+}  events = ["UPDATE"]
+
