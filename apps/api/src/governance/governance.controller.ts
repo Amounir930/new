@@ -1,11 +1,11 @@
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import type { GovernanceService } from './governance.service.js';
+import { GovernanceService } from './governance.service.js';
 
 @Controller('admin/governance')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class GovernanceController {
-  constructor(private readonly governanceService: GovernanceService) {}
+  constructor(private readonly governanceService: GovernanceService) { }
 
   @Get('stats')
   async getStats() {

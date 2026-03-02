@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { AuditService } from '@apex/audit';
-import type { TenantRegistryService } from '@apex/db';
 import * as provisioning from '@apex/provisioning';
 import {
   ConflictException,
@@ -53,12 +52,24 @@ mock.module('@apex/db', () => {
   };
 });
 
+// Mock @apex/config
+mock.module('@apex/config', () => ({
+  env: {
+    APP_ROOT_DOMAIN: 'apex.localhost',
+    NODE_ENV: 'test',
+  },
+}));
+
 describe('ProvisioningService', () => {
   let service: ProvisioningService;
-  let _audit: AuditService;
 
   const mockAuditService = {
     log: mock(),
+  };
+
+  const mockTenantRegistry = {
+    register: mock(),
+    existsBySubdomain: mock().mockResolvedValue(false),
   };
 
   const options: ProvisioningOptions = {
@@ -70,35 +81,31 @@ describe('ProvisioningService', () => {
 
   beforeEach(async () => {
     mockAuditService.log.mockClear();
+    mockTenantRegistry.register.mockClear();
+    mockTenantRegistry.existsBySubdomain.mockClear();
 
-    const mockTenantRegistry = {
-      register: mock(),
-      existsBySubdomain: mock().mockResolvedValue(false),
-    } as unknown as TenantRegistryService;
+    // Reset all provisioning mocks
+    (provisioning.createTenantSchema as any).mockReset();
+    (provisioning.runTenantMigrations as any).mockReset();
+    (provisioning.createStorageBucket as any).mockReset();
+    (provisioning.seedTenantData as any).mockReset();
+    (provisioning.dropTenantSchema as any).mockReset();
 
     // Manual instantiation to bypass NestJS DI issues with Bun/swc
     service = new ProvisioningService(
       mockAuditService as any,
-      mockTenantRegistry
+      mockTenantRegistry as any
     );
-    _audit = mockAuditService as any;
-    (service as any).tenantRegistry = mockTenantRegistry;
   });
 
   describe('provision', () => {
     it('should successfully provision a store', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(
-        undefined as any
-      );
-      (provisioning.runTenantMigrations as any).mockResolvedValue(
-        undefined as any
-      );
-      (provisioning.createStorageBucket as any).mockResolvedValue(
-        undefined as any
-      );
+      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
+      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
+      (provisioning.createStorageBucket as any).mockResolvedValue(undefined);
       (provisioning.seedTenantData as any).mockResolvedValue({
         adminId: 'admin-123',
-      } as any);
+      });
 
       const result = await service.provision(options);
 
@@ -111,7 +118,7 @@ describe('ProvisioningService', () => {
           entityId: 'test-store',
         })
       );
-      expect((service as any).tenantRegistry.register).toHaveBeenCalled();
+      expect(mockTenantRegistry.register).toHaveBeenCalled();
       expect(provisioning.seedTenantData).toHaveBeenCalledWith(
         expect.objectContaining({
           subdomain: 'test-store',
@@ -135,9 +142,7 @@ describe('ProvisioningService', () => {
 
     it('should rollback and throw InternalServerErrorException on step failure', async () => {
       // Step 0 succeeds
-      (provisioning.createTenantSchema as any).mockResolvedValue(
-        undefined as any
-      );
+      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
       // Step 1 fails
       (provisioning.runTenantMigrations as any).mockRejectedValue(
         new Error('Migration failed')
@@ -152,9 +157,7 @@ describe('ProvisioningService', () => {
     });
 
     it('should handle rollback failure gracefully', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(
-        undefined as any
-      );
+      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
       (provisioning.runTenantMigrations as any).mockRejectedValue(
         new Error('Fail')
       );
@@ -168,12 +171,8 @@ describe('ProvisioningService', () => {
     });
 
     it('should proceed with rollback if multiple steps succeeded before failure', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(
-        undefined as any
-      );
-      (provisioning.runTenantMigrations as any).mockResolvedValue(
-        undefined as any
-      );
+      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
+      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
       (provisioning.createStorageBucket as any).mockRejectedValue(
         new Error('Bucket Fail')
       );
@@ -185,15 +184,9 @@ describe('ProvisioningService', () => {
     });
 
     it('should throw InternalServerErrorException if seeding fails', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(
-        undefined as any
-      );
-      (provisioning.runTenantMigrations as any).mockResolvedValue(
-        undefined as any
-      );
-      (provisioning.createStorageBucket as any).mockResolvedValue(
-        undefined as any
-      );
+      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
+      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
+      (provisioning.createStorageBucket as any).mockResolvedValue(undefined);
       (provisioning.seedTenantData as any).mockRejectedValue(
         new Error('Seed Fail')
       );
@@ -207,20 +200,13 @@ describe('ProvisioningService', () => {
 
   describe('registerTenant', () => {
     it('should throw InternalServerErrorException if registry fails', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(
-        undefined as any
-      );
-      (provisioning.runTenantMigrations as any).mockResolvedValue(
-        undefined as any
-      );
-      (provisioning.createStorageBucket as any).mockResolvedValue(
-        undefined as any
-      );
+      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
+      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
+      (provisioning.createStorageBucket as any).mockResolvedValue(undefined);
       (provisioning.seedTenantData as any).mockResolvedValue({
         adminId: 'admin-123',
-      } as any);
+      });
 
-      const mockTenantRegistry = (service as any).tenantRegistry;
       mockTenantRegistry.register.mockRejectedValue(new Error('Registry Fail'));
 
       await expect(service.provision(options)).rejects.toThrow(

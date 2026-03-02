@@ -104,7 +104,9 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should reject non-existent tenant', async () => {
-      mockTenantRegistry.exists.mockResolvedValue(false);
+      // Mock adminDb to return empty array for non-existent tenant
+      const { adminDb } = await import('@apex/db');
+      (adminDb.limit as any).mockResolvedValue([]);
 
       const options: ExportOptions = {
         tenantId: 'non-existent',
@@ -118,7 +120,9 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should handle registry errors', async () => {
-      mockTenantRegistry.exists.mockRejectedValue(new Error('Registry error'));
+      // Mock adminDb to throw error
+      const { adminDb } = await import('@apex/db');
+      (adminDb.limit as any).mockRejectedValue(new Error('Registry error'));
 
       const options: ExportOptions = {
         tenantId: 'tenant-123',

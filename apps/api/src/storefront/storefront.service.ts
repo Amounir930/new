@@ -12,7 +12,8 @@ import {
 } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { RedisRateLimitStore } from '@apex/middleware';
-import type { EncryptionService } from '@apex/security';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { EncryptionService } from '@apex/security';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -20,7 +21,7 @@ export class StorefrontService {
   constructor(
     private readonly redisStore: RedisRateLimitStore,
     private readonly crypto: EncryptionService
-  ) {}
+  ) { }
 
   async getTenantConfig(tenantId: string) {
     const { db, release } = await getTenantDb(tenantId);

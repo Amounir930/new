@@ -41,8 +41,11 @@ mock.module('@apex/db', () => ({
     plan: 'plan-col',
     status: 'status-col',
   },
-  eq: mock(),
-  or: mock(),
+  eq: mock((col: any, val: any) => ({ type: 'eq', col, val })),
+  or: mock((...conditions: any[]) => ({ type: 'or', conditions })),
+  sql: mock((strings: TemplateStringsArray, ...values: any[]) => ({
+    sql: String.raw(strings, ...values),
+  })),
 }));
 
 mock.module('@apex/config', () => ({

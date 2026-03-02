@@ -3,7 +3,7 @@
  * Exposed API for Super Admins to create new store environments
  */
 
-import { AuditLog, type AuditService } from '@apex/audit';
+import { AuditLog, AuditService } from '@apex/audit';
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import { env } from '@apex/config';
 import { FraudGuard } from '@apex/middleware';
@@ -21,7 +21,7 @@ import {
 import type { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
-import type { ProvisioningService } from './provisioning.service.js';
+import { ProvisioningService } from './provisioning.service.js';
 
 @Controller('provision')
 export class ProvisioningController {
@@ -32,7 +32,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) {}
+  ) { }
 
   /**
    * POST /api/provision

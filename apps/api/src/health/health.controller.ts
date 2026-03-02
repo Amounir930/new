@@ -1,5 +1,6 @@
 import { Public } from '@apex/auth';
-import type { ConfigService } from '@apex/config';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { ConfigService } from '@apex/config';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { RedisRateLimitStore } from '@apex/middleware';
 import {
@@ -25,7 +26,7 @@ export class HealthController {
   constructor(
     readonly _config: ConfigService,
     private readonly redisStore: RedisRateLimitStore // S2 FIX 22A: Singleton, no per-request TCP churn
-  ) {}
+  ) { }
 
   @Get()
   rootCheck() {

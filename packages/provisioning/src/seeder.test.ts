@@ -136,19 +136,32 @@ describe('seedTenantData', () => {
 
 describe('isSeeded', () => {
   it('should return true if count > 0', async () => {
-    mockDb.limit.mockResolvedValueOnce([{ count: '1' }]);
+    // Mock the drizzle select to return count > 0
+    mockDb.select.mockReturnValueOnce({
+      from: mock().mockReturnValue([{ count: '1' }]),
+    });
+
     const result = await isSeeded('alpha');
     expect(result).toBe(true);
   });
 
   it('should return false if count is 0', async () => {
-    mockDb.limit.mockResolvedValueOnce([{ count: '0' }]);
+    // Mock the drizzle select to return count = 0
+    mockDb.select.mockReturnValueOnce({
+      from: mock().mockReturnValue([{ count: '0' }]),
+    });
+
     const result = await isSeeded('empty');
     expect(result).toBe(false);
   });
 
   it('should return false if query fails', async () => {
-    mockDb.limit.mockRejectedValueOnce(new Error('Table missing'));
+    // Mock the drizzle select to throw error
+    mockDb.select.mockReturnValueOnce({
+      from: mock().mockImplementation(() => {
+        throw new Error('Table missing');
+      }),
+    });
 
     const result = await isSeeded('empty');
     expect(result).toBe(false);
