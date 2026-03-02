@@ -1185,12 +1185,10 @@ table "order_fraud_scores" {
   index"idx_fraud_tenant"  {
   columns =[column.tenant_id]
 }
-  index"idx_fraud_flagged"  {
-  columns =[column.is_flagged]
-  where ="
-  is_flagged =true AND
-  is_reviewed =false"
-}
+  index "idx_fraud_flagged" {
+    columns = [column.is_flagged]
+    where   = "is_flagged = true AND is_reviewed = false"
+  }
   
   index"idx_order_fraud_scores_tenant"  {
   columns =[column.tenant_id]
