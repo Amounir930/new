@@ -168,17 +168,7 @@ table "customers" {
   index "idx_customers_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_customers_updated_at" {
-    on {
-      table = table.customers
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.customers ENABLE ROW LEVEL SECURITY
 }
@@ -582,17 +572,7 @@ table "orders" {
   index "idx_orders_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_orders_updated_at" {
-    on {
-      table = table.orders
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.orders ENABLE ROW LEVEL SECURITY
   foreign_key "fk_ord_customer" {
@@ -1107,17 +1087,7 @@ table "rma_requests" {
   index "idx_rma_requests_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_rma_requests_updated_at" {
-    on {
-      table = table.rma_requests
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.rma_requests ENABLE ROW LEVEL SECURITY
   foreign_key "fk_rma_order" {
@@ -1526,17 +1496,7 @@ table "shipping_zones" {
   index "idx_shipping_zones_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_shipping_zones_updated_at" {
-    on {
-      table = table.shipping_zones
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.shipping_zones ENABLE ROW LEVEL SECURITY
 }
@@ -1746,3 +1706,50 @@ table "reviews" {
 // Protocol: RESTRICTIVE | Scope: STOREFRONT
 // ==========================================
 
+trigger "trg_customers_updated_at" {
+  on {
+    table = table.customers
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
+
+trigger "trg_orders_updated_at" {
+  on {
+    table = table.orders
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
+
+trigger "trg_rma_requests_updated_at" {
+  on {
+    table = table.rma_requests
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
+
+trigger "trg_shipping_zones_updated_at" {
+  on {
+    table = table.shipping_zones
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}

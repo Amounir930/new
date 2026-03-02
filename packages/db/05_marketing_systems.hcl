@@ -343,17 +343,7 @@ table "flash_sales" {
   index "idx_flash_sales_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_flash_sales_updated_at" {
-    on {
-      table = table.flash_sales
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.flash_sales ENABLE ROW LEVEL SECURITY
 }
@@ -410,15 +400,15 @@ table "flash_sale_products" {
   exclude "idx_flash_prod_overlap_prevent" {
     on {
       column = column.tenant_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.product_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.valid_during
-      ops    = "&&"
+      op    = "&&"
     }
     type = "GIST"
   }
@@ -570,17 +560,7 @@ table "loyalty_rules" {
   index "idx_loyalty_rules_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_loyalty_rules_updated_at" {
-    on {
-      table = table.loyalty_rules
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.loyalty_rules ENABLE ROW LEVEL SECURITY
 }
@@ -1244,17 +1224,7 @@ table "pages" {
   index "idx_pages_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_pages_updated_at" {
-    on {
-      table = table.pages
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.pages ENABLE ROW LEVEL SECURITY
 }
@@ -1353,17 +1323,7 @@ table "blog_posts" {
   index "idx_blog_posts_tenant" {
     columns = [column.tenant_id]
   }
-  trigger "trg_blog_posts_updated_at" {
-    on {
-      table = table.blog_posts
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
+
 
   // ALTER TABLE storefront.blog_posts ENABLE ROW LEVEL SECURITY
 }
@@ -1816,5 +1776,50 @@ table "product_views" {
   // ALTER TABLE storefront.product_views ENABLE ROW LEVEL SECURITY
 }
 
+trigger "trg_flash_sales_updated_at" {
+  on {
+    table = table.flash_sales
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
 
+trigger "trg_loyalty_rules_updated_at" {
+  on {
+    table = table.loyalty_rules
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
 
+trigger "trg_pages_updated_at" {
+  on {
+    table = table.pages
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
+
+trigger "trg_blog_posts_updated_at" {
+  on {
+    table = table.blog_posts
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}

@@ -1503,19 +1503,19 @@ table "b2b_pricing_tiers" {
   exclude "idx_b2b_overlap_prevent" {
     on {
       column = column.tenant_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.company_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.product_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.quantity_range
-      ops    = "&&"
+      op    = "&&"
     }
     type = "GIST"
   }

@@ -85,17 +85,7 @@ table "outbox_events" {
   index "idx_outbox_events_tenant_active" {
     columns = [column.tenant_id]
   }
-  trigger "trg_outbox_prevent_hijack" {
-    on {
-      table = table.outbox_events
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.prevent_tenant_hijacking
-    }
-  }
+
 }
 table "tenant_config" {
   schema = schema.storefront
@@ -125,28 +115,8 @@ table "tenant_config" {
   index "idx_tenant_config_tenant_active" {
     columns = [column.tenant_id]
   }
-  trigger "trg_tenant_config_updated_at" {
-    on {
-      table = table.tenant_config
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
-  }
-  trigger "trg_tenant_config_prevent_hijack" {
-    on {
-      table = table.tenant_config
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.prevent_tenant_hijacking
-    }
-  }
+
+
 }
 table "markets" {
   schema = schema.storefront
@@ -195,17 +165,7 @@ table "markets" {
   }
   // ALTER TABLE storefront.markets ENABLE ROW LEVEL SECURITY
 
-  trigger "trg_markets_prevent_hijack" {
-    on {
-      table = table.markets
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.prevent_tenant_hijacking
-    }
-  }
+
 }
 table "price_lists" {
   schema = schema.storefront
@@ -249,40 +209,29 @@ table "price_lists" {
   index "idx_price_lists_tenant_active" {
     columns = [column.tenant_id]
   }
-  trigger "trg_price_lists_validate_currency" {
-    on {
-      table = table.price_lists
-    }
-    before  = true
-    insert  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.validate_price_currency
-    }
-  }
+
 
   // ELITE: Prevent overlapping quantity ranges for same product/variant/market
   exclude "idx_price_list_overlap_prevent" {
     on {
       column = column.tenant_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.market_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.product_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.variant_id
-      ops    = "="
+      op    = "="
     }
     on {
       column = column.quantity_range
-      ops    = "&&"
+      op    = "&&"
     }
     type = "GIST"
     where   = "variant_id IS NOT NULL"
@@ -297,17 +246,7 @@ table "price_lists" {
   check "chk_pl_price_inner" {
     expr = "(price).amount IS NOT NULL AND (price).currency IS NOT NULL"
   }
-  trigger "trg_price_lists_prevent_hijack" {
-    on {
-      table = table.price_lists
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.prevent_tenant_hijacking
-    }
-  }
+
 }
 table "currency_rates" {
   schema = schema.storefront
@@ -340,27 +279,103 @@ table "currency_rates" {
   index "idx_currency_rates_tenant_active" {
     columns = [column.tenant_id]
   }
-  trigger "trg_currency_rates_updated_at" {
-    on {
-      table = table.currency_rates
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.set_current_timestamp_updated_at
-    }
+
+
+}
+
+trigger "trg_outbox_prevent_hijack" {
+  on {
+    table = table.outbox_events
   }
-  trigger "trg_currency_rates_prevent_hijack" {
-    on {
-      table = table.currency_rates
-    }
-    before  = true
-    update  = true
-    foreach = ROW
-    execute {
-      function = function.prevent_tenant_hijacking
-    }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.prevent_tenant_hijacking
   }
 }
 
+trigger "trg_tenant_config_updated_at" {
+  on {
+    table = table.tenant_config
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
+
+trigger "trg_tenant_config_prevent_hijack" {
+  on {
+    table = table.tenant_config
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.prevent_tenant_hijacking
+  }
+}
+
+trigger "trg_markets_prevent_hijack" {
+  on {
+    table = table.markets
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.prevent_tenant_hijacking
+  }
+}
+
+trigger "trg_price_lists_validate_currency" {
+  on {
+    table = table.price_lists
+  }
+  before  = true
+  insert  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.validate_price_currency
+  }
+}
+
+trigger "trg_price_lists_prevent_hijack" {
+  on {
+    table = table.price_lists
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.prevent_tenant_hijacking
+  }
+}
+
+trigger "trg_currency_rates_updated_at" {
+  on {
+    table = table.currency_rates
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.set_current_timestamp_updated_at
+  }
+}
+
+trigger "trg_currency_rates_prevent_hijack" {
+  on {
+    table = table.currency_rates
+  }
+  before  = true
+  update  = true
+  foreach = ROW
+  execute {
+    function = function.prevent_tenant_hijacking
+  }
+}
