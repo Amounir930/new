@@ -1264,7 +1264,7 @@ table "payment_logs" {
     on_delete = RESTRICT
   }
   unique "uq_tenant_payment_logs_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.tenant_id, column.id, column.created_at]
   }
 }
 table "carts" {

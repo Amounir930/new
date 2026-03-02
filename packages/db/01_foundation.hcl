@@ -461,7 +461,7 @@ table "audit_logs" {
     expr = "(old_values IS NULL OR NOT (old_values ?| array['password', 'secret', 'token', 'cvv', 'card_number'])) AND (new_values IS NULL OR NOT (new_values ?| array['password', 'secret', 'token', 'cvv', 'card_number']))"
   }
   unique "uq_tenant_audit_logs_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.tenant_id, column.id, column.created_at]
   }
 }
 table "leads" {

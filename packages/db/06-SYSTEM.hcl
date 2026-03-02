@@ -78,7 +78,7 @@ table "outbox_events" {
   }
 
   unique "uq_tenant_outbox_events_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.tenant_id, column.id, column.created_at]
   }
 }
 table "tenant_config" {
