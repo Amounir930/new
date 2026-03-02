@@ -1245,12 +1245,13 @@ partition {
     type = RANGE
     columns = [column.created_at]
   }
-index "idx_payment_created_brin"  {
-  columns =[column.created_at]
-  using =BRIN with {
-  pages_per_range =32
-}
-}
+  index "idx_payment_created_brin" {
+    columns = [column.created_at]
+    using   = BRIN
+    with {
+      pages_per_range = 32
+    }
+  }
 index "idx_payment_logs_order"  {
   columns =[column.order_id]
 }
