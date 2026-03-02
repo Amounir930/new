@@ -185,11 +185,10 @@ table "markets" {
   primary_key {
     columns = [column.id]
   }
-  index "uq_tenant_primary_market" {
-    unique  = true
+  unique "uq_tenant_primary_market" {
     columns = [column.tenant_id]
     where   = "is_primary =true"
-  
+  }
   index "idx_markets_tenant_active" {
     columns = [column.tenant_id]
   }
