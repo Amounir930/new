@@ -43,6 +43,34 @@ services:
           cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
+  # Database Initialization (One-Shot)
+  # Applies all migrations from packages/db/drizzle/ in order.
+  # Runs ONCE per deployment, then exits. Safe to re-run (idempotent).
+  #
+  # HOW TO USE (on a fresh server or after schema changes):
+  #   docker compose -f ops/docker-compose.prod.yml --env-file .env \
+  #     run --rm db-init
+  # ═══════════════════════════════════════════════════════════════
+  db-init:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: apex-db-init
+    restart: "no"
+    env_file:
+      - ../.env
+    environment:
+      NODE_ENV: production
+    command: ["bun", "run", "db:migrate"]
+    depends_on:
+      apex-postgres:
+        condition: service_healthy
+    networks:
+      - apex-data
+    profiles:
+      - migration
+
+  # ═══════════════════════════════════════════════════════════════
   # Cache Layer (Redis 7) - Persistent
   # Tier: apex-data (ISOLATED)
   # ═══════════════════════════════════════════════════════════════
@@ -51,7 +79,7 @@ services:
     container_name: apex-redis
     restart: always
     
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    command: "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
     security_opt:
@@ -65,7 +93,7 @@ services:
       - DAC_OVERRIDE
       - FOWNER
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a \"${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -90,7 +118,7 @@ services:
     
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_SERVER_URL: https://storage.60sec.shop
       MINIO_BROWSER_REDIRECT_URL: https://storage-admin.60sec.shop
       MINIO_DOMAIN: storage.60sec.shop
@@ -146,10 +174,6 @@ services:
     restart: always
     env_file:
       - ../.env
-    
-      - redis_password
-      - jwt_secret
-      - cf_api_token
     depends_on:
       apex-postgres:
         condition: service_healthy
@@ -157,19 +181,9 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      # DATABASE_URL without password (password resolved via POSTGRES_PASSWORD_FILE)
-      DATABASE_URL: postgresql://${POSTGRES_USER:-apex}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}
-
       DB_SSL: ${DB_SSL:-false}
-      REDIS_URL: redis://@redis:6379
-
-
-      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
-      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@60sec.shop}
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-apex-assets}
     networks:

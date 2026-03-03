@@ -1,46 +1,122 @@
-# Apex V2 Database Package (`@apex/db`)
+# `@apex/db` — Database Package
 
-This package manages the schema, migrations, and Drizzle ORM layer for the Apex V2 platform.
+> **قاعدة البيانات هي دستور المشروع المقدس.**
+> الملف الوحيد المسموح تعديل الـ schema منه هو `drizzle/schema.ts` — وفقط بعد تطبيق migration جديد.
 
-## ⚠️ The Golden Commandment: DO NOT PUSH
+---
 
-> [!CAUTION]
-> **NEVER** run `npx drizzle-kit push` against the production database (or any shared database).
->
-> Drizzle Kit is used for **introspection (pull)** and **querying** ONLY. It does not understand PostgreSQL Triggers, Row Level Security (RLS) policies, or complex schemas and will attempt to DELETE them during a `push`.
+## 🗺️ هيكل المجلد
 
-## Workflow & Migrations
+```
+packages/db/
+├── drizzle/                       ← ✅ المصدر الوحيد للحقيقة
+│   ├── 0001_baseline.sql          ← Schema كامل (Core Tables, Types, Extensions)
+│   ├── 0002_security_hardening.sql
+│   ├── 0003_definitive_hardening.sql
+│   ├── 0004_phase1_infrastructure.sql
+│   ├── 0005_commerce_completion.sql
+│   ├── 0006_financial_and_data_integrity.sql
+│   ├── 0007_isolation_and_security_hardening.sql
+│   ├── 0008_infrastructure_and_performance_tuning.sql
+│   ├── 0009_critical_fixes.sql
+│   ├── 0010_public_schema_isolation.sql
+│   ├── 0011_definitive_security_batch.sql
+│   │
+│   ├── schema.ts                  ← ORM layer (مُولَّد تلقائياً من قاعدة البيانات)
+│   ├── relations.ts               ← تعريفات العلاقات (مُولَّد تلقائياً)
+│   └── custom_types.ts            ← Custom TypeScript types
+│
+├── src/
+│   ├── index.ts                   ← Database connection pools (adminDb, tenantDb)
+│   └── run-migrate.ts             ← Migration runner (bun run db:migrate)
+│
+└── ops/scripts/init-db.sh         ← Server-side deployment script
+```
 
-All schema changes must follow this strictly ordered workflow using **Atlas**:
+---
 
-1. **Design**: Modify the `.hcl` files in this directory.
-2. **Migration Generation**: Generate SQL migration files using Atlas.
-3. **Hardening**: SQL migrations are automatically hardened with security policies.
-4. **Application**: Apply migrations to the server using the Atlas CLI.
-5. **Introspection**: After the database is updated, run `npm run pull` to update the Drizzle `schema.ts`.
+## ⚙️ القاعدة الأساسية: ترتيب العمل
 
-## Connection Policy (Zero-Trust)
+```
+قاعدة البيانات الحقيقية
+        ↓
+   drizzle/*.sql     ← تُطبق عبر init-db.sh أو bun run db:migrate
+        ↓
+   drizzle/schema.ts ← مُولَّد تلقائياً عبر bun run db:pull
+        ↓
+   الكود (API)       ← يستخدم schema.ts للاستعلامات
+```
 
-### Production Environment
-The application Backend **MUST NOT** connect using the `postgres` superuser.
-- Connection must use the `app_user` account.
-- This user is limited to CRUD operations on specific schemas and is subject to RLS policies.
+---
 
-### Connection Pooling
-To prevent connection exhaustion under high traffic:
-- Use the built-in pooling in the Drizzle driver.
-- Configure `max` connections carefully based on the server capacity.
-- **Example configuration in code**:
-  ```typescript
-  import { pgTable } from "drizzle-orm/pg-core";
-  import { drizzle } from "drizzle-orm/postgres-js";
-  import postgres from "postgres";
+## 🚀 Deployment على سيرفر جديد (خطوة واحدة)
 
-  const client = postgres(process.env.DATABASE_URL, { max: 20 });
-  export const db = drizzle(client);
-  ```
+```bash
+# 1. انسخ المشروع للسيرفر
+git clone <repo> /opt/apex-v2 && cd /opt/apex-v2
 
-## Development Commands
+# 2. انسخ ملف .env
+scp .env deploy@SERVER:/opt/apex-v2/.env
 
-- `npm run pull`: Sync Drizzle schema with the database (Introspection).
-- `npm run check`: Run TypeScript compiler to verify schema and relations.
+# 3. شغّل قاعدة البيانات + طبّق كل الـ migrations
+docker compose -f ops/docker-compose.prod.yml --env-file .env up -d apex-postgres
+chmod +x ops/scripts/init-db.sh
+./ops/scripts/init-db.sh
+
+# 4. شغّل كل الخدمات
+docker compose -f ops/docker-compose.prod.yml --env-file .env up -d
+```
+
+---
+
+## 🔄 إضافة Migration جديد
+
+```bash
+# 1. عدّل ملفات .hcl أو schema.ts
+# 2. أنشئ ملف SQL جديد في drizzle/ باسم تسلسلي:
+#    drizzle/0012_your_feature_name.sql
+# 3. أضف اسم الملف في ops/scripts/init-db.sh ← قائمة MIGRATIONS
+# 4. طبّق على السيرفر:
+./ops/scripts/init-db.sh
+# الملفات السابقة ستُتخطى تلقائياً (idempotent)
+```
+
+---
+
+## ⚠️ القواعد المحرّمة
+
+| محرّم | السبب |
+|---|---|
+| `drizzle-kit push` على production | يحذف Triggers و RLS policies |
+| تعديل `schema.ts` يدوياً | يُولَّد تلقائياً من قاعدة البيانات |
+| حذف أي ملف من `drizzle/` | تاريخ المشروع الكامل |
+| `DROP TABLE` بدون migration | يكسر الـ schema.ts والكود |
+
+---
+
+## 🛠️ أوامر التطوير
+
+```bash
+bun run db:migrate  # طبّق الـ migrations (يستخدم src/run-migrate.ts)
+bun run db:pull     # حدّث schema.ts + relations.ts من قاعدة البيانات الحقيقية
+bun run db:studio   # افتح Drizzle Studio (واجهة بصرية)
+```
+
+---
+
+## 🏗️ Schemas في قاعدة البيانات
+
+| Schema | الوظيفة |
+|---|---|
+| `public` | الجداول العامة (users, stores, orders, ..) |
+| `governance` | إدارة الـ tenants, audit_logs, billing |
+| `storefront` | الواجهة (products, categories, customers) |
+| `vault` | مفاتيح التشفير (مُعزول تماماً) |
+
+---
+
+## 🔒 Connection Policy
+
+- **Production API** → يتصل كـ `app_user` (CRUD فقط، خاضع لـ RLS)
+- **Migrations** → يتصل كـ `apex` (superuser مؤقتاً)
+- **لا يُسمح بـ** `postgres` superuser في الـ production code
