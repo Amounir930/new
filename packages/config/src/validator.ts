@@ -50,6 +50,10 @@ function resolveSecretFiles() {
 export function validateEnv(): EnvConfig {
   try {
     const resolvedEnv = resolveSecretFiles();
+
+    // S1: Sync resolved secrets back to process.env to support packages reading it directly
+    Object.assign(process.env, resolvedEnv);
+
     const parsed = EnvSchema.parse(resolvedEnv);
     enforceProductionChecks(parsed);
     enforceGenericChecks(parsed);
