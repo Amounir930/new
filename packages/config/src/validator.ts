@@ -33,17 +33,17 @@ function resolveSecretFiles() {
     const db = secretEnv.POSTGRES_DB || 'apex_v2';
     const host = secretEnv.POSTGRES_HOST || 'apex-postgres';
     const port = secretEnv.POSTGRES_PORT || '5432';
-    const ssl = secretEnv.DB_SSL === 'false' ? 'disable' : 'require';
-    const sslParam = secretEnv.NODE_ENV === 'production' && secretEnv.DB_SSL_OPTIONAL !== 'true'
-      ? 'sslmode=require'
-      : `sslmode=${ssl}`;
+    const sslMode = secretEnv.NODE_ENV === 'production' && secretEnv.DB_SSL_OPTIONAL !== 'true'
+      ? 'require'
+      : (secretEnv.DB_SSL === 'false' ? 'disable' : 'require');
 
-    secretEnv.DATABASE_URL = `postgresql://${user}:${secretEnv.POSTGRES_PASSWORD}@${host}:${port}/${db}?${sslParam}`;
+    secretEnv.DATABASE_URL = `postgresql://${user}:${secretEnv.POSTGRES_PASSWORD}@${host}:${port}/${db}?sslmode=${sslMode}`;
   }
 
   if (!secretEnv.REDIS_URL && secretEnv.REDIS_PASSWORD) {
     const host = secretEnv.REDIS_HOST || 'apex-redis';
     const port = secretEnv.REDIS_PORT || '6379';
+    // S1: Ensure credentials in production
     secretEnv.REDIS_URL = `redis://:${secretEnv.REDIS_PASSWORD}@${host}:${port}`;
   }
 
