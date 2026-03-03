@@ -800,10 +800,12 @@ services:
 
 volumes:
   pg_data:
+  postgres_data:
   redis_data:
   minio_data:
   gitea_data:
   gitea_config:
+  gitea_conf:
   letsencrypt_data:
   gitea_db_data:
   prometheus_data:
