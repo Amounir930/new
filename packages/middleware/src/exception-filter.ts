@@ -62,10 +62,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const requestId = this.generateRequestId();
-    const { statusCode, message, error } = this.parseError(exception);
+    const { statusCode, message, error, validationErrors } = this.parseError(exception);
 
     // S5: Sanitized client response
-    const clientResponse: ErrorResponse = {
+    const clientResponse: any = {
       statusCode,
       message: this.sanitizeMessage(statusCode, message),
       error,
@@ -73,6 +73,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       path: request.url,
       requestId,
     };
+
+    if (validationErrors) {
+      clientResponse.errors = validationErrors;
+    }
 
     // S5/S8: Detailed server-side logging (Internal Only)
     const serverLog = {
@@ -92,11 +96,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // S5: Stack trace only in development, with path redaction
       ...(this.options.includeStackTrace &&
         exception instanceof Error && {
-          stackTrace: exception.stack?.replace(
-            /(\/app\/|[Cc]:\\Users\\[^\\]+\\Desktop\\60sec\.shop\\)/g,
-            '[REDACTED]/'
-          ),
-        }),
+        stackTrace: exception.stack?.replace(
+          /(\/app\/|[Cc]:\\Users\\[^\\]+\\Desktop\\60sec\.shop\\)/g,
+          '[REDACTED]/'
+        ),
+      }),
     };
 
     // Log internally
@@ -119,8 +123,30 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     statusCode: number;
     message: string;
     error: string;
+    validationErrors?: any;
   } {
-    // NestJS HTTP exceptions
+    // Zod validation errors (S3) (Direct ZodError)
+    if (exception instanceof ZodError) {
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Validation failed',
+        error: 'Bad Request',
+        validationErrors: exception.issues,
+      };
+    }
+
+    // ZodValidationException (nestjs-zod) - Loose check to avoid prototype issues
+    if ((exception as any)?.constructor?.name === 'ZodValidationException') {
+      const issues = (exception as any).getValidationIssues();
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Validation failed',
+        error: 'Bad Request',
+        validationErrors: issues,
+      };
+    }
+
+    // NestJS HTTP exceptions (Fall through to generic handlers)
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
       const response = exception.getResponse();
@@ -137,31 +163,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         statusCode: status,
         message: (response as any).message || response,
         error: (response as any).error || this.getErrorName(status),
-      };
-    }
-
-    // Zod validation errors (S3)
-    if (exception instanceof ZodError) {
-      const issues = exception.issues
-        .map((i) => `${i.path.join('.')}: ${i.message}`)
-        .join('; ');
-      return {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: `Validation failed: ${issues}`,
-        error: 'Bad Request',
-      };
-    }
-
-    // ZodValidationException (nestjs-zod) - Loose check
-    if ((exception as any)?.constructor?.name === 'ZodValidationException') {
-      const issues = (exception as any)
-        .getValidationIssues()
-        .map((i: any) => `${i.path.join('.')}: ${i.message}`)
-        .join('; ');
-      return {
-        statusCode: HttpStatus.BAD_REQUEST,
-        message: `Validation failed: ${issues}`,
-        error: 'Bad Request',
       };
     }
 
@@ -268,7 +269,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException {}
+export class OperationalError extends HttpException { }
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {
