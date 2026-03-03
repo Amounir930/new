@@ -397,6 +397,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2375"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -528,21 +533,21 @@ services:
 # ═══════════════════════════════════════════════════════════════
 secrets:
   postgres_password:
-    file: ./ops/secrets/postgres_password.txt
+    file: ./secrets/postgres_password.txt
   redis_password:
-    file: ./ops/secrets/redis_password.txt
+    file: ./secrets/redis_password.txt
   minio_password:
-    file: ./ops/secrets/minio_password.txt
+    file: ./secrets/minio_password.txt
   jwt_secret:
-    file: ./ops/secrets/jwt_secret.txt
+    file: ./secrets/jwt_secret.txt
   cf_dns_token:
-    file: ./ops/secrets/cf_dns_token.txt
+    file: ./secrets/cf_dns_token.txt
   cf_zone_token:
-    file: ./ops/secrets/cf_zone_token.txt
+    file: ./secrets/cf_zone_token.txt
   gitea_db_password:
-    file: ./ops/secrets/gitea_db_password.txt
+    file: ./secrets/gitea_db_password.txt
   webhook_secret:
-    file: ./ops/secrets/webhook_secret.txt
+    file: ./secrets/webhook_secret.txt
 
 volumes:
   postgres_data:
