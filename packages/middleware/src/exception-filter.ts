@@ -151,11 +151,17 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const response = exception.getResponse();
 
+      let validationErrors: any;
+      if (response && typeof response === 'object' && 'errors' in response) {
+        validationErrors = (response as any).errors;
+      }
+
       if (typeof response === 'string') {
         return {
           statusCode: status,
           message: response,
           error: this.getErrorName(status),
+          validationErrors,
         };
       }
 
@@ -163,6 +169,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         statusCode: status,
         message: (response as any).message || response,
         error: (response as any).error || this.getErrorName(status),
+        validationErrors,
       };
     }
 
@@ -204,7 +211,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // If it's a validation error string, preserve it
       if (typeof message === 'string') {
         if (
-          message.startsWith('Validation failed:') ||
+          message.startsWith('Validation failed') ||
           message.includes('must be')
         ) {
           return message;
