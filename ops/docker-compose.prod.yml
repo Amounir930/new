@@ -149,7 +149,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   api:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:stable # ZERO-TOLERANCE FIX: Avoid latest
-    container_name: apex-api
     restart: always
     # ZERO-TOLERANCE FIX: Removed 'env_file: ../.env' completely to prevent LFI full compromise.
     depends_on:
