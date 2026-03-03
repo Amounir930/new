@@ -135,8 +135,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       };
     }
 
-    // ZodValidationException (nestjs-zod) - Loose check to avoid prototype issues
-    if ((exception as any)?.constructor?.name === 'ZodValidationException') {
+    // ZodValidationException (nestjs-zod) - Duck typing check
+    if (exception && typeof (exception as any).getValidationIssues === 'function') {
       const issues = (exception as any).getValidationIssues();
       return {
         statusCode: HttpStatus.BAD_REQUEST,
