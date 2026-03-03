@@ -171,10 +171,22 @@ services:
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      ENCRYPTION_MASTER_KEY_FILE: /run/secrets/encryption_master_key
+      API_KEY_SECRET_FILE: /run/secrets/api_key_secret
+      BLIND_INDEX_PEPPER_FILE: /run/secrets/blind_index_pepper
+      SESSION_SALT_FILE: /run/secrets/session_salt
+      INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
+      SUPER_ADMIN_PASSWORD_FILE: /run/secrets/super_admin_password
     secrets:
       - jwt_secret
       - postgres_password
       - redis_password
+      - encryption_master_key
+      - api_key_secret
+      - blind_index_pepper
+      - session_salt
+      - internal_api_secret
+      - super_admin_password
     networks:
       - apex-internal
       - apex-data
@@ -524,6 +536,18 @@ secrets:
     file: ./secrets/gitea_db_password.txt
   webhook_secret:
     file: ./secrets/webhook_secret.txt
+  encryption_master_key:
+    file: ./secrets/encryption_master_key.txt
+  api_key_secret:
+    file: ./secrets/api_key_secret.txt
+  blind_index_pepper:
+    file: ./secrets/blind_index_pepper.txt
+  session_salt:
+    file: ./secrets/session_salt.txt
+  internal_api_secret:
+    file: ./secrets/internal_api_secret.txt
+  super_admin_password:
+    file: ./secrets/super_admin_password.txt
 
 volumes:
   postgres_data:

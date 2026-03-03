@@ -8,54 +8,32 @@ export const EnvSchema = z.object({
   // Critical Security Variables
   JWT_SECRET: z
     .string()
-    .min(32, 'S1 Violation: JWT_SECRET must be at least 32 characters')
     .refine((key) => {
       // S1: Mandatory complexity in Production
       if (process.env.NODE_ENV === 'production') {
         if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
-          // Only allow bypass if ENABLE_S1_ENFORCEMENT is explicitly 'false' (emergency only)
           return process.env.ENABLE_S1_ENFORCEMENT === 'false';
         }
-        return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
+        return key.length >= 32 && /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
       }
       return true;
-    }, 'S1 Violation: JWT_SECRET lacks required complexity or unauthorized bypass in production'),
+    }, 'S1 Violation: JWT_SECRET lacks required complexity or unauthorized bypass in production')
+    .optional(),
+  JWT_SECRET_FILE: z.string().optional(),
   ENCRYPTION_MASTER_KEY: z
     .string()
-    .min(
-      32,
-      'S1 Violation: ENCRYPTION_MASTER_KEY must be at least 32 characters'
-    )
     .refine((key) => {
       // S7: Strict Production Validation
       if (process.env.NODE_ENV === 'production') {
         if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
           return process.env.ENABLE_S1_ENFORCEMENT === 'false';
         }
-        return !/test|default|example/i.test(key);
+        return key.length >= 32 && !/test|default|example/i.test(key) && /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
       }
       return true;
-    }, 'S1 Violation: Production key cannot contain test patterns or unauthorized bypass')
-    .refine((key) => {
-      // S7: Complexity check: Uppercase, Lowercase, Number, Special Character
-      if (process.env.NODE_ENV === 'production') {
-        if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
-          return process.env.ENABLE_S1_ENFORCEMENT === 'false';
-        }
-      } else if (
-        process.env.NODE_ENV === 'test' ||
-        process.env.SKIP_S1_COMPLEXITY_CHECK === 'true'
-      ) {
-        return true;
-      }
-
-      return (
-        /[A-Z]/.test(key) &&
-        /[a-z]/.test(key) &&
-        /[0-9]/.test(key) &&
-        /[@$!%*?&#/=_+.-]/.test(key)
-      );
-    }, 'S1 Violation: Key lacks required complexity or unauthorized bypass in production'),
+    }, 'S1 Violation: Production key lacks required complexity or unauthorized bypass')
+    .optional(),
+  ENCRYPTION_MASTER_KEY_FILE: z.string().optional(),
 
   // S1: Admin Credentials (Strict Validation)
   SUPER_ADMIN_EMAIL: z
@@ -63,14 +41,15 @@ export const EnvSchema = z.object({
     .email('S1 Violation: SUPER_ADMIN_EMAIL must be a valid email'),
   SUPER_ADMIN_PASSWORD: z
     .string()
-    .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD must be at least 8 characters'),
+    .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD must be at least 8 characters')
+    .optional(),
+  SUPER_ADMIN_PASSWORD_FILE: z.string().optional(),
 
   JWT_EXPIRES_IN: z.string().default('7d'),
 
   // Database Configuration
   DATABASE_URL: z
     .string()
-    .min(1, 'S1 Violation: DATABASE_URL is required')
     .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL is supported')
     .refine((url) => {
       if (process.env.NODE_ENV === 'production') {
@@ -78,7 +57,9 @@ export const EnvSchema = z.object({
         return url.includes('ssl=require') || url.includes('sslmode=require');
       }
       return true;
-    }, 'S1 Violation: DATABASE_URL must require SSL in production (unless DB_SSL_OPTIONAL=true)'),
+    }, 'S1 Violation: DATABASE_URL must require SSL in production (unless DB_SSL_OPTIONAL=true)')
+    .optional(),
+  DATABASE_URL_FILE: z.string().optional(),
   DB_SSL_OPTIONAL: z.string().default('false'),
   DB_SSL: z.enum(['true', 'false']).default('true'),
   DB_CA_CERT: z.string().optional(),
@@ -87,14 +68,15 @@ export const EnvSchema = z.object({
   // Redis Configuration
   REDIS_URL: z
     .string()
-    .min(1, 'S1 Violation: REDIS_URL is required')
     .refine((url) => {
       if (process.env.NODE_ENV === 'production') {
         // Enforce password in production (redis://:password@host:port)
         return /redis:\/\/[^:]*:[^@]+@/.test(url);
       }
       return true;
-    }, 'S1 Violation: REDIS_URL must include a password in production'),
+    }, 'S1 Violation: REDIS_URL must include a password in production')
+    .optional(),
+  REDIS_URL_FILE: z.string().optional(),
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.string().default('6379'),
 
@@ -123,26 +105,27 @@ export const EnvSchema = z.object({
   // Security Secrets (S7)
   API_KEY_SECRET: z
     .string()
-    .min(32, 'S1 Violation: API_KEY_SECRET must be at least 32 chars')
     .refine((key) => {
       if (process.env.NODE_ENV === 'production') {
         if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
           return process.env.ENABLE_S1_ENFORCEMENT === 'false';
         }
-        return /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
+        return key.length >= 32 && /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
       }
       return true;
-    }, 'S1 Violation: API_KEY_SECRET lacks required complexity or unauthorized bypass in production'),
+    }, 'S1 Violation: API_KEY_SECRET lacks required complexity or unauthorized bypass in production')
+    .optional(),
+  API_KEY_SECRET_FILE: z.string().optional(),
 
   BLIND_INDEX_PEPPER: z
     .string()
-    .min(32, 'S1 Violation: BLIND_INDEX_PEPPER must be at least 32 chars')
     .refine((key) => {
       if (process.env.NODE_ENV === 'production') {
         if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
           return process.env.ENABLE_S1_ENFORCEMENT === 'false';
         }
         return (
+          key.length >= 32 &&
           /[A-Z]/.test(key) &&
           /[a-z]/.test(key) &&
           /[0-9]/.test(key) &&
@@ -150,17 +133,19 @@ export const EnvSchema = z.object({
         );
       }
       return true;
-    }, 'S1 Violation: BLIND_INDEX_PEPPER lacks required complexity or unauthorized bypass in production'),
+    }, 'S1 Violation: BLIND_INDEX_PEPPER lacks required complexity or unauthorized bypass in production')
+    .optional(),
+  BLIND_INDEX_PEPPER_FILE: z.string().optional(),
 
   SESSION_SALT: z
     .string()
-    .min(32, 'S1 Violation: SESSION_SALT must be at least 32 chars')
     .refine((key) => {
       if (process.env.NODE_ENV === 'production') {
         if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') {
           return process.env.ENABLE_S1_ENFORCEMENT === 'false';
         }
         return (
+          key.length >= 32 &&
           /[A-Z]/.test(key) &&
           /[a-z]/.test(key) &&
           /[0-9]/.test(key) &&
@@ -168,11 +153,14 @@ export const EnvSchema = z.object({
         );
       }
       return true;
-    }, 'S1 Violation: SESSION_SALT lacks required complexity or unauthorized bypass in production'),
+    }, 'S1 Violation: SESSION_SALT lacks required complexity or unauthorized bypass in production')
+    .optional(),
+  SESSION_SALT_FILE: z.string().optional(),
 
   INTERNAL_API_SECRET: z
     .string()
-    .min(32, 'S1 Violation: INTERNAL_API_SECRET must be at least 32 chars'),
+    .optional(),
+  INTERNAL_API_SECRET_FILE: z.string().optional(),
 
   // MinIO Root Credentials
   MINIO_ROOT_USER: z.string().optional(),

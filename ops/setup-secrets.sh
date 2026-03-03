@@ -33,6 +33,12 @@ echo "$(get_env CLOUDFLARE_ZONE_API_TOKEN)" > "$SECRETS_DIR/cf_zone_token.txt"
 echo "$(get_env MINIO_ROOT_PASSWORD)"  > "$SECRETS_DIR/minio_password.txt"
 echo "$(get_env GITEA_DB_PASSWORD)"    > "$SECRETS_DIR/gitea_db_password.txt"
 echo "$(get_env WEBHOOK_SECRET)"       > "$SECRETS_DIR/webhook_secret.txt"
+echo "$(get_env ENCRYPTION_MASTER_KEY)" > "$SECRETS_DIR/encryption_master_key.txt"
+echo "$(get_env API_KEY_SECRET)"       > "$SECRETS_DIR/api_key_secret.txt"
+echo "$(get_env BLIND_INDEX_PEPPER)"   > "$SECRETS_DIR/blind_index_pepper.txt"
+echo "$(get_env SESSION_SALT)"         > "$SECRETS_DIR/session_salt.txt"
+echo "$(get_env INTERNAL_API_SECRET)"  > "$SECRETS_DIR/internal_api_secret.txt"
+echo "$(get_env SUPER_ADMIN_PASSWORD)" > "$SECRETS_DIR/super_admin_password.txt"
 
 # Restrict all secret files to root-only
 # Make secrets readable by containers (which run as non-root users e.g., 70:70 or 999:1000)
