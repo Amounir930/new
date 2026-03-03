@@ -434,7 +434,7 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=apex-public"
+      - "--providers.docker.network=apex-internal"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
