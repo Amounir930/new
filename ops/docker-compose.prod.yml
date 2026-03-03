@@ -192,7 +192,7 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health/liveness"]
+      test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:3000/api/v1/health/liveness').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -516,6 +516,11 @@ services:
         condition: service_healthy
     networks:
       - apex-data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     security_opt:
       - no-new-privileges:true
     deploy:
@@ -582,16 +587,21 @@ services:
       retries: 3
 
   # ═══════════════════════════════════════════════════════════════
-  # Distributed Tracing (OpenTelemetry + Jaeger)
+  # Distributed Tracing (OpenTelemetry Collector)
   # ═══════════════════════════════════════════════════════════════
   otel-collector:
-    image: jaegertracing/all-in-one:latest
+    image: otel/opentelemetry-collector-contrib:latest
     container_name: apex-otel-collector
     restart: always
-    environment:
-      - COLLECTOR_OTLP_ENABLED=true
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
     networks:
       - apex-internal
+    healthcheck:
+      test: ["CMD", "/otelcol-contrib", "validate", "--config", "/etc/otelcol-contrib/config.yaml"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     security_opt:
       - no-new-privileges:true
     deploy:
