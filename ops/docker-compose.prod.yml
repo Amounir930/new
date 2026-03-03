@@ -148,7 +148,7 @@ services:
   # Tier: apex-internal + apex-data
   # ═══════════════════════════════════════════════════════════════
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:stable # ZERO-TOLERANCE FIX: Avoid latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest # ZERO-TOLERANCE FIX: Avoid latest
     restart: always
     # ZERO-TOLERANCE FIX: Removed 'env_file: ../.env' completely to prevent LFI full compromise.
     depends_on:
@@ -247,7 +247,7 @@ services:
   # Frontends (Store, Admin, Super-Admin)
   # ═══════════════════════════════════════════════════════════════
   merchant-admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:stable
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:latest
     container_name: apex-merchant-admin
     restart: always
     user: "1000:1000"
@@ -292,7 +292,7 @@ services:
         max-file: "3"
 
   super-admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:stable
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
     container_name: apex-super-admin
     restart: always
     user: "1000:1000"
@@ -331,7 +331,7 @@ services:
         max-file: "3"
 
   store:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:stable
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:latest
     container_name: apex-store
     restart: always
     user: "1000:1000"
@@ -376,7 +376,7 @@ services:
   # Docker Socket Proxy
   # ═══════════════════════════════════════════════════════════════
   docker-proxy:
-    image: tecnativa/docker-socket-proxy:0.3.1
+    image: tecnativa/docker-socket-proxy:0.3
     container_name: apex-docker-proxy
     restart: always
     volumes:
