@@ -153,52 +153,20 @@ services:
       context: ..
       dockerfile: apps/api/Dockerfile
     restart: always
-    # ZERO-TOLERANCE FIX: Removed 'env_file: ../.env' completely to prevent LFI full compromise.
+    env_file: ../.env
     depends_on:
       apex-postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    user: "1000:1000" # ZERO-TOLERANCE FIX: Run as non-root user
-    read_only: true   # ZERO-TOLERANCE FIX: Immutable filesystem
+    user: "1000:1000"
+    read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
       - /home/node:noexec,nosuid,size=10m
     environment:
       NODE_ENV: production
-      DB_SSL: ${DB_SSL:-false}
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
-      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
-      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-apex-assets}
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      REDIS_PASSWORD_FILE: /run/secrets/redis_password
-      ENCRYPTION_MASTER_KEY_FILE: /run/secrets/encryption_master_key
-      API_KEY_SECRET_FILE: /run/secrets/api_key_secret
-      BLIND_INDEX_PEPPER_FILE: /run/secrets/blind_index_pepper
-      SESSION_SALT_FILE: /run/secrets/session_salt
-      INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
-      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
-      SUPER_ADMIN_PASSWORD_FILE: /run/secrets/super_admin_password
-      MINIO_ACCESS_KEY_FILE: /run/secrets/minio_user
-      MINIO_SECRET_KEY_FILE: /run/secrets/minio_password
-      DATABASE_URL_FILE: /run/secrets/database_url
-      REDIS_URL_FILE: /run/secrets/redis_url
-    secrets:
-      - jwt_secret
-      - postgres_password
-      - redis_password
-      - encryption_master_key
-      - api_key_secret
-      - blind_index_pepper
-      - session_salt
-      - internal_api_secret
-      - super_admin_password
-      - database_url
-      - redis_url
-      - minio_user
-      - minio_password
+      MINIO_ENDPOINT: apex-minio
     networks:
       - apex-internal
       - apex-data
