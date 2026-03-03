@@ -497,6 +497,109 @@ services:
       - apex-data
 
 # ═══════════════════════════════════════════════════════════════
+  # ═══════════════════════════════════════════════════════════════
+  # Connection Pooler (PgBouncer) - Hyper-Scale Ready
+  # ═══════════════════════════════════════════════════════════════
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: apex-pgbouncer
+    restart: always
+    env_file: ../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}
+      - MAX_CLIENT_CONN=5000
+      - DEFAULT_POOL_SIZE=150
+      - POOL_MODE=transaction
+      - ADMIN_USERS=${PGBOUNCER_ADMIN_USERS:-postgres,apex}
+    depends_on:
+      apex-postgres:
+        condition: service_healthy
+    networks:
+      - apex-data
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+
+  # ═══════════════════════════════════════════════════════════════
+  # High-Performance Catalog Search (Meilisearch)
+  # ═══════════════════════════════════════════════════════════════
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: apex-meilisearch
+    restart: always
+    env_file: ../.env
+    environment:
+      - MEILI_ENV=production
+      - MEILI_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - apex-internal
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ═══════════════════════════════════════════════════════════════
+  # Dynamic Image Optimization (Imgproxy)
+  # ═══════════════════════════════════════════════════════════════
+  imgproxy:
+    image: darthsim/imgproxy:latest
+    container_name: apex-imgproxy
+    restart: always
+    env_file: ../.env
+    environment:
+      - IMGPROXY_KEY=${IMGPROXY_KEY}
+      - IMGPROXY_SALT=${IMGPROXY_SALT}
+      - IMGPROXY_MAX_SRC_RESOLUTION=50
+      - IMGPROXY_MAX_SRC_FILE_SIZE=20971520 # 20MB
+      - IMGPROXY_BIND=:8080
+    networks:
+      - apex-internal
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ═══════════════════════════════════════════════════════════════
+  # Distributed Tracing (OpenTelemetry + Jaeger)
+  # ═══════════════════════════════════════════════════════════════
+  otel-collector:
+    image: jaegertracing/all-in-one:latest
+    container_name: apex-otel-collector
+    restart: always
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - apex-internal
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+
 # STRICT DOCKER SECRETS (Must be initialized on host via docker swarm/local)
 # ═══════════════════════════════════════════════════════════════
 secrets:
@@ -545,6 +648,7 @@ volumes:
   gitea_db_data:
   gitea_backups:
   db_backups:
+  meilisearch_data:
 
 networks:
   apex-public:
