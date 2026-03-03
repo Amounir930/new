@@ -1,0 +1,231 @@
+services:
+  # ═══════════════════════════════════════════════════════════════
+  # Object Storage (MinIO) - Essential Core Service
+  # ═══════════════════════════════════════════════════════════════
+  minio:
+    image: minio/minio:latest
+    container_name: apex-minio
+    restart: always
+    command: server /data --console-address ":9001"
+    env_file:
+      - ../.env
+    environment:
+      MINIO_SERVER_URL: https://storage.60sec.shop
+      MINIO_BROWSER_REDIRECT_URL: https://storage-admin.60sec.shop
+    volumes:
+      - minio_data:/data
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - apex-internal
+      - apex-data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=apex-internal"
+      # S3 API Endpoint
+      - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
+      - "traefik.http.routers.minio.priority=5000"
+      - "traefik.http.routers.minio.entrypoints=websecure"
+      - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio.service=apex-minio"
+      - "traefik.http.services.apex-minio.loadbalancer.server.port=9000"
+      # Console UI (Protected by SSL and Headers)
+      - "traefik.http.routers.minio-console.rule=Host(`storage-admin.60sec.shop`)"
+      - "traefik.http.routers.minio-console.priority=5500"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minio-console.middlewares=apex-cf-allowlist@file,apex-minio-headers@file"
+      - "traefik.http.routers.minio-console.service=apex-minio-console"
+      - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
+
+  # ═══════════════════════════════════════════════════════════════
+  # Email Testing (Mailpit) - Internal SMTP
+  # ═══════════════════════════════════════════════════════════════
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: apex-mailpit
+    restart: always
+    environment:
+      MP_SMTP_BIND_ADDR: 0.0.0.0:1025
+      MP_UI_BIND_ADDR: 0.0.0.0:8025
+    volumes:
+      - mailpit_data:/data
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - apex-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=apex-internal"
+      - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
+      - "traefik.http.routers.mailpit.priority=5000"
+      - "traefik.http.routers.mailpit.service=apex-mailpit"
+      - "traefik.http.routers.mailpit.entrypoints=websecure"
+      - "traefik.http.routers.mailpit.tls.certresolver=letsencrypt"
+      # S1 Cybersecurity: Protected via BasicAuth & Cloudflare Allowlist from @file
+      - "traefik.http.routers.mailpit.middlewares=apex-cf-allowlist@file,apex-basic-auth@file"
+      - "traefik.http.services.apex-mailpit.loadbalancer.server.port=8025"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # ═══════════════════════════════════════════════════════════════
+  # Database Explorer (Adminer) - Internal Access Only
+  # ═══════════════════════════════════════════════════════════════
+  adminer:
+    image: adminer:latest
+    container_name: apex-adminer
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - ADMINER_DEFAULT_SERVER=apex-postgres
+    networks:
+      - apex-internal
+      - apex-data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=apex-internal"
+      - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
+      - "traefik.http.routers.adminer.priority=5000"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.adminer.service=apex-adminer"
+      # S13 Security: Strict defense in depth
+      - "traefik.http.routers.adminer.middlewares=apex-cf-allowlist@file,apex-basic-auth@file"
+      - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ═══════════════════════════════════════════════════════════════
+  # Gitea Isolated Database (S2 Compliance)
+  # ═══════════════════════════════════════════════════════════════
+  gitea-db:
+    image: postgres:15-alpine
+    container_name: apex-gitea-db
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_USER: gitea
+      POSTGRES_DB: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
+    volumes:
+      - gitea_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apex-internal
+
+  # ═══════════════════════════════════════════════════════════════
+  # Gitea Database Backup
+  # ═══════════════════════════════════════════════════════════════
+  gitea-db-backup:
+    image: prodrigestivill/postgres-backup-local:15
+    container_name: apex-gitea-db-backup
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_HOST: apex-gitea-db
+      POSTGRES_USER: gitea
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD}
+      POSTGRES_DB: gitea
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+    volumes:
+      - gitea_backups:/backups
+    healthcheck:
+      disable: true
+    depends_on:
+      gitea-db:
+        condition: service_healthy
+    networks:
+      - apex-internal
+
+  # ═══════════════════════════════════════════════════════════════
+  # Gitea (The Fortress) - Self-hosted Git Server
+  # ═══════════════════════════════════════════════════════════════
+  gitea:
+    image: gitea/gitea:1.21-rootless
+    container_name: apex-gitea
+    restart: always
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      gitea-db:
+        condition: service_healthy
+    env_file:
+      - ../.env
+    environment:
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=apex-gitea-db:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
+      - GITEA__server__DOMAIN=git.60sec.shop
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__service__DISABLE_REGISTRATION=true
+      - GITEA__service__REQUIRE_SIGNIN_VIEW=true
+      - GITEA__service__EXPLORER_PAGES_ENABLED=false
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__server__ROOT_URL=https://git.60sec.shop/
+      - GITEA__server__DISABLE_SSH=false
+      - GITEA__server__START_SSH_SERVER=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - gitea_data:/var/lib/gitea
+      - gitea_conf:/etc/gitea
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - apex-internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=apex-internal"
+      - "traefik.http.routers.gitea.rule=Host(`git.60sec.shop`)"
+      - "traefik.http.routers.gitea.priority=5000"
+      - "traefik.http.routers.gitea.entrypoints=websecure"
+      - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.gitea.tls.domains[0].main=60sec.shop"
+      - "traefik.http.routers.gitea.tls.domains[0].sans=*.60sec.shop"
+      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+
+volumes:
+  minio_data:
+  mailpit_data:
+  gitea_data:
+  gitea_conf:
+  gitea_db_data:
+  gitea_backups:
+
+networks:
+  apex-internal:
+    name: apex-internal
+    external: true
+  apex-data:
+    name: apex-data
+    external: true
