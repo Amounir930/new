@@ -179,7 +179,10 @@ services:
       BLIND_INDEX_PEPPER_FILE: /run/secrets/blind_index_pepper
       SESSION_SALT_FILE: /run/secrets/session_salt
       INTERNAL_API_SECRET_FILE: /run/secrets/internal_api_secret
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
       SUPER_ADMIN_PASSWORD_FILE: /run/secrets/super_admin_password
+      MINIO_ACCESS_KEY_FILE: /run/secrets/minio_user
+      MINIO_SECRET_KEY_FILE: /run/secrets/minio_password
     secrets:
       - jwt_secret
       - postgres_password
@@ -190,6 +193,8 @@ services:
       - session_salt
       - internal_api_secret
       - super_admin_password
+      - minio_user
+      - minio_password
     networks:
       - apex-internal
       - apex-data
@@ -551,6 +556,8 @@ secrets:
     file: ./secrets/internal_api_secret.txt
   super_admin_password:
     file: ./secrets/super_admin_password.txt
+  minio_user:
+    file: ./secrets/minio_user.txt
 
 volumes:
   postgres_data:

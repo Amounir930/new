@@ -27,6 +27,7 @@ export const EnvSchema = z.object({
 
   // S1: Admin Credentials (Strict Validation)
   SUPER_ADMIN_EMAIL: z.string().email('S1 Violation: Invalid SUPER_ADMIN_EMAIL format'),
+  SUPER_ADMIN_EMAIL_FILE: z.string().optional(),
   SUPER_ADMIN_PASSWORD: z.string().min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD too weak').optional(),
   SUPER_ADMIN_PASSWORD_FILE: z.string().optional(),
 
@@ -61,8 +62,10 @@ export const EnvSchema = z.object({
   MINIO_ENDPOINT: z.string().min(1),
   MINIO_PORT: z.string().default('9000'),
   MINIO_USE_SSL: z.enum(['true', 'false']).default('false'),
-  MINIO_ACCESS_KEY: z.string().min(3),
-  MINIO_SECRET_KEY: z.string().min(8),
+  MINIO_ACCESS_KEY: z.string().min(3).optional(),
+  MINIO_ACCESS_KEY_FILE: z.string().optional(),
+  MINIO_SECRET_KEY: z.string().min(8).optional(),
+  MINIO_SECRET_KEY_FILE: z.string().optional(),
   MINIO_BUCKET_NAME: z.string().default('apex-assets'),
   MINIO_REGION: z.string().default('us-east-1'),
 

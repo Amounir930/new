@@ -34,8 +34,11 @@ function resolveSecretFiles() {
     const host = secretEnv.POSTGRES_HOST || 'apex-postgres';
     const port = secretEnv.POSTGRES_PORT || '5432';
     const ssl = secretEnv.DB_SSL === 'false' ? 'disable' : 'require';
+    const sslParam = secretEnv.NODE_ENV === 'production' && secretEnv.DB_SSL_OPTIONAL !== 'true'
+      ? 'sslmode=require'
+      : `sslmode=${ssl}`;
 
-    secretEnv.DATABASE_URL = `postgresql://${user}:${secretEnv.POSTGRES_PASSWORD}@${host}:${port}/${db}?sslmode=${ssl}`;
+    secretEnv.DATABASE_URL = `postgresql://${user}:${secretEnv.POSTGRES_PASSWORD}@${host}:${port}/${db}?${sslParam}`;
   }
 
   if (!secretEnv.REDIS_URL && secretEnv.REDIS_PASSWORD) {
