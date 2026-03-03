@@ -797,3 +797,24 @@ services:
 # Docker Secrets (managed on the server via `docker secret create`)
 # Run once on the server: ops/setup-secrets.sh
 # ═══════════════════════════════════════════════════════════════
+
+volumes:
+  pg_data:
+  redis_data:
+  minio_data:
+  gitea_data:
+  gitea_config:
+  letsencrypt_data:
+  gitea_db_data:
+  prometheus_data:
+  gitea_backups:
+  grafana_data:
+  portainer_data:
+
+networks:
+  apex-public:
+    external: true
+  apex-internal:
+    external: true
+  apex-data:
+    external: true
