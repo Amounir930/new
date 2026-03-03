@@ -225,9 +225,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
-    secrets:
-      - jwt_secret
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - apex-public
     security_opt:
@@ -248,6 +246,11 @@ services:
       - "traefik.http.routers.merchant-tenant.tls.certresolver=letsencrypt"
       - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.routers.merchant-tenant.service=apex-merchant-admin"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -270,9 +273,7 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
-    secrets:
-      - jwt_secret
+      JWT_SECRET: ${JWT_SECRET}
     networks:
       - apex-public
     security_opt:
@@ -287,6 +288,11 @@ services:
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -309,11 +315,9 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      JWT_SECRET: ${JWT_SECRET}
       INTERNAL_API_URL: http://api:3000/api
       PORT: 3002
-    secrets:
-      - jwt_secret
     networks:
       - apex-public
       - apex-internal
@@ -329,6 +333,11 @@ services:
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.store-main.middlewares=apex-store-csp@file,apex-global-ratelimit@file"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3002/').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     deploy:
       resources:
         limits:
