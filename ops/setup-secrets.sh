@@ -35,8 +35,8 @@ echo "$(get_env GITEA_DB_PASSWORD)"    > "$SECRETS_DIR/gitea_db_password.txt"
 echo "$(get_env WEBHOOK_SECRET)"       > "$SECRETS_DIR/webhook_secret.txt"
 
 # Restrict all secret files to root-only
-chmod 600 "$SECRETS_DIR"/*.txt
-chown root:root "$SECRETS_DIR"/*.txt
+# Make secrets readable by containers (which run as non-root users e.g., 70:70 or 999:1000)
+chmod 644 "$SECRETS_DIR"/*.txt
 
 echo ""
 echo "✅ Secrets created in: $SECRETS_DIR"
