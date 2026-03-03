@@ -24,10 +24,10 @@ import type { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { ExportService } from './export.service.js';
+import { ExportService } from './export.service';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { ExportWorker } from './export.worker.js';
-import type { ExportJob, ExportProfile } from './types.js';
+import { ExportWorker } from './export.worker';
+import type { ExportJob, ExportProfile } from './types';
 
 const CreateExportSchema = z.object({
   profile: z.string() as z.ZodType<ExportProfile>,

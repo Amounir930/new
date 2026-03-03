@@ -9,9 +9,9 @@ import type {
   ExportOptions,
   ExportResult,
   ExportStrategy,
-} from '../types.js';
+} from '../types';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { BunShell } from '../utils/bun-shell.js';
+import { BunShell } from '../utils/bun-shell';
 
 @Injectable()
 export class AnalyticsExportStrategy implements ExportStrategy {
@@ -105,7 +105,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
         };
 
         await this.shell.write(
-          `${workDir}/manifest.json`,
+          `${workDir}/manifeston`,
           JSON.stringify(manifest, null, 2)
         );
 

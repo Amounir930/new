@@ -4,8 +4,8 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { ExportStrategyFactory } from './export-strategy.factory.js';
-import type { ExportOptions } from './types.js';
+import { ExportStrategyFactory } from './export-strategy.factory';
+import type { ExportOptions } from './types';
 
 describe('ExportStrategyFactory', () => {
   let factory: ExportStrategyFactory;

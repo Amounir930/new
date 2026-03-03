@@ -5,12 +5,12 @@
 
 import { Injectable } from '@nestjs/common';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { AnalyticsExportStrategy } from './strategies/analytics-export.strategy.js';
+import { AnalyticsExportStrategy } from './strategies/analytics-export.strategy';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { LiteExportStrategy } from './strategies/lite-export.strategy.js';
+import { LiteExportStrategy } from './strategies/lite-export.strategy';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { NativeExportStrategy } from './strategies/native-export.strategy.js';
-import type { ExportOptions, ExportProfile, ExportStrategy } from './types.js';
+import { NativeExportStrategy } from './strategies/native-export.strategy';
+import type { ExportOptions, ExportProfile, ExportStrategy } from './types';
 
 @Injectable()
 export class ExportStrategyFactory {

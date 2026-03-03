@@ -1,7 +1,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { z } from 'zod';
-import type { EnvConfig } from './schema.js';
-import { EnvSchema } from './schema.js';
+import type { EnvConfig } from './schema';
+import { EnvSchema } from './schema';
 
 /**
  * Military-Grade Zero-Trust Secret Resolution

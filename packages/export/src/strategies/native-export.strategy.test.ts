@@ -4,8 +4,8 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import type { ExportOptions } from '../types.js';
-import { NativeExportStrategy } from './native-export.strategy.js';
+import type { ExportOptions } from '../types';
+import { NativeExportStrategy } from './native-export.strategy';
 
 // Mock database
 const mockClient = {

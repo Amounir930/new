@@ -9,15 +9,15 @@
  * - S7: Secure presigned URLs with 24h TTL
  */
 
-export { ExportController } from './export.controller.js';
-export { ExportModule } from './export.module.js';
-export { ExportService } from './export.service.js';
-export { ExportWorker } from './export.worker.js';
-export { ExportStrategyFactory } from './export-strategy.factory.js';
-export { AnalyticsExportStrategy } from './strategies/analytics-export.strategy.js';
+export { ExportController } from './export.controller';
+export { ExportModule } from './export.module';
+export { ExportService } from './export.service';
+export { ExportWorker } from './export.worker';
+export { ExportStrategyFactory } from './export-strategy.factory';
+export { AnalyticsExportStrategy } from './strategies/analytics-export.strategy';
 
-export { LiteExportStrategy } from './strategies/lite-export.strategy.js';
-export { NativeExportStrategy } from './strategies/native-export.strategy.js';
+export { LiteExportStrategy } from './strategies/lite-export.strategy';
+export { NativeExportStrategy } from './strategies/native-export.strategy';
 export type {
   ExportJob,
   ExportManifest,
@@ -25,4 +25,4 @@ export type {
   ExportProfile,
   ExportResult,
   ExportStrategy,
-} from './types.js';
+} from './types';

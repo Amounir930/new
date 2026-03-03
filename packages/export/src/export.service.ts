@@ -18,8 +18,8 @@ import {
 } from '@nestjs/common';
 import { Queue } from 'bullmq';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { ExportStrategyFactory } from './export-strategy.factory.js';
-import type { ExportJob, ExportOptions, ExportResult } from './types.js';
+import { ExportStrategyFactory } from './export-strategy.factory';
+import type { ExportJob, ExportOptions, ExportResult } from './types';
 
 @Injectable()
 export class ExportService implements OnModuleDestroy {

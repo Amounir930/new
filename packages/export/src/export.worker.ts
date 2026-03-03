@@ -25,8 +25,8 @@ import {
 } from '@nestjs/common';
 import { type Job, Queue, Worker } from 'bullmq';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { ExportStrategyFactory } from './export-strategy.factory.js';
-import type { ExportOptions, ExportResult } from './types.js';
+import { ExportStrategyFactory } from './export-strategy.factory';
+import type { ExportOptions, ExportResult } from './types';
 
 @Injectable()
 export class ExportWorker implements OnModuleInit, OnModuleDestroy {
@@ -209,7 +209,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
         objectKey,
       });
 
-      // Cleanup local file immediately (S14.8: Native Node.js cleanup)
+      // Cleanup local file immediately (S14.8: Native Node cleanup)
       await rm(result.downloadUrl, { force: true }).catch(() => { });
       this.logger.log(`Cleaned up local file: ${result.downloadUrl}`);
 
@@ -246,7 +246,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
         },
       });
 
-      // Cleanup on failure (S14.8: Native Node.js cleanup)
+      // Cleanup on failure (S14.8: Native Node cleanup)
       if (localFilePath) {
         await rm(localFilePath, { force: true }).catch(() => { });
         this.logger.log(`Cleaned up failed export file: ${localFilePath}`);

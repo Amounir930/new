@@ -4,8 +4,8 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import type { ExportOptions } from '../types.js';
-import { AnalyticsExportStrategy } from './analytics-export.strategy.js';
+import type { ExportOptions } from '../types';
+import { AnalyticsExportStrategy } from './analytics-export.strategy';
 
 // Define mocks
 const mockClient = {

@@ -5,7 +5,7 @@
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { publicPool } from '@apex/db';
-import { ExportService } from './export.service.js';
+import { ExportService } from './export.service';
 
 // Mock DB
 mock.module('@apex/db', () => ({

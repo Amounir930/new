@@ -4,8 +4,8 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import type { ExportOptions } from '../types.js';
-import { LiteExportStrategy } from './lite-export.strategy.js';
+import type { ExportOptions } from '../types';
+import { LiteExportStrategy } from './lite-export.strategy';
 
 // Mock fs/promises
 mock.module('node:fs/promises', () => ({

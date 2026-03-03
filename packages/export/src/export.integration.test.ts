@@ -48,7 +48,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
         );
 
         expect(response.status).toBe(202);
-        const data: any = await response.json();
+        const data: any = await responseon();
         const { job } = data;
         expect(job.id).toBeDefined();
         expect(job.status).toBe('pending');
@@ -65,7 +65,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
             { headers: { Authorization: 'Bearer test-token' } }
           );
 
-          const statusData: any = await statusRes.json();
+          const statusData: any = await statusReson();
           status = statusData.status;
 
           if (++attempts > 30) {
@@ -81,7 +81,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           { headers: { Authorization: 'Bearer test-token' } }
         );
 
-        const finalData: any = await finalStatus.json();
+        const finalData: any = await finalStatuson();
         expect(finalData.result?.downloadUrl).toBeDefined();
         expect(finalData.result?.checksum).toBeDefined();
 
@@ -142,7 +142,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           }
         );
 
-        const data: any = await createRes.json();
+        const data: any = await createReson();
         const { job } = data;
 
         // Wait for completion
@@ -155,7 +155,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
             `http://localhost:3000/api/v1/tenant/export/${job.id}/status`,
             { headers: { Authorization: 'Bearer test-token' } }
           );
-          const statusData: any = await statusRes.json();
+          const statusData: any = await statusReson();
           status = statusData.status;
           attempts++;
         }
@@ -170,7 +170,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
         );
 
         expect(confirmRes.status).toBe(200);
-        const confirmData: any = await confirmRes.json();
+        const confirmData: any = await confirmReson();
         expect(confirmData.message).toContain('deleted');
 
         // 3. Verify file is deleted from S3
@@ -204,7 +204,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           }
         );
 
-        const data: any = await createRes.json();
+        const data: any = await createReson();
         const { job } = data;
 
         // Try to access as different tenant

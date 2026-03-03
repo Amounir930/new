@@ -15,9 +15,9 @@ import type {
   ExportOptions,
   ExportResult,
   ExportStrategy,
-} from '../types.js';
+} from '../types';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { BunShell } from '../utils/bun-shell.js';
+import { BunShell } from '../utils/bun-shell';
 
 @Injectable()
 export class LiteExportStrategy implements ExportStrategy {
@@ -62,7 +62,7 @@ export class LiteExportStrategy implements ExportStrategy {
           WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'
         `);
 
-        // S1 FIX 3B: Explicitly access rows property from Node.js pg
+        // S1 FIX 3B: Explicitly access rows property from Node pg
         const tables = (tablesResult.rows || []).map((r: any) => r.table_name);
         let totalRows = 0;
 
@@ -95,7 +95,7 @@ export class LiteExportStrategy implements ExportStrategy {
 
           // Write to JSON file
           await this.writeTableToFile(
-            `${workDir}/database/${table}.json`,
+            `${workDir}/database/${table}on`,
             dataResult.rows || []
           );
         }
@@ -111,7 +111,7 @@ export class LiteExportStrategy implements ExportStrategy {
         };
 
         await this.shell.write(
-          `${workDir}/manifest.json`,
+          `${workDir}/manifeston`,
           JSON.stringify(manifest, null, 2)
         );
 

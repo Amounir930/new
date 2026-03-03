@@ -2,8 +2,8 @@
   "name": "@apex/export",
   "version": "1.0.0",
   "description": "Tenant Data Export System - S2 Compliant with BullMQ",
-  "type": "module",
-  "main": "./dist/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",

@@ -6,7 +6,7 @@
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import type { Job } from 'bullmq';
-import { ExportWorker } from './export.worker.js';
+import { ExportWorker } from './export.worker';
 
 // Mock BullMQ
 mock.module('bullmq', () => ({

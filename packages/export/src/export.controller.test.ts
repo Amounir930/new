@@ -5,9 +5,9 @@
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
-import { ExportController } from './export.controller.js';
-import type { ExportService } from './export.service.js';
-import type { ExportWorker } from './export.worker.js';
+import { ExportController } from './export.controller';
+import type { ExportService } from './export.service';
+import type { ExportWorker } from './export.worker';
 
 describe('ExportController', () => {
   let controller: ExportController;
