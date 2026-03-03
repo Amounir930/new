@@ -12,7 +12,11 @@ export * from '../drizzle/schema';
 const { Pool } = pg;
 
 // Database URL from environment
-const connectionString = process.env.DATABASE_URL;
+const connectionString =
+  process.env.DATABASE_URL ||
+  (process.env.NODE_ENV === 'test'
+    ? 'postgres://postgres:postgres@localhost:5432/postgres'
+    : undefined);
 
 if (!connectionString) {
   throw new Error('DATABASE_URL is not defined in environment variables');
