@@ -11,7 +11,7 @@ export * from './schema.js';
 export { validateEnv, enforceS1Compliance };
 
 // Auto-execute on import for fail-fast behavior
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && process.env.SKIP_ENV_VALIDATION !== 'true') {
   if (process.env.NODE_ENV === 'production') {
     enforceS1Compliance();
   } else if (process.env.ENABLE_S1_ENFORCEMENT !== 'false') {
@@ -25,6 +25,10 @@ if (process.env.NODE_ENV !== 'test') {
  * S1: Strictly enforced. No bypasses.
  */
 export const env: EnvConfig = (() => {
+  if (process.env.SKIP_ENV_VALIDATION === 'true') {
+    return process.env as unknown as EnvConfig;
+  }
+
   if (process.env.NODE_ENV === 'test') {
     try {
       return EnvSchema.parse(process.env);

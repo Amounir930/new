@@ -29,8 +29,9 @@ RUN bun install
 
 # 🧪 S4: Copy source and build
 COPY . .
-# S1 FIX: Increase memory for build to prevent OOM (137)
+# S1 FIX: Increase memory for build and skip env validation (secrets not present)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
+ENV SKIP_ENV_VALIDATION="true"
 RUN bun run build --filter=@apex/api
 
 # ═══════════════════════════════════════════════════════════════

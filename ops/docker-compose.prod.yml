@@ -148,7 +148,10 @@ services:
   # Tier: apex-internal + apex-data
   # ═══════════════════════════════════════════════════════════════
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest # ZERO-TOLERANCE FIX: Avoid latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
     restart: always
     # ZERO-TOLERANCE FIX: Removed 'env_file: ../.env' completely to prevent LFI full compromise.
     depends_on:
