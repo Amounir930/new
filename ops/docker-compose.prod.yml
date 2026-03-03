@@ -512,15 +512,20 @@ services:
     
     environment:
       - "DOCKER_API_VERSION=1.44"
-      - "CF_API_EMAIL=${CF_API_EMAIL}"
-      - "CF_DNS_API_TOKEN_FILE=/run/secrets/cf_api_token"
-      - "CF_ZONE_ID=${CF_ZONE_ID}"
+      - "CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}"
+      - "CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}"
+      - "CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}"
     volumes:
       - ./htpasswd:/etc/traefik/htpasswd:ro
       - letsencrypt_data:/letsencrypt
       - ./logs/traefik:/var/log/traefik
     labels:
       - "traefik.enable=true"
+      
+      # Dummy router to force parsing of middlewares defined on this container
+      - "traefik.http.routers.traefik-middlewares.rule=Host(`localhost`)"
+      - "traefik.http.routers.traefik-middlewares.entrypoints=web"
+      - "traefik.http.routers.traefik-middlewares.service=api@internal"
 
       # ── Global Middlewares ────────────────────────────────────────
       - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
