@@ -128,14 +128,14 @@ services:
       - "traefik.http.routers.minio.priority=5000"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio.middlewares=apex-internal-allowlist@docker"
+      - "traefik.http.routers.minio.middlewares=apex-internal-allowlist@file"
       - "traefik.http.routers.minio.service=apex-minio"
       - "traefik.http.services.apex-minio.loadbalancer.server.port=9000"
       - "traefik.http.routers.minio-console.rule=Host(`storage-admin.60sec.shop`)"
       - "traefik.http.routers.minio-console.priority=5500"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
       - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio-console.middlewares=apex-minio-headers@docker"
+      - "traefik.http.routers.minio-console.middlewares=apex-minio-headers@file"
       - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
     networks:
@@ -185,39 +185,15 @@ services:
       - "traefik.http.routers.api-public.priority=5500"
       - "traefik.http.routers.api-public.entrypoints=websecure"
       - "traefik.http.routers.api-public.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api-public.middlewares=apex-api-ratelimit@docker,apex-saas-cors@docker,apex-security-headers@docker"
+      - "traefik.http.routers.api-public.middlewares=apex-api-ratelimit@file,apex-saas-cors@file,apex-security-headers@file"
       - "traefik.http.routers.api-shielded.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
       - "traefik.http.routers.api-shielded.priority=5000"
       - "traefik.http.routers.api-shielded.entrypoints=websecure"
       - "traefik.http.routers.api-shielded.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@docker,apex-basic-auth@docker,apex-security-headers@docker"
+      - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@file,apex-basic-auth@file,apex-security-headers@file"
       - "traefik.http.services.apex-api.loadbalancer.server.port=3000"
 
-      - "traefik.http.middlewares.apex-cf-allowlist.ipallowlist.sourcerange=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
-      - "traefik.http.middlewares.apex-internal-allowlist.ipallowlist.sourcerange=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
-
-      - "traefik.http.middlewares.apex-security-headers.headers.stsseconds=31536000"
-      - "traefik.http.middlewares.apex-security-headers.headers.stsincludesubdomains=true"
-      - "traefik.http.middlewares.apex-security-headers.headers.contenttypenosniff=true"
-      - "traefik.http.middlewares.apex-security-headers.headers.browserxssfilter=true"
-      - "traefik.http.middlewares.apex-security-headers.headers.referrerpolicy=strict-origin-when-cross-origin"
-      - "traefik.http.middlewares.apex-security-headers.headers.framedeny=true"
-
-      - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.average=100"
-      - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.burst=150"
-      - "traefik.http.middlewares.apex-admin-ratelimit.ratelimit.average=60"
-      - "traefik.http.middlewares.apex-admin-ratelimit.ratelimit.burst=80"
-      - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.average=50"
-      - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.burst=100"
-
-      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
-      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolalloworiginlist=https://super-admin.60sec.shop,https://admin.60sec.shop,https://60sec.shop"
-      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowheaders=Content-Type,Authorization,X-Request-ID"
-      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowcredentials=true"
-
-      # ZERO-TOLERANCE FIX: Stripped 'unsafe-eval' from all CSP policies.
-      - "traefik.http.middlewares.apex-store-csp.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' https://*.60sec.shop; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-      - "traefik.http.middlewares.apex-minio-headers.headers.customResponseHeaders.Content-Security-Policy=default-src 'self' 'unsafe-inline' https://*.60sec.shop; script-src 'self' 'unsafe-inline' https://*.60sec.shop https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'self';"
+      # Global middlewares migrated to traefik-dynamic.yml
 
     security_opt:
       - no-new-privileges:true
@@ -272,13 +248,13 @@ services:
       - "traefik.http.routers.merchant-admin.priority=4000"
       - "traefik.http.routers.merchant-admin.entrypoints=websecure"
       - "traefik.http.routers.merchant-admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.merchant-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.routers.merchant-admin.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.services.apex-merchant-admin.loadbalancer.server.port=3001"
       - "traefik.http.routers.merchant-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
       - "traefik.http.routers.merchant-tenant.priority=4500"
       - "traefik.http.routers.merchant-tenant.entrypoints=websecure"
       - "traefik.http.routers.merchant-tenant.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.routers.merchant-tenant.service=apex-merchant-admin"
     deploy:
       resources:
@@ -317,7 +293,7 @@ services:
       - "traefik.http.routers.super-admin.priority=5000"
       - "traefik.http.routers.super-admin.entrypoints=websecure"
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
+      - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     deploy:
       resources:
@@ -359,7 +335,7 @@ services:
       - "traefik.http.routers.store-main.priority=3000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.store-main.middlewares=apex-store-csp@docker,apex-global-ratelimit@docker"
+      - "traefik.http.routers.store-main.middlewares=apex-store-csp@file,apex-global-ratelimit@file"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
     deploy:
       resources:
@@ -435,6 +411,8 @@ services:
       - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=apex-internal"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
@@ -467,20 +445,18 @@ services:
       - ./htpasswd:/etc/traefik/htpasswd:ro
       - letsencrypt_data:/letsencrypt
       - ./logs/traefik:/var/log/traefik
+      - ./traefik-dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik-middlewares.rule=Host(`localhost`)"
       - "traefik.http.routers.traefik-middlewares.entrypoints=web"
       - "traefik.http.routers.traefik-middlewares.service=api@internal"
-      - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
-      - "traefik.http.middlewares.apex-dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$"
-      - "traefik.http.middlewares.apex-dash-redirect.redirectregex.replacement=$${1}/"
       - "traefik.http.routers.traefikdash.rule=Host(`traefik.60sec.shop`)"
       - "traefik.http.routers.traefikdash.priority=6000"
       - "traefik.http.routers.traefikdash.service=api@internal"
       - "traefik.http.routers.traefikdash.entrypoints=websecure"
       - "traefik.http.routers.traefikdash.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefikdash.middlewares=apex-cf-allowlist@docker,apex-dash-redirect@docker,apex-basic-auth@docker"
+      - "traefik.http.routers.traefikdash.middlewares=apex-cf-allowlist@file,apex-dash-redirect@file,apex-basic-auth@file"
     deploy:
       resources:
         limits:
