@@ -21,7 +21,7 @@ export class StorefrontService {
   constructor(
     private readonly redisStore: RedisRateLimitStore,
     private readonly crypto: EncryptionService
-  ) { }
+  ) {}
 
   async getTenantConfig(tenantId: string) {
     const { db, release } = await getTenantDb(tenantId);

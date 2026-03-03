@@ -6,7 +6,8 @@ import {
   sql,
   tenantsInGovernance,
 } from '@apex/db';
-import type { RedisRateLimitStore } from '@apex/middleware';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { RedisRateLimitStore } from '@apex/middleware';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

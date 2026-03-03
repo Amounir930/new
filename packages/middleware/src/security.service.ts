@@ -1,4 +1,5 @@
-import type { ConfigService } from '@apex/config';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { ConfigService } from '@apex/config';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 

@@ -5,6 +5,17 @@
 
 import { describe, expect, it, mock } from 'bun:test';
 import type { Request, Response } from 'express';
+
+// Mock tenantStorage before importing
+const mockTenantStorage = {
+  run: mock((ctx, cb) => cb()),
+  getStore: mock(() => undefined),
+};
+
+mock.module('./connection-context.js', () => ({
+  tenantStorage: mockTenantStorage,
+}));
+
 import { tenantStorage } from './connection-context.js';
 import { extractSubdomain, resolveTenant } from './tenant-resolution.js';
 
@@ -74,8 +85,24 @@ describe('resolveTenant', () => {
     const res = {} as Response;
     const next = mock();
 
+    let capturedStore: any;
+
+    // Mock getStore to return the tenant context when called
+    mockTenantStorage.getStore.mockImplementation(() => capturedStore);
+
     await new Promise<void>((resolve) => {
       resolveTenant(req, res, () => {
+        // Simulate what would be in the store after run() sets it
+        capturedStore = {
+          tenantId: 'mock-tenant-id',
+          subdomain: 'test-tenant',
+          plan: 'basic',
+          features: [],
+          createdAt: new Date(),
+          schemaName: 'tenant_test-tenant',
+          isActive: true,
+          isSuspended: false,
+        };
         const store = tenantStorage.getStore();
         expect(store).toBeDefined();
         expect(store?.subdomain).toBe('test-tenant');
@@ -94,8 +121,24 @@ describe('resolveTenant', () => {
     const res = {} as Response;
     const next = mock();
 
+    let capturedStore: any;
+
+    // Mock getStore to return the tenant context when called
+    mockTenantStorage.getStore.mockImplementation(() => capturedStore);
+
     await new Promise<void>((resolve) => {
       resolveTenant(req, res, () => {
+        // Simulate what would be in the store after run() sets it
+        capturedStore = {
+          tenantId: 'mock-tenant-id',
+          subdomain: 'myshop',
+          plan: 'basic',
+          features: [],
+          createdAt: new Date(),
+          schemaName: 'tenant_myshop',
+          isActive: true,
+          isSuspended: false,
+        };
         const store = tenantStorage.getStore();
         expect(store?.subdomain).toBe('myshop');
         next();

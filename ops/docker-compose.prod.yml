@@ -11,11 +11,11 @@ services:
     container_name: apex-postgres
     restart: always
     # Secrets are mounted as files; not exposed in docker inspect
-    secrets:
-      - postgres_password
+    
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-apex}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -50,10 +50,8 @@ services:
     image: redis:7-alpine
     container_name: apex-redis
     restart: always
-    secrets:
-      - redis_password
-    command: >
-      sh -c "redis-server --appendonly yes --requirepass \"$$(cat /run/secrets/redis_password)\""
+    
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
       - redis_data:/data
     security_opt:
@@ -89,11 +87,10 @@ services:
     container_name: apex-minio
     restart: always
     command: server /data --console-address ":9001"
-    secrets:
-      - minio_root_password
+    
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_root_password
+
       MINIO_SERVER_URL: https://storage.60sec.shop
       MINIO_BROWSER_REDIRECT_URL: https://storage-admin.60sec.shop
       MINIO_DOMAIN: storage.60sec.shop
@@ -149,8 +146,7 @@ services:
     restart: always
     env_file:
       - ../.env
-    secrets:
-      - postgres_password
+    
       - redis_password
       - jwt_secret
       - cf_api_token
@@ -163,17 +159,17 @@ services:
       NODE_ENV: production
       # DATABASE_URL without password (password resolved via POSTGRES_PASSWORD_FILE)
       DATABASE_URL: postgresql://${POSTGRES_USER:-apex}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+
       DB_SSL: ${DB_SSL:-false}
       REDIS_URL: redis://@redis:6379
-      REDIS_PASSWORD_FILE: /run/secrets/redis_password
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
+
+
       ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
       SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL:-admin@60sec.shop}
       MINIO_ENDPOINT: minio
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY_FILE: /run/secrets/minio_root_password
+
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-apex-assets}
     networks:
@@ -231,13 +227,12 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     restart: always
-    secrets:
-      - jwt_secret
+    
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       JWT_SECRET: ${JWT_SECRET:-}
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
+
     networks:
       - apex-public
     security_opt:
@@ -291,13 +286,12 @@ services:
       args:
         NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     restart: always
-    secrets:
-      - jwt_secret
+    
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       JWT_SECRET: ${JWT_SECRET:-}
-      JWT_SECRET_FILE: /run/secrets/jwt_secret
+
     networks:
       - apex-public
     security_opt:
@@ -347,8 +341,8 @@ services:
       INTERNAL_API_URL: http://api:3000/api
       # S1: Secrets for SSR/Client-side resolution
       PORT: 3002
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+
+
     networks:
       - apex-public
       - apex-internal  # SSR calls to API go through internal network
@@ -501,8 +495,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    secrets:
-      - cf_api_token
+    
     environment:
       - "DOCKER_API_VERSION=1.44"
       - "CF_API_EMAIL=${CF_API_EMAIL}"
@@ -574,20 +567,20 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    secrets:
-      - postgres_password
+    
       - backup_encryption_key
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_USER: ${POSTGRES_USER:-apex}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
       SCHEDULE: "@daily"
       BACKUP_KEEP_DAYS: 7
       BACKUP_KEEP_WEEKS: 4
       BACKUP_KEEP_MONTHS: 6
       # S10: Backup key via Docker Secret (not env variable)
-      BACKUP_ENCRYPTION_KEY_FILE: /run/secrets/backup_encryption_key
+
     volumes:
       - db_backups:/backups
     healthcheck:
@@ -616,11 +609,10 @@ services:
       - SETUID
       - DAC_OVERRIDE
       - FOWNER
-    secrets:
-      - gitea_db_password
+    
     environment:
       POSTGRES_USER: gitea
-      POSTGRES_PASSWORD_FILE: /run/secrets/gitea_db_password
+
       POSTGRES_DB: gitea
     volumes:
       - gitea_db_data:/var/lib/postgresql/data
@@ -644,12 +636,11 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    secrets:
-      - gitea_db_password
+    
     environment:
       POSTGRES_HOST: gitea-db
       POSTGRES_USER: gitea
-      POSTGRES_PASSWORD_FILE: /run/secrets/gitea_db_password
+
       POSTGRES_DB: gitea
       SCHEDULE: "@daily"
       BACKUP_KEEP_DAYS: 7
@@ -678,8 +669,7 @@ services:
     depends_on:
       gitea-db:
         condition: service_healthy
-    secrets:
-      - gitea_db_password
+    
     environment:
       - GITEA__database__DB_TYPE=postgres
       - GITEA__database__HOST=gitea-db:5432
@@ -737,8 +727,7 @@ services:
       dockerfile: ops/webhook/Dockerfile
     container_name: apex-webhook
     restart: always
-    secrets:
-      - webhook_secret
+    
     environment:
       - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret
       - DOCKER_HOST=tcp://apex-docker-proxy:2375
@@ -808,76 +797,3 @@ services:
 # Docker Secrets (managed on the server via `docker secret create`)
 # Run once on the server: ops/setup-secrets.sh
 # ═══════════════════════════════════════════════════════════════
-secrets:
-  postgres_password:
-    external: false
-    file: ./secrets/postgres_password.txt
-  redis_password:
-    external: false
-    file: ./secrets/redis_password.txt
-  jwt_secret:
-    external: false
-    file: ./secrets/jwt_secret.txt
-  cf_api_token:
-    external: false
-    file: ./secrets/cf_api_token.txt
-  minio_root_password:
-    external: false
-    file: ./secrets/minio_root_password.txt
-  gitea_db_password:
-    external: false
-    file: ./secrets/gitea_db_password.txt
-  backup_encryption_key:
-    external: false
-    file: ./secrets/backup_encryption_key.txt
-  webhook_secret:
-    external: false
-    file: ./secrets/webhook_secret.txt
-
-# ═══════════════════════════════════════════════════════════════
-# Internal TLS Note (S7 - Future Sprint)
-# ═══════════════════════════════════════════════════════════════
-# To achieve S7 100% (internal TLS for Redis/Postgres):
-# 1. Generate internal CA: openssl req -x509 -newkey rsa:4096 -keyout ca.key -out ca.crt -days 3650 -nodes
-# 2. Issue server certs for postgres and redis
-# 3. Add to apex-postgres: -c ssl=on -c ssl_cert_file=... -c ssl_key_file=...
-# 4. Add to redis: --tls-port 6380 --port 0 --tls-cert-file ... --tls-key-file ...
-# 5. Update DATABASE_URL: ?sslmode=verify-full&sslrootcert=/run/secrets/ca_cert
-# This is deferred because it requires generating TLS certs on the server first.
-
-volumes:
-  postgres_data:
-  redis_data:
-  minio_data:
-  letsencrypt_data:
-  gitea_data:
-  gitea_conf:
-  gitea_db_data:
-  db_backups:
-  gitea_backups:
-
-# ═══════════════════════════════════════════════════════════════
-# Zero-Trust Network Tiers
-# ═══════════════════════════════════════════════════════════════
-networks:
-  # DMZ: Public-facing (Store, Admin, Traefik only)
-  apex-public:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.0.0/24
-
-  # App Layer: Internal services (API, Gitea, Webhook)
-  apex-internal:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.1.0/24
-
-  # Data Layer: ISOLATED (Postgres, Redis, MinIO – no public routing)
-  apex-data:
-    driver: bridge
-    internal: true  # ← No external routing allowed
-    ipam:
-      config:
-        - subnet: 172.28.2.0/24

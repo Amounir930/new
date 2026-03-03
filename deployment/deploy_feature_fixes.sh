@@ -1,6 +1,6 @@
 #!/bin/bash
 # Phase 2.5 Deployment Script: Surgical Synchronization (Final Victory Run)
-IP="34.102.121.225"
+IP="34.94.130.73"
 KEY="ops/keys/apex-deploy"
 
 echo "🚀 Starting Surgical Synchronization (Try 21)..."

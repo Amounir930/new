@@ -1,4 +1,3 @@
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditLog } from '@apex/audit';
 import { CurrentUser, JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import {

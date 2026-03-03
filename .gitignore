@@ -32,8 +32,6 @@ coverage/
 # ─── Environment Variables (S10 Critical) ───
 .env
 .env.*
-!.env.example
-!.env.production.example
 
 # ─── Logs ───
 *.log

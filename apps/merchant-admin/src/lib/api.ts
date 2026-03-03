@@ -28,6 +28,7 @@ export const setAuthToken = (token: string) => {
     const d = new Date();
     d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000);
     const expires = `expires=${d.toUTCString()}`;
+    // biome-ignore lint/suspicious/noDocumentCookie: S1-S15 Compliance: Token management
     document.cookie = `adm_tkn=${token}; ${expires}; path=/; SameSite=Strict; Secure`;
   }
 };

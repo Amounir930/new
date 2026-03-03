@@ -1,6 +1,7 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
 import { AuthService, type AuthUser } from '@apex/auth';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { ConfigService } from '@apex/config';
 import {
   Body,
@@ -35,7 +36,7 @@ export class AuthController {
     private readonly config: ConfigService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) { }
+  ) {}
 
   @Post('login')
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force

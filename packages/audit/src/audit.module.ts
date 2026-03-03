@@ -17,7 +17,7 @@ import { AuditService } from './audit.service.js';
     AuditService,
     {
       provide: 'DATABASE_POOL',
-      useFactory: () => adminPool,
+      useValue: adminPool,
     },
     {
       provide: 'AUDIT_SERVICE',
@@ -30,4 +30,4 @@ import { AuditService } from './audit.service.js';
   ],
   exports: [AuditService, 'AUDIT_SERVICE', Reflector],
 })
-export class AuditModule { }
+export class AuditModule {}

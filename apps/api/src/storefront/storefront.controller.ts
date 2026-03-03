@@ -16,6 +16,7 @@ import {
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 import type { NewsletterSubscriptionDto } from './dto/newsletter.dto.js';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { StorefrontService } from './storefront.service.js';
 
 const TenantIdSchema = z.object({
@@ -36,7 +37,7 @@ type ProductsQueryDto = z.infer<typeof ProductsQuerySchema>;
 @Controller({ path: 'storefront', version: VERSION_NEUTRAL })
 @UsePipes(ZodValidationPipe)
 export class StorefrontController {
-  constructor(private readonly storefrontService: StorefrontService) { }
+  constructor(private readonly storefrontService: StorefrontService) {}
 
   @Get('config')
   @AuditLog('STOREFRONT_CONFIG_VIEW')

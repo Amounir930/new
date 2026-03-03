@@ -1,9 +1,13 @@
+import { ConfigModule } from '@apex/config';
+import { RateLimitModule } from '@apex/middleware';
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthController } from './health.controller.js';
 
 @Module({
   imports: [
+    ConfigModule,
+    RateLimitModule,
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

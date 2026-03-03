@@ -1,70 +1,11 @@
-import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import type { EnvConfig } from './schema.js';
 import { EnvSchema } from './schema.js';
 
-/**
- * S1: Secret File Resolution
- * Resolves environment variables ending in _FILE by reading their file content.
- */
-function resolveSecretFiles(): void {
-  for (const [key, value] of Object.entries(process.env)) {
-    if (key.endsWith('_FILE') && value) {
-      processSecretFile(key, value);
-    }
-  }
-
-  // S1: Intelligent Patching for Connection URLs
-  patchRedisUrl();
-  patchDatabaseUrl();
-}
-
-function processSecretFile(key: string, value: string): void {
-  try {
-    const secretKey = key.replace('_FILE', '');
-    if (!process.env[secretKey]) {
-      process.env[secretKey] = readFileSync(value, 'utf8').trim();
-    }
-  } catch (error) {
-    console.warn(`⚠️ Failed to resolve secret file for ${key}:`, error);
-  }
-}
-
-function patchRedisUrl(): void {
-  if (!process.env.REDIS_PASSWORD || !process.env.REDIS_URL?.includes('@')) {
-    return;
-  }
-
-  const url = process.env.REDIS_URL;
-  if (url.startsWith('redis://@')) {
-    process.env.REDIS_URL = url.replace(
-      'redis://@',
-      `redis://:${encodeURIComponent(process.env.REDIS_PASSWORD)}@`
-    );
-  }
-}
-
-function patchDatabaseUrl(): void {
-  if (
-    !process.env.POSTGRES_PASSWORD ||
-    !process.env.DATABASE_URL?.includes('@')
-  ) {
-    return;
-  }
-
-  const url = process.env.DATABASE_URL;
-  const regex = /(postgresql?:\/\/)([^:/@]+)@/;
-  if (regex.test(url)) {
-    process.env.DATABASE_URL = url.replace(
-      regex,
-      `$1$2:${encodeURIComponent(process.env.POSTGRES_PASSWORD)}@`
-    );
-  }
-}
+// Deprecated: Secret files are no longer used to comply with Single Source of Truth (.env)
 
 export function validateEnv(): EnvConfig {
   try {
-    resolveSecretFiles();
     const parsed = EnvSchema.parse(process.env);
     enforceProductionChecks(parsed);
     enforceGenericChecks(parsed);

@@ -1,5 +1,6 @@
 import { getTenantDb, importJobsInStorefront } from '@apex/db';
-import type { EncryptionService } from '@apex/security';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { EncryptionService } from '@apex/security';
 import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import type { Job } from 'bull';

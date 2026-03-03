@@ -26,7 +26,7 @@ export class HealthController {
   constructor(
     readonly _config: ConfigService,
     private readonly redisStore: RedisRateLimitStore // S2 FIX 22A: Singleton, no per-request TCP churn
-  ) { }
+  ) {}
 
   @Get()
   rootCheck() {

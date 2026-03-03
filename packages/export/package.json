@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@apex/audit": "workspace:*",
+    "@apex/config": "workspace:*",
     "@apex/db": "workspace:*",
     "@aws-sdk/client-s3": "^3.450.0",
     "@aws-sdk/s3-request-presigner": "^3.450.0",

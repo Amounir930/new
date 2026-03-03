@@ -62,10 +62,17 @@ mock.module('./security.service.js', () => ({
   },
 }));
 
-// Mock connection context
+// Mock connection context with proper AsyncLocalStorage simulation
+const mockTenantContextStore: any = {};
 mock.module('./connection-context.js', () => ({
   tenantStorage: {
-    run: mock((_ctx, cb) => cb()),
+    run: mock((_ctx, cb) => {
+      return cb();
+    }),
+    getStore: mock(() => mockTenantContextStore.value),
+    setContext: mock((value) => {
+      mockTenantContextStore.value = value;
+    }),
   },
 }));
 
@@ -97,7 +104,8 @@ describe('TenantIsolationMiddleware', () => {
 
   describe('Subdomain Extraction', () => {
     it('should resolve tenant for localhost subdomains', async () => {
-      // Mock tenant lookup to return valid tenant
+      // Reset mock and set up proper return values
+      mockDb.limit.mockReset();
       mockDb.limit
         .mockResolvedValueOnce([]) // maintenance mode check
         .mockResolvedValueOnce([
@@ -108,7 +116,8 @@ describe('TenantIsolationMiddleware', () => {
             status: 'active',
             custom_domain: null,
           },
-        ]);
+        ]) // tenant lookup
+        .mockResolvedValueOnce([]); // suspension check
 
       await middleware.use(req, res, next);
       expect(req.tenantContext).toBeDefined();
@@ -135,8 +144,10 @@ describe('TenantIsolationMiddleware', () => {
 
   describe('Tenant Validation', () => {
     it('should throw UnauthorizedException if tenant not found', async () => {
-      mockDb.limit.mockResolvedValueOnce([]); // maintenance mode check
-      mockDb.limit.mockResolvedValueOnce([]); // tenant lookup - empty result
+      mockDb.limit.mockReset();
+      mockDb.limit
+        .mockResolvedValueOnce([]) // maintenance mode check
+        .mockResolvedValueOnce([]); // tenant lookup - empty result
 
       await expect(middleware.use(req, res, next)).rejects.toThrow(
         UnauthorizedException
@@ -144,6 +155,7 @@ describe('TenantIsolationMiddleware', () => {
     });
 
     it('should throw UnauthorizedException if tenant suspended', async () => {
+      mockDb.limit.mockReset();
       mockDb.limit
         .mockResolvedValueOnce([]) // maintenance mode check
         .mockResolvedValueOnce([
@@ -154,7 +166,7 @@ describe('TenantIsolationMiddleware', () => {
             plan: 'pro',
             custom_domain: null,
           },
-        ]);
+        ]); // tenant lookup - suspended
       await expect(middleware.use(req, res, next)).rejects.toThrow(
         UnauthorizedException
       );

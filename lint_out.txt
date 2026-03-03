@@ -1,0 +1,60 @@
+$ turbo run lint "--filter=@apex/security"
+• turbo 2.8.11
+• Packages in scope: @apex/security
+• Running lint in 1 packages
+• Remote caching disabled
+@apex/config:build: cache hit, replaying logs 99b2a0b115a9763d
+@apex/config:build: $ tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'
+@apex/config:build: Build completed
+@apex/security:lint: cache miss, executing 6ea3c4c8713e8493
+@apex/security:lint: $ biome check .
+@apex/security:lint: src\encryption.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@apex/security:lint: 
+@apex/security:lint:   × Formatter would have printed the following content:
+@apex/security:lint:   
+@apex/security:lint:     560 560 │           encrypted: encrypted.encrypted.split('').reverse().join(''),
+@apex/security:lint:     561 561 │         };
+@apex/security:lint:     562     │ - ······expect(()·=>·jsDecrypt(tampered,·masterKey)).toThrow(
+@apex/security:lint:     563     │ - ········'S7·Violation'
+@apex/security:lint:     564     │ - ······);
+@apex/security:lint:         562 │ + ······expect(()·=>·jsDecrypt(tampered,·masterKey)).toThrow('S7·Violation');
+@apex/security:lint:     565 563 │       });
+@apex/security:lint:     566 564 │   
+@apex/security:lint:     ······· │ 
+@apex/security:lint:     571 569 │           iv: '00000000000000000000000000000000',
+@apex/security:lint:     572 570 │         };
+@apex/security:lint:     573     │ - ······expect(()·=>·jsDecrypt(tampered,·masterKey)).toThrow(
+@apex/security:lint:     574     │ - ········'S7·Violation'
+@apex/security:lint:     575     │ - ······);
+@apex/security:lint:         571 │ + ······expect(()·=>·jsDecrypt(tampered,·masterKey)).toThrow('S7·Violation');
+@apex/security:lint:     576 572 │       });
+@apex/security:lint:     577 573 │   
+@apex/security:lint:     ······· │ 
+@apex/security:lint:     582 578 │           tag: 'ffffffffffffffffffffffffffffffff',
+@apex/security:lint:     583 579 │         };
+@apex/security:lint:     584     │ - ······expect(()·=>·jsDecrypt(tampered,·masterKey)).toThrow(
+@apex/security:lint:     585     │ - ········'S7·Violation'
+@apex/security:lint:     586     │ - ······);
+@apex/security:lint:         580 │ + ······expect(()·=>·jsDecrypt(tampered,·masterKey)).toThrow('S7·Violation');
+@apex/security:lint:     587 581 │       });
+@apex/security:lint:     588 582 │     });
+@apex/security:lint:   
+@apex/security:lint: 
+@apex/security:lint: Checked 12 files in 63ms. No fixes applied.
+@apex/security:lint: Found 1 error.
+@apex/security:lint: check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@apex/security:lint: 
+@apex/security:lint:   × Some errors were emitted while running checks.
+@apex/security:lint:   
+@apex/security:lint: 
+@apex/security:lint: error: script "lint" exited with code 1
+@apex/security:lint: ERROR: command finished with error: command (C:\Users\Dell\Desktop\60sec.shop\packages\security) C:\Users\Dell\.bun\bin\bun.exe run lint exited (1)
+@apex/security#lint: command (C:\Users\Dell\Desktop\60sec.shop\packages\security) C:\Users\Dell\.bun\bin\bun.exe run lint exited (1)
+
+ Tasks:    1 successful, 2 total
+Cached:    1 cached, 2 total
+  Time:    476ms 
+Failed:    @apex/security#lint
+
+ ERROR  run failed: command  exited (1)
+error: script "lint" exited with code 1

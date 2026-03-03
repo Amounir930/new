@@ -1,7 +1,5 @@
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { AuditService } from '@apex/audit';
+import type { AuditService } from '@apex/audit';
 import { env } from '@apex/config';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import {
   adminDb,
   and,

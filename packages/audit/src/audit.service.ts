@@ -6,7 +6,7 @@
 import { adminPool } from '@apex/db';
 import { getCurrentTenantId } from '@apex/middleware';
 import { EncryptionService } from '@apex/security';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 // Define types missing in original file but required by index/tests
 export type AuditAction = string;
@@ -68,7 +68,7 @@ export class AuditService {
   private pool: any;
 
   constructor(
-    @Inject('DATABASE_POOL') pool: any,
+    @Optional() @Inject('DATABASE_POOL') pool: any,
     @Inject(EncryptionService) encryption: EncryptionService
   ) {
     this.pool = pool || adminPool;
