@@ -435,12 +435,8 @@ services:
     environment:
       - "DOCKER_API_VERSION=1.44"
       - "CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}"
-      # ZERO-TOLERANCE FIX: Cloudflare tokens mapped through files
-      - "CLOUDFLARE_DNS_API_TOKEN_FILE=/run/secrets/cf_dns_token"
-      - "CLOUDFLARE_ZONE_API_TOKEN_FILE=/run/secrets/cf_zone_token"
-    secrets:
-      - cf_dns_token
-      - cf_zone_token
+      - "CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}"
+      - "CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}"
     volumes:
       # HTpasswd converted to docker secret where applicable, but for Traefik we can mount directly securely
       - ./htpasswd:/etc/traefik/htpasswd:ro
@@ -470,6 +466,11 @@ services:
     networks:
       - apex-public
       - apex-internal
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   # ═══════════════════════════════════════════════════════════════
   # Backups (Postgres & Gitea)
