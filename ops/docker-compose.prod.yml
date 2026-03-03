@@ -810,6 +810,7 @@ volumes:
   gitea_backups:
   grafana_data:
   portainer_data:
+  db_backups:
 
 networks:
   apex-public:
