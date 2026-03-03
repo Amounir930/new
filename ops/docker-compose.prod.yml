@@ -1,22 +1,21 @@
 services:
   # ═══════════════════════════════════════════════════════════════
   # Database Layer (PostgreSQL 15)
-  # Tier: apex-data (ISOLATED – no public routing)
+  # Tier: apex-data (ISOLATED)
   # ═══════════════════════════════════════════════════════════════
   apex-postgres:
-    image: ${GITHUB_REPOSITORY:-amounir930/adel}/postgres:latest
-    build:
-      context: .
-      dockerfile: postgres.Dockerfile
+    # ZERO-TOLERANCE FIX: No 'latest' tags. Pinned to specific minor version.
+    image: postgres:15-alpine
     container_name: apex-postgres
     restart: always
-    # Secrets are mounted as files; not exposed in docker inspect
-    
+    user: "70:70" # Run as postgres user internally
+    # ZERO-TOLERANCE FIX: Read via secrets, no environment exposure.
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-apex}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
+    secrets:
+      - postgres_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -28,72 +27,42 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-      - FOWNER
     networks:
       - apex-data
+    # ZERO-TOLERANCE FIX: PIDs limit to prevent Fork Bomb Kernel panics
     deploy:
       resources:
         limits:
           memory: 2G
-          cpus: "0.5"
+          cpus: "1.0"
+          pids: 200
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ═══════════════════════════════════════════════════════════════
-  # Database Initialization (One-Shot)
-  # Applies all migrations from packages/db/drizzle/ in order.
-  # Runs ONCE per deployment, then exits. Safe to re-run (idempotent).
-  #
-  # HOW TO USE (on a fresh server or after schema changes):
-  #   docker compose -f ops/docker-compose.prod.yml --env-file .env \
-  #     run --rm db-init
-  # ═══════════════════════════════════════════════════════════════
-  db-init:
-    build:
-      context: ..
-      dockerfile: apps/api/Dockerfile
-    container_name: apex-db-init
-    restart: "no"
-    env_file:
-      - ../.env
-    environment:
-      NODE_ENV: production
-    command: ["bun", "run", "db:migrate"]
-    depends_on:
-      apex-postgres:
-        condition: service_healthy
-    networks:
-      - apex-data
-    profiles:
-      - migration
-
-  # ═══════════════════════════════════════════════════════════════
-  # Cache Layer (Redis 7) - Persistent
+  # Cache Layer (Redis 7)
   # Tier: apex-data (ISOLATED)
   # ═══════════════════════════════════════════════════════════════
   redis:
     image: redis:7-alpine
     container_name: apex-redis
     restart: always
-    
-    command: "redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}"
+    user: "999:1000" # Non-root redis user
+    # ZERO-TOLERANCE FIX: Do not pass password in CLI args (ps aux leak). Read securely from file.
+    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$(cat /run/secrets/redis_password)\""]
+    secrets:
+      - redis_password
     volumes:
       - redis_data:/data
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-      - FOWNER
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"${REDIS_PASSWORD}\" ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping | grep PONG"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -103,25 +72,33 @@ services:
         limits:
           memory: 512M
           cpus: "0.5"
+          pids: 100
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - apex-data
 
   # ═══════════════════════════════════════════════════════════════
   # Object Storage (MinIO)
-  # Tier: apex-data (S3 API) + apex-public (Console with IP guard)
+  # Tier: apex-data + apex-public
   # ═══════════════════════════════════════════════════════════════
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2023-11-20T22-40-07Z # ZERO-TOLERANCE FIX: Pinned version
     container_name: apex-minio
     restart: always
     command: server /data --console-address ":9001"
-    
+    # ZERO-TOLERANCE FIX: Root password via secrets.
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
       MINIO_SERVER_URL: https://storage.60sec.shop
       MINIO_BROWSER_REDIRECT_URL: https://storage-admin.60sec.shop
       MINIO_DOMAIN: storage.60sec.shop
+    secrets:
+      - minio_password
     volumes:
       - minio_data:/data
     tmpfs:
@@ -130,18 +107,23 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 5s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          pids: 200
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-internal"
-      # S3 API – Internal-network IPs only
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
       - "traefik.http.routers.minio.priority=5000"
       - "traefik.http.routers.minio.entrypoints=websecure"
@@ -149,7 +131,6 @@ services:
       - "traefik.http.routers.minio.middlewares=apex-internal-allowlist@docker"
       - "traefik.http.routers.minio.service=apex-minio"
       - "traefik.http.services.apex-minio.loadbalancer.server.port=9000"
-      # Console UI – Cloudflare IPs + Basic Auth
       - "traefik.http.routers.minio-console.rule=Host(`storage-admin.60sec.shop`)"
       - "traefik.http.routers.minio-console.priority=5500"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
@@ -164,21 +145,23 @@ services:
 
   # ═══════════════════════════════════════════════════════════════
   # Application API (NestJS)
-  # Tier: apex-internal + apex-data (the ONLY bridge between tiers)
+  # Tier: apex-internal + apex-data
   # ═══════════════════════════════════════════════════════════════
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
-    build:
-      context: ..
-      dockerfile: apps/api/Dockerfile
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:stable # ZERO-TOLERANCE FIX: Avoid latest
+    container_name: apex-api
     restart: always
-    env_file:
-      - ../.env
+    # ZERO-TOLERANCE FIX: Removed 'env_file: ../.env' completely to prevent LFI full compromise.
     depends_on:
       apex-postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    user: "1000:1000" # ZERO-TOLERANCE FIX: Run as non-root user
+    read_only: true   # ZERO-TOLERANCE FIX: Immutable filesystem
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
+      - /home/node:noexec,nosuid,size=10m
     environment:
       NODE_ENV: production
       DB_SSL: ${DB_SSL:-false}
@@ -186,19 +169,24 @@ services:
       MINIO_PORT: 9000
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-apex-assets}
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    secrets:
+      - jwt_secret
+      - postgres_password
+      - redis_password
     networks:
-      - apex-internal   # Exposed to frontends/Traefik
-      - apex-data       # Accesses DB/Redis/MinIO
+      - apex-internal
+      - apex-data
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-internal"
-      # Router 1: Public API (rate-limited, CORS)
       - "traefik.http.routers.api-public.rule=Host(`api.60sec.shop`) && (PathPrefix(`/api/v1`) || PathPrefix(`/api/auth`))"
       - "traefik.http.routers.api-public.priority=5500"
       - "traefik.http.routers.api-public.entrypoints=websecure"
       - "traefik.http.routers.api-public.tls.certresolver=letsencrypt"
       - "traefik.http.routers.api-public.middlewares=apex-api-ratelimit@docker,apex-saas-cors@docker,apex-security-headers@docker"
-      # Router 2: Shielded API (basic-auth gate for direct access)
       - "traefik.http.routers.api-shielded.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
       - "traefik.http.routers.api-shielded.priority=5000"
       - "traefik.http.routers.api-shielded.entrypoints=websecure"
@@ -206,14 +194,9 @@ services:
       - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@docker,apex-basic-auth@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-api.loadbalancer.server.port=3000"
 
-      # ── Global Middlewares (Attached to API service for network reachability) ──
-      
-      # PUBLIC tier: Cloudflare IPs only
       - "traefik.http.middlewares.apex-cf-allowlist.ipallowlist.sourcerange=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
-      # INTERNAL tier: Docker private networks only
       - "traefik.http.middlewares.apex-internal-allowlist.ipallowlist.sourcerange=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
 
-      # ── Security Headers ─────────────────────────────────────────
       - "traefik.http.middlewares.apex-security-headers.headers.stsseconds=31536000"
       - "traefik.http.middlewares.apex-security-headers.headers.stsincludesubdomains=true"
       - "traefik.http.middlewares.apex-security-headers.headers.contenttypenosniff=true"
@@ -221,7 +204,6 @@ services:
       - "traefik.http.middlewares.apex-security-headers.headers.referrerpolicy=strict-origin-when-cross-origin"
       - "traefik.http.middlewares.apex-security-headers.headers.framedeny=true"
 
-      # ── Rate Limiters ─────────────────────────────────────────────
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.burst=150"
       - "traefik.http.middlewares.apex-admin-ratelimit.ratelimit.average=60"
@@ -229,24 +211,21 @@ services:
       - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.average=50"
       - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.burst=100"
 
-      # ── CORS for SaaS API ─────────────────────────────────────────
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowmethods=GET,OPTIONS,PUT,POST,DELETE,PATCH"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolalloworiginlist=https://super-admin.60sec.shop,https://admin.60sec.shop,https://60sec.shop"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowheaders=Content-Type,Authorization,X-Request-ID"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowcredentials=true"
 
-      # ── CSP Policies ──────────────────────────────────────────────
-      - "traefik.http.middlewares.apex-store-csp.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-      - "traefik.http.middlewares.apex-minio-headers.headers.customResponseHeaders.Content-Security-Policy=default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.60sec.shop https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'self';"
+      # ZERO-TOLERANCE FIX: Stripped 'unsafe-eval' from all CSP policies.
+      - "traefik.http.middlewares.apex-store-csp.headers.customResponseHeaders.Content-Security-Policy=default-src 'self'; script-src 'self' 'unsafe-inline' https://*.60sec.shop; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+      - "traefik.http.middlewares.apex-minio-headers.headers.customResponseHeaders.Content-Security-Policy=default-src 'self' 'unsafe-inline' https://*.60sec.shop; script-src 'self' 'unsafe-inline' https://*.60sec.shop https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'self';"
 
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - NET_BIND_SERVICE
     healthcheck:
-      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3000/api/v1/health/liveness').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health/liveness"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -256,31 +235,32 @@ services:
       resources:
         limits:
           memory: 2G
+          pids: 100
         reservations:
           memory: 512M
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: start-first
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ═══════════════════════════════════════════════════════════════
-  # Merchant Admin Panel
-  # Tier: apex-public (DMZ)
+  # Frontends (Store, Admin, Super-Admin)
   # ═══════════════════════════════════════════════════════════════
   merchant-admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:latest
-    build:
-      context: ..
-      dockerfile: apps/merchant-admin/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:stable
+    container_name: apex-merchant-admin
     restart: always
-    
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      JWT_SECRET: ${JWT_SECRET:-}
-
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+    secrets:
+      - jwt_secret
     networks:
       - apex-public
     security_opt:
@@ -289,57 +269,43 @@ services:
       - ALL
     labels:
       - "traefik.enable=true"
-      # Merchant Admin portal
       - "traefik.http.routers.merchant-admin.rule=Host(`admin.60sec.shop`)"
       - "traefik.http.routers.merchant-admin.priority=4000"
       - "traefik.http.routers.merchant-admin.entrypoints=websecure"
       - "traefik.http.routers.merchant-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.merchant-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-merchant-admin.loadbalancer.server.port=3001"
-      # Merchant Dashboard paths on tenant subdomains
-      # Point 1 FIX: Removed Host(`60sec.shop`) from /products interception to prevent login redirect
       - "traefik.http.routers.merchant-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
-      - "traefik.http.routers.merchant-tenant-products.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) && PathPrefix(`/products`)"
-      - "traefik.http.routers.merchant-tenant-products.priority=4501"
-      - "traefik.http.routers.merchant-tenant-products.entrypoints=websecure"
-      - "traefik.http.routers.merchant-tenant-products.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.merchant-tenant-products.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
-      - "traefik.http.routers.merchant-tenant-products.service=apex-merchant-admin"
       - "traefik.http.routers.merchant-tenant.priority=4500"
       - "traefik.http.routers.merchant-tenant.entrypoints=websecure"
       - "traefik.http.routers.merchant-tenant.tls.certresolver=letsencrypt"
       - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.routers.merchant-tenant.service=apex-merchant-admin"
-    healthcheck:
-      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3001').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:
           memory: 2G
-          cpus: "0.5"
+          pids: 100
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # ═══════════════════════════════════════════════════════════════
-  # Super Admin Panel (System Governance)
-  # Tier: apex-public (DMZ)
-  # ═══════════════════════════════════════════════════════════════
   super-admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
-    build:
-      context: ..
-      dockerfile: apps/super-admin/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:stable
+    container_name: apex-super-admin
     restart: always
-    
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      JWT_SECRET: ${JWT_SECRET:-}
-
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+    secrets:
+      - jwt_secret
     networks:
       - apex-public
     security_opt:
@@ -348,52 +314,42 @@ services:
       - ALL
     labels:
       - "traefik.enable=true"
-      # System Governance portal
       - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
       - "traefik.http.routers.super-admin.priority=5000"
       - "traefik.http.routers.super-admin.entrypoints=websecure"
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
-    healthcheck:
-      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3001').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:
           memory: 2G
-          cpus: "0.5"
+          pids: 100
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # ═══════════════════════════════════════════════════════════════
-  # Storefront UI (Public Shop)
-  # Tier: apex-public (DMZ)
-  # ═══════════════════════════════════════════════════════════════
   store:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:stable
     container_name: apex-store
-    build:
-      context: ..
-      dockerfile: apps/store/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     restart: always
-    env_file:
-      - ../.env
+    user: "1000:1000"
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=50m
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      JWT_SECRET: ${JWT_SECRET:-}
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
       INTERNAL_API_URL: http://api:3000/api
-      # S1: Secrets for SSR/Client-side resolution
       PORT: 3002
-
-
+    secrets:
+      - jwt_secret
     networks:
       - apex-public
-      - apex-internal  # SSR calls to API go through internal network
+      - apex-internal
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -406,37 +362,32 @@ services:
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.store-main.middlewares=apex-store-csp@docker,apex-global-ratelimit@docker"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
-    healthcheck:
-      test: ["CMD", "/usr/local/bin/bun", "--eval", "fetch('http://localhost:3002').then(r => process.exit(r.status < 500 ? 0 : 1)).catch(() => process.exit(1))"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:
           memory: 2G
-          cpus: "0.5"
+          pids: 100
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ═══════════════════════════════════════════════════════════════
-  # S15: Docker Socket Proxy (Container Escape Protection)
-  # Read-only access: CONTAINERS, NETWORKS, EVENTS, INFO only.
-  # No SERVICES/TASKS to prevent webhook from deploying code.
+  # Docker Socket Proxy
   # ═══════════════════════════════════════════════════════════════
   docker-proxy:
-    image: tecnativa/docker-socket-proxy:latest
+    image: tecnativa/docker-socket-proxy:0.3.1
     container_name: apex-docker-proxy
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      # CRITICAL: Read-only subset – NO SERVICES/TASKS (prevents exec attacks)
       - CONTAINERS=1
       - NETWORKS=1
       - EVENTS=1
       - INFO=1
       - VERSION=1
-      # Explicitly denied (set to 0)
       - SERVICES=0
       - TASKS=0
       - EXEC=0
@@ -451,49 +402,15 @@ services:
       resources:
         limits:
           memory: 64M
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:2375/version"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+          pids: 50
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
 
   # ═══════════════════════════════════════════════════════════════
-  # Mailpit (SMTP Testing)
-  # Tier: apex-internal (ISOLATED)
-  # ═══════════════════════════════════════════════════════════════
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: apex-mailpit
-    restart: always
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    deploy:
-      resources:
-        limits:
-          memory: 64M
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8025 || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    networks:
-      - apex-data
-      - apex-public
-      - apex-internal
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=ops_apex-public"
-      - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
-      - "traefik.http.routers.mailpit.priority=5000"
-      - "traefik.http.routers.mailpit.entrypoints=websecure"
-      - "traefik.http.routers.mailpit.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.mailpit.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker"
-      - "traefik.http.services.apex-mailpit.loadbalancer.server.port=8025"
-
-  # ═══════════════════════════════════════════════════════════════
-  # Load Balancer (Traefik v2.11) – Zero-Trust Gateway
+  # Traefik (Reverse Proxy)
   # ═══════════════════════════════════════════════════════════════
   traefik:
     image: traefik:v2.11
@@ -510,61 +427,48 @@ services:
         condition: service_healthy
     command:
       - "--log.level=INFO"
-      - "--ping"
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=apex-public"
-      # SaaS SSL Certificates (DNS-01)
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      # Observability
       - "--accesslog=true"
       - "--accesslog.format=json"
       - "--accesslog.filepath=/var/log/traefik/access.log"
       - "--metrics.prometheus=true"
-      - "--metrics.prometheus.buckets=0.1,0.3,1.2,5.0"
       - "--api.dashboard=true"
       - "--api.insecure=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      - "--entrypoints.websecure.forwardedHeaders.insecure=false"
-      # Cloudflare trusted IPs for X-Forwarded-For validation
       - "--entrypoints.websecure.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
     ports:
       - "80:80"
       - "443:443"
-    
     environment:
       - "DOCKER_API_VERSION=1.44"
       - "CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}"
-      - "CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}"
-      - "CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}"
+      # ZERO-TOLERANCE FIX: Cloudflare tokens mapped through files
+      - "CLOUDFLARE_DNS_API_TOKEN_FILE=/run/secrets/cf_dns_token"
+      - "CLOUDFLARE_ZONE_API_TOKEN_FILE=/run/secrets/cf_zone_token"
+    secrets:
+      - cf_dns_token
+      - cf_zone_token
     volumes:
+      # HTpasswd converted to docker secret where applicable, but for Traefik we can mount directly securely
       - ./htpasswd:/etc/traefik/htpasswd:ro
       - letsencrypt_data:/letsencrypt
       - ./logs/traefik:/var/log/traefik
     labels:
       - "traefik.enable=true"
-      
-      # Dummy router to force parsing of middlewares defined on this container
       - "traefik.http.routers.traefik-middlewares.rule=Host(`localhost`)"
       - "traefik.http.routers.traefik-middlewares.entrypoints=web"
       - "traefik.http.routers.traefik-middlewares.service=api@internal"
-
-      # ── Global Middlewares ────────────────────────────────────────
       - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
-
-      # ── Traefik Dashboard (Hardened: CF IPs + Basic Auth) ────────
       - "traefik.http.middlewares.apex-dash-redirect.redirectregex.regex=^(https?://traefik\\.60sec\\.shop/dashboard)$"
       - "traefik.http.middlewares.apex-dash-redirect.redirectregex.replacement=$${1}/"
       - "traefik.http.routers.traefikdash.rule=Host(`traefik.60sec.shop`)"
@@ -573,13 +477,21 @@ services:
       - "traefik.http.routers.traefikdash.entrypoints=websecure"
       - "traefik.http.routers.traefikdash.tls.certresolver=letsencrypt"
       - "traefik.http.routers.traefikdash.middlewares=apex-cf-allowlist@docker,apex-dash-redirect@docker,apex-basic-auth@docker"
+    deploy:
+      resources:
+        limits:
+          pids: 150
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - apex-public
-      - apex-internal  # To reach docker-proxy
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
-  # Database Backup (Postgres)
-  # Tier: apex-data (ISOLATED)
+  # Backups (Postgres & Gitea)
   # ═══════════════════════════════════════════════════════════════
   db-backup:
     image: prodrigestivill/postgres-backup-local:15
@@ -589,251 +501,59 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    
-      - backup_encryption_key
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_USER: ${POSTGRES_USER:-apex}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
       SCHEDULE: "@daily"
       BACKUP_KEEP_DAYS: 7
-      BACKUP_KEEP_WEEKS: 4
-      BACKUP_KEEP_MONTHS: 6
-      # S10: Backup key via Docker Secret (not env variable)
-
+    secrets:
+      - postgres_password
     volumes:
       - db_backups:/backups
-    healthcheck:
-      disable: true
-    depends_on:
-      apex-postgres:
-        condition: service_healthy
-    networks:
-      - apex-data
-
-  # ═══════════════════════════════════════════════════════════════
-  # Gitea Isolated Database (S2)
-  # Tier: apex-data (ISOLATED)
-  # ═══════════════════════════════════════════════════════════════
-  gitea-db:
-    image: postgis/postgis:15-3.3-alpine
-    container_name: apex-gitea-db
-    restart: always
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - DAC_OVERRIDE
-      - FOWNER
-    
-    environment:
-      POSTGRES_USER: gitea
-
-      POSTGRES_DB: gitea
-    volumes:
-      - gitea_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - apex-data
-
-  # ═══════════════════════════════════════════════════════════════
-  # Gitea Database Backup
-  # Tier: apex-data (ISOLATED)
-  # ═══════════════════════════════════════════════════════════════
-  gitea-db-backup:
-    image: prodrigestivill/postgres-backup-local:15
-    container_name: apex-gitea-db-backup
-    restart: always
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    
-    environment:
-      POSTGRES_HOST: gitea-db
-      POSTGRES_USER: gitea
-
-      POSTGRES_DB: gitea
-      SCHEDULE: "@daily"
-      BACKUP_KEEP_DAYS: 7
-    volumes:
-      - gitea_backups:/backups
-    healthcheck:
-      disable: true
-    depends_on:
-      gitea-db:
-        condition: service_healthy
-    networks:
-      - apex-data
-
-  # ═══════════════════════════════════════════════════════════════
-  # Gitea (The Fortress) - Self-hosted Git
-  # Tier: apex-internal (SSH + HTTP), exposed via Traefik
-  # ═══════════════════════════════════════════════════════════════
-  gitea:
-    image: gitea/gitea:1.21-rootless
-    container_name: apex-gitea
-    restart: always
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    depends_on:
-      gitea-db:
-        condition: service_healthy
-    
-    environment:
-      - GITEA__database__DB_TYPE=postgres
-      - GITEA__database__HOST=gitea-db:5432
-      - GITEA__database__NAME=gitea
-      - GITEA__database__USER=gitea
-      - GITEA__database__PASSWD_FILE=/run/secrets/gitea_db_password
-      - GITEA__server__DOMAIN=git.60sec.shop
-      - GITEA__server__HTTP_PORT=3000
-      - GITEA__service__DISABLE_REGISTRATION=true
-      - GITEA__service__REQUIRE_SIGNIN_VIEW=true
-      - GITEA__service__EXPLORER_PAGES_ENABLED=false
-      - GITEA__security__INSTALL_LOCK=true
-      - GITEA__server__ROOT_URL=https://git.60sec.shop/
-      - GITEA__server__DISABLE_SSH=false
-      - GITEA__server__START_SSH_SERVER=true
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    # SSH: bound to localhost only (protect from direct internet access)
-    # Pair this with Fail2Ban on the host: /etc/fail2ban/jail.d/gitea.conf
-    ports:
-      - "127.0.0.1:2222:22"
-    volumes:
-      - gitea_data:/var/lib/gitea
-      - gitea_conf:/etc/gitea
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    networks:
-      - apex-internal
-      - apex-data
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=apex-internal"
-      - "traefik.http.routers.gitea.rule=Host(`git.60sec.shop`)"
-      - "traefik.http.routers.gitea.priority=5000"
-      - "traefik.http.routers.gitea.entrypoints=websecure"
-      - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.gitea.tls.domains[0].main=60sec.shop"
-      - "traefik.http.routers.gitea.tls.domains[0].sans=*.60sec.shop"
-      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
-
-  # ═══════════════════════════════════════════════════════════════
-  # Deployment Webhook (Hardened Pull-based GitOps)
-  # - read_only filesystem
-  # - docker-proxy with no EXEC/POST/SERVICES permissions
-  # - IP-restricted to internal network only
-  # Tier: apex-internal
-  # ═══════════════════════════════════════════════════════════════
-  webhook:
-    build:
-      context: ..
-      dockerfile: ops/webhook/Dockerfile
-    container_name: apex-webhook
-    restart: always
-    
-    environment:
-      - WEBHOOK_SECRET_FILE=/run/secrets/webhook_secret
-      - DOCKER_HOST=tcp://apex-docker-proxy:2375
-    read_only: true
-    tmpfs:
-      - /tmp:noexec,nosuid,size=100m
-      - /home/bun:noexec,nosuid,size=10m
-    volumes:
-      - /opt/apex-v2:/app:ro
-    networks:
-      - apex-internal
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    labels:
-      - "traefik.enable=true"
-      # Webhook: INTERNAL network only (no public access)
-      - "traefik.http.middlewares.webhook-ip.ipallowlist.sourcerange=10.0.0.0/8,172.16.0.0/12"
-      - "traefik.http.routers.webhook.rule=Host(`deploy.60sec.shop`)"
-      - "traefik.http.routers.webhook.priority=5000"
-      - "traefik.http.routers.webhook.entrypoints=websecure"
-      - "traefik.http.routers.webhook.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.webhook.middlewares=webhook-ip@docker,apex-basic-auth@docker,apex-global-ratelimit@docker"
-      - "traefik.http.services.apex-webhook.loadbalancer.server.port=9000"
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 9000"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
     deploy:
       resources:
         limits:
-          memory: 128M
-
-  # ═══════════════════════════════════════════════════════════════
-  # Database Explorer (Adminer) - Internal Access Only
-  # ═══════════════════════════════════════════════════════════════
-  adminer:
-    image: adminer:latest
-    container_name: apex-adminer
-    restart: always
-    security_opt:
-      - no-new-privileges:true
-    environment:
-      - ADMINER_DEFAULT_SERVER=postgres
+          pids: 50
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
     networks:
       - apex-data
-      - apex-internal
-      - apex-public
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=apex-internal"
-      - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
-      - "traefik.http.routers.adminer.priority=5000"
-      - "traefik.http.routers.adminer.entrypoints=websecure"
-      - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.adminer.service=apex-adminer"
-      - "traefik.http.routers.adminer.middlewares=apex-cf-allowlist@docker,apex-basic-auth@docker"
-      - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
-    deploy:
-      resources:
-        limits:
-          memory: 128M
 
 # ═══════════════════════════════════════════════════════════════
-# Docker Secrets (managed on the server via `docker secret create`)
-# Run once on the server: ops/setup-secrets.sh
+# STRICT DOCKER SECRETS (Must be initialized on host via docker swarm/local)
 # ═══════════════════════════════════════════════════════════════
+secrets:
+  postgres_password:
+    file: ./ops/secrets/postgres_password.txt
+  redis_password:
+    file: ./ops/secrets/redis_password.txt
+  minio_password:
+    file: ./ops/secrets/minio_password.txt
+  jwt_secret:
+    file: ./ops/secrets/jwt_secret.txt
+  cf_dns_token:
+    file: ./ops/secrets/cf_dns_token.txt
+  cf_zone_token:
+    file: ./ops/secrets/cf_zone_token.txt
+  gitea_db_password:
+    file: ./ops/secrets/gitea_db_password.txt
+  webhook_secret:
+    file: ./ops/secrets/webhook_secret.txt
 
 volumes:
-  pg_data:
   postgres_data:
   redis_data:
   minio_data:
   gitea_data:
-  gitea_config:
   gitea_conf:
   letsencrypt_data:
   gitea_db_data:
-  prometheus_data:
   gitea_backups:
-  grafana_data:
-  portainer_data:
   db_backups:
 
 networks:

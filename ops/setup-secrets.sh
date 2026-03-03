@@ -28,11 +28,11 @@ chmod 700 "$SECRETS_DIR"
 echo "$(get_env POSTGRES_PASSWORD)"    > "$SECRETS_DIR/postgres_password.txt"
 echo "$(get_env REDIS_PASSWORD)"       > "$SECRETS_DIR/redis_password.txt"
 echo "$(get_env JWT_SECRET)"           > "$SECRETS_DIR/jwt_secret.txt"
-echo "$(get_env CF_DNS_API_TOKEN)"     > "$SECRETS_DIR/cf_api_token.txt"
-echo "$(get_env MINIO_ROOT_PASSWORD)"  > "$SECRETS_DIR/minio_root_password.txt"
+echo "$(get_env CLOUDFLARE_DNS_API_TOKEN)" > "$SECRETS_DIR/cf_dns_token.txt"
+echo "$(get_env CLOUDFLARE_ZONE_API_TOKEN)" > "$SECRETS_DIR/cf_zone_token.txt"
+echo "$(get_env MINIO_ROOT_PASSWORD)"  > "$SECRETS_DIR/minio_password.txt"
 echo "$(get_env GITEA_DB_PASSWORD)"    > "$SECRETS_DIR/gitea_db_password.txt"
 echo "$(get_env WEBHOOK_SECRET)"       > "$SECRETS_DIR/webhook_secret.txt"
-echo "$(get_env BACKUP_ENCRYPTION_KEY)" > "$SECRETS_DIR/backup_encryption_key.txt"
 
 # Restrict all secret files to root-only
 chmod 600 "$SECRETS_DIR"/*.txt
