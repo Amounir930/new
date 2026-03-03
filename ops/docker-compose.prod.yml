@@ -140,7 +140,7 @@ services:
       retries: 3
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=apex-public"
+      - "traefik.docker.network=apex-internal"
       # S3 API – Internal-network IPs only
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
       - "traefik.http.routers.minio.priority=5000"
@@ -802,7 +802,7 @@ services:
       - apex-public
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=apex-public"
+      - "traefik.docker.network=apex-internal"
       - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
       - "traefik.http.routers.adminer.priority=5000"
       - "traefik.http.routers.adminer.entrypoints=websecure"
