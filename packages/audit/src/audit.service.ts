@@ -203,7 +203,7 @@ export class AuditService {
           user_agent TEXT,
           severity TEXT DEFAULT 'INFO',
           result TEXT DEFAULT 'SUCCESS',
-          checksum TEXT, // Item 42: Integrity Hash
+          checksum TEXT, -- Item 42: Integrity Hash
           created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
         `);
