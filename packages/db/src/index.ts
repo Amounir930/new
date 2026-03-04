@@ -11,15 +11,19 @@ export * from '../drizzle/schema';
 
 const { Pool } = pg;
 
-// Database URL from environment
-const connectionString =
-  process.env.DATABASE_URL ||
-  (process.env.NODE_ENV === 'test'
-    ? 'postgres://postgres:postgres@localhost:5432/postgres'
-    : undefined);
+const isTest = process.env.NODE_ENV === 'test';
 
-if (!connectionString) {
-  throw new Error('DATABASE_URL is not defined in environment variables');
+const poolConfig = {
+  host: process.env.PGHOST || (isTest ? 'localhost' : undefined),
+  user: process.env.PGUSER || (isTest ? 'postgres' : undefined),
+  password: process.env.PGPASSWORD || (isTest ? 'postgres' : undefined),
+  database: process.env.PGDATABASE || (isTest ? 'postgres' : undefined),
+  port: parseInt(process.env.PGPORT || '5432', 10),
+  connectionString: (!process.env.PGHOST && process.env.DATABASE_URL) ? process.env.DATABASE_URL : undefined,
+};
+
+if (!poolConfig.host && !poolConfig.connectionString) {
+  throw new Error('Database connection parameters are not defined in environment variables (PGHOST/PGUSER or DATABASE_URL)');
 }
 
 /**
@@ -27,7 +31,7 @@ if (!connectionString) {
  * Used specifically for Governance and Provisioning tasks
  */
 export const adminPool = new Pool({
-  connectionString,
+  ...poolConfig,
   max: 10, // Admin tasks are sequential, low pool needed
 });
 
@@ -40,7 +44,7 @@ export const adminDb = drizzle(adminPool, {
  * Used for all storefront and merchant operations
  */
 export const tenantPool = new Pool({
-  connectionString,
+  ...poolConfig,
   max: 50, // Higher pool for concurrent tenant requests
 });
 

@@ -156,6 +156,104 @@ export class InMemoryEventBus implements EventBus {
 }
 
 // ==========================================
+// Persistent Event Bus (BullMQ)
+// S14.7: Durable Event-Driven Architecture
+// ==========================================
+import { Queue, Worker, type Job } from 'bullmq';
+import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+
+@Injectable()
+export class BullMQEventBus implements EventBus, OnModuleDestroy {
+  private queue: Queue;
+  private readonly logger = new Logger(BullMQEventBus.name);
+
+  constructor(redisUrl: string) {
+    this.queue = new Queue('global-events', {
+      connection: { url: redisUrl },
+      defaultJobOptions: {
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 1000 },
+        removeOnComplete: true,
+      },
+    });
+  }
+
+  async publish<T extends ApexEvent>(event: T): Promise<void> {
+    await this.queue.add(event.eventType, event, {
+      jobId: event.eventId, // Ensure idempotency
+    });
+    this.logger.debug(`Published event ${event.eventType} (${event.eventId})`);
+  }
+
+  // Subscribe is handled by EventsWorker in BullMQ implementation
+  subscribe<T extends ApexEvent>(_eventType: T['eventType'], _handler: (event: T) => Promise<void>): void {
+    throw new Error('Use EventsWorker to subscribe to BullMQ events');
+  }
+
+  async onModuleDestroy() {
+    await this.queue.close();
+  }
+}
+
+@Injectable()
+export class EventsWorker implements OnModuleInit, OnModuleDestroy {
+  private worker!: Worker;
+  private readonly logger = new Logger(EventsWorker.name);
+  private handlers: Map<string, Array<(event: ApexEvent) => Promise<void>>> = new Map();
+
+  constructor(private readonly redisUrl: string) { }
+
+  onModuleInit() {
+    // S14.7: Dedicated Worker Pattern
+    if (process.env.ENABLE_WORKERS !== 'true') {
+      return;
+    }
+
+    this.worker = new Worker(
+      'global-events',
+      async (job: Job) => {
+        const event = job.data as ApexEvent;
+        const handlers = this.handlers.get(event.eventType) || [];
+
+        await Promise.all(
+          handlers.map(async (handler) => {
+            try {
+              await handler(event);
+            } catch (err) {
+              this.logger.error(`Handler failed for event ${event.eventType}:`, err);
+              throw err; // Trigger BullMQ retry
+            }
+          })
+        );
+      },
+      {
+        connection: { url: this.redisUrl },
+        concurrency: 5,
+      }
+    );
+
+    this.worker.on('failed', (job, err) => {
+      this.logger.error(`Event job ${job?.id} failed:`, err);
+    });
+
+    this.logger.log('Events worker started');
+  }
+
+  subscribe<T extends ApexEvent>(
+    eventType: T['eventType'],
+    handler: (event: T) => Promise<void>
+  ): void {
+    const existing = this.handlers.get(eventType) || [];
+    existing.push(handler as (event: ApexEvent) => Promise<void>);
+    this.handlers.set(eventType, existing);
+  }
+
+  async onModuleDestroy() {
+    await this.worker?.close();
+  }
+}
+
+// ==========================================
 // Event Validation (S3 Compliance)
 // ==========================================
 export function validateEvent<T extends ApexEvent>(
@@ -178,4 +276,36 @@ export function createCorrelationId(): string {
 
 export function createTimestamp(): string {
   return new Date().toISOString();
+}
+
+import { Module, type DynamicModule } from '@nestjs/common';
+
+@Module({})
+export class EventsModule {
+  static register(redisUrl: string): DynamicModule {
+    return {
+      module: EventsModule,
+      providers: [
+        {
+          provide: 'REDIS_URL',
+          useValue: redisUrl,
+        },
+        {
+          provide: BullMQEventBus,
+          useFactory: (url: string) => new BullMQEventBus(url),
+          inject: ['REDIS_URL'],
+        },
+        {
+          provide: EventsWorker,
+          useFactory: (url: string) => new EventsWorker(url),
+          inject: ['REDIS_URL'],
+        },
+        {
+          provide: 'EVENT_BUS',
+          useExisting: BullMQEventBus,
+        },
+      ],
+      exports: ['EVENT_BUS', BullMQEventBus, EventsWorker],
+    };
+  }
 }

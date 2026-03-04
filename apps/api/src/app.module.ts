@@ -36,6 +36,8 @@ import { StorefrontModule } from './storefront/storefront.module.js';
 import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
 import { TenantsModule } from './tenants/tenants.module.js';
 
+import { EventsModule } from '@apex/events';
+
 @Module({
   imports: [
     // S15: Security Module (Global) - Register FIRST
@@ -57,6 +59,8 @@ import { TenantsModule } from './tenants/tenants.module.js';
     AuditModule,
     ExportModule,
     GovernanceModule,
+    // S14.7: Persistent Event Bus (Rule 1.3)
+    EventsModule.register(process.env.REDIS_URL || 'redis://localhost:6379'),
   ],
   providers: [
     {

@@ -70,6 +70,12 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
+    // S14.7: Conditional worker initialization (Dedicated Worker Pattern)
+    if (process.env.ENABLE_WORKERS !== 'true') {
+      this.logger.log('Export worker discovery mode active (Jobs will be queued but not processed by this instance)');
+      return;
+    }
+
     // Start worker with concurrency 1 per tenant (handled by queue)
     this.worker = new Worker(
       'tenant-export',
