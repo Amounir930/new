@@ -35,7 +35,7 @@ export function createMockOrderItem(overrides?: Partial<OrderItem>): OrderItem {
 
   return {
     productId: product.id,
-    name: product.name?.en ?? product.name ?? 'Mock Product',
+    name: 'Mock Product',
     sku: faker.string.alphanumeric(10).toUpperCase(),
     price: product.price,
     quantity: faker.number.int({ min: 1, max: 3 }),
