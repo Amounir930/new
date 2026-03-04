@@ -48,7 +48,6 @@
     "zod": "3.24.1"
   },
   "devDependencies": {
-    "@apex/test-utils": "workspace:*",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
