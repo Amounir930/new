@@ -11,32 +11,12 @@ export * from '../drizzle/schema';
 
 const { Pool } = pg;
 
-function parseAndEncodeConnectionString(rawUrl?: string): string | undefined {
-  if (!rawUrl) return undefined;
-  if (!rawUrl.includes('@')) return rawUrl;
-
-  try {
-    const parsedUrl = new URL(rawUrl);
-    if (parsedUrl.password) {
-      // Only encode if it isn't already encoded (contains raw special chars)
-      if (parsedUrl.password.includes('!') || parsedUrl.password.includes('@') || parsedUrl.password.includes('#')) {
-        parsedUrl.password = encodeURIComponent(parsedUrl.password);
-      }
-    }
-    return parsedUrl.toString();
-  } catch (error) {
-    // Fallback if the URL parser chokes
-    return rawUrl;
-  }
-}
-
-// Database URL from environment with automatic URI encoding for special characters
-const connectionString = parseAndEncodeConnectionString(
+// Database URL from environment
+const connectionString =
   process.env.DATABASE_URL ||
   (process.env.NODE_ENV === 'test'
     ? 'postgres://postgres:postgres@localhost:5432/postgres'
-    : undefined)
-);
+    : undefined);
 
 if (!connectionString) {
   throw new Error('DATABASE_URL is not defined in environment variables');
