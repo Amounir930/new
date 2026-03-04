@@ -300,6 +300,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     next: NextFunction
   ) {
     const client = await adminPool.connect();
+    let cleanupRegistered = false;
     try {
       await client.query("SELECT set_config('app.current_tenant', $1, true)", [
         baseContext.tenantId,
@@ -318,11 +319,16 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         res.setHeader('X-Tenant-ID', tenantContext.tenantId);
 
         this.registerCleanup(client, res, tenantContext);
+        cleanupRegistered = true;
         next();
       });
     } catch (error) {
-      await client.query('DISCARD ALL').catch(() => { });
-      client.release();
+      if (!cleanupRegistered) {
+        // Only cleanup here if it wasn't registered to the response lifecycle
+        await client.query('ROLLBACK').catch(() => { });
+        await client.query('RESET ALL; DISCARD ALL;').catch(() => { });
+        client.release();
+      }
 
       res.status(HttpStatus.FORBIDDEN).json({
         statusCode: HttpStatus.FORBIDDEN,
@@ -339,7 +345,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     tenantContext: TenantContext
   ) {
     let isCleanedUp = false;
-    const cleanup = () => {
+    const cleanup = async () => {
       if (isCleanedUp) return;
       isCleanedUp = true;
 
@@ -353,22 +359,21 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         req.tenantContext = undefined;
       }
 
-      client
-        .query(`
+      try {
+        // S2: Robust cleanup - ROLLBACK ensures we aren't stuck in a failed transaction
+        await client.query('ROLLBACK').catch(() => { });
+        await client.query(`
           RESET app.current_tenant;
           RESET app.role;
           RESET search_path;
           RESET ALL;
-          DISCARD ALL;
-        `)
-        .catch((err) => {
-          console.error('S2 DB Cleanup Error:', err);
-          // If RESET fails, we must DESTROY the client to prevent contamination
-          client.release(true);
-        })
-        .finally(() => {
-          if (!(client as any).released) client.release();
-        });
+        `);
+        client.release();
+      } catch (err) {
+        console.error('S2 DB Cleanup Error:', err);
+        // If cleanup fails, we must DESTROY the client to prevent contamination
+        client.release(true);
+      }
     };
 
     // Ensure cleanup runs on all termination paths
