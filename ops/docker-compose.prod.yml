@@ -524,7 +524,10 @@ services:
     restart: always
     env_file: ../.env
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}
+      - DB_USER=${POSTGRES_USER:-apex}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=apex-postgres
+      - DB_NAME=${POSTGRES_DB:-apex_v2}
       - MAX_CLIENT_CONN=5000
       - DEFAULT_POOL_SIZE=150
       - POOL_MODE=transaction
@@ -535,7 +538,7 @@ services:
     networks:
       - apex-data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U postgres || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER:-apex} || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
