@@ -14,13 +14,13 @@ import { createMockProduct } from './product.fixtures';
  * Creates a mock cart item
  */
 export function createMockCartItem(overrides?: Partial<CartItem>): CartItem {
-  const product = createMockProduct();
+  const product: any = createMockProduct();
   const quantity = faker.number.int({ min: 1, max: 5 });
 
   return {
     productId: product.id,
     variantId: null,
-    name: typeof product.name === 'string' ? product.name : (product.name as any).en,
+    name: product.name?.en ?? product.name ?? 'Mock Product',
     sku: faker.string.alphanumeric(10).toUpperCase(),
     price: product.price,
     quantity,

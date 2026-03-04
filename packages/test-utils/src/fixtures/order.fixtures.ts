@@ -31,11 +31,11 @@ export function createMockAddress(overrides?: Partial<Address>): Address {
  * Creates a mock order item
  */
 export function createMockOrderItem(overrides?: Partial<OrderItem>): OrderItem {
-  const product = createMockProduct();
+  const product: any = createMockProduct();
 
   return {
     productId: product.id,
-    name: typeof product.name === 'string' ? product.name : (product.name as any).en,
+    name: product.name?.en ?? product.name ?? 'Mock Product',
     sku: faker.string.alphanumeric(10).toUpperCase(),
     price: product.price,
     quantity: faker.number.int({ min: 1, max: 3 }),
