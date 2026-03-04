@@ -101,7 +101,7 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD", "/usr/bin/bash", "-c", "echo > /dev/tcp/localhost/9000"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -250,6 +250,11 @@ services:
     networks:
       - apex-internal
       - apex-data
+    healthcheck:
+      test: ["CMD-SHELL", "pidof bun || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
     security_opt:
       - no-new-privileges:true
     cap_drop:
