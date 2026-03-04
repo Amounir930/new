@@ -11,7 +11,10 @@ export * from './schema';
 export { validateEnv, enforceS1Compliance };
 
 // Auto-execute on import for fail-fast behavior
-if (process.env.NODE_ENV !== 'test' && process.env.SKIP_ENV_VALIDATION !== 'true') {
+if (
+  process.env.NODE_ENV !== 'test' &&
+  process.env.SKIP_ENV_VALIDATION !== 'true'
+) {
   if (process.env.NODE_ENV === 'production') {
     enforceS1Compliance();
   } else if (process.env.ENABLE_S1_ENFORCEMENT !== 'false') {

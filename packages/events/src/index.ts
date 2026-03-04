@@ -155,12 +155,17 @@ export class InMemoryEventBus implements EventBus {
   }
 }
 
+import {
+  Injectable,
+  Logger,
+  type OnModuleDestroy,
+  type OnModuleInit,
+} from '@nestjs/common';
 // ==========================================
 // Persistent Event Bus (BullMQ)
 // S14.7: Durable Event-Driven Architecture
 // ==========================================
-import { Queue, Worker, type Job } from 'bullmq';
-import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { type Job, Queue, Worker } from 'bullmq';
 
 @Injectable()
 export class BullMQEventBus implements EventBus, OnModuleDestroy {
@@ -186,7 +191,10 @@ export class BullMQEventBus implements EventBus, OnModuleDestroy {
   }
 
   // Subscribe is handled by EventsWorker in BullMQ implementation
-  subscribe<T extends ApexEvent>(_eventType: T['eventType'], _handler: (event: T) => Promise<void>): void {
+  subscribe<T extends ApexEvent>(
+    _eventType: T['eventType'],
+    _handler: (event: T) => Promise<void>
+  ): void {
     throw new Error('Use EventsWorker to subscribe to BullMQ events');
   }
 
@@ -199,9 +207,10 @@ export class BullMQEventBus implements EventBus, OnModuleDestroy {
 export class EventsWorker implements OnModuleInit, OnModuleDestroy {
   private worker!: Worker;
   private readonly logger = new Logger(EventsWorker.name);
-  private handlers: Map<string, Array<(event: ApexEvent) => Promise<void>>> = new Map();
+  private handlers: Map<string, Array<(event: ApexEvent) => Promise<void>>> =
+    new Map();
 
-  constructor(private readonly redisUrl: string) { }
+  constructor(private readonly redisUrl: string) {}
 
   onModuleInit() {
     // S14.7: Dedicated Worker Pattern
@@ -220,7 +229,10 @@ export class EventsWorker implements OnModuleInit, OnModuleDestroy {
             try {
               await handler(event);
             } catch (err) {
-              this.logger.error(`Handler failed for event ${event.eventType}:`, err);
+              this.logger.error(
+                `Handler failed for event ${event.eventType}:`,
+                err
+              );
               throw err; // Trigger BullMQ retry
             }
           })
@@ -278,7 +290,7 @@ export function createTimestamp(): string {
   return new Date().toISOString();
 }
 
-import { Module, type DynamicModule } from '@nestjs/common';
+import { type DynamicModule, Module } from '@nestjs/common';
 
 @Module({})
 export class EventsModule {

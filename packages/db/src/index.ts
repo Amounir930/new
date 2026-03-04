@@ -19,11 +19,16 @@ const poolConfig = {
   password: process.env.PGPASSWORD || (isTest ? 'postgres' : undefined),
   database: process.env.PGDATABASE || (isTest ? 'postgres' : undefined),
   port: parseInt(process.env.PGPORT || '5432', 10),
-  connectionString: (!process.env.PGHOST && process.env.DATABASE_URL) ? process.env.DATABASE_URL : undefined,
+  connectionString:
+    !process.env.PGHOST && process.env.DATABASE_URL
+      ? process.env.DATABASE_URL
+      : undefined,
 };
 
 if (!poolConfig.host && !poolConfig.connectionString) {
-  throw new Error('Database connection parameters are not defined in environment variables (PGHOST/PGUSER or DATABASE_URL)');
+  throw new Error(
+    'Database connection parameters are not defined in environment variables (PGHOST/PGUSER or DATABASE_URL)'
+  );
 }
 
 /**

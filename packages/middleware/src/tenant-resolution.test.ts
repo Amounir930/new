@@ -8,7 +8,7 @@ import type { Request, Response } from 'express';
 
 // Mock tenantStorage before importing
 const mockTenantStorage = {
-  run: mock((ctx, cb) => cb()),
+  run: mock((_ctx, cb) => cb()),
   getStore: mock(() => undefined),
 };
 

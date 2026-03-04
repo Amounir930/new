@@ -62,7 +62,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const requestId = this.generateRequestId();
-    const { statusCode, message, error, validationErrors } = this.parseError(exception);
+    const { statusCode, message, error, validationErrors } =
+      this.parseError(exception);
 
     // S5: Sanitized client response
     const clientResponse: any = {
@@ -96,11 +97,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       // S5: Stack trace only in development, with path redaction
       ...(this.options.includeStackTrace &&
         exception instanceof Error && {
-        stackTrace: exception.stack?.replace(
-          /(\/app\/|[Cc]:\\Users\\[^\\]+\\Desktop\\60sec\.shop\\)/g,
-          '[REDACTED]/'
-        ),
-      }),
+          stackTrace: exception.stack?.replace(
+            /(\/app\/|[Cc]:\\Users\\[^\\]+\\Desktop\\60sec\.shop\\)/g,
+            '[REDACTED]/'
+          ),
+        }),
     };
 
     // Log internally
@@ -136,7 +137,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     // ZodValidationException (nestjs-zod) - Duck typing check
-    if (exception && typeof (exception as any).getValidationIssues === 'function') {
+    if (
+      exception &&
+      typeof (exception as any).getValidationIssues === 'function'
+    ) {
       const issues = (exception as any).getValidationIssues();
       return {
         statusCode: HttpStatus.BAD_REQUEST,
@@ -276,7 +280,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
  * Operational: Expected errors (validation, auth, etc.) - 4xx
  * Programming: Bugs (null reference, etc.) - 5xx
  */
-export class OperationalError extends HttpException { }
+export class OperationalError extends HttpException {}
 
 export class ValidationError extends OperationalError {
   constructor(message: string) {

@@ -5,6 +5,7 @@
 
 import { AuditModule } from '@apex/audit';
 import { ConfigModule } from '@apex/config';
+import { EventsModule } from '@apex/events';
 import { ExportModule } from '@apex/export';
 import {
   ActiveDefenseMiddleware,
@@ -35,8 +36,6 @@ import { SecurityModule } from './security/security.module.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
 import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
 import { TenantsModule } from './tenants/tenants.module.js';
-
-import { EventsModule } from '@apex/events';
 
 @Module({
   imports: [

@@ -10,7 +10,12 @@ export const EnvSchema = z.object({
   JWT_SECRET: z.string().refine((key) => {
     if (process.env.NODE_ENV === 'production') {
       if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return true;
-      return key.length >= 32 && /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
+      return (
+        key.length >= 32 &&
+        /[A-Z]/.test(key) &&
+        /[a-z]/.test(key) &&
+        /[0-9]/.test(key)
+      );
     }
     return true;
   }, 'S1 Violation: JWT_SECRET lacks required complexity in production'),
@@ -19,28 +24,42 @@ export const EnvSchema = z.object({
   ENCRYPTION_MASTER_KEY: z.string().refine((key) => {
     if (process.env.NODE_ENV === 'production') {
       if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return true;
-      return key.length >= 32 && !/test|default|example/i.test(key) && /[A-Z]/.test(key) && /[a-z]/.test(key) && /[0-9]/.test(key);
+      return (
+        key.length >= 32 &&
+        !/test|default|example/i.test(key) &&
+        /[A-Z]/.test(key) &&
+        /[a-z]/.test(key) &&
+        /[0-9]/.test(key)
+      );
     }
     return true;
   }, 'S1 Violation: ENCRYPTION_MASTER_KEY lacks required complexity in production'),
   ENCRYPTION_MASTER_KEY_FILE: z.string().optional(),
 
   // S1: Admin Credentials (Strict Validation)
-  SUPER_ADMIN_EMAIL: z.string().email('S1 Violation: Invalid SUPER_ADMIN_EMAIL format'),
+  SUPER_ADMIN_EMAIL: z
+    .string()
+    .email('S1 Violation: Invalid SUPER_ADMIN_EMAIL format'),
   SUPER_ADMIN_EMAIL_FILE: z.string().optional(),
-  SUPER_ADMIN_PASSWORD: z.string().min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD too weak').optional(),
+  SUPER_ADMIN_PASSWORD: z
+    .string()
+    .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD too weak')
+    .optional(),
   SUPER_ADMIN_PASSWORD_FILE: z.string().optional(),
 
   JWT_EXPIRES_IN: z.string().default('7d'),
 
   // Database Configuration (S1/S2 Enforcement)
-  DATABASE_URL: z.string().startsWith('postgresql://', 'S1 Violation: Only PostgreSQL supported').refine((url) => {
-    if (process.env.NODE_ENV === 'production') {
-      if (process.env.DB_SSL_OPTIONAL === 'true') return true;
-      return url.includes('sslmode=require') || url.includes('ssl=require');
-    }
-    return true;
-  }, 'S1 Violation: DATABASE_URL must require SSL in production'),
+  DATABASE_URL: z
+    .string()
+    .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL supported')
+    .refine((url) => {
+      if (process.env.NODE_ENV === 'production') {
+        if (process.env.DB_SSL_OPTIONAL === 'true') return true;
+        return url.includes('sslmode=require') || url.includes('ssl=require');
+      }
+      return true;
+    }, 'S1 Violation: DATABASE_URL must require SSL in production'),
   DATABASE_URL_FILE: z.string().optional(),
   DB_SSL_OPTIONAL: z.string().default('false'),
   DB_SSL: z.enum(['true', 'false']).default('true'),

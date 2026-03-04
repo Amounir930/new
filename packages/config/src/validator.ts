@@ -1,24 +1,18 @@
-import { readFileSync, existsSync } from 'fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { z } from 'zod';
-import type { EnvConfig } from './schema';
-import { EnvSchema } from './schema';
+import { type EnvConfig, EnvSchema } from './schema';
 
 /**
- * Military-Grade Zero-Trust Secret Resolution
  * Resolves *_FILE variables into their corresponding environment values
  */
-function resolveSecretFiles() {
-  const secretEnv = { ...process.env };
-  const keys = Object.keys(secretEnv);
-
-  for (const key of keys) {
+function resolveFileSecrets(secretEnv: Record<string, string | undefined>) {
+  for (const key of Object.keys(secretEnv)) {
     if (key.endsWith('_FILE')) {
       const filePath = secretEnv[key];
       const targetKey = key.replace('_FILE', '');
 
       if (filePath && existsSync(filePath)) {
         try {
-          // Read secret, trim whitespace (crucial for docker secrets)
           secretEnv[targetKey] = readFileSync(filePath, 'utf8').trim();
         } catch (err) {
           console.warn(`⚠️ Failed to read secret file at ${filePath}:`, err);
@@ -26,35 +20,45 @@ function resolveSecretFiles() {
       }
     }
   }
+}
 
-  // S1/Arch-Core-05: Construct connection strings if components are present via secrets
-  if (!secretEnv.DATABASE_URL && secretEnv.POSTGRES_PASSWORD) {
-    const user = secretEnv.POSTGRES_USER || 'apex';
-    const db = secretEnv.POSTGRES_DB || 'apex_v2';
-    const host = secretEnv.POSTGRES_HOST || 'apex-postgres';
-    const port = secretEnv.POSTGRES_PORT || '5432';
-    const sslMode = secretEnv.NODE_ENV === 'production' && secretEnv.DB_SSL_OPTIONAL !== 'true'
-      ? 'require'
-      : (secretEnv.DB_SSL === 'false' ? 'disable' : 'require');
+function resolvePostgresUrl(secretEnv: Record<string, string | undefined>) {
+  if (secretEnv.DATABASE_URL || !secretEnv.POSTGRES_PASSWORD) return;
 
-    secretEnv.DATABASE_URL = `postgresql://${user}:${secretEnv.POSTGRES_PASSWORD}@${host}:${port}/${db}?sslmode=${sslMode}`;
-  }
+  const user = secretEnv.POSTGRES_USER || 'apex';
+  const db = secretEnv.POSTGRES_DB || 'apex_v2';
+  const host = secretEnv.POSTGRES_HOST || 'apex-postgres';
+  const port = secretEnv.POSTGRES_PORT || '5432';
 
-  if (!secretEnv.REDIS_URL && secretEnv.REDIS_PASSWORD) {
-    const host = secretEnv.REDIS_HOST || 'apex-redis';
-    const port = secretEnv.REDIS_PORT || '6379';
-    // S1: Ensure credentials in production
-    secretEnv.REDIS_URL = `redis://:${secretEnv.REDIS_PASSWORD}@${host}:${port}`;
-  }
+  const isProd = secretEnv.NODE_ENV === 'production';
+  const sslOptional = secretEnv.DB_SSL_OPTIONAL === 'true';
+  const sslDisabled = secretEnv.DB_SSL === 'false';
 
+  const sslMode =
+    isProd && !sslOptional ? 'require' : sslDisabled ? 'disable' : 'require';
+
+  secretEnv.DATABASE_URL = `postgresql://${user}:${secretEnv.POSTGRES_PASSWORD}@${host}:${port}/${db}?sslmode=${sslMode}`;
+}
+
+function resolveRedisUrl(secretEnv: Record<string, string | undefined>) {
+  if (secretEnv.REDIS_URL || !secretEnv.REDIS_PASSWORD) return;
+
+  const host = secretEnv.REDIS_HOST || 'apex-redis';
+  const port = secretEnv.REDIS_PORT || '6379';
+  secretEnv.REDIS_URL = `redis://:${secretEnv.REDIS_PASSWORD}@${host}:${port}`;
+}
+
+function resolveSecretFiles() {
+  const secretEnv = { ...process.env };
+  resolveFileSecrets(secretEnv);
+  resolvePostgresUrl(secretEnv);
+  resolveRedisUrl(secretEnv);
   return secretEnv;
 }
 
 export function validateEnv(): EnvConfig {
   try {
     const resolvedEnv = resolveSecretFiles();
-
-    // S1: Sync resolved secrets back to process.env to support packages reading it directly
     Object.assign(process.env, resolvedEnv);
 
     const parsed = EnvSchema.parse(resolvedEnv);
@@ -84,8 +88,8 @@ function enforceProductionChecks(parsed: EnvConfig): void {
     );
   }
 
-  if (parsed.DATABASE_URL && parsed.DATABASE_URL.includes('localhost') && parsed.DB_SSL === 'true') {
-    // Localhost check for prod - usually managed by Traefik/Internal network anyway
+  if (parsed.DATABASE_URL?.includes('localhost') && parsed.DB_SSL === 'true') {
+    // Localhost check for prod
   }
 }
 
@@ -106,7 +110,9 @@ export function enforceS1Compliance(): void {
   } catch (error) {
     console.error('❌ CRITICAL: S1 Protocol Violation');
     console.error(error instanceof Error ? error.message : 'Unknown error');
-    console.error('Application startup aborted. Check your secrets and environment.');
+    console.error(
+      'Application startup aborted. Check your secrets and environment.'
+    );
     process.exit(1);
   }
 }
