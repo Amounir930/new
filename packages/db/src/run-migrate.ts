@@ -18,10 +18,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pg from 'pg';
+import { env } from '@apex/config';
 
 const { Client } = pg;
 
-const DATABASE_URL = process.env['DATABASE_URL'];
+const DATABASE_URL = env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   process.stdout.write('❌ FATAL: DATABASE_URL is not defined.');
@@ -89,8 +90,7 @@ async function runMigrations() {
         process.stdout.write(`✅ DONE  ${filename}`);
       } catch (err) {
         await client.query('ROLLBACK');
-        process.stdout.write(`❌ FAILED ${filename}:`);
-        process.stdout.write(err instanceof Error ? err.message : err);
+        process.stdout.write(`❌ FAILED ${filename}: ${String(err)}`);
         process.stdout.write(
           '\n🛑 Migration aborted. Fix the error above and re-run.'
         );

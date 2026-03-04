@@ -64,6 +64,11 @@ export const EnvSchema = z.object({
   DB_SSL_OPTIONAL: z.string().default('false'),
   DB_SSL: z.enum(['true', 'false']).default('true'),
   DB_CA_CERT: z.string().optional(),
+  PGHOST: z.string().optional(),
+  PGUSER: z.string().optional(),
+  PGPASSWORD: z.string().optional(),
+  PGDATABASE: z.string().optional(),
+  PGPORT: z.string().optional(),
   READ_REPLICA_URL: z.string().optional(),
 
   // Redis Configuration (S6/S12 Enforcement)

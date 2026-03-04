@@ -1,6 +1,7 @@
 import { env } from '@apex/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import * as relations from '../drizzle/relations';
 import * as schema from '../drizzle/schema';
 
