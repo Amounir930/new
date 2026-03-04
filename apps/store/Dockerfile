@@ -20,6 +20,7 @@ COPY packages/security/package.json ./packages/security/
 COPY packages/test-utils/package.json ./packages/test-utils/
 COPY packages/validators/package.json ./packages/validators/
 COPY packages/monitoring/package.json ./packages/monitoring/
+COPY packages/media/package.json ./packages/media/
 
 # Install dependencies (frozen-lockfile equivalent for bun is default if lockfile present)
 RUN bun install
