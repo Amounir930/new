@@ -8,7 +8,7 @@ export function startTracing(serviceName: string, serviceVersion: string = '1.0.
     // OTLP Trace Exporter
     const traceExporter = new OTLPTraceExporter({
         // If running in docker, use the container name, else fallback to localhost
-        url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://localhost:4317',
+        url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || 'http://otel-collector:4317',
     });
 
     const sdk = new NodeSDK({

@@ -167,6 +167,8 @@ services:
       PGUSER: ${POSTGRES_USER:-apex}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB:-apex_v2}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: apex-api
     networks:
       - apex-internal
       - apex-data
@@ -242,6 +244,8 @@ services:
       PGUSER: ${POSTGRES_USER:-apex}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB:-apex_v2}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: apex-worker
     command: ["/bin/sh", "-c", "bun $(find dist -name worker.js | head -n 1)"]
     networks:
       - apex-internal
@@ -279,6 +283,8 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       JWT_SECRET: ${JWT_SECRET}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: apex-merchant-admin
     networks:
       - apex-public
     security_opt:
@@ -328,6 +334,8 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       JWT_SECRET: ${JWT_SECRET}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: apex-super-admin
     networks:
       - apex-public
     security_opt:
@@ -373,6 +381,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       INTERNAL_API_URL: http://api:3000/api
       PORT: 3002
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_SERVICE_NAME: apex-store
     networks:
       - apex-public
       - apex-internal
