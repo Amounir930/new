@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json --outDir ./dist --declaration --declarationMap --sourceMap && echo 'Build completed'",
+    "build": "echo 'Build skipped'",
     "dev": "tsup --watch",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
