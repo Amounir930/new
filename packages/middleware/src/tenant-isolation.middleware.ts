@@ -89,52 +89,64 @@ async function validateTenant(
 @Injectable()
 export class TenantIsolationMiddleware implements NestMiddleware {
   async use(req: TenantRequest, res: Response, next: NextFunction) {
-    const rawHost = req.headers.host || '';
-    const cleanHost = rawHost.split(':')[0];
-    const xTenantId = req.headers['x-tenant-id'] as string;
-    const isInternal =
-      req.headers['x-internal-secret'] === env.INTERNAL_API_SECRET;
+    try {
+      const rawHost = req.headers.host || '';
+      const cleanHost = rawHost.split(':')[0];
+      const xTenantId = req.headers['x-tenant-id'] as string;
+      const isInternal =
+        req.headers['x-internal-secret'] === env.INTERNAL_API_SECRET;
 
-    const subdomain = extractSubdomain(cleanHost);
-    let identifier = subdomain || cleanHost;
+      const subdomain = extractSubdomain(cleanHost);
+      let identifier = subdomain || cleanHost;
 
-    if (xTenantId && isInternal) {
-      identifier = xTenantId;
+      if (xTenantId && isInternal) {
+        identifier = xTenantId;
+      }
+
+      // 1. System/Root Context Check
+      if (this.isSystemRequest(subdomain)) {
+        return this.handleSystemContext(subdomain, req, res, next);
+      }
+
+      const currentPath = req.originalUrl || req.path || '';
+
+      // 2. Bypass Routes
+      if (this.isBypassRoute(currentPath)) {
+        return next();
+      }
+
+      // 3. Maintenance Mode Check
+      if (await this.handleMaintenanceMode(req, res)) {
+        return;
+      }
+
+      // 4. Webhook Tenant Resolution
+      if (this.isWebhookPath(currentPath, subdomain)) {
+        const resolvedId = await this.resolveWebhookTenant(req, res);
+        if (!resolvedId) return; // Response handled in helper
+        identifier = resolvedId;
+      }
+
+      // 5. Tenant Validation
+      const baseContext = await validateTenant(identifier);
+      if (!this.checkTenantStatus(baseContext, req, res)) return;
+
+      // 6. Suspension Check (Steel Control)
+      const isSuspended = await this.checkSuspension(identifier);
+
+      // 7. Database Session
+      await this.runDatabaseSession(baseContext, isSuspended, req, res, next);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        res.status(HttpStatus.FORBIDDEN).json({
+          statusCode: HttpStatus.FORBIDDEN,
+          message: error.message,
+          error: 'Forbidden'
+        });
+        return;
+      }
+      next(error);
     }
-
-    // 1. System/Root Context Check
-    if (this.isSystemRequest(subdomain)) {
-      return this.handleSystemContext(subdomain, req, res, next);
-    }
-
-    const currentPath = req.originalUrl || req.path || '';
-
-    // 2. Bypass Routes
-    if (this.isBypassRoute(currentPath)) {
-      return next();
-    }
-
-    // 3. Maintenance Mode Check
-    if (await this.handleMaintenanceMode(req, res)) {
-      return;
-    }
-
-    // 4. Webhook Tenant Resolution
-    if (this.isWebhookPath(currentPath, subdomain)) {
-      const resolvedId = await this.resolveWebhookTenant(req, res);
-      if (!resolvedId) return; // Response handled in helper
-      identifier = resolvedId;
-    }
-
-    // 5. Tenant Validation
-    const baseContext = await validateTenant(identifier);
-    if (!this.checkTenantStatus(baseContext, req, res)) return;
-
-    // 6. Suspension Check (Steel Control)
-    const isSuspended = await this.checkSuspension(identifier);
-
-    // 7. Database Session
-    await this.runDatabaseSession(baseContext, isSuspended, req, res, next);
   }
 
   private isSystemRequest(subdomain: string | null): boolean {
@@ -309,7 +321,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         next();
       });
     } catch (error) {
-      await client.query('DISCARD ALL').catch(() => {});
+      await client.query('DISCARD ALL').catch(() => { });
       client.release();
 
       res.status(HttpStatus.FORBIDDEN).json({
