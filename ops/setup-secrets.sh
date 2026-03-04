@@ -8,8 +8,8 @@
 # ═══════════════════════════════════════════════════════════════
 set -euo pipefail
 
-SECRETS_DIR="/opt/apex-v2/ops/secrets"
-ENV_FILE="/opt/apex-v2/.env"
+SECRETS_DIR="./secrets"
+ENV_FILE="../.env"
 
 echo "🔐 [Fortress V3.0] Setting up Docker Secrets..."
 echo "   Reading secrets from: $ENV_FILE"
