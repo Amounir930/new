@@ -27,11 +27,4 @@ export class AppController {
     return `User-agent: *
 Disallow: /`;
   }
-
-  @Get('test-error')
-  @Version(VERSION_NEUTRAL)
-  @Public()
-  testError() {
-    throw new Error('S5 Protocol Test Error: Forced 500');
-  }
 }
