@@ -23,6 +23,7 @@ COPY packages/provisioning/package.json ./packages/provisioning/
 COPY packages/security/package.json ./packages/security/
 COPY packages/test-utils/package.json ./packages/test-utils/
 COPY packages/validators/package.json ./packages/validators/
+COPY packages/monitoring/package.json ./packages/monitoring/
 
 # 🛠️ S3: Install dependencies
 RUN bun install
