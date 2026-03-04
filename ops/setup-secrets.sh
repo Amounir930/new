@@ -14,10 +14,11 @@ ENV_FILE="../.env"
 echo "🔐 [Fortress V3.0] Setting up Docker Secrets..."
 echo "   Reading secrets from: $ENV_FILE"
 
-# Helper: extract a value from the .env file
+# Helper: extract a value from the .env file (handles quoted and unquoted values)
 get_env() {
   local key="$1"
-  grep -E "^${key}=" "$ENV_FILE" | cut -d'"' -f2 | head -1
+  grep -E "^${key}=" "$ENV_FILE" | head -1 \
+    | sed 's/^[^=]*=//; s/^"//; s/"[[:space:]]*#.*$//; s/"$//; s/[[:space:]]*#.*$//'
 }
 
 # Create secrets directory (restricted permissions)
