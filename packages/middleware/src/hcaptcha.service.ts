@@ -43,12 +43,12 @@ export class HCaptchaService {
 
       const data = (await response.json()) as never;
 
-      if (data.success) {
+      if ((data as any).success) {
         return true;
       }
 
-      this.logger.warn(
-        `HCAPTCHA: Verification failed - Errors: ${JSON.stringify(data['error-codes'])}`
+      this.logger.error(
+        `HCAPTCHA: Verification failed - Errors: ${JSON.stringify((data as any)['error-codes'])}`
       );
       return false;
     } catch (error) {

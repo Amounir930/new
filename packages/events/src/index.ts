@@ -324,7 +324,7 @@ export class EventsModule {
 
   static registerAsync(options: {
     imports?: DynamicModule['imports'];
-    useFactory: (...args: unknown[]) => Promise<string> | string;
+    useFactory: (...args: any[]) => Promise<string> | string;
     inject?: FactoryProvider['inject'];
   }): DynamicModule {
     return {

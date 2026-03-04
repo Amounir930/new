@@ -18,7 +18,7 @@ import {
 import { apiFetch } from '@/lib/api';
 
 export default function MerchantDashboard() {
-  const [data, setData] = useState<unknown>(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function MerchantDashboard() {
   const stats = [
     {
       name: 'Total Revenue',
-      value: data ? `$${data.totalRevenue.toLocaleString()}` : '$0',
+      value: data ? `$${(data as any).totalRevenue.toLocaleString()}` : '$0',
       icon: TrendingUp,
       change: '+0%',
       color: 'text-green-600',

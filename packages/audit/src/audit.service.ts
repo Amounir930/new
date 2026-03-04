@@ -124,7 +124,7 @@ export class AuditService {
     // 2. Persistent Logging (S4 Protocol)
     // S4 FIX: Store encrypted PII for GDPR/S7 compliance
     try {
-      const client = await this.pool.connect();
+      const client = await (this.pool as any).connect();
       try {
         // S2: Using schema-qualified INSERT (public.audit_logs) — no SET needed
         await client.query(
@@ -184,7 +184,7 @@ export class AuditService {
    * Ensures the audit_logs table and its immutability triggers exist
    */
   async initializeS4(): Promise<void> {
-    const client = await this.pool.connect();
+    const client = await (this.pool as any).connect();
     try {
       // 0. Ensure public schema (S2 Enforcement)
       // Using schema-qualified DDL (public.audit_logs) below

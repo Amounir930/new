@@ -76,13 +76,13 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
  */
 export interface CorsConfig {
   origin:
-    | string
-    | string[]
-    | boolean
-    | ((
-        origin: string | undefined,
-        callback: (err: Error | null, allow?: boolean) => void
-      ) => void);
+  | string
+  | string[]
+  | boolean
+  | ((
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => void);
   methods: string[];
   allowedHeaders: string[];
   exposedHeaders: string[];
@@ -121,7 +121,7 @@ export const defaultCorsConfig: CorsConfig = {
 
     // Load additional origins from env and trim whitespace
     const allowedOrigins =
-      ((env as never).ALLOWED_ORIGINS as string)
+      ((env as any).ALLOWED_ORIGINS as string)
         ?.split(',')
         .map((o: string) => o.trim())
         .filter(Boolean) || [];

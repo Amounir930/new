@@ -38,7 +38,7 @@ export class TenantsController {
   constructor(
     @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService
-  ) {}
+  ) { }
 
   @Get()
   async findAll() {
@@ -136,8 +136,9 @@ export class TenantsController {
       .update(tenantsInGovernance)
       .set({
         ...body,
-        plan: body.plan as never, // Cast only the enum if needed, or refine Zod schema
-        updatedAt: new Date(),
+        status: body.status as any,
+        plan: body.plan as any,
+        updatedAt: new Date().toISOString() as any,
       })
       .where(eq(tenantsInGovernance.id, id))
       .returning();

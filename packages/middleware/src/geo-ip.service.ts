@@ -35,7 +35,17 @@ export class GeoIpService {
     currentGeo: unknown
   ): Promise<boolean> {
     if (!lastGeo || !currentGeo) return false;
-    if (lastGeo.country !== currentGeo.country) {
+
+    const last = lastGeo as any;
+    const current = currentGeo as any;
+
+    if (
+      last.country &&
+      current.country &&
+      last.country !== 'unknown' &&
+      current.country !== 'unknown' &&
+      last.country !== current.country
+    ) {
       // Logic for travel time between countries can be added here
       return true; // Simplified: unknown country change in a short window is suspicious
     }

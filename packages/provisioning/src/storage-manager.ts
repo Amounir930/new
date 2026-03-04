@@ -25,13 +25,10 @@ export interface StorageStats {
 const logger = {
   info: (message: string, meta?: Record<string, unknown>) => {
     // bypass console lint
-    process.stdout.write(`[INFO] ${message}`, meta ? JSON.stringify(meta) : '');
+    process.stdout.write(`[INFO] ${message}${meta ? ' ' + JSON.stringify(meta) : ''}\n`);
   },
   error: (message: string, meta?: Record<string, unknown>) => {
-    process.stdout.write(
-      `[ERROR] ${message}`,
-      meta ? JSON.stringify(meta) : ''
-    );
+    process.stdout.write(`[ERROR] ${message}${meta ? ' ' + JSON.stringify(meta) : ''}\n`);
   },
 };
 

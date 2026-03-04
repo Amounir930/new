@@ -44,6 +44,7 @@ export interface BlueprintTemplate {
   banners?: unknown[];
   nicheType?: string;
   uiConfig?: Record<string, unknown>;
+  quotas?: Record<string, number>;
 }
 
 export interface BlueprintRecord {

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<unknown[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
 
   // Mock data for Admin-17
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function OrdersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
+              {orders.map((order: any) => (
                 <TableRow
                   key={order.id}
                   className="hover:bg-slate-50 transition-colors"
@@ -95,13 +95,12 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell>
                     <div
-                      className={`inline-flex px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
-                        order.status === 'shipped'
-                          ? 'bg-green-100 text-green-700'
-                          : order.status === 'processing'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-amber-100 text-amber-700'
-                      }`}
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${order.status === 'shipped'
+                        ? 'bg-green-100 text-green-700'
+                        : order.status === 'processing'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-amber-100 text-amber-700'
+                        }`}
                     >
                       {order.status}
                     </div>

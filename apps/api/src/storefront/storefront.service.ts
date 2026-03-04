@@ -21,7 +21,7 @@ export class StorefrontService {
   constructor(
     private readonly redisStore: RedisRateLimitStore,
     private readonly crypto: EncryptionService
-  ) {}
+  ) { }
 
   async getTenantConfig(tenantId: string) {
     const { db, release } = await getTenantDb(tenantId);
@@ -310,7 +310,7 @@ export class StorefrontService {
         const dbTx = tx as typeof db;
         return (await dbTx
           .insert(newsletterSubscribersInStorefront)
-          .values({ email: encryptedEmail })
+          .values({ email: encryptedEmail, tenantId: _tenantId })
           .onConflictDoUpdate({
             target: newsletterSubscribersInStorefront.email,
             set: { isActive: true },

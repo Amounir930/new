@@ -39,7 +39,7 @@ export const CheckQuota = (resource: 'products' | 'orders' | 'staff') =>
 
 @Injectable()
 export class QuotaInterceptor implements NestInterceptor {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   async intercept(
     context: ExecutionContext,
@@ -59,9 +59,7 @@ export class QuotaInterceptor implements NestInterceptor {
     const tenantId = request.tenantContext?.tenantId;
 
     // Super Admin Bypass
-    if (user?.role === 'super_admin') {
-      return next.handle();
-    }
+    if ((user as any)?.role === 'super_admin') return next.handle();
 
     if (!tenantId) {
       throw new ForbiddenException(
@@ -111,12 +109,12 @@ export class QuotaInterceptor implements NestInterceptor {
     }
 
     // 3. Check Current Usage
-    const [usage] = await adminDb
+    const [usageResult] = await adminDb
       .select({ count: count() })
-      .from(targetTable)
-      .where(eq(targetTable.tenantId, tenantId));
+      .from(targetTable as any)
+      .where(eq((targetTable as any).tenantId, tenantId));
 
-    const current = usage?.count ?? 0;
+    const current = usageResult?.count ?? 0;
 
     if (current >= max) {
       throw new ForbiddenException(

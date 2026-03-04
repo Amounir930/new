@@ -29,7 +29,7 @@ export class DbSecurityInterceptor implements NestInterceptor {
           // This interceptor provides a secondary application-layer safety net.
 
           // We use the raw client if available to perform the reset
-          const client = (executor as never).session?.client;
+          const client = (executor as any).session?.client;
           if (client) {
             await client.query(`
               RESET app.current_tenant;
@@ -40,11 +40,10 @@ export class DbSecurityInterceptor implements NestInterceptor {
           }
         } catch (error) {
           process.stdout.write(
-            'CRITICAL: Failed to reset DB session state:',
-            error
+            `CRITICAL: Failed to reset DB session state: ${String(error)}\n`
           );
           // Mandate Pt 3: Connection destruction on all reset failure
-          const client = (executor as never).session?.client;
+          const client = (executor as any).session?.client;
           if (client && typeof client.release === 'function') {
             // Passing true to release() usually signals to the pool to destroy the client (pg specific)
             client.release(true);

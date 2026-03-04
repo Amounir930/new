@@ -31,24 +31,33 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
   const [description, setDescription] = useState('');
   const [plan, setPlan] = useState('free');
   const [isDefault, setIsDefault] = useState(false);
+  const [sector, setSector] = useState('retail'); // Added state
+  const [features, setFeatures] = useState({}); // Added state
+  const [quotas, setQuotas] = useState({}); // Added state
   const [json, setJson] = useState(
     '{\n  "version": "1.0",\n  "name": "Starter Template",\n  "settings": {\n    "site_name": "My Store",\n    "currency": "USD"\n  },\n  "pages": [],\n  "products": []\n}'
   );
 
   const fetchBlueprint = useCallback(async () => {
     try {
-      const data = await apiFetch<unknown>(`/v1/admin/blueprints/${id}`);
+      const data = await apiFetch<any>(`/v1/admin/blueprints/${id}`);
       setName(data.name);
       setDescription(data.description || '');
       setPlan(data.plan);
       setIsDefault(data.isDefault);
+      setSector(data.nicheType || 'retail'); // Added line
+
+      if (data.blueprint) { // Added block
+        setFeatures(data.blueprint.modules || {});
+        setQuotas(data.blueprint.quotas || {});
+      }
       // Ensure blueprint is a string for the editor
       const bpString =
         typeof data.blueprint === 'string'
           ? data.blueprint
           : JSON.stringify(data.blueprint, null, 2);
       setJson(bpString);
-    } catch (e: unknown) {
+    } catch (e: any) {
       alert(`Failed to load: ${e.message}`);
       router.push('/dashboard/blueprints');
     } finally {
@@ -62,7 +71,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
     }
   }, [isNew, fetchBlueprint]);
 
-  const extractInnerBlueprint = (parsed: unknown) => {
+  const extractInnerBlueprint = (parsed: any) => {
     let blueprint = parsed;
     if (parsed.blueprint && typeof parsed.blueprint === 'object') {
       if (!name && parsed.name) setName(parsed.name);
@@ -104,7 +113,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
       const blueprint = processBlueprint(json);
       await submitBlueprint(blueprint);
       router.push('/dashboard/blueprints');
-    } catch (e: unknown) {
+    } catch (e: any) {
       alert(e.message || 'Error saving');
     } finally {
       setSaving(false);

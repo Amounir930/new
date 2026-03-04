@@ -25,7 +25,7 @@ export class AuditInterceptor implements NestInterceptor {
     private readonly reflector: Reflector,
     @Inject(AuditService)
     private readonly auditService: AuditService
-  ) {}
+  ) { }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
@@ -64,7 +64,7 @@ export class AuditInterceptor implements NestInterceptor {
   ) {
     const request = context.switchToHttp().getRequest();
     const { method, url, ip, headers } = request;
-    const user = (request as never).user;
+    const user = (request as any).user;
 
     // Determine action name
     const action = options?.action || `${method}:${url}`;
@@ -72,9 +72,9 @@ export class AuditInterceptor implements NestInterceptor {
 
     // Extract entityId if possible from params or body
     const entityId =
-      request.params?.id ||
-      request.body?.id ||
-      request.body?.subdomain ||
+      (request as any).params?.id ||
+      (request as any).body?.id ||
+      (request as any).body?.subdomain ||
       'unknown';
 
     try {
@@ -94,13 +94,13 @@ export class AuditInterceptor implements NestInterceptor {
           method,
           statusCode: context.switchToHttp().getResponse().statusCode,
           ...(resultStatus === 'FAILURE'
-            ? { error: resultData?.message || resultData?.toString() }
+            ? { error: (resultData as any)?.message || (resultData as any)?.toString() }
             : {}),
         },
       });
     } catch (err) {
       // Fail-safe: don't crash the request if auditing fails, but log it
-      process.stderr.write('S4 Auditing Failed:', err);
+      process.stderr.write(`S4 Auditing Failed: ${String(err)}\n`);
     }
   }
 }

@@ -11,6 +11,7 @@ import 'reflect-metadata';
 import { AuditService } from '@apex/audit';
 import { env } from '@apex/config';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
+import { type Response as ExpressResponse } from 'express';
 import {
   Logger,
   type LogLevel,
@@ -95,7 +96,7 @@ async function bootstrap() {
   app.useGlobalFilters(
     new GlobalExceptionFilter({
       includeStackTrace: !isProduction,
-      includeIpDetails: false, // S5 FIX: Never leak IP details in response
+      includeIpDetails: false,
     })
   );
 

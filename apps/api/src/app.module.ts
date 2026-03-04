@@ -66,7 +66,7 @@ import { TenantsModule } from './tenants/tenants.module.js';
     EventsModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) =>
-        config.get('REDIS_URL') || 'redis://localhost:6379',
+        (config.get('REDIS_URL') as string) || 'redis://localhost:6379',
       inject: [ConfigService],
     }),
   ],

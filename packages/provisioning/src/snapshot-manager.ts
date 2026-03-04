@@ -30,13 +30,13 @@ export async function createSnapshot(
     // 1. Capture Settings
     const settingsRows = await db.select().from(tenantConfigInStorefront);
     const settingsMap: Record<string, unknown> = {};
-    settingsRows.forEach((row: unknown) => {
+    settingsRows.forEach((row: any) => {
       settingsMap[row.key] = row.value;
     });
 
     // 2. Capture Pages
     const pagesRows = await db.select().from(pagesInStorefront);
-    const pagesMapped = pagesRows.map((p: unknown) => ({
+    const pagesMapped = pagesRows.map((p: any) => ({
       title: p.title,
       slug: p.slug,
       content: p.content,

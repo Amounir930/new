@@ -29,18 +29,17 @@ export class FingerprintMiddleware implements NestMiddleware {
     ];
 
     const rawFingerprint = fingerprintParts.join('|');
+    const fp = (req as any).fingerprint || 'unknown';
+    const data = (req as any).fingerprintData || {};
     const fingerprint = createHash('sha256')
       .update(rawFingerprint)
       .digest('hex');
 
     // Attach fingerprint to request for downstream fraud scoring (Level 3)
-    (req as never).fingerprint = fingerprint;
+    (req as any).fingerprint = fingerprint;
 
     // Also attach parts for velocity checks (S14 Level 2)
-    (req as never).fingerprintData = {
-      ip: req.ip,
-      ua: headers['user-agent'],
-    };
+    (req as any).fingerprintData = data;
 
     next();
   }

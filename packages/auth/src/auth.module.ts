@@ -16,7 +16,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
           expiresIn: configService.getWithDefault(
             'JWT_EXPIRES_IN',
             '7d'
-          ) as never,
+          ) as any,
         },
       }),
       inject: [ConfigService],
@@ -25,4 +25,4 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }

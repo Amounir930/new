@@ -51,7 +51,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -85,8 +85,8 @@ export class RateLimitGuard implements CanActivate {
       (customConfig?.ttl ? customConfig.ttl * 1000 : tierConfig.windowMs);
 
     // S6 FIX: Include tenantId in rate limit key for proper tenant isolation
-    const tenantContext = (request as never).tenantContext;
-    const tenantId = tenantContext?.tenantId || 'anonymous';
+    const tenantContext = (request as any).tenantContext;
+    const tenantId = (request as any).tenantContext?.tenantId || 'system';
     const key = `ratelimit:${tenantId}:${identifier}`;
     const now = Date.now();
 
@@ -115,7 +115,7 @@ export class RateLimitGuard implements CanActivate {
     if (count > ddosThreshold) {
       await this.rateLimitStore.block(key, 3600_000); // Block for 1 hour
       process.stdout.write(
-        `S12 CRITICAL: DDoS pattern detected! IP: ${identifier} | Count: ${count} | THRESHOLD: ${ddosThreshold}`
+        `S12 CRITICAL: DDoS pattern detected! IP: ${identifier} | Count: ${count} | THRESHOLD: ${ddosThreshold}\n`
       );
       throw new HttpException(
         {
@@ -166,7 +166,7 @@ export class RateLimitGuard implements CanActivate {
 
   private getIdentifier(request: Request): string {
     // Use API key if available, otherwise IP
-    const headers = request.headers as never;
+    const headers = request.headers as any;
     const apiKey = headers['x-api-key'] as string;
     if (apiKey) {
       return `api:${apiKey}`;
@@ -174,9 +174,9 @@ export class RateLimitGuard implements CanActivate {
 
     // Get IP from various headers (proxy support)
     const rawIp =
+      (request as any).ip ||
       headers['x-forwarded-for'] ||
       headers['x-real-ip'] ||
-      (request as never).ip ||
       'unknown';
 
     // S6: Safely handle both string and array header values (NestJS/Node.js compatibility)
@@ -192,8 +192,8 @@ export class RateLimitGuard implements CanActivate {
 
   private getTenantTier(request: Request): keyof typeof RATE_LIMIT_TIERS {
     // Extract from tenant context or default to free
-    const tenantContext = (request as never).tenantContext;
-    return tenantContext?.plan || 'free';
+    const tenantContext = (request as any).tenantContext;
+    return (tenantContext as any)?.plan || 'free';
   }
 }
 
@@ -280,4 +280,4 @@ import { QuotaInterceptor } from './quota.interceptor.js';
     FraudGuard,
   ],
 })
-export class RateLimitModule {}
+export class RateLimitModule { }

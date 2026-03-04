@@ -62,8 +62,7 @@ export class BlueprintExecutor {
         );
       } catch (error) {
         process.stdout.write(
-          `[BlueprintExecutor] CRITICAL FAILURE in module '${moduleName}':`,
-          error
+          `[BlueprintExecutor] CRITICAL FAILURE in module '${moduleName}': ${String(error)}\n`
         );
         // Circuit Breaker: Throw immediately to trigger transaction rollback in parent
         throw new Error(
@@ -124,7 +123,7 @@ export class BlueprintExecutor {
  * Validate Blueprint JSON Structure (S21 Strictness)
  * Enforces that all 41 features and essential quotas are present.
  */
-export function validateBlueprint(blueprint: unknown): BlueprintTemplate {
+export function validateBlueprint(blueprint: any): BlueprintTemplate {
   if (!blueprint || typeof blueprint !== 'object') {
     throw new Error('Blueprint must be a valid JSON object');
   }

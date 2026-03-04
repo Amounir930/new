@@ -54,8 +54,8 @@ export class CoreModule implements SeederModule {
 
     // 3. Essential Pages (Legal, About)
     if (config.pages && config.pages.length > 0) {
-      const pageEntries = (config.pages as never[]).map((p: unknown) => ({
-        ...p,
+      const pageEntries = (config.pages as never[]).map((p: any) => ({
+        ...(p as any),
         tenantId: storeId,
       }));
 

@@ -27,7 +27,7 @@ export const RequireFeature = (feature: string) =>
 
 @Injectable()
 export class GovernanceGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const feature = this.reflector.get<string>(
@@ -45,7 +45,7 @@ export class GovernanceGuard implements CanActivate {
     const tenantId = request.tenantContext?.tenantId;
 
     // Super Admin Bypass
-    if (user?.role === 'super_admin') {
+    if ((user as any)?.role === 'super_admin') {
       return true;
     }
 

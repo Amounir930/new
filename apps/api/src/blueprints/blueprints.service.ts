@@ -15,7 +15,7 @@ export class BlueprintsService {
   private readonly logger = new Logger(BlueprintsService.name);
   private db = adminDb;
 
-  constructor(private readonly audit: AuditService) {}
+  constructor(private readonly audit: AuditService) { }
 
   async findAll(): Promise<BlueprintRecord[]> {
     return (await this.db
@@ -57,8 +57,8 @@ export class BlueprintsService {
         name: dto.name,
         description: dto.description || null,
         plan: dto.plan,
-        nicheType: dto.nicheType || 'retail',
-        status: (dto.status || 'active') as 'active' | 'paused',
+        nicheType: (dto.nicheType || 'retail') as any,
+        status: (dto.status || 'active') as any,
         uiConfig: dto.uiConfig || {},
         isDefault: dto.isDefault,
         blueprint: blueprintData,
@@ -100,9 +100,9 @@ export class BlueprintsService {
     const [updatedBlueprint] = (await this.db
       .update(onboardingBlueprintsInGovernance)
       .set({
-        plan: dto.plan,
-        nicheType: dto.nicheType ?? undefined,
-        status: dto.status as 'active' | 'paused' | undefined,
+        plan: dto.plan as any,
+        nicheType: (dto.nicheType ?? undefined) as any,
+        status: dto.status as any,
         blueprint: dto.blueprint as unknown as BlueprintTemplate,
         isDefault: dto.isDefault,
         updatedAt: new Date().toISOString(),
@@ -120,7 +120,7 @@ export class BlueprintsService {
       action: 'BLUEPRINT_UPDATED',
       entityType: 'onboarding_blueprints',
       entityId: id,
-      metadata: dto,
+      metadata: dto as any,
     });
 
     return updatedBlueprint;

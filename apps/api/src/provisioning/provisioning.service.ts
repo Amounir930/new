@@ -47,7 +47,7 @@ interface ProvisioningStep {
 export class ProvisioningService {
   private readonly logger = new Logger(ProvisioningService.name);
 
-  constructor(@Inject('AUDIT_SERVICE') private readonly audit: AuditService) {}
+  constructor(@Inject('AUDIT_SERVICE') private readonly audit: AuditService) { }
 
   /**
    * Provision a new store in under 60 seconds
@@ -163,8 +163,7 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${
-          error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }
@@ -201,11 +200,11 @@ export class ProvisioningService {
         );
       }
 
-      return dbBlueprint.blueprint;
+      return dbBlueprint.blueprint as BlueprintTemplate;
     }
 
     if (options.blueprint) {
-      return options.blueprint;
+      return options.blueprint as BlueprintTemplate;
     }
 
     this.logger.log(
@@ -222,13 +221,13 @@ export class ProvisioningService {
           eq(
             onboardingBlueprintsInGovernance.nicheType,
             (options.nicheType || 'retail') as
-              | 'retail'
-              | 'wellness'
-              | 'education'
-              | 'services'
-              | 'hospitality'
-              | 'real-estate'
-              | 'creative'
+            | 'retail'
+            | 'wellness'
+            | 'education'
+            | 'services'
+            | 'hospitality'
+            | 'real-estate'
+            | 'creative'
           ),
           eq(onboardingBlueprintsInGovernance.plan, options.plan)
         )

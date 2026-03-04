@@ -27,7 +27,7 @@ export class LiteExportStrategy implements ExportStrategy {
   constructor(
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) {}
+  ) { }
 
   async validate(options: ExportOptions): Promise<boolean> {
     const tenants = await adminDb
@@ -57,14 +57,14 @@ export class LiteExportStrategy implements ExportStrategy {
         // S2: Hard Isolation. Using the scoped tenant db.
 
         // 1. Get tables from current schema (which is forced to the tenant's exact schema)
-        const tablesResult: unknown = await db.execute(sql`
+        const tablesResult: any = await db.execute(sql`
           SELECT table_name FROM information_schema.tables 
           WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'
         `);
 
         // S1 FIX 3B: Explicitly access rows property from Node pg
-        const tables = (tablesResult.rows || []).map(
-          (r: unknown) => r.table_name
+        const tables = ((tablesResult as any).rows || []).map(
+          (r: any) => r.table_name
         );
         let totalRows = 0;
 
@@ -79,7 +79,7 @@ export class LiteExportStrategy implements ExportStrategy {
           this.logger.debug(`Exporting table: ${table}`);
 
           // Check row count limit
-          const countResult: unknown = await db.execute(
+          const countResult: any = await db.execute(
             sql`SELECT COUNT(*) FROM ${safeTable}`
           );
           const rowCount = Number(countResult.rows[0].count);
@@ -90,7 +90,7 @@ export class LiteExportStrategy implements ExportStrategy {
             );
           }
 
-          const dataResult: unknown = await db.execute(
+          const dataResult: any = await db.execute(
             sql`SELECT * FROM ${safeTable}`
           );
           totalRows += dataResult.rowCount || 0;

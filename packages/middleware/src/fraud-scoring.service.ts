@@ -31,14 +31,14 @@ export class FraudScoringService {
   constructor(
     private readonly store: RedisRateLimitStore,
     private readonly geoIp: GeoIpService
-  ) {}
+  ) { }
 
   async calculateScore(req: unknown): Promise<FraudScore> {
     let score = 0;
     const reasons: string[] = [];
 
-    const fingerprint = req.fingerprint;
-    const ip = req.fingerprintData?.ip;
+    const fingerprint = (req as any).fingerprint;
+    const ip = (req as any).fingerprintData?.ip;
 
     // 1. Check Velocity per Fingerprint (L3)
     const velocityResult = await this.checkVelocity(fingerprint);
@@ -162,8 +162,8 @@ export class FraudScoringService {
 
   private checkBotPatterns(req: unknown): FraudCheckResult {
     if (
-      !req.headers['user-agent'] ||
-      req.headers['user-agent'].includes('Headless')
+      !(req as any).headers['user-agent'] ||
+      (req as any).headers['user-agent'].includes('Headless')
     ) {
       return { score: 400, reason: 'Anomalous User-Agent' };
     }

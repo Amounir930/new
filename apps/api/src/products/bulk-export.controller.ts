@@ -10,6 +10,7 @@ import {
   productsInStorefront,
 } from '@apex/db';
 import { Controller, Get, Logger, Req, Res, UseGuards } from '@nestjs/common';
+import { type Response } from 'express';
 import { Parser } from 'json2csv';
 
 @Controller('admin/products/export')

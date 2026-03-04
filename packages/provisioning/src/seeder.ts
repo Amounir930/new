@@ -107,7 +107,7 @@ export async function seedTenantData(
       seededAt: new Date(),
     };
   } catch (error) {
-    process.stdout.write(`Seeding failed for ${options.subdomain}:`, error);
+    process.stdout.write(`Seeding failed for ${options.subdomain}: ${String(error)}`);
     throw new Error(
       `Seeding Failure: ${error instanceof Error ? error.message : String(error)}`
     );

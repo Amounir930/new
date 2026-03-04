@@ -65,6 +65,8 @@ export class ProductsController {
       longDescription: { ar: body.descriptionAr, en: body.descriptionEn },
       taxBasisPoints: Math.round((body.taxPercentage || 0) * 100),
       tenantId,
+      basePrice: String(body.basePrice),
+      salePrice: body.salePrice ? String(body.salePrice) : null,
     };
 
     const { db, release } = await getTenantDb(tenantId);
@@ -97,6 +99,8 @@ export class ProductsController {
     // Map localized fields if present
     const mappedData: Partial<InferInsertModel<typeof productsInStorefront>> = {
       ...updateData,
+      basePrice: updateData.basePrice ? String(updateData.basePrice) : undefined,
+      salePrice: updateData.salePrice ? String(updateData.salePrice) : undefined,
     };
     if (body.nameAr || body.nameEn) {
       mappedData.name = { ar: body.nameAr || '', en: body.nameEn || '' };

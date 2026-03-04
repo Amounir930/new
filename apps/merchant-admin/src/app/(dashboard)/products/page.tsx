@@ -18,7 +18,7 @@ import {
 import { apiFetch } from '@/lib/api';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<unknown[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +35,7 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  function renderProductRow(product: unknown) {
+  function renderProductRow(product: any) {
     return (
       <TableRow
         key={product.id}

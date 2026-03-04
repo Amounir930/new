@@ -24,7 +24,7 @@ export class CatalogModule implements SeederModule {
     if (config.categories && config.categories.length > 0) {
       const categoryEntries = (config.categories as never[]).map(
         (c: unknown) => ({
-          ...c,
+          ...(c as any),
           tenantId: storeId,
         })
       );
@@ -38,7 +38,7 @@ export class CatalogModule implements SeederModule {
     // 2. Seed Products
     if (config.products && config.products.length > 0) {
       const productEntries = (config.products as never[]).map((p: unknown) => ({
-        ...p,
+        ...(p as any),
         tenantId: storeId,
       }));
 
@@ -50,8 +50,8 @@ export class CatalogModule implements SeederModule {
 
     // 3. Seed Banners
     if (config.banners && config.banners.length > 0) {
-      const bannerEntries = (config.banners as never[]).map((b: unknown) => ({
-        ...b,
+      const bannerEntries = (config.banners as never[]).map((b: any) => ({
+        ...(b as any),
         tenantId: storeId,
       }));
 

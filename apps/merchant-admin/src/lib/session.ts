@@ -22,7 +22,7 @@ export interface UserSession {
 // Redis Singleton — NEVER open/close per request!
 // Connection Churn = DDoS on your own Redis server.
 // ═══════════════════════════════════════════════════════════════
-let redisClient: unknown = null;
+let redisClient: any = null;
 let redisConnecting: Promise<unknown> | null = null;
 
 async function getRedisClient() {

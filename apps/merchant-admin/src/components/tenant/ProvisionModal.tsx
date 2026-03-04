@@ -37,7 +37,7 @@ export function ProvisionModal({
 }: ProvisionModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [blueprints, setBlueprints] = useState<unknown[]>([]);
+  const [blueprints, setBlueprints] = useState<any[]>([]);
 
   const {
     register,
@@ -90,8 +90,8 @@ export function ProvisionModal({
       onSuccess();
       onOpenChange(false);
       reset();
-    } catch (e: unknown) {
-      setError(e.message || 'Failed to provision store');
+    } catch (e: any) {
+      setError(e.message || 'Provisioning failed');
     } finally {
       setLoading(false);
     }

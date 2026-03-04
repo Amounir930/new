@@ -52,8 +52,8 @@ export async function runTenantMigrations(
       process.stdout.write(
         `[Runner] Migration files found: ${files.join(', ')}`
       );
-    } catch (e) {
-      process.stdout.write('[Runner] Failed to list migration files:', e);
+    } catch (e: any) {
+      process.stdout.write(`[Runner] Failed to list migration files: ${String(e)}\n`);
     }
 
     // 3. Execute migrations
@@ -80,14 +80,14 @@ export async function runTenantMigrations(
       process.stdout.write(
         `[Runner] Migration completed for schema: ${schemaName}`
       );
-    } catch (e: unknown) {
+    } catch (e: any) {
       if (e.code === '42P07') {
         // duplicate_table
         process.stdout.write(
-          `[Runner] Migration warning: Schema ${schemaName} already has tables. Skipping creation.`
+          `[Runner] Migration warning: Schema ${schemaName} already has tables. Skipping creation.\n`
         );
       } else {
-        process.stdout.write(`[Runner] Migration failed for ${schemaName}:`, e);
+        process.stdout.write(`[Runner] Migration failed for ${schemaName}: ${String(e)}\n`);
         throw e;
       }
     }
@@ -100,7 +100,7 @@ export async function runTenantMigrations(
       durationMs,
     };
   } catch (error) {
-    process.stdout.write(`S2 MIGRATION FAILURE for ${schemaName}:`, error);
+    process.stdout.write(`S2 MIGRATION FAILURE for ${schemaName}: ${String(error)}\n`);
     throw error;
   } finally {
     try {

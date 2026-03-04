@@ -81,7 +81,7 @@ async function validateTenant(
     };
   } catch (error) {
     if (error instanceof UnauthorizedException) throw error;
-    process.stdout.write(`S2 Error validating tenant ${identifier}:`, error);
+    process.stdout.write(`S2 Warning: Subdomain resolving on root API path: ${identifier || 'none'}\n`);
     throw new UnauthorizedException('Tenant validation failed');
   }
 }
@@ -225,7 +225,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         '';
 
       const rawBodyBuffer: Buffer =
-        (req as never).rawBody || Buffer.from(JSON.stringify(req.body || {}));
+        (req as any).rawBody || Buffer.from(JSON.stringify(req.body || {}));
 
       const expectedSig = crypto
         .createHmac('sha256', env.WEBHOOK_SECRET || '')
@@ -271,7 +271,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     req: TenantRequest,
     res: Response
   ): boolean {
-    if (!baseContext.isActive && req.user?.role !== 'super_admin') {
+    if (!baseContext.isActive && (req.user as any)?.role !== 'super_admin') {
       res.status(HttpStatus.FORBIDDEN).json({
         error: 'Tenant Suspended',
         message: 'This storefront has been suspended by governance.',
@@ -325,8 +325,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     } catch (error) {
       if (!cleanupRegistered) {
         // Only cleanup here if it wasn't registered to the response lifecycle
-        await client.query('ROLLBACK').catch(() => {});
-        await client.query('RESET ALL; DISCARD ALL;').catch(() => {});
+        await client.query('ROLLBACK').catch(() => { });
+        await client.query('RESET ALL; DISCARD ALL;').catch(() => { });
         client.release();
       }
 
@@ -350,18 +350,18 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       isCleanedUp = true;
 
       // Item 31: Force cleanup of context properties to prevent bleeding/leaks
-      (tenantContext as never).isActive = false;
-      (tenantContext as never).executor = null;
+      (tenantContext as any).isActive = false;
+      (tenantContext as any).executor = null;
 
       // Explicitly clear request context reference
-      const req = (res as never).req;
+      const req = (res as any).req;
       if (req) {
         req.tenantContext = undefined;
       }
 
       try {
         // S2: Robust cleanup - ROLLBACK ensures we aren't stuck in a failed transaction
-        await client.query('ROLLBACK').catch(() => {});
+        await client.query('ROLLBACK').catch(() => { });
         await client.query(`
           RESET app.current_tenant;
           RESET app.role;
@@ -370,7 +370,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         `);
         client.release();
       } catch (err) {
-        process.stdout.write('S2 DB Cleanup Error:', err);
+        process.stdout.write(`S2 DB Cleanup Error: ${String(err)}\n`);
         // If cleanup fails, we must DESTROY the client to prevent contamination
         client.release(true);
       }
@@ -404,14 +404,14 @@ export class TenantScopedGuard implements CanActivate {
 export class SuperAdminOrTenantGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<TenantRequest>();
-    const user = request.user as never;
+    const user = request.user as any;
 
     if (user?.role === 'super_admin') return true;
 
     if (!request.tenantContext?.isActive) {
       throw new UnauthorizedException('Tenant access denied');
     }
-    if (user?.tenantId !== request.tenantContext.tenantId) {
+    if ((user as any)?.tenantId !== request.tenantContext.tenantId) {
       throw new UnauthorizedException('Cross-tenant access denied');
     }
     return true;

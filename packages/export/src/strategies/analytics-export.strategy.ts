@@ -21,7 +21,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
   constructor(
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) {}
+  ) { }
 
   async validate(options: ExportOptions): Promise<boolean> {
     return !!options.dateRange; // Requires date range
@@ -46,7 +46,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
         const exportedFiles: string[] = [];
 
         // Export orders summary
-        const ordersResult: unknown = await db.execute(sql`
+        const ordersResult: any = await db.execute(sql`
           SELECT 
             DATE(created_at) as date,
             COUNT(*) as order_count,
@@ -60,13 +60,13 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
         await this.writeCSV(
           `${workDir}/analytics/orders_summary.csv`,
-          ordersResult.rows || [],
+          (ordersResult as any).rows || [],
           ['date', 'order_count', 'total_revenue', 'avg_order_value']
         );
         exportedFiles.push('orders_summary.csv');
 
         // Export products performance
-        const productsResult: unknown = await db.execute(sql`
+        const productsResult: any = await db.execute(sql`
           SELECT 
             p.name,
             p.sku,
@@ -81,7 +81,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
         await this.writeCSV(
           `${workDir}/analytics/products_performance.csv`,
-          productsResult.rows || [],
+          (productsResult as any).rows || [],
           ['name', 'sku', 'times_ordered', 'total_quantity']
         );
         exportedFiles.push('products_performance.csv');
@@ -94,7 +94,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
           database: {
             tables: ['orders_summary', 'products_performance'],
             rowCount:
-              (ordersResult.rowCount ?? 0) + (productsResult.rowCount ?? 0),
+              ((ordersResult as any).rowCount ?? 0) + ((productsResult as any).rowCount ?? 0),
             format: 'csv',
           },
           assets: {
@@ -198,7 +198,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
     for (const row of rows) {
       const values = headers.map((h) => {
-        const val = row[h];
+        const val = (row as any)[h];
         if (val === null || val === undefined) return '';
         // Escape quotes and wrap in quotes if contains comma
         const str = String(val).replace(/"/g, '""');

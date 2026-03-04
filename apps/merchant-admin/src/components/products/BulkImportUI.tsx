@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 export default function BulkImportUI() {
   const [file, setFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState<unknown>(null);
+  const [status, setStatus] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
