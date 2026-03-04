@@ -167,6 +167,10 @@ services:
     environment:
       NODE_ENV: production
       MINIO_ENDPOINT: apex-minio
+      PGHOST: apex-postgres
+      PGUSER: ${POSTGRES_USER:-apex}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-apex_v2}
     networks:
       - apex-internal
       - apex-data
@@ -234,6 +238,7 @@ services:
       - ALL
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.merchant-admin.rule=Host(`admin.60sec.shop`)"
       - "traefik.http.routers.merchant-admin.priority=4000"
       - "traefik.http.routers.merchant-admin.entrypoints=websecure"
@@ -282,6 +287,7 @@ services:
       - ALL
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
       - "traefik.http.routers.super-admin.priority=5000"
       - "traefik.http.routers.super-admin.entrypoints=websecure"
@@ -327,6 +333,7 @@ services:
       - ALL
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
       - "traefik.http.routers.store-main.priority=3000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
@@ -424,6 +431,7 @@ services:
       - "--metrics.prometheus=true"
       - "--api.dashboard=true"
       - "--api.insecure=false"
+      - "--ping=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
