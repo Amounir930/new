@@ -531,6 +531,7 @@ services:
       - MAX_CLIENT_CONN=5000
       - DEFAULT_POOL_SIZE=150
       - POOL_MODE=transaction
+      - AUTH_TYPE=scram-sha-256
       - ADMIN_USERS=${PGBOUNCER_ADMIN_USERS:-postgres,apex}
     depends_on:
       apex-postgres:
