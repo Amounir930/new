@@ -34,10 +34,10 @@ export class FingerprintMiddleware implements NestMiddleware {
       .digest('hex');
 
     // Attach fingerprint to request for downstream fraud scoring (Level 3)
-    (req as any).fingerprint = fingerprint;
+    (req as never).fingerprint = fingerprint;
 
     // Also attach parts for velocity checks (S14 Level 2)
-    (req as any).fingerprintData = {
+    (req as never).fingerprintData = {
       ip: req.ip,
       ua: headers['user-agent'],
     };

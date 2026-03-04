@@ -15,17 +15,17 @@ describe('ExportStrategyFactory', () => {
     name: 'lite',
     validate: mock().mockResolvedValue(true),
     export: mock(),
-  } as any;
+  } as never;
   const mockNativeStrategy = {
     name: 'native',
     validate: mock().mockResolvedValue(true),
     export: mock(),
-  } as any;
+  } as never;
   const mockAnalyticsStrategy = {
     name: 'analytics',
     validate: mock().mockResolvedValue(true),
     export: mock(),
-  } as any;
+  } as never;
 
   beforeEach(() => {
     factory = new ExportStrategyFactory(
@@ -52,7 +52,7 @@ describe('ExportStrategyFactory', () => {
     });
 
     it('should throw for invalid profile', () => {
-      expect(() => factory.getStrategy('invalid' as any)).toThrow(
+      expect(() => factory.getStrategy('invalid' as never)).toThrow(
         'Unknown export profile'
       );
     });

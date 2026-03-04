@@ -31,6 +31,6 @@ for (const file of files) {
     }
 
     writeFileSync(filePath, content, 'utf-8');
-    console.log(`Updated ${file}`);
+    process.stdout.write(`Updated ${file}`);
   }
 }

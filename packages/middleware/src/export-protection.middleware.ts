@@ -19,7 +19,7 @@ export class ExportProtectionMiddleware implements NestMiddleware {
       req.path.includes('/export');
 
     if (isExport) {
-      const user = (req as any).user;
+      const user = (req as never).user;
 
       // 1. Enforce Admin-Only Access (Mandate #27)
       if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
@@ -29,14 +29,14 @@ export class ExportProtectionMiddleware implements NestMiddleware {
       }
 
       // 2. Log Export Attempt to Audit Logs (Mandate #27)
-      console.log(
+      process.stdout.write(
         `[AUDIT] Export Attempt - User: ${user.email}, Resource: ${req.path}, Format: ${req.query.format}`
       );
 
       // Note: In a full implementation, we would call platformAuditLogs.insert here.
       // Since this is middleware, we might attach a flag for the AuditInterceptor to pick up.
-      (req as any).auditMetadata = {
-        ...(req as any).auditMetadata,
+      (req as never).auditMetadata = {
+        ...(req as never).auditMetadata,
         action: 'EXPORT',
         entityType: 'DATA_BULK',
         metadata: {

@@ -237,7 +237,7 @@ export async function updateTenant(
     status?: TenantStatus;
   }
 ): Promise<TenantOverviewRecord | null> {
-  const updateData: Record<string, any> = {
+  const updateData: Record<string, unknown> = {
     updatedAt: new Date().toISOString(),
   };
 
@@ -248,7 +248,7 @@ export async function updateTenant(
 
   const result = await adminDb
     .update(tenantsInGovernance)
-    .set(updateData as any)
+    .set(updateData as never)
     .where(eq(tenantsInGovernance.id, id))
     .returning();
 

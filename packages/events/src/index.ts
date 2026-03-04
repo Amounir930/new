@@ -210,11 +210,11 @@ export class EventsWorker implements OnModuleInit, OnModuleDestroy {
   private handlers: Map<string, Array<(event: ApexEvent) => Promise<void>>> =
     new Map();
 
-  constructor(private readonly redisUrl: string) {}
+  constructor(private readonly redisUrl: string) { }
 
   onModuleInit() {
     // S14.7: Dedicated Worker Pattern
-    if (process.env.ENABLE_WORKERS !== 'true') {
+    if (process.env['ENABLE_WORKERS'] !== 'true') {
       return;
     }
 
@@ -290,9 +290,10 @@ export function createTimestamp(): string {
   return new Date().toISOString();
 }
 
-import { type DynamicModule, Module } from '@nestjs/common';
+import { type DynamicModule, Module, type FactoryProvider } from '@nestjs/common';
 
 @Module({})
+// biome-ignore lint/complexity/noStaticOnlyClass: NestJS module pattern
 export class EventsModule {
   static register(redisUrl: string): DynamicModule {
     return {
@@ -301,6 +302,39 @@ export class EventsModule {
         {
           provide: 'REDIS_URL',
           useValue: redisUrl,
+        },
+        {
+          provide: BullMQEventBus,
+          useFactory: (url: string) => new BullMQEventBus(url),
+          inject: ['REDIS_URL'],
+        },
+        {
+          provide: EventsWorker,
+          useFactory: (url: string) => new EventsWorker(url),
+          inject: ['REDIS_URL'],
+        },
+        {
+          provide: 'EVENT_BUS',
+          useExisting: BullMQEventBus,
+        },
+      ],
+      exports: ['EVENT_BUS', BullMQEventBus, EventsWorker],
+    };
+  }
+
+  static registerAsync(options: {
+    imports?: DynamicModule['imports'];
+    useFactory: (...args: unknown[]) => Promise<string> | string;
+    inject?: FactoryProvider['inject'];
+  }): DynamicModule {
+    return {
+      module: EventsModule,
+      imports: options.imports || [],
+      providers: [
+        {
+          provide: 'REDIS_URL',
+          useFactory: options.useFactory,
+          inject: options.inject || [],
         },
         {
           provide: BullMQEventBus,

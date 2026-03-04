@@ -41,10 +41,10 @@ describe('StorageManager', () => {
     mock.restore();
     // Clear call history for all mocks in the shared client
     Object.values(mockMinioClient).forEach((m) => {
-      if ((m as any).mockClear) (m as any).mockClear();
+      if ((m as never).mockClear) (m as never).mockClear();
     });
     resetMinioClient();
-    setMinioClient(mockMinioClient as any);
+    setMinioClient(mockMinioClient as never);
   });
 
   describe('createStorageBucket', () => {
@@ -72,7 +72,7 @@ describe('StorageManager', () => {
         mockMinioClient.setBucketVersioning.mockResolvedValue(undefined);
         mockMinioClient.setBucketPolicy.mockResolvedValue(undefined);
         mockMinioClient.setBucketTagging.mockResolvedValue(undefined);
-        mockMinioClient.putObject.mockResolvedValue({} as any);
+        mockMinioClient.putObject.mockResolvedValue({} as never);
 
         const result = await createStorageBucket(subdomain, plan);
 
@@ -80,7 +80,7 @@ describe('StorageManager', () => {
         expect(result.bucketName).toBe(expectedBucket);
         expect(mockMinioClient.makeBucket).toHaveBeenCalledWith(
           expectedBucket,
-          expect.any(String)
+          expect.anything(String)
         );
         expect(mockMinioClient.setBucketTagging).toHaveBeenCalledWith(
           expectedBucket,
@@ -128,7 +128,7 @@ describe('StorageManager', () => {
         [Symbol.asyncIterator]: async function* () {
           yield { name: 'file.txt' };
         },
-      } as any);
+      } as never);
       mockMinioClient.removeObjects = mock().mockResolvedValueOnce(undefined);
       mockMinioClient.removeBucket.mockResolvedValueOnce(undefined);
 
@@ -145,7 +145,7 @@ describe('StorageManager', () => {
       ];
       mockMinioClient.listObjects.mockReturnValueOnce({
         toArray: mock().mockResolvedValueOnce(mockObjects),
-      } as any);
+      } as never);
       mockMinioClient.getBucketTagging.mockResolvedValueOnce([
         { Key: 'plan', Value: 'basic' },
       ]);

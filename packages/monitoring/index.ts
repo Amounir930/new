@@ -1,1 +1,1 @@
-console.log("Hello via Bun!");
+process.stdout.write('Hello via Bun!');

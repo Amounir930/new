@@ -33,7 +33,7 @@ export function BlueprintList() {
       setLoading(true);
       const data = await apiFetch<Blueprint[]>('/v1/admin/blueprints');
       setBlueprints(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e.message);
     } finally {
       setLoading(false);
@@ -45,12 +45,12 @@ export function BlueprintList() {
   }, [fetchBlueprints]);
 
   const handleDelete = async (id: string) => {
-    // eslint-disable-next-line no-restricted-globals
+    // eslint-ignore no-restricted-globals
     if (!confirm('Are you sure you want to delete this blueprint?')) return;
     try {
       await apiFetch(`/v1/admin/blueprints/${id}`, { method: 'DELETE' });
       fetchBlueprints();
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e.message);
     }
   };

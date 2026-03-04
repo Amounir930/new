@@ -4,7 +4,7 @@
  */
 
 import { AuditModule } from '@apex/audit';
-import { ConfigModule } from '@apex/config';
+import { ConfigModule, ConfigService } from '@apex/config';
 import { EventsModule } from '@apex/events';
 import { ExportModule } from '@apex/export';
 import {
@@ -26,6 +26,7 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BlueprintsModule } from './blueprints/blueprints.module.js';
+import { MediaModule } from './common/media/media.module.js';
 import { GovernanceModule } from './governance/governance.module.js';
 import { HealthModule } from './health/health.module.js';
 import { BulkImportController } from './products/bulk-import.controller.js';
@@ -36,7 +37,6 @@ import { SecurityModule } from './security/security.module.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
 import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
 import { TenantsModule } from './tenants/tenants.module.js';
-import { MediaModule } from './common/media/media.module.js';
 
 @Module({
   imports: [
@@ -63,7 +63,12 @@ import { MediaModule } from './common/media/media.module.js';
     ExportModule,
     GovernanceModule,
     // S14.7: Persistent Event Bus (Rule 1.3)
-    EventsModule.register(process.env.REDIS_URL || 'redis://localhost:6379'),
+    EventsModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) =>
+        config.get('REDIS_URL') || 'redis://localhost:6379',
+      inject: [ConfigService],
+    }),
   ],
   providers: [
     {

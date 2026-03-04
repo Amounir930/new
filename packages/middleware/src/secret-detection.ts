@@ -35,7 +35,7 @@ export class SecretDetectionMiddleware implements NestMiddleware {
     if (!isSecretPath) {
       for (const pattern of this.secretPatterns) {
         if (pattern.test(body) || pattern.test(headers)) {
-          console.error(
+          process.stdout.write(
             `S50 CRITICAL: Potential secret detected in request! Path: ${req.originalUrl}`
           );
           throw new BadRequestException(

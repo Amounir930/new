@@ -121,7 +121,7 @@ export const defaultCorsConfig: CorsConfig = {
 
     // Load additional origins from env and trim whitespace
     const allowedOrigins =
-      ((env as any).ALLOWED_ORIGINS as string)
+      ((env as never).ALLOWED_ORIGINS as string)
         ?.split(',')
         .map((o: string) => o.trim())
         .filter(Boolean) || [];
@@ -132,7 +132,7 @@ export const defaultCorsConfig: CorsConfig = {
     if (whitelist.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(
+      process.stdout.write(
         `[Security] S8 Violation: CORS blocked request from origin: ${origin}`
       );
       callback(new Error('Not allowed by CORS'));

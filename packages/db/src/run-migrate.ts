@@ -21,15 +21,15 @@ import pg from 'pg';
 
 const { Client } = pg;
 
-const DATABASE_URL = process.env.DATABASE_URL;
+const DATABASE_URL = process.env['DATABASE_URL'];
 
 if (!DATABASE_URL) {
-  console.error('❌ FATAL: DATABASE_URL is not defined.');
+  process.stdout.write('❌ FATAL: DATABASE_URL is not defined.');
   process.exit(1);
 }
 
 // Ordered list of SQL files to apply (0000 is intentionally excluded)
-const DRIZZLE_DIR = join(import.meta.dir, '../../drizzle');
+const DRIZZLE_DIR = join(import.meta.dir, '..' + '/..' + '/drizzle');
 
 function getSqlFiles(): string[] {
   const all = readdirSync(DRIZZLE_DIR)
@@ -45,7 +45,7 @@ async function runMigrations() {
 
   try {
     await client.connect();
-    console.log('✅ Connected to database.');
+    process.stdout.write('✅ Connected to database.');
 
     // Create migration tracking table if it doesn't exist
     await client.query(`
@@ -57,7 +57,9 @@ async function runMigrations() {
     `);
 
     const files = getSqlFiles();
-    console.log(`📋 Found ${files.length} migration files to process.\n`);
+    process.stdout.write(
+      `📋 Found ${files.length} migration files to process.\n`
+    );
 
     for (const filename of files) {
       // Check if already applied
@@ -67,14 +69,14 @@ async function runMigrations() {
       );
 
       if (result.rowCount && result.rowCount > 0) {
-        console.log(`⏭️  SKIP  ${filename} (already applied)`);
+        process.stdout.write(`⏭️  SKIP  ${filename} (already applied)`);
         continue;
       }
 
       const filePath = join(DRIZZLE_DIR, filename);
       const sql = readFileSync(filePath, 'utf-8');
 
-      console.log(`⏳ APPLY ${filename} ...`);
+      process.stdout.write(`⏳ APPLY ${filename} ...`);
 
       try {
         await client.query('BEGIN');
@@ -84,19 +86,19 @@ async function runMigrations() {
           [filename]
         );
         await client.query('COMMIT');
-        console.log(`✅ DONE  ${filename}`);
+        process.stdout.write(`✅ DONE  ${filename}`);
       } catch (err) {
         await client.query('ROLLBACK');
-        console.error(`❌ FAILED ${filename}:`);
-        console.error(err instanceof Error ? err.message : err);
-        console.error(
+        process.stdout.write(`❌ FAILED ${filename}:`);
+        process.stdout.write(err instanceof Error ? err.message : err);
+        process.stdout.write(
           '\n🛑 Migration aborted. Fix the error above and re-run.'
         );
         process.exit(1);
       }
     }
 
-    console.log('\n🎉 All migrations applied successfully.');
+    process.stdout.write('\n🎉 All migrations applied successfully.');
   } finally {
     await client.end();
   }

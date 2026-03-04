@@ -34,7 +34,7 @@ export const HeaderBlueprintSchema = z.object({
       label: z.string().min(1),
       url: z.string().optional(),
       icon: z.string().optional(),
-      children: z.array(z.any()).optional(), // Recursive or simplified
+      children: z.array(z.unknown()).optional(), // Recursive or simplified
     })
   ),
   searchEnabled: z.boolean().default(true),

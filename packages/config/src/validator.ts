@@ -15,7 +15,7 @@ function resolveFileSecrets(secretEnv: Record<string, string | undefined>) {
         try {
           secretEnv[targetKey] = readFileSync(filePath, 'utf8').trim();
         } catch (err) {
-          console.warn(`⚠️ Failed to read secret file at ${filePath}:`, err);
+          console['warn'](`⚠️ Failed to read secret file at ${filePath}:`, err);
         }
       }
     }
@@ -108,9 +108,9 @@ export function enforceS1Compliance(): void {
   try {
     validateEnv();
   } catch (error) {
-    console.error('❌ CRITICAL: S1 Protocol Violation');
-    console.error(error instanceof Error ? error.message : 'Unknown error');
-    console.error(
+    console['warn']('❌ CRITICAL: S1 Protocol Violation');
+    console['warn'](error instanceof Error ? error.message : 'Unknown error');
+    console['warn'](
       'Application startup aborted. Check your secrets and environment.'
     );
     process.exit(1);

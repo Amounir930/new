@@ -17,11 +17,11 @@ import { Node, Project } from 'ts-morph';
 const PROJECT_ROOT = process.cwd();
 const DB_PACKAGE_PATH = join(PROJECT_ROOT, 'packages/db/src');
 
-console.log('\n🛡️  S2 Data Isolation Advanced Checker (AST)');
-console.log('   Scanning packages/db/src for semantic violations...\n');
+process.stdout.write('\n🛡️  S2 Data Isolation Advanced Checker (AST)');
+process.stdout.write('   Scanning packages/db/src for semantic violations...\n');
 
 if (!existsSync(DB_PACKAGE_PATH)) {
-  console.error(`❌ Error: Database package not found at ${DB_PACKAGE_PATH}`);
+  process.stdout.write(`❌ Error: Database package not found at ${DB_PACKAGE_PATH}`);
   process.exit(1);
 }
 
@@ -41,9 +41,9 @@ function report(type: 'CRITICAL' | 'WARNING', message: string, node: Node) {
   const { line, column } = sourceFile.getLineAndColumnAtPos(node.getStart());
   const filePath = sourceFile.getFilePath().replace(PROJECT_ROOT, '');
 
-  console.log(`\n${type === 'CRITICAL' ? '❌' : '⚠️ '} ${type}: ${message}`);
-  console.log(`   📁 .${filePath}:${line}:${column}`);
-  console.log(`   Code: ${node.getText().substring(0, 80).trim()}...`);
+  process.stdout.write(`\n${type === 'CRITICAL' ? '❌' : '⚠️ '} ${type}: ${message}`);
+  process.stdout.write(`   📁 .${filePath}:${line}:${column}`);
+  process.stdout.write(`   Code: ${node.getText().substring(0, 80).trim()}...`);
 
   if (type === 'CRITICAL') criticalViolations++;
   else warnings++;
@@ -122,7 +122,7 @@ for (const sourceFile of project.getSourceFiles()) {
         text.includes('ALTER TABLE') &&
         text.includes('ENABLE ROW LEVEL SECURITY')
       ) {
-        console.log(
+        process.stdout.write(
           '   ✅ Found RLS Enforcement:',
           text.substring(0, 50).trim()
         );
@@ -132,7 +132,7 @@ for (const sourceFile of project.getSourceFiles()) {
 }
 
 // 5. Global RLS Coverage Check (Post-Pass)
-console.log('\n🔍 Running Post-Pass RLS Coverage Check...');
+process.stdout.write('\n🔍 Running Post-Pass RLS Coverage Check...');
 const schemaContent =
   project
     .getSourceFiles()
@@ -146,15 +146,15 @@ if (!schemaContent.includes('pgPolicy') && criticalViolations === 0) {
   );
 }
 
-console.log(`\n${'='.repeat(60)}`);
-console.log(
+process.stdout.write(`\n${'='.repeat(60)}`);
+process.stdout.write(
   `📊 Scan Complete: ${criticalViolations} Critical, ${warnings} Warnings`
 );
-console.log('='.repeat(60));
+process.stdout.write('='.repeat(60));
 
 if (criticalViolations > 0) {
-  console.error('\n❌ FAILED: Critical security violations found.');
+  process.stdout.write('\n❌ FAILED: Critical security violations found.');
   process.exit(1);
 } else {
-  console.log('\n✅ PASSED: No critical isolation violations found.');
+  process.stdout.write('\n✅ PASSED: No critical isolation violations found.');
 }

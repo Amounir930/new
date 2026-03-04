@@ -56,12 +56,12 @@ export default function LoginPage() {
       if (res?.accessToken) {
         setAuthToken(res.accessToken);
         // Redirect to dashboard
-        router.push('/super-admin');
+        router.push('/dashboard');
       } else {
         throw new Error('No token received');
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err: unknown) {
+      void err;
       setError('Invalid credentials or server error');
     } finally {
       setLoading(false);

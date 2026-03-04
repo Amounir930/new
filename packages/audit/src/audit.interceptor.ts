@@ -27,7 +27,7 @@ export class AuditInterceptor implements NestInterceptor {
     private readonly auditService: AuditService
   ) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
     const method = request.method;
 
@@ -46,10 +46,10 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: async (data: any) => {
+        next: async (data: unknown) => {
           await this.performAudit(context, auditOptions, data, 'SUCCESS');
         },
-        error: async (error: any) => {
+        error: async (error: unknown) => {
           await this.performAudit(context, auditOptions, error, 'FAILURE');
         },
       })
@@ -59,12 +59,12 @@ export class AuditInterceptor implements NestInterceptor {
   private async performAudit(
     context: ExecutionContext,
     options: AuditLogOptions | undefined,
-    resultData: any,
+    resultData: unknown,
     resultStatus: 'SUCCESS' | 'FAILURE'
   ) {
     const request = context.switchToHttp().getRequest();
     const { method, url, ip, headers } = request;
-    const user = (request as any).user;
+    const user = (request as never).user;
 
     // Determine action name
     const action = options?.action || `${method}:${url}`;
@@ -100,7 +100,7 @@ export class AuditInterceptor implements NestInterceptor {
       });
     } catch (err) {
       // Fail-safe: don't crash the request if auditing fails, but log it
-      console.error('S4 Auditing Failed:', err);
+      process.stderr.write('S4 Auditing Failed:', err);
     }
   }
 }

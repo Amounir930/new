@@ -55,7 +55,7 @@ export type Category = z.infer<typeof CategorySchema>;
 /**
  * Category tree node (with nested children)
  */
-export const CategoryTreeNodeSchema: z.ZodType<any> = z.lazy(() =>
+export const CategoryTreeNodeSchema: z.ZodType<unknown> = z.lazy(() =>
   CategorySchema.extend({
     children: z.array(CategoryTreeNodeSchema).optional(),
   })

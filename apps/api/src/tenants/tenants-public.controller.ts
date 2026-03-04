@@ -35,7 +35,19 @@ export class TenantsPublicController {
       const [blueprint] = await adminDb
         .select({ uiConfig: onboardingBlueprintsInGovernance.uiConfig })
         .from(onboardingBlueprintsInGovernance)
-        .where(eq(onboardingBlueprintsInGovernance.nicheType, nicheType as any))
+        .where(
+          eq(
+            onboardingBlueprintsInGovernance.nicheType,
+            nicheType as
+              | 'retail'
+              | 'wellness'
+              | 'education'
+              | 'services'
+              | 'hospitality'
+              | 'real-estate'
+              | 'creative'
+          )
+        )
         .limit(1);
 
       if (blueprint?.uiConfig) {

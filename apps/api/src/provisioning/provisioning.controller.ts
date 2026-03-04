@@ -4,7 +4,11 @@
  */
 
 import { AuditLog, type AuditService } from '@apex/audit';
-import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
+import {
+  type AuthenticatedRequest,
+  JwtAuthGuard,
+  SuperAdminGuard,
+} from '@apex/auth';
 import { env } from '@apex/config';
 import { FraudGuard } from '@apex/middleware';
 import {
@@ -18,7 +22,6 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import type { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
@@ -45,7 +48,7 @@ export class ProvisioningController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async provisionStore(
-    @Req() _req: Request,
+    @Req() _req: AuthenticatedRequest,
     @Body(ZodValidationPipe) dto: ProvisionRequestDto
   ) {
     this.logger.log(`Received provisioning request for: ${dto.subdomain}`);
@@ -62,7 +65,7 @@ export class ProvisioningController {
       plan: dto.plan ?? 'free',
       nicheType: dto.nicheType ?? undefined,
       uiConfig: dto.uiConfig,
-      blueprint: dto.blueprint as unknown, // S3: Inject custom blueprint
+      blueprint: dto.blueprint, // S3: Inject custom blueprint
       blueprintId: dto.blueprintId, // S21: Pass specific blueprint ID
     });
 
@@ -84,10 +87,15 @@ export class ProvisioningController {
   @AuditLog({ action: 'PROVISIONING_OTP_REQUESTED', entityType: 'security' })
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
   @Post('otp')
-  async requestProvisioningOTP(@Req() req: Request) {
-    const otpService = (req as any).otpService; // Will be injected or accessed via module
+  async requestProvisioningOTP(
+    @Req()
+    req: AuthenticatedRequest & {
+      otpService?: { generateOTP: (id: string) => Promise<string> };
+    }
+  ) {
+    const otpService = req.otpService; // Will be injected or accessed via module
     const identifier = req.ip || 'anonymous';
-    const code = await otpService.generateOTP(identifier);
+    const code = await otpService?.generateOTP(identifier);
     this.logger.log(`[S14] OTP requested for provisioning by ${identifier}`);
     return {
       message: 'OTP sent to registered administrator device',

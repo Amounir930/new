@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<unknown[]>([]);
 
   // Mock data for Admin-17
   useEffect(() => {

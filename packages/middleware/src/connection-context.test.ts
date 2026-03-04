@@ -14,7 +14,7 @@ import {
 
 describe('ConnectionContext', () => {
   beforeEach(() => {
-    // Clear any existing context
+    // Clear all existing context
   });
 
   it('should set and get tenant context', async () => {

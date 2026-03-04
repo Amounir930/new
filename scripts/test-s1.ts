@@ -15,8 +15,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-console.log('🧪 S1 Protocol Test Suite');
-console.log('='.repeat(50));
+process.stdout.write('🧪 S1 Protocol Test Suite');
+process.stdout.write('='.repeat(50));
 
 const tests = [
   {
@@ -86,8 +86,8 @@ let passed = 0;
 let failed = 0;
 
 for (const test of tests) {
-  console.log(`\n📝 Test: ${test.name}`);
-  console.log(`   Expected: ${test.shouldCrash ? 'CRASH 💥' : 'SUCCESS ✅'}`);
+  process.stdout.write(`\n📝 Test: ${test.name}`);
+  process.stdout.write(`   Expected: ${test.shouldCrash ? 'CRASH 💥' : 'SUCCESS ✅'}`);
 
   // Run test in subprocess
   const result = spawn('bun', ['run', 'packages/config/src/index.ts'], {
@@ -120,35 +120,35 @@ for (const test of tests) {
       test.expectedError &&
       fullOutput.includes(test.expectedError)
     ) {
-      console.log('   Result: ✅ PASS (Crashed with expected error)');
-      console.log(
+      process.stdout.write('   Result: ✅ PASS (Crashed with expected error)');
+      process.stdout.write(
         `   Error: ${
           fullOutput.split('S1 Violation')[1]?.substring(0, 100) || 'N/A'
         }`
       );
       passed++;
     } else if (!test.shouldCrash) {
-      console.log('   Result: ✅ PASS (Started successfully)');
+      process.stdout.write('   Result: ✅ PASS (Started successfully)');
       passed++;
     } else {
-      console.log('   Result: ❌ FAIL (Crashed but with wrong error)');
-      console.log(`   Output: ${fullOutput.substring(0, 200)}`);
+      process.stdout.write('   Result: ❌ FAIL (Crashed but with wrong error)');
+      process.stdout.write(`   Output: ${fullOutput.substring(0, 200)}`);
       failed++;
     }
   } else {
-    console.log(
+    process.stdout.write(
       `   Result: ❌ FAIL (Expected ${
         test.shouldCrash ? 'crash' : 'success'
       }, got ${crashed ? 'crash' : 'success'})`
     );
-    console.log(`   Output: ${fullOutput.substring(0, 200)}`);
+    process.stdout.write(`   Output: ${fullOutput.substring(0, 200)}`);
     failed++;
   }
 }
 
-console.log(`\n${'='.repeat(50)}`);
-console.log(`📊 Results: ${passed} passed, ${failed} failed`);
-console.log('='.repeat(50));
+process.stdout.write(`\n${'='.repeat(50)}`);
+process.stdout.write(`📊 Results: ${passed} passed, ${failed} failed`);
+process.stdout.write('='.repeat(50));
 
 if (failed > 0) {
   process.exit(1);

@@ -30,11 +30,14 @@ export class GeoIpService {
   /**
    * Detects "Impossible Travel" (jumping between countries/cities faster than physically possible)
    */
-  async isImpossibleTravel(lastGeo: any, currentGeo: any): Promise<boolean> {
+  async isImpossibleTravel(
+    lastGeo: unknown,
+    currentGeo: unknown
+  ): Promise<boolean> {
     if (!lastGeo || !currentGeo) return false;
     if (lastGeo.country !== currentGeo.country) {
       // Logic for travel time between countries can be added here
-      return true; // Simplified: any country change in a short window is suspicious
+      return true; // Simplified: unknown country change in a short window is suspicious
     }
     return false;
   }

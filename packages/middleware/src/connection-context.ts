@@ -19,7 +19,7 @@ export interface TenantContext {
   readonly schemaName: string;
   readonly isActive: boolean;
   readonly isSuspended: boolean; // S15 FIX 19A: Steel Control flag (enforced by Guards, not Middleware)
-  readonly executor?: any; // Drizzle executor/client for stickiness (S2)
+  readonly executor?: unknown; // Drizzle executor/client for stickiness (S2)
 }
 
 /**

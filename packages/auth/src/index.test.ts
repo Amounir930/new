@@ -33,7 +33,7 @@ describe('JwtAuthGuard', () => {
       switchToHttp: () => ({
         getRequest: () => ({ headers: {} }),
       }),
-    } as any;
+    } as never;
 
     // We can't easily mock 'super' in a unit test without more complex setup,
     // but we can at least call the function to cover the entry point.

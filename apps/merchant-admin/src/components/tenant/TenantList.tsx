@@ -57,7 +57,7 @@ export function TenantList() {
       setLoading(true);
       const data = await apiFetch<Tenant[]>('/v1/admin/tenants');
       setTenants(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e.message);
     } finally {
       setLoading(false);
@@ -76,7 +76,7 @@ export function TenantList() {
     return matchesSearch && matchesStatus;
   });
 
-  async function updateTenant(id: string, data: any) {
+  async function updateTenant(id: string, data: unknown) {
     try {
       setUpdatingId(id);
       await apiFetch(`/v1/admin/tenants/${id}`, {
@@ -84,7 +84,7 @@ export function TenantList() {
         body: JSON.stringify(data),
       });
       await fetchTenants();
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(`Update failed: ${e.message}`);
     } finally {
       setUpdatingId(null);

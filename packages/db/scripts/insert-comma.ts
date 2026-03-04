@@ -18,6 +18,6 @@ for (const file of files) {
       '$1,\n  storefrontSchema,'
     );
     writeFileSync(filePath, content, 'utf-8');
-    console.log(`Inserted missing comma in ${file}`);
+    process.stdout.write(`Inserted missing comma in ${file}`);
   }
 }

@@ -25,8 +25,8 @@ const mockShell = {
 };
 
 mock.module('@apex/db', () => {
-  const sqlMock: any = mock(
-    (strings: TemplateStringsArray, ...values: any[]) => ({
+  const sqlMock: unknown = mock(
+    (strings: TemplateStringsArray, ...values: unknown[]) => ({
       strings,
       values,
     })
@@ -61,7 +61,7 @@ describe('LiteExportStrategy', () => {
 
   beforeEach(() => {
     mockClient.release.mockClear();
-    (mockClient as any).execute = mock().mockResolvedValue({
+    (mockClient as never).execute = mock().mockResolvedValue({
       rows: [],
       rowCount: 0,
     });
@@ -82,8 +82,8 @@ describe('LiteExportStrategy', () => {
     });
 
     strategy = new LiteExportStrategy(
-      mockShell as any,
-      mockAuditService as any
+      mockShell as never,
+      mockAuditService as never
     );
   });
 
@@ -106,7 +106,7 @@ describe('LiteExportStrategy', () => {
     it('should reject non-existent tenant', async () => {
       // Mock adminDb to return empty array for non-existent tenant
       const { adminDb } = await import('@apex/db');
-      (adminDb.limit as any).mockResolvedValue([]);
+      (adminDb.limit as never).mockResolvedValue([]);
 
       const options: ExportOptions = {
         tenantId: 'non-existent',
@@ -122,7 +122,7 @@ describe('LiteExportStrategy', () => {
     it('should handle registry errors', async () => {
       // Mock adminDb to throw error
       const { adminDb } = await import('@apex/db');
-      (adminDb.limit as any).mockRejectedValue(new Error('Registry error'));
+      (adminDb.limit as never).mockRejectedValue(new Error('Registry error'));
 
       const options: ExportOptions = {
         tenantId: 'tenant-123',
@@ -139,23 +139,23 @@ describe('LiteExportStrategy', () => {
   describe('export', () => {
     it('should export tenant data successfully', async () => {
       // Mock table discovery
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }, { table_name: 'orders' }],
       });
 
       // Mock row count checks
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ count: '100' }],
       });
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ id: 1, name: 'User 1' }],
         rowCount: 1,
       });
 
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ count: '50' }],
       });
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ id: 1, total: 100 }],
         rowCount: 1,
       });
@@ -177,14 +177,14 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should enforce S2 tenant isolation', async () => {
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'users' }],
       });
 
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ count: '10' }],
       });
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [],
         rowCount: 0,
       });
@@ -198,8 +198,8 @@ describe('LiteExportStrategy', () => {
       await strategy.export(options);
 
       // Verify schema-scoped queries
-      const executeCalls = (mockClient as any).execute.mock.calls;
-      const schemaQuery = executeCalls.find((call: any) => {
+      const executeCalls = (mockClient as never).execute.mock.calls;
+      const schemaQuery = executeCalls.find((call: unknown) => {
         const queryText = call[0].strings
           ? call[0].strings.join('')
           : call[0].toString();
@@ -209,12 +209,12 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should reject tables exceeding row limit', async () => {
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'huge_table' }],
       });
 
       // Return count > MAX_ROWS_PER_TABLE (100K)
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ count: '150000' }],
       });
 
@@ -232,7 +232,7 @@ describe('LiteExportStrategy', () => {
 
     it('should cleanup on export failure', async () => {
       mockClient.release.mockClear();
-      (mockClient as any).execute.mockRejectedValueOnce(
+      (mockClient as never).execute.mockRejectedValueOnce(
         new Error('Export failed')
       );
 
@@ -250,14 +250,14 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should create manifest with correct metadata', async () => {
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'products' }],
       });
 
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ count: '25' }],
       });
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: Array(25).fill({ id: 1 }),
         rowCount: 25,
       });
@@ -283,14 +283,14 @@ describe('LiteExportStrategy', () => {
     });
 
     it('should handle empty tables', async () => {
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ table_name: 'empty_table' }],
       });
 
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [{ count: '0' }],
       });
-      (mockClient as any).execute.mockResolvedValueOnce({
+      (mockClient as never).execute.mockResolvedValueOnce({
         rows: [],
         rowCount: 0,
       });

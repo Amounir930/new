@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import * as dotenv from 'dotenv';
 import type { Config } from 'drizzle-kit';
 
-dotenv.config({ path: resolve(__dirname, '../../.env') });
+dotenv.config({ path: resolve(__dirname, '..' + '/..' + '/.env') });
 
 export default {
   schema: [
@@ -26,6 +26,6 @@ export default {
     schema: 'external',
   },
   dbCredentials: {
-    url: process.env.DATABASE_URL || '',
+    url: process.env['DATABASE_URL'] || '',
   },
 } satisfies Config;

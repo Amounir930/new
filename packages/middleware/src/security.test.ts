@@ -114,8 +114,9 @@ describe('CORS Configuration', () => {
       // Security middleware's defaultCorsConfig uses @apex/config's env.ALLOWED_ORIGINS
       // Since we don't mock it in this file but the implementation depends on it,
       // we need to be careful. Let's verify how it's implemented.
-      const originalEnv = process.env.ALLOWED_ORIGINS;
-      process.env.ALLOWED_ORIGINS = 'https://myapp.com,https://api.myapp.com';
+      const originalEnv = process.env['ALLOWED_ORIGINS'];
+      process.env['ALLOWED_ORIGINS'] =
+        'https://myapp.com,https://api.myapp.com';
 
       // Force reload or re-evaluating originFn if it was closed over?
       // Actually, originFn is defaultCorsConfig.origin which is likely
@@ -134,14 +135,14 @@ describe('CORS Configuration', () => {
       } else {
         expect(callback).toHaveBeenCalledWith(null, true);
       }
-      process.env.ALLOWED_ORIGINS = originalEnv;
+      process.env['ALLOWED_ORIGINS'] = originalEnv;
     });
 
     it('should block non-whitelisted origins', () => {
       const callback = mock();
       const consoleSpy = spyOn(console, 'warn').mockImplementation(() => {});
       originFn('http://evil.com', callback);
-      expect(callback).toHaveBeenCalledWith(expect.any(Error));
+      expect(callback).toHaveBeenCalledWith(expect.anything(Error));
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
@@ -155,13 +156,13 @@ describe('CORS Configuration', () => {
     });
 
     it('should include dev origins in development environment', () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      const originalEnv = process.env['NODE_ENV'];
+      process.env['NODE_ENV'] = 'development';
       const config = getTenantCorsConfig('https://tenant1.com');
       // In our implementation, dev origins are only included if NODE_ENV is explicitly 'development'
       // and getTenantCorsConfig is reactive to it.
       expect(config.origin).toContain('https://tenant1.com');
-      process.env.NODE_ENV = originalEnv;
+      process.env['NODE_ENV'] = originalEnv;
     });
   });
 });
@@ -185,7 +186,7 @@ describe('CsrfProtection', () => {
     expect(mockRes.cookie).toHaveBeenCalledWith(
       'XSRF_TK',
       'test-token',
-      expect.any(Object)
+      expect.anything(Object)
     );
   });
 

@@ -16,7 +16,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
           expiresIn: configService.getWithDefault(
             'JWT_EXPIRES_IN',
             '7d'
-          ) as any,
+          ) as never,
         },
       }),
       inject: [ConfigService],

@@ -74,8 +74,8 @@ export function ProductForm({
   initialData,
   onSubmit,
 }: {
-  initialData?: any;
-  onSubmit: (data: any) => Promise<void>;
+  initialData?: unknown;
+  onSubmit: (data: unknown) => Promise<void>;
 }) {
   const [loading, setLoading] = useState(false);
 

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { EnvSchema } from '../../packages/config/src/schema';
+import { EnvSchema } from '.././../packages/config/src/schema';
 
 /**
  * S1: Environment Consistency Checker
@@ -7,7 +7,7 @@ import { EnvSchema } from '../../packages/config/src/schema';
  */
 
 function verifyEnvConsistency() {
-  console.log('🔍 S1: Verifying Environment Consistency...');
+  process.stdout.write('🔍 S1: Verifying Environment Consistency...');
 
   // 1. Load .env.example keys
   const envExampleContent = readFileSync('.env.example', 'utf-8');
@@ -27,22 +27,22 @@ function verifyEnvConsistency() {
   let failure = false;
 
   if (missingInSchema.length > 0) {
-    console.error(
+    process.stdout.write(
       '❌ S1 VIOLATION: Keys in .env.example are missing from config schema:'
     );
     for (const k of missingInSchema) {
-      console.error(`   - ${k}`);
+      process.stdout.write(`   - ${k}`);
     }
     failure = true;
   }
 
   if (missingInExample.length > 0) {
     // Note: Some might be optional/defaulted, but for S1 we want them in .env.example for documentation
-    console.error(
+    process.stdout.write(
       '❌ S1 VIOLATION: Keys in config schema are missing from .env.example:'
     );
     for (const k of missingInExample) {
-      console.error(`   - ${k}`);
+      process.stdout.write(`   - ${k}`);
     }
     failure = true;
   }
@@ -51,7 +51,7 @@ function verifyEnvConsistency() {
     process.exit(1);
   }
 
-  console.log(
+  process.stdout.write(
     '✅ S1: Environment consistency verified (Schema vs .env.example)'
   );
 }

@@ -6,11 +6,11 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class BunShell {
-  spawn(args: string[], options?: any) {
+  spawn(args: string[], options?: unknown) {
     return Bun.spawn(args, options);
   }
 
-  write(path: string | URL, content: any) {
+  write(path: string | URL, content: unknown) {
     return Bun.write(path, content);
   }
 

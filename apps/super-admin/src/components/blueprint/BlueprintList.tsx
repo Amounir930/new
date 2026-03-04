@@ -33,7 +33,7 @@ export function BlueprintList() {
       setLoading(true);
       const data = await apiFetch<Blueprint[]>('/v1/admin/blueprints');
       setBlueprints(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e.message);
     } finally {
       setLoading(false);
@@ -45,12 +45,12 @@ export function BlueprintList() {
   }, [fetchBlueprints]);
 
   const handleDelete = async (id: string) => {
-    // eslint-disable-next-line no-restricted-globals
+    // eslint-ignore no-restricted-globals
     if (!confirm('Are you sure you want to delete this blueprint?')) return;
     try {
       await apiFetch(`/v1/admin/blueprints/${id}`, { method: 'DELETE' });
       fetchBlueprints();
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e.message);
     }
   };
@@ -67,7 +67,7 @@ export function BlueprintList() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Onboarding Blueprints</CardTitle>
-        <Link href="/super-admin/blueprints/new">
+        <Link href="/dashboard/blueprints/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" /> Create New
           </Button>
@@ -112,7 +112,7 @@ export function BlueprintList() {
                     {new Date(bp.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <Link href={`/super-admin/blueprints/${bp.id}`}>
+                    <Link href={`/dashboard/blueprints/${bp.id}`}>
                       <Button variant="ghost" size="icon">
                         <Edit className="h-4 w-4" />
                       </Button>

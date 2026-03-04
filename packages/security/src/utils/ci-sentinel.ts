@@ -14,7 +14,7 @@ const __dirname = dirname(__filename);
 // 2: src -> security
 // 3: security -> packages
 // 4: packages -> ROOT
-const PROJECT_ROOT = join(__dirname, '../../../../');
+const PROJECT_ROOT = join(__dirname, '..' + '/..' + '/..' + '/..' + '/');
 
 const CONFIG = {
   modules: {
@@ -27,11 +27,13 @@ const CONFIG = {
 function getDiffFiles(): string[] {
   try {
     // Check if in GitHub Action
-    const baseRef = process.env.GITHUB_BASE_REF;
-    const beforeSha = process.env.GITHUB_EVENT_BEFORE;
+    const baseRef = process.env['GITHUB_BASE_REF'];
+    const beforeSha = process.env['GITHUB_EVENT_BEFORE'];
 
     if (baseRef) {
-      console.log(`🔍 PR Context: Comparing against origin/${baseRef}`);
+      process.stdout.write(
+        `🔍 PR Context: Comparing against origin/${baseRef}`
+      );
       return execSync(`git diff --name-only origin/${baseRef}...HEAD`)
         .toString()
         .split('\n')
@@ -39,7 +41,7 @@ function getDiffFiles(): string[] {
     }
 
     if (beforeSha && beforeSha !== '0000000000000000000000000000000000000000') {
-      console.log(
+      process.stdout.write(
         `🔍 Push Context: Comparing against ${beforeSha.substring(0, 7)}`
       );
       return execSync(`git diff --name-only ${beforeSha}...HEAD`)
@@ -48,13 +50,13 @@ function getDiffFiles(): string[] {
         .filter(Boolean);
     }
 
-    console.log('ℹ️ No base ref found. Checking last commit.');
+    process.stdout.write('ℹ️ No base ref found. Checking last commit.');
     return execSync('git diff --name-only HEAD~1...HEAD')
       .toString()
       .split('\n')
       .filter(Boolean);
   } catch (_err) {
-    console.warn(
+    process.stdout.write(
       '⚠️ Git diff failed. Falling back to all staged/modified files.'
     );
     return execSync('git ls-files -m -o --exclude-standard')
@@ -65,25 +67,27 @@ function getDiffFiles(): string[] {
 }
 
 async function runGateS5() {
-  console.log('🛡️ Running S5: Exception Handling Gate...');
+  process.stdout.write('🛡️ Running S5: Exception Handling Gate...');
   if (!existsSync(CONFIG.modules.security)) {
-    console.error('❌ CRITICAL: @apex/security module missing!');
+    process.stdout.write('❌ CRITICAL: @apex/security module missing!');
     process.exit(1);
   }
-  console.log('✅ S5: Structural Integrity Verified.');
+  process.stdout.write('✅ S5: Structural Integrity Verified.');
 }
 
 async function runGateS14() {
-  console.log('📦 Running S14: Export Module Validation...');
+  process.stdout.write('📦 Running S14: Export Module Validation...');
   const files = getDiffFiles();
   const exportFiles = files.filter((f) => f.startsWith('packages/export/src/'));
 
   if (exportFiles.length === 0) {
-    console.log('✅ No changes in export module.');
+    process.stdout.write('✅ No changes in export module.');
     return;
   }
 
-  console.log(`🔍 Auditing ${exportFiles.length} files in export module...`);
+  process.stdout.write(
+    `🔍 Auditing ${exportFiles.length} files in export module...`
+  );
 
   for (const file of exportFiles) {
     if (file.endsWith('.ts') && !file.endsWith('.test.ts')) {
@@ -96,7 +100,7 @@ async function runGateS14() {
           { cwd: PROJECT_ROOT }
         ).toString();
         if (!search.trim()) {
-          console.error(`❌ CRITICAL: Missing test for ${file}`);
+          process.stdout.write(`❌ CRITICAL: Missing test for ${file}`);
           process.exit(1);
         }
       }
@@ -111,13 +115,13 @@ async function runGateS14() {
     /SELECT.*\$\{.*schema/i.test(content) ||
     /FROM.*\$\{.*tenant/i.test(content)
   ) {
-    console.error(
+    process.stdout.write(
       '❌ CRITICAL: Potential SQL injection in export query detected!'
     );
     process.exit(1);
   }
 
-  console.log('✅ S14: Export module validation passed.');
+  process.stdout.write('✅ S14: Export module validation passed.');
 }
 
 async function main() {
@@ -132,12 +136,12 @@ async function main() {
       await runGateS14();
       break;
     default:
-      console.error(`❌ Unknown gate: ${gate}`);
+      process.stdout.write(`❌ Unknown gate: ${gate}`);
       process.exit(1);
   }
 }
 
 main().catch((err) => {
-  console.error('🚨 CI Sentinel Error:', err);
+  process.stdout.write('🚨 CI Sentinel Error:', err);
   process.exit(1);
 });

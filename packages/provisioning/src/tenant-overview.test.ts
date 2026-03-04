@@ -79,11 +79,11 @@ mock.module('@apex/db', () => {
     },
   ];
 
-  const mockQuery = Promise.resolve(mockTenants) as any;
+  const mockQuery = Promise.resolve(mockTenants) as never;
   mockQuery.where = mock().mockReturnThis();
   mockQuery.limit = mock().mockImplementation((n: number) => {
     const result = Promise.resolve(mockTenants.slice(0, n));
-    (result as any).offset = mock().mockImplementation(() =>
+    (result as never).offset = mock().mockImplementation(() =>
       Promise.resolve(mockTenants.slice(0, n))
     );
     return result;
@@ -134,7 +134,7 @@ mock.module('@apex/db', () => {
 // Add sql.raw separately since it's a property of the function
 import { sql } from '@apex/db';
 
-(sql as any).raw = mock().mockImplementation((s: string) => s);
+(sql as never).raw = mock().mockImplementation((s: string) => s);
 
 describe('Tenant Overview Service', () => {
   describe('getTenantList', () => {
@@ -190,11 +190,11 @@ describe('Tenant Overview Service', () => {
 
     it('should handle empty count result in getTenantList', async () => {
       const { adminDb } = await import('@apex/db');
-      (adminDb.select as any).mockReturnValueOnce({
+      (adminDb.select as never).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockResolvedValue([]), // Empty count array
         }),
-      } as any);
+      } as never);
 
       const result = await getTenantList();
       expect(result.pagination.total).toBe(0);
@@ -210,12 +210,12 @@ describe('Tenant Overview Service', () => {
     it('should return null for non-existent id', async () => {
       // Ensure the mock for this specific case resolves to empty array
       const { adminDb } = await import('@apex/db');
-      (adminDb.select as any).mockReturnValueOnce({
+      (adminDb.select as never).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([]),
         }),
-      } as any);
+      } as never);
 
       const result = await getTenantById('non-existent');
       expect(result).toBeNull();
@@ -230,12 +230,12 @@ describe('Tenant Overview Service', () => {
 
     it('should return null for non-existent subdomain', async () => {
       const { adminDb } = await import('@apex/db');
-      (adminDb.select as any).mockReturnValueOnce({
+      (adminDb.select as never).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([]),
         }),
-      } as any);
+      } as never);
 
       const result = await getTenantBySubdomain('non-existent');
       expect(result).toBeNull();
@@ -250,11 +250,11 @@ describe('Tenant Overview Service', () => {
 
     it('should return null for non-existent tenant', async () => {
       const { adminDb } = await import('@apex/db');
-      (adminDb.update as any).mockReturnValueOnce({
+      (adminDb.update as never).mockReturnValueOnce({
         set: mock().mockReturnThis(),
         where: mock().mockReturnThis(),
         returning: mock().mockResolvedValue([]),
-      } as any);
+      } as never);
 
       const result = await updateTenantStatus('non-existent', 'active');
       expect(result).toBeNull();
@@ -290,18 +290,18 @@ describe('Tenant Overview Service', () => {
     it('should allow deletion of suspended tenants', async () => {
       // Mock getTenantById to return a suspended tenant
       const { adminDb } = await import('@apex/db');
-      (adminDb.select as any).mockReturnValueOnce({
+      (adminDb.select as never).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([mockTenants[1]]), // tenant-2 is suspended
         }),
-      } as any);
+      } as never);
 
       // Also mock delete to return success
-      (adminDb.delete as any).mockReturnValueOnce({
+      (adminDb.delete as never).mockReturnValueOnce({
         where: mock().mockReturnThis(),
         returning: mock().mockResolvedValue([{ id: 'tenant-2' }]),
-      } as any);
+      } as never);
 
       const result = await deleteTenant('tenant-2');
       expect(result.success).toBe(true);
@@ -310,15 +310,15 @@ describe('Tenant Overview Service', () => {
     it('should handle non-Error objects in deleteTenant catch block', async () => {
       const { adminDb } = await import('@apex/db');
       // Mock existing tenant
-      (adminDb.select as any).mockReturnValueOnce({
+      (adminDb.select as never).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([mockTenants[1]]), // Suspended
         }),
-      } as any);
+      } as never);
 
       // Mock delete to throw raw string
-      (adminDb.delete as any).mockImplementation(() => {
+      (adminDb.delete as never).mockImplementation(() => {
         throw 'Raw Delete Fail';
       });
 
@@ -345,11 +345,11 @@ describe('Tenant Overview Service', () => {
 
     it('should handle records with missing dates in getTenantStats', async () => {
       const { adminDb } = await import('@apex/db');
-      (adminDb.select as any).mockReturnValueOnce({
+      (adminDb.select as never).mockReturnValueOnce({
         from: mock().mockResolvedValue([
           { status: 'active', plan: 'free' }, // Missing createdAt
         ]),
-      } as any);
+      } as never);
 
       const stats = await getTenantStats();
       expect(stats.total).toBe(1);
@@ -365,12 +365,12 @@ describe('Tenant Overview Service', () => {
     it('should return false for non-existent subdomain', async () => {
       // Setup mock to return empty array for non-existent subdomain search
       const { adminDb } = await import('@apex/db');
-      (adminDb.select as any).mockReturnValueOnce({
+      (adminDb.select as never).mockReturnValueOnce({
         from: mock().mockReturnValue({
           where: mock().mockReturnThis(),
           limit: mock().mockResolvedValue([]),
         }),
-      } as any);
+      } as never);
 
       const result = await killSwitch('non-existent');
       expect(result).toBe(false);

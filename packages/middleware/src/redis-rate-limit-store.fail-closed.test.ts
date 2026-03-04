@@ -20,17 +20,16 @@ describe('S6 Fail-Closed Behavior (Production)', () => {
         return 'redis://localhost:6379';
       }),
     };
-    store = new RedisRateLimitStore(mockConfig as any);
+    store = new RedisRateLimitStore(mockConfig as never);
 
     try {
-      // @ts-expect-error - access private
-      store.client = null;
-      // @ts-expect-error
-      store.fallbackToMemory = false;
+      // Access private
+      (store as unknown as Record<string, unknown>).client = null;
+      (store as unknown as Record<string, unknown>).fallbackToMemory = false;
 
       await store.increment('test-ip', 60000);
       expect(true).toBe(false); // Should not reach here
-    } catch (e: any) {
+    } catch (e: unknown) {
       // NestJS HttpException uses getStatus()
       expect(e.getStatus()).toBe(503);
       expect(e.getResponse().message).toContain(
@@ -46,12 +45,10 @@ describe('S6 Fail-Closed Behavior (Production)', () => {
         return 'redis://localhost:6379';
       }),
     };
-    store = new RedisRateLimitStore(mockConfig as any);
+    store = new RedisRateLimitStore(mockConfig as never);
 
-    // @ts-expect-error
-    store.client = null;
-    // @ts-expect-error
-    store.fallbackToMemory = true;
+    (store as unknown as Record<string, unknown>).client = null;
+    (store as unknown as Record<string, unknown>).fallbackToMemory = true;
 
     const result = await store.increment('test-ip', 60000);
     expect(result.count).toBe(1);

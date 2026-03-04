@@ -17,11 +17,11 @@ const LOCK_ID = 605360; // Unique advisory lock ID for 60sec.shop migrations
 
 async function migrateWithLock() {
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env['DATABASE_URL'],
   });
 
   await client.connect();
-  console.log('🔒 Attempting to acquire migration advisory lock...');
+  process.stdout.write('🔒 Attempting to acquire migration advisory lock...');
 
   try {
     // Try to acquire advisory lock (non-blocking)
@@ -31,21 +31,21 @@ async function migrateWithLock() {
     );
 
     if (!lockResult.rows[0].acquired) {
-      console.log('⏳ Another instance is running migrations. Waiting...');
+      process.stdout.write('⏳ Another instance is running migrations. Waiting...');
 
       // Blocking wait for the lock
       await client.query('SELECT pg_advisory_lock($1)', [LOCK_ID]);
-      console.log('✅ Lock acquired (previous migration finished).');
+      process.stdout.write('✅ Lock acquired (previous migration finished).');
 
       // At this point, migrations are already done by the other instance.
       // We can safely skip.
-      console.log(
+      process.stdout.write(
         '✅ Migrations already applied by another instance. Skipping.'
       );
       return;
     }
 
-    console.log('✅ Advisory lock acquired. Running migrations...');
+    process.stdout.write('✅ Advisory lock acquired. Running migrations...');
 
     // Run Drizzle migrations
     const { drizzle } = await import('drizzle-orm/node-postgres');
@@ -56,19 +56,19 @@ async function migrateWithLock() {
       migrationsFolder: './packages/db/drizzle',
     });
 
-    console.log('✅ Migrations completed successfully!');
+    process.stdout.write('✅ Migrations completed successfully!');
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    process.stdout.write('❌ Migration failed:', error);
     process.exit(1);
   } finally {
     // Release advisory lock
     await client.query('SELECT pg_advisory_unlock($1)', [LOCK_ID]);
     await client.end();
-    console.log('🔓 Advisory lock released.');
+    process.stdout.write('🔓 Advisory lock released.');
   }
 }
 
 migrateWithLock().catch((err) => {
-  console.error('❌ Fatal migration error:', err);
+  process.stdout.write('❌ Fatal migration error:', err);
   process.exit(1);
 });

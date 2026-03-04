@@ -17,6 +17,8 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import * as bcrypt from 'bcrypt';
+import type { Response } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 
@@ -44,7 +46,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Super Admin Login' })
   async login(
     @Body(new ZodValidationPipe(LoginSchema)) body: LoginDto,
-    @Res({ passthrough: true }) response: any
+    @Res({ passthrough: true }) response: Response
   ) {
     const { email, password } = body;
 
@@ -59,10 +61,7 @@ export class AuthController {
     }
 
     // S7/Item 29: Compare hashed password using bcrypt (S1-S15 Compliance: 12 Rounds)
-    const isPasswordValid = await require('bcrypt').compare(
-      password,
-      adminPassword
-    );
+    const isPasswordValid = await bcrypt.compare(password, adminPassword);
 
     if (email === adminEmail && isPasswordValid) {
       // S4: Audit successful login
@@ -84,10 +83,12 @@ export class AuthController {
       const token = await this.authService.generateToken(user);
 
       // S8: Set Secure, HttpOnly cookie for admin session (Prevent XSS theft)
+      const rootDomain = this.config.get('APP_ROOT_DOMAIN') || '60sec.shop';
       response.cookie('adm_tkn', token, {
         httpOnly: true,
         secure: true,
-        sameSite: 'strict',
+        sameSite: 'lax', // Use 'lax' for cross-subdomain navigation
+        domain: `.${rootDomain}`,
         path: '/',
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       });

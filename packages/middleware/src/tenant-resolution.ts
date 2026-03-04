@@ -16,7 +16,7 @@ export async function resolveTenant(
     return next();
   }
 
-  // TODO: Real DB Lookup will go here in the next step
+  // PENDING: Real DB Lookup will go here in the next step
   // const tenant = await db.query.tenantsInGovernance.findFirst(...)
 
   // MOCK for scaffolding - TO BE REPLACED WITH DB CALL

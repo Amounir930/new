@@ -23,7 +23,7 @@ function getAllFiles(dir: string, extension: string): string[] {
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: legacy maintenance script
 function auditAuditLogging() {
-  console.log('🔍 S4: Auditing Audit Logging Coverage...');
+  process.stdout.write('🔍 S4: Auditing Audit Logging Coverage...');
 
   const controllers = getAllFiles('apps/api/src', '.controller.ts');
   let violations = 0;
@@ -47,12 +47,12 @@ function auditAuditLogging() {
         if (!hasAuditLog) {
           // Heuristic: Check if it's a mutation. Read/Get of non-sensitive data might not need audit.
           // But our policy (per user request) wants to find these.
-          console.warn(
+          process.stdout.write(
             `⚠️  S4 WARNING: Potential missing audit log on mutation endpoint at ${file}:${
               index + 1
             }`
           );
-          console.warn(`   > ${line.trim()}`);
+          process.stdout.write(`   > ${line.trim()}`);
           // We mark it as warning for now unless it's a known critical endpoint
           if (line.includes('Post')) violations++;
         }
@@ -62,13 +62,13 @@ function auditAuditLogging() {
 
   if (violations > 10) {
     // Tolerant for now as we transition
-    console.error(
+    process.stdout.write(
       `\n🚨 S4 Audit Failed: Found ${violations} endpoints lacking audit logging.`
     );
     process.exit(1);
   }
 
-  console.log(
+  process.stdout.write(
     `✅ S4: Audit logging audit complete. Checked ${controllers.length} controllers.`
   );
 }

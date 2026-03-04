@@ -47,26 +47,26 @@ const mockFactory = {
 
 describe('ExportService', () => {
   let service: ExportService;
-  const mockAudit = { log: mock().mockResolvedValue(true) } as any;
+  const mockAudit = { log: mock().mockResolvedValue(true) } as never;
 
   beforeEach(() => {
     mock.restore();
 
     // Default mock behavior for database
-    (publicPool as any).connect.mockResolvedValue({
+    (publicPool as never).connect.mockResolvedValue({
       query: mock().mockResolvedValue({ rows: [], rowCount: 0 }),
       release: mock(),
-    } as any);
+    } as never);
 
     // Reset factory mocks
     mockFactory.validateOptions.mockResolvedValue(true);
     mockFactory.create.mockReturnValue(mockStrategy);
 
     // Instantiate service with mock factory
-    service = new ExportService(mockFactory as any, mockAudit);
+    service = new ExportService(mockFactory as never, mockAudit);
 
     // Silence logger for tests
-    (service as any).logger = {
+    (service as never).logger = {
       log: mock(),
       error: mock(),
       debug: mock(),
@@ -125,21 +125,23 @@ describe('ExportService', () => {
     } of testCases) {
       it(name, async () => {
         mockFactory.validateOptions.mockResolvedValue(factoryValid);
-        (service as any).exportQueue.getJobs = mock(async (types: string[]) => {
-          if (types.includes('active')) return activeJobs;
-          if (types.includes('completed')) return recentJobs;
-          return [];
-        });
-        (service as any).exportQueue.add = mock().mockResolvedValue({
+        (service as never).exportQueue.getJobs = mock(
+          async (types: string[]) => {
+            if (types.includes('active')) return activeJobs;
+            if (types.includes('completed')) return recentJobs;
+            return [];
+          }
+        );
+        (service as never).exportQueue.add = mock().mockResolvedValue({
           id: 'new-job',
         });
 
         if (error) {
-          await expect(service.createExportJob(options as any)).rejects.toThrow(
-            error
-          );
+          await expect(
+            service.createExportJob(options as never)
+          ).rejects.toThrow(error);
         } else {
-          const result = await service.createExportJob(options as any);
+          const result = await service.createExportJob(options as never);
           expect(result.status).toBe(expectedStatus);
           expect(mockAudit.log).toHaveBeenCalledWith(
             expect.objectContaining({ action: 'EXPORT_REQUESTED' })
@@ -151,11 +153,11 @@ describe('ExportService', () => {
 
   describe('Utility Methods', () => {
     it('should map BullMQ states correctly', () => {
-      expect((service as any).mapJobState('active')).toBe('processing');
-      expect((service as any).mapJobState('completed')).toBe('completed');
-      expect((service as any).mapJobState('failed')).toBe('failed');
-      expect((service as any).mapJobState('waiting')).toBe('pending');
-      expect((service as any).mapJobState('other')).toBe('pending');
+      expect((service as never).mapJobState('active')).toBe('processing');
+      expect((service as never).mapJobState('completed')).toBe('completed');
+      expect((service as never).mapJobState('failed')).toBe('failed');
+      expect((service as never).mapJobState('waiting')).toBe('pending');
+      expect((service as never).mapJobState('other')).toBe('pending');
     });
   });
 });

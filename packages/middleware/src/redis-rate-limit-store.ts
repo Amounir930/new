@@ -77,13 +77,13 @@ export class RedisRateLimitStore
         const isProduction =
           this.configService.get('NODE_ENV') === 'production';
         if (isProduction) {
-          console.error(
+          process.stdout.write(
             '❌ S6 CRITICAL: Redis runtime error in production. Disabling memory fallback to ensure Fail-Closed security.',
             err
           );
           this.fallbackToMemory = false;
         } else {
-          console.warn(
+          process.stdout.write(
             '⚠️ S6: Redis runtime error, falling back to memory (development mode only).'
           );
           this.fallbackToMemory = true;
@@ -100,12 +100,12 @@ export class RedisRateLimitStore
       // In non-production, fallback to memory with warning
       const isProduction = this.configService.get('NODE_ENV') === 'production';
       if (isProduction) {
-        console.error(
+        process.stdout.write(
           '❌ S6 CRITICAL: Redis unavailable in production. Rate limiting cannot function securely. FAILING CLOSED.'
         );
         this.fallbackToMemory = false;
       } else {
-        console.warn(
+        process.stdout.write(
           '⚠️ S6: Redis unavailable, falling back to in-memory rate limiting (NOT for production multi-instance)'
         );
         this.fallbackToMemory = true;

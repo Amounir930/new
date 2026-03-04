@@ -14,7 +14,7 @@ export class BlueprintExecutor {
   }
 
   async execute(ctx: BlueprintContext, config: BlueprintConfig) {
-    console.log(
+    process.stdout.write(
       `[BlueprintExecutor] Starting execution for ${ctx.subdomain} (Plan: ${ctx.plan}, Niche: ${ctx.nicheType || 'generic'})`
     );
 
@@ -42,7 +42,7 @@ export class BlueprintExecutor {
       const module = this.modules.get(moduleName);
 
       if (!module) {
-        console.warn(
+        process.stdout.write(
           `[BlueprintExecutor] Warning: Requested module '${moduleName}' not found. Skipping.`
         );
         continue;
@@ -53,13 +53,15 @@ export class BlueprintExecutor {
 
       // 4. Execution with Circuit Breaker
       try {
-        console.log(`[BlueprintExecutor] Running module: ${moduleName}`);
+        process.stdout.write(
+          `[BlueprintExecutor] Running module: ${moduleName}`
+        );
         await module.run(ctx, config);
-        console.log(
+        process.stdout.write(
           `[BlueprintExecutor] Module ${moduleName} completed successfully.`
         );
       } catch (error) {
-        console.error(
+        process.stdout.write(
           `[BlueprintExecutor] CRITICAL FAILURE in module '${moduleName}':`,
           error
         );
@@ -70,7 +72,9 @@ export class BlueprintExecutor {
       }
     }
 
-    console.log('[BlueprintExecutor] All modules executed successfully.');
+    process.stdout.write(
+      '[BlueprintExecutor] All modules executed successfully.'
+    );
   }
 
   /**
@@ -79,15 +83,15 @@ export class BlueprintExecutor {
   private autoEnableModules(ctx: BlueprintContext, config: BlueprintConfig) {
     // Example: Health & Wellness (medical-like) + Pro plan gets automated bookings
     if (ctx.nicheType === 'wellness' && ctx.plan === 'pro') {
-      console.log(
+      process.stdout.write(
         `[BlueprintExecutor] Auto-enabling 'bookings' for wellness niche on pro plan.`
       );
       config.modules.bookings = true;
     }
 
-    // Example: Food & Hospitality gets inventory by default on any plan
+    // Example: Food & Hospitality gets inventory by default on all plans
     if (ctx.nicheType === 'food') {
-      console.log(
+      process.stdout.write(
         `[BlueprintExecutor] Auto-enabling 'inventory' for food niche.`
       );
       config.modules.inventory = true;
@@ -100,7 +104,7 @@ export class BlueprintExecutor {
     // 1. Plan Check
     if (module.allowedPlans && module.allowedPlans !== '*') {
       if (Array.isArray(module.allowedPlans)) {
-        if (!module.allowedPlans.includes(plan as any)) {
+        if (!module.allowedPlans.includes(plan as never)) {
           throw new Error(
             `[Permission Denied] Module '${module.name}' is not allowed for plan '${plan}'.`
           );
@@ -120,7 +124,7 @@ export class BlueprintExecutor {
  * Validate Blueprint JSON Structure (S21 Strictness)
  * Enforces that all 41 features and essential quotas are present.
  */
-export function validateBlueprint(blueprint: any): BlueprintTemplate {
+export function validateBlueprint(blueprint: unknown): BlueprintTemplate {
   if (!blueprint || typeof blueprint !== 'object') {
     throw new Error('Blueprint must be a valid JSON object');
   }

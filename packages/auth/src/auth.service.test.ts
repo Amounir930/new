@@ -15,7 +15,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     mock.restore();
-    service = new AuthService(mockJwtService as any);
+    service = new AuthService(mockJwtService as never);
   });
 
   describe('generateToken', () => {
@@ -31,7 +31,7 @@ describe('AuthService', () => {
         email: user.email,
         tenantId: user.tenantId,
         role: undefined,
-        jti: expect.any(String),
+        jti: expect.anything(String),
         dfp: undefined,
       });
     });
@@ -51,7 +51,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException if sub is missing', async () => {
-      const payload = { email: 'test@test.com', tenantId: 't1' } as any;
+      const payload = { email: 'test@test.com', tenantId: 't1' } as never;
       await expect(service.validateUser(payload)).rejects.toThrow(
         UnauthorizedException
       );

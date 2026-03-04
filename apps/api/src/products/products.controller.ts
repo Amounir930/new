@@ -1,6 +1,12 @@
 import { AuditLog } from '@apex/audit';
 import { type AuthenticatedRequest, JwtAuthGuard } from '@apex/auth';
-import { and, eq, getTenantDb, productsInStorefront } from '@apex/db';
+import {
+  and,
+  eq,
+  getTenantDb,
+  type InferInsertModel,
+  productsInStorefront,
+} from '@apex/db';
 import {
   CheckQuota,
   GovernanceGuard,
@@ -49,10 +55,15 @@ export class ProductsController {
   ) {
     const tenantId = req.user.tenantId!;
     // Map DTO to localized schema
-    const productData = {
+    const productData: InferInsertModel<typeof productsInStorefront> = {
       ...body,
       name: { ar: body.nameAr, en: body.nameEn },
-      description: { ar: body.descriptionAr, en: body.descriptionEn },
+      shortDescription: {
+        ar: body.shortDescriptionAr,
+        en: body.shortDescriptionEn,
+      },
+      longDescription: { ar: body.descriptionAr, en: body.descriptionEn },
+      taxBasisPoints: Math.round((body.taxPercentage || 0) * 100),
       tenantId,
     };
 
@@ -60,7 +71,7 @@ export class ProductsController {
     try {
       const [product] = await db
         .insert(productsInStorefront)
-        .values(productData as any)
+        .values(productData)
         .returning();
 
       return {
@@ -84,9 +95,11 @@ export class ProductsController {
     const { version, ...updateData } = body;
 
     // Map localized fields if present
-    const mappedData: any = { ...updateData };
+    const mappedData: Partial<InferInsertModel<typeof productsInStorefront>> = {
+      ...updateData,
+    };
     if (body.nameAr || body.nameEn) {
-      mappedData.name = { ar: body.nameAr, en: body.nameEn };
+      mappedData.name = { ar: body.nameAr || '', en: body.nameEn || '' };
     }
 
     const { db, release } = await getTenantDb(tenantId);

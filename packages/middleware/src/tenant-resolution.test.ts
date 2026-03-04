@@ -85,7 +85,7 @@ describe('resolveTenant', () => {
     const res = {} as Response;
     const next = mock();
 
-    let capturedStore: any;
+    let capturedStore: unknown;
 
     // Mock getStore to return the tenant context when called
     mockTenantStorage.getStore.mockImplementation(() => capturedStore);
@@ -121,7 +121,7 @@ describe('resolveTenant', () => {
     const res = {} as Response;
     const next = mock();
 
-    let capturedStore: any;
+    let capturedStore: unknown;
 
     // Mock getStore to return the tenant context when called
     mockTenantStorage.getStore.mockImplementation(() => capturedStore);
@@ -165,6 +165,6 @@ describe('Tenant Extraction Helpers', () => {
 
   it('should return null from extractTenantFromJWT (placeholder)', async () => {
     const { extractTenantFromJWT } = await import('./tenant-resolution.js');
-    expect(extractTenantFromJWT({} as any)).toBeNull();
+    expect(extractTenantFromJWT({} as never)).toBeNull();
   });
 });

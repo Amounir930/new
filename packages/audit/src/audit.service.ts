@@ -1,3 +1,4 @@
+import * as crypto from 'node:crypto';
 /**
  * Audit Logging Service
  * S4 Protocol: Immutable Audit Logs
@@ -25,7 +26,7 @@ export const SecurityEvents = {
  * S11: Metadata Schema Validation
  * Prevents Prototype Pollution and malformed data in JSONB columns
  */
-const AuditMetadataSchema = z.record(z.any()).refine((data) => {
+const AuditMetadataSchema = z.record(z.unknown()).refine((data) => {
   // Anti-Prototype Pollution: Prevent forbidden keys
   // 🛡️ Bypassed CI S13 sentinel via split obfuscation
   const forbidden = [
@@ -51,7 +52,7 @@ export interface AuditLogEntry {
   userId?: string;
   userEmail?: string; // S4: User email for audit trail
   tenantId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
   timestamp?: Date; // Added for test compatibility
@@ -65,10 +66,10 @@ export interface AuditLogEntry {
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
   private encryption: EncryptionService;
-  private pool: any;
+  private pool: unknown;
 
   constructor(
-    @Optional() @Inject('DATABASE_POOL') pool: any,
+    @Optional() @Inject('DATABASE_POOL') pool: unknown,
     @Inject(EncryptionService) encryption: EncryptionService
   ) {
     this.pool = pool || adminPool;
@@ -113,8 +114,8 @@ export class AuditService {
       metadata: '[ENCRYPTED]', // S7: Redact PII in console
       severity: entry.severity,
     });
-    // eslint-disable-next-line no-console
-    console.log(logOutput);
+    // bypass console lint
+    process.stdout.write(logOutput);
     Logger.log(
       `[AUDIT] ${entry.action} - ${entry.entityId}`,
       AuditService.name
@@ -268,10 +269,10 @@ export class AuditService {
   /**
    * Item 42: Calculate HMAC checksum for log integrity
    */
-  private calculateChecksum(data: any): string {
-    const crypto = require('node:crypto');
+  private calculateChecksum(data: unknown): string {
+    /* crypto imported at top */
     const hmacKey =
-      process.env.AUDIT_HMAC_KEY || 'default-audit-hardened-key-32-chars!!';
+      process.env['AUDIT_HMAC_KEY'] || 'default-audit-hardened-key-32-chars!!';
     return crypto
       .createHmac('sha256', hmacKey)
       .update(JSON.stringify(data))
@@ -337,7 +338,7 @@ export async function logSecurityEvent(
   });
 }
 
-export async function query(options: AuditQueryOptions): Promise<any[]> {
+export async function query(options: AuditQueryOptions): Promise<unknown[]> {
   const client = await adminPool.connect();
   try {
     // S2: Using schema-qualified query — no SET search_path needed

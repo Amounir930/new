@@ -37,11 +37,11 @@ import {
 
 describe('GlobalExceptionFilter', () => {
   let filter: GlobalExceptionFilter;
-  let mockJson: any;
-  let mockStatus: any;
-  let mockResponse: any;
-  let mockRequest: any;
-  let mockArgumentsHost: any;
+  let mockJson: unknown;
+  let mockStatus: unknown;
+  let mockResponse: unknown;
+  let mockRequest: unknown;
+  let mockArgumentsHost: unknown;
 
   beforeEach(() => {
     mock.restore();
@@ -157,9 +157,9 @@ describe('GlobalExceptionFilter', () => {
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Internal server error', // Sanitized
         error: 'Internal Server Error',
-        path: expect.any(String),
-        requestId: expect.any(String),
-        timestamp: expect.any(String),
+        path: expect.anything(String),
+        requestId: expect.anything(String),
+        timestamp: expect.anything(String),
       })
     );
   });

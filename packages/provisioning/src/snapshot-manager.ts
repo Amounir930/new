@@ -29,14 +29,14 @@ export async function createSnapshot(
   try {
     // 1. Capture Settings
     const settingsRows = await db.select().from(tenantConfigInStorefront);
-    const settingsMap: Record<string, any> = {};
-    settingsRows.forEach((row: any) => {
+    const settingsMap: Record<string, unknown> = {};
+    settingsRows.forEach((row: unknown) => {
       settingsMap[row.key] = row.value;
     });
 
     // 2. Capture Pages
     const pagesRows = await db.select().from(pagesInStorefront);
-    const pagesMapped = pagesRows.map((p: any) => ({
+    const pagesMapped = pagesRows.map((p: unknown) => ({
       title: p.title,
       slug: p.slug,
       content: p.content,
@@ -63,8 +63,8 @@ export async function createSnapshot(
       .values({
         name: options.name,
         description: options.description || `Snapshot of ${tenantId}`,
-        blueprint: blueprint as any,
-        plan: (options.plan || 'pro') as any,
+        blueprint: blueprint as never,
+        plan: (options.plan || 'pro') as never,
         isDefault: !!options.isDefault,
         status: 'active',
         uiConfig: {},

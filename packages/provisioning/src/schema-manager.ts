@@ -208,7 +208,7 @@ export async function listTenantSchemas(): Promise<string[]> {
       ORDER BY schema_name
     `);
 
-    return result.rows.map((row: any) => row.schema_name as string);
+    return result.rows.map((row: unknown) => row.schema_name as string);
   } finally {
     client.release();
   }

@@ -74,7 +74,7 @@ export async function seedTenantData(
       await executor.execute(
         {
           subdomain: options.subdomain,
-          db: tx as any,
+          db: tx as never,
           schema: schemaName,
           plan: (options.plan || 'free') as
             | 'free'
@@ -107,7 +107,7 @@ export async function seedTenantData(
       seededAt: new Date(),
     };
   } catch (error) {
-    console.error(`Seeding failed for ${options.subdomain}:`, error);
+    process.stdout.write(`Seeding failed for ${options.subdomain}:`, error);
     throw new Error(
       `Seeding Failure: ${error instanceof Error ? error.message : String(error)}`
     );
@@ -187,7 +187,7 @@ async function resolveStore(
       subdomain: options.subdomain,
       status: 'active',
       plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
-      nicheType: (options.nicheType || 'retail') as any,
+      nicheType: (options.nicheType || 'retail') as never,
     })
     .returning({ id: tenantsInGovernance.id });
 

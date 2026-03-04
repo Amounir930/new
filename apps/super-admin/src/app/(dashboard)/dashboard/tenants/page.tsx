@@ -8,11 +8,13 @@ import {
   MoreVertical,
   Plus,
   Search,
+  Shield,
   Users,
   XCircle,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { ProvisionModal } from '@/components/tenant/ProvisionModal';
+import { TenantGovernanceModal } from '@/components/tenant/TenantGovernanceModal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { apiFetch } from '@/lib/api';
@@ -32,14 +34,18 @@ export default function TenantsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [provisionOpen, setProvisionOpen] = useState(false);
+  const [governanceTenant, setGovernanceTenant] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
       const data = await apiFetch('/v1/admin/tenants');
       setTenants(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error('Failed to fetch tenants:', e);
+    } catch (_e) {
+      /* 'Failed to fetch tenants:', e */
     } finally {
       setLoading(false);
     }
@@ -208,13 +214,27 @@ export default function TenantsPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        type="button"
-                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-500 hover:text-white"
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-500 hover:text-indigo-400 rounded-lg"
+                        onClick={() =>
+                          setGovernanceTenant({
+                            id: tenant.id,
+                            name: tenant.storeName,
+                          })
+                        }
+                      >
+                        <Shield className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-slate-500 hover:text-white rounded-lg"
                       >
                         <MoreVertical className="w-4 h-4" />
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))
@@ -231,6 +251,14 @@ export default function TenantsPage() {
           fetchTenants();
         }}
       />
+
+      {governanceTenant && (
+        <TenantGovernanceModal
+          tenantId={governanceTenant.id}
+          tenantName={governanceTenant.name}
+          onClose={() => setGovernanceTenant(null)}
+        />
+      )}
     </div>
   );
 }

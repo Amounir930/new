@@ -1,7 +1,7 @@
 import { jwtVerify } from 'jose';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process['env']['JWT_SECRET'];
 const MERCHANT_PROTECTED_ROUTES = ['/dashboard', '/orders', '/products'];
 
 async function verifyMerchantToken(token: string) {
@@ -13,8 +13,10 @@ async function verifyMerchantToken(token: string) {
   return payload;
 }
 
-function isMerchantAuthorized(payload: any): boolean {
-  return ['admin', 'staff'].includes(payload.role) && !!payload.tenantId;
+function isMerchantAuthorized(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  const p = payload as { role?: string; tenantId?: string };
+  return ['admin', 'staff'].includes(p.role as string) && !!p.tenantId;
 }
 
 async function handleMerchantProtected(request: NextRequest, token?: string) {

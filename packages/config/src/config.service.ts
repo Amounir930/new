@@ -20,7 +20,7 @@ export class ConfigService {
     try {
       this.config = validateEnv();
     } catch (error) {
-      if (process.env.NODE_ENV === 'test') {
+      if (process.env['NODE_ENV'] === 'test') {
         this.config = process.env as unknown as EnvConfig;
       } else {
         throw error;

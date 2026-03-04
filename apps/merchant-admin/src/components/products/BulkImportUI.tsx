@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 export default function BulkImportUI() {
   const [file, setFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,8 +40,8 @@ export default function BulkImportUI() {
         });
         const data = await res.json();
         setJobId(data.jobId);
-      } catch (err) {
-        console.error('Import failed', err);
+      } catch (_err) {
+        /* 'Import failed', err */
       } finally {
         setLoading(false);
       }
@@ -60,8 +60,8 @@ export default function BulkImportUI() {
         if (data.status === 'completed' || data.status === 'failed') {
           clearInterval(interval);
         }
-      } catch (err) {
-        console.error('Polling failed', err);
+      } catch (_err) {
+        /* 'Polling failed', err */
       }
     }, 2000);
 

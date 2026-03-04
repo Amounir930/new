@@ -37,7 +37,7 @@ export function ProvisionModal({
 }: ProvisionModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [blueprints, setBlueprints] = useState<any[]>([]);
+  const [blueprints, setBlueprints] = useState<unknown[]>([]);
 
   const {
     register,
@@ -63,8 +63,8 @@ export function ProvisionModal({
         const data = await apiFetch('/v1/blueprints');
         // Filter blueprints by selected plan if they exist
         setBlueprints(Array.isArray(data) ? data : []);
-      } catch (e) {
-        console.error('Failed to fetch blueprints:', e);
+      } catch (_e) {
+        /* 'Failed to fetch blueprints:', e */
       }
     }
     if (open) {
@@ -90,7 +90,7 @@ export function ProvisionModal({
       onSuccess();
       onOpenChange(false);
       reset();
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e.message || 'Failed to provision store');
     } finally {
       setLoading(false);

@@ -87,7 +87,7 @@ export class FileValidationService {
         buffer.subarray(offset, offset + sig.prefix.length).equals(sig.prefix)
       ) {
         return {
-          // POLYGLOT DEFENSE: UUID filename kills any malicious extension
+          // POLYGLOT DEFENSE: UUID filename kills all malicious extensions
           safeFilename: `${randomUUID()}.${sig.ext}`,
           // Force MIME type from magic bytes, not client claim
           detectedMimeType: sig.mime,

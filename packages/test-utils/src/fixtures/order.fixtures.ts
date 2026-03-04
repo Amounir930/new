@@ -31,7 +31,7 @@ export function createMockAddress(overrides?: Partial<Address>): Address {
  * Creates a mock order item
  */
 export function createMockOrderItem(overrides?: Partial<OrderItem>): OrderItem {
-  const product: any = createMockProduct();
+  const product: unknown = createMockProduct();
 
   return {
     productId: product.id,

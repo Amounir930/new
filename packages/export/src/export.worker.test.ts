@@ -44,7 +44,7 @@ mock.module('fs/promises', () => ({
 
 describe('ExportWorker', () => {
   let worker: ExportWorker;
-  const mockAudit = { log: mock() } as any;
+  const mockAudit = { log: mock() } as never;
   const mockStrategy = {
     export: mock().mockResolvedValue({
       downloadUrl: '/tmp/test.tar.gz',
@@ -63,9 +63,16 @@ describe('ExportWorker', () => {
       get: mock().mockReturnValue('mock'),
       getOrThrow: mock().mockReturnValue('mock'),
     };
-    worker = new ExportWorker(mockAudit, mockFactory as any, mockConfig as any);
-    // @ts-expect-error - access private for testing
-    (worker as any).logger = { log: mock(), error: mock() } as any;
+    worker = new ExportWorker(
+      mockAudit,
+      mockFactory as never,
+      mockConfig as never
+    );
+    // Access private for testing
+    (worker as unknown as Record<string, unknown>).logger = {
+      log: mock(),
+      error: mock(),
+    } as never;
   });
 
   it('should process a valid export job successfully', async () => {
@@ -81,8 +88,10 @@ describe('ExportWorker', () => {
       updateData: mock().mockResolvedValue(undefined),
     } as unknown as Job;
 
-    // @ts-expect-error - access private to trigger processJob
-    const result = await worker.processJob(mockJob);
+    // Access private to trigger processJob
+    const result = await (
+      worker as unknown as Record<string, unknown>
+    ).processJob(mockJob);
 
     expect(result.downloadUrl).toBe('https://mock-presigned-url.com');
     expect(mockJob.updateProgress).toHaveBeenCalledWith(100);
@@ -99,7 +108,7 @@ describe('ExportWorker', () => {
       id: 'job-huge',
       data: { tenantId: 'tenant-1', profile: 'lite' },
       updateProgress: mock(),
-    } as any;
+    } as never;
 
     mockStrategy.export.mockResolvedValueOnce({
       downloadUrl: '/tmp/huge.tar.gz',
@@ -107,8 +116,9 @@ describe('ExportWorker', () => {
       checksum: 'big-file',
     });
 
-    // @ts-expect-error
-    await expect(worker.processJob(mockJob)).rejects.toThrow(/exceeds limit/);
+    await expect(
+      (worker as unknown as Record<string, unknown>).processJob(mockJob)
+    ).rejects.toThrow(/exceeds limit/);
     expect(mockAudit.log).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'EXPORT_FAILED',
@@ -121,12 +131,13 @@ describe('ExportWorker', () => {
       id: 'job-fail',
       data: { tenantId: 'tenant-1', profile: 'lite' },
       updateProgress: mock(),
-    } as any;
+    } as never;
 
     mockStrategy.export.mockRejectedValueOnce(new Error('Export crash'));
 
-    // @ts-expect-error
-    await expect(worker.processJob(mockJob)).rejects.toThrow('Export crash');
+    await expect(
+      (worker as unknown as Record<string, unknown>).processJob(mockJob)
+    ).rejects.toThrow('Export crash');
     expect(mockAudit.log).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'EXPORT_FAILED',

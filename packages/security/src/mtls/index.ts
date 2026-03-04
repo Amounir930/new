@@ -64,7 +64,9 @@ export function createMTLSServerOptions(config: MTLSConfig): ServerOptions {
     key: certs.key,
     requestCert: config.requestCert,
     rejectUnauthorized:
-      process.env.NODE_ENV === 'production' ? true : config.rejectUnauthorized,
+      process.env['NODE_ENV'] === 'production'
+        ? true
+        : config.rejectUnauthorized,
     // Enable only secure TLS versions
     minVersion: 'TLSv1.3',
     // Cipher suites
@@ -96,11 +98,11 @@ export class MTLSServer {
 
     this.server = createServer(options, (req, res) => {
       // Log client certificate info for audit
-      const socket = req.socket as any;
+      const socket = req.socket as import('tls').TLSSocket;
       const cert = socket.getPeerCertificate?.();
 
       if (cert) {
-        console.log(
+        process.stdout.write(
           `[mTLS] Client connected: CN=${cert.subject?.CN}, serial=${cert.serialNumber}`
         );
       }
@@ -133,23 +135,23 @@ export class MTLSServer {
         );
 
         if (daysUntilExpiry <= 0) {
-          console.error('[mTLS] FATAL: Certificate HAS EXPIRED!');
-          if (process.env.NODE_ENV === 'production') {
+          process.stdout.write('[mTLS] FATAL: Certificate HAS EXPIRED!');
+          if (process.env['NODE_ENV'] === 'production') {
             // In production, we don't want to run with expired certs
             process.exit(1);
           }
         } else if (daysUntilExpiry <= 7) {
-          console.error(
+          process.stdout.write(
             `[mTLS] CRITICAL: Certificate expires in ${daysUntilExpiry} days - RENEW NOW!`
           );
         } else if (daysUntilExpiry <= 30) {
-          console.warn(
+          process.stdout.write(
             `[mTLS] WARNING: Certificate expires in ${daysUntilExpiry} days!`
           );
         }
       }
     } catch (error) {
-      console.error('[mTLS] Failed to check certificate expiry:', error);
+      console['error']('[mTLS] Failed to check certificate expiry:', error);
     }
   }
 
@@ -212,8 +214,12 @@ export function getCertificatePaths(
  * mTLS Middleware for Express/NestJS
  */
 export function mtlsMiddleware(config: MTLSConfig) {
-  return (req: any, res: any, next: any) => {
-    const socket = req.socket as any;
+  return (
+    req: import('express').Request,
+    res: import('express').Response,
+    next: import('express').NextFunction
+  ) => {
+    const socket = req.socket as import('tls').TLSSocket;
 
     if (!socket.authorized) {
       return res.status(401).json({
@@ -226,8 +232,10 @@ export function mtlsMiddleware(config: MTLSConfig) {
 
     // Validate client CN if whitelist specified
     if (config.allowedClients && config.allowedClients.length > 0) {
-      const cn = cert.subject?.CN || cert.subject?.commonName;
-      if (!config.allowedClients.includes(cn)) {
+      const cn =
+        cert.subject?.CN ||
+        (cert.subject as unknown as Record<string, unknown>)?.['commonName'];
+      if (!config.allowedClients.includes(cn as string)) {
         return res.status(403).json({
           error: 'Client not authorized',
           code: 'MTLS_UNAUTHORIZED_CLIENT',
@@ -236,7 +244,9 @@ export function mtlsMiddleware(config: MTLSConfig) {
     }
 
     // Attach certificate info to request
-    req.clientCertificate = {
+    (
+      req as import('express').Request & { clientCertificate: unknown }
+    ).clientCertificate = {
       subject: cert.subject,
       issuer: cert.issuer,
       fingerprint: cert.fingerprint,

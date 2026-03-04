@@ -2,13 +2,14 @@ import { getTenantDb, importJobsInStorefront } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { EncryptionService } from '@apex/security';
 import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Job } from 'bull';
 import { eq } from 'drizzle-orm';
 
 @Processor('import-queue')
 @Injectable()
 export class ImportWorker {
+  private readonly logger = new Logger(ImportWorker.name);
   constructor(readonly _crypto: EncryptionService) {}
 
   @Process('product-import')
@@ -28,7 +29,7 @@ export class ImportWorker {
 
     // 2. Mock processing (Row-by-row)
     // In a real app, parse CSV and iterate
-    console.log(`Processing import job ${job.id} for tenant ${tenantId}`);
+    this.logger.log(`Processing import job ${job.id} for tenant ${tenantId}`);
 
     // Update progress example
     await job.progress(50);
@@ -54,12 +55,12 @@ export class ImportWorker {
 
   @OnQueueActive()
   onActive(job: Job) {
-    console.log(`Job ${job.id} started`);
+    this.logger.log(`Job ${job.id} started`);
   }
 
   @OnQueueFailed()
   async onFailed(job: Job, error: Error) {
-    console.error(`Job ${job.id} failed: ${error.message}`);
+    this.logger.error(`Job ${job.id} failed: ${error.message}`);
     const tenantId = job.data?.tenantId;
     if (!tenantId) return;
     const { db, release } = await getTenantDb(tenantId);

@@ -31,14 +31,14 @@ export default async function ProductPage({
           </div>
           {product.images?.length > 1 && (
             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-              {product.images.map((img: any) => (
+              {product.images.map((img: { id: string, url: string, altText?: string } | unknown) => (
                 <div
-                  key={img.id}
+                  key={(img as { id: string }).id}
                   className="relative w-24 aspect-square flex-shrink-0 rounded-xl overflow-hidden ring-1 ring-gray-100 transition-opacity hover:opacity-80 cursor-pointer"
                 >
                   <Image
-                    src={img.url}
-                    alt={img.altText || ''}
+                    src={(img as { url: string }).url}
+                    alt={(img as { altText?: string }).altText || ''}
                     fill
                     className="object-cover"
                   />
@@ -95,13 +95,13 @@ export default async function ProductPage({
                 Available Options
               </h3>
               <div className="flex flex-wrap gap-3">
-                {product.variants.map((v: any) => (
+                {product.variants.map((v: { id: string, name: string } | unknown) => (
                   <button
-                    key={v.id}
+                    key={(v as { id: string }).id}
                     type="button"
                     className="px-5 py-2.5 rounded-xl border-2 border-gray-100 text-sm font-bold transition-all hover:border-black active:scale-95"
                   >
-                    {v.name}
+                    {(v as { name: string }).name}
                   </button>
                 ))}
               </div>

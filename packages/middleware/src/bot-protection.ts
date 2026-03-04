@@ -82,7 +82,9 @@ export class BotProtectionMiddleware implements NestMiddleware {
   ): boolean {
     for (const botPattern of this.botUserAgents) {
       if (botPattern.test(userAgent)) {
-        console.warn(`S11: Bot blocked - UA: "${userAgent}" | IP: ${clientIp}`);
+        process.stdout.write(
+          `S11: Bot blocked - UA: "${userAgent}" | IP: ${clientIp}`
+        );
         throw new ForbiddenException('S11 Violation: Automated access blocked');
       }
     }
@@ -117,7 +119,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
       // (allows admin panel logins which don't include the token)
       const hasHcaptchaSecret = !!env.HCAPTCHA_SECRET_KEY;
       if (!hasHcaptchaSecret) {
-        console.warn(
+        process.stdout.write(
           `⚠️ S11: HCAPTCHA_SECRET_KEY not configured - bypassing hCaptcha for ${path}`
         );
         return;
@@ -129,14 +131,14 @@ export class BotProtectionMiddleware implements NestMiddleware {
           clientIp
         );
         if (!isValid) {
-          console.warn(
+          process.stdout.write(
             `S11: hCaptcha failed for sensitive route: ${path} | IP: ${clientIp}`
           );
           throw new ForbiddenException(
             'S11 Violation: hCaptcha validation required for this action'
           );
         }
-        console.log(`✅ S11: hCaptcha verified for ${path}`);
+        process.stdout.write(`✅ S11: hCaptcha verified for ${path}`);
       }
     }
   }
@@ -155,7 +157,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
 
     for (const pathPattern of suspiciousPaths) {
       if (pathPattern.test(req.url)) {
-        console.warn(
+        process.stdout.write(
           `S11: Suspicious path hit - Path: "${req.url}" | IP: ${req.ip}`
         );
         throw new ForbiddenException(

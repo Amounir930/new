@@ -17,10 +17,10 @@ describe('ProvisioningController', () => {
   beforeEach(async () => {
     // Manual instantiation to bypass NestJS TestingModule issues with Bun
     controller = new ProvisioningController(
-      mockProvisioningService as any,
-      mockAuditService as any
+      mockProvisioningService as never,
+      mockAuditService as never
     );
-    service = mockProvisioningService as any;
+    service = mockProvisioningService as never;
 
     mockProvisioningService.provision.mockClear();
     mockAuditService.log.mockClear();
@@ -46,8 +46,8 @@ describe('ProvisioningController', () => {
       });
 
       const result = await controller.provisionStore(
-        {} as any,
-        validDto as any
+        {} as never,
+        validDto as never
       );
 
       expect(result.message).toBe('Store provisioned successfully');
@@ -61,7 +61,7 @@ describe('ProvisioningController', () => {
       );
 
       await expect(
-        controller.provisionStore({} as any, validDto as any)
+        controller.provisionStore({} as never, validDto as never)
       ).rejects.toThrow('Provisioning failed');
     });
   });

@@ -13,7 +13,7 @@ const CONFIG = {
   subdomain: SUBDOMAIN,
 };
 
-console.log(`\n🔍 DIAGNOSTIC STARTED: ${CONFIG.subdomain}\n`);
+process.stdout.write(`\n🔍 DIAGNOSTIC STARTED: ${CONFIG.subdomain}\n`);
 
 // -----------------------------------------------------------------------------
 // UTILS
@@ -22,9 +22,9 @@ async function fetchJson(
   method: string,
   path: string,
   token?: string,
-  body?: any
+  body?: unknown
 ) {
-  const headers: any = { 'Content-Type': 'application/json' };
+  const headers: unknown = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const response = await fetch(`${CONFIG.baseUrl}${path}`, {
@@ -42,21 +42,21 @@ async function fetchJson(
 // -----------------------------------------------------------------------------
 async function run() {
   // 1. Authenticate
-  console.log('--- STEP 1: AUTH ---');
+  process.stdout.write('--- STEP 1: AUTH ---');
   const auth = await fetchJson('POST', '/api/v1/auth/login', undefined, {
     email: CONFIG.adminEmail,
     password: CONFIG.adminPassword,
   });
 
   if (auth.status !== 201 || !auth.data.accessToken) {
-    console.error('❌ Auth Failed:', auth.data);
+    process.stdout.write('❌ Auth Failed:', auth.data);
     process.exit(1);
   }
   const token = auth.data.accessToken;
-  console.log('✅ Auth Success\n');
+  process.stdout.write('✅ Auth Success\n');
 
   // 2. Provision Tenant
-  console.log(`--- STEP 2: PROVISION (${CONFIG.subdomain}) ---`);
+  process.stdout.write(`--- STEP 2: PROVISION (${CONFIG.subdomain}) ---`);
   const provision = await fetchJson('POST', '/api/v1/provision', token, {
     subdomain: CONFIG.subdomain,
     storeName: 'Diagnostic Store',
@@ -64,15 +64,15 @@ async function run() {
     plan: 'pro',
   });
 
-  console.log(`Status: ${provision.status}`);
+  process.stdout.write(`Status: ${provision.status}`);
   if (provision.status === 201) {
-    console.log('✅ PROVISIONING SUCCESS!');
-    console.log(JSON.stringify(provision.data, null, 2));
+    process.stdout.write('✅ PROVISIONING SUCCESS!');
+    process.stdout.write(JSON.stringify(provision.data, null, 2));
   } else {
-    console.error('❌ PROVISIONING FAILED');
-    console.error(JSON.stringify(provision.data, null, 2));
+    process.stdout.write('❌ PROVISIONING FAILED');
+    process.stdout.write(JSON.stringify(provision.data, null, 2));
     process.exit(1);
   }
 }
 
-run().catch(console.error);
+run().catch(console['error']);

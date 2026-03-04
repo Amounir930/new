@@ -25,6 +25,6 @@ for (const file of files) {
       content = `import { storefrontSchema } from '../v5-core';\n${content}`;
     }
     writeFileSync(filePath, content, 'utf-8');
-    console.log(`Fixed import in ${file}`);
+    process.stdout.write(`Fixed import in ${file}`);
   }
 }

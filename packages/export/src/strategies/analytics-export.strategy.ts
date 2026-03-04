@@ -46,7 +46,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
         const exportedFiles: string[] = [];
 
         // Export orders summary
-        const ordersResult: any = await db.execute(sql`
+        const ordersResult: unknown = await db.execute(sql`
           SELECT 
             DATE(created_at) as date,
             COUNT(*) as order_count,
@@ -66,7 +66,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
         exportedFiles.push('orders_summary.csv');
 
         // Export products performance
-        const productsResult: any = await db.execute(sql`
+        const productsResult: unknown = await db.execute(sql`
           SELECT 
             p.name,
             p.sku,
@@ -191,7 +191,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
   private async writeCSV(
     filePath: string,
-    rows: any[],
+    rows: unknown[],
     headers: string[]
   ): Promise<void> {
     const csvLines = [headers.join(',')];

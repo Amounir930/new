@@ -1,17 +1,8 @@
 import { jwtVerify } from 'jose';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const PROTECTED_PREFIXES = [
-  '/dashboard',
-  '/tenants',
-  '/blueprints',
-  '/infra',
-  '/security',
-  '/settings',
-  '/orders',
-  '/products',
-];
+const JWT_SECRET = process['env']['JWT_SECRET'];
+const PROTECTED_PREFIXES = ['/dashboard', '/super-admin'];
 
 async function verifyToken(token: string) {
   if (!JWT_SECRET) {
@@ -20,6 +11,12 @@ async function verifyToken(token: string) {
   const secret = new TextEncoder().encode(JWT_SECRET);
   const { payload } = await jwtVerify(token, secret);
   return payload;
+}
+
+function _isSuperAdminAuthorized(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  const p = payload as { role?: string; tenantId?: string };
+  return p.role === 'super_admin' && p.tenantId === 'system';
 }
 
 function isProtectedRoute(pathname: string): boolean {
@@ -74,16 +71,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/tenants/:path*',
-    '/blueprints/:path*',
-    '/infra/:path*',
-    '/security/:path*',
-    '/settings/:path*',
-    '/orders/:path*',
-    '/products/:path*',
-    '/login',
-    '/',
-  ],
+  matcher: ['/dashboard/:path*', '/super-admin/:path*', '/login', '/'],
 };

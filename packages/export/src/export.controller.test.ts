@@ -20,11 +20,11 @@ describe('ExportController', () => {
       getJobStatus: mock(),
       listTenantExports: mock(),
       cancelJob: mock(),
-    } as any;
+    } as never;
 
     mockWorker = {
       confirmDownload: mock(),
-    } as any;
+    } as never;
 
     controller = new ExportController(mockService, mockWorker);
   });
@@ -40,7 +40,7 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      (mockService.createExportJob as any).mockResolvedValue(mockJob);
+      (mockService.createExportJob as never).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -48,7 +48,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.createExport(
         { profile: 'lite', includeAssets: true },
@@ -67,7 +67,7 @@ describe('ExportController', () => {
     });
 
     it('should reject unauthenticated request', async () => {
-      const req = { user: undefined } as any;
+      const req = { user: undefined } as never;
 
       await expect(
         controller.createExport({ profile: 'lite' }, req)
@@ -81,7 +81,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'user',
         },
-      } as any;
+      } as never;
 
       await expect(
         controller.createExport({ profile: 'lite' }, req)
@@ -98,7 +98,7 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      (mockService.createExportJob as any).mockResolvedValue(mockJob);
+      (mockService.createExportJob as never).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -106,7 +106,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'super_admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.createExport({ profile: 'lite' }, req);
       expect(result.job).toBeDefined();
@@ -122,7 +122,7 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      (mockService.createExportJob as any).mockResolvedValue(mockJob);
+      (mockService.createExportJob as never).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -130,7 +130,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       await controller.createExport(
         {
@@ -162,7 +162,7 @@ describe('ExportController', () => {
         status: 'processing' as const,
       };
 
-      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as never).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -170,14 +170,14 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.getStatus('job-123', req);
       expect(result).toEqual(mockJob);
     });
 
     it('should throw NotFoundException for non-existent job', async () => {
-      (mockService.getJobStatus as any).mockResolvedValue(null);
+      (mockService.getJobStatus as never).mockResolvedValue(null);
 
       const req = {
         user: {
@@ -185,7 +185,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       await expect(controller.getStatus('non-existent', req)).rejects.toThrow(
         NotFoundException
@@ -202,7 +202,7 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as never).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -210,14 +210,14 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       await expect(controller.getStatus('job-123', req)).rejects.toThrow(
         ForbiddenException
       );
     });
 
-    it('should allow super_admin to access any tenant job', async () => {
+    it('should allow super_admin to access all tenant jobs', async () => {
       const mockJob = {
         id: 'job-123',
         tenantId: 'tenant-456',
@@ -227,7 +227,7 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as never).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -235,7 +235,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'super_admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.getStatus('job-123', req);
       expect(result).toEqual(mockJob);
@@ -253,8 +253,8 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
-      (mockWorker.confirmDownload as any).mockResolvedValue(undefined);
+      (mockService.getJobStatus as never).mockResolvedValue(mockJob);
+      (mockWorker.confirmDownload as never).mockResolvedValue(undefined);
 
       const req = {
         user: {
@@ -262,7 +262,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.confirmDownload('job-123', req);
 
@@ -282,7 +282,7 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
+      (mockService.getJobStatus as never).mockResolvedValue(mockJob);
 
       const req = {
         user: {
@@ -290,7 +290,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       await expect(controller.confirmDownload('job-123', req)).rejects.toThrow(
         ForbiddenException
@@ -309,8 +309,8 @@ describe('ExportController', () => {
         status: 'pending' as const,
       };
 
-      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
-      (mockService.cancelJob as any).mockResolvedValue(true);
+      (mockService.getJobStatus as never).mockResolvedValue(mockJob);
+      (mockService.cancelJob as never).mockResolvedValue(true);
 
       const req = {
         user: {
@@ -318,7 +318,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.cancelJob('job-123', req);
 
@@ -336,8 +336,8 @@ describe('ExportController', () => {
         status: 'completed' as const,
       };
 
-      (mockService.getJobStatus as any).mockResolvedValue(mockJob);
-      (mockService.cancelJob as any).mockResolvedValue(false);
+      (mockService.getJobStatus as never).mockResolvedValue(mockJob);
+      (mockService.cancelJob as never).mockResolvedValue(false);
 
       const req = {
         user: {
@@ -345,7 +345,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.cancelJob('job-123', req);
 
@@ -374,7 +374,7 @@ describe('ExportController', () => {
         },
       ];
 
-      (mockService.listTenantExports as any).mockResolvedValue(mockJobs);
+      (mockService.listTenantExports as never).mockResolvedValue(mockJobs);
 
       const req = {
         user: {
@@ -382,7 +382,7 @@ describe('ExportController', () => {
           tenantId: 'tenant-123',
           role: 'admin',
         },
-      } as any;
+      } as never;
 
       const result = await controller.listJobs(req);
 

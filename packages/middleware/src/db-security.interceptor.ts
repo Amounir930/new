@@ -10,7 +10,10 @@ import { tenantStorage } from './connection-context.js';
 
 @Injectable()
 export class DbSecurityInterceptor implements NestInterceptor {
-  intercept(_context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler
+  ): Observable<unknown> {
     return next.handle().pipe(
       finalize(async () => {
         const tenantContext = tenantStorage.getStore();
@@ -26,7 +29,7 @@ export class DbSecurityInterceptor implements NestInterceptor {
           // This interceptor provides a secondary application-layer safety net.
 
           // We use the raw client if available to perform the reset
-          const client = (executor as any).session?.client;
+          const client = (executor as never).session?.client;
           if (client) {
             await client.query(`
               RESET app.current_tenant;
@@ -36,9 +39,12 @@ export class DbSecurityInterceptor implements NestInterceptor {
             `);
           }
         } catch (error) {
-          console.error('CRITICAL: Failed to reset DB session state:', error);
-          // Mandate Pt 3: Connection destruction on any reset failure
-          const client = (executor as any).session?.client;
+          process.stdout.write(
+            'CRITICAL: Failed to reset DB session state:',
+            error
+          );
+          // Mandate Pt 3: Connection destruction on all reset failure
+          const client = (executor as never).session?.client;
           if (client && typeof client.release === 'function') {
             // Passing true to release() usually signals to the pool to destroy the client (pg specific)
             client.release(true);

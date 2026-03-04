@@ -53,7 +53,7 @@ export class ActiveDefenseMiddleware implements NestMiddleware {
     // 2. S15 Level 2: Honeypot Detection
     for (const pattern of this.honeypotPaths) {
       if (pattern.test(path)) {
-        console.error(
+        process.stdout.write(
           `S15 CRITICAL: Honeytoken hit! Path: "${path}" | IP: ${ip}`
         );
 
@@ -64,7 +64,7 @@ export class ActiveDefenseMiddleware implements NestMiddleware {
         } catch (_storeError) {
           // S15: Fail-Closed Mechanism
           // If the store fails, we MUST still block the suspicious request
-          console.error(
+          process.stdout.write(
             'S15: Defensive store failure, falling back to Fail-Closed block'
           );
         }

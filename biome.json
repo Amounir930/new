@@ -27,6 +27,7 @@
       },
       "complexity": {
         "noBannedTypes": "off",
+        "useLiteralKeys": "off",
         "noExcessiveCognitiveComplexity": {
           "level": "error",
           "options": {

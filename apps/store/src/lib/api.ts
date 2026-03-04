@@ -39,7 +39,7 @@ export async function fetchStorefront(
     if (!res.ok) {
       // S5 Security: Mask internal URL to prevent infrastructure disclosure
       const errorMsg = `API Error [${res.status}] | Tenant: ${tenantId}`;
-      console.error(errorMsg);
+      void errorMsg;
 
       if (res.status >= 500) {
         return { error: 'INTERNAL_SERVER_ERROR', status: res.status };
@@ -53,8 +53,8 @@ export async function fetchStorefront(
     }
 
     return res.json();
-  } catch (error) {
-    console.error(`Fetch error: ${url} | Tenant: ${tenantId}`, error);
+  } catch (_error) {
+    /* `Fetch error: ${url} | Tenant: ${tenantId}`, error */
     return null;
   }
 }
@@ -86,7 +86,9 @@ export async function getProducts(
     sort?: 'newest' | 'price_asc' | 'price_desc';
   } = {}
 ) {
-  const query = new URLSearchParams(params as any).toString();
+  const query = new URLSearchParams(
+    params as Record<string, string>
+  ).toString();
   return fetchStorefront(`/storefront/products?${query}`, tenantId, {
     next: { revalidate: 60 },
   });

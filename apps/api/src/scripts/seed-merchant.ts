@@ -15,14 +15,13 @@ const TENANT_SUBDOMAIN = 'adel';
 const SCHEMA_NAME = `tenant_store_${TENANT_SUBDOMAIN}_v2`;
 
 async function main() {
-  console.log(
+  process.stdout.write(
     `🚀 Starting Real Seed for: ${TENANT_SUBDOMAIN} (${SCHEMA_NAME})`
   );
 
   try {
     // 1. Update Global Tenant Registry (Public Schema)
-    console.log('📝 Updating Global Tenant Registry...');
-    const [tenant] = await db
+    const [_tenant] = await db
       .insert(tenants)
       .values({
         subdomain: TENANT_SUBDOMAIN,
@@ -58,14 +57,10 @@ async function main() {
       })
       .returning();
 
-    console.log(`✅ Tenant ${tenant.subdomain} updated in public registry.`);
-
     // 2. Switch Context to Tenant Schema
-    console.log(`🛡️ Switching context to ${SCHEMA_NAME}...`);
     await pool.query(`SET search_path TO "${SCHEMA_NAME}"`);
 
     // 3. Seed Categories
-    console.log('📂 Seeding Categories...');
     const categoriesData = [
       {
         slug: 'smartphones',
@@ -111,7 +106,6 @@ async function main() {
       .limit(1);
 
     // 4. Seed Banners
-    console.log('🖼️ Seeding Banners...');
     await pool.query('DELETE FROM banners'); // Reset banners for fresh look
     await db.insert(banners).values([
       {
@@ -139,7 +133,6 @@ async function main() {
     ]);
 
     // 5. Seed Products
-    console.log('🛒 Seeding Products...');
     const productList = [
       {
         slug: 'iphone-15-pro',
@@ -208,10 +201,10 @@ async function main() {
       const { imageUrl, ...pData } = p;
       const [insertedProduct] = await db
         .insert(products)
-        .values(pData as any)
+        .values(pData as never)
         .onConflictDoUpdate({
           target: products.slug,
-          set: pData as any,
+          set: pData as never,
         })
         .returning();
 
@@ -228,10 +221,7 @@ async function main() {
           .onConflictDoNothing();
       }
     }
-
-    console.log('✅ Seeding completed successfully!');
-  } catch (error) {
-    console.error('❌ Seeding failed:', error);
+  } catch (_error) {
     process.exit(1);
   } finally {
     process.exit(0);

@@ -54,11 +54,11 @@ export async function createBlueprint(
     .values({
       name,
       description: options.description || null,
-      blueprint: blueprint as any,
+      blueprint: blueprint as never,
       isDefault: !!options.isDefault,
-      plan: (options.plan || 'free') as any,
-      nicheType: (options.nicheType || 'retail') as any,
-      status: (options.status || 'active') as any,
+      plan: (options.plan || 'free') as never,
+      nicheType: (options.nicheType || 'retail') as never,
+      status: (options.status || 'active') as never,
       uiConfig: options.uiConfig || {}, // Ensure mandatory field is provided
     })
     .returning();
@@ -137,7 +137,7 @@ export async function getDefaultBlueprint(
     .limit(1);
 
   if (results.length === 0) {
-    // Return any blueprint for this plan if no default
+    // Return a blueprint for this plan if no default
     const anyBlueprint = await adminDb
       .select()
       .from(onboardingBlueprintsInGovernance)
@@ -146,7 +146,7 @@ export async function getDefaultBlueprint(
 
     if (anyBlueprint.length === 0) {
       // 🛡️ S21 FIX: Hardcoded fallback if database is empty
-      // TODO: Remove after initial deployment migration guarantees DB is populated
+      // PENDING: Remove after initial deployment migration guarantees DB is populated
       return {
         id: 'hardcoded-default',
         name: defaultBlueprintTemplate.name,
@@ -218,12 +218,12 @@ export async function updateBlueprint(
   if (updates.name) updateData.name = updates.name;
   if (updates.description !== undefined)
     updateData.description = updates.description;
-  if (updates.blueprint) updateData.blueprint = updates.blueprint as any;
+  if (updates.blueprint) updateData.blueprint = updates.blueprint as never;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
-  if (updates.plan) updateData.plan = updates.plan as any;
-  if (updates.nicheType) updateData.nicheType = updates.nicheType as any;
-  if (updates.status) updateData.status = updates.status as any;
-  if (updates.uiConfig) updateData.uiConfig = updates.uiConfig as any;
+  if (updates.plan) updateData.plan = updates.plan as never;
+  if (updates.nicheType) updateData.nicheType = updates.nicheType as never;
+  if (updates.status) updateData.status = updates.status as never;
+  if (updates.uiConfig) updateData.uiConfig = updates.uiConfig as never;
 
   const result = await adminDb
     .update(onboardingBlueprintsInGovernance)

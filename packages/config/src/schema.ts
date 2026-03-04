@@ -8,8 +8,8 @@ import { z } from 'zod';
 export const EnvSchema = z.object({
   // Critical Security Variables (S1/S7 Enforcement)
   JWT_SECRET: z.string().refine((key) => {
-    if (process.env.NODE_ENV === 'production') {
-      if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return true;
+    if (process.env['NODE_ENV'] === 'production') {
+      if (process.env['SKIP_S1_COMPLEXITY_CHECK'] === 'true') return true;
       return (
         key.length >= 32 &&
         /[A-Z]/.test(key) &&
@@ -22,8 +22,8 @@ export const EnvSchema = z.object({
   JWT_SECRET_FILE: z.string().optional(),
 
   ENCRYPTION_MASTER_KEY: z.string().refine((key) => {
-    if (process.env.NODE_ENV === 'production') {
-      if (process.env.SKIP_S1_COMPLEXITY_CHECK === 'true') return true;
+    if (process.env['NODE_ENV'] === 'production') {
+      if (process.env['SKIP_S1_COMPLEXITY_CHECK'] === 'true') return true;
       return (
         key.length >= 32 &&
         !/test|default|example/i.test(key) &&
@@ -54,8 +54,8 @@ export const EnvSchema = z.object({
     .string()
     .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL supported')
     .refine((url) => {
-      if (process.env.NODE_ENV === 'production') {
-        if (process.env.DB_SSL_OPTIONAL === 'true') return true;
+      if (process.env['NODE_ENV'] === 'production') {
+        if (process.env['DB_SSL_OPTIONAL'] === 'true') return true;
         return url.includes('sslmode=require') || url.includes('ssl=require');
       }
       return true;
@@ -68,7 +68,7 @@ export const EnvSchema = z.object({
 
   // Redis Configuration (S6/S12 Enforcement)
   REDIS_URL: z.string().refine((url) => {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env['NODE_ENV'] === 'production') {
       return /redis:\/\/[^:]*:[^@]+@/.test(url);
     }
     return true;
@@ -89,9 +89,37 @@ export const EnvSchema = z.object({
   MINIO_REGION: z.string().default('us-east-1'),
 
   // Imgproxy Configuration (S1/S7 Enforcement)
-  IMGPROXY_KEY: z.string().regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_KEY must be a valid hex-encoded string').optional(),
-  IMGPROXY_SALT: z.string().regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_SALT must be a valid hex-encoded string').optional(),
-  IMGPROXY_SOURCE_URL: z.string().url('S1 Violation: IMGPROXY_SOURCE_URL must be a valid URL').optional(),
+  IMGPROXY_KEY: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]+$/,
+      'S1 Violation: IMGPROXY_KEY must be a valid hex-encoded string'
+    )
+    .optional(),
+  IMGPROXY_SALT: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]+$/,
+      'S1 Violation: IMGPROXY_SALT must be a valid hex-encoded string'
+    )
+    .optional(),
+  IMGPROXY_SOURCE_URL: z
+    .string()
+    .url('S1 Violation: IMGPROXY_SOURCE_URL must be a valid URL')
+    .optional(),
+
+  // Meilisearch (S3/S6)
+  MEILISEARCH_MASTER_KEY: z.string().optional(),
+
+  // Cloudflare & ACME (S8)
+  CF_API_EMAIL: z.string().email().optional(),
+  CF_DNS_API_TOKEN: z.string().optional(),
+  CF_ZONE_ID: z.string().optional(),
+  ACME_EMAIL: z.string().email().optional(),
+
+  // Backup & Infrastructure
+  BACKUP_ENCRYPTION_KEY: z.string().optional(),
+  PGBOUNCER_ADMIN_USERS: z.string().optional(),
 
   // Application Settings
   NODE_ENV: z.enum(['development', 'production', 'test']),
@@ -107,19 +135,19 @@ export const EnvSchema = z.object({
 
   // Security Secrets (S7/S15 Enforcement)
   API_KEY_SECRET: z.string().refine((key) => {
-    if (process.env.NODE_ENV === 'production') return key.length >= 32;
+    if (process.env['NODE_ENV'] === 'production') return key.length >= 32;
     return true;
   }, 'S1 Violation: API_KEY_SECRET too short'),
   API_KEY_SECRET_FILE: z.string().optional(),
 
   BLIND_INDEX_PEPPER: z.string().refine((key) => {
-    if (process.env.NODE_ENV === 'production') return key.length >= 32;
+    if (process.env['NODE_ENV'] === 'production') return key.length >= 32;
     return true;
   }, 'S1 Violation: BLIND_INDEX_PEPPER too short'),
   BLIND_INDEX_PEPPER_FILE: z.string().optional(),
 
   SESSION_SALT: z.string().refine((key) => {
-    if (process.env.NODE_ENV === 'production') return key.length >= 32;
+    if (process.env['NODE_ENV'] === 'production') return key.length >= 32;
     return true;
   }, 'S1 Violation: SESSION_SALT too short'),
   SESSION_SALT_FILE: z.string().optional(),
@@ -127,13 +155,18 @@ export const EnvSchema = z.object({
   INTERNAL_API_SECRET: z.string().optional(),
   INTERNAL_API_SECRET_FILE: z.string().optional(),
 
+  // Next.js Public Vars
+  NEXT_PUBLIC_API_URL: z.string().url().optional(),
+  INTERNAL_API_URL: z.string().url().optional(),
+
   // MinIO Root Credentials
   MINIO_ROOT_USER: z.string().optional(),
   MINIO_ROOT_PASSWORD: z.string().optional(),
 
   // Protocol Controls
-  ENABLE_S1_ENFORCEMENT: z.string().default('true'),
-  SKIP_ENV_VALIDATION: z.string().default('false'),
+  ENABLE_S1_ENFORCEMENT: z.coerce.boolean().default(true),
+  SKIP_ENV_VALIDATION: z.coerce.boolean().default(false),
+  SKIP_S1_COMPLEXITY_CHECK: z.coerce.boolean().default(false),
 
   // Rate Limiting (S6)
   RATE_LIMIT_TTL: z.string().default('60'),

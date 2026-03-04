@@ -45,8 +45,8 @@ describe('RateLimitGuard', () => {
   let store: RedisRateLimitStore;
   let configService: ConfigService;
   let mockContext: ExecutionContext;
-  let mockRequest: any;
-  let mockResponse: any;
+  let mockRequest: unknown;
+  let mockResponse: unknown;
 
   beforeEach(() => {
     mock.restore();
@@ -55,10 +55,10 @@ describe('RateLimitGuard', () => {
     // Mock ConfigService
     configService = {
       get: mock().mockImplementation((key: string) => {
-        if (key === 'NODE_ENV') return process.env.NODE_ENV || 'development';
+        if (key === 'NODE_ENV') return process.env['NODE_ENV'] || 'development';
         return 'redis://localhost:6379';
       }),
-    } as any;
+    } as never;
 
     // Mock RedisRateLimitStore instance
     store = new RedisRateLimitStore(configService);
@@ -94,7 +94,7 @@ describe('RateLimitGuard', () => {
       }),
       getHandler: () => function testHandler() {},
       getClass: () => class TestController {},
-    } as any;
+    } as never;
   });
 
   afterEach(() => {
@@ -110,7 +110,7 @@ describe('RateLimitGuard', () => {
     expect(result).toBe(true);
     expect(mockResponse.setHeader).toHaveBeenCalledWith(
       'X-RateLimit-Limit',
-      expect.any(Number)
+      expect.anything(Number)
     );
   });
 
@@ -170,7 +170,7 @@ describe('RateLimitGuard', () => {
     await guard.canActivate(mockContext);
     expect(store.increment).toHaveBeenCalledWith(
       expect.stringContaining('ip:1.2.3.4'),
-      expect.any(Number)
+      expect.anything(Number)
     );
   });
 
@@ -179,7 +179,7 @@ describe('RateLimitGuard', () => {
     await guard.canActivate(mockContext);
     expect(store.increment).toHaveBeenCalledWith(
       expect.stringContaining('ip:9.10.11.12'),
-      expect.any(Number)
+      expect.anything(Number)
     );
   });
 
@@ -221,7 +221,7 @@ describe('RateLimitGuard', () => {
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
       'DDoS protection triggered'
     );
-    expect(blockSpy).toHaveBeenCalledWith(expect.any(String), 3600000); // 1 hour
+    expect(blockSpy).toHaveBeenCalledWith(expect.anything(String), 3600000); // 1 hour
   });
 });
 
@@ -232,24 +232,24 @@ describe('RedisRateLimitStore Branches', () => {
   beforeEach(() => {
     configService = {
       get: mock().mockImplementation((key: string) => {
-        if (key === 'NODE_ENV') return process.env.NODE_ENV || 'development';
+        if (key === 'NODE_ENV') return process.env['NODE_ENV'] || 'development';
         return 'redis://localhost:6379';
       }),
-    } as any;
+    } as never;
     store = new RedisRateLimitStore(configService);
     mock.restore();
   });
 
   it('should fallback to memory in non-production on Redis failure', async () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
+    const originalEnv = process.env['NODE_ENV'];
+    process.env['NODE_ENV'] = 'development';
     // Force Redis connect to fail
     const mockRedis = {
       on: mock(),
       connect: mock().mockRejectedValue(new Error('Redis Down')),
       isOpen: false,
     };
-    (createClient as any).mockReturnValue(mockRedis as any);
+    (createClient as never).mockReturnValue(mockRedis as never);
 
     // Call increment - should trigger connect and fallback
     await store.increment('test-key', 60000);
@@ -258,12 +258,12 @@ describe('RedisRateLimitStore Branches', () => {
     const client = await store.getClient();
     expect(client).toBeNull();
 
-    process.env.NODE_ENV = originalEnv;
+    process.env['NODE_ENV'] = originalEnv;
   });
 
   it('should throw in production if Redis is unavailable', async () => {
-    const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
+    const originalEnv = process.env['NODE_ENV'];
+    process.env['NODE_ENV'] = 'production';
 
     // Mock getClient to return null
     spyOn(store, 'getClient').mockResolvedValue(null);
@@ -272,11 +272,11 @@ describe('RedisRateLimitStore Branches', () => {
       HttpException
     );
 
-    process.env.NODE_ENV = originalEnv;
+    process.env['NODE_ENV'] = originalEnv;
   });
 
   it('should return null if already connecting', async () => {
-    (store as any).connecting = true;
+    (store as never).connecting = true;
     const client = await store.getClient();
     expect(client).toBeNull();
   });

@@ -10,16 +10,16 @@ export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const data = await apiFetch<any>(`/products/${id}`);
+        const data = await apiFetch<unknown>(`/products/${id}`);
         setProduct(data);
-      } catch (error) {
-        console.error('Failed to fetch product:', error);
+      } catch (_error) {
+        /* 'Failed to fetch product:', error */
       } finally {
         setLoading(false);
       }
@@ -27,7 +27,7 @@ export default function EditProductPage() {
     if (id) fetchProduct();
   }, [id]);
 
-  const handleUpdateProduct = async (data: any) => {
+  const handleUpdateProduct = async (data: unknown) => {
     try {
       await apiFetch(`/products/${id}`, {
         method: 'PATCH',
@@ -36,8 +36,8 @@ export default function EditProductPage() {
 
       router.push('/dashboard/products');
       router.refresh();
-    } catch (error) {
-      console.error('Failed to update product:', error);
+    } catch (_error) {
+      /* 'Failed to update product:', error */
     }
   };
 

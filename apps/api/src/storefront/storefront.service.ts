@@ -37,8 +37,8 @@ export class StorefrontService {
       // Fetch config from tenant_config table
       const configEntries = await db.select().from(tenantConfigInStorefront);
       const config = configEntries.reduce(
-        (acc: Record<string, unknown>, curr: any) => {
-          acc[curr.key] = curr.value;
+        (acc: Record<string, unknown>, curr: Record<string, unknown>) => {
+          if (typeof curr.key === 'string') acc[curr.key] = curr.value;
           return acc;
         },
         {} as Record<string, unknown>
@@ -240,8 +240,8 @@ export class StorefrontService {
     try {
       const configEntries = await db.select().from(tenantConfigInStorefront);
       const config = configEntries.reduce(
-        (acc: Record<string, unknown>, curr: any) => {
-          acc[curr.key] = curr.value;
+        (acc: Record<string, unknown>, curr: Record<string, unknown>) => {
+          if (typeof curr.key === 'string') acc[curr.key] = curr.value;
           return acc;
         },
         {} as Record<string, unknown>
@@ -306,15 +306,16 @@ export class StorefrontService {
       const encryptedEmail = this.crypto.encrypt(email).encrypted;
 
       // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure
-      return await db.transaction(async (tx: any) => {
-        return (await tx
+      return await db.transaction(async (tx: unknown) => {
+        const dbTx = tx as typeof db;
+        return (await dbTx
           .insert(newsletterSubscribersInStorefront)
           .values({ email: encryptedEmail })
           .onConflictDoUpdate({
             target: newsletterSubscribersInStorefront.email,
             set: { isActive: true },
           })
-          .returning()) as any;
+          .returning()) as unknown;
       });
     } finally {
       release();

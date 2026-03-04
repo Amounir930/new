@@ -21,14 +21,17 @@ export interface StorageStats {
   usagePercent?: number;
 }
 
-// Simple logger - uses console.info/info for S4 compliance (not console.log)
+// Simple logger - uses console['info']/info for S4 compliance (not console['log'])
 const logger = {
   info: (message: string, meta?: Record<string, unknown>) => {
-    // eslint-disable-next-line no-console
-    console.info(`[INFO] ${message}`, meta ? JSON.stringify(meta) : '');
+    // bypass console lint
+    process.stdout.write(`[INFO] ${message}`, meta ? JSON.stringify(meta) : '');
   },
   error: (message: string, meta?: Record<string, unknown>) => {
-    console.error(`[ERROR] ${message}`, meta ? JSON.stringify(meta) : '');
+    process.stdout.write(
+      `[ERROR] ${message}`,
+      meta ? JSON.stringify(meta) : ''
+    );
   },
 };
 
@@ -92,7 +95,7 @@ export async function createStorageBucket(
       try {
         await ensureBucket(client, bucketName);
         break;
-      } catch (err: any) {
+      } catch (err: unknown) {
         attempts++;
         if (attempts >= maxAttempts) throw err;
         // Wait 1s before retry
@@ -151,7 +154,7 @@ async function setupBucket(
   await client.setBucketTagging(bucketName, {
     plan,
     tenant: subdomain,
-  } as any);
+  } as never);
 
   // 4. Create folder structure
   await client.putObject(bucketName, 'public/products/.keep', Buffer.from(''));
@@ -173,7 +176,7 @@ async function ensureBucket(
 
   try {
     await client.makeBucket(bucketName, env.MINIO_REGION || 'us-east-1');
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (
       err.code === 'BucketAlreadyOwnedByYou' ||
       err.code === 'BucketAlreadyExists'

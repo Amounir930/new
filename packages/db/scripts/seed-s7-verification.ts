@@ -5,7 +5,7 @@ const TABLE_NAME = 'public.s7_verification_data';
 const KNOWN_PLAINTEXT = 'S7_VERIFICATION_SECRET_PLAINTEXT_2026';
 
 async function seed() {
-  console.log('🌱 Seeding S7 verification data...');
+  process.stdout.write('🌱 Seeding S7 verification data...');
   const client = await publicPool.connect();
 
   try {
@@ -18,7 +18,7 @@ async function seed() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    console.log('✅ Table verified');
+    process.stdout.write('✅ Table verified');
 
     // 2. Encrypt Data
     // Initialize service (it will read ENCRYPTION_MASTER_KEY from env)
@@ -34,7 +34,7 @@ async function seed() {
 
     // Simplest format compatible with "grep" check (checking it's NOT plaintext)
     const payload = JSON.stringify({ encrypted, iv, tag, salt });
-    console.log('✅ Data encrypted');
+    process.stdout.write('✅ Data encrypted');
 
     // 3. Insert Data
     await client.query(
@@ -42,10 +42,10 @@ async function seed() {
       ['s7_gate_test', payload]
     );
 
-    console.log('✅ Verification data seeded successfully');
+    process.stdout.write('✅ Verification data seeded successfully');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Failed to seed data:', error);
+    process.stdout.write('❌ Failed to seed data:', error);
     process.exit(1);
   } finally {
     client.release();

@@ -66,7 +66,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       this.parseError(exception);
 
     // S5: Sanitized client response
-    const clientResponse: any = {
+    const clientResponse: unknown = {
       statusCode,
       message: this.sanitizeMessage(statusCode, message),
       error,
@@ -124,7 +124,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     statusCode: number;
     message: string;
     error: string;
-    validationErrors?: any;
+    validationErrors?: unknown;
   } {
     // Zod validation errors (S3) (Direct ZodError)
     if (exception instanceof ZodError) {
@@ -139,9 +139,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // ZodValidationException (nestjs-zod) - Duck typing check
     if (
       exception &&
-      typeof (exception as any).getValidationIssues === 'function'
+      typeof (exception as never).getValidationIssues === 'function'
     ) {
-      const issues = (exception as any).getValidationIssues();
+      const issues = (exception as never).getValidationIssues();
       return {
         statusCode: HttpStatus.BAD_REQUEST,
         message: 'Validation failed',
@@ -155,9 +155,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const response = exception.getResponse();
 
-      let validationErrors: any;
+      let validationErrors: unknown;
       if (response && typeof response === 'object' && 'errors' in response) {
-        validationErrors = (response as any).errors;
+        validationErrors = (response as never).errors;
       }
 
       if (typeof response === 'string') {
@@ -171,14 +171,14 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       return {
         statusCode: status,
-        message: (response as any).message || response,
-        error: (response as any).error || this.getErrorName(status),
+        message: (response as never).message || response,
+        error: (response as never).error || this.getErrorName(status),
         validationErrors,
       };
     }
 
     // Generic Error (Audit 777 Point #50: Map SQL errors)
-    const err = exception as any;
+    const err = exception as never;
     if (err.code && typeof err.code === 'string' && err.code.startsWith('23')) {
       return {
         statusCode: HttpStatus.CONFLICT,

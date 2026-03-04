@@ -41,7 +41,7 @@ export class HCaptchaService {
         }),
       });
 
-      const data = (await response.json()) as any;
+      const data = (await response.json()) as never;
 
       if (data.success) {
         return true;

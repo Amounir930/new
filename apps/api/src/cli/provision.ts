@@ -72,7 +72,9 @@ export async function main(args: string[] = process.argv.slice(2)) {
   }
 
   if (!options.quiet) {
-    console.log(`🚀 Starting provisioning for: ${options.subdomain}`);
+    process.stdout.write(
+      `\n🚀 Starting provisioning for: ${options.subdomain}\n`
+    );
   }
 
   try {
@@ -92,22 +94,22 @@ export async function main(args: string[] = process.argv.slice(2)) {
     });
 
     if (!options.quiet) {
-      console.log('✅ Provisioning completed successfully');
-      console.log(`   Tenant ID: ${result.subdomain}`);
-      console.log(`   Duration: ${result.durationMs}ms`);
+      process.stdout.write('\n✅ Provisioning completed successfully\n');
+      process.stdout.write(`   Tenant ID: ${result.subdomain}\n`);
+      process.stdout.write(`   Duration: ${result.durationMs}ms\n`);
     }
 
     await app.close();
     return result;
   } catch (error) {
-    console.error(
-      '❌ Provisioning failed:',
-      error instanceof Error ? error.message : error
+    process.stderr.write(
+      `\n❌ Provisioning failed: ${error instanceof Error ? error.message : error}\n`
     );
     throw error;
   }
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: parsing logic
 function parseArgs(args: string[]): ProvisionOptions {
   const options: Partial<ProvisionOptions> = {};
 
@@ -115,7 +117,10 @@ function parseArgs(args: string[]): ProvisionOptions {
     if (arg.startsWith('--subdomain=')) {
       options.subdomain = arg.split('=')[1];
     } else if (arg.startsWith('--plan=')) {
-      options.plan = arg.split('=')[1] as any;
+      const planValue = arg.split('=')[1];
+      if (['free', 'basic', 'pro', 'enterprise'].includes(planValue)) {
+        options.plan = planValue as ProvisionOptions['plan'];
+      }
     } else if (arg.startsWith('--email=')) {
       options.email = arg.split('=')[1];
     } else if (arg.startsWith('--password=')) {
@@ -140,7 +145,7 @@ if (
   process.argv[1]?.endsWith('provision.ts')
 ) {
   main().catch((err) => {
-    console.error('❌ Fatal CLI Error:', err);
+    process.stderr.write(`\n❌ Fatal CLI Error: ${err}\n`);
     process.exit(1);
   });
 }

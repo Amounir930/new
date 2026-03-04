@@ -4,6 +4,10 @@
 
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import {
+  type BlueprintStructure,
+  blueprintStructureSchema,
+} from '.././../blueprints/dto/blueprint.dto.js';
 
 /**
  * S21: Provision Request Schema Interface
@@ -14,10 +18,18 @@ export interface ProvisionRequest {
   storeName: string;
   adminEmail: string;
   plan?: 'free' | 'basic' | 'pro' | 'enterprise';
-  nicheType?: string | null;
-  uiConfig?: Record<string, any>;
+  nicheType?:
+    | 'retail'
+    | 'wellness'
+    | 'education'
+    | 'services'
+    | 'hospitality'
+    | 'real-estate'
+    | 'creative'
+    | null;
+  uiConfig?: Record<string, unknown>;
   superAdminKey?: string;
-  blueprint?: any;
+  blueprint?: BlueprintStructure;
   blueprintId?: string;
 }
 
@@ -56,12 +68,23 @@ export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
   /**
    * Industry niche classification (S2.5)
    */
-  nicheType: z.any().optional().nullable(),
+  nicheType: z
+    .enum([
+      'retail',
+      'wellness',
+      'education',
+      'services',
+      'hospitality',
+      'real-estate',
+      'creative',
+    ])
+    .optional()
+    .nullable(),
 
   /**
    * SDUI/Theme configuration (S2.5)
    */
-  uiConfig: z.record(z.any()).optional().default({}),
+  uiConfig: z.record(z.unknown()).optional().default({}),
 
   /**
    * Super Admin secret key
@@ -78,7 +101,7 @@ export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
   /**
    * Optional inline blueprint definition
    */
-  blueprint: z.any().optional(),
+  blueprint: blueprintStructureSchema.optional(),
 
   /**
    * Optional named blueprint ID

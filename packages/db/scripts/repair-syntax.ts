@@ -21,6 +21,6 @@ for (const file of files) {
       '$1storefrontSchema'
     ); // Remove double commas
     writeFileSync(filePath, content, 'utf-8');
-    console.log(`Repaired syntax in ${file}`);
+    process.stdout.write(`Repaired syntax in ${file}`);
   }
 }

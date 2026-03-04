@@ -14,10 +14,10 @@ const SALT_ROUNDS = 12;
 const ENV_PATH = join(process.cwd(), '.env');
 
 async function migrate() {
-  console.log('🛡️  Apex v2: Graceful Password Migration Starting...');
+  process.stdout.write('🛡️  Apex v2: Graceful Password Migration Starting...');
 
   if (!existsSync(ENV_PATH)) {
-    console.error('❌ Error: .env file not found at root.');
+    process.stdout.write('❌ Error: .env file not found at root.');
     process.exit(1);
   }
 
@@ -25,24 +25,24 @@ async function migrate() {
   const passwordMatch = envContent.match(/^SUPER_ADMIN_PASSWORD=(.*)$/m);
 
   if (!passwordMatch) {
-    console.error('❌ Error: SUPER_ADMIN_PASSWORD not found in .env');
+    process.stdout.write('❌ Error: SUPER_ADMIN_PASSWORD not found in .env');
     process.exit(1);
   }
 
   const plaintextPassword = passwordMatch[1].trim();
 
   if (plaintextPassword.startsWith('$2b$')) {
-    console.log('✅ Password already appears to be hashed. Skipping.');
+    process.stdout.write('✅ Password already appears to be hashed. Skipping.');
     return;
   }
 
-  console.log(`🔒 Hashing plaintext password with ${SALT_ROUNDS} rounds...`);
+  process.stdout.write(`🔒 Hashing plaintext password with ${SALT_ROUNDS} rounds...`);
   const startTime = Date.now();
   const hash = await bcrypt.hash(plaintextPassword, SALT_ROUNDS);
   const duration = Date.now() - startTime;
 
-  console.log(`✅ Hash generated in ${duration}ms!`);
-  console.log(`📝 Resulting Hash: ${hash}`);
+  process.stdout.write(`✅ Hash generated in ${duration}ms!`);
+  process.stdout.write(`📝 Resulting Hash: ${hash}`);
 
   // Update .env file
   const newEnvContent = envContent.replace(
@@ -51,12 +51,12 @@ async function migrate() {
   );
 
   writeFileSync(ENV_PATH, newEnvContent);
-  console.log(
+  process.stdout.write(
     '🚀 .env updated successfully! You can now use this hash with the hardened AuthController.'
   );
 }
 
 migrate().catch((err) => {
-  console.error('❌ Fatal Migration Error:', err);
+  process.stdout.write('❌ Fatal Migration Error:', err);
   process.exit(1);
 });

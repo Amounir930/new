@@ -33,7 +33,7 @@ export class FraudScoringService {
     private readonly geoIp: GeoIpService
   ) {}
 
-  async calculateScore(req: any): Promise<FraudScore> {
+  async calculateScore(req: unknown): Promise<FraudScore> {
     let score = 0;
     const reasons: string[] = [];
 
@@ -160,7 +160,7 @@ export class FraudScoringService {
     return null;
   }
 
-  private checkBotPatterns(req: any): FraudCheckResult {
+  private checkBotPatterns(req: unknown): FraudCheckResult {
     if (
       !req.headers['user-agent'] ||
       req.headers['user-agent'].includes('Headless')

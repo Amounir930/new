@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/api';
 export default function NewProductPage() {
   const router = useRouter();
 
-  const handleCreateProduct = async (data: any) => {
+  const handleCreateProduct = async (data: unknown) => {
     try {
       await apiFetch('/v1/products', {
         method: 'POST',
@@ -17,8 +17,8 @@ export default function NewProductPage() {
       // toast.success('Product created successfully');
       router.push('/dashboard/products');
       router.refresh();
-    } catch (error: any) {
-      console.error('Failed to create product:', error);
+    } catch (_error: unknown) {
+      /* 'Failed to create product:', error */
       // toast.error(error.message || 'Failed to create product');
     }
   };

@@ -1,26 +1,31 @@
 import { AuditLog } from '@apex/audit';
-import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
-import { getTenantDb, productsInStorefront } from '@apex/db';
-import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import {
+  type AuthenticatedRequest,
+  JwtAuthGuard,
+  TenantJwtMatchGuard,
+} from '@apex/auth';
+import {
+  getTenantDb,
+  type InferSelectModel,
+  productsInStorefront,
+} from '@apex/db';
+import { Controller, Get, Logger, Req, Res, UseGuards } from '@nestjs/common';
 import { Parser } from 'json2csv';
 
 @Controller('admin/products/export')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class BulkExportController {
+  private readonly logger = new Logger(BulkExportController.name);
   @Get()
   @AuditLog({ action: 'PRODUCT_BULK_EXPORT', entityType: 'product' })
-  async exportProducts(
-    @Req() req: Request & { user?: any },
-    @Res() res: Response
-  ) {
+  async exportProducts(@Req() req: AuthenticatedRequest, @Res() res: Response) {
     const tenantId = req.user?.tenantId;
     if (!tenantId) {
       return res.status(401).send('Unauthorized');
     }
 
     const { db, release } = await getTenantDb(tenantId);
-    let allProducts: any[];
+    let allProducts: InferSelectModel<typeof productsInStorefront>[];
     try {
       allProducts = await db.select().from(productsInStorefront);
     } finally {
@@ -48,7 +53,7 @@ export class BulkExportController {
       );
       return res.send(csv);
     } catch (err) {
-      console.error(err);
+      this.logger.error('Export generation FAILED:', err);
       return res.status(500).send('Error generating export');
     }
   }

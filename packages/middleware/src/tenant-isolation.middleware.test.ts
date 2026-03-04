@@ -41,9 +41,9 @@ mock.module('@apex/db', () => ({
     plan: 'plan-col',
     status: 'status-col',
   },
-  eq: mock((col: any, val: any) => ({ type: 'eq', col, val })),
-  or: mock((...conditions: any[]) => ({ type: 'or', conditions })),
-  sql: mock((strings: TemplateStringsArray, ...values: any[]) => ({
+  eq: mock((col: unknown, val: unknown) => ({ type: 'eq', col, val })),
+  or: mock((...conditions: unknown[]) => ({ type: 'or', conditions })),
+  sql: mock((strings: TemplateStringsArray, ...values: unknown[]) => ({
     sql: String.raw(strings, ...values),
   })),
 }));
@@ -63,7 +63,7 @@ mock.module('./security.service.js', () => ({
 }));
 
 // Mock connection context with proper AsyncLocalStorage simulation
-const mockTenantContextStore: any = {};
+const mockTenantContextStore: unknown = {};
 mock.module('./connection-context.js', () => ({
   tenantStorage: {
     run: mock((_ctx, cb) => {
@@ -78,8 +78,8 @@ mock.module('./connection-context.js', () => ({
 
 describe('TenantIsolationMiddleware', () => {
   let middleware: TenantIsolationMiddleware;
-  let req: any;
-  let res: any;
+  let req: unknown;
+  let res: unknown;
   let next: NextFunction;
 
   beforeEach(() => {
@@ -183,7 +183,7 @@ describe('Guards', () => {
         switchToHttp: () => ({
           getRequest: () => ({ tenantContext: { isActive: true } }),
         }),
-      } as any;
+      } as never;
       expect(guard.canActivate(context)).toBe(true);
     });
 
@@ -192,7 +192,7 @@ describe('Guards', () => {
         switchToHttp: () => ({
           getRequest: () => ({}),
         }),
-      } as any;
+      } as never;
       expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
     });
   });
@@ -208,13 +208,13 @@ describe('Guards', () => {
             tenantContext: { tenantId: 't2', isActive: true },
           }),
         }),
-      } as any;
+      } as never;
       expect(() => guard.canActivate(context)).toThrow(
         'Cross-tenant access denied'
       );
     });
 
-    it('should allow super admin access to any tenant', () => {
+    it('should allow super admin access to all tenants', () => {
       const context = {
         switchToHttp: () => ({
           getRequest: () => ({
@@ -222,7 +222,7 @@ describe('Guards', () => {
             tenantContext: { tenantId: 't2', isActive: true },
           }),
         }),
-      } as any;
+      } as never;
       expect(guard.canActivate(context)).toBe(true);
     });
   });

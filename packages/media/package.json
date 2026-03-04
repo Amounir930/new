@@ -1,29 +1,30 @@
 {
-    "name": "@apex/media",
-    "version": "1.0.0",
-    "description": "Apex Media Optimization and Processing Services",
-    "main": "./dist/index.js",
-    "module": "./dist/index.mjs",
-    "types": "./dist/index.d.ts",
-    "exports": {
-        ".": {
-            "require": "./dist/index.js",
-            "import": "./dist/index.mjs",
-            "types": "./dist/index.d.ts"
-        }
-    },
-    "scripts": {
-        "build": "tsup",
-        "dev": "tsup --watch",
-        "lint": "eslint \"src/**/*.ts\"",
-        "clean": "rimraf dist"
-    },
-    "dependencies": {
-        "@apex/config": "workspace:*"
-    },
-    "devDependencies": {
-        "@types/node": "^20.11.16",
-        "tsup": "^8.0.2",
-        "typescript": "^5.3.3"
+  "name": "@apex/media",
+  "version": "1.0.0",
+  "description": "Apex Media Optimization and Processing Services",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
     }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@apex/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "tsup": "^8.0.2",
+    "typescript": "^5.3.3"
+  }
 }

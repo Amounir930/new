@@ -4,6 +4,7 @@
  */
 
 import { startTracing } from '@apex/monitoring';
+
 startTracing('apex-api');
 
 import 'reflect-metadata';
@@ -19,6 +20,7 @@ import {
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/nestjs';
+import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module.js';
@@ -60,7 +62,11 @@ async function bootstrap() {
   const bodyParser = await import('body-parser');
 
   // S2 FIX 21B: Capture raw body for webhook signature verification
-  const captureRawBody = (req: any, _res: any, buf: Buffer) => {
+  const captureRawBody = (
+    req: Request & { rawBody?: Buffer },
+    _res: Response,
+    buf: Buffer
+  ) => {
     req.rawBody = buf;
   };
 
@@ -76,7 +82,7 @@ async function bootstrap() {
     verify: captureRawBody,
   });
 
-  app.use((req: any, res: any, next: any) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.originalUrl?.includes('/api/products/import')) {
       return importParser(req, res, next);
     }

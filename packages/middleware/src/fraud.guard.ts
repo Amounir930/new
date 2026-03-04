@@ -20,7 +20,7 @@ export class FraudGuard implements CanActivate {
     // S14 Critical: Threshold for blocking
     // 80+ is reserved for high-confidence fraud (e.g., impossible travel + high velocity)
     if (result.score >= 80) {
-      console.warn(
+      process.stdout.write(
         `[S14] Fraud Blocked: Score ${result.score} | Reasons: ${result.reasons.join(', ')}`
       );
       throw new ForbiddenException({

@@ -56,7 +56,7 @@ describe('NativeExportStrategy', () => {
       stat: mock().mockResolvedValue({ size: 2048 }),
     });
 
-    strategy = new NativeExportStrategy(mockShell as any);
+    strategy = new NativeExportStrategy(mockShell as never);
   });
 
   describe('validate', () => {
@@ -91,7 +91,7 @@ describe('NativeExportStrategy', () => {
       // Verify pg_dump was called with correct schema
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call: any) =>
+        (call: unknown) =>
           Array.isArray(call[0]) &&
           call[0][0] === 'pg_dump' &&
           call[0].includes('-n')
@@ -113,7 +113,7 @@ describe('NativeExportStrategy', () => {
 
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call: any) =>
+        (call: unknown) =>
           Array.isArray(call[0]) &&
           call[0][0] === 'pg_dump' &&
           call[0].includes('-n')
@@ -132,7 +132,7 @@ describe('NativeExportStrategy', () => {
         stderr: {
           text: mock().mockResolvedValue('pg_dump failed'),
         },
-      } as any);
+      } as never);
 
       const options: ExportOptions = {
         tenantId: 'tenant-123',

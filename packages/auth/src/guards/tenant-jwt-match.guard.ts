@@ -45,7 +45,7 @@ export class TenantJwtMatchGuard implements CanActivate {
 
     // CRITICAL FIX (S2): Validate JWT tenant matches request tenant
     if (jwtTenantId && jwtTenantId !== contextTenantId) {
-      console.error(
+      process.stdout.write(
         `S2 VIOLATION: JWT tenant (${jwtTenantId}) doesn't match request tenant (${contextTenantId})`
       );
       throw new UnauthorizedException('Cross-tenant access denied');

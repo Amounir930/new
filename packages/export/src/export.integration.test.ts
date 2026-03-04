@@ -7,7 +7,7 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
-const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
+const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
 
 (INTEGRATION_TEST ? describe : describe.skip)(
   'Export Integration Tests',
@@ -18,11 +18,11 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
     beforeAll(async () => {
       // Initialize S3 client for MinIO
       s3Client = new S3Client({
-        endpoint: process.env.MINIO_ENDPOINT || 'http://localhost:9000',
+        endpoint: process.env['MINIO_ENDPOINT'] || 'http://localhost:9000',
         region: 'us-east-1',
         credentials: {
-          accessKeyId: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-          secretAccessKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+          accessKeyId: process.env['MINIO_ACCESS_KEY'] || 'minioadmin',
+          secretAccessKey: process.env['MINIO_SECRET_KEY'] || 'minioadmin',
         },
         forcePathStyle: true,
       });
@@ -48,7 +48,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
         );
 
         expect(response.status).toBe(202);
-        const data: any = await response.json();
+        const data: unknown = await response.json();
         const { job } = data;
         expect(job.id).toBeDefined();
         expect(job.status).toBe('pending');
@@ -65,7 +65,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
             { headers: { Authorization: 'Bearer test-token' } }
           );
 
-          const statusData: any = await statusRes.json();
+          const statusData: unknown = await statusRes.json();
           status = statusData.status;
 
           if (++attempts > 30) {
@@ -81,7 +81,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           { headers: { Authorization: 'Bearer test-token' } }
         );
 
-        const finalData: any = await finalStatus.json();
+        const finalData: unknown = await finalStatus.json();
         expect(finalData.result?.downloadUrl).toBeDefined();
         expect(finalData.result?.checksum).toBeDefined();
 
@@ -142,7 +142,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           }
         );
 
-        const data: any = await createRes.json();
+        const data: unknown = await createRes.json();
         const { job } = data;
 
         // Wait for completion
@@ -155,7 +155,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
             `http://localhost:3000/api/v1/tenant/export/${job.id}/status`,
             { headers: { Authorization: 'Bearer test-token' } }
           );
-          const statusData: any = await statusRes.json();
+          const statusData: unknown = await statusRes.json();
           status = statusData.status;
           attempts++;
         }
@@ -170,7 +170,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
         );
 
         expect(confirmRes.status).toBe(200);
-        const confirmData: any = await confirmRes.json();
+        const confirmData: unknown = await confirmRes.json();
         expect(confirmData.message).toContain('deleted');
 
         // 3. Verify file is deleted from S3
@@ -204,7 +204,7 @@ const INTEGRATION_TEST = process.env.RUN_INTEGRATION_TESTS === 'true';
           }
         );
 
-        const data: any = await createRes.json();
+        const data: unknown = await createRes.json();
         const { job } = data;
 
         // Try to access as different tenant

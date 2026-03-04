@@ -4,11 +4,11 @@ import {
   CheckCircle2,
   Clock,
   Edit3,
-  Eye,
   LayoutGrid,
   Plus,
   Search,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -34,8 +34,8 @@ export default function BlueprintsPage() {
     try {
       const data = await apiFetch<Blueprint[]>('/v1/admin/blueprints');
       setBlueprints(data);
-    } catch (error) {
-      console.error('Failed to fetch blueprints:', error);
+    } catch (_error) {
+      /* 'Failed to fetch blueprints:', error */
     } finally {
       setLoading(false);
     }
@@ -63,10 +63,12 @@ export default function BlueprintsPage() {
               className="bg-slate-900/50 border border-white/5 rounded-xl pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all w-64"
             />
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20 px-6 font-bold">
-            <Plus className="w-4 h-4 mr-2" />
-            New Blueprint
-          </Button>
+          <Link href="/dashboard/blueprints/new">
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20 px-6 font-bold">
+              <Plus className="w-4 h-4 mr-2" />
+              New Blueprint
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -155,20 +157,15 @@ export default function BlueprintsPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-slate-500 hover:text-white rounded-lg"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-slate-500 hover:text-indigo-400 rounded-lg"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </Button>
+                  <Link href={`/dashboard/blueprints/${bp.id}`}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-slate-500 hover:text-indigo-400 rounded-lg"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </Card>
@@ -184,9 +181,11 @@ export default function BlueprintsPage() {
             Create your first store template to start provisioning tenants with
             pre-configured settings.
           </p>
-          <Button className="mt-8 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-xl px-8 font-bold">
-            Create Initial Blueprint
-          </Button>
+          <Link href="/dashboard/blueprints/new">
+            <Button className="mt-8 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-xl px-8 font-bold">
+              Create Initial Blueprint
+            </Button>
+          </Link>
         </Card>
       )}
     </div>

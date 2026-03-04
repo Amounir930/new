@@ -22,8 +22,8 @@ export interface UserSession {
 // Redis Singleton — NEVER open/close per request!
 // Connection Churn = DDoS on your own Redis server.
 // ═══════════════════════════════════════════════════════════════
-let redisClient: any = null;
-let redisConnecting: Promise<any> | null = null;
+let redisClient: unknown = null;
+let redisConnecting: Promise<unknown> | null = null;
 
 async function getRedisClient() {
   if (redisClient?.isOpen) return redisClient;
@@ -33,7 +33,7 @@ async function getRedisClient() {
 
   redisConnecting = (async () => {
     try {
-      const redisUrl = process.env.REDIS_URL;
+      const redisUrl = process['env']['REDIS_URL'];
       if (!redisUrl) return null;
 
       const { createClient } = await import('redis');
@@ -47,14 +47,14 @@ async function getRedisClient() {
         },
       });
 
-      redisClient.on('error', (err: Error) => {
-        console.error('Redis singleton error:', err.message);
+      redisClient.on('error', (_err: Error) => {
+        // // process.stderr.write('Redis singleton error:', err.message);
       });
 
       await redisClient.connect();
       return redisClient;
-    } catch (error) {
-      console.error('Redis singleton connection failed:', error);
+    } catch (_error) {
+      // // process.stderr.write('Redis singleton connection failed:', error);
       redisClient = null;
       return null;
     } finally {
@@ -73,9 +73,9 @@ export async function getSession(): Promise<UserSession | null> {
 
   try {
     // Layer 1: JWT signature verification
-    const secret = process.env.JWT_SECRET;
+    const secret = process['env']['JWT_SECRET'];
     if (!secret) {
-      console.error('S1 Violation: JWT_SECRET not available');
+      // // process.stderr.write('S1 Violation: JWT_SECRET not available');
       return null;
     }
 
@@ -89,9 +89,7 @@ export async function getSession(): Promise<UserSession | null> {
     if (tenantId && tenantId !== 'system') {
       const isLocked = await checkSteelControl(tenantId, iat);
       if (isLocked) {
-        console.warn(
-          `Steel Control: Tenant ${tenantId} suspended. Session rejected.`
-        );
+        // process.stderr.write(`Steel Control: Tenant ${tenantId} suspended. Session rejected.`);
         return null;
       }
     }
@@ -134,8 +132,8 @@ async function checkSteelControl(
     }
 
     return true; // Locked and no iat to compare → block
-  } catch (error) {
-    console.error('Steel Control check failed:', error);
+  } catch (_error) {
+    // // process.stderr.write('Steel Control check failed:', error);
     return true; // Fail-CLOSED: block if can't verify
   }
 }

@@ -27,17 +27,29 @@
 
 | Master ID | Feature Name | Technical Implementation Strategy | Architecture Dependency | Definition of Done | Sprint |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Arch-Core-01** | Turborepo Monorepo Setup | Initialize root `package.json` with workspaces: `apps/*`, `packages/*`. Configure `turbo.json` pipeline with `^build` dependencies. | Bun ⚡, Turborepo 📦 | `bun turbo run build` executes without errors; cache hits verified on rebuild | 1 |
-| **Arch-Core-02** | Docker Compose Stack | Define services: `postgres`, `redis`, `minio`, `traefik`, `mailpit`, `pgbouncer`, `meilisearch`, **`imgproxy`**, **`otel-collector`**. Health checks on all. | Docker 🐳, Traefik 🚦 | `docker compose up -d` → All services report `HEALTHY`; `imgproxy` reachable on port 8080. **[100% COMPLETED]** | 1 |
-| **Arch-Core-03** | Environment Verification | `@apex/config` package: Zod schema validates ALL env vars at boot. App crashes with clear error on failure. | Zod, `@nestjs/config` | Invalid `JWT_SECRET` → App fails to start with `"S1 Violation: JWT_SECRET malformed"` | 1 |
-| **Arch-Core-04** | Tenant Isolation Middleware | NestJS middleware: Extracts subdomain → Validates → SET LOCAL `app.current_tenant = {id}`. Shared-Schema RLS enforced. | Drizzle ORM 🌧️, RLS 🛡️ | Request to `alpha.apex.localhost` accesses ONLY data matching `tenant_id` in `storefront` schema **[100% COMPLETED]** | 2 |
-| **Arch-Core-05** | Global Input Validation | Apply `ZodValidationPipe` globally. All DTOs use Zod schemas. Strips unknown properties. | `nestjs-zod`, Zod | POST invalid payload → Returns 400 with `{ errors: [...] }`, no DB write **[100% COMPLETED]** | 2 |
-| **Arch-Core-06** | **Connection Pooler (PgBouncer)** 🚀 | **NEW:** Deploy PgBouncer in Transaction Pooling mode. App connects to Port 6432 (Bouncer) not 5432 (DB). Limits max client connections. | **PgBouncer**, PostgreSQL | Load test with 5000 concurrent connections → DB connections stay < 200; No `too many clients` error | 2 |
-| **Arch-Core-07** | **Async Job Queue (BullMQ)** 🚀 | **NEW:** Dedicated `worker` service using BullMQ + Redis. Handles `outbox_events`, emails, AI processing. API pushes jobs, Worker consumes. | **BullMQ**, Redis 🚀 | Trigger 10,000 email jobs → API responds instantly; Worker processes queue without blocking API Event Loop | 3 |
-| **Arch-Core-08** | **Distributed Tracing (OpenTelemetry)** 👁️ | **NEW:** Inject `otel-collector` sidecar. All services (Bun, Postgres, Redis) export traces. `trace_id` passed in HTTP headers. | **OpenTelemetry**, Jaeger/Tempo | Request `GET /products` → View trace in Jaeger showing spans: `Traefik → API → DB → Redis` with timings | 3 |
-| **Arch-Core-09** | **Image Optimization (Imgproxy)** 🚀 | **NEW:** Deploy `imgproxy` container. All image URLs in API responses must be signed `imgproxy` URLs (resize, webp, quality). | **Imgproxy**, MinIO | Upload 5MB PNG → API returns `imgproxy` URL → Browser loads 50KB WebP instantly; Quality preserved | 4 |
+
+| **Arch-Core-01** | Turborepo Monorepo Setup | Initialize root `package.json` with workspaces: `apps/*`, `packages/*`. Configure `turbo.json` pipeline with `^build` dependencies. | Bun ⚡, Turborepo 📦 | `bun turbo run build` executes without errors; cache hits verified on rebuild | 1 |✅
+
+| **Arch-Core-02** | Docker Compose Stack | Define services: `postgres`, `redis`, `minio`, `traefik`, `mailpit`, `pgbouncer`, `meilisearch`, **`imgproxy`**, **`otel-collector`**. Health checks on all. | Docker 🐳, Traefik 🚦 | `docker compose up -d` → All services report `HEALTHY`; `imgproxy` reachable on port 8080. **[100% COMPLETED]** | 1 |✅
+
+| **Arch-Core-03** | Environment Verification | `@apex/config` package: Zod schema validates ALL env vars at boot. App crashes with clear error on failure. | Zod, `@nestjs/config` | Invalid `JWT_SECRET` → App fails to start with `"S1 Violation: JWT_SECRET malformed"` | 1 |✅
+
+| **Arch-Core-04** | Tenant Isolation Middleware | NestJS middleware: Extracts subdomain → Validates → SET LOCAL `app.current_tenant = {id}`. Shared-Schema RLS enforced. | Drizzle ORM 🌧️, RLS 🛡️ | Request to `alpha.apex.localhost` accesses ONLY data matching `tenant_id` in `storefront` schema **[100% COMPLETED]** | 2 |✅
+
+| **Arch-Core-05** | Global Input Validation | Apply `ZodValidationPipe` globally. All DTOs use Zod schemas. Strips unknown properties. | `nestjs-zod`, Zod | POST invalid payload → Returns 400 with `{ errors: [...] }`, no DB write **[100% COMPLETED]** | 2 |✅
+
+| **Arch-Core-06** | **Connection Pooler (PgBouncer)** 🚀 | **NEW:** Deploy PgBouncer in Transaction Pooling mode. App connects to Port 6432 (Bouncer) not 5432 (DB). Limits max client connections. | **PgBouncer**, PostgreSQL | Load test with 5000 concurrent connections → DB connections stay < 200; No `too many clients` error | 2 |✅
+
+| **Arch-Core-07** | **Async Job Queue (BullMQ)** 🚀 | **NEW:** Dedicated `worker` service using BullMQ + Redis. Handles `outbox_events`, emails, AI processing. API pushes jobs, Worker consumes. | **BullMQ**, Redis 🚀 | Trigger 10,000 email jobs → API responds instantly; Worker processes queue without blocking API Event Loop | 3 |✅
+
+| **Arch-Core-08** | **Distributed Tracing (OpenTelemetry)** 👁️ | **NEW:** Inject `otel-collector` sidecar. All services (Bun, Postgres, Redis) export traces. `trace_id` passed in HTTP headers. | **OpenTelemetry**, Jaeger/Tempo | Request `GET /products` → View trace in Jaeger showing spans: `Traefik → API → DB → Redis` with timings | 3 |✅
+
+| **Arch-Core-09** | **Image Optimization (Imgproxy)** 🚀 | **NEW:** Deploy `imgproxy` container. All image URLs in API responses must be signed `imgproxy` URLs (resize, webp, quality). | **Imgproxy**, MinIO | Upload 5MB PNG → API returns `imgproxy` URL → Browser loads 50KB WebP instantly; Quality preserved | 4 |✅
+
 | **Arch-S4** | Audit Logging Interceptor | NestJS interceptor + AsyncLocalStorage: Logs ALL write ops to immutable `audit_logs` table (user, action, tenant, ip, timestamp). | PostgreSQL, AsyncLocalStorage | DB query shows: `INSERT INTO audit_logs VALUES ('staff@x.com', 'PRODUCT_DELETED', 'tenant_x', ...)` | 3 |
+
 | **Arch-S5** | Global Exception Filter | Standardized error responses (no stack traces). Operational errors (4xx) vs System errors (5xx). Auto-report to GlitchTip. | GlitchTip 🚨 | Trigger `throw new Error("TEST")` → Client sees `{ error: "Internal Server Error" }`, error appears in GlitchTip | 3 |
+
 | **Arch-S6** | Rate Limiting Service | `@nestjs/throttler` + Redis. Dynamic limits per tenant tier (Free: 100 req/min, Pro: 1000). IP block after 5 violations. | Redis 🚀, `@nestjs/throttler` | 101st request from Free tenant IP → Returns 429 with `X-RateLimit-Reset` header | 3 |
 | **Arch-S7** | Encryption Service | AES-256-GCM for PII/API keys at rest. TLS enforced via Traefik. DB connection requires SSL. | `crypto` module, Traefik | Query DB directly → `api_keys` column shows encrypted ciphertext (not plaintext) | 4 |
 | **Arch-S8** | Web Security Headers | Helmet middleware: Strict CSP, HSTS, dynamic CORS per tenant domain, CSRF protection for cookie sessions. | Helmet, CORS | `curl -I https://store.apex.com` → Headers include `Strict-Transport-Security`, `Content-Security-Policy` | 4 |

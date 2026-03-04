@@ -10,6 +10,7 @@ import {
   tenantsInGovernance,
 } from '@apex/db';
 import {
+  type BlueprintTemplate,
   createStorageBucket,
   createTenantSchema,
   dropTenantSchema,
@@ -172,7 +173,9 @@ export class ProvisioningService {
   /**
    * Resolve the active blueprint based on the current provision request (S21 Phase 6)
    */
-  private async resolveBlueprint(options: ProvisioningOptions): Promise<any> {
+  private async resolveBlueprint(
+    options: ProvisioningOptions
+  ): Promise<BlueprintTemplate> {
     if (options.blueprintId) {
       this.logger.log(
         `Fetching specific blueprint by ID: ${options.blueprintId}`
@@ -218,7 +221,14 @@ export class ProvisioningService {
         and(
           eq(
             onboardingBlueprintsInGovernance.nicheType,
-            (options.nicheType || 'retail') as any
+            (options.nicheType || 'retail') as
+              | 'retail'
+              | 'wellness'
+              | 'education'
+              | 'services'
+              | 'hospitality'
+              | 'real-estate'
+              | 'creative'
           ),
           eq(onboardingBlueprintsInGovernance.plan, options.plan)
         )
@@ -231,7 +241,10 @@ export class ProvisioningService {
       );
     }
 
-    return dbBlueprint?.blueprint || (await getDefaultBlueprint(options.plan));
+    return (
+      (dbBlueprint?.blueprint as unknown as BlueprintTemplate) ||
+      (await getDefaultBlueprint(options.plan))
+    );
   }
 
   /**
@@ -312,7 +325,10 @@ export class ProvisioningService {
    * Sync Blueprint JSON modules and quotas to the central Governance system
    * This ensures that "Frontend" settings in the Blueprint become "Backend" enforcements.
    */
-  private async syncGovernance(subdomain: string, blueprint: any) {
+  private async syncGovernance(
+    subdomain: string,
+    blueprint: BlueprintTemplate
+  ) {
     if (!blueprint || typeof blueprint !== 'object') return;
 
     // Resolve Tenant ID

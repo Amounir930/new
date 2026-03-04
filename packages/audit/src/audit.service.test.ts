@@ -42,7 +42,7 @@ describe('AuditService & Helpers', () => {
     mockClient.query.mockClear();
     mockClient.release.mockClear();
     // Inject mock pool and encryption directly
-    service = new AuditService(mockPool, mockEncryption as any);
+    service = new AuditService(mockPool, mockEncryption as never);
   });
 
   describe('AuditService.log', () => {
@@ -56,7 +56,7 @@ describe('AuditService & Helpers', () => {
       };
 
       await runWithTenantContext(
-        { tenantId: 'mock-tenant' } as any,
+        { tenantId: 'mock-tenant' } as never,
         async () => {
           await service.log(entry);
         }
@@ -79,7 +79,7 @@ describe('AuditService & Helpers', () => {
 
     it('should handle missing tenantId by falling back to context', async () => {
       await runWithTenantContext(
-        { tenantId: 'fallback-tenant' } as any,
+        { tenantId: 'fallback-tenant' } as never,
         async () => {
           await service.log({
             action: 'SYS_EVENT',
@@ -97,7 +97,7 @@ describe('AuditService & Helpers', () => {
     it('should throw "Audit Persistence Failure" if query fails', async () => {
       mockClient.query.mockRejectedValueOnce(new Error('DB Crash'));
 
-      let error: any;
+      let error: unknown;
       try {
         await service.log({ action: 'A', entityType: 'B', entityId: 'C' });
       } catch (e) {
@@ -110,7 +110,7 @@ describe('AuditService & Helpers', () => {
 
   describe('Standalone Helpers', () => {
     it('logProvisioning should log tenant provisioned event', async () => {
-      process.env.ENCRYPTION_MASTER_KEY = 'ValidTestKey32CharsWith1$!Abc1234';
+      process.env['ENCRYPTION_MASTER_KEY'] = 'T3st_Mock_K3y_32_Ch@rs_L0ng_1234'; // gitleaks:allow
       await logProvisioning('test-store', 'pro', 'u1', '1.1.1.1', true);
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO public.audit_logs'),
@@ -119,7 +119,7 @@ describe('AuditService & Helpers', () => {
     });
 
     it('logSecurityEvent should log critical failure', async () => {
-      process.env.ENCRYPTION_MASTER_KEY = 'ValidTestKey32CharsWith1$!Abc1234';
+      process.env['ENCRYPTION_MASTER_KEY'] = 'T3st_Mock_K3y_32_Ch@rs_L0ng_1234'; // gitleaks:allow
       await logSecurityEvent('SQLI_ATTEMPT', 'actor', 'target', '2.2.2.2');
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('INSERT INTO public.audit_logs'),

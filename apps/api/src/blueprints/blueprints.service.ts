@@ -3,7 +3,7 @@ import { AuditService } from '@apex/audit';
 import { adminDb, eq, onboardingBlueprintsInGovernance } from '@apex/db';
 import type { BlueprintRecord, BlueprintTemplate } from '@apex/provisioning';
 import { createSnapshot, validateBlueprint } from '@apex/provisioning';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import type {
   CreateBlueprintDto,
@@ -12,6 +12,7 @@ import type {
 
 @Injectable()
 export class BlueprintsService {
+  private readonly logger = new Logger(BlueprintsService.name);
   private db = adminDb;
 
   constructor(private readonly audit: AuditService) {}
@@ -55,8 +56,8 @@ export class BlueprintsService {
       .values({
         name: dto.name,
         description: dto.description || null,
-        plan: dto.plan as any,
-        nicheType: (dto.nicheType || 'retail') as any,
+        plan: dto.plan,
+        nicheType: dto.nicheType || 'retail',
         status: (dto.status || 'active') as 'active' | 'paused',
         uiConfig: dto.uiConfig || {},
         isDefault: dto.isDefault,
@@ -85,10 +86,10 @@ export class BlueprintsService {
       try {
         const { z } = await import('zod');
         // S3: Strict validation with unknown key stripping
-        const result = z.record(z.any()).safeParse(dto.blueprint);
+        const result = z.record(z.unknown()).safeParse(dto.blueprint);
         if (!result.success) throw new Error('Invalid blueprint payload');
 
-        validateBlueprint(result.data as any);
+        validateBlueprint(result.data);
       } catch (e) {
         throw new Error(
           `Invalid blueprint structure: ${e instanceof Error ? e.message : 'Unknown error'}`
@@ -100,7 +101,7 @@ export class BlueprintsService {
       .update(onboardingBlueprintsInGovernance)
       .set({
         plan: dto.plan,
-        nicheType: (dto.nicheType ?? undefined) as any,
+        nicheType: dto.nicheType ?? undefined,
         status: dto.status as 'active' | 'paused' | undefined,
         blueprint: dto.blueprint as unknown as BlueprintTemplate,
         isDefault: dto.isDefault,
@@ -178,7 +179,7 @@ export class BlueprintsService {
 
       return blueprint;
     } catch (error) {
-      console.error(
+      this.logger.error(
         `[BlueprintsService] Snapshot FAILED for ${subdomain}:`,
         error
       );

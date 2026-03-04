@@ -17,20 +17,20 @@ const args = process.argv.slice(2);
 const stagedFiles = args.filter((f) => existsSync(f));
 
 if (stagedFiles.length === 0) {
-  console.log(color.gray('No staged files to scan. Skipping security check.'));
+  process.stdout.write(color.gray('No staged files to scan. Skipping security check.'));
   process.exit(0);
 }
 
-console.log(color.cyan('\n🛡️  Apex Security Shield'));
-console.log(
+process.stdout.write(color.cyan('\n🛡️  Apex Security Shield'));
+process.stdout.write(
   color.gray(`   Scanning ${stagedFiles.length} staged file(s)...\n`)
 );
 
 let violations = 0;
 
 function report(rule: string, message: string, file: string) {
-  console.error(color.red(`❌ [${rule}] ${message}`));
-  console.error(color.gray(`   File: ${file}`));
+  process.stdout.write(color.red(`❌ [${rule}] ${message}`));
+  process.stdout.write(color.gray(`   File: ${file}`));
   violations++;
 }
 
@@ -102,7 +102,7 @@ for (const file of controllers) {
 // Comprehensive patterns based on Gitleaks/Semgrep rules
 const SECRET_PATTERNS = [
   { name: 'AWS Key', regex: /AKIA[0-9A-Z]{16}/ },
-  { name: 'Private Key', regex: /-----BEGIN PRIVATE KEY-----/ }, // gitleaks:allow
+  { name: 'Private Key', regex: /-----BEGIN PRIVATE KEY-----/ },
   { name: 'Generic Secret', regex: /['"][A-Za-z0-9+/]{40,}['"]/ }, // 40+ chars base64-ish string in quotes
   { name: 'Hardcoded Password', regex: /password\s*=\s*['"][^'"]{8,}['"]/i },
   { name: 'GitHub Token', regex: /gh[pso]_[a-zA-Z0-9]{36}/ },
@@ -143,11 +143,11 @@ for (const file of stagedFiles) {
 }
 
 if (violations > 0) {
-  console.error(
+  process.stdout.write(
     color.red(`\n⛔ Commit Blocked: ${violations} security violation(s) found.`)
   );
   process.exit(1);
 } else {
-  console.log(color.green('✅ Security Check Passed'));
+  process.stdout.write(color.green('✅ Security Check Passed'));
   process.exit(0);
 }

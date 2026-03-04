@@ -14,7 +14,7 @@ describe('JwtStrategy', () => {
 
   beforeEach(() => {
     mock.restore();
-    strategy = new JwtStrategy(mockConfigService as any);
+    strategy = new JwtStrategy(mockConfigService as never);
   });
 
   describe('validate', () => {
@@ -30,14 +30,14 @@ describe('JwtStrategy', () => {
     });
 
     it('should throw UnauthorizedException if sub is missing', async () => {
-      const payload = { email: 'test@test.com' } as any;
+      const payload = { email: 'test@test.com' } as never;
       await expect(strategy.validate(payload)).rejects.toThrow(
         UnauthorizedException
       );
     });
 
     it('should throw UnauthorizedException if payload is null', async () => {
-      await expect(strategy.validate(null as any)).rejects.toThrow(
+      await expect(strategy.validate(null as never)).rejects.toThrow(
         UnauthorizedException
       );
     });

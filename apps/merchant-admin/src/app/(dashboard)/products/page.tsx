@@ -18,16 +18,16 @@ import {
 import { apiFetch } from '@/lib/api';
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const data = await apiFetch<any[]>('/products');
+        const data = await apiFetch<unknown[]>('/products');
         setProducts(data);
-      } catch (error) {
-        console.error('Failed to fetch products:', error);
+      } catch (_error) {
+        /* 'Failed to fetch products:', error */
       } finally {
         setLoading(false);
       }
@@ -35,7 +35,7 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  function renderProductRow(product: any) {
+  function renderProductRow(product: unknown) {
     return (
       <TableRow
         key={product.id}

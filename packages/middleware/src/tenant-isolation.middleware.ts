@@ -15,7 +15,7 @@ import { type TenantContext, tenantStorage } from './connection-context.js';
 
 export interface TenantRequest extends Request {
   tenantContext?: TenantContext;
-  user?: any;
+  user?: unknown;
 }
 
 /**
@@ -81,7 +81,7 @@ async function validateTenant(
     };
   } catch (error) {
     if (error instanceof UnauthorizedException) throw error;
-    console.error(`S2 Error validating tenant ${identifier}:`, error);
+    process.stdout.write(`S2 Error validating tenant ${identifier}:`, error);
     throw new UnauthorizedException('Tenant validation failed');
   }
 }
@@ -225,7 +225,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         '';
 
       const rawBodyBuffer: Buffer =
-        (req as any).rawBody || Buffer.from(JSON.stringify(req.body || {}));
+        (req as never).rawBody || Buffer.from(JSON.stringify(req.body || {}));
 
       const expectedSig = crypto
         .createHmac('sha256', env.WEBHOOK_SECRET || '')
@@ -284,7 +284,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   private async checkSuspension(identifier: string): Promise<boolean> {
     try {
       const { SecurityService } = await import('./security.service.js');
-      const security = new SecurityService(env as any);
+      const security = new SecurityService(env as never);
       const lockData = await security.getTenantLock(identifier);
       return !!lockData?.locked;
     } catch {
@@ -350,11 +350,11 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       isCleanedUp = true;
 
       // Item 31: Force cleanup of context properties to prevent bleeding/leaks
-      (tenantContext as any).isActive = false;
-      (tenantContext as any).executor = null;
+      (tenantContext as never).isActive = false;
+      (tenantContext as never).executor = null;
 
       // Explicitly clear request context reference
-      const req = (res as any).req;
+      const req = (res as never).req;
       if (req) {
         req.tenantContext = undefined;
       }
@@ -370,7 +370,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         `);
         client.release();
       } catch (err) {
-        console.error('S2 DB Cleanup Error:', err);
+        process.stdout.write('S2 DB Cleanup Error:', err);
         // If cleanup fails, we must DESTROY the client to prevent contamination
         client.release(true);
       }
@@ -404,7 +404,7 @@ export class TenantScopedGuard implements CanActivate {
 export class SuperAdminOrTenantGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<TenantRequest>();
-    const user = request.user as any;
+    const user = request.user as never;
 
     if (user?.role === 'super_admin') return true;
 
@@ -421,7 +421,7 @@ export class SuperAdminOrTenantGuard implements CanActivate {
 declare global {
   namespace Express {
     interface Request {
-      user?: any;
+      user?: unknown;
     }
   }
 }

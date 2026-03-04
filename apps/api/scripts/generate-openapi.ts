@@ -12,10 +12,17 @@ if (
 }
 
 // Ensure strict isolation mode
-process.env.TENANT_ISOLATION_MODE = 'strict';
-process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+// These are overrides for the generation process
+import { Logger } from '@nestjs/common';
 
-console.log('DEBUG: Env vars set (Mock Mode):', {
+const logger = new Logger('OpenAPIGenerator');
+
+process.env['TENANT_ISOLATION_MODE'] = 'strict';
+if (!process.env['NODE_ENV']) {
+  process.env['NODE_ENV'] = 'test';
+}
+
+logger.debug('Env vars set (Mock Mode):', {
   DB: env.DATABASE_URL,
   JWT: env.JWT_SECRET ? 'Exists' : 'Missing',
 });
@@ -27,7 +34,6 @@ console.log('DEBUG: Env vars set (Mock Mode):', {
 async function generate() {
   // Dynamic imports ensure env vars are processed FIRST
   const { writeFileSync } = await import('node:fs');
-  const { Logger } = await import('@nestjs/common');
 
   // Use explicit path dynamic import for local module to avoid eager evaluation
   // Note: We use relative path for local module
@@ -35,26 +41,18 @@ async function generate() {
 
   const { EncryptionService } = await import('@apex/security');
   const { AuditService } = await import('@apex/audit');
-  const { TenantRegistryService, CustomerService } = await import('@apex/db');
+  const { adminDb } = await import('@apex/db');
   const { DocumentBuilder, SwaggerModule } = await import('@nestjs/swagger');
   const { Reflector } = await import('@nestjs/core');
   const { Test } = await import('@nestjs/testing');
   const { AuditInterceptor } = await import('@apex/audit');
-  const { ProvisioningService } = await import(
-    '../src/provisioning/provisioning.service.js'
-  );
 
-  const logger = new Logger('OpenAPIGenerator');
   logger.log('🚀 Starting OpenAPI Specification Generation (Mocked Mode)...');
 
   try {
     // Mock Services
-    const mockTenantRegistryService = {
-      get: () => Promise.resolve(null),
-      register: () => Promise.resolve({}),
-    };
 
-    const mockProvisioningService = {
+    const _mockProvisioningService = {
       provision: () => Promise.resolve({ success: true }),
     };
 
@@ -68,18 +66,8 @@ async function generate() {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, AuditModule],
     })
-      .overrideProvider(TenantRegistryService)
-      .useValue(mockTenantRegistryService)
-      .overrideProvider(ProvisioningService)
-      .useValue(mockProvisioningService)
-      .overrideProvider('PROVISIONING_SERVICE')
-      .useValue(mockProvisioningService)
-      .overrideProvider(CustomerService)
-      .useValue({
-        create: () => Promise.resolve({}),
-        findByEmail: () => Promise.resolve(null),
-        findById: () => Promise.resolve(null),
-      })
+      .overrideProvider('ADMIN_DB')
+      .useValue(adminDb)
       .overrideProvider(EncryptionService) // Mock EncryptionService
       .useValue({
         encrypt: () => ({

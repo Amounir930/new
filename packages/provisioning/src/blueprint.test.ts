@@ -45,10 +45,10 @@ mock.module('@apex/db', () => ({
 
 // Helper to create a valid minimal blueprint structure
 const createValidBlueprint = (overrides = {}) => {
-  const modules: any = {};
+  const modules: unknown = {};
   for (const f of MASTER_FEATURE_LIST) modules[f] = true;
 
-  const quotas: any = {};
+  const quotas: unknown = {};
   for (const q of MASTER_QUOTA_LIST) quotas[q] = 100;
 
   return {
@@ -69,7 +69,7 @@ describe('BlueprintManager', () => {
   describe('validateBlueprint', () => {
     it('should validate a valid minimal blueprint', () => {
       const blueprint = createValidBlueprint();
-      expect(validateBlueprint(blueprint)).toBe(blueprint as any);
+      expect(validateBlueprint(blueprint)).toBe(blueprint as never);
     });
 
     it('should validate with products and pages', () => {
@@ -77,7 +77,7 @@ describe('BlueprintManager', () => {
         products: [{ name: 'P1', price: 10 }],
         pages: [{ slug: 's', title: 't', content: 'c' }],
       });
-      expect(validateBlueprint(blueprint)).toBe(blueprint as any);
+      expect(validateBlueprint(blueprint)).toBe(blueprint as never);
     });
 
     it('should throw if version is wrong', () => {
@@ -96,7 +96,7 @@ describe('BlueprintManager', () => {
 
     it('should throw if modules are missing one feature', () => {
       const blueprint = createValidBlueprint();
-      delete (blueprint.modules as any).home;
+      delete (blueprint.modules as never).home;
       expect(() => validateBlueprint(blueprint)).toThrow(
         /Missing required feature 'home'/
       );
@@ -104,7 +104,7 @@ describe('BlueprintManager', () => {
 
     it('should throw if quotas are missing one quota', () => {
       const blueprint = createValidBlueprint();
-      delete (blueprint.quotas as any).max_products;
+      delete (blueprint.quotas as never).max_products;
       expect(() => validateBlueprint(blueprint)).toThrow(
         /Missing required quota 'max_products'/
       );
@@ -121,7 +121,7 @@ describe('BlueprintManager', () => {
     };
 
     it('should create a blueprint', async () => {
-      (adminDb.returning as any).mockResolvedValue([mockRecord]);
+      (adminDb.returning as never).mockResolvedValue([mockRecord]);
 
       const result = await createBlueprint(
         'Test',
@@ -134,7 +134,9 @@ describe('BlueprintManager', () => {
     });
 
     it('should get all blueprints', async () => {
-      (adminDb.select().from().orderBy as any).mockResolvedValue([mockRecord]);
+      (adminDb.select().from().orderBy as never).mockResolvedValue([
+        mockRecord,
+      ]);
 
       const results = await getAllBlueprints();
 
@@ -143,7 +145,7 @@ describe('BlueprintManager', () => {
     });
 
     it('should get blueprint by ID', async () => {
-      (adminDb.limit as any).mockResolvedValue([mockRecord]);
+      (adminDb.limit as never).mockResolvedValue([mockRecord]);
 
       const result = await getBlueprintById('uuid-1');
 
@@ -151,7 +153,7 @@ describe('BlueprintManager', () => {
     });
 
     it('should return null if blueprint ID not found', async () => {
-      (adminDb.limit as any).mockResolvedValue([]);
+      (adminDb.limit as never).mockResolvedValue([]);
 
       const result = await getBlueprintById('missing');
 
@@ -167,7 +169,7 @@ describe('BlueprintManager', () => {
         isDefault: 'true',
         plan: 'free',
       };
-      (adminDb.limit as any).mockResolvedValue([mockDefault]);
+      (adminDb.limit as never).mockResolvedValue([mockDefault]);
 
       const result = await getDefaultBlueprint('free');
 
@@ -175,9 +177,9 @@ describe('BlueprintManager', () => {
       expect(result?.name).toBe('Default');
     });
 
-    it('should fallback to any blueprint if no default is found', async () => {
-      (adminDb.limit as any).mockResolvedValueOnce([]); // No default
-      (adminDb.limit as any).mockResolvedValueOnce([
+    it('should fallback to a blueprint if no default is found', async () => {
+      (adminDb.limit as never).mockResolvedValueOnce([]); // No default
+      (adminDb.limit as never).mockResolvedValueOnce([
         {
           name: 'Fallback',
           blueprint: JSON.stringify(createValidBlueprint({ name: 'F' })),

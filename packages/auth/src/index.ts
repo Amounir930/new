@@ -11,6 +11,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import type { Request } from 'express';
 import type { Observable } from 'rxjs';
 import type { AuthUser } from './auth.service.js';
 

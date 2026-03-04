@@ -1,3 +1,4 @@
+import { env } from '@apex/config';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import * as relations from '../drizzle/relations';
@@ -11,18 +12,18 @@ export * from '../drizzle/schema';
 
 const { Pool } = pg;
 
-const isTest = process.env.NODE_ENV === 'test';
+const isTest = env.NODE_ENV === 'test';
 
 const poolConfig = {
-  host: process.env.PGHOST || (isTest ? 'localhost' : undefined),
-  user: process.env.PGUSER || (isTest ? 'postgres' : undefined),
-  password: process.env.PGPASSWORD || (isTest ? 'postgres' : undefined),
-  database: process.env.PGDATABASE || (isTest ? 'postgres' : undefined),
-  port: parseInt(process.env.PGPORT || '5432', 10),
+  host: env.PGHOST || (isTest ? 'localhost' : undefined),
+  user: env.PGUSER || (isTest ? 'postgres' : undefined),
+  password: env.PGPASSWORD || (isTest ? 'postgres' : undefined),
+  database: env.PGDATABASE || (isTest ? 'postgres' : undefined),
+  port: parseInt(String(env.PGPORT || '5432'), 10),
   connectionString:
-    !process.env.PGHOST && process.env.DATABASE_URL
-      ? process.env.DATABASE_URL
-      : undefined,
+    !env.PGHOST && env.DATABASE_URL ? env.DATABASE_URL : undefined,
+  // S7 Protocol: Explicitly enforce SSL when not in test/dev if required
+  ssl: env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 };
 
 if (!poolConfig.host && !poolConfig.connectionString) {
@@ -89,7 +90,7 @@ export async function getTenantDb(tenantId: string) {
  */
 export async function withTenantDb<T>(
   tenantId: string,
-  callback: (db: any) => Promise<T>
+  callback: (db: NodePgDatabase<typeof schema & typeof relations>) => Promise<T>
 ): Promise<T> {
   const client = await tenantPool.connect();
   try {

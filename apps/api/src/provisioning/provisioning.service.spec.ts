@@ -84,25 +84,33 @@ describe('ProvisioningService', () => {
     mockTenantRegistry.existsBySubdomain.mockClear();
 
     // Reset all provisioning mocks
-    (provisioning.createTenantSchema as any).mockReset();
-    (provisioning.runTenantMigrations as any).mockReset();
-    (provisioning.createStorageBucket as any).mockReset();
-    (provisioning.seedTenantData as any).mockReset();
-    (provisioning.dropTenantSchema as any).mockReset();
+    (provisioning.createTenantSchema as ReturnType<typeof mock>).mockReset();
+    (provisioning.runTenantMigrations as ReturnType<typeof mock>).mockReset();
+    (provisioning.createStorageBucket as ReturnType<typeof mock>).mockReset();
+    (provisioning.seedTenantData as ReturnType<typeof mock>).mockReset();
+    (provisioning.dropTenantSchema as ReturnType<typeof mock>).mockReset();
 
     // Manual instantiation to bypass NestJS DI issues with Bun/swc
     service = new ProvisioningService(
-      mockAuditService as any,
-      mockTenantRegistry as any
+      mockAuditService as never,
+      mockTenantRegistry as never
     );
   });
 
   describe('provision', () => {
     it('should successfully provision a store', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
-      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
-      (provisioning.createStorageBucket as any).mockResolvedValue(undefined);
-      (provisioning.seedTenantData as any).mockResolvedValue({
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.runTenantMigrations as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.createStorageBucket as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.seedTenantData as ReturnType<typeof mock>
+      ).mockResolvedValue({
         adminId: 'admin-123',
       });
 
@@ -129,7 +137,9 @@ describe('ProvisioningService', () => {
     });
 
     it('should throw ConflictException if resource already exists', async () => {
-      (provisioning.createTenantSchema as any).mockRejectedValue(
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockRejectedValue(
         new Error('schema "tenant_test-store" already exists')
       );
 
@@ -141,11 +151,13 @@ describe('ProvisioningService', () => {
 
     it('should rollback and throw InternalServerErrorException on step failure', async () => {
       // Step 0 succeeds
-      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
       // Step 1 fails
-      (provisioning.runTenantMigrations as any).mockRejectedValue(
-        new Error('Migration failed')
-      );
+      (
+        provisioning.runTenantMigrations as ReturnType<typeof mock>
+      ).mockRejectedValue(new Error('Migration failed'));
 
       await expect(service.provision(options)).rejects.toThrow(
         InternalServerErrorException
@@ -156,13 +168,15 @@ describe('ProvisioningService', () => {
     });
 
     it('should handle rollback failure gracefully', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
-      (provisioning.runTenantMigrations as any).mockRejectedValue(
-        new Error('Fail')
-      );
-      (provisioning.dropTenantSchema as any).mockRejectedValue(
-        new Error('Rollback Fail')
-      );
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.runTenantMigrations as ReturnType<typeof mock>
+      ).mockRejectedValue(new Error('Fail'));
+      (
+        provisioning.dropTenantSchema as ReturnType<typeof mock>
+      ).mockRejectedValue(new Error('Rollback Fail'));
 
       await expect(service.provision(options)).rejects.toThrow(
         InternalServerErrorException
@@ -170,11 +184,15 @@ describe('ProvisioningService', () => {
     });
 
     it('should proceed with rollback if multiple steps succeeded before failure', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
-      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
-      (provisioning.createStorageBucket as any).mockRejectedValue(
-        new Error('Bucket Fail')
-      );
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.runTenantMigrations as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.createStorageBucket as ReturnType<typeof mock>
+      ).mockRejectedValue(new Error('Bucket Fail'));
 
       await expect(service.provision(options)).rejects.toThrow(
         InternalServerErrorException
@@ -183,12 +201,18 @@ describe('ProvisioningService', () => {
     });
 
     it('should throw InternalServerErrorException if seeding fails', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
-      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
-      (provisioning.createStorageBucket as any).mockResolvedValue(undefined);
-      (provisioning.seedTenantData as any).mockRejectedValue(
-        new Error('Seed Fail')
-      );
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.runTenantMigrations as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.createStorageBucket as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.seedTenantData as ReturnType<typeof mock>
+      ).mockRejectedValue(new Error('Seed Fail'));
 
       await expect(service.provision(options)).rejects.toThrow(
         InternalServerErrorException
@@ -199,10 +223,18 @@ describe('ProvisioningService', () => {
 
   describe('registerTenant', () => {
     it('should throw InternalServerErrorException if registry fails', async () => {
-      (provisioning.createTenantSchema as any).mockResolvedValue(undefined);
-      (provisioning.runTenantMigrations as any).mockResolvedValue(undefined);
-      (provisioning.createStorageBucket as any).mockResolvedValue(undefined);
-      (provisioning.seedTenantData as any).mockResolvedValue({
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.runTenantMigrations as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.createStorageBucket as ReturnType<typeof mock>
+      ).mockResolvedValue(undefined);
+      (
+        provisioning.seedTenantData as ReturnType<typeof mock>
+      ).mockResolvedValue({
         adminId: 'admin-123',
       });
 
@@ -216,9 +248,9 @@ describe('ProvisioningService', () => {
 
   describe('Non-Standard Errors', () => {
     it('should handle non-Error objects thrown during provisioning', async () => {
-      (provisioning.createTenantSchema as any).mockRejectedValue(
-        'String Error'
-      );
+      (
+        provisioning.createTenantSchema as ReturnType<typeof mock>
+      ).mockRejectedValue('String Error');
 
       await expect(service.provision(options)).rejects.toThrow(
         'Provisioning Failed: Unknown'

@@ -8,7 +8,7 @@ import { getCurrentTenantId } from './connection-context.js';
 
 export interface TenantEvent {
   name: string;
-  payload: any;
+  payload: unknown;
   tenantId: string;
   timestamp: Date;
 }
@@ -20,7 +20,7 @@ export class TenantEventService {
   /**
    * Emit a tenant-scoped event
    */
-  async emit(name: string, payload: any): Promise<void> {
+  async emit(name: string, payload: unknown): Promise<void> {
     const tenantId = getCurrentTenantId();
 
     if (!tenantId) {

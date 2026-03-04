@@ -37,7 +37,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
 
   const fetchBlueprint = useCallback(async () => {
     try {
-      const data = await apiFetch<any>(`/v1/admin/blueprints/${id}`);
+      const data = await apiFetch<unknown>(`/v1/admin/blueprints/${id}`);
       setName(data.name);
       setDescription(data.description || '');
       setPlan(data.plan);
@@ -48,7 +48,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
           ? data.blueprint
           : JSON.stringify(data.blueprint, null, 2);
       setJson(bpString);
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(`Failed to load: ${e.message}`);
       router.push('/super-admin/blueprints');
     } finally {
@@ -62,7 +62,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
     }
   }, [isNew, fetchBlueprint]);
 
-  const extractInnerBlueprint = (parsed: any) => {
+  const extractInnerBlueprint = (parsed: unknown) => {
     let blueprint = parsed;
     if (parsed.blueprint && typeof parsed.blueprint === 'object') {
       if (!name && parsed.name) setName(parsed.name);
@@ -85,7 +85,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
     return blueprint;
   };
 
-  const submitBlueprint = async (blueprint: any) => {
+  const submitBlueprint = async (blueprint: unknown) => {
     const payload = { name, description, plan, isDefault, blueprint };
     const method = isNew ? 'POST' : 'PATCH';
     const endpoint = isNew
@@ -104,7 +104,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
       const blueprint = processBlueprint(json);
       await submitBlueprint(blueprint);
       router.push('/super-admin/blueprints');
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e.message || 'Error saving');
     } finally {
       setSaving(false);

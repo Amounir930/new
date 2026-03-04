@@ -13,10 +13,10 @@ describe('Security Base Utils', () => {
     // or just test the logic directly if exported.
 
     it('should detect hardcoded postgres strings', () => {
-      // gitleaks:allow - Test value for security validation logic
+      - Test value for security validation logic
       const val = 'postgres://user:pass@localhost:5432/db';
       expect(() =>
-        (BaseSecurityTest as any).validateMetadataValue(val, 'path')
+        (BaseSecurityTest as never).validateMetadataValue(val, 'path')
       ).toThrow(/S1 Violation/);
     });
 
@@ -24,7 +24,7 @@ describe('Security Base Utils', () => {
       const jwt =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
       expect(() =>
-        (BaseSecurityTest as any).validateMetadataValue(jwt, 'path')
+        (BaseSecurityTest as never).validateMetadataValue(jwt, 'path')
       ).toThrow(/S1 Violation/);
     });
   });

@@ -30,8 +30,8 @@ const mockAuditService = {
 };
 
 mock.module('@apex/db', () => {
-  const sqlMock: any = mock(
-    (strings: TemplateStringsArray, ...values: any[]) => ({
+  const sqlMock: unknown = mock(
+    (strings: TemplateStringsArray, ...values: unknown[]) => ({
       strings,
       values,
     })
@@ -62,7 +62,7 @@ describe('AnalyticsExportStrategy', () => {
   beforeEach(() => {
     mockClient.query.mockClear();
     mockClient.release.mockClear();
-    (mockClient as any).execute = mock().mockResolvedValue({
+    (mockClient as never).execute = mock().mockResolvedValue({
       rows: [],
       rowCount: 0,
     });
@@ -82,8 +82,8 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     strategy = new AnalyticsExportStrategy(
-      mockShell as any,
-      mockAuditService as any
+      mockShell as never,
+      mockAuditService as never
     );
   });
 
@@ -128,7 +128,7 @@ describe('AnalyticsExportStrategy', () => {
     };
 
     it('should export analytics tables as CSV', async () => {
-      (mockClient as any).execute.mockImplementation((query: any) => {
+      (mockClient as never).execute.mockImplementation((query: unknown) => {
         const queryText = query.strings
           ? query.strings.join('')
           : query.toString();
@@ -174,12 +174,15 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     it('should apply date range filter to orders', async () => {
-      (mockClient as any).execute.mockResolvedValue({ rows: [], rowCount: 0 });
+      (mockClient as never).execute.mockResolvedValue({
+        rows: [],
+        rowCount: 0,
+      });
 
       await strategy.export(defaultOptions);
 
-      const executeCalls = (mockClient as any).execute.mock.calls;
-      const ordersCall = executeCalls.find((call: any) => {
+      const executeCalls = (mockClient as never).execute.mock.calls;
+      const ordersCall = executeCalls.find((call: unknown) => {
         const queryText = call[0].strings
           ? call[0].strings.join('')
           : call[0].toString();
@@ -193,11 +196,14 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     it('should enforce S2 tenant isolation', async () => {
-      (mockClient as any).execute.mockResolvedValue({ rows: [], rowCount: 0 });
+      (mockClient as never).execute.mockResolvedValue({
+        rows: [],
+        rowCount: 0,
+      });
 
       await strategy.export(defaultOptions);
 
-      const executeCalls = (mockClient as any).execute.mock.calls;
+      const executeCalls = (mockClient as never).execute.mock.calls;
       for (const call of executeCalls) {
         const _queryText = call[0].strings
           ? call[0].strings.join('')
@@ -211,7 +217,7 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     it('should convert rows to CSV format', async () => {
-      (mockClient as any).execute.mockImplementation((query: any) => {
+      (mockClient as never).execute.mockImplementation((query: unknown) => {
         const queryText = query.strings
           ? query.strings.join('')
           : query.toString();
@@ -237,7 +243,7 @@ describe('AnalyticsExportStrategy', () => {
       await strategy.export(defaultOptions);
 
       const writeCalls = mockShell.write.mock.calls;
-      const csvWrite = writeCalls.find((call: any) =>
+      const csvWrite = writeCalls.find((call: unknown) =>
         call[0].toString().includes('products_performance.csv')
       );
       expect(csvWrite).toBeDefined();
@@ -249,7 +255,10 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     it('should handle empty result sets', async () => {
-      (mockClient as any).execute.mockResolvedValue({ rows: [], rowCount: 0 });
+      (mockClient as never).execute.mockResolvedValue({
+        rows: [],
+        rowCount: 0,
+      });
 
       const result = await strategy.export(defaultOptions);
 
@@ -257,7 +266,10 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     it('should calculate checksum', async () => {
-      (mockClient as any).execute.mockResolvedValue({ rows: [], rowCount: 0 });
+      (mockClient as never).execute.mockResolvedValue({
+        rows: [],
+        rowCount: 0,
+      });
 
       const result = await strategy.export(defaultOptions);
 
@@ -265,7 +277,7 @@ describe('AnalyticsExportStrategy', () => {
     });
 
     it('should cleanup on error', async () => {
-      (mockClient as any).execute.mockRejectedValueOnce(
+      (mockClient as never).execute.mockRejectedValueOnce(
         new Error('Query failed')
       );
 
@@ -273,13 +285,16 @@ describe('AnalyticsExportStrategy', () => {
         'Query failed'
       );
 
-      const rmCalls = (rm as any).mock.calls;
+      const rmCalls = (rm as never).mock.calls;
       expect(rmCalls.length).toBeGreaterThan(0);
       expect(mockClient.release).toHaveBeenCalled();
     });
 
     it('should set 24h expiry', async () => {
-      (mockClient as any).execute.mockResolvedValue({ rows: [], rowCount: 0 });
+      (mockClient as never).execute.mockResolvedValue({
+        rows: [],
+        rowCount: 0,
+      });
 
       const result = await strategy.export(defaultOptions);
 

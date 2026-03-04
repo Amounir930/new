@@ -45,7 +45,7 @@ function generateSecurityTest(modulePath: string) {
 
   // Skip if already exists
   if (fs.existsSync(testPath)) {
-    console.log(`⏩ Skipping ${testFilename} (exists)`);
+    process.stdout.write(`⏩ Skipping ${testFilename} (exists)`);
     return;
   }
 
@@ -55,7 +55,7 @@ function generateSecurityTest(modulePath: string) {
   const classDecl = sourceFile.getClasses()[0];
 
   if (!classDecl) {
-    console.warn(`⚠️  Skipping ${modulePath}: No class found.`);
+    process.stdout.write(`⚠️  Skipping ${modulePath}: No class found.`);
     return;
   }
 
@@ -88,27 +88,27 @@ describe('${className} Security Checks', () => {
 `.trim();
 
   fs.writeFileSync(testPath, content);
-  console.log(`✅ Generated ${testFilename}`);
+  process.stdout.write(`✅ Generated ${testFilename}`);
 }
 
 async function main() {
-  console.log('🛡️  Scanning for NestJS Modules to Scaffold Security Tests...');
+  process.stdout.write('🛡️  Scanning for NestJS Modules to Scaffold Security Tests...');
 
   const appModules = findAllModules(APPS_DIR);
   const pkgModules = findAllModules(PACKAGES_DIR);
   const allModules = [...appModules, ...pkgModules];
 
-  console.log(`🔍 Found ${allModules.length} modules.`);
+  process.stdout.write(`🔍 Found ${allModules.length} modules.`);
 
   for (const mod of allModules) {
     try {
       generateSecurityTest(mod);
     } catch (e) {
-      console.error(`❌ Failed to scaffold for ${mod}:`, e);
+      process.stdout.write(`❌ Failed to scaffold for ${mod}:`, e);
     }
   }
 
-  console.log('✨ Scaffolding Complete.');
+  process.stdout.write('✨ Scaffolding Complete.');
 }
 
 main();

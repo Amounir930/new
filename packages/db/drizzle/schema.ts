@@ -409,7 +409,7 @@ export const subscriptionPlansInGovernance = governance.table(
       .defaultNow()
       .notNull(),
     priceMonthly: moneyAmount('price_monthly').notNull(),
-    // TODO: failed to parse database type 'money_amount'
+    // PENDING: failed to parse database type 'money_amount'
     priceYearly: moneyAmount('price_yearly').notNull(),
     defaultMaxProducts: integer('default_max_products').default(50).notNull(),
     defaultMaxOrders: integer('default_max_orders').default(100).notNull(),
@@ -1315,7 +1315,7 @@ export const categoriesInStorefront = storefront.table(
     bannerUrl: text('banner_url'),
     name: jsonb().notNull(),
     description: jsonb(),
-    // TODO: failed to parse database type 'ltree'
+    // PENDING: failed to parse database type 'ltree'
     path: ltree('path'),
   },
   (table) => [
@@ -1566,7 +1566,7 @@ export const b2BPricingTiersInStorefront = storefront.table(
     maxQuantity: integer('max_quantity'),
     price: numeric({ precision: 12, scale: 4 }),
     currency: char({ length: 3 }).default('SAR').notNull(),
-    // TODO: failed to parse database type 'int4range'
+    // PENDING: failed to parse database type 'int4range'
     quantityRange: int4range('quantity_range').notNull(),
     lockVersion: integer('lock_version').default(1).notNull(),
   },
@@ -1947,7 +1947,7 @@ export const customerAddressesInStorefront = storefront.table(
     postalCode: jsonb('postal_code').notNull(),
     country: char({ length: 2 }).notNull(),
     phone: jsonb(),
-    // TODO: failed to parse database type 'geography'
+    // PENDING: failed to parse database type 'geography'
     coordinates: customGeography('coordinates'),
   },
   (table) => [
@@ -2523,7 +2523,7 @@ export const flashSaleProductsInStorefront = storefront.table(
     quantityLimit: integer('quantity_limit').notNull(),
     soldQuantity: integer('sold_quantity').default(0).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
-    // TODO: failed to parse database type 'tstzrange'
+    // PENDING: failed to parse database type 'tstzrange'
     validDuring: tstzrange('valid_during'),
   },
   (table) => [
@@ -3213,7 +3213,7 @@ export const priceListsInStorefront = storefront.table(
     marketId: uuid('market_id').notNull(),
     productId: uuid('product_id'),
     variantId: uuid('variant_id'),
-    // TODO: failed to parse database type 'int4range'
+    // PENDING: failed to parse database type 'int4range'
     quantityRange: int4range('quantity_range').notNull(),
     price: numeric({ precision: 12, scale: 4 }).notNull(),
     compareAtPrice: numeric('compare_at_price', { precision: 12, scale: 4 }),
@@ -4802,7 +4802,7 @@ export const locationsInStorefront = storefront.table(
     type: locationType().default('warehouse').notNull(),
     name: jsonb().notNull(),
     address: jsonb(),
-    // TODO: failed to parse database type 'geography'
+    // PENDING: failed to parse database type 'geography'
     coordinates: customGeography('coordinates'),
   },
   (table) => [
@@ -5029,9 +5029,9 @@ export const shippingMethodsInStorefront = storefront.table(
     tenantId: uuid('tenant_id').notNull(),
     name: text().notNull(),
     provider: text(),
-    // TODO: failed to parse database type 'money_amount'
+    // PENDING: failed to parse database type 'money_amount'
     basePrice: moneyAmount('base_price').notNull(),
-    // TODO: failed to parse database type 'money_amount'
+    // PENDING: failed to parse database type 'money_amount'
     minOrderTotal: moneyAmount('min_order_total'),
     minWeightGrams: integer('min_weight_grams'),
     maxWeightGrams: integer('max_weight_grams'),
@@ -5067,7 +5067,7 @@ export const shippingRatesInStorefront = storefront.table(
     id: uuid().default(sql`gen_ulid()`).primaryKey().notNull(),
     methodId: uuid('method_id').notNull(),
     tenantId: uuid('tenant_id').notNull(),
-    // TODO: failed to parse database type 'money_amount'
+    // PENDING: failed to parse database type 'money_amount'
     price: moneyAmount('price').notNull(),
     minWeight: integer('min_weight').notNull(),
     maxWeight: integer('max_weight').notNull(),
@@ -5220,7 +5220,7 @@ export const customTimePartitions = pgTable(
   {
     parentTable: text('parent_table').notNull(),
     childTable: text('child_table').notNull(),
-    // TODO: failed to parse database type 'tstzrange'
+    // PENDING: failed to parse database type 'tstzrange'
     partitionRange: tstzrange('partition_range').notNull(),
   },
   (table) => [
@@ -5270,13 +5270,13 @@ export const tenantConfigInStorefront = storefront.table(
   ]
 );
 export const geographyColumns = pgView('geography_columns', {
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   fTableCatalog: pgName('f_table_catalog'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   fTableSchema: pgName('f_table_schema'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   fTableName: pgName('f_table_name'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   fGeographyColumn: pgName('f_geography_column'),
   coordDimension: integer('coord_dimension'),
   srid: integer(),
@@ -5287,11 +5287,11 @@ export const geographyColumns = pgView('geography_columns', {
 
 export const geometryColumns = pgView('geometry_columns', {
   fTableCatalog: varchar('f_table_catalog', { length: 256 }),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   fTableSchema: pgName('f_table_schema'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   fTableName: pgName('f_table_name'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   fGeometryColumn: pgName('f_geometry_column'),
   coordDimension: integer('coord_dimension'),
   srid: integer(),
@@ -5301,13 +5301,13 @@ export const geometryColumns = pgView('geometry_columns', {
 );
 
 export const tablePrivs = pgView('table_privs', {
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   grantor: pgName('grantor'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   grantee: pgName('grantee'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   tableSchema: pgName('table_schema'),
-  // TODO: failed to parse database type 'name'
+  // PENDING: failed to parse database type 'name'
   tableName: pgName('table_name'),
   privilegeType: text('privilege_type'),
 }).as(
@@ -5551,7 +5551,7 @@ export const categoriesInStorefrontView = storefront
     bannerUrl: text('banner_url'),
     name: jsonb(),
     description: jsonb(),
-    // TODO: failed to parse database type 'ltree'
+    // PENDING: failed to parse database type 'ltree'
     path: ltree('path'),
   })
   .as(

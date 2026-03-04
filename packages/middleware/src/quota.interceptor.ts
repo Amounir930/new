@@ -44,7 +44,7 @@ export class QuotaInterceptor implements NestInterceptor {
   async intercept(
     context: ExecutionContext,
     next: CallHandler
-  ): Promise<Observable<any>> {
+  ): Promise<Observable<unknown>> {
     const resource = this.reflector.get<'products' | 'orders' | 'staff'>(
       QUOTA_KEY,
       context.getHandler()
@@ -97,7 +97,7 @@ export class QuotaInterceptor implements NestInterceptor {
 
     // 2. Resolve Maximum Limit and Target Table
     let max = 0;
-    let targetTable: any;
+    let targetTable: unknown;
 
     if (resource === 'products') {
       max = quotaData.overrideMaxProducts ?? quotaData.planMaxProducts;

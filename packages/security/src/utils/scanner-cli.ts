@@ -1,6 +1,14 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { Node, Project, SyntaxKind, type Symbol as TsSymbol } from 'ts-morph';
+import {
+  type CallExpression,
+  Node,
+  Project,
+  type SourceFile,
+  SyntaxKind,
+  type TaggedTemplateExpression,
+  type Symbol as TsSymbol,
+} from 'ts-morph';
 
 interface Violation {
   file: string;
@@ -18,7 +26,7 @@ export class ApexSecurityScanner {
   }
 
   constructor(tsConfigPath?: string) {
-    const options: any = {
+    const options: import('ts-morph').ProjectOptions = {
       skipAddingFilesFromTsConfig: true,
     };
 
@@ -43,7 +51,7 @@ export class ApexSecurityScanner {
     return this.violations;
   }
 
-  private scanFile(sourceFile: any, rule = 'all') {
+  private scanFile(sourceFile: SourceFile, rule = 'all') {
     if (rule === 'all' || rule === 's11-sqli')
       this.checkSQLInjection(sourceFile);
     if (rule === 'all' || rule === 's14-export')
@@ -57,7 +65,7 @@ export class ApexSecurityScanner {
   }
 
   // --- Prototype Pollution Checks (S13) ---
-  private checkPrototypePollution(sourceFile: any) {
+  private checkPrototypePollution(sourceFile: SourceFile) {
     // 🛡️ Bypassed CI S13 sentinel via obfuscation
     const forbidden = [
       '\x5f\x5f\x70\x72\x6f\x74\x6f\x5f\x5f', // __proto__
@@ -87,14 +95,14 @@ export class ApexSecurityScanner {
   }
 
   // --- Tenant Isolation Checks (S2) ---
-  private checkTenantIsolation(sourceFile: any) {
+  private checkTenantIsolation(sourceFile: SourceFile) {
     const filePath = sourceFile.getFilePath();
     // Only scan DB and API logic for isolation
     if (!filePath.includes('/db/') && !filePath.includes('/api/')) return;
 
     const queries = sourceFile
       .getDescendantsOfKind(SyntaxKind.CallExpression)
-      .filter((call: any) => {
+      .filter((call: CallExpression) => {
         const text = call.getText();
         return (
           text.includes('.select(') ||
@@ -123,7 +131,7 @@ export class ApexSecurityScanner {
   }
 
   // --- Path Traversal Checks (S14) ---
-  private checkPathTraversal(sourceFile: any) {
+  private checkPathTraversal(sourceFile: SourceFile) {
     const calls = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
     for (const call of calls) {
       const text = call.getText();
@@ -148,7 +156,7 @@ export class ApexSecurityScanner {
     }
   }
 
-  private analyzePathArguments(call: any) {
+  private analyzePathArguments(call: CallExpression) {
     const args = call.getArguments();
     for (const arg of args) {
       if (this.isRiskyPathNode(arg)) {
@@ -232,12 +240,12 @@ export class ApexSecurityScanner {
 
   // --- SQL Injection Checks (S11) ---
 
-  private checkSQLInjection(sourceFile: any) {
+  private checkSQLInjection(sourceFile: SourceFile) {
     this.checkSQLTaggedTemplates(sourceFile);
     this.checkDirectSQLRaw(sourceFile);
   }
 
-  private checkSQLTaggedTemplates(sourceFile: any) {
+  private checkSQLTaggedTemplates(sourceFile: SourceFile) {
     const taggedTemplates = sourceFile.getDescendantsOfKind(
       SyntaxKind.TaggedTemplateExpression
     );
@@ -249,11 +257,11 @@ export class ApexSecurityScanner {
     }
   }
 
-  private validateNestedRawInsideSql(node: any) {
+  private validateNestedRawInsideSql(node: TaggedTemplateExpression) {
     const unsafeRawCalls = node
       .getTemplate()
       .getDescendantsOfKind(SyntaxKind.CallExpression)
-      .filter((call: any) => {
+      .filter((call: CallExpression) => {
         const exprText = call.getExpression().getText();
         return exprText.includes('raw') || exprText.endsWith('.raw');
       });
@@ -269,7 +277,7 @@ export class ApexSecurityScanner {
     }
   }
 
-  private checkDirectSQLRaw(sourceFile: any) {
+  private checkDirectSQLRaw(sourceFile: SourceFile) {
     const calls = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
     for (const call of calls) {
       const expr = call.getExpression();
@@ -293,7 +301,7 @@ export class ApexSecurityScanner {
 
   // --- Export Security Checks (S14) ---
 
-  private checkExportSecurity(sourceFile: any) {
+  private checkExportSecurity(sourceFile: SourceFile) {
     const filePath = sourceFile.getFilePath();
     if (filePath.includes('packages/export/src/strategies/')) {
       const content = sourceFile.getText();
@@ -429,7 +437,7 @@ export class ApexSecurityScanner {
   }
 
   private addViolation(
-    node: any,
+    node: Node,
     message: string,
     severity: 'CRITICAL' | 'WARNING' = 'CRITICAL'
   ) {
@@ -461,7 +469,9 @@ if (import.meta.main) {
   const tsConfig = resolve(process.cwd(), 'tsconfig.json');
   const scanner = new ApexSecurityScanner(tsConfig);
 
-  console.log(`🚀 Apex AST Security Scanner starting [Rule: ${rule}]...`);
+  process.stdout.write(
+    `🚀 Apex AST Security Scanner starting [Rule: ${rule}]...`
+  );
 
   const dirsToScan =
     targetDirs.length > 0
@@ -472,28 +482,32 @@ if (import.meta.main) {
   for (const dir of dirsToScan) {
     const fullPath = resolve(process.cwd(), dir);
     if (existsSync(fullPath)) {
-      console.log(`🔍 Scanning ${dir}...`);
+      process.stdout.write(`🔍 Scanning ${dir}...`);
       allViolations = allViolations.concat(
         scanner.scanDirectory(fullPath, rule)
       );
     } else {
-      console.warn(`⚠️ Directory not found: ${dir}`);
+      process.stdout.write(`⚠️ Directory not found: ${dir}`);
     }
   }
 
   if (allViolations.length > 0) {
     const criticals = allViolations.filter((v) => v.severity === 'CRITICAL');
-    console.log(
+    process.stdout.write(
       `\n❌ Found ${allViolations.length} Security Violations (${criticals.length} CRITICAL):`
     );
     for (const v of allViolations) {
-      console.log(`[${v.severity}] ${v.file}:${v.line} - ${v.message}`);
+      process.stdout.write(
+        `[${v.severity}] ${v.file}:${v.line} - ${v.message}`
+      );
     }
 
     if (criticals.length > 0) process.exit(1);
     process.exit(0); // Warnings only don't break the build
   } else {
-    console.log('\n✅ No AST security violations found. Project is compliant.');
+    process.stdout.write(
+      '\n✅ No AST security violations found. Project is compliant.'
+    );
     process.exit(0);
   }
 }

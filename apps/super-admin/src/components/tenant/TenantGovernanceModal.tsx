@@ -95,7 +95,7 @@ export function TenantGovernanceModal({
           `/v1/admin/tenants/${tenantId}/features`
         );
         setFeatures(data);
-      } catch (e: any) {
+      } catch (e: unknown) {
         setError(e.message || 'Failed to fetch features');
       } finally {
         setLoading(false);
@@ -119,7 +119,7 @@ export function TenantGovernanceModal({
         ...prev,
         [key]: { enabled: newState, source: 'tenant' },
       }));
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(`Failed to update feature: ${e.message}`);
     } finally {
       setSaving(null);

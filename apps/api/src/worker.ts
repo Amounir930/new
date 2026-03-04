@@ -12,7 +12,7 @@ async function bootstrap() {
   const logger = new Logger('WorkerBootstrap');
 
   // Force ENABLE_WORKERS to true for this entry point
-  process.env.ENABLE_WORKERS = 'true';
+  process.env['ENABLE_WORKERS'] = 'true';
 
   // S14.7: Boot the main AppModule but without the HTTP/Express listener
   // This will initialize all modules and their providers (including workers)
@@ -33,6 +33,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error('Worker failed to start:', err);
+  process.stderr.write(`\nWorker failed to start: ${err}\n`);
   process.exit(1);
 });

@@ -60,8 +60,8 @@ export default function LoginPage() {
       } else {
         throw new Error('No token received');
       }
-    } catch (err: any) {
-      console.error(err);
+    } catch (err: unknown) {
+      void err;
       setError('Invalid credentials or server error');
     } finally {
       setLoading(false);

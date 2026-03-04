@@ -18,16 +18,16 @@ import {
 import { apiFetch } from '@/lib/api';
 
 export default function MerchantDashboard() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const stats = await apiFetch<any>('/tenants/stats');
+        const stats = await apiFetch<unknown>('/tenants/stats');
         setData(stats);
-      } catch (error) {
-        console.error('Failed to fetch stats:', error);
+      } catch (_error) {
+        /* 'Failed to fetch stats:', error */
       } finally {
         setLoading(false);
       }

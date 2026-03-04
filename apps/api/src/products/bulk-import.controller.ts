@@ -18,13 +18,13 @@ export class BulkImportController {
   @Post()
   @AuditLog({ action: 'PRODUCT_BULK_IMPORT_START', entityType: 'product' })
   async startImport(@Body() _dto: BulkImportDto) {
-    // TODO: Initiate BullMQ job
+    // PENDING: Initiate BullMQ job
     return { jobId: 'pending', status: 'initiated' };
   }
 
   @Get(':jobId')
   async getImportStatus(@Param('jobId') jobId: string) {
-    // TODO: Query import_jobs table
+    // PENDING: Query import_jobs table
     return { jobId, status: 'processing', progress: 0 };
   }
 }

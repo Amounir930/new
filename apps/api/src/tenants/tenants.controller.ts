@@ -134,7 +134,11 @@ export class TenantsController {
   ) {
     const [updated] = await adminDb
       .update(tenantsInGovernance)
-      .set({ ...body, updatedAt: new Date() } as any)
+      .set({
+        ...body,
+        plan: body.plan as never, // Cast only the enum if needed, or refine Zod schema
+        updatedAt: new Date(),
+      })
       .where(eq(tenantsInGovernance.id, id))
       .returning();
 

@@ -20,7 +20,7 @@ mock.module('@apex/db', () => ({
 }));
 
 describe('SchemaManager', () => {
-  let mockClient: any;
+  let mockClient: unknown;
 
   beforeEach(() => {
     mock.restore();
@@ -28,7 +28,7 @@ describe('SchemaManager', () => {
       query: mock(),
       release: mock(),
     };
-    (adminPool.connect as any).mockResolvedValue(mockClient);
+    (adminPool.connect as never).mockResolvedValue(mockClient);
   });
 
   describe('sanitizeSchemaName', () => {

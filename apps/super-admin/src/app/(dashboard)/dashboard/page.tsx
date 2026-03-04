@@ -8,6 +8,7 @@ import {
   RefreshCcw,
   ShieldCheck,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { ProvisionModal } from '@/components/tenant/ProvisionModal';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,8 @@ export default function SuperAdminDashboard() {
       ]);
       setStatsData(stats);
       setHealthData(health);
-    } catch (error) {
-      console.error('Failed to fetch governance data:', error);
+    } catch (_error) {
+      /* 'Failed to fetch governance data:', error */
     } finally {
       setLoading(false);
     }
@@ -154,14 +155,16 @@ export default function SuperAdminDashboard() {
               <div className="w-2 h-8 bg-indigo-500 rounded-full" />
               Infrastructure Health
             </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-slate-500 hover:text-white group"
-            >
-              Full Monitor{' '}
-              <ArrowUpRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </Button>
+            <Link href="/dashboard/infra">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-500 hover:text-white group"
+              >
+                Full Monitor{' '}
+                <ArrowUpRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+              </Button>
+            </Link>
           </div>
           <div className="space-y-4">
             {loading ? (

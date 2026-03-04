@@ -26,7 +26,7 @@ import { apiFetch } from '@/lib/api';
 import {
   MASTER_FEATURE_LIST,
   MASTER_QUOTA_LIST,
-} from '../../../../../packages/provisioning/src/blueprint/constants';
+} from '.././.././.././.././packages/provisioning/src/blueprint/constants';
 
 const SECTORS = [
   'retail',
@@ -100,7 +100,7 @@ export function BlueprintBuilder() {
       });
 
       router.push('/super-admin/blueprints');
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(`Save Failed: ${e.message}`);
     } finally {
       setSaving(false);

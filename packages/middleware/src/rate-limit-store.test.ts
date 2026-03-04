@@ -9,8 +9,8 @@ mock.module('redis', () => ({
 
 describe('RedisRateLimitStore', () => {
   let store: RedisRateLimitStore;
-  let mockRedisClient: any;
-  let mockMulti: any;
+  let mockRedisClient: unknown;
+  let mockMulti: unknown;
 
   beforeEach(() => {
     mock.restore();
@@ -38,19 +38,19 @@ describe('RedisRateLimitStore', () => {
       ttl: mock(),
     };
 
-    (createClient as any).mockReturnValue(mockRedisClient);
+    (createClient as never).mockReturnValue(mockRedisClient);
 
     const mockConfigService = {
       get: mock((key: string) => {
         if (key === 'NODE_ENV')
-          return (store as any)._mockNodeEnv || 'development';
+          return (store as never)._mockNodeEnv || 'development';
         if (key === 'REDIS_URL') return 'redis://localhost:6379';
         return null;
       }),
     };
 
-    store = new RedisRateLimitStore(mockConfigService as any);
-    (store as any)._mockNodeEnv = 'development';
+    store = new RedisRateLimitStore(mockConfigService as never);
+    (store as never)._mockNodeEnv = 'development';
   });
 
   afterEach(() => {
@@ -63,30 +63,30 @@ describe('RedisRateLimitStore', () => {
 
   describe('connect', () => {
     it('should connect to redis', async () => {
-      await (store as any).connect();
+      await (store as never).connect();
       expect(createClient).toHaveBeenCalled();
       expect(mockRedisClient.connect).toHaveBeenCalled();
     });
 
     it('should handle connection error and fallback to memory in development', async () => {
-      (store as any)._mockNodeEnv = 'development';
+      (store as never)._mockNodeEnv = 'development';
       mockRedisClient.connect.mockRejectedValue(new Error('Connection failed'));
-      await (store as any).connect();
+      await (store as never).connect();
 
       // Should set fallbackToMemory to true
       // Note: We should probably mock ConfigService to return 'development' here
       // if it checks it dynamically.
-      expect((store as any).fallbackToMemory).toBe(true);
+      expect((store as never).fallbackToMemory).toBe(true);
     });
 
     it('should handle connection error and NOT fallback in production', async () => {
-      (store as any)._mockNodeEnv = 'production';
+      (store as never)._mockNodeEnv = 'production';
       mockRedisClient.connect.mockRejectedValue(new Error('Connection failed'));
-      await (store as any).connect();
+      await (store as never).connect();
 
       // Should set fallbackToMemory to false (strict)
-      // The implementation checks process.env.NODE_ENV in the constructor
-      expect((store as any).fallbackToMemory).toBe(false);
+      // The implementation checks process.env['NODE_ENV'] in the constructor
+      expect((store as never).fallbackToMemory).toBe(false);
     });
   });
 
@@ -94,7 +94,7 @@ describe('RedisRateLimitStore', () => {
     it('should use redis if available', async () => {
       mockRedisClient.isOpen = true;
       // Force client injection
-      (store as any).client = mockRedisClient;
+      (store as never).client = mockRedisClient;
 
       const res = await store.increment('key', 60000);
 
@@ -105,8 +105,8 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should use memory if fallback is active', async () => {
-      (store as any).fallbackToMemory = true;
-      (store as any).client = null;
+      (store as never).fallbackToMemory = true;
+      (store as never).client = null;
 
       const res1 = await store.increment('key', 60000);
       expect(res1.count).toBe(1);
@@ -116,9 +116,9 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should throw in production if redis unavailable', async () => {
-      (store as any)._mockNodeEnv = 'production';
-      (store as any).fallbackToMemory = false;
-      (store as any).client = null;
+      (store as never)._mockNodeEnv = 'production';
+      (store as never).fallbackToMemory = false;
+      (store as never).client = null;
 
       await expect(store.increment('key', 60000)).rejects.toThrow(
         'Rate limiting service unavailable'
@@ -129,7 +129,7 @@ describe('RedisRateLimitStore', () => {
   describe('getViolations', () => {
     it('should get from redis if available', async () => {
       mockRedisClient.isOpen = true;
-      (store as any).client = mockRedisClient;
+      (store as never).client = mockRedisClient;
       mockRedisClient.get.mockResolvedValue('5');
 
       const violations = await store.getViolations('key');
@@ -138,11 +138,11 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should get from memory if fallback', async () => {
-      (store as any).fallbackToMemory = true;
-      (store as any).client = null;
+      (store as never).fallbackToMemory = true;
+      (store as never).client = null;
 
       // Seed memory
-      (store as any).memoryStore.set('key', {
+      (store as never).memoryStore.set('key', {
         count: 1,
         resetTime: Date.now() + 1000,
         violations: 3,
@@ -156,7 +156,7 @@ describe('RedisRateLimitStore', () => {
   describe('incrementViolations', () => {
     it('should use redis if available', async () => {
       mockRedisClient.isOpen = true;
-      (store as any).client = mockRedisClient;
+      (store as never).client = mockRedisClient;
       mockRedisClient.incr.mockResolvedValue(1);
 
       const v = await store.incrementViolations('key', 30000);
@@ -166,11 +166,11 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should use memory if fallback', async () => {
-      (store as any).fallbackToMemory = true;
-      (store as any).client = null;
+      (store as never).fallbackToMemory = true;
+      (store as never).client = null;
 
       // Seed memory
-      (store as any).memoryStore.set('key', {
+      (store as never).memoryStore.set('key', {
         count: 1,
         resetTime: Date.now() + 1000,
         violations: 0,
@@ -187,7 +187,7 @@ describe('RedisRateLimitStore', () => {
   describe('block/isBlocked', () => {
     it('should block and check via redis', async () => {
       mockRedisClient.isOpen = true;
-      (store as any).client = mockRedisClient;
+      (store as never).client = mockRedisClient;
 
       await store.block('key', 300000);
       expect(mockRedisClient.setEx).toHaveBeenCalledWith(
@@ -203,11 +203,11 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should block and check via memory', async () => {
-      (store as any).fallbackToMemory = true;
-      (store as any).client = null;
+      (store as never).fallbackToMemory = true;
+      (store as never).client = null;
 
       // Seed memory
-      (store as any).memoryStore.set('key', {
+      (store as never).memoryStore.set('key', {
         count: 1,
         resetTime: Date.now(),
         violations: 5,
@@ -223,7 +223,7 @@ describe('RedisRateLimitStore', () => {
   describe('getRemaining', () => {
     it('should calculate remaining', async () => {
       mockRedisClient.isOpen = true;
-      (store as any).client = mockRedisClient;
+      (store as never).client = mockRedisClient;
       // increment(key, 0) -> results[2] is count
       mockMulti.exec.mockResolvedValue([0, 0, 5, true]);
 

@@ -39,4 +39,4 @@ fs.writeFileSync(
   JSON.stringify(journal, null, 2)
 );
 
-console.log('Successfully reconstructed _journal.json');
+process.stdout.write('Successfully reconstructed _journal.json\n');

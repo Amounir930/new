@@ -13,7 +13,7 @@ import {
 
 describe('TenantJwtMatchGuard', () => {
   let guard: TenantJwtMatchGuard;
-  let mockContext: any;
+  let mockContext: unknown;
   let mockRequest: Partial<TenantRequest>;
 
   beforeEach(() => {

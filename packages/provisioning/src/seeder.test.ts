@@ -35,7 +35,7 @@ mock.module('@apex/db', () => ({
   },
   drizzle: mock().mockReturnValue(mockDb),
   eq: mock(),
-  sql: mock((strings: TemplateStringsArray, ...values: any[]) => ({
+  sql: mock((strings: TemplateStringsArray, ...values: unknown[]) => ({
     sql: String.raw(strings, ...values),
   })),
   tenantsInGovernance: { id: 'tenantsInGovernance.id', subdomain: 'subdomain' },
@@ -86,7 +86,7 @@ mock.module('@apex/security', () => ({
     salt: 'mock-salt',
     version: 1,
   })),
-  decrypt: mock((data: any) =>
+  decrypt: mock((data: unknown) =>
     typeof data === 'string' && data.startsWith('enc_') ? data.slice(4) : data
   ),
 }));

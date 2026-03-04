@@ -71,7 +71,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     // S14.7: Conditional worker initialization (Dedicated Worker Pattern)
-    if (process.env.ENABLE_WORKERS !== 'true') {
+    if (process.env['ENABLE_WORKERS'] !== 'true') {
       this.logger.log(
         'Export worker discovery mode active (Jobs will be queued but not processed by this instance)'
       );
@@ -282,7 +282,7 @@ export class ExportWorker implements OnModuleInit, OnModuleDestroy {
 
       // Note: Lifecycle policy disabled for immediate cleanup
       // Files are deleted after 5 minutes via setTimeout
-      // TODO: Re-enable for production with 24h retention
+      // PENDING: Re-enable for production with 24h retention
     }
   }
 

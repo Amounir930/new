@@ -118,7 +118,7 @@ export class SecretsManager {
     this.secrets.set(name, config);
     this.scheduleRotation(name);
 
-    console.log(
+    process.stdout.write(
       `[SecretsManager] Registered secret: ${name}, next rotation: ${config.nextRotationAt.toISOString()}`
     );
   }
@@ -136,7 +136,7 @@ export class SecretsManager {
     const memoryAgeMs = now.getTime() - config.registeredAt.getTime();
     if (memoryAgeMs > 24 * 60 * 60 * 1000) {
       this.secrets.delete(name);
-      console.warn(
+      process.stdout.write(
         `[SecretsManager] Secret ${name} purged: memory age exceeded 24h`
       );
       return undefined;
@@ -170,7 +170,7 @@ export class SecretsManager {
       );
 
       if (new Date() <= gracePeriodEnd) {
-        console.warn(
+        process.stdout.write(
           `[SecretsManager] Secret ${name} used old value (grace period)`
         );
         return { valid: true, status: 'grace' };
@@ -216,14 +216,18 @@ export class SecretsManager {
       try {
         listener(event);
       } catch (error) {
-        console.error('[SecretsManager] Listener error:', error);
+        process.stdout.write(
+          `[SecretsManager] Listener error:\n${String(error)}`
+        );
       }
     }
 
     // Reschedule
     this.scheduleRotation(name);
 
-    console.log(`[SecretsManager] Rotated secret: ${name}, reason: ${reason}`);
+    process.stdout.write(
+      `[SecretsManager] Rotated secret: ${name}, reason: ${reason}`
+    );
 
     return newValue;
   }
@@ -302,7 +306,7 @@ export class SecretsManager {
    * Item 16: Robust implementation
    */
   emergencyRotation(): string[] {
-    console.warn(
+    process.stdout.write(
       '[SecretsManager] EMERGENCY ROTATION INITIATED - COMPROMISE DETECTED'
     );
 
@@ -313,7 +317,7 @@ export class SecretsManager {
         this.rotateSecret(name, 'compromise');
         rotated.push(name);
       } catch (error) {
-        console.error(
+        console['error'](
           `[SecretsManager] Failed to rotate ${name} during emergency:`,
           error
         );

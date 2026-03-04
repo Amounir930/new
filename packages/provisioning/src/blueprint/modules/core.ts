@@ -30,7 +30,7 @@ export class CoreModule implements SeederModule {
           role: 'admin',
           status: 'active',
           tenantId: storeId, // Ensure tenant affiliation
-        } as any)
+        } as never)
         .onConflictDoNothing();
     }
 
@@ -47,21 +47,21 @@ export class CoreModule implements SeederModule {
       if (settingsEntries.length > 0) {
         await db
           .insert(tenantConfigInStorefront)
-          .values(settingsEntries as any)
+          .values(settingsEntries as never)
           .onConflictDoNothing();
       }
     }
 
     // 3. Essential Pages (Legal, About)
     if (config.pages && config.pages.length > 0) {
-      const pageEntries = (config.pages as any[]).map((p: any) => ({
+      const pageEntries = (config.pages as never[]).map((p: unknown) => ({
         ...p,
         tenantId: storeId,
       }));
 
       await db
         .insert(pagesInStorefront)
-        .values(pageEntries as any)
+        .values(pageEntries as never)
         .onConflictDoNothing();
     }
   }
