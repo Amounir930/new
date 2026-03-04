@@ -3,6 +3,9 @@
  * Implements S1-S8 Security Protocols + OpenAPI Documentation
  */
 
+import { startTracing } from '@apex/monitoring';
+startTracing('apex-api');
+
 import 'reflect-metadata';
 import { AuditService } from '@apex/audit';
 import { env } from '@apex/config';

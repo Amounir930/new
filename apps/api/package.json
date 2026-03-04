@@ -20,6 +20,7 @@
     "@apex/db": "workspace:*",
     "@apex/export": "workspace:*",
     "@apex/middleware": "workspace:*",
+    "@apex/monitoring": "workspace:*",
     "@apex/provisioning": "workspace:*",
     "@nestjs/bull": "^11.0.4",
     "@nestjs/common": "10.4.16",

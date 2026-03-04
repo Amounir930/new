@@ -9,13 +9,10 @@ services:
     container_name: apex-postgres
     restart: always
     user: "70:70" # Run as postgres user internally
-    # ZERO-TOLERANCE FIX: Read via secrets, no environment exposure.
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-apex}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
-    secrets:
-      - postgres_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -51,10 +48,9 @@ services:
     container_name: apex-redis
     restart: always
     user: "999:1000" # Non-root redis user
-    # ZERO-TOLERANCE FIX: Do not pass password in CLI args (ps aux leak). Read securely from file.
-    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$$(cat /run/secrets/redis_password)\""]
-    secrets:
-      - redis_password
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     security_opt:
@@ -62,7 +58,7 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$(cat /run/secrets/redis_password)\" ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a \"${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -90,15 +86,12 @@ services:
     container_name: apex-minio
     restart: always
     command: server /data --console-address ":9001"
-    # ZERO-TOLERANCE FIX: Root password via secrets.
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD_FILE: /run/secrets/minio_password
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_SERVER_URL: https://storage.60sec.shop
       MINIO_BROWSER_REDIRECT_URL: https://storage-admin.60sec.shop
       MINIO_DOMAIN: storage.60sec.shop
-    secrets:
-      - minio_password
     volumes:
       - minio_data:/data
     tmpfs:
@@ -153,7 +146,7 @@ services:
       context: ..
       dockerfile: apps/api/Dockerfile
     restart: always
-    env_file: ../.env
+    env_file: .env
     depends_on:
       apex-postgres:
         condition: service_healthy
@@ -225,7 +218,7 @@ services:
   worker:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
     restart: always
-    env_file: ../.env
+    env_file: .env
     depends_on:
       apex-postgres:
         condition: service_healthy
@@ -550,12 +543,10 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_USER: ${POSTGRES_USER:-apex}
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
       SCHEDULE: "@daily"
       BACKUP_KEEP_DAYS: 7
-    secrets:
-      - postgres_password
     volumes:
       - db_backups:/backups
     deploy:
@@ -578,7 +569,7 @@ services:
     image: edoburu/pgbouncer:latest
     container_name: apex-pgbouncer
     restart: always
-    env_file: ../.env
+    env_file: .env
     environment:
       - DB_USER=${POSTGRES_USER:-apex}
       - DB_PASSWORD=${POSTGRES_PASSWORD}
@@ -614,7 +605,7 @@ services:
     image: getmeili/meilisearch:v1.6
     container_name: apex-meilisearch
     restart: always
-    env_file: ../.env
+    env_file: .env
     environment:
       - MEILI_ENV=production
       - MEILI_MASTER_KEY=${MEILISEARCH_MASTER_KEY}
@@ -642,7 +633,7 @@ services:
     image: darthsim/imgproxy:latest
     container_name: apex-imgproxy
     restart: always
-    env_file: ../.env
+    env_file: .env
     environment:
       - IMGPROXY_KEY=${IMGPROXY_KEY}
       - IMGPROXY_SALT=${IMGPROXY_SALT}
@@ -688,43 +679,10 @@ services:
           memory: 512M
           cpus: "0.5"
 
-# STRICT DOCKER SECRETS (Must be initialized on host via docker swarm/local)
-# ═══════════════════════════════════════════════════════════════
-secrets:
-  postgres_password:
-    file: ./secrets/postgres_password.txt
-  redis_password:
-    file: ./secrets/redis_password.txt
-  minio_password:
-    file: ./secrets/minio_password.txt
-  jwt_secret:
-    file: ./secrets/jwt_secret.txt
-  cf_dns_token:
-    file: ./secrets/cf_dns_token.txt
-  cf_zone_token:
-    file: ./secrets/cf_zone_token.txt
-  gitea_db_password:
-    file: ./secrets/gitea_db_password.txt
-  webhook_secret:
-    file: ./secrets/webhook_secret.txt
-  encryption_master_key:
-    file: ./secrets/encryption_master_key.txt
-  api_key_secret:
-    file: ./secrets/api_key_secret.txt
-  blind_index_pepper:
-    file: ./secrets/blind_index_pepper.txt
-  session_salt:
-    file: ./secrets/session_salt.txt
-  internal_api_secret:
-    file: ./secrets/internal_api_secret.txt
-  super_admin_password:
-    file: ./secrets/super_admin_password.txt
-  database_url:
-    file: ./secrets/database_url.txt
-  redis_url:
-    file: ./secrets/redis_url.txt
-  minio_user:
-    file: ./secrets/minio_user.txt
+# ══════════════════════════════════════════════════════════════
+# جميع الأسرار تُقرأ حصراً من ملف .env (المصدر الوحيد للحقيقة)
+# لا توجد docker secrets — .env هو الكتاب المقدس
+# ══════════════════════════════════════════════════════════════
 
 volumes:
   postgres_data:

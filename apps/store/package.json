@@ -10,6 +10,7 @@
     "lint:fix": "biome check --write ."
   },
   "dependencies": {
+    "@apex/monitoring": "workspace:*",
     "lucide-react": "0.475.0",
     "next": "16.1.6",
     "react": "19.2.4",
