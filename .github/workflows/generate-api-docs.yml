@@ -62,7 +62,7 @@ jobs:
           npx @stoplight/spectral-cli lint openapi-spec.json --ruleset https://unpkg.com/@stoplight/spectral-functions@1.2.3/dist/ruleset.js || echo "⚠️ Spectral linting finished with warnings"
 
       - name: Upload Spec
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: openapi-spec
           path: apps/api/openapi-spec.json
