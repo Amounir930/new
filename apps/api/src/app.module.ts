@@ -36,6 +36,7 @@ import { SecurityModule } from './security/security.module.js';
 import { StorefrontModule } from './storefront/storefront.module.js';
 import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
 import { TenantsModule } from './tenants/tenants.module.js';
+import { MediaModule } from './common/media/media.module.js';
 
 @Module({
   imports: [
@@ -46,6 +47,9 @@ import { TenantsModule } from './tenants/tenants.module.js';
 
     // S1: Configuration
     ConfigModule,
+
+    // Media (Imgproxy) Global Module
+    MediaModule,
 
     // S6: Rate Limiting
     RateLimitModule,

@@ -19,6 +19,7 @@
     "@apex/config": "workspace:*",
     "@apex/db": "workspace:*",
     "@apex/export": "workspace:*",
+    "@apex/media": "workspace:*",
     "@apex/middleware": "workspace:*",
     "@apex/monitoring": "workspace:*",
     "@apex/provisioning": "workspace:*",

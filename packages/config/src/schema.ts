@@ -88,6 +88,11 @@ export const EnvSchema = z.object({
   MINIO_BUCKET_NAME: z.string().default('apex-assets'),
   MINIO_REGION: z.string().default('us-east-1'),
 
+  // Imgproxy Configuration (S1/S7 Enforcement)
+  IMGPROXY_KEY: z.string().regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_KEY must be a valid hex-encoded string').optional(),
+  IMGPROXY_SALT: z.string().regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_SALT must be a valid hex-encoded string').optional(),
+  IMGPROXY_SOURCE_URL: z.string().url('S1 Violation: IMGPROXY_SOURCE_URL must be a valid URL').optional(),
+
   // Application Settings
   NODE_ENV: z.enum(['development', 'production', 'test']),
   PORT: z.coerce.number().default(3000),

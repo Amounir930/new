@@ -49,6 +49,7 @@
         "@apex/config": "workspace:*",
         "@apex/db": "workspace:*",
         "@apex/export": "workspace:*",
+        "@apex/media": "workspace:*",
         "@apex/middleware": "workspace:*",
         "@apex/monitoring": "workspace:*",
         "@apex/provisioning": "workspace:*",
@@ -315,6 +316,18 @@
         "typescript": "^5.3.0",
       },
     },
+    "packages/media": {
+      "name": "@apex/media",
+      "version": "1.0.0",
+      "dependencies": {
+        "@apex/config": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^20.11.16",
+        "tsup": "^8.0.2",
+        "typescript": "^5.3.3",
+      },
+    },
     "packages/middleware": {
       "name": "@apex/middleware",
       "version": "1.0.0",
@@ -472,6 +485,8 @@
     "@apex/events": ["@apex/events@workspace:packages/events"],
 
     "@apex/export": ["@apex/export@workspace:packages/export"],
+
+    "@apex/media": ["@apex/media@workspace:packages/media"],
 
     "@apex/middleware": ["@apex/middleware@workspace:packages/middleware"],
 
@@ -2767,6 +2782,8 @@
 
     "@apex/export/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
+    "@apex/media/@types/node": ["@types/node@20.19.33", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-Rs1bVAIdBs5gbTIKza/tgpMuG1k3U/UMJLWecIMxNdJFDMzcM5LOiLVRYh3PilWEYDIeUDv7bpiHPLPsbydGcw=="],
+
     "@apex/middleware/@types/node": ["@types/node@20.19.33", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-Rs1bVAIdBs5gbTIKza/tgpMuG1k3U/UMJLWecIMxNdJFDMzcM5LOiLVRYh3PilWEYDIeUDv7bpiHPLPsbydGcw=="],
 
     "@apex/middleware/redis": ["redis@4.7.0", "", { "dependencies": { "@redis/bloom": "1.2.0", "@redis/client": "1.6.0", "@redis/graph": "1.1.1", "@redis/json": "1.0.7", "@redis/search": "1.2.0", "@redis/time-series": "1.1.0" } }, "sha512-zvmkHEAdGMn+hMRXuMBtu4Vo5P6rHQjLoHftu+lBqq8ZTA3RCVC/WzD790bkKKiNFp7d5/9PcSD19fJyyRvOdQ=="],
@@ -3366,6 +3383,8 @@
     "@apex/events/@nestjs/core/path-to-regexp": ["path-to-regexp@8.3.0", "", {}, "sha512-7jdwVIRtsP8MYpdXSwOS0YdD0Du+qOoF/AEPIt88PcCFrZCzx41oxku1jD88hZBwbNUIEfpqvuhjFaMAqMTWnA=="],
 
     "@apex/events/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
+
+    "@apex/media/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 
     "@apex/middleware/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 
