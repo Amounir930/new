@@ -9,3 +9,5 @@ tmp
 .gemini
 ops/keys
 ops/secrets
+.turbo
+**/.turbo
