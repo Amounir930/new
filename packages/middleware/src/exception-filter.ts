@@ -16,7 +16,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       includeStackTrace: boolean;
       includeIpDetails: boolean;
     }
-  ) {}
+  ) { }
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -51,11 +51,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   }
 
   private parseException(exception: any) {
-    if (exception instanceof HttpException) {
+    // S5 FIX: Use structural check instead of just instanceof to handle cross-package version mismatches
+    const isHttpException =
+      exception instanceof HttpException ||
+      (typeof exception?.getStatus === 'function' &&
+        typeof exception?.getResponse === 'function');
+
+    if (isHttpException) {
       const res = exception.getResponse();
       const isObj = typeof res === 'object' && res !== null;
+      const status = exception.getStatus();
       return {
-        status: exception.getStatus(),
+        status,
         message: isObj ? (res as any).message || JSON.stringify(res) : res,
         error: isObj ? (res as any).error || 'Error' : 'Error',
         validationErrors: isObj ? (res as any).errors : undefined,

@@ -21,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
-        (req: { cookies?: Record<string, string> }) => {
+        (req: any) => {
           let token = null;
           if (req?.cookies) {
             token = req.cookies.adm_tkn;
@@ -36,7 +36,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload): Promise<AuthUser> {
     // Item 21: Enforce mandatory tenantId in JWT
-    if (!payload || !payload.sub || !payload.tenantId) {
+    if (!payload?.sub || !payload?.tenantId) {
       throw new UnauthorizedException(
         'S2 Violation: Invalid token payload (missing sub or tenantId)'
       );

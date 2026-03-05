@@ -22,6 +22,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/nestjs';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module.js';
 
@@ -89,6 +90,7 @@ async function bootstrap() {
     return defaultParser(req, res, next);
   });
 
+  app.use(cookieParser());
   app.use(bodyParser.urlencoded({ limit: '100kb', extended: true }));
 
   // S5: Global Exception Filter (Hardened)
