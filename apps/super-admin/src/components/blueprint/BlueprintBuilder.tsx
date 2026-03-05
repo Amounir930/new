@@ -1,7 +1,7 @@
 'use client';
 
-import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST, MasterFeature } from '@apex/provisioning';
-import { ArrowLeft, Loader2, Save, ShieldCheck, Zap, Globe, Package, ShoppingCart, BarChart3, Settings } from 'lucide-react';
+import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST, MasterFeature, validateBlueprint } from '@apex/provisioning/client';
+import { ArrowLeft, Loader2, Save, ShieldCheck, Zap, Globe, Package, ShoppingCart, BarChart3, Settings, LayoutGrid } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -103,7 +103,7 @@ const FEATURE_GROUPS = [
   { id: 'catalog', name: 'Catalog & Inventory', icon: <Package className="w-4 h-4" />, items: ['quickView', 'compare', 'productReviews', 'brands', 'smartCollections', 'variants', 'inventory', 'smartFilters'] },
   { id: 'customer', name: 'Customer Identity', icon: <ShieldCheck className="w-4 h-4" />, items: ['login', 'register', 'accountDashboard', 'myOrders', 'orderDetails', 'trackOrder', 'addresses', 'paymentMethods', 'wishlist', 'wallet', 'loyalty', 'referral', 'notifications'] },
   { id: 'marketing', name: 'Growth & Marketing', icon: <Zap className="w-4 h-4" />, items: ['flashDeals', 'newsletter', 'coupons', 'analytics', 'seo'] },
-  { id: 'content', name: 'Content & CMS', icon: <CardTitle className="p-0 text-[10px]">CMS</CardTitle>, items: ['aboutUs', 'contactUs', 'faq', 'blog', 'privacyPolicy', 'termsConditions', 'refundPolicy', 'multilingual', 'multicurrency'] },
+  { id: 'content', name: 'Content & CMS', icon: <LayoutGrid className="w-4 h-4" />, items: ['aboutUs', 'contactUs', 'faq', 'blog', 'privacyPolicy', 'termsConditions', 'refundPolicy', 'multilingual', 'multicurrency'] },
   { id: 'advanced', name: 'B2B & Enterprise', icon: <Settings className="w-4 h-4" />, items: ['apiAccess', 'pos', 'b2b', 'metafields'] }
 ];
 

@@ -123,26 +123,30 @@ export class BlueprintExecutor {
  * Validate Blueprint JSON Structure (S21 Strictness)
  * Enforces that all 41 features and essential quotas are present.
  */
-export function validateBlueprint(blueprint: any): BlueprintTemplate {
+export function validateBlueprint(blueprint: unknown): BlueprintTemplate {
   if (!blueprint || typeof blueprint !== 'object') {
     throw new Error('Blueprint must be a valid JSON object');
   }
 
-  if (!blueprint.name || typeof blueprint.name !== 'string') {
+  const b = blueprint as Record<string, unknown>;
+
+  if (!b.name || typeof b.name !== 'string') {
     throw new Error('Blueprint must have a valid name');
   }
 
-  if (!blueprint.modules || typeof blueprint.modules !== 'object') {
+  if (!b.modules || typeof b.modules !== 'object') {
     throw new Error('Blueprint must define modules object');
   }
 
-  if (blueprint.version !== '1.0') {
+  if (b.version !== '1.0') {
     throw new Error('version must be "1.0"');
   }
 
+  const modules = b.modules as Record<string, unknown>;
+
   // 1. Strict Module Check (All 41 must exist)
   for (const feature of MASTER_FEATURE_LIST) {
-    if (!(feature in blueprint.modules)) {
+    if (!(feature in modules)) {
       throw new Error(
         `Validation Error: Missing required feature '${feature}' in blueprint modules.`
       );
@@ -150,12 +154,14 @@ export function validateBlueprint(blueprint: any): BlueprintTemplate {
   }
 
   // 2. Strict Quota Check
-  if (!blueprint.quotas || typeof blueprint.quotas !== 'object') {
+  if (!b.quotas || typeof b.quotas !== 'object') {
     throw new Error('Blueprint must define quotas object');
   }
 
+  const quotas = b.quotas as Record<string, unknown>;
+
   for (const quota of MASTER_QUOTA_LIST) {
-    if (!(quota in blueprint.quotas)) {
+    if (!(quota in quotas)) {
       throw new Error(
         `Validation Error: Missing required quota '${quota}' in blueprint quotas.`
       );

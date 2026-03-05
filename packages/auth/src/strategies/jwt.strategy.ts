@@ -21,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
-        (req: any) => {
+        (req: { cookies?: Record<string, string> }) => {
           let token = null;
           if (req?.cookies) {
             token = req.cookies.adm_tkn;
@@ -43,7 +43,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     // Item 28: DB Validation — Check if session is still valid
-    if (payload.jti) {
+    // Skip this check for super_admin as they don't have sessions in tenant databases
+    if (payload.jti && payload.role !== 'super_admin') {
       // For staff sessions, we check the DB directly using admin connection scoped to tenant
       const { db, release } = await getTenantDb(payload.tenantId);
       try {

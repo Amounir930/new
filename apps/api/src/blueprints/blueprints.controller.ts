@@ -25,11 +25,17 @@ import {
 @Controller('admin/blueprints')
 @UseGuards(JwtAuthGuard, SuperAdminGuard) // Super-#21: Super Admin ONLY
 export class BlueprintsController {
-  constructor(private readonly blueprintsService: BlueprintsService) {}
+  constructor(private readonly blueprintsService: BlueprintsService) { }
 
   @Get()
-  findAll() {
-    return this.blueprintsService.findAll();
+  async findAll() {
+    try {
+      return await this.blueprintsService.findAll();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('[BlueprintsController] FIND_ALL_ERROR:', message);
+      throw error;
+    }
   }
 
   @Get(':id')
