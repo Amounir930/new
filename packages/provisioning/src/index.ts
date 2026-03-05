@@ -6,17 +6,17 @@
 export {
   MASTER_FEATURE_LIST,
   MASTER_QUOTA_LIST,
-} from './blueprint/constants.js';
-export { validateBlueprint } from './blueprint/executor.js'; // Explicit export
-export * from './blueprint/types.js'; // Export types for BlueprintTemplate
-export * from './blueprint.js';
-export * from './quota-service.js';
-export * from './runner.js';
-export * from './schema-manager.js';
-export * from './seeder.js';
-export * from './snapshot-manager.js';
-export * from './storage-manager.js';
-export * from './tenant-overview.js';
+} from './blueprint/constants';
+export { validateBlueprint } from './blueprint/executor'; // Explicit export
+export * from './blueprint/types'; // Export types for BlueprintTemplate
+export * from './blueprint';
+export * from './quota-service';
+export * from './runner';
+export * from './schema-manager';
+export * from './seeder';
+export * from './snapshot-manager';
+export * from './storage-manager';
+export * from './tenant-overview';
 
 export interface ProvisioningOptions {
   subdomain: string;

@@ -11,7 +11,7 @@ import {
   getStorageStats,
   resetMinioClient,
   setMinioClient,
-} from './storage-manager.js';
+} from './storage-manager';
 
 // Mock MinIO client
 const mockMinioClient = {

@@ -1,10 +1,10 @@
-import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST } from './constants.js';
+import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST } from './constants';
 import type {
   BlueprintConfig,
   BlueprintContext,
   BlueprintTemplate,
   SeederModule,
-} from './types.js';
+} from './types';
 
 export class BlueprintExecutor {
   private modules: Map<string, SeederModule> = new Map();

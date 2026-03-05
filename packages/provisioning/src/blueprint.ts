@@ -6,10 +6,10 @@ import {
   onboardingBlueprintsInGovernance,
 } from '@apex/db';
 
-export { validateBlueprint } from './blueprint/executor.js';
+export { validateBlueprint } from './blueprint/executor';
 
-import { validateBlueprint } from './blueprint/executor.js';
-import type { BlueprintRecord, BlueprintTemplate } from './blueprint/types.js';
+import { validateBlueprint } from './blueprint/executor';
+import type { BlueprintRecord, BlueprintTemplate } from './blueprint/types';
 
 // Fallback template for safety
 const defaultBlueprintTemplate: BlueprintTemplate = {

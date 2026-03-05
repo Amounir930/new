@@ -8,7 +8,7 @@ import {
   checkQuota,
   isFeatureAllowed,
   validateSubdomainAvailability,
-} from './quota-service.js';
+} from './quota-service';
 
 describe('QuotaService (Data-Driven)', () => {
   beforeEach(() => {

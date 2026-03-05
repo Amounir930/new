@@ -31,9 +31,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
   const [description, setDescription] = useState('');
   const [plan, setPlan] = useState('free');
   const [isDefault, setIsDefault] = useState(false);
-  const [_sector, setSector] = useState('retail');
-  const [_features, setFeatures] = useState({});
-  const [_quotas, setQuotas] = useState({});
+
   const [json, setJson] = useState(
     '{\n  "version": "1.0",\n  "name": "Starter Template",\n  "settings": {\n    "site_name": "My Store",\n    "currency": "USD"\n  },\n  "pages": [],\n  "products": []\n}'
   );
@@ -45,7 +43,7 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
       setDescription(data.description || '');
       setPlan(data.plan);
       setIsDefault(data.isDefault);
-      setSector(data.nicheType || 'retail');
+
       // Ensure blueprint is a string for the editor
       const bpString =
         typeof data.blueprint === 'string'

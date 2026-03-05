@@ -4,7 +4,7 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { runTenantMigrations } from './runner.js';
+import { runTenantMigrations } from './runner';
 
 // Mock DB
 const mockDb = {

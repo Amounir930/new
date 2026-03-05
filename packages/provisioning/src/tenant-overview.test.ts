@@ -16,7 +16,7 @@ import {
   updateTenant,
   updateTenantPlan,
   updateTenantStatus,
-} from './tenant-overview.js';
+} from './tenant-overview';
 
 const mockTenants = [
   {

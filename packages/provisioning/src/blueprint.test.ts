@@ -9,14 +9,14 @@ import { adminDb } from '@apex/db';
 import {
   MASTER_FEATURE_LIST,
   MASTER_QUOTA_LIST,
-} from './blueprint/constants.js';
+} from './blueprint/constants';
 import {
   createBlueprint,
   getAllBlueprints,
   getBlueprintById,
   getDefaultBlueprint,
   validateBlueprint,
-} from './blueprint.js';
+} from './blueprint';
 
 // Mock DB
 mock.module('@apex/db', () => ({

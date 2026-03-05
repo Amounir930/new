@@ -12,7 +12,7 @@ import type {
   BlueprintConfig,
   BlueprintContext,
   SeederModule,
-} from '../types.js';
+} from '../types';
 
 export class CoreModule implements SeederModule {
   name = 'core';

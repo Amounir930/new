@@ -10,7 +10,7 @@ import {
   pagesInStorefront,
   tenantConfigInStorefront,
 } from '@apex/db';
-import type { BlueprintTemplate } from './blueprint/types.js';
+import type { BlueprintTemplate } from './blueprint/types';
 
 /**
  * Capture a snapshot of current tenant state

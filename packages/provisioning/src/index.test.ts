@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import * as provisioning from './index.js';
+import * as provisioning from './index';
 
 describe('Provisioning Module Exports', () => {
   it('should export quota service functions', () => {

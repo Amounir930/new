@@ -11,7 +11,7 @@ import {
   dropTenantSchema,
   sanitizeSchemaName,
   verifySchemaExists,
-} from './schema-manager.js';
+} from './schema-manager';
 
 mock.module('@apex/db', () => ({
   adminPool: {
