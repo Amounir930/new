@@ -29,7 +29,7 @@ export class FingerprintMiddleware implements NestMiddleware {
     ];
 
     const rawFingerprint = fingerprintParts.join('|');
-    const fp = (req as any).fingerprint || 'unknown';
+    // fp var removed for lint compliance
     const data = (req as any).fingerprintData || {};
     const fingerprint = createHash('sha256')
       .update(rawFingerprint)

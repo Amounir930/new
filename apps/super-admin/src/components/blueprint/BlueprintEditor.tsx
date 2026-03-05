@@ -31,9 +31,9 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
   const [description, setDescription] = useState('');
   const [plan, setPlan] = useState('free');
   const [isDefault, setIsDefault] = useState(false);
-  const [sector, setSector] = useState('retail'); // Added state
-  const [features, setFeatures] = useState({}); // Added state
-  const [quotas, setQuotas] = useState({}); // Added state
+  const [_sector, setSector] = useState('retail'); // Added state
+  const [_features, setFeatures] = useState({}); // Added state
+  const [_quotas, setQuotas] = useState({}); // Added state
   const [json, setJson] = useState(
     '{\n  "version": "1.0",\n  "name": "Starter Template",\n  "settings": {\n    "site_name": "My Store",\n    "currency": "USD"\n  },\n  "pages": [],\n  "products": []\n}'
   );
@@ -47,7 +47,8 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
       setIsDefault(data.isDefault);
       setSector(data.nicheType || 'retail'); // Added line
 
-      if (data.blueprint) { // Added block
+      if (data.blueprint) {
+        // Added block
         setFeatures(data.blueprint.modules || {});
         setQuotas(data.blueprint.quotas || {});
       }

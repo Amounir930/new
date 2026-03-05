@@ -38,7 +38,7 @@ export class TenantsController {
   constructor(
     @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService
-  ) { }
+  ) {}
 
   @Get()
   async findAll() {

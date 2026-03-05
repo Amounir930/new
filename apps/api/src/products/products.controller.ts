@@ -99,8 +99,12 @@ export class ProductsController {
     // Map localized fields if present
     const mappedData: Partial<InferInsertModel<typeof productsInStorefront>> = {
       ...updateData,
-      basePrice: updateData.basePrice ? String(updateData.basePrice) : undefined,
-      salePrice: updateData.salePrice ? String(updateData.salePrice) : undefined,
+      basePrice: updateData.basePrice
+        ? String(updateData.basePrice)
+        : undefined,
+      salePrice: updateData.salePrice
+        ? String(updateData.salePrice)
+        : undefined,
     };
     if (body.nameAr || body.nameEn) {
       mappedData.name = { ar: body.nameAr || '', en: body.nameEn || '' };

@@ -53,7 +53,9 @@ export async function runTenantMigrations(
         `[Runner] Migration files found: ${files.join(', ')}`
       );
     } catch (e: any) {
-      process.stdout.write(`[Runner] Failed to list migration files: ${String(e)}\n`);
+      process.stdout.write(
+        `[Runner] Failed to list migration files: ${String(e)}\n`
+      );
     }
 
     // 3. Execute migrations
@@ -87,7 +89,9 @@ export async function runTenantMigrations(
           `[Runner] Migration warning: Schema ${schemaName} already has tables. Skipping creation.\n`
         );
       } else {
-        process.stdout.write(`[Runner] Migration failed for ${schemaName}: ${String(e)}\n`);
+        process.stdout.write(
+          `[Runner] Migration failed for ${schemaName}: ${String(e)}\n`
+        );
         throw e;
       }
     }
@@ -100,7 +104,9 @@ export async function runTenantMigrations(
       durationMs,
     };
   } catch (error) {
-    process.stdout.write(`S2 MIGRATION FAILURE for ${schemaName}: ${String(error)}\n`);
+    process.stdout.write(
+      `S2 MIGRATION FAILURE for ${schemaName}: ${String(error)}\n`
+    );
     throw error;
   } finally {
     try {

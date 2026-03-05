@@ -210,7 +210,7 @@ export class EventsWorker implements OnModuleInit, OnModuleDestroy {
   private handlers: Map<string, Array<(event: ApexEvent) => Promise<void>>> =
     new Map();
 
-  constructor(private readonly redisUrl: string) { }
+  constructor(private readonly redisUrl: string) {}
 
   onModuleInit() {
     // S14.7: Dedicated Worker Pattern
@@ -290,7 +290,11 @@ export function createTimestamp(): string {
   return new Date().toISOString();
 }
 
-import { type DynamicModule, Module, type FactoryProvider } from '@nestjs/common';
+import {
+  type DynamicModule,
+  type FactoryProvider,
+  Module,
+} from '@nestjs/common';
 
 @Module({})
 // biome-ignore lint/complexity/noStaticOnlyClass: NestJS module pattern

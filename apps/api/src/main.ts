@@ -11,7 +11,6 @@ import 'reflect-metadata';
 import { AuditService } from '@apex/audit';
 import { env } from '@apex/config';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
-import { type Response as ExpressResponse } from 'express';
 import {
   Logger,
   type LogLevel,

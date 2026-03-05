@@ -21,7 +21,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
   constructor(
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) { }
+  ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
     return !!options.dateRange; // Requires date range
@@ -94,7 +94,8 @@ export class AnalyticsExportStrategy implements ExportStrategy {
           database: {
             tables: ['orders_summary', 'products_performance'],
             rowCount:
-              ((ordersResult as any).rowCount ?? 0) + ((productsResult as any).rowCount ?? 0),
+              ((ordersResult as any).rowCount ?? 0) +
+              ((productsResult as any).rowCount ?? 0),
             format: 'csv',
           },
           assets: {

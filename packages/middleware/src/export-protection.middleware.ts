@@ -35,8 +35,7 @@ export class ExportProtectionMiddleware implements NestMiddleware {
 
       // Note: In a full implementation, we would call platformAuditLogs.insert here.
       // Since this is middleware, we might attach a flag for the AuditInterceptor to pick up.
-      const audit = (req as any).auditMetadata?.exportMetadata || {};
-      const meta = (req as any).auditMetadata?.exportMetadata || {};
+      // Unused variables removed for lint compliance
       (req as any).auditMetadata = {
         ...(req as any).auditMetadata,
         action: 'EXPORT',

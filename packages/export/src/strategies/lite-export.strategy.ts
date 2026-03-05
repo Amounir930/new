@@ -27,7 +27,7 @@ export class LiteExportStrategy implements ExportStrategy {
   constructor(
     private readonly shell: BunShell,
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService
-  ) { }
+  ) {}
 
   async validate(options: ExportOptions): Promise<boolean> {
     const tenants = await adminDb

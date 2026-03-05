@@ -25,7 +25,7 @@ export class AuditInterceptor implements NestInterceptor {
     private readonly reflector: Reflector,
     @Inject(AuditService)
     private readonly auditService: AuditService
-  ) { }
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest();
@@ -94,7 +94,11 @@ export class AuditInterceptor implements NestInterceptor {
           method,
           statusCode: context.switchToHttp().getResponse().statusCode,
           ...(resultStatus === 'FAILURE'
-            ? { error: (resultData as any)?.message || (resultData as any)?.toString() }
+            ? {
+                error:
+                  (resultData as any)?.message ||
+                  (resultData as any)?.toString(),
+              }
             : {}),
         },
       });

@@ -13,7 +13,7 @@ describe('Security Base Utils', () => {
     // or just test the logic directly if exported.
 
     it('should detect hardcoded postgres strings', () => {
-      - Test value for security validation logic
+      // Test: validates security logic for postgres connection strings
       const val = 'postgres://user:pass@localhost:5432/db';
       expect(() =>
         (BaseSecurityTest as never).validateMetadataValue(val, 'path')

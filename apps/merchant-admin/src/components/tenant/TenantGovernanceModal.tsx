@@ -31,10 +31,11 @@ function FeatureItem({
 }: FeatureItemProps) {
   return (
     <div
-      className={`flex items-center justify-between p-4 rounded-lg border transition-all hover:shadow-md ${state.enabled
+      className={`flex items-center justify-between p-4 rounded-lg border transition-all hover:shadow-md ${
+        state.enabled
           ? 'border-primary/20 bg-primary/[0.02]'
           : 'bg-muted/30 grayscale-[0.5]'
-        }`}
+      }`}
     >
       <div className="space-y-1">
         <div className="flex items-center space-x-2">
@@ -55,8 +56,9 @@ function FeatureItem({
       <Button
         size="sm"
         variant={state.enabled ? 'default' : 'outline'}
-        className={`h-8 w-24 transition-all ${state.enabled ? 'bg-green-600 hover:bg-green-700' : 'hover:bg-muted'
-          }`}
+        className={`h-8 w-24 transition-all ${
+          state.enabled ? 'bg-green-600 hover:bg-green-700' : 'hover:bg-muted'
+        }`}
         onClick={onToggle}
         disabled={saving}
       >

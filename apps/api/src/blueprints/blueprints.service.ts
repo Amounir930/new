@@ -15,7 +15,7 @@ export class BlueprintsService {
   private readonly logger = new Logger(BlueprintsService.name);
   private db = adminDb;
 
-  constructor(private readonly audit: AuditService) { }
+  constructor(private readonly audit: AuditService) {}
 
   async findAll(): Promise<BlueprintRecord[]> {
     return (await this.db

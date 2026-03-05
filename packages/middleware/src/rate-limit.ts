@@ -51,7 +51,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -85,7 +85,7 @@ export class RateLimitGuard implements CanActivate {
       (customConfig?.ttl ? customConfig.ttl * 1000 : tierConfig.windowMs);
 
     // S6 FIX: Include tenantId in rate limit key for proper tenant isolation
-    const tenantContext = (request as any).tenantContext;
+    // tenantContext var removed for lint compliance
     const tenantId = (request as any).tenantContext?.tenantId || 'system';
     const key = `ratelimit:${tenantId}:${identifier}`;
     const now = Date.now();
@@ -280,4 +280,4 @@ import { QuotaInterceptor } from './quota.interceptor.js';
     FraudGuard,
   ],
 })
-export class RateLimitModule { }
+export class RateLimitModule {}

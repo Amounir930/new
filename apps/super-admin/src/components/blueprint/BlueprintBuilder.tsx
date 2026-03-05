@@ -1,5 +1,6 @@
 'use client';
 
+import { MASTER_FEATURE_LIST, MASTER_QUOTA_LIST } from '@apex/provisioning';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -23,10 +24,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { apiFetch } from '@/lib/api';
-import {
-  MASTER_FEATURE_LIST,
-  MASTER_QUOTA_LIST,
-} from '@apex/provisioning';
 
 const SECTORS = [
   'retail',

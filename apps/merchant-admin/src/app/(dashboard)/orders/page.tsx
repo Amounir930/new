@@ -95,12 +95,13 @@ export default function OrdersPage() {
                   </TableCell>
                   <TableCell>
                     <div
-                      className={`inline-flex px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${order.status === 'shipped'
-                        ? 'bg-green-100 text-green-700'
-                        : order.status === 'processing'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-amber-100 text-amber-700'
-                        }`}
+                      className={`inline-flex px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${
+                        order.status === 'shipped'
+                          ? 'bg-green-100 text-green-700'
+                          : order.status === 'processing'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-amber-100 text-amber-700'
+                      }`}
                     >
                       {order.status}
                     </div>

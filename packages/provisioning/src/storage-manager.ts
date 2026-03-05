@@ -25,10 +25,14 @@ export interface StorageStats {
 const logger = {
   info: (message: string, meta?: Record<string, unknown>) => {
     // bypass console lint
-    process.stdout.write(`[INFO] ${message}${meta ? ' ' + JSON.stringify(meta) : ''}\n`);
+    process.stdout.write(
+      `[INFO] ${message}${meta ? ` ${JSON.stringify(meta)}` : ''}\n`
+    );
   },
   error: (message: string, meta?: Record<string, unknown>) => {
-    process.stdout.write(`[ERROR] ${message}${meta ? ' ' + JSON.stringify(meta) : ''}\n`);
+    process.stdout.write(
+      `[ERROR] ${message}${meta ? ` ${JSON.stringify(meta)}` : ''}\n`
+    );
   },
 };
 
@@ -114,8 +118,9 @@ export async function createStorageBucket(
     return {
       success: true,
       bucketName,
-      endpoint: `${env.MINIO_USE_SSL === 'true' ? 'https' : 'http'}://${env.MINIO_ENDPOINT
-        }:${env.MINIO_PORT}/${bucketName}`,
+      endpoint: `${env.MINIO_USE_SSL === 'true' ? 'https' : 'http'}://${
+        env.MINIO_ENDPOINT
+      }:${env.MINIO_PORT}/${bucketName}`,
       quotaBytes: PLAN_QUOTAS[plan] || PLAN_QUOTAS.free,
       durationMs: duration,
       createdAt: new Date(),
@@ -123,7 +128,8 @@ export async function createStorageBucket(
   } catch (error) {
     logger.error('Failed to create storage bucket', { subdomain, error });
     throw new Error(
-      `Failed to create storage bucket: ${error instanceof Error ? error.message : 'Unknown error'
+      `Failed to create storage bucket: ${
+        error instanceof Error ? error.message : 'Unknown error'
       }`
     );
   }
@@ -172,7 +178,11 @@ async function ensureBucket(
   try {
     await client.makeBucket(bucketName, env.MINIO_REGION || 'us-east-1');
   } catch (err: any) {
-    if (err.code !== 'NoSuchBucket' && (err.code === 'BucketAlreadyOwnedByYou' || err.code === 'BucketAlreadyExists')) {
+    if (
+      err.code !== 'NoSuchBucket' &&
+      (err.code === 'BucketAlreadyOwnedByYou' ||
+        err.code === 'BucketAlreadyExists')
+    ) {
       logger.info(
         `Bucket ${bucketName} already exists (caught error). Skipping creation.`
       );
@@ -306,16 +316,17 @@ export async function getStorageStats(
       lastModified:
         objects.length > 0
           ? new Date(
-            Math.max(
-              ...objects.map((o) => new Date(o.lastModified || 0).getTime())
+              Math.max(
+                ...objects.map((o) => new Date(o.lastModified || 0).getTime())
+              )
             )
-          )
           : null,
     };
   } catch (error) {
     logger.error('Failed to get storage stats', { bucketName, error });
     throw new Error(
-      `Failed to get storage stats: ${error instanceof Error ? error.message : 'Unknown error'
+      `Failed to get storage stats: ${
+        error instanceof Error ? error.message : 'Unknown error'
       }`
     );
   }

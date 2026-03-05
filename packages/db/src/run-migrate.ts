@@ -17,8 +17,8 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import pg from 'pg';
 import { env } from '@apex/config';
+import pg from 'pg';
 
 const { Client } = pg;
 

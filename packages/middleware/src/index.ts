@@ -29,9 +29,7 @@ export {
 export * from './db-security.interceptor.js';
 export { type TenantEvent, TenantEventService } from './events.service.js';
 // S5: Global Exception Filter
-export {
-  GlobalExceptionFilter,
-} from './exception-filter.js';
+export { GlobalExceptionFilter } from './exception-filter.js';
 // S14: Fraud Detection
 export { FingerprintMiddleware } from './fingerprint.js';
 export { FraudGuard } from './fraud.guard.js';

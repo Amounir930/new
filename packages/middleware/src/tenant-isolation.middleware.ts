@@ -81,7 +81,9 @@ async function validateTenant(
     };
   } catch (error) {
     if (error instanceof UnauthorizedException) throw error;
-    process.stdout.write(`S2 Warning: Subdomain resolving on root API path: ${identifier || 'none'}\n`);
+    process.stdout.write(
+      `S2 Warning: Subdomain resolving on root API path: ${identifier || 'none'}\n`
+    );
     throw new UnauthorizedException('Tenant validation failed');
   }
 }
@@ -325,8 +327,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     } catch (error) {
       if (!cleanupRegistered) {
         // Only cleanup here if it wasn't registered to the response lifecycle
-        await client.query('ROLLBACK').catch(() => { });
-        await client.query('RESET ALL; DISCARD ALL;').catch(() => { });
+        await client.query('ROLLBACK').catch(() => {});
+        await client.query('RESET ALL; DISCARD ALL;').catch(() => {});
         client.release();
       }
 
@@ -361,7 +363,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
       try {
         // S2: Robust cleanup - ROLLBACK ensures we aren't stuck in a failed transaction
-        await client.query('ROLLBACK').catch(() => { });
+        await client.query('ROLLBACK').catch(() => {});
         await client.query(`
           RESET app.current_tenant;
           RESET app.role;
