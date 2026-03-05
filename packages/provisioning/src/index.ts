@@ -7,6 +7,7 @@ export {
   MASTER_FEATURE_LIST,
   MASTER_QUOTA_LIST,
 } from './blueprint/constants';
+export type { MasterFeature } from './blueprint/constants';
 export { validateBlueprint } from './blueprint/executor'; // Explicit export
 export * from './blueprint/types'; // Export types for BlueprintTemplate
 export * from './blueprint';

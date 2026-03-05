@@ -44,6 +44,19 @@ export const MASTER_FEATURE_LIST = [
   'smartFilters',
   'toast',
   'newsletter',
+  'brands',
+  'smartCollections',
+  'variants',
+  'metafields',
+  'inventory',
+  'coupons',
+  'analytics',
+  'seo',
+  'apiAccess',
+  'multilingual',
+  'multicurrency',
+  'pos',
+  'b2b',
 ] as const;
 
 export type MasterFeature = (typeof MASTER_FEATURE_LIST)[number];
@@ -55,5 +68,10 @@ export const MASTER_QUOTA_LIST = [
   'max_products',
   'max_orders',
   'max_pages',
+  'max_staff',
+  'max_categories',
+  'max_coupons',
   'storage_limit_gb',
+  'api_rate_limit',
 ] as const;
+
