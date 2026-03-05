@@ -160,7 +160,7 @@ services:
     environment:
       NODE_ENV: production
       MINIO_ENDPOINT: apex-minio
-      PGHOST: apex-postgres
+      PGHOST: apex-pgbouncer
       DB_SSL: "true"
       DB_SSL_OPTIONAL: "false"
       DATABASE_URL: "postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-pgbouncer:5432/${POSTGRES_DB:-apex_v2}?sslmode=require"
@@ -170,6 +170,8 @@ services:
       PGDATABASE: ${POSTGRES_DB:-apex_v2}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       OTEL_SERVICE_NAME: apex-api
+      SUPER_ADMIN_EMAIL: 'admin@60sec.shop'
+      SUPER_ADMIN_PASSWORD: '$$2b$$12$$SxsPEOTZPcNdjuYKkAr5E.8xTqb04bauK.gjBl.5TuaNzbVoZFGpC'
     networks:
       - apex-internal
       - apex-data
@@ -238,7 +240,7 @@ services:
       NODE_ENV: production
       ENABLE_WORKERS: "true"
       MINIO_ENDPOINT: apex-minio
-      PGHOST: apex-postgres
+      PGHOST: apex-pgbouncer
       DB_SSL: "true"
       DB_SSL_OPTIONAL: "false"
       DATABASE_URL: "postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-pgbouncer:5432/${POSTGRES_DB:-apex_v2}?sslmode=require"
@@ -248,6 +250,8 @@ services:
       PGDATABASE: ${POSTGRES_DB:-apex_v2}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       OTEL_SERVICE_NAME: apex-worker
+      SUPER_ADMIN_EMAIL: 'admin@60sec.shop'
+      SUPER_ADMIN_PASSWORD: '$$2b$$12$$SxsPEOTZPcNdjuYKkAr5E.8xTqb04bauK.gjBl.5TuaNzbVoZFGpC'
     command: ["/bin/sh", "-c", "bun $(find dist -name worker.js | head -n 1)"]
     networks:
       - apex-internal
@@ -597,7 +601,7 @@ services:
       - AUTH_TYPE=scram-sha-256
       - ADMIN_USERS=${PGBOUNCER_ADMIN_USERS:-postgres,apex}
       - CLIENT_TLS_SSLMODE=require
-      - SERVER_TLS_SSLMODE=require
+      - SERVER_TLS_SSLMODE=prefer
       - CLIENT_TLS_CERT_FILE=/etc/pgbouncer/certs/server.crt
       - CLIENT_TLS_KEY_FILE=/etc/pgbouncer/certs/server.key
     volumes:
