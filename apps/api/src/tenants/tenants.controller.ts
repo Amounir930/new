@@ -38,11 +38,16 @@ export class TenantsController {
   constructor(
     @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService
-  ) {}
+  ) { }
 
   @Get()
   async findAll() {
-    return adminDb.select().from(tenantsInGovernance);
+    try {
+      return await adminDb.select().from(tenantsInGovernance);
+    } catch (error: any) {
+      console.error('[TENANT_FIND_ALL_ERROR]', error);
+      throw error;
+    }
   }
 
   @Get(':id/features')

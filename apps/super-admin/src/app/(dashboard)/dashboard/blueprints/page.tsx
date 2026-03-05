@@ -100,11 +100,10 @@ export default function BlueprintsPage() {
             >
               <div className="absolute top-0 right-0 p-4">
                 <span
-                  className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${
-                    bp.status === 'active'
+                  className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${bp.status === 'active'
                       ? 'bg-emerald-500/10 text-emerald-400'
                       : 'bg-amber-500/10 text-amber-400'
-                  }`}
+                    }`}
                 >
                   {bp.status}
                 </span>
@@ -160,15 +159,16 @@ export default function BlueprintsPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link href={`/dashboard/blueprints/${bp.id}`}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-slate-500 hover:text-indigo-400 rounded-lg"
-                    >
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-500 hover:text-indigo-400 rounded-lg"
+                  >
+                    <Link href={`/dashboard/blueprints/${bp.id}`}>
                       <Edit3 className="w-4 h-4" />
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </div>
             </Card>

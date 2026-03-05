@@ -123,13 +123,12 @@ export default function SuperAdminDashboard() {
                 <stat.icon className="w-6 h-6 text-indigo-400" />
               </div>
               <span
-                className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest ${
-                  loading
+                className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest ${loading
                     ? 'animate-pulse bg-slate-500/20'
                     : stat.changeType === 'increase'
                       ? 'bg-emerald-500/10 text-emerald-400'
                       : 'bg-slate-500/10 text-slate-400'
-                }`}
+                  }`}
               >
                 {stat.change}
               </span>
@@ -155,16 +154,17 @@ export default function SuperAdminDashboard() {
               <div className="w-2 h-8 bg-indigo-500 rounded-full" />
               Infrastructure Health
             </h2>
-            <Link href="/dashboard/infra">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-slate-500 hover:text-white group"
-              >
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="text-slate-500 hover:text-white group"
+            >
+              <Link href="/dashboard/infra">
                 Full Monitor{' '}
                 <ArrowUpRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
           <div className="space-y-4">
             {loading ? (
@@ -186,11 +186,10 @@ export default function SuperAdminDashboard() {
                   <div className="flex items-center gap-6">
                     <div className="h-1.5 w-24 bg-slate-800 rounded-full overflow-hidden hidden sm:block">
                       <div
-                        className={`h-full rounded-full transition-all duration-1000 ${
-                          Number.parseInt(node.load, 10) > 80
+                        className={`h-full rounded-full transition-all duration-1000 ${Number.parseInt(node.load, 10) > 80
                             ? 'bg-amber-500'
                             : 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]'
-                        }`}
+                          }`}
                         style={{ width: node.load }}
                       />
                     </div>
@@ -199,11 +198,10 @@ export default function SuperAdminDashboard() {
                         className={`w-1.5 h-1.5 rounded-full ${node.status === 'Healthy' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-amber-400'}`}
                       />
                       <span
-                        className={`text-[10px] font-black uppercase tracking-widest ${
-                          node.status === 'Healthy'
+                        className={`text-[10px] font-black uppercase tracking-widest ${node.status === 'Healthy'
                             ? 'text-emerald-400'
                             : 'text-amber-400'
-                        }`}
+                          }`}
                       >
                         {node.status}
                       </span>
