@@ -214,16 +214,18 @@ export async function deleteStorageBucket(
     if (force) {
       // S15 FIX: Comprehensive bucket clearing (including versions & delete markers)
       // Protocol S2: Ensure full cleanup before bucket removal
-      // Note: Using individual removeObject calls to satisfy SDK type constraints
+      // Workaround: The minio SDK type definitions for listObjects lack the 4th options argument
+      // but the implementation supports it for version listing. Using index access to bypass arity check.
       
-      const stream = client.listObjects(bucketName, '', true, {
+      const stream = (client as any).listObjects(bucketName, '', true, {
         includeVersion: true,
-      } as any); // Cast only as last resort for undocumented but present SDK features
+      });
 
       for await (const obj of stream) {
         if (obj.name) {
+          // Use versionId if present (from includeVersion: true)
           await client.removeObject(bucketName, obj.name, {
-            versionId: obj.versionId,
+            versionId: (obj as any).versionId,
           });
         }
       }
