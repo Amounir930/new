@@ -21,27 +21,20 @@ export class CoreModule implements SeederModule {
     if (adminEmail && storeId) {
       const roleId = crypto.randomUUID();
 
-      await db
-        .insert(staffRolesInStorefront)
-        .values({
-          id: roleId,
-          tenantId: storeId,
-          name: 'Owner',
-          isSystem: true,
-          permissions: { scope: '*' },
-        })
-        .onConflictDoNothing();
+      // S2 Protocol: Use raw SQL to respect search_path and avoid schema prefixes
+      const { sql } = await import('drizzle-orm');
 
-      await db
-        .insert(staffMembersInStorefront)
-        .values({
-          tenantId: storeId,
-          userId: crypto.randomUUID(), // Placeholder for external auth logic
-          roleId,
-          email: adminEmail,
-          isActive: true,
-        })
-        .onConflictDoNothing();
+      await db.execute(sql`
+        INSERT INTO "staff_roles" ("id", "tenant_id", "name", "is_system", "permissions")
+        VALUES (${roleId}, ${storeId}, 'Owner', true, ${JSON.stringify({ scope: '*' })})
+        ON CONFLICT DO NOTHING
+      `);
+
+      await db.execute(sql`
+        INSERT INTO "staff_members" ("tenant_id", "user_id", "role_id", "email", "is_active")
+        VALUES (${storeId}, ${crypto.randomUUID()}, ${roleId}, ${JSON.stringify(adminEmail)}, true)
+        ON CONFLICT DO NOTHING
+      `);
     }
 
     // 2. Initial Settings (S21 Protocol)

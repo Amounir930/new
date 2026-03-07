@@ -212,16 +212,22 @@ export async function deleteStorageBucket(
 
   try {
     if (force) {
-      const objectsList: string[] = [];
-      const stream = client.listObjects(bucketName, '', true);
-      for await (const obj of stream) {
-        if (obj.name) objectsList.push(obj.name);
-      }
+      // S15 FIX: Comprehensive bucket clearing (including versions & delete markers)
+      // Protocol S2: Ensure full cleanup before bucket removal
+      // Note: Using individual removeObject calls to satisfy SDK type constraints
+      
+      const stream = client.listObjects(bucketName, '', true, {
+        includeVersion: true,
+      } as any); // Cast only as last resort for undocumented but present SDK features
 
-      if (objectsList.length > 0) {
-        await client.removeObjects(bucketName, objectsList);
-        logger.info(`Cleared ${objectsList.length} objects from ${bucketName}`);
+      for await (const obj of stream) {
+        if (obj.name) {
+          await client.removeObject(bucketName, obj.name, {
+            versionId: obj.versionId,
+          });
+        }
       }
+      logger.info(`Force-cleared objects/versions from ${bucketName}`);
     }
 
     await client.removeBucket(bucketName);
@@ -229,6 +235,10 @@ export async function deleteStorageBucket(
     return true;
   } catch (error) {
     if (error instanceof Error && error.message.includes('not empty')) {
+      logger.error('Bucket is NOT empty after force-clear attempt', {
+        bucketName,
+        error,
+      });
       throw error;
     }
     logger.error('Failed to delete bucket', { bucketName, error });
