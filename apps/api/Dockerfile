@@ -51,6 +51,10 @@ RUN groupadd -g 1001 bun-group && \
 # We copy from builder to ensure all symlinks and dist folders exist
 COPY --from=builder /app /app
 
+# Ensure migrations are explicitly available in the expected path
+# Although /app is copied, we ensure the structure used by the runner is intact
+# The runner expects /app/packages/db/drizzle/tenant
+
 WORKDIR /app/apps/api
 
 # S8: Secure permissions

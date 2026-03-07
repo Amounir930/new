@@ -64,7 +64,14 @@
   },
   "overrides": [
     {
-      "includes": ["**/.next/**", "**/.turbo/**", "**/dist/**", "**/env.d.ts", "**/routes.d.ts"],
+      "includes": [
+        "**/.next/**",
+        "**/.turbo/**",
+        "**/dist/**",
+        "**/env.d.ts",
+        "**/routes.d.ts",
+        "**/next-env.d.ts"
+      ],
       "formatter": {
         "enabled": false
       },

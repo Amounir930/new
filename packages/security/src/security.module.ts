@@ -1,5 +1,5 @@
-import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@apex/config';
+import { Global, Module } from '@nestjs/common';
 import { EncryptionService } from './encryption';
 
 /**

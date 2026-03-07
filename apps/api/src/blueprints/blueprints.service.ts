@@ -4,12 +4,11 @@ import { adminDb, eq, onboardingBlueprintsInGovernance } from '@apex/db';
 import type { BlueprintRecord, BlueprintTemplate } from '@apex/provisioning';
 import { createSnapshot, validateBlueprint } from '@apex/provisioning';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-
-import { blueprintStructureSchema } from './dto/blueprint.dto';
 import type {
   CreateBlueprintDto,
   UpdateBlueprintDto,
 } from './dto/blueprint.dto';
+import { blueprintStructureSchema } from './dto/blueprint.dto';
 
 @Injectable()
 export class BlueprintsService {
@@ -95,9 +94,7 @@ export class BlueprintsService {
         // S3: Strict validation with specialized schema
         const result = blueprintStructureSchema.safeParse(dto.blueprint);
         if (!result.success) {
-          throw new Error(
-            `Invalid blueprint payload: ${result.error.message}`
-          );
+          throw new Error(`Invalid blueprint payload: ${result.error.message}`);
         }
 
         validateBlueprint(result.data as BlueprintTemplate);

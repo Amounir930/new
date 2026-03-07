@@ -42,7 +42,7 @@ export async function runTenantMigrations(
       new URL('.', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'),
       '..' + '/..' + '/..'
     );
-    const migrationsPath = path.join(rootDir, 'db/drizzle/tenant');
+    const migrationsPath = path.join(rootDir, 'packages/db/drizzle/tenant');
 
     process.stdout.write(`[Runner] Migrations path: ${migrationsPath}`);
     try {

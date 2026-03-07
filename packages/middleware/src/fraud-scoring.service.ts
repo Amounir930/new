@@ -57,10 +57,12 @@ export class FraudScoringService {
     score += botResult.score;
     if (botResult.reason) reasons.push(botResult.reason);
 
-    // 4. Payment Specific Velocity (S14)
-    const paymentVelocity = await this.checkPaymentVelocity(fingerprint);
-    score += paymentVelocity.score;
-    if (paymentVelocity.reason) reasons.push(paymentVelocity.reason);
+    // 4. Payment Specific Velocity (S14) - Only for payment/subscription paths
+    if (this.isPaymentPath(req)) {
+      const paymentVelocity = await this.checkPaymentVelocity(fingerprint);
+      score += paymentVelocity.score;
+      if (paymentVelocity.reason) reasons.push(paymentVelocity.reason);
+    }
 
     return {
       score: Math.min(score, 1000),
@@ -160,6 +162,15 @@ export class FraudScoringService {
     }
 
     return null;
+  }
+
+  private isPaymentPath(req: unknown): boolean {
+    const url = (req as { url?: string }).url || '';
+    return (
+      url.includes('payment') ||
+      url.includes('subscription') ||
+      url.includes('checkout')
+    );
   }
 
   private checkBotPatterns(req: unknown): FraudCheckResult {
