@@ -218,14 +218,21 @@ export async function deleteStorageBucket(
       logger.info(`Force-clearing bucket: ${bucketName} (removing all versions, markers, and uploads)...`);
       
       // 1. Remove all object versions and delete markers
-      const versionStream = (client as any).listObjectVersions(bucketName, '', true);
+      // S21: Use custom interface to expose methods missing in specific SDK versions without using 'as any'
+      interface MinioExtendedClient extends Minio.Client {
+        listObjectVersions(bucket: string, prefix: string, recursive: boolean): any;
+        listIncompleteUploads(bucket: string, prefix: string, recursive: boolean): any;
+      }
+      const extendedClient = client as unknown as MinioExtendedClient;
+      
+      const versionStream = extendedClient.listObjectVersions(bucketName, '', true);
 
       let vCount = 0;
       for await (const obj of versionStream) {
         if (obj.name) {
           vCount++;
           await client.removeObject(bucketName, obj.name, {
-            versionId: (obj as any).versionId,
+            versionId: (obj as { versionId?: string }).versionId,
           });
         }
       }
@@ -233,7 +240,7 @@ export async function deleteStorageBucket(
 
       // 2. Remove all incomplete multipart uploads
       // MinIO SDK listIncompleteUploads returns a stream
-      const uploadStream = (client as any).listIncompleteUploads(bucketName, '', true);
+      const uploadStream = extendedClient.listIncompleteUploads(bucketName, '', true);
       let uCount = 0;
       for await (const upload of uploadStream) {
         if (upload.key) {

@@ -24,9 +24,8 @@ export const ordersHandlers = [
   // GET /api/orders/:id - Get order details
   http.get(`${BASE_URL}/orders/:id`, ({ params }) => {
     const { id } = params;
-    const isString = (s: unknown): s is string => typeof s === 'string';
     const order = createMockOrder({
-      id: isString(id) ? id : String(id),
+      id: typeof id === 'string' ? id : String(id),
     });
 
     return HttpResponse.json({ order });

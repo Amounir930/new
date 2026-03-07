@@ -29,7 +29,7 @@ export const productsHandlers = [
     const { id } = params;
     const isString = (s: unknown): s is string => typeof s === 'string';
     const product = createMockProduct({
-      id: isString(id) ? id : String(id), // Replaced (id as any) with String(id)
+      id: typeof id === 'string' ? id : String(id),
     });
 
     return HttpResponse.json({ product });

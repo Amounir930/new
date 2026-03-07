@@ -70,9 +70,9 @@ export function TenantList() {
 
   const filteredTenants = tenants.filter((t) => {
     const matchesSearch =
-      (t.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-      (t.subdomain ?? '').toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+      (t?.name || '').toLowerCase().includes((search || '').toLowerCase()) ||
+      (t?.subdomain || '').toLowerCase().includes((search || '').toLowerCase());
+    const matchesStatus = statusFilter === 'all' || t?.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 

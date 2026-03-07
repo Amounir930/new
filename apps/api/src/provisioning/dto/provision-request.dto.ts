@@ -7,7 +7,7 @@ import { z } from 'zod';
 import {
   type BlueprintStructure,
   blueprintStructureSchema,
-} from '../../blueprints';
+} from '../../blueprints/dto/blueprint.dto';
 
 /**
  * S21: Provision Request Schema Interface
