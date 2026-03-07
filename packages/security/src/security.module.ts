@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { ConfigModule } from '@apex/config';
 import { EncryptionService } from './encryption';
 
 /**
@@ -7,6 +8,7 @@ import { EncryptionService } from './encryption';
  */
 @Global()
 @Module({
+  imports: [ConfigModule],
   providers: [EncryptionService],
   exports: [EncryptionService],
 })

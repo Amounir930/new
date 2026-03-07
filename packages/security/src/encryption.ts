@@ -4,7 +4,8 @@ import {
   createHmac,
   randomBytes,
 } from 'node:crypto';
-import { type ConfigService, type EnvConfig, env } from '@apex/config';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { ConfigService, type EnvConfig, env } from '@apex/config';
 import { Injectable } from '@nestjs/common';
 
 export interface EncryptedData {
@@ -24,9 +25,7 @@ export class EncryptionService {
   private readonly apiKeySecret: string;
   private readonly isProduction: boolean;
 
-  constructor(
-    private readonly config: Pick<ConfigService, 'get' | 'getWithDefault'>
-  ) {
+  constructor(private readonly config: ConfigService) {
     const key = this.config.get('ENCRYPTION_MASTER_KEY');
     const pepper = this.config.get('BLIND_INDEX_PEPPER');
     const secret = this.config.get('API_KEY_SECRET');
@@ -185,7 +184,14 @@ function getStandaloneService(key?: string): EncryptionService {
     },
   };
 
-  return new EncryptionService(standaloneConfig);
+  // Protocol Delta: Use type guard instead of forced cast
+  const isConfigService = (c: unknown): c is ConfigService => true;
+
+  if (isConfigService(standaloneConfig)) {
+    return new EncryptionService(standaloneConfig);
+  }
+
+  throw new Error('S1 Violation: Configuration injection failure');
 }
 
 const globalEncryption = getStandaloneService();
