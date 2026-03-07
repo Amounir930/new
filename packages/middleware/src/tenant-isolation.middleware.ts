@@ -16,6 +16,18 @@ import {
   type TenantContext,
   tenantStorage,
 } from './connection-context';
+import { TenantCacheService } from './tenant-cache.service';
+import { Inject } from '@nestjs/common';
+
+export interface AuditService {
+  log(data: {
+    action: string;
+    entityType: string;
+    entityId: string;
+    metadata?: Record<string, unknown>;
+    severity?: 'INFO' | 'WARNING' | 'CRITICAL' | 'SECURITY_ALERT';
+  }): Promise<void>;
+}
 
 /**
  * 🛡️ Protocol Delta Guard: Safe type assertion for Drizzle executors
@@ -110,6 +122,11 @@ async function validateTenant(
 
 @Injectable()
 export class TenantIsolationMiddleware implements NestMiddleware {
+  constructor(
+    @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
+    private readonly cache: TenantCacheService
+  ) {}
+
   async use(req: TenantRequest, res: Response, next: NextFunction) {
     try {
       const rawHost = req.headers.host || '';
@@ -149,8 +166,14 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         identifier = resolvedId;
       }
 
-      // 5. Tenant Validation
-      const baseContext = await validateTenant(identifier);
+      // 5. Tenant Validation (with Redis Caching)
+      let baseContext = await this.cache.getTenant(identifier);
+      
+      if (!baseContext) {
+        baseContext = await validateTenant(identifier);
+        await this.cache.setTenant(identifier, baseContext);
+      }
+      
       if (!this.checkTenantStatus(baseContext, req, res)) return;
 
       // 6. Suspension Check (Steel Control)

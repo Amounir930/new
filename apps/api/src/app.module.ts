@@ -15,6 +15,7 @@ import {
   QuotaInterceptor,
   RateLimitModule,
   TenantIsolationMiddleware,
+  TenantCacheService,
 } from '@apex/middleware';
 import {
   type MiddlewareConsumer,
@@ -80,6 +81,7 @@ import { TenantsModule } from './tenants/tenants.module';
       provide: APP_INTERCEPTOR,
       useClass: QuotaInterceptor,
     },
+    TenantCacheService,
   ],
   controllers: [
     AppController,

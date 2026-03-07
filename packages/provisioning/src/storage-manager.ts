@@ -215,6 +215,8 @@ export async function deleteStorageBucket(
       // S15 FIX: Comprehensive bucket clearing (including versions & delete markers)
       // Protocol S2: Ensure full cleanup before bucket removal
       
+      logger.info(`Force-clearing bucket: ${bucketName} (removing all versions)...`);
+      
       const stream = (client as any).listObjects(bucketName, '', true, {
         includeVersion: true,
       });
@@ -223,6 +225,7 @@ export async function deleteStorageBucket(
       for await (const obj of stream) {
         if (obj.name) {
           count++;
+          // S15: Pass versionId if present to ensure the specific version/marker is deleted
           await client.removeObject(bucketName, obj.name, {
             versionId: (obj as any).versionId,
           });

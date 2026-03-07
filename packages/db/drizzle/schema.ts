@@ -3988,7 +3988,7 @@ export const tenantsInGovernance = governance.table(
     check('chk_ui_config_size', sql`pg_column_size(ui_config) <= 204800`),
     check(
       'subdomain_safety_check',
-      sql`(subdomain ~* '^[a-z0-9](-?[a-z0-9])*$'::text) AND (subdomain <> ALL (ARRAY['admin'::text, 'api'::text, 'app'::text, 'dev'::text, 'test'::text, 'www'::text, 'portal'::text, 'apex'::text])) AND ((length(subdomain) >= 3) AND (length(subdomain) <= 63))`
+      sql`(subdomain ~* '^[a-z0-9](-?[a-z0-9])*$'::text) AND (subdomain <> ALL (ARRAY['admin'::text, 'api'::text, 'app'::text, 'dev'::text, 'www'::text, 'portal'::text, 'apex'::text])) AND ((length(subdomain) >= 3) AND (length(subdomain) <= 63))`
     ),
     check(
       'check_owner_email_encrypted',

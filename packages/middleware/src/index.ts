@@ -82,6 +82,7 @@ export {
   type TenantRequest,
   TenantScopedGuard,
 } from './tenant-isolation.middleware';
+export { TenantCacheService } from './tenant-cache.service';
 export {
   extractTenantFromHeader,
   extractTenantFromHost,
