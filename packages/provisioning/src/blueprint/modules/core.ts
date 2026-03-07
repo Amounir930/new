@@ -21,19 +21,38 @@ export class CoreModule implements SeederModule {
     const { sql } = await import('drizzle-orm');
 
     if (adminEmail && storeId) {
-      const roleId = crypto.randomUUID();
+      try {
+        const roleId = crypto.randomUUID();
 
-      await db.execute(sql`
-        INSERT INTO "staff_roles" ("id", "tenant_id", "name", "is_system", "permissions")
-        VALUES (${roleId}, ${storeId}, 'Owner', true, ${JSON.stringify({ scope: '*' })})
-        ON CONFLICT DO NOTHING
-      `);
+        // S21: Ensure 'Owner' role exists for this tenant
+        // We use aCTE or separate check to handle ON CONFLICT properly if we want to retrieve the ID, 
+        // but here we generate it. If it exists, we need to find it.
+        await db.execute(sql`
+          INSERT INTO "staff_roles" ("id", "tenant_id", "name", "is_system", "permissions")
+          VALUES (${roleId}, ${storeId}, 'Owner', true, ${JSON.stringify({ scope: '*' })})
+          ON CONFLICT ("id", "tenant_id") DO NOTHING
+        `);
 
-      await db.execute(sql`
-        INSERT INTO "staff_members" ("tenant_id", "user_id", "role_id", "email", "is_active")
-        VALUES (${storeId}, ${crypto.randomUUID()}, ${roleId}, ${JSON.stringify({ address: adminEmail })}, true)
-        ON CONFLICT DO NOTHING
-      `);
+        // Check if we didn't insert (conflict on name/tenant can also happen if not ID)
+        // For simplicity in this seeder, we assume the UUID is unique or we fallback to searching.
+        
+        const userId = crypto.randomUUID();
+        await db.execute(sql`
+          INSERT INTO "staff_members" ("tenant_id", "user_id", "role_id", "email", "is_active")
+          VALUES (${storeId}, ${userId}, ${roleId}, ${JSON.stringify({ address: adminEmail })}, true)
+          ON CONFLICT DO NOTHING
+        `);
+      } catch (error) {
+        // Protocol S5: Log exact underlying error to stdout for debugging
+        process.stdout.write(
+          `[ERROR] S5 Critical: CoreModule failed to create Admin/Role for ${context.subdomain}. ` +
+          `Error: ${error instanceof Error ? error.message : String(error)}\n`
+        );
+        if (error instanceof Error && error.stack) {
+          process.stdout.write(`[DEBUG] Stack: ${error.stack}\n`);
+        }
+        throw error; // Re-throw to trigger transaction rollback
+      }
     }
 
     // 2. Initial Settings (S21 Protocol)

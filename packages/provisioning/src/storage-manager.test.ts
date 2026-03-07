@@ -12,7 +12,7 @@ import {
 const mockMinioClient: Mocked<MinioMock> = MockFactory.createMinioClient();
 
 interface ListObjectsMock {
-  toArray: Mock<() => Promise<any[]>>;
+  toArray?: Mock<() => Promise<any[]>>;
   [Symbol.asyncIterator](): AsyncGenerator<any, void, unknown>;
 }
 
@@ -125,17 +125,34 @@ describe('StorageManager', () => {
 
     it('should delete non-empty bucket if force is true', async () => {
       mockMinioClient.bucketExists.mockResolvedValueOnce(true);
-      mockMinioClient.listObjects.mockReturnValue({
-        toArray: mock().mockResolvedValue([]),
+      
+      // Setup versions/markers
+      mockMinioClient.listObjectVersions.mockReturnValue({
         [Symbol.asyncIterator]: async function* () {
-          yield { name: 'file.txt' };
+          yield { name: 'file.txt', versionId: 'v1' };
+          yield { name: 'file.txt', versionId: 'v2' }; // Represents a delete marker or old version
         },
       } as ListObjectsMock);
-      mockMinioClient.removeObjects.mockResolvedValueOnce(undefined);
+
+      // Setup incomplete uploads
+      mockMinioClient.listIncompleteUploads.mockReturnValue({
+        [Symbol.asyncIterator]: async function* () {
+          yield { key: 'large-file.zip' };
+        },
+      } as ListObjectsMock);
+
+      mockMinioClient.removeObject.mockResolvedValue(undefined);
+      mockMinioClient.removeIncompleteUpload.mockResolvedValue(undefined);
       mockMinioClient.removeBucket.mockResolvedValueOnce(undefined);
 
       const result = await deleteStorageBucket('full-tenant', true);
+      
       expect(result).toBe(true);
+      expect(mockMinioClient.listObjectVersions).toHaveBeenCalled();
+      expect(mockMinioClient.listIncompleteUploads).toHaveBeenCalled();
+      expect(mockMinioClient.removeObject).toHaveBeenCalledTimes(2);
+      expect(mockMinioClient.removeIncompleteUpload).toHaveBeenCalledWith(expect.any(String), 'large-file.zip');
+      expect(mockMinioClient.removeBucket).toHaveBeenCalled();
     });
   });
 

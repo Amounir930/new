@@ -19,7 +19,7 @@ const mockDb = {
   where: mock().mockReturnThis(),
   select: mock().mockReturnThis(),
   from: mock().mockReturnThis(),
-  limit: mock().mockResolvedValue([{ id: 'mock-id' }]),
+  limit: mock().mockResolvedValue([]),
   transaction: mock((cb: (db: typeof mockDb) => Promise<unknown>) =>
     cb(mockDb)
   ),
@@ -106,7 +106,10 @@ describe('seedTenantData', () => {
     mockDb.returning.mockClear();
     mockDb.select.mockClear();
     mockDb.from.mockClear();
-    mockDb.limit.mockClear();
+    mockDb.limit.mockReset();
+    mockDb.limit
+      .mockResolvedValueOnce([]) // resolveStore: not found, trigger insert
+      .mockResolvedValueOnce([{ id: 'mock-id' }]); // Verification: found after seed
     mockClient.query.mockClear();
   });
 

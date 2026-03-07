@@ -212,26 +212,38 @@ export async function deleteStorageBucket(
 
   try {
     if (force) {
-      // S15 FIX: Comprehensive bucket clearing (including versions & delete markers)
+      // S15 FIX: Comprehensive bucket clearing
       // Protocol S2: Ensure full cleanup before bucket removal
       
-      logger.info(`Force-clearing bucket: ${bucketName} (removing all versions)...`);
+      logger.info(`Force-clearing bucket: ${bucketName} (removing all versions, markers, and uploads)...`);
       
-      const stream = (client as any).listObjects(bucketName, '', true, {
-        includeVersion: true,
-      });
+      // 1. Remove all object versions and delete markers
+      const versionStream = (client as any).listObjectVersions(bucketName, '', true);
 
-      let count = 0;
-      for await (const obj of stream) {
+      let vCount = 0;
+      for await (const obj of versionStream) {
         if (obj.name) {
-          count++;
-          // S15: Pass versionId if present to ensure the specific version/marker is deleted
+          vCount++;
           await client.removeObject(bucketName, obj.name, {
             versionId: (obj as any).versionId,
           });
         }
       }
-      logger.info(`Force-cleared ${count} objects/versions from ${bucketName}`);
+      logger.info(`Force-cleared ${vCount} objects/versions/markers from ${bucketName}`);
+
+      // 2. Remove all incomplete multipart uploads
+      // MinIO SDK listIncompleteUploads returns a stream
+      const uploadStream = (client as any).listIncompleteUploads(bucketName, '', true);
+      let uCount = 0;
+      for await (const upload of uploadStream) {
+        if (upload.key) {
+          uCount++;
+          await client.removeIncompleteUpload(bucketName, upload.key);
+        }
+      }
+      if (uCount > 0) {
+        logger.info(`Force-cleared ${uCount} incomplete multipart uploads from ${bucketName}`);
+      }
     }
 
     try {
