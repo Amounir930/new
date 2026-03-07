@@ -8,7 +8,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   ProvisionRequestDto,
   ProvisionRequestSchema,
-} from './provision-request.dto.js';
+} from './provision-request.dto';
 
 describe('ProvisionRequestSchema', () => {
   const validProvisionData = {

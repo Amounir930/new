@@ -10,8 +10,7 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { BunShell } from '../utils/bun-shell';
+import type { BunShell } from '../utils/bun-shell';
 
 @Injectable()
 export class AnalyticsExportStrategy implements ExportStrategy {
@@ -46,7 +45,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
         const exportedFiles: string[] = [];
 
         // Export orders summary
-        const ordersResult: any = await db.execute(sql`
+        const ordersResult = await db.execute(sql`
           SELECT 
             DATE(created_at) as date,
             COUNT(*) as order_count,
@@ -60,14 +59,14 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
         await this.writeCSV(
           `${workDir}/analytics/orders_summary.csv`,
-          (ordersResult as any).rows || [],
+          ordersResult.rows,
           ['date', 'order_count', 'total_revenue', 'avg_order_value']
         );
         exportedFiles.push('orders_summary.csv');
 
         // Export products performance
-        const productsResult: any = await db.execute(sql`
-          SELECT 
+        const productsResult = await db.execute(sql`
+          SELECT
             p.name,
             p.sku,
             COUNT(oi.id) as times_ordered,
@@ -81,7 +80,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
 
         await this.writeCSV(
           `${workDir}/analytics/products_performance.csv`,
-          (productsResult as any).rows || [],
+          productsResult.rows,
           ['name', 'sku', 'times_ordered', 'total_quantity']
         );
         exportedFiles.push('products_performance.csv');
@@ -94,8 +93,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
           database: {
             tables: ['orders_summary', 'products_performance'],
             rowCount:
-              ((ordersResult as any).rowCount ?? 0) +
-              ((productsResult as any).rowCount ?? 0),
+              (ordersResult.rowCount ?? 0) + (productsResult.rowCount ?? 0),
             format: 'csv',
           },
           assets: {
@@ -106,7 +104,7 @@ export class AnalyticsExportStrategy implements ExportStrategy {
         };
 
         await this.shell.write(
-          `${workDir}/manifeston`,
+          `${workDir}/manifest.json`,
           JSON.stringify(manifest, null, 2)
         );
 
@@ -198,8 +196,9 @@ export class AnalyticsExportStrategy implements ExportStrategy {
     const csvLines = [headers.join(',')];
 
     for (const row of rows) {
+      const typedRow = row as Record<string, unknown>;
       const values = headers.map((h) => {
-        const val = (row as any)[h];
+        const val = typedRow[h];
         if (val === null || val === undefined) return '';
         // Escape quotes and wrap in quotes if contains comma
         const str = String(val).replace(/"/g, '""');

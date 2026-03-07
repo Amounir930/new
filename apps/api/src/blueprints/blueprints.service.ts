@@ -8,7 +8,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type {
   CreateBlueprintDto,
   UpdateBlueprintDto,
-} from './dto/blueprint.dto.js';
+} from './dto/blueprint.dto';
 
 @Injectable()
 export class BlueprintsService {
@@ -18,30 +18,30 @@ export class BlueprintsService {
   constructor(private readonly audit: AuditService) {}
 
   async findAll(): Promise<BlueprintRecord[]> {
-    return (await this.db
+    const results = await this.db
       .select()
-      .from(onboardingBlueprintsInGovernance)) as unknown as BlueprintRecord[];
+      .from(onboardingBlueprintsInGovernance);
+    return results as unknown as BlueprintRecord[];
   }
 
   async findOne(id: string): Promise<BlueprintRecord> {
-    const [blueprint] = (await this.db
+    const results = await this.db
       .select()
       .from(onboardingBlueprintsInGovernance)
-      .where(
-        eq(onboardingBlueprintsInGovernance.id, id)
-      )) as unknown as BlueprintRecord[];
+      .where(eq(onboardingBlueprintsInGovernance.id, id));
+    const blueprint = results[0];
 
     if (!blueprint) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
     }
-    return blueprint;
+    return blueprint as unknown as BlueprintRecord;
   }
 
   async create(
     userId: string,
     dto: CreateBlueprintDto
   ): Promise<BlueprintRecord> {
-    const blueprintData = dto.blueprint as unknown as BlueprintTemplate;
+    const blueprintData = dto.blueprint as BlueprintTemplate;
 
     try {
       validateBlueprint(blueprintData);
@@ -51,19 +51,26 @@ export class BlueprintsService {
       );
     }
 
-    const [newBlueprint] = (await this.db
+    const [newBlueprint] = await this.db
       .insert(onboardingBlueprintsInGovernance)
       .values({
         name: dto.name,
         description: dto.description || null,
         plan: dto.plan,
-        nicheType: (dto.nicheType || 'retail') as any,
-        status: (dto.status || 'active') as any,
+        nicheType: (dto.nicheType || 'retail') as
+          | 'retail'
+          | 'wellness'
+          | 'education'
+          | 'services'
+          | 'hospitality'
+          | 'real-estate'
+          | 'creative',
+        status: (dto.status || 'active') as 'active' | 'paused',
         uiConfig: dto.uiConfig || {},
         isDefault: dto.isDefault,
         blueprint: blueprintData,
       })
-      .returning()) as unknown as BlueprintRecord[];
+      .returning();
 
     this.audit.log({
       userId,
@@ -74,7 +81,7 @@ export class BlueprintsService {
       metadata: { name: dto.name, plan: dto.plan },
     });
 
-    return newBlueprint;
+    return newBlueprint as unknown as BlueprintRecord;
   }
 
   async update(
@@ -97,18 +104,26 @@ export class BlueprintsService {
       }
     }
 
-    const [updatedBlueprint] = (await this.db
+    const [updatedBlueprint] = await this.db
       .update(onboardingBlueprintsInGovernance)
       .set({
-        plan: dto.plan as any,
-        nicheType: (dto.nicheType ?? undefined) as any,
-        status: dto.status as any,
-        blueprint: dto.blueprint as unknown as BlueprintTemplate,
+        plan: dto.plan,
+        nicheType: dto.nicheType as
+          | 'retail'
+          | 'wellness'
+          | 'education'
+          | 'services'
+          | 'hospitality'
+          | 'real-estate'
+          | 'creative'
+          | undefined,
+        status: dto.status as 'active' | 'paused' | undefined,
+        blueprint: dto.blueprint as BlueprintTemplate,
         isDefault: dto.isDefault,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(onboardingBlueprintsInGovernance.id, id))
-      .returning()) as unknown as BlueprintRecord[];
+      .returning();
 
     if (!updatedBlueprint) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
@@ -120,17 +135,17 @@ export class BlueprintsService {
       action: 'BLUEPRINT_UPDATED',
       entityType: 'onboarding_blueprints',
       entityId: id,
-      metadata: dto as any,
+      metadata: dto as Record<string, unknown>,
     });
 
-    return updatedBlueprint;
+    return updatedBlueprint as unknown as BlueprintRecord;
   }
 
   async remove(userId: string, id: string): Promise<BlueprintRecord> {
-    const [deleted] = (await this.db
+    const [deleted] = await this.db
       .delete(onboardingBlueprintsInGovernance)
       .where(eq(onboardingBlueprintsInGovernance.id, id))
-      .returning()) as unknown as BlueprintRecord[];
+      .returning();
 
     if (!deleted) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
@@ -145,7 +160,7 @@ export class BlueprintsService {
       metadata: { name: deleted.name },
     });
 
-    return deleted;
+    return deleted as unknown as BlueprintRecord;
   }
 
   async snapshot(

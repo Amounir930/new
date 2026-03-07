@@ -8,7 +8,7 @@ import {
   AuditLogSchema,
   type CreateAuditLogDto,
   CreateAuditLogSchema,
-} from './audit.schema.js';
+} from './audit.schema';
 
 describe('Audit Schema Validation', () => {
   describe('AuditLogSchema', () => {

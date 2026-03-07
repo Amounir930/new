@@ -15,8 +15,8 @@ import {
   hashSecret,
   SecretsManager,
   verifySecret,
-} from '../secrets/index.js';
-import { MTLSServer } from './index.js';
+} from '../secrets/index';
+import { MTLSServer } from './index';
 
 describe('mTLS Implementation', () => {
   const testDir = join(tmpdir(), `mtls-test-${Date.now()}`);
@@ -115,7 +115,7 @@ describe('Secrets Manager', () => {
       const secret_var = 't3st-s3cr3t'; // gitleaks:allow
       const hash = hashSecret(secret_var);
 
-      expect(verifySecret(secret, hash)).toBe(true);
+      expect(verifySecret(secret_var, hash)).toBe(true);
       expect(verifySecret('wrong-secret', hash)).toBe(false);
     });
 
@@ -124,7 +124,7 @@ describe('Secrets Manager', () => {
       const hash = hashSecret(secret_var);
 
       // Should not throw timing attack errors
-      expect(verifySecret(secret, hash)).toBe(true);
+      expect(verifySecret(secret_var, hash)).toBe(true);
     });
   });
 

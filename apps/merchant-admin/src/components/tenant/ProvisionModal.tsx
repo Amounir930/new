@@ -24,6 +24,14 @@ const provisionSchema = z.object({
 
 type ProvisionFormValues = z.infer<typeof provisionSchema>;
 
+interface Blueprint {
+  id: string;
+  name: string;
+  version: string;
+  plan: string;
+  status: string;
+}
+
 interface ProvisionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,7 +45,7 @@ export function ProvisionModal({
 }: ProvisionModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [blueprints, setBlueprints] = useState<any[]>([]);
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
 
   const {
     register,
@@ -90,8 +98,8 @@ export function ProvisionModal({
       onSuccess();
       onOpenChange(false);
       reset();
-    } catch (e: any) {
-      setError(e.message || 'Provisioning failed');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Provisioning failed');
     } finally {
       setLoading(false);
     }

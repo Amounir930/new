@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { AddToCartSchema, CartSchema } from './cart.schema.js';
+import { AddToCartSchema, CartSchema } from './cart.schema';
 
 describe('CartSchema', () => {
   const validCart = {

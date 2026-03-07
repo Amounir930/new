@@ -6,7 +6,7 @@ import {
   logProvisioning,
   logSecurityEvent,
   query,
-} from './index.js';
+} from './index';
 
 describe('Audit Module Exports', () => {
   it('should export AuditService', () => {

@@ -1,5 +1,5 @@
-import { EnvSchema } from '.././../packages/config/src/schema'; // Adjust path
-import { EncryptionService } from '.././../packages/security/src/encryption'; // Adjust path
+import { EnvSchema } from '@apex/config/schema'; // Adjust path
+import { EncryptionService } from '@apex/security/encryption'; // Adjust path
 
 process.stdout.write('🛡️ Verifying Defense-in-Depth Fixes...');
 

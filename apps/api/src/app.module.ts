@@ -23,20 +23,20 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { AppController } from './app.controller.js';
-import { AuthModule } from './auth/auth.module.js';
-import { BlueprintsModule } from './blueprints/blueprints.module.js';
-import { MediaModule } from './common/media/media.module.js';
-import { GovernanceModule } from './governance/governance.module.js';
-import { HealthModule } from './health/health.module.js';
-import { BulkImportController } from './products/bulk-import.controller.js';
-import { ProductsController } from './products/products.controller.js';
-import { ProvisioningModule } from './provisioning/provisioning.module.js';
-import { HoneyTokensController } from './security/honey-tokens.controller.js';
-import { SecurityModule } from './security/security.module.js';
-import { StorefrontModule } from './storefront/storefront.module.js';
-import { MerchantStatsController } from './tenants/merchant-stats.controller.js';
-import { TenantsModule } from './tenants/tenants.module.js';
+import { AppController } from './app.controller';
+import { AuthModule } from './auth/auth.module';
+import { BlueprintsModule } from './blueprints/blueprints.module';
+import { MediaModule } from './common/media/media.module';
+import { GovernanceModule } from './governance/governance.module';
+import { HealthModule } from './health/health.module';
+import { BulkImportController } from './products/bulk-import.controller';
+import { ProductsController } from './products/products.controller';
+import { ProvisioningModule } from './provisioning/provisioning.module';
+import { HoneyTokensController } from './security/honey-tokens.controller';
+import { SecurityModule } from './security/security.module';
+import { StorefrontModule } from './storefront/storefront.module';
+import { MerchantStatsController } from './tenants/merchant-stats.controller';
+import { TenantsModule } from './tenants/tenants.module';
 
 @Module({
   imports: [
@@ -65,8 +65,9 @@ import { TenantsModule } from './tenants/tenants.module.js';
     // S14.7: Persistent Event Bus (Rule 1.3)
     EventsModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (config: ConfigService) =>
-        (config.get('REDIS_URL') as string) || 'redis://localhost:6379',
+      useFactory: (config: unknown) =>
+        ((config as ConfigService).get('REDIS_URL') as string) ||
+        'redis://localhost:6379',
       inject: [ConfigService],
     }),
   ],

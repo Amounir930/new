@@ -219,7 +219,7 @@ export function mtlsMiddleware(config: MTLSConfig) {
     res: import('express').Response,
     next: import('express').NextFunction
   ) => {
-    const socket = req.socket as import('tls').TLSSocket;
+    const socket = req.socket as import('node:tls').TLSSocket;
 
     if (!socket.authorized) {
       return res.status(401).json({
@@ -232,10 +232,11 @@ export function mtlsMiddleware(config: MTLSConfig) {
 
     // Validate client CN if whitelist specified
     if (config.allowedClients && config.allowedClients.length > 0) {
-      const cn =
-        cert.subject?.CN ||
-        (cert.subject as unknown as Record<string, unknown>)?.['commonName'];
-      if (!config.allowedClients.includes(cn as string)) {
+      const subject = cert.subject;
+      const cn = 'CN' in subject ? subject.CN : subject['commonName'];
+      const cnString = Array.isArray(cn) ? cn[0] : cn;
+
+      if (!cnString || !config.allowedClients.includes(cnString)) {
         return res.status(403).json({
           error: 'Client not authorized',
           code: 'MTLS_UNAUTHORIZED_CLIENT',
@@ -245,7 +246,9 @@ export function mtlsMiddleware(config: MTLSConfig) {
 
     // Attach certificate info to request
     (
-      req as import('express').Request & { clientCertificate: unknown }
+      req as import('express').Request & {
+        clientCertificate: Record<string, unknown>;
+      }
     ).clientCertificate = {
       subject: cert.subject,
       issuer: cert.issuer,

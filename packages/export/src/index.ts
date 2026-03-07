@@ -26,3 +26,4 @@ export type {
   ExportResult,
   ExportStrategy,
 } from './types';
+export { BunShell } from './utils/bun-shell';

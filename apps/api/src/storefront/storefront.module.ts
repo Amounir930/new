@@ -1,8 +1,8 @@
 import { AuditModule } from '@apex/audit';
 
 import { Module } from '@nestjs/common';
-import { StorefrontController } from './storefront.controller.js';
-import { StorefrontService } from './storefront.service.js';
+import { StorefrontController } from './storefront.controller';
+import { StorefrontService } from './storefront.service';
 
 @Module({
   imports: [AuditModule],

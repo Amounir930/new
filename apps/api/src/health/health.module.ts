@@ -2,7 +2,7 @@ import { ConfigModule } from '@apex/config';
 import { RateLimitModule } from '@apex/middleware';
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
-import { HealthController } from './health.controller.js';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [

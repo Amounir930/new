@@ -97,8 +97,9 @@ export function BlueprintBuilder() {
       });
 
       router.push('/super-admin/blueprints');
-    } catch (e: any) {
-      alert(`Save Failed: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      alert(`Save Failed: ${message}`);
     } finally {
       setSaving(false);
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { CreateReviewSchema, ReviewSchema } from './review.schema.js';
+import { CreateReviewSchema, ReviewSchema } from './review.schema';
 
 describe('ReviewSchema', () => {
   const validReview = {

@@ -31,7 +31,9 @@ async function migrateWithLock() {
     );
 
     if (!lockResult.rows[0].acquired) {
-      process.stdout.write('⏳ Another instance is running migrations. Waiting...');
+      process.stdout.write(
+        '⏳ Another instance is running migrations. Waiting...'
+      );
 
       // Blocking wait for the lock
       await client.query('SELECT pg_advisory_lock($1)', [LOCK_ID]);

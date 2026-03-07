@@ -57,8 +57,8 @@ export function TenantList() {
       setLoading(true);
       const data = await apiFetch<Tenant[]>('/v1/admin/tenants');
       setTenants(data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -84,8 +84,9 @@ export function TenantList() {
         body: JSON.stringify(data),
       });
       await fetchTenants();
-    } catch (e: any) {
-      alert(`Update failed: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      alert(`Update failed: ${message}`);
     } finally {
       setUpdatingId(null);
     }

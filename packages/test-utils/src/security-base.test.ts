@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import { BaseSecurityTest } from './security-base.js';
+import { validateMetadataValue } from './security-base';
 
 describe('Security Base Utils', () => {
   describe('validateMetadataValue', () => {
@@ -15,17 +15,13 @@ describe('Security Base Utils', () => {
     it('should detect hardcoded postgres strings', () => {
       // Test: validates security logic for postgres connection strings
       const val = 'postgres://user:pass@localhost:5432/db';
-      expect(() =>
-        (BaseSecurityTest as never).validateMetadataValue(val, 'path')
-      ).toThrow(/S1 Violation/);
+      expect(() => validateMetadataValue(val, 'path')).toThrow(/S1 Violation/);
     });
 
     it('should detect hardcoded JWTs', () => {
       const jwt =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
-      expect(() =>
-        (BaseSecurityTest as never).validateMetadataValue(jwt, 'path')
-      ).toThrow(/S1 Violation/);
+      expect(() => validateMetadataValue(jwt, 'path')).toThrow(/S1 Violation/);
     });
   });
 

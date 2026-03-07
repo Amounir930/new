@@ -13,8 +13,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+interface Order {
+  id: string;
+  customer: string;
+  total: string;
+  status: 'shipped' | 'processing' | 'pending';
+  date: string;
+}
+
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   // Mock data for Admin-17
   useEffect(() => {
@@ -78,7 +86,7 @@ export default function OrdersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order: any) => (
+              {orders.map((order) => (
                 <TableRow
                   key={order.id}
                   className="hover:bg-slate-50 transition-colors"

@@ -6,8 +6,22 @@
 
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import type { ExportJob, ExportResult } from './types';
 
 const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
+
+interface CreateExportResponse {
+  message: string;
+  job: ExportJob;
+}
+
+interface GetStatusResponse extends ExportJob {
+  result?: ExportResult;
+}
+
+interface ConfirmDownloadResponse {
+  message: string;
+}
 
 (INTEGRATION_TEST ? describe : describe.skip)(
   'Export Integration Tests',
@@ -48,7 +62,7 @@ const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
         );
 
         expect(response.status).toBe(202);
-        const data: unknown = await response.json();
+        const data = (await response.json()) as CreateExportResponse;
         const { job } = data;
         expect(job.id).toBeDefined();
         expect(job.status).toBe('pending');
@@ -65,7 +79,7 @@ const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
             { headers: { Authorization: 'Bearer test-token' } }
           );
 
-          const statusData: unknown = await statusRes.json();
+          const statusData = (await statusRes.json()) as GetStatusResponse;
           status = statusData.status;
 
           if (++attempts > 30) {
@@ -81,7 +95,7 @@ const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
           { headers: { Authorization: 'Bearer test-token' } }
         );
 
-        const finalData: unknown = await finalStatus.json();
+        const finalData = (await finalStatus.json()) as GetStatusResponse;
         expect(finalData.result?.downloadUrl).toBeDefined();
         expect(finalData.result?.checksum).toBeDefined();
 
@@ -142,11 +156,11 @@ const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
           }
         );
 
-        const data: unknown = await createRes.json();
+        const data = (await createRes.json()) as CreateExportResponse;
         const { job } = data;
 
         // Wait for completion
-        let status = 'pending';
+        let status: string = 'pending';
         let attempts = 0;
 
         while (status !== 'completed' && attempts < 30) {
@@ -155,7 +169,7 @@ const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
             `http://localhost:3000/api/v1/tenant/export/${job.id}/status`,
             { headers: { Authorization: 'Bearer test-token' } }
           );
-          const statusData: unknown = await statusRes.json();
+          const statusData = (await statusRes.json()) as GetStatusResponse;
           status = statusData.status;
           attempts++;
         }
@@ -170,7 +184,8 @@ const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
         );
 
         expect(confirmRes.status).toBe(200);
-        const confirmData: unknown = await confirmRes.json();
+        const confirmData =
+          (await confirmRes.json()) as ConfirmDownloadResponse;
         expect(confirmData.message).toContain('deleted');
 
         // 3. Verify file is deleted from S3
@@ -204,7 +219,7 @@ const INTEGRATION_TEST = process.env['RUN_INTEGRATION_TESTS'] === 'true';
           }
         );
 
-        const data: unknown = await createRes.json();
+        const data = (await createRes.json()) as CreateExportResponse;
         const { job } = data;
 
         // Try to access as different tenant

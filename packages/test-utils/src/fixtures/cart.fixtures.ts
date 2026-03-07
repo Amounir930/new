@@ -14,7 +14,7 @@ import { createMockProduct } from './product.fixtures';
  * Creates a mock cart item
  */
 export function createMockCartItem(overrides?: Partial<CartItem>): CartItem {
-  const product: unknown = createMockProduct();
+  const product = createMockProduct();
   const quantity = faker.number.int({ min: 1, max: 5 });
 
   return {

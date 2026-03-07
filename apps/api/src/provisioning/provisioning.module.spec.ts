@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { ProvisioningModule } from './provisioning.module.js';
+import { ProvisioningModule } from './provisioning.module';
 
 describe('ProvisioningModule', () => {
   it('should be defined', () => {

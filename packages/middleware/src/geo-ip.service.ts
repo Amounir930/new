@@ -36,8 +36,12 @@ export class GeoIpService {
   ): Promise<boolean> {
     if (!lastGeo || !currentGeo) return false;
 
-    const last = lastGeo as any;
-    const current = currentGeo as any;
+    interface GeoRecord {
+      country?: string;
+      city?: string;
+    }
+    const last = lastGeo as GeoRecord;
+    const current = currentGeo as GeoRecord;
 
     if (
       last.country &&

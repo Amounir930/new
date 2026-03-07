@@ -7,10 +7,7 @@
  */
 
 import { HttpResponse, http } from 'msw';
-import {
-  createMockOrder,
-  createPendingOrder,
-} from '.././../fixtures/order.fixtures';
+import { createMockOrder, createPendingOrder } from '../../fixtures';
 
 const BASE_URL = '/api';
 
@@ -27,7 +24,10 @@ export const ordersHandlers = [
   // GET /api/orders/:id - Get order details
   http.get(`${BASE_URL}/orders/:id`, ({ params }) => {
     const { id } = params;
-    const order = createMockOrder({ id: id as string });
+    const isString = (s: unknown): s is string => typeof s === 'string';
+    const order = createMockOrder({
+      id: isString(id) ? id : String(id),
+    });
 
     return HttpResponse.json({ order });
   }),

@@ -1,30 +1,51 @@
-import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
-import type { ExecutionContext } from '@nestjs/common';
-import type { NextFunction, Request, Response } from 'express';
 import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  mock,
+  spyOn,
+} from 'bun:test';
+import { Logger } from '@nestjs/common';
+import type { NextFunction, Request, Response } from 'express';
+
+// REQUIRE: Mocks must be registered before the module under test is imported
+mock.module('@apex/config', () => ({
+  env: {
+    NODE_ENV: 'test',
+    ALLOWED_ORIGINS: 'https://myapp.com,https://api.myapp.com',
+    APP_ROOT_DOMAIN: 'apex.localhost',
+  },
+}));
+
+import { type Mocked, MockFactory } from '@apex/test-utils';
+
+const {
   CsrfGuard,
   CsrfProtection,
   defaultCorsConfig,
   getTenantCorsConfig,
   SecurityHeadersMiddleware,
-} from './security.ts';
+} = await import('./security');
+
+type ISecurityHeadersMiddleware = InstanceType<
+  typeof SecurityHeadersMiddleware
+>;
+type ICsrfProtection = InstanceType<typeof CsrfProtection>;
+type ICsrfGuard = InstanceType<typeof CsrfGuard>;
 
 describe('SecurityMiddleware', () => {
-  let middleware: SecurityHeadersMiddleware;
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
+  let middleware: ISecurityHeadersMiddleware;
+  let mockRequest: Mocked<Request>;
+  let mockResponse: Mocked<Response>;
   let nextFunction: NextFunction;
 
   beforeEach(() => {
     middleware = new SecurityHeadersMiddleware();
-    mockRequest = {
-      headers: {},
-    };
-    mockResponse = {
-      setHeader: mock(),
-      removeHeader: mock(),
-    };
-    nextFunction = mock() as unknown as NextFunction;
+    mockRequest = MockFactory.createRequest();
+    mockResponse = MockFactory.createResponse();
+    nextFunction = mock(() => {}) as NextFunction;
   });
 
   it('should be defined', () => {
@@ -32,11 +53,7 @@ describe('SecurityMiddleware', () => {
   });
 
   it('should set basic security headers', () => {
-    middleware.use(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware.use(mockRequest, mockResponse, nextFunction);
 
     expect(mockResponse.setHeader).toHaveBeenCalledWith(
       'X-DNS-Prefetch-Control',
@@ -58,11 +75,7 @@ describe('SecurityMiddleware', () => {
   });
 
   it('should set HSTS header', () => {
-    middleware.use(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware.use(mockRequest, mockResponse, nextFunction);
     expect(mockResponse.setHeader).toHaveBeenCalledWith(
       'Strict-Transport-Security',
       expect.stringContaining('max-age=31536000')
@@ -70,20 +83,12 @@ describe('SecurityMiddleware', () => {
   });
 
   it('should remove X-Powered-By header', () => {
-    middleware.use(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware.use(mockRequest, mockResponse, nextFunction);
     expect(mockResponse.removeHeader).toHaveBeenCalledWith('X-Powered-By');
   });
 
   it('should set CSP headers if configured', () => {
-    middleware.use(
-      mockRequest as Request,
-      mockResponse as Response,
-      nextFunction
-    );
+    middleware.use(mockRequest, mockResponse, nextFunction);
     expect(mockResponse.setHeader).toHaveBeenCalledWith(
       'Content-Security-Policy',
       expect.stringContaining("default-src 'self'")
@@ -111,64 +116,38 @@ describe('CORS Configuration', () => {
     });
 
     it('should allow origins from ALLOWED_ORIGINS env', () => {
-      // Security middleware's defaultCorsConfig uses @apex/config's env.ALLOWED_ORIGINS
-      // Since we don't mock it in this file but the implementation depends on it,
-      // we need to be careful. Let's verify how it's implemented.
-      const originalEnv = process.env['ALLOWED_ORIGINS'];
-      process.env['ALLOWED_ORIGINS'] =
-        'https://myapp.com,https://api.myapp.com';
-
-      // Force reload or re-evaluating originFn if it was closed over?
-      // Actually, originFn is defaultCorsConfig.origin which is likely
-      // already initialized. For testing, we might need a different approach.
-      // But let's see if process.env works if not already closed over.
+      // NOTE: originFn uses config.env.ALLOWED_ORIGINS which we mocked at the top
       const callback = mock();
       originFn('https://myapp.com', callback);
-
-      // If the above fails, it's because the whitelisting is fixed at startup.
-      // In that case, we should skip this test or fix the implementation to be dynamic.
-      if (
-        callback.mock.calls.length > 0 &&
-        callback.mock.calls[0][0] instanceof Error
-      ) {
-        // Skip or handle appropriately - for now let's try to match reality
-      } else {
-        expect(callback).toHaveBeenCalledWith(null, true);
-      }
-      process.env['ALLOWED_ORIGINS'] = originalEnv;
+      expect(callback).toHaveBeenCalledWith(null, true);
     });
 
     it('should block non-whitelisted origins', () => {
       const callback = mock();
-      const consoleSpy = spyOn(console, 'warn').mockImplementation(() => {});
+      const loggerSpy = spyOn(Logger, 'warn').mockImplementation(() => {});
       originFn('http://evil.com', callback);
-      expect(callback).toHaveBeenCalledWith(expect.anything(Error));
-      expect(consoleSpy).toHaveBeenCalled();
-      consoleSpy.mockRestore();
-    });
-  });
-
-  describe('getTenantCorsConfig', () => {
-    it('should generate tenant specific CORS config', () => {
-      const config = getTenantCorsConfig('https://tenant1.com');
-      expect(config.origin).toContain('https://tenant1.com');
-      expect(config.origin).toContain('admin.https://tenant1.com');
-    });
-
-    it('should include dev origins in development environment', () => {
-      const originalEnv = process.env['NODE_ENV'];
-      process.env['NODE_ENV'] = 'development';
-      const config = getTenantCorsConfig('https://tenant1.com');
-      // In our implementation, dev origins are only included if NODE_ENV is explicitly 'development'
-      // and getTenantCorsConfig is reactive to it.
-      expect(config.origin).toContain('https://tenant1.com');
-      process.env['NODE_ENV'] = originalEnv;
+      expect(callback).toHaveBeenCalledWith(expect.any(Error));
+      expect(loggerSpy).toHaveBeenCalled();
+      loggerSpy.mockRestore();
     });
   });
 });
 
+describe('getTenantCorsConfig', () => {
+  it('should generate tenant specific CORS config', () => {
+    const config = getTenantCorsConfig('https://tenant1.com');
+    expect(config.origin).toContain('https://tenant1.com');
+    expect(config.origin).toContain('admin.https://tenant1.com');
+  });
+
+  it('should include tenant domain in origin', () => {
+    const config = getTenantCorsConfig('https://tenant1.com');
+    expect(config.origin).toContain('https://tenant1.com');
+  });
+});
+
 describe('CsrfProtection', () => {
-  let csrf: CsrfProtection;
+  let csrf: ICsrfProtection;
 
   beforeEach(() => {
     csrf = new CsrfProtection();
@@ -181,89 +160,85 @@ describe('CsrfProtection', () => {
   });
 
   it('should set XSRF_TK cookie', () => {
-    const mockRes = { cookie: mock() } as unknown as Response;
+    const mockRes = MockFactory.createResponse();
     csrf.setCookie(mockRes, 'test-token');
     expect(mockRes.cookie).toHaveBeenCalledWith(
       'XSRF_TK',
       'test-token',
-      expect.anything(Object)
+      expect.any(Object)
     );
   });
 
   it('should validate matching tokens', () => {
-    const mockReq = {
+    const mockReq = MockFactory.createRequest({
       cookies: { XSRF_TK: 'match' },
       headers: { 'x-xsrf-tk': 'match' },
-    } as unknown as Request;
+    });
     expect(csrf.validate(mockReq)).toBe(true);
   });
 
   it('should reject non-matching tokens', () => {
-    const mockReq = {
+    const mockReq = MockFactory.createRequest({
       cookies: { XSRF_TK: 'match' },
       headers: { 'x-xsrf-tk': 'mismatch' },
-    } as unknown as Request;
+    });
     expect(csrf.validate(mockReq)).toBe(false);
   });
 
   it('should reject missing tokens', () => {
-    const mockReq = {
-      cookies: {},
-      headers: {},
-    } as unknown as Request;
+    const mockReq = MockFactory.createRequest();
     expect(csrf.validate(mockReq)).toBe(false);
   });
 
   it('should reject missing cookie token', () => {
-    const mockReq = {
-      cookies: {},
+    const mockReq = MockFactory.createRequest({
       headers: { 'x-xsrf-tk': 'token' },
-    } as unknown as Request;
+    });
     expect(csrf.validate(mockReq)).toBe(false);
   });
 
   it('should reject missing header token', () => {
-    const mockReq = {
+    const mockReq = MockFactory.createRequest({
       cookies: { XSRF_TK: 'token' },
-      headers: {},
-    } as unknown as Request;
+    });
     expect(csrf.validate(mockReq)).toBe(false);
   });
 });
 
 describe('CsrfGuard', () => {
-  let guard: CsrfGuard;
+  let guard: ICsrfGuard;
 
   beforeEach(() => {
     guard = new CsrfGuard();
   });
 
+  // Type guard for Request to Record<string, unknown>
+  const isRecord = (obj: unknown): obj is Record<string, unknown> =>
+    typeof obj === 'object' && obj !== null;
+
   it('should allow GET requests and set cookie', () => {
-    const mockReq = { method: 'GET' };
-    const mockRes = { cookie: mock() };
-    const mockContext = {
-      switchToHttp: () => ({
-        getRequest: () => mockReq,
-        getResponse: () => mockRes,
-      }),
-    } as unknown as ExecutionContext;
+    const mockReq = MockFactory.createRequest({ method: 'GET' });
+    const mockRes = MockFactory.createResponse();
+    const mockContext = MockFactory.createExecutionContext(
+      isRecord(mockReq) ? mockReq : ({} as Record<string, unknown>)
+    );
+    (
+      mockContext.switchToHttp().getResponse as Mock<() => Response>
+    ).mockReturnValue(mockRes);
 
     expect(guard.canActivate(mockContext)).toBe(true);
     expect(mockRes.cookie).toHaveBeenCalled();
   });
 
   it('should validate POST requests', () => {
-    const mockReq = {
+    const mockReq = MockFactory.createRequest({
       method: 'POST',
       cookies: { XSRF_TK: 'valid' },
       headers: { 'x-xsrf-tk': 'valid' },
-    };
-    const mockContext = {
-      switchToHttp: () => ({
-        getRequest: () => mockReq,
-        getResponse: () => ({}),
-      }),
-    } as unknown as ExecutionContext;
+    });
+    const mockContext = MockFactory.createExecutionContext(
+      isRecord(mockReq) ? mockReq : ({} as Record<string, unknown>)
+    );
 
     expect(guard.canActivate(mockContext)).toBe(true);
   });

@@ -74,7 +74,7 @@ export async function seedTenantData(
       await executor.execute(
         {
           subdomain: options.subdomain,
-          db: tx as never,
+          db: tx,
           schema: schemaName,
           plan: (options.plan || 'free') as
             | 'free'
@@ -139,7 +139,7 @@ async function resolveTemplate(
 
   if (!blueprintRecord) {
     throw new Error(
-      `Critical Failure (S21): No blueprint found for plan ${options.plan || 'free'}`
+      `Critical Failure (S21): No blueprint found for plan ${options.plan ?? 'free'}`
     );
   }
   return blueprintRecord.blueprint;
@@ -189,7 +189,7 @@ async function resolveStore(
       subdomain: options.subdomain,
       status: 'active',
       plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
-      nicheType: (options.nicheType || 'retail') as never,
+      nicheType: (options.nicheType || 'retail') as string,
     })
     .returning({ id: tenantsInGovernance.id });
 

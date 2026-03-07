@@ -4,8 +4,9 @@
  */
 
 import { describe, expect, it } from 'bun:test';
+import { MockFactory } from '@apex/test-utils';
 import { UnauthorizedException } from '@nestjs/common';
-import { JwtAuthGuard } from './index.js';
+import { JwtAuthGuard } from './index';
 
 describe('JwtAuthGuard', () => {
   const guard = new JwtAuthGuard();
@@ -29,11 +30,7 @@ describe('JwtAuthGuard', () => {
 
   it('should call super.canActivate (mocked)', async () => {
     // Mocking at the class level to trigger the line without needing full super logic
-    const mockContext = {
-      switchToHttp: () => ({
-        getRequest: () => ({ headers: {} }),
-      }),
-    } as never;
+    const mockContext = MockFactory.createExecutionContext({ headers: {} });
 
     // We can't easily mock 'super' in a unit test without more complex setup,
     // but we can at least call the function to cover the entry point.

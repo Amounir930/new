@@ -1,5 +1,5 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
-import type { AuthUser } from '../auth.service.js';
+import type { AuthUser } from '../auth.service';
 
 export const currentUserFactory = (
   data: keyof AuthUser | undefined,

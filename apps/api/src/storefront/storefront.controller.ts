@@ -15,9 +15,9 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import type { NewsletterSubscriptionDto } from './dto/newsletter.dto.js';
+import type { NewsletterSubscriptionDto } from './dto/newsletter.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { StorefrontService } from './storefront.service.js';
+import { StorefrontService } from './storefront.service';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),

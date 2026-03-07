@@ -13,13 +13,14 @@ import {
   forwardRef,
   Get,
   Inject,
+  Logger,
   Param,
   Patch,
   UseGuards,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import { SecurityService } from '../security/security.service.js';
+import { SecurityService } from '../security/security.service';
 
 const UpdateTenantSchema = z.object({
   plan: z.string().optional(),
@@ -35,17 +36,21 @@ const UpdateFeatureSchema = z.object({
 @Controller('admin/tenants')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
+  private readonly logger = new Logger(TenantsController.name);
+
   constructor(
     @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService
-  ) { }
+  ) {}
 
   @Get()
   async findAll() {
     try {
       return await adminDb.select().from(tenantsInGovernance);
-    } catch (error: any) {
-      console.error('[TENANT_FIND_ALL_ERROR]', error);
+    } catch (error: unknown) {
+      this.logger.error(
+        `[TENANT_FIND_ALL_ERROR] ${error instanceof Error ? error.message : String(error)}`
+      );
       throw error;
     }
   }
@@ -141,9 +146,14 @@ export class TenantsController {
       .update(tenantsInGovernance)
       .set({
         ...body,
-        status: body.status as any,
-        plan: body.plan as any,
-        updatedAt: new Date().toISOString() as any,
+        status: body.status as
+          | 'active'
+          | 'pending'
+          | 'suspended'
+          | 'archived'
+          | undefined,
+        plan: body.plan as 'free' | 'basic' | 'pro' | 'enterprise' | undefined,
+        updatedAt: new Date().toISOString(),
       })
       .where(eq(tenantsInGovernance.id, id))
       .returning();

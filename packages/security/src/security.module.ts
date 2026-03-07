@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { EncryptionService } from './encryption.js';
+import { EncryptionService } from './encryption';
 
 /**
  * S7: Security Module

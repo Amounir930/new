@@ -242,7 +242,7 @@ export class ProvisioningService {
     }
 
     return (
-      (dbBlueprint?.blueprint as unknown as BlueprintTemplate) ||
+      (dbBlueprint?.blueprint as BlueprintTemplate) ||
       (await getDefaultBlueprint(options.plan))
     );
   }

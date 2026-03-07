@@ -74,4 +74,3 @@ export const MASTER_QUOTA_LIST = [
   'storage_limit_gb',
   'api_rate_limit',
 ] as const;
-

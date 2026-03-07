@@ -10,7 +10,7 @@ import type { Request } from 'express';
 export class SuperAdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
-    const user = (request as any).user;
+    const user = (request as Request & { user?: { role?: string } }).user;
 
     if (!user) {
       throw new UnauthorizedException('Authentication required');

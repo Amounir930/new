@@ -17,14 +17,25 @@ import {
 } from '@/components/ui/table';
 import { apiFetch } from '@/lib/api';
 
+interface Product {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  sku: string;
+  basePrice: number;
+  stockQuantity: number;
+  isActive: boolean;
+  mainImage?: string;
+}
+
 export default function ProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const data = await apiFetch<unknown[]>('/products');
+        const data = await apiFetch<Product[]>('/products');
         setProducts(data);
       } catch (_error) {
         /* 'Failed to fetch products:', error */
@@ -35,7 +46,7 @@ export default function ProductsPage() {
     fetchProducts();
   }, []);
 
-  function renderProductRow(product: any) {
+  function renderProductRow(product: Product) {
     return (
       <TableRow
         key={product.id}

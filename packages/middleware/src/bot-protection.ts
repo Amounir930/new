@@ -8,11 +8,12 @@ import { env } from '@apex/config';
 import {
   ForbiddenException,
   Injectable,
+  Logger,
   type NestMiddleware,
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { HCaptchaService } from './hcaptcha.service.js';
+import { HCaptchaService } from './hcaptcha.service';
 
 @Injectable()
 export class BotProtectionMiddleware implements NestMiddleware {
@@ -82,8 +83,9 @@ export class BotProtectionMiddleware implements NestMiddleware {
   ): boolean {
     for (const botPattern of this.botUserAgents) {
       if (botPattern.test(userAgent)) {
-        process.stdout.write(
-          `S11: Bot blocked - UA: "${userAgent}" | IP: ${clientIp}`
+        Logger.warn(
+          `S11: Bot blocked - UA: "${userAgent}" | IP: ${clientIp}`,
+          'BotProtection'
         );
         throw new ForbiddenException('S11 Violation: Automated access blocked');
       }
@@ -119,8 +121,9 @@ export class BotProtectionMiddleware implements NestMiddleware {
       // (allows admin panel logins which don't include the token)
       const hasHcaptchaSecret = !!env.HCAPTCHA_SECRET_KEY;
       if (!hasHcaptchaSecret) {
-        process.stdout.write(
-          `⚠️ S11: HCAPTCHA_SECRET_KEY not configured - bypassing hCaptcha for ${path}`
+        Logger.warn(
+          `S11: HCAPTCHA_SECRET_KEY not configured - bypassing hCaptcha for ${path}`,
+          'BotProtection'
         );
         return;
       }
@@ -131,14 +134,15 @@ export class BotProtectionMiddleware implements NestMiddleware {
           clientIp
         );
         if (!isValid) {
-          process.stdout.write(
-            `S11: hCaptcha failed for sensitive route: ${path} | IP: ${clientIp}`
+          Logger.warn(
+            `S11: hCaptcha failed for sensitive route: ${path} | IP: ${clientIp}`,
+            'BotProtection'
           );
           throw new ForbiddenException(
             'S11 Violation: hCaptcha validation required for this action'
           );
         }
-        process.stdout.write(`✅ S11: hCaptcha verified for ${path}`);
+        Logger.log(`S11: hCaptcha verified for ${path}`, 'BotProtection');
       }
     }
   }
@@ -157,8 +161,9 @@ export class BotProtectionMiddleware implements NestMiddleware {
 
     for (const pathPattern of suspiciousPaths) {
       if (pathPattern.test(req.url)) {
-        process.stdout.write(
-          `S11: Suspicious path hit - Path: "${req.url}" | IP: ${req.ip}`
+        Logger.warn(
+          `S11: Suspicious path hit - Path: "${req.url}" | IP: ${req.ip}`,
+          'BotProtection'
         );
         throw new ForbiddenException(
           'S11 Violation: Security violation detected'

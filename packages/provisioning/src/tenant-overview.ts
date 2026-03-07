@@ -248,7 +248,7 @@ export async function updateTenant(
 
   const result = await adminDb
     .update(tenantsInGovernance)
-    .set(updateData as never)
+    .set(updateData)
     .where(eq(tenantsInGovernance.id, id))
     .returning();
 

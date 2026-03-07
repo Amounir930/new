@@ -5,15 +5,16 @@
  */
 
 import { beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { MockFactory } from '@apex/test-utils';
 import { UnauthorizedException } from '@nestjs/common';
 import {
   TenantJwtMatchGuard,
   type TenantRequest,
-} from './tenant-jwt-match.guard.js';
+} from './tenant-jwt-match.guard';
 
 describe('TenantJwtMatchGuard', () => {
   let guard: TenantJwtMatchGuard;
-  let mockContext: unknown;
+  let mockContext: any;
   let mockRequest: Partial<TenantRequest>;
 
   beforeEach(() => {
@@ -31,11 +32,7 @@ describe('TenantJwtMatchGuard', () => {
       },
     };
 
-    mockContext = {
-      switchToHttp: mock().mockReturnValue({
-        getRequest: mock().mockReturnValue(mockRequest),
-      }),
-    };
+    mockContext = MockFactory.createExecutionContext(mockRequest);
   });
 
   describe('canActivate', () => {
@@ -74,7 +71,9 @@ describe('TenantJwtMatchGuard', () => {
     });
 
     it('should log S2 violation when cross-tenant access is attempted', () => {
-      const consoleSpy = spyOn(console, 'error').mockImplementation(() => {});
+      const stdoutSpy = spyOn(process.stdout, 'write').mockImplementation(
+        () => false
+      );
 
       mockRequest.user = {
         tenantId: 'attacker-tenant',
@@ -88,13 +87,13 @@ describe('TenantJwtMatchGuard', () => {
         // Expected to throw
       }
 
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(stdoutSpy).toHaveBeenCalledWith(
         expect.stringContaining('S2 VIOLATION')
       );
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(stdoutSpy).toHaveBeenCalledWith(
         expect.stringContaining('attacker-tenant')
       );
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(stdoutSpy).toHaveBeenCalledWith(
         expect.stringContaining('tenant-123')
       );
     });
@@ -113,7 +112,7 @@ describe('TenantJwtMatchGuard', () => {
     it('should handle request with minimal context', () => {
       mockRequest = {
         tenantContext: { tenantId: 'minimal-tenant' },
-        user: { tenantId: 'minimal-tenant' },
+        user: { id: 'minimal-user', tenantId: 'minimal-tenant' },
       };
 
       mockContext.switchToHttp().getRequest.mockReturnValue(mockRequest);

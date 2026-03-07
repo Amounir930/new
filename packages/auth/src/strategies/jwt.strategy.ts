@@ -2,8 +2,9 @@ import { ConfigService } from '@apex/config';
 import { eq, getTenantDb, staffSessionsInStorefront } from '@apex/db';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import type { AuthUser, JwtPayload } from '../auth.service.js';
+import type { AuthUser, JwtPayload } from '../auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -21,12 +22,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
-        (req: any) => {
+        (req: Request & { cookies?: Record<string, unknown> }) => {
           let token = null;
-          if (req?.cookies) {
-            token = req.cookies.adm_tkn;
+          if (req?.cookies && typeof req.cookies === 'object') {
+            token = (req.cookies as Record<string, string | undefined>).adm_tkn;
           }
-          return token;
+          return token ?? null;
         },
       ]),
       ignoreExpiration: false,

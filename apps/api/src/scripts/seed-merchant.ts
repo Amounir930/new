@@ -201,10 +201,10 @@ async function main() {
       const { imageUrl, ...pData } = p;
       const [insertedProduct] = await db
         .insert(products)
-        .values(pData as never)
+        .values(pData)
         .onConflictDoUpdate({
           target: products.slug,
-          set: pData as never,
+          set: pData,
         })
         .returning();
 

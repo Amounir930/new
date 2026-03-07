@@ -5,9 +5,9 @@
  */
 
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../app.module.js';
+import { AppModule } from '../app.module';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { ProvisioningService } from '../provisioning/provisioning.service.js';
+import { ProvisioningService } from '../provisioning/provisioning.service';
 
 interface ProvisionOptions {
   subdomain: string;

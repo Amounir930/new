@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import * as utils from './index.js';
+import * as utils from './index';
 
 describe('@apex/test-utils', () => {
   it('should export testing utilities', () => {

@@ -16,11 +16,17 @@ export * from './fixtures/product.fixtures';
 export * from './mocks/handlers/cart.handlers';
 export * from './mocks/handlers/orders.handlers';
 export * from './mocks/handlers/products.handlers';
+export {
+  type DrizzleMock,
+  type MinioMock,
+  type Mocked,
+  MockFactory,
+  type MockQueryBuilder,
+} from './mocks/mock-factory';
 // ═══════════════════════════════════════════════════════════
 // MSW Mocks
 // ═══════════════════════════════════════════════════════════
 export * from './mocks/server';
-
 // ═══════════════════════════════════════════════════════════
 // Security Utilities
 // ═══════════════════════════════════════════════════════════

@@ -1,4 +1,30 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
+
+// Mock config and db before importing index
+mock.module('@apex/config', () => ({
+  env: {
+    APP_ROOT_DOMAIN: 'apex.localhost',
+    INTERNAL_API_SECRET: 'test-secret',
+  },
+}));
+
+mock.module('@apex/db', () => ({
+  adminDb: {
+    select: mock().mockReturnThis(),
+    from: mock().mockReturnThis(),
+    where: mock().mockReturnThis(),
+    limit: mock().mockResolvedValue([]),
+  },
+  adminPool: {
+    connect: mock().mockResolvedValue({
+      query: mock().mockResolvedValue(undefined),
+      release: mock(),
+    }),
+  },
+  tenantsInGovernance: {},
+  eq: mock(),
+}));
+
 import {
   getCurrentTenantContext,
   getCurrentTenantId,
@@ -7,7 +33,7 @@ import {
   requireTenantContext,
   runWithTenantContext,
   tenantStorage,
-} from './index.js';
+} from './index';
 
 describe('Middleware Module Exports', () => {
   it('should export getCurrentTenantContext', () => {

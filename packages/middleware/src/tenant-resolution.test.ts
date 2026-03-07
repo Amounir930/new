@@ -4,20 +4,21 @@
  */
 
 import { describe, expect, it, mock } from 'bun:test';
-import type { Request, Response } from 'express';
 
 // Mock tenantStorage before importing
 const mockTenantStorage = {
-  run: mock((_ctx, cb) => cb()),
-  getStore: mock(() => undefined),
+  run: mock(<T>(_ctx: TenantContext | undefined, cb: () => T) => cb()),
+  getStore: mock((): TenantContext | undefined => undefined),
 };
+const tenantStorage = mockTenantStorage;
 
-mock.module('./connection-context.js', () => ({
+mock.module('./connection-context', () => ({
   tenantStorage: mockTenantStorage,
 }));
 
-import { tenantStorage } from './connection-context.js';
-import { extractSubdomain, resolveTenant } from './tenant-resolution.js';
+import { MockFactory } from '@apex/test-utils';
+import type { TenantContext } from './connection-context';
+import { extractSubdomain, resolveTenant } from './tenant-resolution';
 
 describe('extractSubdomain', () => {
   it('should extract subdomain from apex.com domain', () => {
@@ -55,10 +56,10 @@ describe('extractSubdomain', () => {
 
 describe('resolveTenant', () => {
   it('should call next() when no subdomain', async () => {
-    const req = {
+    const req = MockFactory.createRequest({
       headers: { host: 'apex.com' },
-    } as Request;
-    const res = {} as Response;
+    });
+    const res = MockFactory.createResponse();
     const next = mock();
 
     await resolveTenant(req, res, next);
@@ -67,10 +68,10 @@ describe('resolveTenant', () => {
   });
 
   it('should call next() when www subdomain', async () => {
-    const req = {
+    const req = MockFactory.createRequest({
       headers: { host: 'www.apex.com' },
-    } as Request;
-    const res = {} as Response;
+    });
+    const res = MockFactory.createResponse();
     const next = mock();
 
     await resolveTenant(req, res, next);
@@ -79,13 +80,13 @@ describe('resolveTenant', () => {
   });
 
   it('should set tenant context for valid subdomain', async () => {
-    const req = {
+    const req = MockFactory.createRequest({
       headers: { host: 'test-tenant.apex.com' },
-    } as Request;
-    const res = {} as Response;
+    });
+    const res = MockFactory.createResponse();
     const next = mock();
 
-    let capturedStore: unknown;
+    let capturedStore: TenantContext | undefined;
 
     // Mock getStore to return the tenant context when called
     mockTenantStorage.getStore.mockImplementation(() => capturedStore);
@@ -93,16 +94,11 @@ describe('resolveTenant', () => {
     await new Promise<void>((resolve) => {
       resolveTenant(req, res, () => {
         // Simulate what would be in the store after run() sets it
-        capturedStore = {
+        capturedStore = MockFactory.createTenantContext({
           tenantId: 'mock-tenant-id',
           subdomain: 'test-tenant',
-          plan: 'basic',
-          features: [],
-          createdAt: new Date(),
           schemaName: 'tenant_test-tenant',
-          isActive: true,
-          isSuspended: false,
-        };
+        });
         const store = tenantStorage.getStore();
         expect(store).toBeDefined();
         expect(store?.subdomain).toBe('test-tenant');
@@ -115,13 +111,13 @@ describe('resolveTenant', () => {
   });
 
   it('should handle localhost subdomain', async () => {
-    const req = {
+    const req = MockFactory.createRequest({
       headers: { host: 'myshop.localhost:3000' },
-    } as Request;
-    const res = {} as Response;
+    });
+    const res = MockFactory.createResponse();
     const next = mock();
 
-    let capturedStore: unknown;
+    let capturedStore: TenantContext | undefined;
 
     // Mock getStore to return the tenant context when called
     mockTenantStorage.getStore.mockImplementation(() => capturedStore);
@@ -129,16 +125,11 @@ describe('resolveTenant', () => {
     await new Promise<void>((resolve) => {
       resolveTenant(req, res, () => {
         // Simulate what would be in the store after run() sets it
-        capturedStore = {
+        capturedStore = MockFactory.createTenantContext({
           tenantId: 'mock-tenant-id',
           subdomain: 'myshop',
-          plan: 'basic',
-          features: [],
-          createdAt: new Date(),
           schemaName: 'tenant_myshop',
-          isActive: true,
-          isSuspended: false,
-        };
+        });
         const store = tenantStorage.getStore();
         expect(store?.subdomain).toBe('myshop');
         next();
@@ -156,15 +147,16 @@ describe('Tenant Extraction Helpers', () => {
   });
 
   it('should extract tenant from header', async () => {
-    const req = {
+    const req = MockFactory.createRequest({
       headers: { 'x-tenant-id': 'tenant-789' },
-    } as unknown as Request;
-    const { extractTenantFromHeader } = await import('./tenant-resolution.js');
+    });
+    const { extractTenantFromHeader } = await import('./tenant-resolution');
     expect(extractTenantFromHeader(req)).toBe('tenant-789');
   });
 
   it('should return null from extractTenantFromJWT (placeholder)', async () => {
-    const { extractTenantFromJWT } = await import('./tenant-resolution.js');
-    expect(extractTenantFromJWT({} as never)).toBeNull();
+    const req = MockFactory.createRequest();
+    const { extractTenantFromJWT } = await import('./tenant-resolution');
+    expect(extractTenantFromJWT(req)).toBeNull();
   });
 });

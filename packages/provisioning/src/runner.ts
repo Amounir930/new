@@ -52,7 +52,7 @@ export async function runTenantMigrations(
       process.stdout.write(
         `[Runner] Migration files found: ${files.join(', ')}`
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       process.stdout.write(
         `[Runner] Failed to list migration files: ${String(e)}\n`
       );
@@ -82,8 +82,9 @@ export async function runTenantMigrations(
       process.stdout.write(
         `[Runner] Migration completed for schema: ${schemaName}`
       );
-    } catch (e: any) {
-      if (e.code === '42P07') {
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      if (err.code === '42P07') {
         // duplicate_table
         process.stdout.write(
           `[Runner] Migration warning: Schema ${schemaName} already has tables. Skipping creation.\n`

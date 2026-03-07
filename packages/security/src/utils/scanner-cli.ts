@@ -10,7 +10,7 @@ import {
   type Symbol as TsSymbol,
 } from 'ts-morph';
 
-interface Violation {
+export interface Violation {
   file: string;
   line: number;
   message: string;
@@ -18,11 +18,15 @@ interface Violation {
 }
 
 export class ApexSecurityScanner {
-  private project: Project;
-  private violations: Violation[] = [];
+  protected project: Project;
+  protected violations: Violation[] = [];
 
   public clearViolations() {
     this.violations = [];
+  }
+
+  public getViolations(): Violation[] {
+    return this.violations;
   }
 
   constructor(tsConfigPath?: string) {
@@ -51,7 +55,7 @@ export class ApexSecurityScanner {
     return this.violations;
   }
 
-  private scanFile(sourceFile: SourceFile, rule = 'all') {
+  protected scanFile(sourceFile: SourceFile, rule = 'all') {
     if (rule === 'all' || rule === 's11-sqli')
       this.checkSQLInjection(sourceFile);
     if (rule === 'all' || rule === 's14-export')

@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import * as validators from './index.js';
+import * as validators from './index';
 
 describe('@apex/validators', () => {
   it('should export all required storefront schemas', () => {

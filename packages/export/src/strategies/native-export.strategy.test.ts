@@ -3,15 +3,13 @@
  * Verifies PostgreSQL binary dump export
  */
 
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test';
+import { type Mocked, MockFactory } from '@apex/test-utils';
 import type { ExportOptions } from '../types';
 import { NativeExportStrategy } from './native-export.strategy';
 
 // Mock database
-const mockClient = {
-  query: mock(),
-  release: mock(),
-};
+const mockClient = MockFactory.createDbClient();
 
 mock.module('@apex/db', () => ({
   publicPool: {
@@ -24,11 +22,7 @@ mock.module('@apex/db', () => ({
 }));
 
 // Define mocks
-const mockShell = {
-  spawn: mock(),
-  write: mock(),
-  file: mock(),
-};
+const mockShell = MockFactory.createBunShell();
 
 describe('NativeExportStrategy', () => {
   let strategy: NativeExportStrategy;
@@ -49,19 +43,19 @@ describe('NativeExportStrategy', () => {
       stderr: {
         text: mock().mockResolvedValue(''),
       },
-    });
+    } as unknown as ReturnType<Mocked<typeof mockShell>['spawn']>);
     mockShell.write.mockResolvedValue(undefined);
     mockShell.file.mockReturnValue({
       arrayBuffer: mock().mockResolvedValue(new ArrayBuffer(100)),
       stat: mock().mockResolvedValue({ size: 2048 }),
-    });
+    } as unknown as ReturnType<Mocked<typeof mockShell>['file']>);
 
-    strategy = new NativeExportStrategy(mockShell as never);
+    strategy = new NativeExportStrategy(mockShell);
   });
 
   describe('validate', () => {
     it('should validate existing tenant', async () => {
-      mockClient.query.mockResolvedValue({ rowCount: 1 });
+      (mockClient.query as Mock<any>).mockResolvedValue({ rowCount: 1 });
 
       const options: ExportOptions = {
         tenantId: 'tenant-123',
@@ -91,10 +85,10 @@ describe('NativeExportStrategy', () => {
       // Verify pg_dump was called with correct schema
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call: unknown) =>
+        (call: unknown[]) =>
           Array.isArray(call[0]) &&
           call[0][0] === 'pg_dump' &&
-          call[0].includes('-n')
+          (call[0] as string[]).includes('-n')
       );
       expect(pgDumpCall).toBeDefined();
       expect(pgDumpCall?.[0]).toContain('-n');
@@ -113,10 +107,10 @@ describe('NativeExportStrategy', () => {
 
       const spawnCalls = mockShell.spawn.mock.calls;
       const pgDumpCall = spawnCalls.find(
-        (call: unknown) =>
+        (call: unknown[]) =>
           Array.isArray(call[0]) &&
           call[0][0] === 'pg_dump' &&
-          call[0].includes('-n')
+          (call[0] as string[]).includes('-n')
       );
 
       // Verify only tenant schema is exported
@@ -132,7 +126,7 @@ describe('NativeExportStrategy', () => {
         stderr: {
           text: mock().mockResolvedValue('pg_dump failed'),
         },
-      } as never);
+      } as unknown as ReturnType<Mocked<typeof mockShell>['spawn']>);
 
       const options: ExportOptions = {
         tenantId: 'tenant-123',

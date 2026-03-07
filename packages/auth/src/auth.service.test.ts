@@ -3,19 +3,17 @@
  */
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { MockFactory } from '@apex/test-utils';
 import { UnauthorizedException } from '@nestjs/common';
-import { AuthService } from './auth.service.js';
+import { AuthService, type JwtPayload } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
-  const mockJwtService = {
-    sign: mock(),
-    verify: mock(),
-  };
+  const mockJwtService = MockFactory.createJwtService();
 
   beforeEach(() => {
     mock.restore();
-    service = new AuthService(mockJwtService as never);
+    service = new AuthService(mockJwtService);
   });
 
   describe('generateToken', () => {
@@ -31,7 +29,7 @@ describe('AuthService', () => {
         email: user.email,
         tenantId: user.tenantId,
         role: undefined,
-        jti: expect.anything(String),
+        jti: expect.any(String),
         dfp: undefined,
       });
     });
@@ -39,7 +37,12 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('should validate a user with a valid payload', async () => {
-      const payload = { sub: 'u1', email: 'test@test.com', tenantId: 't1' };
+      const payload = {
+        sub: 'u1',
+        email: 'test@test.com',
+        tenantId: 't1',
+        jti: 'test-jti',
+      };
       const user = await service.validateUser(payload);
 
       expect(user).toEqual({
@@ -51,8 +54,11 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException if sub is missing', async () => {
-      const payload = { email: 'test@test.com', tenantId: 't1' } as never;
-      await expect(service.validateUser(payload)).rejects.toThrow(
+      const payload: Partial<JwtPayload> = {
+        email: 'test@test.com',
+        tenantId: 't1',
+      };
+      await expect(service.validateUser(payload as JwtPayload)).rejects.toThrow(
         UnauthorizedException
       );
     });
@@ -60,7 +66,12 @@ describe('AuthService', () => {
 
   describe('verifyToken', () => {
     it('should return payload for a valid token', async () => {
-      const payload = { sub: 'u1', email: 'test@test.com' };
+      const payload = {
+        sub: 'u1',
+        email: 'test@test.com',
+        tenantId: 't1',
+        jti: 'test-jti',
+      };
       mockJwtService.verify.mockReturnValue(payload);
 
       const result = await service.verifyToken('valid-token');

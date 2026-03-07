@@ -1,7 +1,7 @@
 import { AuditModule } from '@apex/audit';
 import { Module } from '@nestjs/common';
-import { BlueprintsController } from './blueprints.controller.js';
-import { BlueprintsService } from './blueprints.service.js';
+import { BlueprintsController } from './blueprints.controller';
+import { BlueprintsService } from './blueprints.service';
 
 @Module({
   imports: [AuditModule],

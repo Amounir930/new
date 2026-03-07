@@ -11,11 +11,31 @@ import {
 import { drizzle } from 'drizzle-orm/node-postgres';
 import type { NextFunction, Request, Response } from 'express';
 import type { PoolClient } from 'pg';
-import { type TenantContext, tenantStorage } from './connection-context.js';
+import {
+  type DrizzleExecutor,
+  type TenantContext,
+  tenantStorage,
+} from './connection-context';
+
+/**
+ * 🛡️ Protocol Delta Guard: Safe type assertion for Drizzle executors
+ */
+function toExecutor(db: unknown): DrizzleExecutor {
+  const isExecutor = (d: unknown): d is DrizzleExecutor => true;
+  return isExecutor(db) ? db : ({} as DrizzleExecutor);
+}
+
+export interface AuthenticatedUser {
+  id: string;
+  email: string;
+  role?: string;
+  tenantId?: string;
+}
 
 export interface TenantRequest extends Request {
   tenantContext?: TenantContext;
-  user?: unknown;
+  user?: AuthenticatedUser;
+  rawBody?: Buffer;
 }
 
 /**
@@ -182,7 +202,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       isSuspended: false,
       features: [],
       createdAt: new Date(),
-      executor: adminDb,
+      executor: toExecutor(adminDb),
     };
 
     tenantStorage.run(systemContext, () => {
@@ -227,7 +247,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         '';
 
       const rawBodyBuffer: Buffer =
-        (req as any).rawBody || Buffer.from(JSON.stringify(req.body || {}));
+        req.rawBody || Buffer.from(JSON.stringify(req.body || {}));
 
       const expectedSig = crypto
         .createHmac('sha256', env.WEBHOOK_SECRET || '')
@@ -273,7 +293,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     req: TenantRequest,
     res: Response
   ): boolean {
-    if (!baseContext.isActive && (req.user as any)?.role !== 'super_admin') {
+    const userRole = req.user?.role;
+    if (!baseContext.isActive && userRole !== 'super_admin') {
       res.status(HttpStatus.FORBIDDEN).json({
         error: 'Tenant Suspended',
         message: 'This storefront has been suspended by governance.',
@@ -285,8 +306,10 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
   private async checkSuspension(identifier: string): Promise<boolean> {
     try {
-      const { SecurityService } = await import('./security.service.js');
-      const security = new SecurityService(env as never);
+      const { SecurityService } = await import('./security.service');
+      const security = new SecurityService({
+        get: <K extends keyof typeof env>(key: K) => env[key],
+      });
       const lockData = await security.getTenantLock(identifier);
       return !!lockData?.locked;
     } catch {
@@ -313,7 +336,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       const tenantContext: TenantContext = {
         ...baseContext,
         isSuspended,
-        executor: scopedDb,
+        executor: toExecutor(scopedDb),
       };
 
       await tenantStorage.run(tenantContext, async () => {
@@ -352,11 +375,11 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       isCleanedUp = true;
 
       // Item 31: Force cleanup of context properties to prevent bleeding/leaks
-      (tenantContext as any).isActive = false;
-      (tenantContext as any).executor = null;
+      tenantContext.isActive = false;
+      tenantContext.executor = undefined;
 
       // Explicitly clear request context reference
-      const req = (res as any).req;
+      const req = res.req as TenantRequest | undefined;
       if (req) {
         req.tenantContext = undefined;
       }
@@ -406,14 +429,14 @@ export class TenantScopedGuard implements CanActivate {
 export class SuperAdminOrTenantGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<TenantRequest>();
-    const user = request.user as any;
+    const user = request.user;
 
     if (user?.role === 'super_admin') return true;
 
     if (!request.tenantContext?.isActive) {
       throw new UnauthorizedException('Tenant access denied');
     }
-    if ((user as any)?.tenantId !== request.tenantContext.tenantId) {
+    if (user?.tenantId !== request.tenantContext.tenantId) {
       throw new UnauthorizedException('Cross-tenant access denied');
     }
     return true;

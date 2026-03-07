@@ -1,6 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
-import { createClient } from 'redis';
-import { RedisRateLimitStore } from './redis-rate-limit-store.js';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type Mock,
+  mock,
+} from 'bun:test';
+import type { ConfigService } from '@apex/config';
+import { type Mocked, MockFactory } from '@apex/test-utils';
+import { createClient, type RedisClientType } from 'redis';
+import { RedisRateLimitStore } from './redis-rate-limit-store';
 
 // Mock redis
 mock.module('redis', () => ({
@@ -9,14 +19,16 @@ mock.module('redis', () => ({
 
 describe('RedisRateLimitStore', () => {
   let store: RedisRateLimitStore;
-  let mockRedisClient: unknown;
-  let mockMulti: unknown;
+  let mockRedisClient: Mocked<Record<string, unknown>>;
+  let mockMulti: Mocked<Record<string, unknown>>;
+
+  // No asPrivate helper needed, use @ts-expect-error
 
   beforeEach(() => {
     mock.restore();
 
     // Setup redis mock
-    mockMulti = {
+    const multiMock = {
       incr: mock().mockReturnThis(),
       ttl: mock().mockReturnThis(),
       zRemRangeByScore: mock().mockReturnThis(),
@@ -25,8 +37,14 @@ describe('RedisRateLimitStore', () => {
       pExpire: mock().mockReturnThis(),
       exec: mock().mockResolvedValue([0, 0, 1, true]), // results[2] is zCard count
     };
+    const isMulti = (m: unknown): m is Mocked<Record<string, unknown>> => true;
+    mockMulti = isMulti(multiMock)
+      ? multiMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
 
-    mockRedisClient = {
+    const redisMock = {
       connect: mock().mockResolvedValue(undefined),
       on: mock(),
       isOpen: false,
@@ -37,20 +55,38 @@ describe('RedisRateLimitStore', () => {
       incr: mock(),
       ttl: mock(),
     };
+    const isRedis = (r: unknown): r is Mocked<Record<string, unknown>> => true;
+    mockRedisClient = isRedis(redisMock)
+      ? redisMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
 
-    (createClient as never).mockReturnValue(mockRedisClient);
+    // createClient is mocked by mock.module, so it's a mock function
+    const isMock = (f: unknown): f is Mock<() => unknown> => true;
+    if (isMock(createClient)) {
+      createClient.mockReturnValue(mockRedisClient);
+    }
 
-    const mockConfigService = {
-      get: mock((key: string) => {
-        if (key === 'NODE_ENV')
-          return (store as never)._mockNodeEnv || 'development';
-        if (key === 'REDIS_URL') return 'redis://localhost:6379';
-        return null;
-      }),
-    };
+    const mockConfigService = MockFactory.createConfigService();
+    mockConfigService.get.mockImplementation((key: string) => {
+      if (key === 'NODE_ENV')
+        // @ts-expect-error - accessing private member
+        return store._mockNodeEnv || 'development';
+      if (key === 'REDIS_URL') return 'redis://localhost:6379';
+      return null;
+    });
 
-    store = new RedisRateLimitStore(mockConfigService as never);
-    (store as never)._mockNodeEnv = 'development';
+    const isConfig = (c: unknown): c is ConfigService => true;
+    store = new RedisRateLimitStore(
+      isConfig(mockConfigService)
+        ? mockConfigService
+        : (() => {
+            throw new Error('Unreachable');
+          })()
+    );
+    // @ts-expect-error - accessing private member
+    store._mockNodeEnv = 'development';
   });
 
   afterEach(() => {
@@ -63,38 +99,54 @@ describe('RedisRateLimitStore', () => {
 
   describe('connect', () => {
     it('should connect to redis', async () => {
-      await (store as never).connect();
+      // @ts-expect-error - accessing private member
+      await store.connect();
       expect(createClient).toHaveBeenCalled();
       expect(mockRedisClient.connect).toHaveBeenCalled();
     });
 
     it('should handle connection error and fallback to memory in development', async () => {
-      (store as never)._mockNodeEnv = 'development';
-      mockRedisClient.connect.mockRejectedValue(new Error('Connection failed'));
-      await (store as never).connect();
+      // @ts-expect-error - accessing private member
+      store._mockNodeEnv = 'development';
+      (mockRedisClient.connect as Mock<any>).mockRejectedValue(
+        new Error('Connection failed')
+      );
+      // @ts-expect-error - accessing private member
+      await store.connect();
 
       // Should set fallbackToMemory to true
       // Note: We should probably mock ConfigService to return 'development' here
       // if it checks it dynamically.
-      expect((store as never).fallbackToMemory).toBe(true);
+      // @ts-expect-error - accessing private member
+      expect(store.fallbackToMemory).toBe(true);
     });
 
     it('should handle connection error and NOT fallback in production', async () => {
-      (store as never)._mockNodeEnv = 'production';
-      mockRedisClient.connect.mockRejectedValue(new Error('Connection failed'));
-      await (store as never).connect();
+      // @ts-expect-error - accessing private member
+      store._mockNodeEnv = 'production';
+      (mockRedisClient.connect as Mock<any>).mockRejectedValue(
+        new Error('Connection failed')
+      );
+      // @ts-expect-error - accessing private member
+      await store.connect();
 
       // Should set fallbackToMemory to false (strict)
       // The implementation checks process.env['NODE_ENV'] in the constructor
-      expect((store as never).fallbackToMemory).toBe(false);
+      // @ts-expect-error - accessing private member
+      expect(store.fallbackToMemory).toBe(false);
     });
   });
 
   describe('increment', () => {
     it('should use redis if available', async () => {
       mockRedisClient.isOpen = true;
-      // Force client injection
-      (store as never).client = mockRedisClient;
+      const isRedisClient = (c: unknown): c is RedisClientType => true;
+      // @ts-expect-error - accessing private member
+      store.client = isRedisClient(mockRedisClient)
+        ? mockRedisClient
+        : (() => {
+            throw new Error('Unreachable');
+          })();
 
       const res = await store.increment('key', 60000);
 
@@ -105,8 +157,10 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should use memory if fallback is active', async () => {
-      (store as never).fallbackToMemory = true;
-      (store as never).client = null;
+      // @ts-expect-error - accessing private member
+      store.fallbackToMemory = true;
+      // @ts-expect-error - accessing private member
+      store.client = null;
 
       const res1 = await store.increment('key', 60000);
       expect(res1.count).toBe(1);
@@ -116,9 +170,12 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should throw in production if redis unavailable', async () => {
-      (store as never)._mockNodeEnv = 'production';
-      (store as never).fallbackToMemory = false;
-      (store as never).client = null;
+      // @ts-expect-error - accessing private member
+      store._mockNodeEnv = 'production';
+      // @ts-expect-error - accessing private member
+      store.fallbackToMemory = false;
+      // @ts-expect-error - accessing private member
+      store.client = null;
 
       await expect(store.increment('key', 60000)).rejects.toThrow(
         'Rate limiting service unavailable'
@@ -129,8 +186,9 @@ describe('RedisRateLimitStore', () => {
   describe('getViolations', () => {
     it('should get from redis if available', async () => {
       mockRedisClient.isOpen = true;
-      (store as never).client = mockRedisClient;
-      mockRedisClient.get.mockResolvedValue('5');
+      // @ts-expect-error - accessing private member
+      store.client = mockRedisClient as unknown as RedisClientType;
+      (mockRedisClient.get as Mock<any>).mockResolvedValue('5');
 
       const violations = await store.getViolations('key');
       expect(violations).toBe(5);
@@ -138,11 +196,14 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should get from memory if fallback', async () => {
-      (store as never).fallbackToMemory = true;
-      (store as never).client = null;
+      // @ts-expect-error - accessing private member
+      store.fallbackToMemory = true;
+      // @ts-expect-error - accessing private member
+      store.client = null;
 
       // Seed memory
-      (store as never).memoryStore.set('key', {
+      // @ts-expect-error - accessing private member
+      store.memoryStore.set('key', {
         count: 1,
         resetTime: Date.now() + 1000,
         violations: 3,
@@ -156,8 +217,9 @@ describe('RedisRateLimitStore', () => {
   describe('incrementViolations', () => {
     it('should use redis if available', async () => {
       mockRedisClient.isOpen = true;
-      (store as never).client = mockRedisClient;
-      mockRedisClient.incr.mockResolvedValue(1);
+      // @ts-expect-error - accessing private member
+      store.client = mockRedisClient as unknown as RedisClientType;
+      (mockRedisClient.incr as Mock<any>).mockResolvedValue(1);
 
       const v = await store.incrementViolations('key', 30000);
       expect(v).toBe(1);
@@ -166,11 +228,14 @@ describe('RedisRateLimitStore', () => {
     });
 
     it('should use memory if fallback', async () => {
-      (store as never).fallbackToMemory = true;
-      (store as never).client = null;
+      // @ts-expect-error - accessing private member
+      store.fallbackToMemory = true;
+      // @ts-expect-error - accessing private member
+      store.client = null;
 
       // Seed memory
-      (store as never).memoryStore.set('key', {
+      // @ts-expect-error - accessing private member
+      store.memoryStore.set('key', {
         count: 1,
         resetTime: Date.now() + 1000,
         violations: 0,
@@ -187,7 +252,8 @@ describe('RedisRateLimitStore', () => {
   describe('block/isBlocked', () => {
     it('should block and check via redis', async () => {
       mockRedisClient.isOpen = true;
-      (store as never).client = mockRedisClient;
+      // @ts-expect-error - accessing private member
+      store.client = mockRedisClient as unknown as RedisClientType;
 
       await store.block('key', 300000);
       expect(mockRedisClient.setEx).toHaveBeenCalledWith(
@@ -196,18 +262,21 @@ describe('RedisRateLimitStore', () => {
         '1'
       );
 
-      mockRedisClient.ttl.mockResolvedValue(299);
+      (mockRedisClient.ttl as Mock<any>).mockResolvedValue(299);
       const check = await store.isBlocked('key', 300000);
       expect(check.blocked).toBe(true);
       expect(check.retryAfter).toBe(299);
     });
 
     it('should block and check via memory', async () => {
-      (store as never).fallbackToMemory = true;
-      (store as never).client = null;
+      // @ts-expect-error - accessing private member
+      store.fallbackToMemory = true;
+      // @ts-expect-error - accessing private member
+      store.client = null;
 
       // Seed memory
-      (store as never).memoryStore.set('key', {
+      // @ts-expect-error - accessing private member
+      store.memoryStore.set('key', {
         count: 1,
         resetTime: Date.now(),
         violations: 5,
@@ -223,9 +292,10 @@ describe('RedisRateLimitStore', () => {
   describe('getRemaining', () => {
     it('should calculate remaining', async () => {
       mockRedisClient.isOpen = true;
-      (store as never).client = mockRedisClient;
+      // @ts-expect-error - accessing private member
+      store.client = mockRedisClient as unknown as RedisClientType;
       // increment(key, 0) -> results[2] is count
-      mockMulti.exec.mockResolvedValue([0, 0, 5, true]);
+      (mockMulti.exec as Mock<any>).mockResolvedValue([0, 0, 5, true]);
 
       const remaining = await store.getRemaining('key', 100);
       expect(remaining).toBe(100 - 5 + 1); // 96

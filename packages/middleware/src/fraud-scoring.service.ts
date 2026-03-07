@@ -6,9 +6,9 @@
 
 import { Injectable } from '@nestjs/common';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { GeoIpService } from './geo-ip.service.js';
+import { GeoIpService } from './geo-ip.service';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { RedisRateLimitStore } from './redis-rate-limit-store.js';
+import { RedisRateLimitStore } from './redis-rate-limit-store';
 
 export interface FraudScore {
   score: number; // 0-1000 (1000 is high risk)
@@ -37,8 +37,10 @@ export class FraudScoringService {
     let score = 0;
     const reasons: string[] = [];
 
-    const fingerprint = (req as any).fingerprint;
-    const ip = (req as any).fingerprintData?.ip;
+    const fingerprintData = (req as { fingerprintData?: { ip?: string } })
+      .fingerprintData;
+    const fingerprint = (req as { fingerprint?: string }).fingerprint;
+    const ip = fingerprintData?.ip;
 
     // 1. Check Velocity per Fingerprint (L3)
     const velocityResult = await this.checkVelocity(fingerprint);
@@ -161,10 +163,13 @@ export class FraudScoringService {
   }
 
   private checkBotPatterns(req: unknown): FraudCheckResult {
-    if (
-      !(req as any).headers['user-agent'] ||
-      (req as any).headers['user-agent'].includes('Headless')
-    ) {
+    const headers =
+      (req as { headers?: Record<string, string | string[] | undefined> })
+        .headers || {};
+    const userAgent = headers['user-agent'];
+    const uaString = Array.isArray(userAgent) ? userAgent[0] : userAgent;
+
+    if (!uaString || uaString.includes('Headless')) {
       return { score: 400, reason: 'Anomalous User-Agent' };
     }
 

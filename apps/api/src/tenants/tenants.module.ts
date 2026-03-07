@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TenantsController } from './tenants.controller.js';
-import { TenantsPublicController } from './tenants-public.controller.js';
+import { TenantsController } from './tenants.controller';
+import { TenantsPublicController } from './tenants-public.controller';
 @Module({
   imports: [],
   controllers: [TenantsController, TenantsPublicController],

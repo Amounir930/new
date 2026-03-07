@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { TenantConfigSchema } from './tenant-config.schema.js';
+import { TenantConfigSchema } from './tenant-config.schema';
 
 describe('TenantConfigSchema', () => {
   const validData = {

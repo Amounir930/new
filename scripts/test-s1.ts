@@ -87,7 +87,9 @@ let failed = 0;
 
 for (const test of tests) {
   process.stdout.write(`\n📝 Test: ${test.name}`);
-  process.stdout.write(`   Expected: ${test.shouldCrash ? 'CRASH 💥' : 'SUCCESS ✅'}`);
+  process.stdout.write(
+    `   Expected: ${test.shouldCrash ? 'CRASH 💥' : 'SUCCESS ✅'}`
+  );
 
   // Run test in subprocess
   const result = spawn('bun', ['run', 'packages/config/src/index.ts'], {

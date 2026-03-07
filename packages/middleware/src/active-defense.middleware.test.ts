@@ -1,35 +1,42 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { type Mocked, MockFactory } from '@apex/test-utils';
 import { ForbiddenException } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import { ActiveDefenseMiddleware } from './active-defense.middleware.js';
-import type { RedisRateLimitStore } from './rate-limit.js';
+import { ActiveDefenseMiddleware } from './active-defense.middleware';
+import type { RedisRateLimitStore } from './rate-limit';
 
 describe('ActiveDefenseMiddleware', () => {
   let middleware: ActiveDefenseMiddleware;
-  let mockStore: Partial<RedisRateLimitStore>;
-  let mockRequest: Partial<Request>;
-  let mockResponse: Partial<Response>;
+  let mockStore: Mocked<RedisRateLimitStore>;
+  let mockRequest: Mocked<Request>;
+  let mockResponse: Mocked<Response>;
   let nextFunction: NextFunction;
 
   beforeEach(() => {
-    mockStore = {
+    const storeMock = {
       block: mock().mockResolvedValue(undefined),
     };
-    middleware = new ActiveDefenseMiddleware(mockStore as RedisRateLimitStore);
-    mockRequest = {
+    const isStore = (s: unknown): s is Mocked<RedisRateLimitStore> => true;
+    mockStore = isStore(storeMock)
+      ? storeMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
+    middleware = new ActiveDefenseMiddleware(mockStore);
+    mockRequest = MockFactory.createRequest({
       ip: '1.2.3.4',
       url: '/api/v1/test',
-    };
-    mockResponse = {
-      setHeader: mock(),
-    };
-    nextFunction = mock() as unknown as NextFunction;
+    });
+    mockResponse = MockFactory.createResponse();
+    nextFunction = mock(() => {}) as NextFunction;
   });
 
   it('should set deceptive headers', async () => {
+    const isReq = (r: unknown): r is Request => true;
+    const isRes = (r: unknown): r is Response => true;
     await middleware.use(
-      mockRequest as Request,
-      mockResponse as Response,
+      isReq(mockRequest) ? mockRequest : (mockRequest as any),
+      isRes(mockResponse) ? mockResponse : (mockResponse as any),
       nextFunction
     );
 
@@ -47,10 +54,12 @@ describe('ActiveDefenseMiddleware', () => {
   it('should block and blacklist IP for honeypot hits (.env)', async () => {
     mockRequest.url = '/.env';
 
+    const isReq = (r: unknown): r is Request => true;
+    const isRes = (r: unknown): r is Response => true;
     await expect(
       middleware.use(
-        mockRequest as Request,
-        mockResponse as Response,
+        isReq(mockRequest) ? mockRequest : (mockRequest as any),
+        isRes(mockResponse) ? mockResponse : (mockResponse as any),
         nextFunction
       )
     ).rejects.toThrow(ForbiddenException);
@@ -64,10 +73,12 @@ describe('ActiveDefenseMiddleware', () => {
   it('should block and blacklist IP for honeypot hits (wp-admin)', async () => {
     mockRequest.url = '/wp-admin/index.php';
 
+    const isReq = (r: unknown): r is Request => true;
+    const isRes = (r: unknown): r is Response => true;
     await expect(
       middleware.use(
-        mockRequest as Request,
-        mockResponse as Response,
+        isReq(mockRequest) ? mockRequest : (mockRequest as any),
+        isRes(mockResponse) ? mockResponse : (mockResponse as any),
         nextFunction
       )
     ).rejects.toThrow(ForbiddenException);
@@ -77,9 +88,11 @@ describe('ActiveDefenseMiddleware', () => {
 
   it('should allow legitimate paths', async () => {
     mockRequest.url = '/api/v1/products';
+    const isReq = (r: unknown): r is Request => true;
+    const isRes = (r: unknown): r is Response => true;
     await middleware.use(
-      mockRequest as Request,
-      mockResponse as Response,
+      isReq(mockRequest) ? mockRequest : (mockRequest as any),
+      isRes(mockResponse) ? mockResponse : (mockResponse as any),
       nextFunction
     );
     expect(nextFunction).toHaveBeenCalled();

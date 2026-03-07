@@ -29,17 +29,24 @@ export async function createSnapshot(
   try {
     // 1. Capture Settings
     const settingsRows = await db.select().from(tenantConfigInStorefront);
-    const settingsMap: Record<string, unknown> = {};
-    settingsRows.forEach((row: any) => {
-      settingsMap[row.key] = row.value;
+    const settingsMap: Record<string, string> = {};
+    settingsRows.forEach((row) => {
+      settingsMap[row.key] =
+        typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
     });
 
     // 2. Capture Pages
     const pagesRows = await db.select().from(pagesInStorefront);
-    const pagesMapped = pagesRows.map((p: any) => ({
-      title: p.title,
+    const pagesMapped = pagesRows.map((p) => ({
+      id: p.id,
+      title: typeof p.title === 'string' ? p.title : JSON.stringify(p.title),
       slug: p.slug,
-      content: p.content,
+      content:
+        typeof p.content === 'string'
+          ? p.content
+          : p.content
+            ? JSON.stringify(p.content)
+            : undefined,
       isPublished: p.isPublished,
     }));
 
@@ -63,8 +70,12 @@ export async function createSnapshot(
       .values({
         name: options.name,
         description: options.description || `Snapshot of ${tenantId}`,
-        blueprint: blueprint as never,
-        plan: (options.plan || 'pro') as never,
+        blueprint: blueprint satisfies BlueprintTemplate,
+        plan: (options.plan || 'pro') as
+          | 'free'
+          | 'basic'
+          | 'pro'
+          | 'enterprise',
         isDefault: !!options.isDefault,
         status: 'active',
         uiConfig: {},

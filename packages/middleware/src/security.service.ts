@@ -12,7 +12,7 @@ export class SecurityService implements OnModuleInit {
   private redis: RedisClientType;
   private readonly logger = new Logger(SecurityService.name);
 
-  constructor(private readonly config: ConfigService) {
+  constructor(private readonly config: Pick<ConfigService, 'get'>) {
     const redisUrl = this.config.get('REDIS_URL') || 'redis://localhost:6379';
     this.redis = createClient({ url: redisUrl });
   }

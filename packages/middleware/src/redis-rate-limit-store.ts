@@ -27,7 +27,7 @@ export class RedisRateLimitStore
   > = new Map();
   private readonly logger = new Logger(RedisRateLimitStore.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: Pick<ConfigService, 'get'>) {}
 
   async onModuleInit() {
     await this.connect();

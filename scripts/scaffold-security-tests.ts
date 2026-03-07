@@ -92,7 +92,9 @@ describe('${className} Security Checks', () => {
 }
 
 async function main() {
-  process.stdout.write('🛡️  Scanning for NestJS Modules to Scaffold Security Tests...');
+  process.stdout.write(
+    '🛡️  Scanning for NestJS Modules to Scaffold Security Tests...'
+  );
 
   const appModules = findAllModules(APPS_DIR);
   const pkgModules = findAllModules(PACKAGES_DIR);

@@ -23,9 +23,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
-import type { ProvisionRequestDto } from './dto/provision-request.dto.js';
+import type { ProvisionRequestDto } from './dto/provision-request.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { ProvisioningService } from './provisioning.service.js';
+import { ProvisioningService } from './provisioning.service';
 
 @Controller('provision')
 export class ProvisioningController {

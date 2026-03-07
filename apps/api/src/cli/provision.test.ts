@@ -21,7 +21,7 @@ const mockProvisioningService = {
   provision: mock().mockResolvedValue({ subdomain: 'test', durationMs: 100 }),
 };
 
-import { main } from './provision.js';
+import { main } from './provision';
 
 describe('CLI Provisioning', () => {
   beforeEach(() => {

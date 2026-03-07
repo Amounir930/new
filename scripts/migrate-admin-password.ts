@@ -36,7 +36,9 @@ async function migrate() {
     return;
   }
 
-  process.stdout.write(`🔒 Hashing plaintext password with ${SALT_ROUNDS} rounds...`);
+  process.stdout.write(
+    `🔒 Hashing plaintext password with ${SALT_ROUNDS} rounds...`
+  );
   const startTime = Date.now();
   const hash = await bcrypt.hash(plaintextPassword, SALT_ROUNDS);
   const duration = Date.now() - startTime;

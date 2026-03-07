@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import {
-  JwtPayloadSchema,
-  LoginSchema,
-  RegisterSchema,
-} from './auth.schema.js';
+import { JwtPayloadSchema, LoginSchema, RegisterSchema } from './auth.schema';
 
 describe('Auth Schemas (Rule 5.1)', () => {
   describe('LoginSchema', () => {

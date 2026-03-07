@@ -6,7 +6,7 @@ import {
   InMemoryEventBus,
   TenantProvisioningStartedSchema,
   validateEvent,
-} from './index.js';
+} from './index';
 
 describe('Events Module Exports', () => {
   it('should export InMemoryEventBus', () => {

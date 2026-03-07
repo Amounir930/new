@@ -4,16 +4,16 @@
  */
 
 // S15: Active Defense
-export { ActiveDefenseMiddleware } from './active-defense.middleware.js';
+export { ActiveDefenseMiddleware } from './active-defense.middleware';
 // S3: Input Validation (Audit Schema)
 export {
   type AuditLogDto,
   AuditLogSchema,
   type CreateAuditLogDto,
   CreateAuditLogSchema,
-} from './audit.schema.js';
+} from './audit.schema';
 // S11: Bot Protection
-export { BotProtectionMiddleware } from './bot-protection.js';
+export { BotProtectionMiddleware } from './bot-protection';
 // S2: Tenant Resolution & Context Management
 export {
   getCurrentTenantContext,
@@ -24,25 +24,32 @@ export {
   runWithTenantContext,
   type TenantContext,
   tenantStorage,
-} from './connection-context.js';
+} from './connection-context';
 // S4: Database Security
-export * from './db-security.interceptor.js';
-export { type TenantEvent, TenantEventService } from './events.service.js';
+export * from './db-security.interceptor';
+export { type TenantEvent, TenantEventService } from './events.service';
 // S5: Global Exception Filter
-export { GlobalExceptionFilter } from './exception-filter.js';
+export {
+  AuthenticationError,
+  AuthorizationError,
+  GlobalExceptionFilter,
+  OperationalError,
+  TenantIsolationError,
+  ValidationError,
+} from './exception-filter';
 // S14: Fraud Detection
-export { FingerprintMiddleware } from './fingerprint.js';
-export { FraudGuard } from './fraud.guard.js';
+export { FingerprintMiddleware } from './fingerprint';
+export { FraudGuard } from './fraud.guard';
 export {
   type FraudScore,
   FraudScoringService,
-} from './fraud-scoring.service.js';
-export { GeoIpService } from './geo-ip.service.js';
+} from './fraud-scoring.service';
+export { GeoIpService } from './geo-ip.service';
 // Governance & Quotas
-export { GovernanceGuard, RequireFeature } from './governance.guard.js';
-export { HCaptchaService } from './hcaptcha.service.js';
-export { OTPService } from './otp.service.js';
-export { CheckQuota, QuotaInterceptor } from './quota.interceptor.js';
+export { GovernanceGuard, RequireFeature } from './governance.guard';
+export { HCaptchaService } from './hcaptcha.service';
+export { OTPService } from './otp.service';
+export { CheckQuota, QuotaInterceptor } from './quota.interceptor';
 // S6: Rate Limiting
 export {
   RATE_LIMIT_KEY,
@@ -52,9 +59,9 @@ export {
   RateLimitModule,
   RedisRateLimitStore,
   ThrottleConfig,
-} from './rate-limit.js';
+} from './rate-limit';
 // Tier 3 Security Support
-export { SecretDetectionMiddleware } from './secret-detection.js';
+export { SecretDetectionMiddleware } from './secret-detection';
 // S8: Security Headers & CORS
 export {
   type CorsConfig,
@@ -65,19 +72,20 @@ export {
   helmetConfig,
   SecurityHeadersMiddleware,
   securityHeaders,
-} from './security.js';
-export { SecurityService } from './security.service.js';
+} from './security';
+export { SecurityService } from './security.service';
 // S2: Tenant Isolation Middleware
 export {
+  type AuthenticatedUser,
   SuperAdminOrTenantGuard,
   TenantIsolationMiddleware,
   type TenantRequest,
   TenantScopedGuard,
-} from './tenant-isolation.middleware.js';
+} from './tenant-isolation.middleware';
 export {
   extractTenantFromHeader,
   extractTenantFromHost,
   extractTenantFromJWT,
   resolveTenant,
   type TenantResolutionStrategy,
-} from './tenant-resolution.js';
+} from './tenant-resolution';

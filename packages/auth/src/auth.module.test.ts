@@ -3,8 +3,8 @@ import { describe, expect, it, mock } from 'bun:test';
 import { ConfigService } from '@apex/config';
 import { Global, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { AuthModule } from './auth.module.js';
-import { AuthService } from './auth.service.js';
+import { AuthModule } from './auth.module';
+import { AuthService } from './auth.service';
 
 @Global()
 @Module({

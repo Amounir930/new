@@ -17,7 +17,9 @@ const args = process.argv.slice(2);
 const stagedFiles = args.filter((f) => existsSync(f));
 
 if (stagedFiles.length === 0) {
-  process.stdout.write(color.gray('No staged files to scan. Skipping security check.'));
+  process.stdout.write(
+    color.gray('No staged files to scan. Skipping security check.')
+  );
   process.exit(0);
 }
 

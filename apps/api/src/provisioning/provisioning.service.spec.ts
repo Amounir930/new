@@ -1,5 +1,7 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test';
+import type { AuditLogEntry, AuditService } from '@apex/audit';
 import * as provisioning from '@apex/provisioning';
+import { type Mocked, MockFactory } from '@apex/test-utils';
 import {
   ConflictException,
   InternalServerErrorException,
@@ -7,7 +9,7 @@ import {
 import {
   type ProvisioningOptions,
   ProvisioningService,
-} from './provisioning.service.js';
+} from './provisioning.service';
 
 // Mock the @apex/provisioning module
 mock.module('@apex/provisioning', () => ({
@@ -19,37 +21,51 @@ mock.module('@apex/provisioning', () => ({
 }));
 
 // Mock @apex/db
-mock.module('@apex/db', () => {
-  return {
-    TenantRegistryService: class TenantRegistryService {
-      register = mock();
-      existsBySubdomain = mock().mockResolvedValue(false);
-    },
-    publicDb: {
-      select: mock().mockReturnThis(),
-      from: mock().mockReturnThis(),
-      where: mock().mockReturnThis(),
-      limit: mock().mockImplementation(() => Promise.resolve([])),
-      insert: mock().mockReturnThis(),
-      values: mock().mockReturnThis(),
-      onConflictDoNothing: mock().mockImplementation(() => Promise.resolve([])),
-      execute: mock().mockResolvedValue([]),
-    },
-    tenants: { subdomain: 'subdomain', id: 'id' },
-    onboardingBlueprints: {
-      id: 'id',
-      blueprint: 'blueprint',
-      status: 'status',
-      nicheType: 'nicheType',
-      plan: 'plan',
-    },
-    featureGates: {},
-    tenantQuotas: {},
-    eq: mock(),
-    and: mock(),
-    sql: mock(),
-  };
-});
+const adminDb = {
+  select: mock().mockReturnThis(),
+  from: mock().mockReturnThis(),
+  where: mock().mockReturnThis(),
+  limit: mock().mockImplementation(() => Promise.resolve([])),
+  execute: mock().mockResolvedValue([]),
+  insert: mock().mockReturnThis(),
+  values: mock().mockImplementation(() => Promise.resolve([])),
+};
+
+const publicDb = {
+  select: mock().mockReturnThis(),
+  from: mock().mockReturnThis(),
+  where: mock().mockReturnThis(),
+  limit: mock().mockImplementation(() => Promise.resolve([])),
+  insert: mock().mockReturnThis(),
+  values: mock().mockReturnThis(),
+  onConflictDoNothing: mock().mockImplementation(() => Promise.resolve([])),
+  execute: mock().mockResolvedValue([]),
+};
+
+mock.module('@apex/db', () => ({
+  adminDb,
+  publicDb,
+  tenantsInGovernance: { id: 'id', ownerEmail: 'ownerEmail' },
+  onboardingBlueprintsInGovernance: {
+    id: 'id',
+    blueprint: 'blueprint',
+    status: 'status',
+    nicheType: 'nicheType',
+    plan: 'plan',
+  },
+  tenantQuotasInGovernance: {
+    tenantId: 'tenantId',
+    maxProducts: 'maxProducts',
+    maxOrders: 'maxOrders',
+    maxPages: 'maxPages',
+    maxStaff: 'maxStaff',
+    storageLimitGb: 'storageLimitGb',
+  },
+  featureGatesInGovernance: {},
+  eq: mock(),
+  and: mock(),
+  sql: mock().mockReturnValue({}),
+}));
 
 // Mock @apex/config
 mock.module('@apex/config', () => ({
@@ -62,14 +78,7 @@ mock.module('@apex/config', () => ({
 describe('ProvisioningService', () => {
   let service: ProvisioningService;
 
-  const mockAuditService = {
-    log: mock(),
-  };
-
-  const mockTenantRegistry = {
-    register: mock(),
-    existsBySubdomain: mock().mockResolvedValue(false),
-  };
+  const mockAuditService = MockFactory.createAuditService();
 
   const options: ProvisioningOptions = {
     subdomain: 'test-store',
@@ -79,22 +88,22 @@ describe('ProvisioningService', () => {
   };
 
   beforeEach(async () => {
-    mockAuditService.log.mockClear();
-    mockTenantRegistry.register.mockClear();
-    mockTenantRegistry.existsBySubdomain.mockClear();
+    adminDb.insert.mockClear();
+    adminDb.values.mockClear();
+    adminDb.limit.mockClear();
+    adminDb.select.mockClear();
 
     // Reset all provisioning mocks
     (provisioning.createTenantSchema as ReturnType<typeof mock>).mockReset();
     (provisioning.runTenantMigrations as ReturnType<typeof mock>).mockReset();
     (provisioning.createStorageBucket as ReturnType<typeof mock>).mockReset();
     (provisioning.seedTenantData as ReturnType<typeof mock>).mockReset();
-    (provisioning.dropTenantSchema as ReturnType<typeof mock>).mockReset();
+    (
+      provisioning.dropTenantSchema as ReturnType<typeof mock>
+    ).mockRejectedValue(new Error('Rollback Fail'));
 
     // Manual instantiation to bypass NestJS DI issues with Bun/swc
-    service = new ProvisioningService(
-      mockAuditService as never,
-      mockTenantRegistry as never
-    );
+    service = new ProvisioningService(mockAuditService as AuditService);
   });
 
   describe('provision', () => {
@@ -125,7 +134,7 @@ describe('ProvisioningService', () => {
           entityId: 'test-store',
         })
       );
-      expect(mockTenantRegistry.register).toHaveBeenCalled();
+      expect(adminDb.insert).toHaveBeenCalledWith(expect.anything());
       expect(provisioning.seedTenantData).toHaveBeenCalledWith(
         expect.objectContaining({
           subdomain: 'test-store',
@@ -238,7 +247,9 @@ describe('ProvisioningService', () => {
         adminId: 'admin-123',
       });
 
-      mockTenantRegistry.register.mockRejectedValue(new Error('Registry Fail'));
+      (adminDb.insert as ReturnType<typeof mock>).mockReturnValue({
+        values: mock().mockRejectedValue(new Error('Registry Fail')),
+      });
 
       await expect(service.provision(options)).rejects.toThrow(
         InternalServerErrorException

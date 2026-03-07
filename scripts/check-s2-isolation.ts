@@ -18,10 +18,14 @@ const PROJECT_ROOT = process.cwd();
 const DB_PACKAGE_PATH = join(PROJECT_ROOT, 'packages/db/src');
 
 process.stdout.write('\n🛡️  S2 Data Isolation Advanced Checker (AST)');
-process.stdout.write('   Scanning packages/db/src for semantic violations...\n');
+process.stdout.write(
+  '   Scanning packages/db/src for semantic violations...\n'
+);
 
 if (!existsSync(DB_PACKAGE_PATH)) {
-  process.stdout.write(`❌ Error: Database package not found at ${DB_PACKAGE_PATH}`);
+  process.stdout.write(
+    `❌ Error: Database package not found at ${DB_PACKAGE_PATH}`
+  );
   process.exit(1);
 }
 
@@ -41,7 +45,9 @@ function report(type: 'CRITICAL' | 'WARNING', message: string, node: Node) {
   const { line, column } = sourceFile.getLineAndColumnAtPos(node.getStart());
   const filePath = sourceFile.getFilePath().replace(PROJECT_ROOT, '');
 
-  process.stdout.write(`\n${type === 'CRITICAL' ? '❌' : '⚠️ '} ${type}: ${message}`);
+  process.stdout.write(
+    `\n${type === 'CRITICAL' ? '❌' : '⚠️ '} ${type}: ${message}`
+  );
   process.stdout.write(`   📁 .${filePath}:${line}:${column}`);
   process.stdout.write(`   Code: ${node.getText().substring(0, 80).trim()}...`);
 

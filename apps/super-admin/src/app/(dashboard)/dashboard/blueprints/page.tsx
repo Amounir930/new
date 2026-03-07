@@ -100,10 +100,11 @@ export default function BlueprintsPage() {
             >
               <div className="absolute top-0 right-0 p-4">
                 <span
-                  className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${bp.status === 'active'
+                  className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter ${
+                    bp.status === 'active'
                       ? 'bg-emerald-500/10 text-emerald-400'
                       : 'bg-amber-500/10 text-amber-400'
-                    }`}
+                  }`}
                 >
                   {bp.status}
                 </span>

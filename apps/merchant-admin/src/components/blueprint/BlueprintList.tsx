@@ -33,8 +33,8 @@ export function BlueprintList() {
       setLoading(true);
       const data = await apiFetch<Blueprint[]>('/v1/admin/blueprints');
       setBlueprints(data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -50,8 +50,9 @@ export function BlueprintList() {
     try {
       await apiFetch(`/v1/admin/blueprints/${id}`, { method: 'DELETE' });
       fetchBlueprints();
-    } catch (e: any) {
-      alert(e.message);
+      fetchBlueprints();
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : String(e));
     }
   };
 

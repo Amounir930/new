@@ -13,6 +13,28 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 export type AuditAction = string;
 export type AuditSeverity = 'INFO' | 'HIGH' | 'CRITICAL';
 
+/**
+ * Interface for Drizzle executor session client (S4 Reset Protocol)
+ */
+export interface PgPoolClient {
+  query: (
+    q: string,
+    params?: unknown[]
+  ) => Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
+  release: (destroy?: boolean) => void;
+}
+
+/**
+ * Interface for DB Pool
+ */
+export interface PgPool {
+  connect: () => Promise<PgPoolClient>;
+  query?: (
+    q: string,
+    params?: unknown[]
+  ) => Promise<{ rows: Record<string, unknown>[]; rowCount: number | null }>;
+}
+
 import { z } from 'zod';
 
 export const SecurityEvents = {
@@ -66,13 +88,13 @@ export interface AuditLogEntry {
 export class AuditService {
   private readonly logger = new Logger(AuditService.name);
   private encryption: EncryptionService;
-  private pool: unknown;
+  private pool: PgPool;
 
   constructor(
-    @Optional() @Inject('DATABASE_POOL') pool: unknown,
+    @Optional() @Inject('DATABASE_POOL') pool: PgPool | null,
     @Inject(EncryptionService) encryption: EncryptionService
   ) {
-    this.pool = pool || adminPool;
+    this.pool = pool || (adminPool as PgPool);
     this.encryption = encryption;
   }
 
@@ -124,7 +146,7 @@ export class AuditService {
     // 2. Persistent Logging (S4 Protocol)
     // S4 FIX: Store encrypted PII for GDPR/S7 compliance
     try {
-      const client = await (this.pool as any).connect();
+      const client = await this.pool.connect();
       try {
         // S2: Using schema-qualified INSERT (public.audit_logs) — no SET needed
         await client.query(
@@ -184,7 +206,7 @@ export class AuditService {
    * Ensures the audit_logs table and its immutability triggers exist
    */
   async initializeS4(): Promise<void> {
-    const client = await (this.pool as any).connect();
+    const client = await this.pool.connect();
     try {
       // 0. Ensure public schema (S2 Enforcement)
       // Using schema-qualified DDL (public.audit_logs) below

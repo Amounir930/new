@@ -1,7 +1,7 @@
 import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import { Controller, Get, UseGuards } from '@nestjs/common';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { GovernanceService } from './governance.service.js';
+import { GovernanceService } from './governance.service';
 
 @Controller('admin/governance')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)

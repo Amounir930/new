@@ -24,7 +24,8 @@
       "@apex/auth": ["./packages/auth/src"],
       "@apex/validators": ["./packages/validators/src"],
       "@apex/provisioning": ["./packages/provisioning/src"],
-      "@apex/events": ["./packages/events/src"]
+      "@apex/events": ["./packages/events/src"],
+      "@apex/test-utils": ["./packages/test-utils/src"]
     }
   },
   "exclude": ["node_modules", "dist", "build", ".turbo"]

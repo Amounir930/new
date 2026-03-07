@@ -2,8 +2,8 @@ import { adminPool } from '@apex/db';
 import { SecurityModule } from '@apex/security';
 import { Global, Module } from '@nestjs/common';
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
-import { AuditInterceptor } from './audit.interceptor.js';
-import { AuditService } from './audit.service.js';
+import { AuditInterceptor } from './audit.interceptor';
+import { AuditService } from './audit.service';
 
 /**
  * S4: Audit Module

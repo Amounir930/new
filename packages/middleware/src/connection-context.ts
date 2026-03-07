@@ -8,18 +8,40 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 /**
+ * Interface for Drizzle executor session client (S2 Reset Protocol)
+ */
+export interface DrizzleSessionClient {
+  query: (query: string, params?: unknown[]) => Promise<unknown>;
+  release: (destroy?: boolean) => void;
+}
+
+/**
+ * Interface for Drizzle executor session
+ */
+export interface DrizzleSession {
+  client?: DrizzleSessionClient;
+}
+
+/**
+ * Interface for Drizzle executor
+ */
+export interface DrizzleExecutor {
+  session?: DrizzleSession;
+}
+
+/**
  * Tenant context stored per request
  */
 export interface TenantContext {
-  readonly tenantId: string;
-  readonly subdomain: string;
-  readonly plan: 'free' | 'basic' | 'pro' | 'enterprise';
-  readonly features: readonly string[];
-  readonly createdAt: Date;
-  readonly schemaName: string;
-  readonly isActive: boolean;
-  readonly isSuspended: boolean; // S15 FIX 19A: Steel Control flag (enforced by Guards, not Middleware)
-  readonly executor?: unknown; // Drizzle executor/client for stickiness (S2)
+  tenantId: string;
+  subdomain: string;
+  plan: 'free' | 'basic' | 'pro' | 'enterprise';
+  features: readonly string[];
+  createdAt: Date;
+  schemaName: string;
+  isActive: boolean;
+  isSuspended: boolean; // S15 FIX 19A: Steel Control flag (enforced by Guards, not Middleware)
+  executor?: DrizzleExecutor; // Drizzle executor/client for stickiness (S2)
 }
 
 /**

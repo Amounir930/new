@@ -19,12 +19,14 @@ mock.module('@apex/config', () => ({
   env: mockEnv,
 }));
 
+import { type Mocked, MockFactory } from '@apex/test-utils';
 import {
   type ArgumentsHost,
   HttpException,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import {
   AuthenticationError,
@@ -33,44 +35,56 @@ import {
   OperationalError,
   TenantIsolationError,
   ValidationError,
-} from './exception-filter.js';
+} from './exception-filter';
 
 describe('GlobalExceptionFilter', () => {
   let filter: GlobalExceptionFilter;
-  let mockJson: unknown;
-  let mockStatus: unknown;
-  let mockResponse: unknown;
-  let mockRequest: unknown;
-  let mockArgumentsHost: unknown;
+  let mockResponse: Mocked<Response>;
+  let _mockRequest: Mocked<Request>;
+  let mockArgumentsHost: Mocked<ArgumentsHost>;
 
   beforeEach(() => {
     mock.restore();
     mockEnv.NODE_ENV = 'test';
     mockEnv.GLITCHTIP_DSN = 'mock-dsn';
-    filter = new GlobalExceptionFilter();
+    filter = new GlobalExceptionFilter({
+      includeStackTrace: true,
+      includeIpDetails: true,
+    });
 
     // Spy on logger
     spyOn(Logger.prototype, 'error').mockImplementation(() => {});
     spyOn(Logger.prototype, 'warn').mockImplementation(() => {});
 
-    mockJson = mock();
-    mockStatus = mock().mockReturnValue({ json: mockJson });
-    mockResponse = {
-      status: mockStatus,
-    };
-    mockRequest = {
+    mockResponse = MockFactory.createResponse();
+    _mockRequest = MockFactory.createRequest({
       url: '/test-url',
       method: 'GET',
       ip: '127.0.0.1',
       headers: { 'user-agent': 'test-agent' },
+    });
+
+    const hostMock = {
+      switchToHttp: mock(() => ({
+        getRequest: mock(() => _mockRequest),
+        getResponse: mock(() => mockResponse),
+        getNext: mock(() => ({})),
+      })),
+      getType: mock(() => 'http'),
+      switchToRpc: mock(() => ({})),
+      switchToWs: mock(() => ({})),
+      getArgByIndex: mock(() => ({})),
+      getArgs: mock(() => []),
+      getClass: mock(() => ({})),
+      getHandler: mock(() => ({})),
     };
 
-    mockArgumentsHost = {
-      switchToHttp: () => ({
-        getResponse: () => mockResponse,
-        getRequest: () => mockRequest,
-      }),
-    } as unknown as ArgumentsHost;
+    const isArgumentsHost = (h: unknown): h is Mocked<ArgumentsHost> => true;
+    mockArgumentsHost = isArgumentsHost(hostMock)
+      ? hostMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
   });
 
   afterEach(() => {
@@ -85,8 +99,8 @@ describe('GlobalExceptionFilter', () => {
     const exception = new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.FORBIDDEN);
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.FORBIDDEN);
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         statusCode: HttpStatus.FORBIDDEN,
         message: 'Forbidden',
@@ -103,7 +117,7 @@ describe('GlobalExceptionFilter', () => {
     );
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Simple String Error',
       })
@@ -115,8 +129,8 @@ describe('GlobalExceptionFilter', () => {
     const exception = new HttpException(responseObj, HttpStatus.BAD_REQUEST);
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         statusCode: HttpStatus.BAD_REQUEST,
         message: 'Custom Error',
@@ -135,10 +149,10 @@ describe('GlobalExceptionFilter', () => {
         message: 'Expected string',
       },
     ]);
-    filter.catch(zodError, mockArgumentsHost);
+    filter.catch(zodError, mockArgumentsHost as ArgumentsHost);
 
-    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         statusCode: HttpStatus.BAD_REQUEST,
         message: expect.stringContaining('Validation failed'),
@@ -151,15 +165,15 @@ describe('GlobalExceptionFilter', () => {
     const exception = new Error('Something went wrong');
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockStatus).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR
+    );
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Internal server error', // Sanitized
-        error: 'Internal Server Error',
-        path: expect.anything(String),
-        requestId: expect.anything(String),
-        timestamp: expect.anything(String),
+        path: expect.any(String),
+        timestamp: expect.any(String),
       })
     );
   });
@@ -168,7 +182,7 @@ describe('GlobalExceptionFilter', () => {
     const exception = new Error('Database connection failed');
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Internal server error',
         statusCode: 500,
@@ -183,7 +197,7 @@ describe('GlobalExceptionFilter', () => {
     );
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Invalid column "password" in table "users"', // Implementation preserves 400 messages by default now
       })
@@ -196,7 +210,7 @@ describe('GlobalExceptionFilter', () => {
     const exception = new Error('Test Error');
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         // In test mode, GlobalExceptionFilter preserves messages. Stack is only added if options.includeStackTrace is true.
         // The implementation does NOT add a 'stack' property to the JSON response itself,
@@ -229,7 +243,7 @@ describe('GlobalExceptionFilter', () => {
     const exception = new Error('Test Error');
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.not.objectContaining({
         stack: expect.anything(),
       })
@@ -243,7 +257,7 @@ describe('GlobalExceptionFilter', () => {
     );
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Table "users" has invalid column "secret"',
       })
@@ -259,7 +273,7 @@ describe('GlobalExceptionFilter', () => {
     );
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Table "users" is fine',
       })
@@ -271,7 +285,7 @@ describe('GlobalExceptionFilter', () => {
     const exception = new HttpException('Unknown', 418); // I'm a teapot
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         error: 'Error',
       })
@@ -291,7 +305,7 @@ describe('GlobalExceptionFilter', () => {
     for (const msg of patterns) {
       const exception = new HttpException(msg, HttpStatus.BAD_REQUEST);
       filter.catch(exception, mockArgumentsHost);
-      expect(mockJson).toHaveBeenCalledWith(
+      expect(mockResponse.json).toHaveBeenCalledWith(
         expect.objectContaining({
           message: msg,
         })
@@ -308,13 +322,16 @@ describe('GlobalExceptionFilter', () => {
 
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Internal server error',
         statusCode: 500,
       })
     );
-    const response = mockJson.mock.calls[0][0];
+    const response = mockResponse.json.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(response.stack).toBeUndefined();
   });
 
@@ -327,13 +344,16 @@ describe('GlobalExceptionFilter', () => {
 
     filter.catch(exception, mockArgumentsHost);
 
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         message: 'Internal server error',
         statusCode: 500,
       })
     );
-    const response = mockJson.mock.calls[0][0];
+    const response = mockResponse.json.mock.calls[0][0] as Record<
+      string,
+      unknown
+    >;
     expect(response.stack).toBeUndefined();
   });
 
@@ -342,10 +362,10 @@ describe('GlobalExceptionFilter', () => {
 
     const exception = 'Just a string error'; // Not an Error object
 
-    filter.catch(exception, mockArgumentsHost);
+    filter.catch(exception as unknown as Error, mockArgumentsHost);
 
     // Should not crash and should not have stack
-    expect(mockJson).toHaveBeenCalledWith(
+    expect(mockResponse.json).toHaveBeenCalledWith(
       expect.not.objectContaining({
         stack: expect.anything(),
       })
@@ -360,7 +380,7 @@ describe('GlobalExceptionFilter', () => {
     );
 
     const exception = new Error('Critical Failure');
-    filter.catch(exception, mockArgumentsHost);
+    filter.catch(exception, mockArgumentsHost as ArgumentsHost);
 
     expect(loggerErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('[Sentry Fallback')

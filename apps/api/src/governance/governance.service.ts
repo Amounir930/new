@@ -4,6 +4,7 @@ import {
   eq,
   onboardingBlueprintsInGovernance,
   sql,
+  tenantQuotasInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
@@ -13,6 +14,93 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 export class GovernanceService {
   constructor(private readonly redisStore: RedisRateLimitStore) {}
+
+  /**
+   * Check if a tenant has exceeded their quota for a specific resource
+   */
+  async checkQuota(
+    tenantId: string,
+    resource: 'products' | 'orders' | 'staff',
+    subdomain: string
+  ): Promise<{ allowed: boolean; limit: number; current: number }> {
+    const limits = await this.getTenantLimits(tenantId);
+    const current = await this.getResourceCount(subdomain, resource);
+
+    let limit = 0;
+    switch (resource) {
+      case 'products':
+        limit = limits.maxProducts;
+        break;
+      case 'orders':
+        limit = limits.maxOrders;
+        break;
+      case 'staff':
+        limit = limits.maxStaff;
+        break;
+    }
+
+    return {
+      allowed: current < limit,
+      limit,
+      current,
+    };
+  }
+
+  /**
+   * Fetch current quota limits for a tenant
+   */
+  async getTenantLimits(tenantId: string) {
+    const [quota] = await adminDb
+      .select({
+        maxProducts: tenantQuotasInGovernance.maxProducts,
+        maxOrders: tenantQuotasInGovernance.maxOrders,
+        maxPages: tenantQuotasInGovernance.maxPages,
+        maxStaff: tenantQuotasInGovernance.maxStaff,
+        storageLimitGb: tenantQuotasInGovernance.storageLimitGb,
+      })
+      .from(tenantQuotasInGovernance)
+      .where(eq(tenantQuotasInGovernance.tenantId, tenantId))
+      .limit(1);
+
+    const [tenant] = await adminDb
+      .select({
+        ownerEmail: tenantsInGovernance.ownerEmail,
+      })
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.id, tenantId))
+      .limit(1);
+
+    return {
+      maxProducts: quota?.maxProducts || 0,
+      maxOrders: quota?.maxOrders || 0,
+      maxPages: quota?.maxPages || 0,
+      maxStaff: quota?.maxStaff || 0,
+      storageLimitGb: quota?.storageLimitGb || 1,
+      ownerEmail:
+        typeof tenant?.ownerEmail === 'string' ? tenant.ownerEmail : 'unknown',
+    };
+  }
+
+  /**
+   * Internal helper to count resources in tenant schema (Public for testing)
+   */
+  async getResourceCount(
+    subdomain: string,
+    resource: 'products' | 'orders' | 'staff'
+  ): Promise<number> {
+    // S2 FIX: Use schema-qualified table names to avoid search_path contamination
+    const schemaName = `tenant_store_${subdomain}_v2`;
+    const tableName = resource === 'staff' ? 'staff' : resource;
+
+    const result = await adminDb.execute(
+      sql.raw(`SELECT count(*) as count FROM "${schemaName}"."${tableName}"`)
+    );
+
+    const countRaw = result.rows[0]?.count;
+    return typeof countRaw === 'number'
+      ? countRaw
+      : parseInt(String(countRaw || '0'), 10);
+  }
 
   async getPlatformStats() {
     // 1. Total Active Tenants

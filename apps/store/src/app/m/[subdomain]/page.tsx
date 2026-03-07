@@ -112,14 +112,20 @@ export default async function TenantHome({ params }: TenantPageProps) {
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
             {bestSellers.length > 0 ? (
-              bestSellers.map(
-                (product: { id: string; [key: string]: unknown } | unknown) => (
-                  <ProductCard
-                    key={(product as { id: string }).id}
-                    product={product as never}
-                  />
-                )
-              )
+              bestSellers.map((p: Record<string, unknown>) => {
+                const product = {
+                  id: String(p.id ?? ''),
+                  slug: String(p.slug ?? ''),
+                  name: String(p.name ?? p.title ?? ''),
+                  price: Number(p.price ?? p.basePrice ?? 0),
+                  compareAtPrice: p.compareAtPrice
+                    ? Number(p.compareAtPrice)
+                    : undefined,
+                  imageUrl: String(p.imageUrl ?? p.mainImage ?? ''),
+                  rating: Number(p.rating ?? p.avgRating ?? 0),
+                };
+                return <ProductCard key={product.id} product={product} />;
+              })
             ) : (
               <div className="col-span-full py-20 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
                 <p className="text-gray-400 font-medium">

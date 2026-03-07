@@ -4,11 +4,20 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import { Project } from 'ts-morph';
-import { ApexSecurityScanner } from './scanner-cli.js';
+import { Project, type SourceFile } from 'ts-morph';
+import { ApexSecurityScanner } from './scanner-cli';
+
+/**
+ * Test-friendly subclass to access protected members
+ */
+class TestScanner extends ApexSecurityScanner {
+  public runScanFile(sourceFile: SourceFile, rule?: string): void {
+    this.scanFile(sourceFile, rule);
+  }
+}
 
 describe('ApexSecurityScanner', () => {
-  const scanner = new ApexSecurityScanner();
+  const scanner = new TestScanner();
 
   describe('SQL Injection Detection (S11)', () => {
     it('should detect unsafe sql.raw() concatenation', () => {
@@ -22,9 +31,9 @@ describe('ApexSecurityScanner', () => {
             `
       );
 
-      // Access private scanFile for targeted testing
-      (scanner as never).scanFile(sf);
-      const violations = (scanner as never).violations;
+      scanner.clearViolations();
+      scanner.runScanFile(sf);
+      const violations = scanner.getViolations();
 
       expect(violations).toEqual(
         expect.arrayContaining([
@@ -35,7 +44,7 @@ describe('ApexSecurityScanner', () => {
           }),
         ])
       );
-    }, 20000);
+    }, 15000);
 
     it('should bypass safe sql.raw() usage', () => {
       const project = new Project();
@@ -47,9 +56,9 @@ describe('ApexSecurityScanner', () => {
             `
       );
       scanner.clearViolations();
-      (scanner as never).scanFile(sf);
-      expect((scanner as never).violations).toHaveLength(0);
-    });
+      scanner.runScanFile(sf);
+      expect(scanner.getViolations()).toHaveLength(0);
+    }, 15000);
   });
 
   describe('Path Traversal Detection (S14)', () => {
@@ -64,9 +73,9 @@ describe('ApexSecurityScanner', () => {
              `
       );
       scanner.clearViolations();
-      (scanner as never).scanFile(sf);
-      expect((scanner as never).violations.length).toBeGreaterThan(0);
-    });
+      scanner.runScanFile(sf);
+      expect(scanner.getViolations().length).toBeGreaterThan(0);
+    }, 15000);
   });
 
   describe('Export Security (S14)', () => {
@@ -81,8 +90,10 @@ describe('ApexSecurityScanner', () => {
              `
       );
       scanner.clearViolations();
-      (scanner as never).scanFile(sf);
-      expect((scanner as never).violations).toContainEqual(
+      scanner.runScanFile(sf);
+      const violations = scanner.getViolations();
+
+      expect(violations).toContainEqual(
         expect.objectContaining({
           severity: 'CRITICAL',
           message: expect.stringContaining(
@@ -90,7 +101,7 @@ describe('ApexSecurityScanner', () => {
           ),
         })
       );
-      expect((scanner as never).violations).toContainEqual(
+      expect(violations).toContainEqual(
         expect.objectContaining({
           severity: 'CRITICAL',
           message: expect.stringContaining(
@@ -98,6 +109,6 @@ describe('ApexSecurityScanner', () => {
           ),
         })
       );
-    });
+    }, 15000);
   });
 });

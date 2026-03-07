@@ -45,7 +45,7 @@ export class GovernanceGuard implements CanActivate {
     const tenantId = request.tenantContext?.tenantId;
 
     // Super Admin Bypass
-    if ((user as any)?.role === 'super_admin') {
+    if ((user as { role?: string } | undefined)?.role === 'super_admin') {
       return true;
     }
 
@@ -68,12 +68,6 @@ export class GovernanceGuard implements CanActivate {
       .limit(1);
 
     const isEnabled = gate?.isEnabled || false;
-
-    if (!isEnabled) {
-      throw new ForbiddenException(
-        `Feature '${feature}' is not enabled for your current plan.`
-      );
-    }
 
     if (!isEnabled) {
       throw new ForbiddenException(

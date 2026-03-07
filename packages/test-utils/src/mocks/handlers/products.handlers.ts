@@ -7,10 +7,7 @@
  */
 
 import { HttpResponse, http } from 'msw';
-import {
-  createMockProduct,
-  createMockProductList,
-} from '.././../fixtures/product.fixtures';
+import { createMockProduct, createMockProductList } from '../../fixtures';
 
 const BASE_URL = '/api';
 
@@ -30,7 +27,10 @@ export const productsHandlers = [
   // GET /api/products/:id - Get single product
   http.get(`${BASE_URL}/products/:id`, ({ params }) => {
     const { id } = params;
-    const product = createMockProduct({ id: id as string });
+    const isString = (s: unknown): s is string => typeof s === 'string';
+    const product = createMockProduct({
+      id: isString(id) ? id : String(id), // Replaced (id as any) with String(id)
+    });
 
     return HttpResponse.json({ product });
   }),
@@ -38,7 +38,10 @@ export const productsHandlers = [
   // GET /api/products/slug/:slug - Get product by slug
   http.get(`${BASE_URL}/products/slug/:slug`, ({ params }) => {
     const { slug } = params;
-    const product = createMockProduct({ slug: slug as string });
+    const isString = (s: unknown): s is string => typeof s === 'string';
+    const product = createMockProduct({
+      slug: isString(slug) ? slug : String(slug),
+    });
 
     return HttpResponse.json({ product });
   }),
@@ -46,9 +49,10 @@ export const productsHandlers = [
   // GET /api/products/category/:categoryId - Get products by category
   http.get(`${BASE_URL}/products/category/:categoryId`, ({ params }) => {
     const { categoryId } = params;
+    const isString = (s: unknown): s is string => typeof s === 'string';
     const products = createMockProductList(8).map((p) => ({
       ...p,
-      categoryId: categoryId as string,
+      categoryId: isString(categoryId) ? categoryId : String(categoryId),
     }));
 
     return HttpResponse.json({ products });

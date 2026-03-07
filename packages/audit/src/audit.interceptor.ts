@@ -1,3 +1,4 @@
+import type { AuthenticatedUser } from '@apex/middleware';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -6,12 +7,17 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
 import { type Observable, tap } from 'rxjs';
 import {
   AUDIT_LOG_METADATA_KEY,
   type AuditLogOptions,
-} from './audit.decorator.js';
-import { AuditService } from './audit.service.js';
+} from './audit.decorator';
+import { AuditService } from './audit.service';
+
+interface AuthenticatedRequest extends Request {
+  user?: AuthenticatedUser;
+}
 
 /**
  * S4: Global Audit Interceptor
@@ -62,19 +68,22 @@ export class AuditInterceptor implements NestInterceptor {
     resultData: unknown,
     resultStatus: 'SUCCESS' | 'FAILURE'
   ) {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const { method, url, ip, headers } = request;
-    const user = (request as any).user;
+    const user = request.user;
 
     // Determine action name
     const action = options?.action || `${method}:${url}`;
     const entityType = options?.entityType || 'api_request';
 
     // Extract entityId if possible from params or body
+    const params = request.params as Record<string, unknown>;
+    const body = request.body as Record<string, unknown>;
+
     const entityId =
-      (request as any).params?.id ||
-      (request as any).body?.id ||
-      (request as any).body?.subdomain ||
+      (params?.id as string) ||
+      (body?.id as string) ||
+      (body?.subdomain as string) ||
       'unknown';
 
     try {
@@ -96,8 +105,8 @@ export class AuditInterceptor implements NestInterceptor {
           ...(resultStatus === 'FAILURE'
             ? {
                 error:
-                  (resultData as any)?.message ||
-                  (resultData as any)?.toString(),
+                  (resultData as { message?: string })?.message ||
+                  String(resultData),
               }
             : {}),
         },

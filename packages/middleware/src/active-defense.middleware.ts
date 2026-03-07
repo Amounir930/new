@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { RedisRateLimitStore } from './redis-rate-limit-store.js';
+import { RedisRateLimitStore } from './redis-rate-limit-store';
 
 @Injectable()
 export class ActiveDefenseMiddleware implements NestMiddleware {

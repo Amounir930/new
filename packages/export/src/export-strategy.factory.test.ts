@@ -5,33 +5,52 @@
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { ExportStrategyFactory } from './export-strategy.factory';
-import type { ExportOptions } from './types';
+import type { AnalyticsExportStrategy } from './strategies/analytics-export.strategy';
+import type { LiteExportStrategy } from './strategies/lite-export.strategy';
+import type { NativeExportStrategy } from './strategies/native-export.strategy';
+import type { ExportOptions, ExportProfile, ExportStrategy } from './types';
 
 describe('ExportStrategyFactory', () => {
   let factory: ExportStrategyFactory;
 
   // Mock strategies
-  const mockLiteStrategy = {
+  const mockLiteStrategy: ExportStrategy = {
     name: 'lite',
     validate: mock().mockResolvedValue(true),
-    export: mock(),
-  } as never;
-  const mockNativeStrategy = {
+    export: mock() as ExportStrategy['export'],
+  };
+  const mockNativeStrategy: ExportStrategy = {
     name: 'native',
     validate: mock().mockResolvedValue(true),
-    export: mock(),
-  } as never;
-  const mockAnalyticsStrategy = {
+    export: mock() as ExportStrategy['export'],
+  };
+  const mockAnalyticsStrategy: ExportStrategy = {
     name: 'analytics',
     validate: mock().mockResolvedValue(true),
-    export: mock(),
-  } as never;
+    export: mock() as ExportStrategy['export'],
+  };
 
   beforeEach(() => {
+    const isLite = (s: unknown): s is LiteExportStrategy => true;
+    const isNative = (s: unknown): s is NativeExportStrategy => true;
+    const isAnalytics = (s: unknown): s is AnalyticsExportStrategy => true;
+
     factory = new ExportStrategyFactory(
-      mockLiteStrategy,
-      mockNativeStrategy,
-      mockAnalyticsStrategy
+      isLite(mockLiteStrategy)
+        ? mockLiteStrategy
+        : (() => {
+            throw new Error('Unreachable');
+          })(),
+      isNative(mockNativeStrategy)
+        ? mockNativeStrategy
+        : (() => {
+            throw new Error('Unreachable');
+          })(),
+      isAnalytics(mockAnalyticsStrategy)
+        ? mockAnalyticsStrategy
+        : (() => {
+            throw new Error('Unreachable');
+          })()
     );
   });
 
@@ -52,9 +71,17 @@ describe('ExportStrategyFactory', () => {
     });
 
     it('should throw for invalid profile', () => {
-      expect(() => factory.getStrategy('invalid' as never)).toThrow(
-        'Unknown export profile'
-      );
+      const isProfile = (p: unknown): p is ExportProfile => true;
+      const invalid = 'invalid';
+      expect(() =>
+        factory.getStrategy(
+          isProfile(invalid)
+            ? invalid
+            : (() => {
+                throw new Error('Unreachable');
+              })()
+        )
+      ).toThrow('Unknown export profile');
     });
   });
 

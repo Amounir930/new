@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { ProductSchema } from './product.schema.js';
+import { ProductSchema } from './product.schema';
 
 describe('ProductSchema', () => {
   const validProduct = {

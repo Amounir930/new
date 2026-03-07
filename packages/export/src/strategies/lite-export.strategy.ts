@@ -16,8 +16,7 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { BunShell } from '../utils/bun-shell';
+import type { BunShell } from '../utils/bun-shell';
 
 @Injectable()
 export class LiteExportStrategy implements ExportStrategy {
@@ -57,14 +56,14 @@ export class LiteExportStrategy implements ExportStrategy {
         // S2: Hard Isolation. Using the scoped tenant db.
 
         // 1. Get tables from current schema (which is forced to the tenant's exact schema)
-        const tablesResult: any = await db.execute(sql`
-          SELECT table_name FROM information_schema.tables 
+        const tablesResult = await db.execute(sql`
+          SELECT table_name FROM information_schema.tables
           WHERE table_schema = current_schema() AND table_type = 'BASE TABLE'
         `);
 
         // S1 FIX 3B: Explicitly access rows property from Node pg
-        const tables = ((tablesResult as any).rows || []).map(
-          (r: any) => r.table_name
+        const tables = (tablesResult.rows || []).map(
+          (r) => r.table_name as string
         );
         let totalRows = 0;
 
@@ -79,10 +78,12 @@ export class LiteExportStrategy implements ExportStrategy {
           this.logger.debug(`Exporting table: ${table}`);
 
           // Check row count limit
-          const countResult: any = await db.execute(
+          const countResult = await db.execute(
             sql`SELECT COUNT(*) FROM ${safeTable}`
           );
-          const rowCount = Number(countResult.rows[0].count);
+          const rowCount = Number(
+            (countResult.rows[0] as { count: string }).count
+          );
 
           if (rowCount > this.MAX_ROWS_PER_TABLE) {
             throw new Error(
@@ -90,7 +91,7 @@ export class LiteExportStrategy implements ExportStrategy {
             );
           }
 
-          const dataResult: any = await db.execute(
+          const dataResult = await db.execute<Record<string, unknown>>(
             sql`SELECT * FROM ${safeTable}`
           );
           totalRows += dataResult.rowCount || 0;

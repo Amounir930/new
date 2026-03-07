@@ -5,7 +5,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { FraudScoringService } from './fraud-scoring.service.js';
+import { FraudScoringService } from './fraud-scoring.service';
 
 @Injectable()
 export class FraudGuard implements CanActivate {

@@ -9,7 +9,9 @@ function resolveSecrets() {
         const secretKey = key.replace('_FILE', '');
         process.env[secretKey] = readFileSync(value, 'utf8').trim();
       } catch (e) {
-        process.stderr.write(`⚠️ Failed to read secret file ${value}: ${e}` + "\n");
+        process.stderr.write(
+          `⚠️ Failed to read secret file ${value}: ${e}` + '\n'
+        );
       }
     }
   }
@@ -21,7 +23,9 @@ const PORT = 9000;
 // We mount the host root to /app
 const REPO_DIR = '/app';
 
-process.stdout.write(`🛡️  Apex Webhook Listener v1.1 starting on port ${PORT}...` + "\n");
+process.stdout.write(
+  `🛡️  Apex Webhook Listener v1.1 starting on port ${PORT}...` + '\n'
+);
 
 serve({
   port: PORT,
@@ -44,11 +48,13 @@ serve({
     }
 
     if (querySecret !== SECRET && bodySecret !== SECRET) {
-      process.stderr.write('❌ Unauthorized webhook attempt' + "\n");
+      process.stderr.write('❌ Unauthorized webhook attempt' + '\n');
       return new Response('Unauthorized', { status: 401 });
     }
 
-    process.stdout.write('🚀 Webhook verified. Triggering surgical deployment...' + "\n");
+    process.stdout.write(
+      '🚀 Webhook verified. Triggering surgical deployment...' + '\n'
+    );
 
     // 2. Execute Deployment Logic
     // We use 'sh' because we are in Alpine

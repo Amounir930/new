@@ -54,23 +54,31 @@ export async function createBlueprint(
     .values({
       name,
       description: options.description || null,
-      blueprint: blueprint as never,
+      blueprint: blueprint satisfies BlueprintTemplate,
       isDefault: !!options.isDefault,
-      plan: (options.plan || 'free') as never,
-      nicheType: (options.nicheType || 'retail') as never,
-      status: (options.status || 'active') as never,
+      plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
+      nicheType: (options.nicheType || 'retail') as
+        | 'retail'
+        | 'wellness'
+        | 'education'
+        | 'services'
+        | 'hospitality'
+        | 'real-estate'
+        | 'creative',
+      status: (options.status || 'active') as 'active' | 'paused',
       uiConfig: options.uiConfig || {}, // Ensure mandatory field is provided
     })
     .returning();
 
+  const record = result[0];
   return {
-    ...result[0],
-    blueprint: result[0].blueprint as unknown as BlueprintTemplate,
-    uiConfig: result[0].uiConfig as Record<string, unknown> | null,
-    isDefault: !!result[0].isDefault,
-    createdAt: result[0].createdAt ? new Date(result[0].createdAt) : null,
-    updatedAt: result[0].updatedAt ? new Date(result[0].updatedAt) : null,
-  } as unknown as BlueprintRecord;
+    ...record,
+    blueprint: record.blueprint as BlueprintTemplate,
+    uiConfig: record.uiConfig as Record<string, unknown> | null,
+    isDefault: !!record.isDefault,
+    createdAt: record.createdAt ? new Date(record.createdAt) : null,
+    updatedAt: record.updatedAt ? new Date(record.updatedAt) : null,
+  } satisfies BlueprintRecord;
 }
 
 /**
@@ -82,14 +90,17 @@ export async function getAllBlueprints(): Promise<BlueprintRecord[]> {
     .from(onboardingBlueprintsInGovernance)
     .orderBy(desc(onboardingBlueprintsInGovernance.createdAt));
 
-  return results.map((r) => ({
-    ...r,
-    blueprint: r.blueprint as unknown as BlueprintTemplate,
-    uiConfig: r.uiConfig as Record<string, unknown> | null,
-    isDefault: !!r.isDefault,
-    createdAt: r.createdAt ? new Date(r.createdAt) : null,
-    updatedAt: r.updatedAt ? new Date(r.updatedAt) : null,
-  })) as unknown as BlueprintRecord[];
+  return results.map(
+    (r) =>
+      ({
+        ...r,
+        blueprint: r.blueprint as BlueprintTemplate,
+        uiConfig: r.uiConfig as Record<string, unknown> | null,
+        isDefault: !!r.isDefault,
+        createdAt: r.createdAt ? new Date(r.createdAt) : null,
+        updatedAt: r.updatedAt ? new Date(r.updatedAt) : null,
+      }) satisfies BlueprintRecord
+  );
 }
 
 /**
@@ -111,12 +122,12 @@ export async function getBlueprintById(
   const res = results[0];
   return {
     ...res,
-    blueprint: res.blueprint as unknown as BlueprintTemplate,
+    blueprint: res.blueprint as BlueprintTemplate,
     uiConfig: res.uiConfig as Record<string, unknown> | null,
     isDefault: !!res.isDefault,
     createdAt: res.createdAt ? new Date(res.createdAt) : null,
     updatedAt: res.updatedAt ? new Date(res.updatedAt) : null,
-  } as unknown as BlueprintRecord;
+  } satisfies BlueprintRecord;
 }
 
 /**
@@ -165,23 +176,23 @@ export async function getDefaultBlueprint(
     const first = anyBlueprint[0];
     return {
       ...first,
-      blueprint: first.blueprint as unknown as BlueprintTemplate,
+      blueprint: first.blueprint as BlueprintTemplate,
       uiConfig: first.uiConfig as Record<string, unknown> | null,
       isDefault: !!first.isDefault,
       createdAt: first.createdAt ? new Date(first.createdAt) : null,
       updatedAt: first.updatedAt ? new Date(first.updatedAt) : null,
-    } as unknown as BlueprintRecord;
+    } satisfies BlueprintRecord;
   }
 
   const res = results[0];
   return {
     ...res,
-    blueprint: res.blueprint as unknown as BlueprintTemplate,
+    blueprint: res.blueprint as BlueprintTemplate,
     uiConfig: res.uiConfig as Record<string, unknown> | null,
     isDefault: !!res.isDefault,
     createdAt: res.createdAt ? new Date(res.createdAt) : null,
     updatedAt: res.updatedAt ? new Date(res.updatedAt) : null,
-  } as unknown as BlueprintRecord;
+  } satisfies BlueprintRecord;
 }
 
 /**
@@ -218,12 +229,23 @@ export async function updateBlueprint(
   if (updates.name) updateData.name = updates.name;
   if (updates.description !== undefined)
     updateData.description = updates.description;
-  if (updates.blueprint) updateData.blueprint = updates.blueprint as never;
+  if (updates.blueprint)
+    updateData.blueprint = updates.blueprint satisfies BlueprintTemplate;
   if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault;
-  if (updates.plan) updateData.plan = updates.plan as never;
-  if (updates.nicheType) updateData.nicheType = updates.nicheType as never;
-  if (updates.status) updateData.status = updates.status as never;
-  if (updates.uiConfig) updateData.uiConfig = updates.uiConfig as never;
+  if (updates.plan)
+    updateData.plan = updates.plan as 'free' | 'basic' | 'pro' | 'enterprise';
+  if (updates.nicheType)
+    updateData.nicheType = updates.nicheType as
+      | 'retail'
+      | 'wellness'
+      | 'education'
+      | 'services'
+      | 'hospitality'
+      | 'real-estate'
+      | 'creative';
+  if (updates.status) updateData.status = updates.status as 'active' | 'paused';
+  if (updates.uiConfig)
+    updateData.uiConfig = updates.uiConfig as Record<string, unknown>;
 
   const result = await adminDb
     .update(onboardingBlueprintsInGovernance)
@@ -238,12 +260,12 @@ export async function updateBlueprint(
   const res = result[0];
   return {
     ...res,
-    blueprint: res.blueprint as unknown as BlueprintTemplate,
+    blueprint: res.blueprint as BlueprintTemplate,
     uiConfig: res.uiConfig as Record<string, unknown> | null,
     isDefault: !!res.isDefault,
     createdAt: res.createdAt ? new Date(res.createdAt) : null,
     updatedAt: res.updatedAt ? new Date(res.updatedAt) : null,
-  } as unknown as BlueprintRecord;
+  } satisfies BlueprintRecord;
 }
 
 /**

@@ -1,5 +1,6 @@
+```
 import { serve } from 'bun';
-import { env } from '.././../packages/config/src/index.ts';
+import { env } from '@apex/config';
 
 const PORT = 8080;
 const COOKIE_NAME = 'apex_auth_session';
@@ -8,14 +9,21 @@ const SESSION_VALUE = Bun.hash(env.JWT_SECRET || 'default_secret').toString();
 const EMAIL = env.SUPER_ADMIN_EMAIL || 'admin@60sec.shop';
 const PASSWORD = env.SUPER_ADMIN_PASSWORD || 'Admin@60SecShop!2026';
 
-process.stdout.write(`🛡️  Apex Auth Portal starting on port ${PORT}...` + '\n');
+process.stdout.write(`;
+🛡️  Apex Auth Portal starting on port $
+{
+  PORT;
+}
+...` + '\n');
 
 serve({
   port: PORT,
   async fetch(req) {
     const url = new URL(req.url);
     const cookies = req.headers.get('Cookie') || '';
-    const isAuthenticated = cookies.includes(`${COOKIE_NAME}=${SESSION_VALUE}`);
+    const isAuthenticated = cookies.includes(
+      `${COOKIE_NAME}=${SESSION_VALUE} `
+    );
 
     // 1. ForwardAuth Endpoint
     if (url.pathname === '/auth') {
@@ -49,7 +57,7 @@ serve({
             status: 302,
             headers: {
               Location: '/dashboard/',
-              'Set-Cookie': `${COOKIE_NAME}=${SESSION_VALUE}; Path=/; HttpOnly; SameSite=Lax`,
+              'Set-Cookie': `${COOKIE_NAME}=${SESSION_VALUE}; Path =/; HttpOnly; SameSite=Lax`,
             },
           });
         }

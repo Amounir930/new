@@ -1,26 +1,42 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { ProvisioningController } from './provisioning.controller.js';
-import type { ProvisioningService } from './provisioning.service.js';
+import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test';
+import type { AuditService } from '@apex/audit';
+import type { AuthenticatedRequest } from '@apex/auth';
+import { type Mocked, MockFactory } from '@apex/test-utils';
+import type { ProvisionRequestDto } from './dto/provision-request.dto';
+import { ProvisioningController } from './provisioning.controller';
+import type { ProvisioningService } from './provisioning.service';
 
 describe('ProvisioningController', () => {
   let controller: ProvisioningController;
   let service: ProvisioningService;
 
-  const mockProvisioningService = {
+  const provServiceMock = {
     provision: mock(),
   };
+  const isProvService = (s: unknown): s is Mocked<ProvisioningService> => true;
+  const mockProvisioningService = isProvService(provServiceMock)
+    ? provServiceMock
+    : (() => {
+        throw new Error('Unreachable');
+      })();
 
-  const mockAuditService = {
+  const auditServiceMock = {
     log: mock(),
   };
+  const isAuditService = (s: unknown): s is Mocked<AuditService> => true;
+  const mockAuditService = isAuditService(auditServiceMock)
+    ? auditServiceMock
+    : (() => {
+        throw new Error('Unreachable');
+      })();
 
   beforeEach(async () => {
     // Manual instantiation to bypass NestJS TestingModule issues with Bun
     controller = new ProvisioningController(
-      mockProvisioningService as never,
-      mockAuditService as never
+      mockProvisioningService,
+      mockAuditService
     );
-    service = mockProvisioningService as never;
+    service = mockProvisioningService;
 
     mockProvisioningService.provision.mockClear();
     mockAuditService.log.mockClear();
@@ -41,13 +57,19 @@ describe('ProvisioningController', () => {
 
     it('should provision with valid data', async () => {
       mockProvisioningService.provision.mockResolvedValue({
+        success: true,
         subdomain: 'test-store',
         durationMs: 1500,
+        adminId: 'admin-123',
       });
 
+      const authReq = {};
+      const isAuthReq = (r: unknown): r is AuthenticatedRequest => true;
+      const isDto = (d: unknown): d is ProvisionRequestDto => true;
+
       const result = await controller.provisionStore(
-        {} as never,
-        validDto as never
+        isAuthReq(authReq) ? authReq : (authReq as AuthenticatedRequest),
+        isDto(validDto) ? validDto : (validDto as ProvisionRequestDto)
       );
 
       expect(result.message).toBe('Store provisioned successfully');
@@ -60,8 +82,15 @@ describe('ProvisioningController', () => {
         new Error('Provisioning failed')
       );
 
+      const authReq = {};
+      const isAuthReq = (r: unknown): r is AuthenticatedRequest => true;
+      const isDto = (d: unknown): d is ProvisionRequestDto => true;
+
       await expect(
-        controller.provisionStore({} as never, validDto as never)
+        controller.provisionStore(
+          isAuthReq(authReq) ? authReq : (authReq as AuthenticatedRequest),
+          isDto(validDto) ? validDto : (validDto as ProvisionRequestDto)
+        )
       ).rejects.toThrow('Provisioning failed');
     });
   });

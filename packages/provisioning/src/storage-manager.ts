@@ -152,10 +152,21 @@ async function setupBucket(
   await client.setBucketPolicy(bucketName, JSON.stringify(policy));
 
   // 3. Set bucket tagging with plan info
-  await client.setBucketTagging(bucketName, {
+  // 🛡️ Protocol Delta: Use interface extension to workaround broken SDK type definitions safely
+  // MinIO SDK dist/main/internal/client.d.ts incorrectly types setBucketTagging as taking 'Tag'
+  // but runtime expects 'Record<string, string>' (Tags).
+  interface PatchedMinioClient extends Omit<Minio.Client, 'setBucketTagging'> {
+    setBucketTagging(
+      bucketName: string,
+      tags: Record<string, string>
+    ): Promise<void>;
+  }
+
+  const patchedClient = client as PatchedMinioClient;
+  await patchedClient.setBucketTagging(bucketName, {
     plan,
     tenant: subdomain,
-  } as never);
+  });
 
   // 4. Create folder structure
   await client.putObject(bucketName, 'public/products/.keep', Buffer.from(''));
@@ -177,16 +188,17 @@ async function ensureBucket(
 
   try {
     await client.makeBucket(bucketName, env.MINIO_REGION || 'us-east-1');
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string };
     if (
-      err.code !== 'NoSuchBucket' &&
-      (err.code === 'BucketAlreadyOwnedByYou' ||
-        err.code === 'BucketAlreadyExists')
+      error.code !== 'NoSuchBucket' &&
+      (error.code === 'BucketAlreadyOwnedByYou' ||
+        error.code === 'BucketAlreadyExists')
     ) {
       logger.info(
         `Bucket ${bucketName} already exists (caught error). Skipping creation.`
       );
-    } else if (err.code !== 'NoSuchBucket') {
+    } else if (error.code !== 'NoSuchBucket') {
       throw err;
     }
   }
@@ -296,10 +308,15 @@ export async function getStorageStats(
     // Get quota from bucket tags
     let quotaBytes = PLAN_QUOTAS.free;
     try {
-      const tags = await client.getBucketTagging(bucketName);
-      // Tags is Tag[] array, find the plan tag
-      const planTag = tags.find((t) => t.Key === 'plan');
-      const plan = (planTag?.Value as keyof typeof PLAN_QUOTAS) || 'free';
+      const tagsResult = await client.getBucketTagging(bucketName);
+      // MinIO might return Tag[] or Tags record depending on version/overload
+      const tags = Array.isArray(tagsResult)
+        ? tagsResult.reduce(
+            (acc, t) => ({ ...acc, [t.Key]: t.Value }),
+            {} as Record<string, string>
+          )
+        : tagsResult;
+      const plan = (tags['plan'] as keyof typeof PLAN_QUOTAS) || 'free';
       quotaBytes = PLAN_QUOTAS[plan] || PLAN_QUOTAS.free;
     } catch {
       // Ignore tagging errors, use default quota

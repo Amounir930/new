@@ -6,6 +6,9 @@
 
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
 import { runWithTenantContext } from '@apex/middleware';
+import type { EncryptionService } from '@apex/security';
+import { type Mocked, MockFactory } from '@apex/test-utils';
+import type { Pool, PoolClient } from 'pg';
 import {
   type AuditLogEntry,
   AuditService,
@@ -13,18 +16,18 @@ import {
   logProvisioning,
   logSecurityEvent,
   query,
-} from './audit.service.js';
+} from './audit.service';
 
 // Mocks will be injected directly into the service instance to avoid global leakage.
 const mockClient = {
   query: mock().mockResolvedValue({ rows: [] }),
   release: mock(),
-};
+} as Mocked<PoolClient>;
 
 const mockPool = {
   connect: mock().mockResolvedValue(mockClient),
   query: mockClient.query,
-};
+} as Mocked<Pool>;
 
 mock.module('@apex/db', () => ({
   adminPool: mockPool,
@@ -32,17 +35,23 @@ mock.module('@apex/db', () => ({
 
 describe('AuditService & Helpers', () => {
   let service: AuditService;
-  const mockEncryption = {
-    encrypt: mock().mockReturnValue({ encrypted: 'encrypted-data' }),
-    decrypt: mock().mockReturnValue('decrypted-data'),
-    validateMasterKey: mock(),
-  };
+  let mockEncryption: Mocked<EncryptionService>;
 
   beforeEach(() => {
     mockClient.query.mockClear();
     mockClient.release.mockClear();
-    // Inject mock pool and encryption directly
-    service = new AuditService(mockPool, mockEncryption as never);
+
+    mockEncryption = {
+      encrypt: mock().mockReturnValue({
+        encrypted: 'encrypted-data',
+        iv: 'iv',
+        tag: 'tag',
+        salt: 'salt',
+      }),
+      decrypt: mock().mockReturnValue('decrypted-data'),
+    } as Mocked<EncryptionService>;
+
+    service = new AuditService(mockPool, mockEncryption);
   });
 
   describe('AuditService.log', () => {
@@ -56,7 +65,7 @@ describe('AuditService & Helpers', () => {
       };
 
       await runWithTenantContext(
-        { tenantId: 'mock-tenant' } as never,
+        MockFactory.createTenantContext({ tenantId: 'mock-tenant' }),
         async () => {
           await service.log(entry);
         }
@@ -79,7 +88,7 @@ describe('AuditService & Helpers', () => {
 
     it('should handle missing tenantId by falling back to context', async () => {
       await runWithTenantContext(
-        { tenantId: 'fallback-tenant' } as never,
+        MockFactory.createTenantContext({ tenantId: 'fallback-tenant' }),
         async () => {
           await service.log({
             action: 'SYS_EVENT',
@@ -95,16 +104,18 @@ describe('AuditService & Helpers', () => {
     });
 
     it('should throw "Audit Persistence Failure" if query fails', async () => {
-      mockClient.query.mockRejectedValueOnce(new Error('DB Crash'));
+      (mockClient.query as ReturnType<typeof mock>).mockRejectedValueOnce(
+        new Error('DB Crash')
+      );
 
-      let error: unknown;
+      let error: Error | undefined;
       try {
         await service.log({ action: 'A', entityType: 'B', entityId: 'C' });
       } catch (e) {
-        error = e;
+        error = e as Error;
       }
       expect(error).toBeDefined();
-      expect(error.message).toBe('Audit Persistence Failure');
+      expect(error?.message).toBe('Audit Persistence Failure');
     });
   });
 

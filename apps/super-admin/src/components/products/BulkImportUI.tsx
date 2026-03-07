@@ -14,7 +14,13 @@ import { Input } from '@/components/ui/input';
 export default function BulkImportUI() {
   const [file, setFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState<any>(null);
+  const [status, setStatus] = useState<{
+    status?: string;
+    progress?: number;
+    totalRows?: number;
+    successRows?: number;
+    errorRows?: number;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,7 +115,7 @@ export default function BulkImportUI() {
                     {status.status}
                   </span>
                 </span>
-                <span>{status.progress || 0}% Complete</span>
+                <span>{status.progress ?? 0}% Complete</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                 <div
@@ -140,7 +146,7 @@ export default function BulkImportUI() {
                     Errors
                   </p>
                   <p className="text-2xl font-black text-red-900">
-                    {status.errorRows || 0}
+                    {status.errorRows ?? 0}
                   </p>
                 </div>
               </div>

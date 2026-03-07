@@ -36,6 +36,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@apex/test-utils": "workspace:*",
     "@nestjs/testing": "^11.1.13",
     "@types/express": "^4.17.17",
     "@types/node": "^20.0.0",

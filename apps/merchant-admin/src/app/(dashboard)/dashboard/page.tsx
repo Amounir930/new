@@ -17,14 +17,21 @@ import {
 } from '@/components/ui/card';
 import { apiFetch } from '@/lib/api';
 
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCustomers: number;
+}
+
 export default function MerchantDashboard() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const stats = await apiFetch<unknown>('/tenants/stats');
+        const stats = await apiFetch<DashboardStats>('/tenants/stats');
         setData(stats);
       } catch (_error) {
         /* 'Failed to fetch stats:', error */
@@ -38,7 +45,7 @@ export default function MerchantDashboard() {
   const stats = [
     {
       name: 'Total Revenue',
-      value: data ? `$${(data as any).totalRevenue.toLocaleString()}` : '$0',
+      value: data ? `$${data.totalRevenue.toLocaleString()}` : '$0',
       icon: TrendingUp,
       change: '+0%',
       color: 'text-green-600',

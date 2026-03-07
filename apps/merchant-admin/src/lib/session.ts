@@ -18,14 +18,16 @@ export interface UserSession {
   name?: string;
 }
 
+import { createClient, type RedisClientType } from 'redis';
+
 // ═══════════════════════════════════════════════════════════════
 // Redis Singleton — NEVER open/close per request!
 // Connection Churn = DDoS on your own Redis server.
 // ═══════════════════════════════════════════════════════════════
-let redisClient: any = null;
-let redisConnecting: Promise<unknown> | null = null;
+let redisClient: RedisClientType | null = null;
+let redisConnecting: Promise<RedisClientType | null> | null = null;
 
-async function getRedisClient() {
+async function getRedisClient(): Promise<RedisClientType | null> {
   if (redisClient?.isOpen) return redisClient;
 
   // Prevent multiple simultaneous connection attempts
@@ -36,7 +38,6 @@ async function getRedisClient() {
       const redisUrl = process['env']['REDIS_URL'];
       if (!redisUrl) return null;
 
-      const { createClient } = await import('redis');
       redisClient = createClient({
         url: redisUrl,
         socket: {

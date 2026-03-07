@@ -3,7 +3,7 @@
  * S2 Protocol: Tenant Data Isolation
  */
 
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 
 // Define mockDb first
 const mockClient = {
@@ -93,6 +93,11 @@ mock.module('@apex/security', () => ({
 
 // Import after mocks are set up
 const { isSeeded, seedTenantData } = await import('./seeder.js');
+
+// Global cleanup for module mocks
+afterEach(() => {
+  mock.restore();
+});
 
 describe('seedTenantData', () => {
   beforeEach(() => {

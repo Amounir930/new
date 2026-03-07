@@ -10,7 +10,14 @@ import type { NextFunction, Request, Response } from 'express';
 
 @Injectable()
 export class FingerprintMiddleware implements NestMiddleware {
-  use(req: Request, _res: Response, next: NextFunction): void {
+  use(
+    req: Request & {
+      fingerprintData?: Record<string, unknown>;
+      fingerprint?: string;
+    },
+    _res: Response,
+    next: NextFunction
+  ): void {
     const headers = req.headers;
 
     // Components of a fingerprint:
@@ -29,17 +36,17 @@ export class FingerprintMiddleware implements NestMiddleware {
     ];
 
     const rawFingerprint = fingerprintParts.join('|');
-    // fp var removed for lint compliance
-    const data = (req as any).fingerprintData || {};
+    // Attach fingerprint parts for velocity checks (S14 Level 2)
+    const data = req.fingerprintData || {};
     const fingerprint = createHash('sha256')
       .update(rawFingerprint)
       .digest('hex');
 
     // Attach fingerprint to request for downstream fraud scoring (Level 3)
-    (req as any).fingerprint = fingerprint;
+    req.fingerprint = fingerprint;
 
     // Also attach parts for velocity checks (S14 Level 2)
-    (req as any).fingerprintData = data;
+    req.fingerprintData = data;
 
     next();
   }

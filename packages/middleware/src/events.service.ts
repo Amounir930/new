@@ -4,7 +4,7 @@
  */
 
 import { Injectable, Logger } from '@nestjs/common';
-import { getCurrentTenantId } from './connection-context.js';
+import { getCurrentTenantId } from './connection-context';
 
 export interface TenantEvent {
   name: string;

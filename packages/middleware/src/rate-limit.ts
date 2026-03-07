@@ -9,6 +9,7 @@ import { ConfigModule } from '@apex/config';
 import {
   type CanActivate,
   type ExecutionContext,
+  forwardRef,
   Global,
   HttpException,
   HttpStatus,
@@ -19,8 +20,18 @@ import {
 } from '@nestjs/common';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { RedisRateLimitStore } from './redis-rate-limit-store.js';
+import { RedisRateLimitStore } from './redis-rate-limit-store';
+import type { TenantRequest } from './tenant-isolation.middleware';
 export { RedisRateLimitStore };
+
+import { ActiveDefenseMiddleware } from './active-defense.middleware';
+import { FraudGuard } from './fraud.guard';
+import { FraudScoringService } from './fraud-scoring.service';
+import { GeoIpService } from './geo-ip.service';
+import { GovernanceGuard } from './governance.guard';
+import { HCaptchaService } from './hcaptcha.service';
+import { OTPService } from './otp.service';
+import { QuotaInterceptor } from './quota.interceptor';
 
 export const REFLECTOR_TOKEN = 'REFLECTOR';
 
@@ -85,8 +96,8 @@ export class RateLimitGuard implements CanActivate {
       (customConfig?.ttl ? customConfig.ttl * 1000 : tierConfig.windowMs);
 
     // S6 FIX: Include tenantId in rate limit key for proper tenant isolation
-    // tenantContext var removed for lint compliance
-    const tenantId = (request as any).tenantContext?.tenantId || 'system';
+    const tenantId =
+      (request as TenantRequest).tenantContext?.tenantId || 'system';
     const key = `ratelimit:${tenantId}:${identifier}`;
     const now = Date.now();
 
@@ -166,17 +177,16 @@ export class RateLimitGuard implements CanActivate {
 
   private getIdentifier(request: Request): string {
     // Use API key if available, otherwise IP
-    const headers = request.headers as any;
-    const apiKey = headers['x-api-key'] as string;
-    if (apiKey) {
+    const apiKey = request.headers['x-api-key'];
+    if (typeof apiKey === 'string' && apiKey) {
       return `api:${apiKey}`;
     }
 
     // Get IP from various headers (proxy support)
     const rawIp =
-      (request as any).ip ||
-      headers['x-forwarded-for'] ||
-      headers['x-real-ip'] ||
+      request.headers['x-forwarded-for'] ||
+      request.headers['x-real-ip'] ||
+      request.ip ||
       'unknown';
 
     // S6: Safely handle both string and array header values (NestJS/Node.js compatibility)
@@ -192,8 +202,10 @@ export class RateLimitGuard implements CanActivate {
 
   private getTenantTier(request: Request): keyof typeof RATE_LIMIT_TIERS {
     // Extract from tenant context or default to free
-    const tenantContext = (request as any).tenantContext;
-    return (tenantContext as any)?.plan || 'free';
+    const reqWithTenant = request as Request & {
+      tenantContext?: { plan?: keyof typeof RATE_LIMIT_TIERS };
+    };
+    return reqWithTenant.tenantContext?.plan || 'free';
   }
 }
 
@@ -235,14 +247,7 @@ export const ThrottleConfig = {
   ],
 };
 
-import { ActiveDefenseMiddleware } from './active-defense.middleware.js';
-import { FraudGuard } from './fraud.guard.js';
-import { FraudScoringService } from './fraud-scoring.service.js';
-import { GeoIpService } from './geo-ip.service.js';
-import { GovernanceGuard } from './governance.guard.js';
-import { HCaptchaService } from './hcaptcha.service.js';
-import { OTPService } from './otp.service.js';
-import { QuotaInterceptor } from './quota.interceptor.js';
+// RateLimitModule moved here for better organization and to satisfy circular dependencies
 
 @Global()
 @Module({
@@ -273,7 +278,7 @@ import { QuotaInterceptor } from './quota.interceptor.js';
     GeoIpService,
     FraudScoringService,
     ActiveDefenseMiddleware,
-    GovernanceGuard,
+    forwardRef(() => GovernanceGuard),
     QuotaInterceptor,
     HCaptchaService,
     OTPService,

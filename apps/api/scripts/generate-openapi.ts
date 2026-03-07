@@ -37,7 +37,7 @@ async function generate() {
 
   // Use explicit path dynamic import for local module to avoid eager evaluation
   // Note: We use relative path for local module
-  const { AppModule } = await import('../src/app.module.js');
+  const { AppModule } = await import('../src/app.module');
 
   const { EncryptionService } = await import('@apex/security');
   const { AuditService } = await import('@apex/audit');

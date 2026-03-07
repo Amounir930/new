@@ -13,15 +13,15 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
 import type { Observable } from 'rxjs';
-import type { AuthUser } from './auth.service.js';
+import type { AuthUser } from './auth.service';
 
-export * from './auth.module.js';
-export * from './auth.service.js';
-export * from './decorators/current-user.decorator.js';
-export * from './decorators/public.decorator.js';
-export * from './guards/super-admin.guard.js';
-export * from './guards/tenant-jwt-match.guard.js';
-export * from './strategies/jwt.strategy.js';
+export * from './auth.module';
+export * from './auth.service';
+export * from './decorators/current-user.decorator';
+export * from './decorators/public.decorator';
+export * from './guards/super-admin.guard';
+export * from './guards/tenant-jwt-match.guard';
+export * from './strategies/jwt.strategy';
 export type { TenantContext };
 
 export interface AuthenticatedRequest extends Request {

@@ -1,10 +1,5 @@
-/**
- * Storage Manager Tests
- * S3: Multi-tenant storage isolation
- * Rule 4.1: Test Coverage Mandate
- */
-
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test';
+import { type MinioMock, type Mocked, MockFactory } from '@apex/test-utils';
 import {
   createStorageBucket,
   deleteStorageBucket,
@@ -14,37 +9,33 @@ import {
 } from './storage-manager';
 
 // Mock MinIO client
-const mockMinioClient = {
-  bucketExists: mock(),
-  makeBucket: mock(),
-  setBucketVersioning: mock(),
-  setBucketPolicy: mock(),
-  setBucketTagging: mock(),
-  putObject: mock(),
-  removeBucket: mock(),
-  listObjects: mock().mockImplementation(() => ({
-    toArray: mock().mockResolvedValue([]),
-    [Symbol.asyncIterator]: async function* () {
-      yield* [];
-    },
-  })),
-  toArray: mock(), // Keep for type satisfaction
-  removeObjects: mock(), // Keep for type satisfaction
-  getBucketTagging: mock(),
-  presignedPutObject: mock(),
-  presignedGetObject: mock(),
-  removeObject: mock(),
-};
+const mockMinioClient: Mocked<MinioMock> = MockFactory.createMinioClient();
+
+interface ListObjectsMock {
+  toArray: Mock<() => Promise<any[]>>;
+  [Symbol.asyncIterator](): AsyncGenerator<any, void, unknown>;
+}
 
 describe('StorageManager', () => {
   beforeEach(() => {
-    mock.restore();
-    // Clear call history for all mocks in the shared client
-    Object.values(mockMinioClient).forEach((m) => {
-      if ((m as never).mockClear) (m as never).mockClear();
-    });
+    // Manually clear each mock to avoid loop issues
+    mockMinioClient.bucketExists.mockClear();
+    mockMinioClient.makeBucket.mockClear();
+    mockMinioClient.setBucketVersioning.mockClear();
+    mockMinioClient.setBucketPolicy.mockClear();
+    mockMinioClient.setBucketTagging.mockClear();
+    mockMinioClient.putObject.mockClear();
+    mockMinioClient.removeBucket.mockClear();
+    mockMinioClient.listObjects.mockClear();
+    mockMinioClient.removeObjects.mockClear();
+    mockMinioClient.getBucketTagging.mockClear();
+    mockMinioClient.presignedPutObject.mockClear();
+    mockMinioClient.presignedGetObject.mockClear();
+    mockMinioClient.removeObject.mockClear();
+
     resetMinioClient();
-    setMinioClient(mockMinioClient as never);
+    // @ts-expect-error - Bridge mock to service which expects real Minio.Client
+    setMinioClient(mockMinioClient);
   });
 
   describe('createStorageBucket', () => {
@@ -72,7 +63,7 @@ describe('StorageManager', () => {
         mockMinioClient.setBucketVersioning.mockResolvedValue(undefined);
         mockMinioClient.setBucketPolicy.mockResolvedValue(undefined);
         mockMinioClient.setBucketTagging.mockResolvedValue(undefined);
-        mockMinioClient.putObject.mockResolvedValue({} as never);
+        mockMinioClient.putObject.mockResolvedValue({});
 
         const result = await createStorageBucket(subdomain, plan);
 
@@ -80,11 +71,14 @@ describe('StorageManager', () => {
         expect(result.bucketName).toBe(expectedBucket);
         expect(mockMinioClient.makeBucket).toHaveBeenCalledWith(
           expectedBucket,
-          expect.anything(String)
+          expect.any(String)
         );
         expect(mockMinioClient.setBucketTagging).toHaveBeenCalledWith(
           expectedBucket,
-          expect.objectContaining({ plan })
+          {
+            plan,
+            tenant: subdomain,
+          }
         );
       });
     }
@@ -101,7 +95,14 @@ describe('StorageManager', () => {
   describe('deleteStorageBucket', () => {
     it('should delete empty bucket', async () => {
       mockMinioClient.bucketExists.mockResolvedValueOnce(true);
-      mockMinioClient.toArray.mockResolvedValueOnce([]);
+      // listObjects returns a structure with toArray
+      const listObjectsMock: ListObjectsMock = {
+        toArray: mock().mockResolvedValue([]),
+        [Symbol.asyncIterator]: async function* () {
+          yield* [];
+        },
+      };
+      mockMinioClient.listObjects.mockReturnValueOnce(listObjectsMock);
       mockMinioClient.removeBucket.mockResolvedValueOnce(undefined);
 
       const result = await deleteStorageBucket('empty-tenant');
@@ -125,11 +126,12 @@ describe('StorageManager', () => {
     it('should delete non-empty bucket if force is true', async () => {
       mockMinioClient.bucketExists.mockResolvedValueOnce(true);
       mockMinioClient.listObjects.mockReturnValue({
+        toArray: mock().mockResolvedValue([]),
         [Symbol.asyncIterator]: async function* () {
           yield { name: 'file.txt' };
         },
-      } as never);
-      mockMinioClient.removeObjects = mock().mockResolvedValueOnce(undefined);
+      } as ListObjectsMock);
+      mockMinioClient.removeObjects.mockResolvedValueOnce(undefined);
       mockMinioClient.removeBucket.mockResolvedValueOnce(undefined);
 
       const result = await deleteStorageBucket('full-tenant', true);
@@ -145,7 +147,10 @@ describe('StorageManager', () => {
       ];
       mockMinioClient.listObjects.mockReturnValueOnce({
         toArray: mock().mockResolvedValueOnce(mockObjects),
-      } as never);
+        [Symbol.asyncIterator]: async function* () {
+          yield* mockObjects;
+        },
+      } as ListObjectsMock);
       mockMinioClient.getBucketTagging.mockResolvedValueOnce([
         { Key: 'plan', Value: 'basic' },
       ]);

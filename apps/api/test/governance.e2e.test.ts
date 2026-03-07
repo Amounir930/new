@@ -1,5 +1,5 @@
-import { publicDb } from '@apex/db';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, mock } from 'bun:test';
+import { adminDb } from '@apex/db';
 
 // S1-S15 Protocols: Environment Handshake
 process.env['NODE_ENV'] = 'test';
@@ -12,17 +12,18 @@ process.env['SUPER_ADMIN_PASSWORD'] = 'Admin@60SecShop!2026';
 process.env['DATABASE_URL'] =
   'postgresql://apex:ApexV2DBPassSecure2026GrowthScale!QazXswEdCv@localhost:5432/apex_v2';
 
-import { GovernanceService } from '@apex/db';
+import type { RedisRateLimitStore } from '@apex/middleware';
+import { type Mocked, MockFactory } from '@apex/test-utils';
+import { GovernanceService } from '../src/governance/governance.service';
 
 // Mock dependencies for GovernanceService
 const mockRedisService = {
-  subscribe: async () => {},
-  publish: async () => {},
-} as never;
-
-const mockEncryptionService = {
-  decrypt: (v: unknown) => v,
-} as never;
+  getClient: mock(async () => ({
+    ping: mock(async () => 'PONG'),
+  })),
+  subscribe: mock(async () => {}),
+  publish: mock(async () => {}),
+} as Mocked<RedisRateLimitStore>;
 
 let governanceService: GovernanceService;
 
@@ -30,10 +31,10 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
   beforeAll(async () => {
     void '🏁 Ensuring DB Connection for Governance Logic...';
     governanceService = new GovernanceService(
-      publicDb as never,
-      mockRedisService,
-      mockEncryptionService
+      mockRedisService as RedisRateLimitStore
     );
+    // Note: publicDb/adminDb usage in GovernanceService is internal,
+    // we don't pass it in constructor in the current NestJS implementation.
   });
 
   it('should block product creation when blueprint max_products is 0 (Stage 1 & 2 logic)', async () => {
@@ -50,7 +51,7 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
     });
 
     // Mock getResourceCount
-    (governanceService as never).getResourceCount = async () => 0;
+    governanceService.getResourceCount = async () => 0;
 
     void '🔍 Testing Real-time Enforcement...';
     const result = await governanceService.checkQuota(
@@ -70,16 +71,17 @@ describe('Blueprint Governance E2E (Logic Verification)', () => {
     const subdomain = `pro-store-${Date.now()}`;
 
     // Mock the getTenantLimits internal behavior
-    governanceService.getTenantLimits = async () => ({
+    governanceService.getTenantLimits = async (_tenantId: string) => ({
       maxProducts: 100,
       maxOrders: 1000,
       maxPages: 50,
+      maxStaff: 10,
       storageLimitGb: 10,
       ownerEmail: 'test@example.com',
     });
 
     // Mock getResourceCount
-    (governanceService as never).getResourceCount = async () => 0;
+    governanceService.getResourceCount = async () => 0;
 
     const result = await governanceService.checkQuota(
       'tenant-id-456',

@@ -41,7 +41,9 @@ export function startTracing(
       `[OpenTelemetry] Tracing initialized for service: ${serviceName}`
     );
   } catch (error) {
-    process.stdout.write(`[OpenTelemetry] Error initializing tracing: \n${String(error)}`);
+    process.stdout.write(
+      `[OpenTelemetry] Error initializing tracing: \n${String(error)}`
+    );
   }
 
   // Graceful shutdown

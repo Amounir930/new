@@ -39,6 +39,14 @@ interface ProvisionModalProps {
   onSuccess: () => void;
 }
 
+interface Blueprint {
+  id: string;
+  name: string;
+  version: string;
+  plan: string;
+  status: string;
+}
+
 export function ProvisionModal({
   open,
   onOpenChange,
@@ -46,7 +54,7 @@ export function ProvisionModal({
 }: ProvisionModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [blueprints, setBlueprints] = useState<any[]>([]);
+  const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
 
   const {
     register,
@@ -99,8 +107,8 @@ export function ProvisionModal({
       onSuccess();
       onOpenChange(false);
       reset();
-    } catch (e: any) {
-      setError(e.message || 'Provisioning failed');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Provisioning failed');
     } finally {
       setLoading(false);
     }

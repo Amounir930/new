@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { CreateOrderSchema, OrderSchema } from './order.schema.js';
+import { CreateOrderSchema, OrderSchema } from './order.schema';
 
 describe('OrderSchema', () => {
   const validOrder = {

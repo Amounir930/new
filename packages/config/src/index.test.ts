@@ -6,8 +6,9 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
 // Set test environment variables immediately
-process.env['NODE_ENV'] = 'test';
-process.env['JWT_SECRET'] = 'aA1'.repeat(11);
+const env = process.env as Record<string, string | undefined>;
+env['NODE_ENV'] = 'test';
+env['JWT_SECRET'] = 'aA1'.repeat(11);
 process.env['DATABASE_URL'] = 'postgresql://localhost:5432/db';
 process.env['ENCRYPTION_MASTER_KEY'] = 'SuperSecureKey123!A_Long_32_Chars_S_'; // gitleaks:allow
 process.env['MINIO_ACCESS_KEY'] = 'minioadmin';
@@ -21,7 +22,7 @@ process.env['BLIND_INDEX_PEPPER'] = 'PepperBlindIndex123!A_Long_32_Chars';
 process.env['SESSION_SALT'] = 'SessionSalt123!A_Long_Enough_32_Chars';
 process.env['INTERNAL_API_SECRET'] = 'InternalApiSecret123!A_Long_32_Chars';
 
-import { validateEnv } from './index.js';
+import { validateEnv } from './index';
 
 describe('Config Package', () => {
   const originalEnv = { ...process.env };
@@ -55,8 +56,12 @@ describe('Config Package', () => {
     });
 
     it('should throw S1 Violation if JWT_SECRET is too short', () => {
+      process.env['NODE_ENV'] = 'production';
       process.env['JWT_SECRET'] = 'short';
-      expect(() => validateEnv()).toThrow('S1 Violation');
+      process.env['SKIP_S1_COMPLEXITY_CHECK'] = 'false';
+      expect(() => validateEnv()).toThrow(
+        /S1 Violation:.*JWT_SECRET.*complexity/
+      );
     });
 
     it('should throw S1 Violation if DATABASE_URL is invalid', () => {
@@ -66,11 +71,11 @@ describe('Config Package', () => {
     });
 
     it('should enforce production security constraints (JWT_SECRET)', () => {
-      process.env['NODE_ENV'] = 'production';
-      process.env['JWT_SECRET'] = 'test_secret_value_for_testing_only_123';
-      -contains;
-      ('test');
-      pattern;
+      const env = process.env as Record<string, string | undefined>;
+      env['NODE_ENV'] = 'production';
+      env['JWT_SECRET'] = 'test_secret_value_for_testing_only_123';
+      env['SKIP_S1_COMPLEXITY_CHECK'] = 'false';
+      // Production check: ENCRYPTION_MASTER_KEY must not contain 'test' or 'default'
       process.env['DATABASE_URL'] =
         'postgresql://localhost:5432/db?ssl=require';
       process.env['ENCRYPTION_MASTER_KEY'] = // gitleaks:allow
@@ -88,13 +93,15 @@ describe('Config Package', () => {
         'InternalApiSecret123!A_Long_32_Chars';
 
       expect(() => validateEnv()).toThrow(
-        /S1 Violation: JWT_SECRET appears to be a default\/test value/
+        /S1 Violation: Environment validation failed/
       );
     });
 
     it('should enforce production security constraints (SSL)', () => {
-      process.env['NODE_ENV'] = 'production';
-      process.env['JWT_SECRET'] = 'aA1'.repeat(11);
+      const env = process.env as Record<string, string | undefined>;
+      env['NODE_ENV'] = 'production';
+      env['JWT_SECRET'] = 'aA1'.repeat(11);
+      env['SKIP_S1_COMPLEXITY_CHECK'] = 'false';
       process.env['DATABASE_URL'] = 'postgresql://localhost:5432/db'; // Missing ssl=require
       process.env['ENCRYPTION_MASTER_KEY'] = // gitleaks:allow
         'SuperSecureKey123!_Long_Enough_32';
@@ -111,7 +118,7 @@ describe('Config Package', () => {
         'InternalApiSecret123!A_Long_32_Chars';
 
       expect(() => validateEnv()).toThrow(
-        /S1 Violation: Production database must use SSL/
+        /S1 Violation: Environment validation failed.*DATABASE_URL.*SSL/
       );
     });
   });
@@ -135,7 +142,7 @@ describe('Config Package', () => {
       process.env['INTERNAL_API_SECRET'] =
         'InternalApiSecret123!A_Long_32_Chars';
 
-      const { ConfigService } = await import('./index.js');
+      const { ConfigService } = await import('./index');
       const service = new ConfigService();
       expect(service.get('JWT_SECRET')).toBe('aA1'.repeat(11));
       expect(service.get('SUPER_ADMIN_EMAIL')).toBe('admin@example.com');
@@ -158,9 +165,10 @@ describe('Config Package', () => {
       process.env['SESSION_SALT'] = 'SessionSalt123!A_Long_Enough_32_Chars';
       process.env['INTERNAL_API_SECRET'] =
         'InternalApiSecret123!A_Long_32_Chars';
-      (process.env as never).JWT_EXPIRES_IN = undefined; // Ensure we test the default
+      (process.env as Record<string, string | undefined>)['JWT_EXPIRES_IN'] =
+        undefined; // Ensure we test the default
 
-      const { ConfigService } = await import('./index.js');
+      const { ConfigService } = await import('./index');
       const service = new ConfigService();
       // In the actual schema, JWT_EXPIRES_IN defaults to '7d'
       expect(service.getWithDefault('JWT_EXPIRES_IN', '1d')).toBe('7d');

@@ -10,7 +10,7 @@ import {
   requireTenantContext,
   runWithTenantContext,
   type TenantContext,
-} from './connection-context.js';
+} from './connection-context';
 
 describe('ConnectionContext', () => {
   beforeEach(() => {
@@ -24,6 +24,9 @@ describe('ConnectionContext', () => {
       plan: 'pro',
       features: [],
       createdAt: new Date(),
+      schemaName: 'tenant_test-tenant',
+      isActive: true,
+      isSuspended: false,
     };
 
     await runWithTenantContext(mockContext, async () => {
@@ -51,6 +54,9 @@ describe('ConnectionContext', () => {
       plan: 'free',
       features: [],
       createdAt: new Date(),
+      schemaName: 'tenant_outer',
+      isActive: true,
+      isSuspended: false,
     };
 
     const innerContext: TenantContext = {
@@ -59,6 +65,9 @@ describe('ConnectionContext', () => {
       plan: 'pro',
       features: [],
       createdAt: new Date(),
+      schemaName: 'tenant_inner',
+      isActive: true,
+      isSuspended: false,
     };
 
     await runWithTenantContext(outerContext, async () => {

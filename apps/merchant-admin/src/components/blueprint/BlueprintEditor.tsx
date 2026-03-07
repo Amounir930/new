@@ -21,6 +21,18 @@ interface BlueprintEditorProps {
   id: string; // 'new' or UUID
 }
 
+interface BlueprintData {
+  name: string;
+  description?: string;
+  plan: string;
+  isDefault: boolean;
+  blueprint: Record<string, unknown>;
+}
+
+interface BlueprintRecord extends BlueprintData {
+  id: string;
+}
+
 export function BlueprintEditor({ id }: BlueprintEditorProps) {
   const router = useRouter();
   const isNew = id === 'new';
@@ -38,7 +50,9 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
 
   const fetchBlueprint = useCallback(async () => {
     try {
-      const data = await apiFetch<any>(`/v1/admin/blueprints/${id}`);
+      const data = await apiFetch<BlueprintRecord>(
+        `/v1/admin/blueprints/${id}`
+      );
       setName(data.name);
       setDescription(data.description || '');
       setPlan(data.plan);
@@ -50,8 +64,9 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
           ? data.blueprint
           : JSON.stringify(data.blueprint, null, 2);
       setJson(bpString);
-    } catch (e: any) {
-      alert(`Failed to load: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      alert(`Failed to load: ${message}`);
       router.push('/super-admin/blueprints');
     } finally {
       setLoading(false);
@@ -64,14 +79,22 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
     }
   }, [isNew, fetchBlueprint]);
 
-  const extractInnerBlueprint = (parsed: any) => {
+  const extractInnerBlueprint = (
+    parsed: Record<string, unknown>
+  ): Record<string, unknown> => {
     let blueprint = parsed;
-    if (parsed.blueprint && typeof parsed.blueprint === 'object') {
-      if (!name && parsed.name) setName(parsed.name);
-      if (!description && parsed.description)
-        setDescription(parsed.description);
-      if (parsed.plan) setPlan(parsed.plan);
-      blueprint = parsed.blueprint;
+    const bpData = parsed as {
+      blueprint?: Record<string, unknown>;
+      name?: string;
+      description?: string;
+      plan?: string;
+    };
+    if (bpData.blueprint && typeof bpData.blueprint === 'object') {
+      if (!name && bpData.name) setName(bpData.name);
+      if (!description && bpData.description)
+        setDescription(bpData.description);
+      if (bpData.plan) setPlan(bpData.plan);
+      blueprint = bpData.blueprint;
     }
     return blueprint;
   };
@@ -106,8 +129,9 @@ export function BlueprintEditor({ id }: BlueprintEditorProps) {
       const blueprint = processBlueprint(json);
       await submitBlueprint(blueprint);
       router.push('/super-admin/blueprints');
-    } catch (e: any) {
-      alert(e.message || 'Error saving');
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Error saving';
+      alert(message);
     } finally {
       setSaving(false);
     }

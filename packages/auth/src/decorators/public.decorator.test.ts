@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'bun:test';
-import { IS_PUBLIC_KEY, Public } from './public.decorator.js';
+import { IS_PUBLIC_KEY, Public } from './public.decorator';
 
 describe('Public Decorator', () => {
   it('should have correct metadata key', () => {

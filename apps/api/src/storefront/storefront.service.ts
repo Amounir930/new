@@ -306,16 +306,15 @@ export class StorefrontService {
       const encryptedEmail = this.crypto.encrypt(email).encrypted;
 
       // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure
-      return await db.transaction(async (tx: unknown) => {
-        const dbTx = tx as typeof db;
-        return (await dbTx
+      return await db.transaction(async (dbTx) => {
+        return await dbTx
           .insert(newsletterSubscribersInStorefront)
           .values({ email: encryptedEmail, tenantId: _tenantId })
           .onConflictDoUpdate({
             target: newsletterSubscribersInStorefront.email,
             set: { isActive: true },
           })
-          .returning()) as unknown;
+          .returning();
       });
     } finally {
       release();

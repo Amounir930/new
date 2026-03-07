@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { MASTER_FEATURE_LIST } from './constants';
 import { validateBlueprint } from './executor';
 
@@ -11,8 +12,8 @@ describe('S21 Strict Validation', () => {
       {} as Record<string, boolean>
     );
 
-    const incompleteModules = { ...completeModules };
-    delete (incompleteModules as never).home; // Remove 1
+    const incompleteModules: Record<string, boolean> = { ...completeModules };
+    delete incompleteModules['home']; // Remove 1
 
     const blueprint = {
       name: 'Test',
@@ -22,7 +23,11 @@ describe('S21 Strict Validation', () => {
         max_products: 10,
         max_orders: 10,
         max_pages: 1,
+        max_staff: 5,
+        max_categories: 10,
+        max_coupons: 5,
         storage_limit_gb: 1,
+        api_rate_limit: 100,
       },
     };
 
@@ -47,7 +52,11 @@ describe('S21 Strict Validation', () => {
         max_products: 10,
         max_orders: 10,
         max_pages: 1,
+        max_staff: 5,
+        max_categories: 10,
+        max_coupons: 5,
         storage_limit_gb: 1,
+        api_rate_limit: 100,
       },
     };
 

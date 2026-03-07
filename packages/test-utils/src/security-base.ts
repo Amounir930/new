@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import type { Provider, Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import 'reflect-metadata';
 import { describe, expect, it } from 'bun:test';
@@ -10,8 +11,8 @@ import { type CallExpression, Node, Project, type SourceFile } from 'ts-morph';
  * Checks for hardcoded secrets (S1) and SQL Injection vulnerabilities (S11).
  */
 export function validateModuleSecurity(
-  module: unknown,
-  providers: unknown[] = []
+  module: Type<unknown>,
+  providers: Provider[] = []
 ) {
   describe(`${module.name} Security Compliance (Reference Architecture)`, () => {
     // S1: Secrets Management (Deep Scan)
@@ -21,7 +22,7 @@ export function validateModuleSecurity(
         providers: providers,
       }).compile();
 
-      const modules = moduleRef.get(module, { strict: false });
+      const modules = moduleRef.get(module, { strict: false }) as object;
       const metadataKeys = Reflect.getMetadataKeys(modules);
 
       for (const key of metadataKeys) {
@@ -29,7 +30,7 @@ export function validateModuleSecurity(
         try {
           validateMetadataValue(value, key.toString());
         } catch (e: unknown) {
-          throw new Error(e.message);
+          throw new Error(e instanceof Error ? e.message : String(e));
         }
       }
     });
@@ -73,7 +74,10 @@ export function validateMetadataValue(value: unknown, pathIdx: string) {
     // Recursive scan
     for (const key in value) {
       if (Object.hasOwn(value, key)) {
-        validateMetadataValue(value[key], `${pathIdx}.${key}`);
+        validateMetadataValue(
+          (value as Record<string, unknown>)[key],
+          `${pathIdx}.${key}`
+        );
       }
     }
   }

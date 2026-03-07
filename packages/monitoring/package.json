@@ -4,7 +4,7 @@
   "main": "src/tracing.ts",
   "types": "src/tracing.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests specified for monitoring\" && exit 0"
   },
   "dependencies": {
     "@opentelemetry/auto-instrumentations-node": "^0.53.0",

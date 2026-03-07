@@ -1,5 +1,5 @@
-**/drizzle/meta/**
-**/drizzle/_journal.json
+**/.next/**
+**/.turbo/**
 **/dist/**
-**/node_modules/**
-**/next-env.d.ts
+**/env.d.ts
+**/routes.d.ts

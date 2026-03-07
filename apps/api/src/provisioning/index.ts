@@ -5,7 +5,7 @@
 
 // Note: The KIMI file suggested function exports, but our implementation is a class.
 // Adjusting to export the DTOs and types correctly.
-export * from './dto/provision-response.dto.js';
-export { ProvisioningController } from './provisioning.controller.js';
-export { ProvisioningModule } from './provisioning.module.js';
-export { ProvisioningService } from './provisioning.service.js';
+export * from './dto/provision-response.dto';
+export { ProvisioningController } from './provisioning.controller';
+export { ProvisioningModule } from './provisioning.module';
+export { ProvisioningService } from './provisioning.service';

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { EnvSchema } from '.././../packages/config/src/schema';
+import { EnvSchema } from '@apex/config/schema';
 
 /**
  * S1: Environment Consistency Checker

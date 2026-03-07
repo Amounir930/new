@@ -64,19 +64,7 @@
   },
   "overrides": [
     {
-      "formatter": {
-        "enabled": false
-      },
-      "linter": {
-        "enabled": false
-      }
-    },
-    {
-      "formatter": {
-        "enabled": false
-      }
-    },
-    {
+      "includes": ["**/.next/**", "**/.turbo/**", "**/dist/**", "**/env.d.ts", "**/routes.d.ts"],
       "formatter": {
         "enabled": false
       },

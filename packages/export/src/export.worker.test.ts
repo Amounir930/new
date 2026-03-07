@@ -4,9 +4,14 @@
  * Rule 4.1: Test Coverage Mandate
  */
 
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import type { Job } from 'bullmq';
+import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test';
+import type { AuditService } from '@apex/audit';
+import type { ConfigService } from '@apex/config';
+import { type Mocked, MockFactory } from '@apex/test-utils';
+import { type Job, Queue } from 'bullmq';
 import { ExportWorker } from './export.worker';
+import type { ExportStrategyFactory } from './export-strategy.factory';
+import type { ExportManifest, ExportResult, ExportStrategy } from './types';
 
 // Mock BullMQ
 mock.module('bullmq', () => ({
@@ -44,39 +49,70 @@ mock.module('fs/promises', () => ({
 
 describe('ExportWorker', () => {
   let worker: ExportWorker;
-  const mockAudit = { log: mock() } as never;
-  const mockStrategy = {
-    export: mock().mockResolvedValue({
-      downloadUrl: '/tmp/test.tar.gz',
-      sizeBytes: 1024,
-      checksum: 'abc-123',
-    }),
-  };
-  const mockFactory = {
-    getStrategy: mock().mockReturnValue(mockStrategy),
-  };
+  let mockAudit: Mocked<AuditService>;
+  let mockStrategy: Mocked<ExportStrategy>;
+  let mockFactory: Mocked<ExportStrategyFactory>;
+  let mockConfig: Mocked<ConfigService>;
+
+  const createMockManifest = (
+    overrides: Partial<ExportManifest> = {}
+  ): ExportManifest => ({
+    version: '1.0',
+    tenantId: 'tenant-1',
+    exportedAt: new Date().toISOString(),
+    profile: 'lite',
+    database: { tables: [], rowCount: 0, format: 'json' },
+    assets: { files: [], totalSize: 0 },
+    ...overrides,
+  });
+
+  const isJob = (j: unknown): j is Job => true;
 
   beforeEach(() => {
-    // mock.restore() removed as it breaks module mocks defined at top-level
-    const mockConfig = {
-      getWithDefault: mock().mockReturnValue('http://localhost:9000'),
-      get: mock().mockReturnValue('mock'),
-      getOrThrow: mock().mockReturnValue('mock'),
+    mockAudit = MockFactory.createAuditService();
+    const strategyMock = {
+      name: 'lite',
+      validate: mock().mockResolvedValue(true),
+      export: mock().mockResolvedValue({
+        downloadUrl: '/tmp/test.tar.gz',
+        sizeBytes: 1024,
+        checksum: 'abc-123',
+        manifest: createMockManifest(),
+        expiresAt: new Date(),
+      } as ExportResult),
     };
-    worker = new ExportWorker(
-      mockAudit,
-      mockFactory as never,
-      mockConfig as never
-    );
-    // Access private for testing
-    (worker as unknown as Record<string, unknown>).logger = {
+    const isStrategy = (s: unknown): s is Mocked<ExportStrategy> => true;
+    mockStrategy = isStrategy(strategyMock)
+      ? strategyMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
+
+    const factoryMock = {
+      getStrategy: mock().mockReturnValue(mockStrategy),
+      validateOptions: mock().mockResolvedValue(true),
+    };
+    const isFactory = (f: unknown): f is Mocked<ExportStrategyFactory> => true;
+    mockFactory = isFactory(factoryMock)
+      ? factoryMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
+
+    mockConfig = MockFactory.createConfigService();
+
+    worker = new ExportWorker(mockAudit, mockFactory, mockConfig);
+
+    // Silence logger and mock internal state
+    // @ts-expect-error - accessing private member
+    worker.logger = {
       log: mock(),
       error: mock(),
-    } as never;
+    };
   });
 
   it('should process a valid export job successfully', async () => {
-    const mockJob = {
+    const jobMock = {
       id: 'job-123',
       data: {
         tenantId: 'tenant-1',
@@ -86,12 +122,15 @@ describe('ExportWorker', () => {
       },
       updateProgress: mock().mockResolvedValue(undefined),
       updateData: mock().mockResolvedValue(undefined),
-    } as unknown as Job;
+    };
+    const mockJob = isJob(jobMock)
+      ? jobMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
 
-    // Access private to trigger processJob
-    const result = await (
-      worker as unknown as Record<string, unknown>
-    ).processJob(mockJob);
+    // @ts-expect-error - accessing private member
+    const result = await worker.processJob(mockJob);
 
     expect(result.downloadUrl).toBe('https://mock-presigned-url.com');
     expect(mockJob.updateProgress).toHaveBeenCalledWith(100);
@@ -104,20 +143,28 @@ describe('ExportWorker', () => {
   });
 
   it('should handle export size limit violation', async () => {
-    const mockJob = {
+    const jobLimitMock = {
       id: 'job-huge',
       data: { tenantId: 'tenant-1', profile: 'lite' },
-      updateProgress: mock(),
-    } as never;
+      updateProgress: mock().mockResolvedValue(undefined),
+    };
+    const mockJob = isJob(jobLimitMock)
+      ? jobLimitMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
 
-    mockStrategy.export.mockResolvedValueOnce({
+    (mockStrategy.export as Mock<any>).mockResolvedValueOnce({
       downloadUrl: '/tmp/huge.tar.gz',
       sizeBytes: 600 * 1024 * 1024, // 600MB
       checksum: 'big-file',
-    });
+      manifest: createMockManifest(),
+      expiresAt: new Date(),
+    } as ExportResult);
 
     await expect(
-      (worker as unknown as Record<string, unknown>).processJob(mockJob)
+      // @ts-expect-error - accessing private member
+      worker.processJob(mockJob)
     ).rejects.toThrow(/exceeds limit/);
     expect(mockAudit.log).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -127,16 +174,24 @@ describe('ExportWorker', () => {
   });
 
   it('should cleanup local file on failure', async () => {
-    const mockJob = {
+    const jobFailMock = {
       id: 'job-fail',
       data: { tenantId: 'tenant-1', profile: 'lite' },
-      updateProgress: mock(),
-    } as never;
+      updateProgress: mock().mockResolvedValue(undefined),
+    };
+    const mockJob = isJob(jobFailMock)
+      ? jobFailMock
+      : (() => {
+          throw new Error('Unreachable');
+        })();
 
-    mockStrategy.export.mockRejectedValueOnce(new Error('Export crash'));
+    (mockStrategy.export as Mock<any>).mockRejectedValueOnce(
+      new Error('Export crash')
+    );
 
     await expect(
-      (worker as unknown as Record<string, unknown>).processJob(mockJob)
+      // @ts-expect-error - accessing private member
+      worker.processJob(mockJob)
     ).rejects.toThrow('Export crash');
     expect(mockAudit.log).toHaveBeenCalledWith(
       expect.objectContaining({

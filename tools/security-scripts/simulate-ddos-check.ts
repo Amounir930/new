@@ -7,9 +7,9 @@ import { env } from '@apex/config';
  */
 async function runTest() {
   // Dynamic imports ensure env vars are processed FIRST (before auto-enforcing S1)
-  const { ConfigService } = await import('.././../packages/config/src');
+  const { ConfigService } = await import('@apex/config');
   const { RedisRateLimitStore } = await import(
-    '.././../packages/middleware/src/redis-rate-limit-store'
+    '@apex/middleware/src/redis-rate-limit-store'
   );
 
   const maxRequests = Number.parseInt(env.RATE_LIMIT_MAX || '10', 10);

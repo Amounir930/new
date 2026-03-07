@@ -1,7 +1,7 @@
 import { describe, expect, it, mock } from 'bun:test';
-import type { Request, Response } from 'express';
-import { tenantStorage } from './connection-context.js';
-import { extractSubdomain, resolveTenant } from './tenant-resolution.js';
+import { MockFactory } from '@apex/test-utils';
+import { tenantStorage } from './connection-context';
+import { extractSubdomain, resolveTenant } from './tenant-resolution';
 
 describe('S2 Middleware: Tenant Resolution', () => {
   it('should extract subdomain from host header', () => {
@@ -12,10 +12,10 @@ describe('S2 Middleware: Tenant Resolution', () => {
   });
 
   it('should resolve tenant and attach to context', async () => {
-    const req = {
+    const req = MockFactory.createRequest({
       headers: { host: 'test-tenant.apex.com' },
-    } as Request;
-    const res = {} as Response;
+    });
+    const res = MockFactory.createResponse();
     const next = mock();
 
     // We need to wrap this in a promise because resolveTenant is async

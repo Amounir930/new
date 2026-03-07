@@ -1,5 +1,5 @@
 import { env } from '@apex/config';
-import { Injectable, type NestMiddleware } from '@nestjs/common';
+import { Injectable, Logger, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 
 /**
@@ -121,8 +121,7 @@ export const defaultCorsConfig: CorsConfig = {
 
     // Load additional origins from env and trim whitespace
     const allowedOrigins =
-      ((env as any).ALLOWED_ORIGINS as string)
-        ?.split(',')
+      env.ALLOWED_ORIGINS?.split(',')
         .map((o: string) => o.trim())
         .filter(Boolean) || [];
 
@@ -132,8 +131,9 @@ export const defaultCorsConfig: CorsConfig = {
     if (whitelist.includes(origin)) {
       callback(null, true);
     } else {
-      process.stdout.write(
-        `[Security] S8 Violation: CORS blocked request from origin: ${origin}`
+      Logger.warn(
+        `[Security] S8 Violation: CORS blocked request from origin: ${origin}`,
+        'SecurityHeaders'
       );
       callback(new Error('Not allowed by CORS'));
     }

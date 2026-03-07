@@ -2,9 +2,9 @@ export {
   AUDIT_LOG_METADATA_KEY,
   AuditLog,
   type AuditLogOptions,
-} from './audit.decorator.js';
-export { AuditInterceptor } from './audit.interceptor.js';
-export { AuditModule } from './audit.module.js';
+} from './audit.decorator';
+export { AuditInterceptor } from './audit.interceptor';
+export { AuditModule } from './audit.module';
 export {
   type AuditAction,
   type AuditLogEntry,
@@ -16,4 +16,4 @@ export {
   logProvisioning,
   logSecurityEvent,
   query,
-} from './audit.service.js';
+} from './audit.service';

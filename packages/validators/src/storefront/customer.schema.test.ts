@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { CustomerSchema, RegisterCustomerSchema } from './customer.schema.js';
+import { CustomerSchema, RegisterCustomerSchema } from './customer.schema';
 
 describe('CustomerSchema', () => {
   const validCustomer = {

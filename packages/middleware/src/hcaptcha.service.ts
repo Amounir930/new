@@ -1,6 +1,10 @@
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config';
 import { Injectable, Logger } from '@nestjs/common';
+
+interface HCaptchaResponse {
+  success: boolean;
+  'error-codes'?: string[];
+}
 
 @Injectable()
 export class HCaptchaService {
@@ -41,14 +45,14 @@ export class HCaptchaService {
         }),
       });
 
-      const data = (await response.json()) as never;
+      const data = (await response.json()) as HCaptchaResponse;
 
-      if ((data as any).success) {
+      if (data.success) {
         return true;
       }
 
       this.logger.error(
-        `HCAPTCHA: Verification failed - Errors: ${JSON.stringify((data as any)['error-codes'])}`
+        `HCAPTCHA: Verification failed - Errors: ${JSON.stringify(data['error-codes'])}`
       );
       return false;
     } catch (error) {

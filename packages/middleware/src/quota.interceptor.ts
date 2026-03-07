@@ -59,7 +59,9 @@ export class QuotaInterceptor implements NestInterceptor {
     const tenantId = request.tenantContext?.tenantId;
 
     // Super Admin Bypass
-    if ((user as any)?.role === 'super_admin') return next.handle();
+    if ((user as { role?: string } | undefined)?.role === 'super_admin') {
+      return next.handle();
+    }
 
     if (!tenantId) {
       throw new ForbiddenException(
@@ -93,28 +95,32 @@ export class QuotaInterceptor implements NestInterceptor {
       throw new ForbiddenException('Unable to resolve quota data for tenant');
     }
 
-    // 2. Resolve Maximum Limit and Target Table
+    // 2. Resolve Maximum Limit and Check Usage
     let max = 0;
-    let targetTable: unknown;
+    let current = 0;
 
     if (resource === 'products') {
       max = quotaData.overrideMaxProducts ?? quotaData.planMaxProducts;
-      targetTable = productsInStorefront;
+      const [usageResult] = await adminDb
+        .select({ count: count() })
+        .from(productsInStorefront)
+        .where(eq(productsInStorefront.tenantId, tenantId));
+      current = usageResult?.count ?? 0;
     } else if (resource === 'orders') {
       max = quotaData.overrideMaxOrders ?? quotaData.planMaxOrders;
-      targetTable = ordersInStorefront;
+      const [usageResult] = await adminDb
+        .select({ count: count() })
+        .from(ordersInStorefront)
+        .where(eq(ordersInStorefront.tenantId, tenantId));
+      current = usageResult?.count ?? 0;
     } else if (resource === 'staff') {
       max = quotaData.overrideMaxStaff ?? quotaData.planMaxStaff;
-      targetTable = staffMembersInStorefront;
+      const [usageResult] = await adminDb
+        .select({ count: count() })
+        .from(staffMembersInStorefront)
+        .where(eq(staffMembersInStorefront.tenantId, tenantId));
+      current = usageResult?.count ?? 0;
     }
-
-    // 3. Check Current Usage
-    const [usageResult] = await adminDb
-      .select({ count: count() })
-      .from(targetTable as any)
-      .where(eq((targetTable as any).tenantId, tenantId));
-
-    const current = usageResult?.count ?? 0;
 
     if (current >= max) {
       throw new ForbiddenException(

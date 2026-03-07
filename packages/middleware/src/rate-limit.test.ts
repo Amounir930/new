@@ -12,11 +12,9 @@ import {
   mock,
   spyOn,
 } from 'bun:test';
-import {
-  RateLimit,
-  RateLimitGuard,
-  RedisRateLimitStore,
-} from './rate-limit.js';
+import { type Mocked, MockFactory } from '@apex/test-utils';
+import type { Request, Response } from 'express';
+import { RateLimit, RateLimitGuard, RedisRateLimitStore } from './rate-limit';
 
 // Mock Redis
 mock.module('redis', () => ({
@@ -43,10 +41,10 @@ describe('RateLimitGuard', () => {
   let guard: RateLimitGuard;
   let reflector: Reflector;
   let store: RedisRateLimitStore;
-  let configService: ConfigService;
-  let mockContext: ExecutionContext;
-  let mockRequest: unknown;
-  let mockResponse: unknown;
+  let configService: Mocked<ConfigService>;
+  let mockContext: Mocked<ExecutionContext>;
+  let mockRequest: Mocked<Request>;
+  let mockResponse: Mocked<Response>;
 
   beforeEach(() => {
     mock.restore();
@@ -54,13 +52,12 @@ describe('RateLimitGuard', () => {
     reflector = new Reflector();
     // Mock ConfigService
     configService = {
-      get: mock().mockImplementation((key: string) => {
-        if (key === 'NODE_ENV') return process.env['NODE_ENV'] || 'development';
-        return 'redis://localhost:6379';
+      get: mock().mockImplementation((key: string): string | undefined => {
+        if (key === 'REDIS_URL') return 'redis://localhost:6379';
+        return undefined;
       }),
-    } as never;
+    } as Mocked<ConfigService>;
 
-    // Mock RedisRateLimitStore instance
     store = new RedisRateLimitStore(configService);
 
     // Spy on store methods
@@ -77,24 +74,30 @@ describe('RateLimitGuard', () => {
 
     guard = new RateLimitGuard(reflector, store);
 
-    mockRequest = {
-      headers: {},
+    mockRequest = MockFactory.createRequest({
+      headers: {} as Record<string, string>,
       ip: '127.0.0.1',
-      tenantContext: { plan: 'free', tenantId: 'test-tenant' },
-    };
+    });
+    mockRequest.tenantContext = MockFactory.createTenantContext({
+      plan: 'free',
+      tenantId: 'test-tenant',
+    });
 
-    mockResponse = {
-      setHeader: mock(),
-    };
+    mockResponse = MockFactory.createResponse();
 
+    const executionContextMock = MockFactory.createExecutionContext(
+      mockRequest as unknown as Record<string, unknown>
+    );
     mockContext = {
-      switchToHttp: () => ({
-        getRequest: () => mockRequest,
-        getResponse: () => mockResponse,
+      ...executionContextMock,
+      switchToHttp: mock().mockReturnValue({
+        getRequest: mock().mockReturnValue(mockRequest),
+        getResponse: mock().mockReturnValue(mockResponse),
+        getNext: mock(),
       }),
-      getHandler: () => function testHandler() {},
-      getClass: () => class TestController {},
-    } as never;
+      getHandler: mock().mockReturnValue(function testHandler() {}),
+      getClass: mock().mockReturnValue(class TestController {}),
+    } as Mocked<ExecutionContext>;
   });
 
   afterEach(() => {
@@ -110,7 +113,7 @@ describe('RateLimitGuard', () => {
     expect(result).toBe(true);
     expect(mockResponse.setHeader).toHaveBeenCalledWith(
       'X-RateLimit-Limit',
-      expect.anything(Number)
+      expect.anything()
     );
   });
 
@@ -159,6 +162,7 @@ describe('RateLimitGuard', () => {
   });
 
   it('should handle missing IP and unidentified caller', async () => {
+    // @ts-expect-error - testing invalid IP
     mockRequest.ip = undefined;
     mockRequest.headers = {};
     const result = await guard.canActivate(mockContext);
@@ -170,7 +174,7 @@ describe('RateLimitGuard', () => {
     await guard.canActivate(mockContext);
     expect(store.increment).toHaveBeenCalledWith(
       expect.stringContaining('ip:1.2.3.4'),
-      expect.anything(Number)
+      expect.anything()
     );
   });
 
@@ -179,7 +183,7 @@ describe('RateLimitGuard', () => {
     await guard.canActivate(mockContext);
     expect(store.increment).toHaveBeenCalledWith(
       expect.stringContaining('ip:9.10.11.12'),
-      expect.anything(Number)
+      expect.anything()
     );
   });
 
@@ -221,13 +225,13 @@ describe('RateLimitGuard', () => {
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
       'DDoS protection triggered'
     );
-    expect(blockSpy).toHaveBeenCalledWith(expect.anything(String), 3600000); // 1 hour
+    expect(blockSpy).toHaveBeenCalledWith(expect.anything(), 3600000); // 1 hour
   });
 });
 
 describe('RedisRateLimitStore Branches', () => {
   let store: RedisRateLimitStore;
-  let configService: ConfigService;
+  let configService: Mocked<ConfigService>;
 
   beforeEach(() => {
     configService = {
@@ -235,7 +239,7 @@ describe('RedisRateLimitStore Branches', () => {
         if (key === 'NODE_ENV') return process.env['NODE_ENV'] || 'development';
         return 'redis://localhost:6379';
       }),
-    } as never;
+    } as Mocked<ConfigService>;
     store = new RedisRateLimitStore(configService);
     mock.restore();
   });
@@ -249,7 +253,9 @@ describe('RedisRateLimitStore Branches', () => {
       connect: mock().mockRejectedValue(new Error('Redis Down')),
       isOpen: false,
     };
-    (createClient as never).mockReturnValue(mockRedis as never);
+    (createClient as Mock<typeof createClient>).mockReturnValue(
+      mockRedis as any
+    );
 
     // Call increment - should trigger connect and fallback
     await store.increment('test-key', 60000);
@@ -276,7 +282,8 @@ describe('RedisRateLimitStore Branches', () => {
   });
 
   it('should return null if already connecting', async () => {
-    (store as never).connecting = true;
+    // @ts-expect-error - accessing private member
+    store.connecting = true;
     const client = await store.getClient();
     expect(client).toBeNull();
   });
