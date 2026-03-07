@@ -57,9 +57,9 @@ export default function TenantsPage() {
 
   const filteredTenants = tenants.filter(
     (t) =>
-      t.storeName.toLowerCase().includes(search.toLowerCase()) ||
-      t.subdomain.toLowerCase().includes(search.toLowerCase()) ||
-      t.adminEmail.toLowerCase().includes(search.toLowerCase())
+      (t.storeName ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (t.subdomain ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (t.adminEmail ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (
