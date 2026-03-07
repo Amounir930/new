@@ -1,49 +1,4 @@
 services:
-  # ═══════════════════════════════════════════════════════════════
-  # Object Storage (MinIO) - Essential Core Service
-  # ═══════════════════════════════════════════════════════════════
-  minio:
-    image: minio/minio:latest
-    container_name: apex-minio
-    restart: always
-    command: server /data --console-address ":9001"
-    env_file:
-      - ../.env
-    environment:
-      MINIO_SERVER_URL: https://storage.60sec.shop
-      MINIO_BROWSER_REDIRECT_URL: https://storage-admin.60sec.shop
-    volumes:
-      - minio_data:/data
-    tmpfs:
-      - /tmp:noexec,nosuid,size=100m
-    security_opt:
-      - no-new-privileges:true
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    networks:
-      - apex-internal
-      - apex-data
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=apex-internal"
-      # S3 API Endpoint
-      - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
-      - "traefik.http.routers.minio.priority=5000"
-      - "traefik.http.routers.minio.entrypoints=websecure"
-      - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio.service=apex-minio"
-      - "traefik.http.services.apex-minio.loadbalancer.server.port=9000"
-      # Console UI (Protected by SSL and Headers)
-      - "traefik.http.routers.minio-console.rule=Host(`storage-admin.60sec.shop`)"
-      - "traefik.http.routers.minio-console.priority=5500"
-      - "traefik.http.routers.minio-console.entrypoints=websecure"
-      - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio-console.middlewares=apex-cf-allowlist@file,apex-minio-headers@file"
-      - "traefik.http.routers.minio-console.service=apex-minio-console"
-      - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
 
   # ═══════════════════════════════════════════════════════════════
   # Email Testing (Mailpit) - Internal SMTP

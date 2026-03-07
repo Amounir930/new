@@ -128,7 +128,7 @@ services:
       - "traefik.http.routers.minio-console.priority=5500"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
       - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio-console.middlewares=apex-minio-headers@file"
+      - "traefik.http.routers.minio-console.middlewares=apex-cf-allowlist@file,apex-minio-headers@file"
       - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
     networks:
@@ -562,7 +562,7 @@ services:
     cap_drop:
       - ALL
     environment:
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: apex-postgres
       POSTGRES_USER: ${POSTGRES_USER:-apex}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
