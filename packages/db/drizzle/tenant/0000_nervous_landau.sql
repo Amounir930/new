@@ -1,11 +1,17 @@
-CREATE TABLE "pages" (
+CREATE TABLE "_pages" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"slug" text NOT NULL,
-	"title" text NOT NULL,
-	"content" text DEFAULT '',
-	"is_published" boolean DEFAULT true,
-	"created_at" timestamp DEFAULT now(),
-	"updated_at" timestamp DEFAULT now()
+	"tenant_id" uuid NOT NULL,
+	"slug" varchar(255) NOT NULL,
+	"title" jsonb NOT NULL,
+	"content" jsonb,
+	"is_published" boolean DEFAULT false NOT NULL,
+	"page_type" varchar(50) DEFAULT 'custom' NOT NULL,
+	"template" varchar(50) DEFAULT 'default' NOT NULL,
+	"meta_title" varchar(70),
+	"meta_description" varchar(160),
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"deleted_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE "settings" (
@@ -65,21 +71,22 @@ CREATE TABLE "carts" (
 	"expires_at" timestamp with time zone
 );
 --> statement-breakpoint
-CREATE TABLE "categories" (
+CREATE TABLE "_categories" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"parent_id" uuid,
 	"slug" varchar(255) NOT NULL,
-	"name" varchar(255) NOT NULL,
-	"description" text,
+	"name" jsonb NOT NULL,
+	"description" jsonb,
 	"image_url" text,
 	"banner_url" text,
 	"meta_title" varchar(150),
 	"meta_description" varchar(255),
-	"parent_id" uuid,
-	"order" integer DEFAULT 0,
-	"is_active" boolean DEFAULT true,
-	"created_at" timestamp with time zone DEFAULT now(),
-	"updated_at" timestamp with time zone DEFAULT now(),
-	CONSTRAINT "categories_slug_unique" UNIQUE("slug")
+	"sort_order" integer DEFAULT 0 NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE "menu_items" (
@@ -94,9 +101,11 @@ CREATE TABLE "menu_items" (
 );
 --> statement-breakpoint
 CREATE TABLE "tenant_config" (
-	"key" varchar(100) PRIMARY KEY NOT NULL,
+	"key" varchar(100) NOT NULL,
+	"tenant_id" uuid NOT NULL,
 	"value" jsonb NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now()
+	"updated_at" timestamp with time zone DEFAULT now(),
+	PRIMARY KEY ("key", "tenant_id")
 );
 --> statement-breakpoint
 CREATE TABLE "blog_posts" (
@@ -360,31 +369,28 @@ CREATE TABLE "product_variants" (
 	CONSTRAINT "product_variants_sku_unique" UNIQUE("sku")
 );
 --> statement-breakpoint
-CREATE TABLE "products" (
+CREATE TABLE "_products" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"slug" varchar(255) NOT NULL,
-	"name" varchar(255) NOT NULL,
-	"description" text,
-	"short_description" varchar(500),
-	"price" numeric(10, 2) NOT NULL,
-	"compare_at_price" numeric(10, 2),
-	"cost_price" numeric(10, 2),
-	"currency" char(3) DEFAULT 'USD' NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"brand_id" uuid,
 	"category_id" uuid,
-	"brand" varchar(100),
-	"sku" varchar(100),
-	"barcode" varchar(50),
-	"quantity" integer DEFAULT 0 NOT NULL,
-	"track_inventory" boolean DEFAULT true,
-	"weight" numeric(8, 3),
-	"is_active" boolean DEFAULT true,
-	"is_featured" boolean DEFAULT false,
-	"meta_title" varchar(60),
-	"meta_description" varchar(160),
-	"created_at" timestamp with time zone DEFAULT now(),
-	"updated_at" timestamp with time zone DEFAULT now(),
-	CONSTRAINT "products_slug_unique" UNIQUE("slug"),
-	CONSTRAINT "products_sku_unique" UNIQUE("sku")
+	"slug" varchar(255) NOT NULL,
+	"sku" varchar(100) NOT NULL,
+	"name" jsonb NOT NULL,
+	"short_description" jsonb,
+	"long_description" jsonb,
+	"base_price" numeric(12, 4) NOT NULL,
+	"sale_price" numeric(12, 4),
+	"cost_price" numeric(12, 4),
+	"compare_at_price" numeric(12, 4),
+	"min_order_qty" integer DEFAULT 1 NOT NULL,
+	"stock_quantity" integer DEFAULT 0 NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"is_featured" boolean DEFAULT false NOT NULL,
+	"main_image" text NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"deleted_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE "referrals" (
@@ -550,3 +556,41 @@ CREATE INDEX "idx_reviews_approved" ON "reviews" USING btree ("is_approved") WHE
 CREATE INDEX "idx_reviews_customer" ON "reviews" USING btree ("customer_id");--> statement-breakpoint
 CREATE INDEX "idx_shipping_region" ON "shipping_zones" USING btree ("region");--> statement-breakpoint
 CREATE INDEX "idx_shipping_active" ON "shipping_zones" USING btree ("is_active");
+--> statement-breakpoint
+CREATE TABLE "staff_roles" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"is_system" boolean DEFAULT false NOT NULL,
+	"name" varchar(100) NOT NULL,
+	"permissions" jsonb NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE "staff_members" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"user_id" uuid NOT NULL,
+	"role_id" uuid NOT NULL,
+	"email" jsonb NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"first_name" varchar(100),
+	"last_name" varchar(100),
+	"avatar_url" text,
+	"phone" jsonb
+);
+--> statement-breakpoint
+CREATE TABLE "banners" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"tenant_id" uuid NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"sort_order" integer DEFAULT 0 NOT NULL,
+	"location" varchar(50) DEFAULT 'home_top' NOT NULL,
+	"image_url" text NOT NULL,
+	"link_url" text,
+	"title" jsonb,
+	"content" jsonb
+);
+--> statement-breakpoint
+ALTER TABLE "staff_members" ADD CONSTRAINT "staff_members_role_id_staff_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "staff_roles"("id") ON DELETE restrict ON UPDATE no action;

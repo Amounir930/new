@@ -21,7 +21,7 @@ export class CatalogModule implements SeederModule {
     if (config.categories && config.categories.length > 0) {
       for (const c of config.categories) {
         await db.execute(sql`
-          INSERT INTO "categories" ("id", "tenant_id", "parent_id", "slug", "name", "description", "image_url", "is_active")
+          INSERT INTO "_categories" ("id", "tenant_id", "parent_id", "slug", "name", "description", "image_url", "is_active")
           VALUES (${c.id}, ${storeId}, ${c.parentId || null}, ${c.slug || `cat-${Math.random().toString(36).slice(2, 7)}`}, 
                   ${JSON.stringify({ ar: c.title, en: c.title })}, 
                   ${c.description ? JSON.stringify({ ar: c.description, en: c.description }) : null}, 
@@ -35,7 +35,7 @@ export class CatalogModule implements SeederModule {
     if (config.products && config.products.length > 0) {
       for (const p of config.products) {
         await db.execute(sql`
-          INSERT INTO "products" ("id", "tenant_id", "slug", "sku", "name", "short_description", "base_price", "main_image", "category_id", "is_active")
+          INSERT INTO "_products" ("id", "tenant_id", "slug", "sku", "name", "short_description", "base_price", "main_image", "category_id", "is_active")
           VALUES (${p.id}, ${storeId}, ${p.slug || `prod-${Math.random().toString(36).slice(2, 7)}`}, 
                   ${p.sku || p.slug || `sku-${Math.random().toString(36).slice(2, 7)}`}, 
                   ${JSON.stringify({ ar: p.title, en: p.title })}, 

@@ -18,11 +18,10 @@ export class CoreModule implements SeederModule {
     const { db, adminEmail, storeId } = context;
 
     // 1. Create Admin User (S2/S7 Protocol - external auth mapping)
+    const { sql } = await import('drizzle-orm');
+
     if (adminEmail && storeId) {
       const roleId = crypto.randomUUID();
-
-      // S2 Protocol: Use raw SQL to respect search_path and avoid schema prefixes
-      const { sql } = await import('drizzle-orm');
 
       await db.execute(sql`
         INSERT INTO "staff_roles" ("id", "tenant_id", "name", "is_system", "permissions")
@@ -32,46 +31,35 @@ export class CoreModule implements SeederModule {
 
       await db.execute(sql`
         INSERT INTO "staff_members" ("tenant_id", "user_id", "role_id", "email", "is_active")
-        VALUES (${storeId}, ${crypto.randomUUID()}, ${roleId}, ${JSON.stringify(adminEmail)}, true)
+        VALUES (${storeId}, ${crypto.randomUUID()}, ${roleId}, ${JSON.stringify({ address: adminEmail })}, true)
         ON CONFLICT DO NOTHING
       `);
     }
 
     // 2. Initial Settings (S21 Protocol)
     if (config.settings) {
-      const settingsEntries = Object.entries(config.settings).map(
-        ([key, value]) => ({
-          key,
-          value,
-          tenantId: storeId!,
-        })
-      );
-
-      if (settingsEntries.length > 0) {
-        await db
-          .insert(tenantConfigInStorefront)
-          .values(settingsEntries)
-          .onConflictDoNothing();
+      for (const [key, value] of Object.entries(config.settings)) {
+        await db.execute(sql`
+          INSERT INTO "tenant_config" ("key", "tenant_id", "value", "updated_at")
+          VALUES (${key}, ${storeId}, ${JSON.stringify(value)}, now())
+          ON CONFLICT DO NOTHING
+        `);
       }
     }
 
     // 3. Essential Pages (Legal, About)
     if (config.pages && config.pages.length > 0) {
-      const pageEntries = config.pages.map((p) => ({
-        id: p.id,
-        tenantId: storeId!,
-        slug: p.slug,
-        title: { ar: p.title, en: p.title },
-        content: p.content ? { ar: p.content, en: p.content } : null,
-        isPublished: p.isPublished ?? true,
-        pageType: p.pageType || 'custom',
-        template: p.template || 'default',
-      }));
-
-      await db
-        .insert(pagesInStorefront)
-        .values(pageEntries)
-        .onConflictDoNothing();
+      for (const p of config.pages) {
+        await db.execute(sql`
+          INSERT INTO "_pages" ("id", "tenant_id", "slug", "title", "content", "is_published", "page_type", "template", "created_at", "updated_at")
+          VALUES (${p.id || crypto.randomUUID()}, ${storeId}, ${p.slug}, 
+                  ${JSON.stringify({ ar: p.title, en: p.title })}, 
+                  ${p.content ? JSON.stringify({ ar: p.content, en: p.content }) : null}, 
+                  ${p.isPublished ?? true}, ${p.pageType || 'custom'}, ${p.template || 'default'}, 
+                  now(), now())
+          ON CONFLICT DO NOTHING
+        `);
+      }
     }
   }
 }
