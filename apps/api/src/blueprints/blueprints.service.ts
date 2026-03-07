@@ -5,6 +5,7 @@ import type { BlueprintRecord, BlueprintTemplate } from '@apex/provisioning';
 import { createSnapshot, validateBlueprint } from '@apex/provisioning';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 
+import { blueprintStructureSchema } from './dto/blueprint.dto';
 import type {
   CreateBlueprintDto,
   UpdateBlueprintDto,
@@ -21,7 +22,7 @@ export class BlueprintsService {
     const results = await this.db
       .select()
       .from(onboardingBlueprintsInGovernance);
-    return results as unknown as BlueprintRecord[];
+    return results.map((r) => this.mapBlueprintRecord(r));
   }
 
   async findOne(id: string): Promise<BlueprintRecord> {
@@ -34,7 +35,7 @@ export class BlueprintsService {
     if (!blueprint) {
       throw new NotFoundException(`Blueprint with ID ${id} not found`);
     }
-    return blueprint as unknown as BlueprintRecord;
+    return this.mapBlueprintRecord(blueprint);
   }
 
   async create(
@@ -81,7 +82,7 @@ export class BlueprintsService {
       metadata: { name: dto.name, plan: dto.plan },
     });
 
-    return newBlueprint as unknown as BlueprintRecord;
+    return this.mapBlueprintRecord(newBlueprint);
   }
 
   async update(
@@ -91,12 +92,15 @@ export class BlueprintsService {
   ): Promise<BlueprintRecord> {
     if (dto.blueprint) {
       try {
-        const { z } = await import('zod');
-        // S3: Strict validation with unknown key stripping
-        const result = z.record(z.unknown()).safeParse(dto.blueprint);
-        if (!result.success) throw new Error('Invalid blueprint payload');
+        // S3: Strict validation with specialized schema
+        const result = blueprintStructureSchema.safeParse(dto.blueprint);
+        if (!result.success) {
+          throw new Error(
+            `Invalid blueprint payload: ${result.error.message}`
+          );
+        }
 
-        validateBlueprint(result.data);
+        validateBlueprint(result.data as BlueprintTemplate);
       } catch (e) {
         throw new Error(
           `Invalid blueprint structure: ${e instanceof Error ? e.message : 'Unknown error'}`
@@ -138,7 +142,7 @@ export class BlueprintsService {
       metadata: dto as Record<string, unknown>,
     });
 
-    return updatedBlueprint as unknown as BlueprintRecord;
+    return this.mapBlueprintRecord(updatedBlueprint);
   }
 
   async remove(userId: string, id: string): Promise<BlueprintRecord> {
@@ -160,7 +164,7 @@ export class BlueprintsService {
       metadata: { name: deleted.name },
     });
 
-    return deleted as unknown as BlueprintRecord;
+    return this.mapBlueprintRecord(deleted);
   }
 
   async snapshot(
@@ -200,5 +204,18 @@ export class BlueprintsService {
       );
       throw error;
     }
+  }
+
+  /**
+   * Safe mapping from DB record to BlueprintRecord interface
+   * Protocol Delta: Resolves string-to-Date mismatch without 'unknown' casting
+   */
+  private mapBlueprintRecord(raw: any): BlueprintRecord {
+    return {
+      ...raw,
+      blueprint: raw.blueprint as BlueprintTemplate,
+      createdAt: raw.createdAt ? new Date(raw.createdAt) : null,
+      updatedAt: raw.updatedAt ? new Date(raw.updatedAt) : null,
+    };
   }
 }

@@ -10,7 +10,8 @@ import type {
   ExportResult,
   ExportStrategy,
 } from '../types';
-import type { BunShell } from '../utils/bun-shell';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import
+import { BunShell } from '../utils/bun-shell';
 
 @Injectable()
 export class AnalyticsExportStrategy implements ExportStrategy {
