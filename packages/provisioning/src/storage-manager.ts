@@ -40,8 +40,7 @@ export let minioClient: Minio.Client | null = null;
 
 function getMinioClient(): Minio.Client {
   if (!minioClient) {
-    const isProd = env.NODE_ENV === 'production';
-    const useSSL = isProd ? true : env.MINIO_USE_SSL === 'true'; // Item 44: Force SSL in production
+    const useSSL = env.MINIO_USE_SSL === 'true'; // Protocol S14: Support internal HTTP and external HTTPS via env toggle
 
     minioClient = new Minio.Client({
       endPoint: env.MINIO_ENDPOINT,
