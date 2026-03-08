@@ -3,22 +3,22 @@
 This document provides all essential information for managing the Apex v2 production environment.
 
 ## 🖥️ Server Infrastructure
-- **Server IP:** `34.94.130.73`
+- **Server IP:** `34.18.192.25`
 - **Provider:** Google Cloud Platform (GCP)
 - **Environment:** Ubuntu Linux
 - **Project Root:** `/opt/apex-v2`
-- **SSH Access:** `ssh -i ops/keys/apex-deploy deploy@34.94.130.73`
+- **SSH Access:** `ssh -i ops/keys/apex-deploy deploy@34.18.192.25`
 
 ## 🌐 DNS & Domains
 The following records are configured at the registrar:
 
 | Type | Host | Value | Purpose |
 | :--- | :--- | :--- | :--- |
-| **A** | `@` | `34.94.130.73` | **Storefront Root** (`60sec.shop`) |
-| **A** | `api` | `34.94.130.73` | API Endpoint (`api.60sec.shop`) |
-| **A** | `*` | `34.94.130.73` | **Multi-tenant Shops** (`*.60sec.shop`) |
-| **A** | `super-admin`| `34.94.130.73` | Administration UI |
-| **A** | `git` | `34.94.130.73` | **Gitea Fortress** (Source Code) |
+| **A** | `@` | `34.18.192.25` | **Storefront Root** (`60sec.shop`) |
+| **A** | `api` | `34.18.192.25` | API Endpoint (`api.60sec.shop`) |
+| **A** | `*` | `34.18.192.25` | **Multi-tenant Shops** (`*.60sec.shop`) |
+| **A** | `super-admin`| `34.18.192.25` | Administration UI |
+| **A** | `git` | `34.18.192.25` | **Gitea Fortress** (Source Code) |
 
 ## 🚀 Deployment Methodology (DevSecOps)
 We use a **Local-First, Artifact-Driven** strategy. 
@@ -56,7 +56,7 @@ The system is strictly hardened according to Apex v2 security standards:
 - **View Logs:** `sudo docker logs -f apex-api` OR `sudo docker logs -f apex-store`
 - **Resource Usage:** `sudo docker stats`
 - **Restart Services:** `sudo docker compose -f ops/docker-compose.prod.yml restart`
-- **Manual Sync:** `rsync -avz --exclude 'node_modules' ./ deploy@34.94.130.73:/opt/apex-v2`
+- **Manual Sync:** `rsync -avz --exclude 'node_modules' ./ deploy@34.18.192.25:/opt/apex-v2`
 
 ## 🏁 Project Milestones
 - [x] **Core Infra (S1-S8):** Hardened & Operational (S1-S15 Protocols).
@@ -66,4 +66,4 @@ The system is strictly hardened according to Apex v2 security standards:
 - [x] **Admin-#17 (Orders):** Dashboard and Order management live.
 
 ---
-*Documented on 2026-02-22* 🛡️🚀✨💎🏁
+*Documented on 2026-03-08* 🛡️🚀✨💎🏁

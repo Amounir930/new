@@ -11,7 +11,7 @@ set -euo pipefail
 SSH_KEY="ops/keys/apex-deploy"
 SSH_PORT="22"
 SSH_USER="deploy"
-SSH_HOST="34.94.130.73"
+SSH_HOST="34.18.192.25"
 REMOTE_DIR="/home/deploy"
 LOCAL_ENV=".env"
 
