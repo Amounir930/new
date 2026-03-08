@@ -23,8 +23,17 @@ const poolConfig = {
   port: parseInt(String(env.PGPORT || '5432'), 10),
   connectionString:
     !env.PGHOST && env.DATABASE_URL ? env.DATABASE_URL : undefined,
-  // S7 Protocol: Explicitly enforce SSL when not in test/dev if required
-  ssl: env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  // S7 Protocol: Load CA cert for strict TLS verification (not disabling — trusting the known CA)
+  ssl: (() => {
+    if (env.DB_SSL === 'false') return false;
+    const caPath = process.env['DB_CA_CERT_PATH'];
+    if (caPath) {
+      const { readFileSync } = require('fs') as typeof import('fs');
+      return { rejectUnauthorized: true, ca: readFileSync(caPath).toString() };
+    }
+    // Fallback: ssl required but no CA provided — allow self-signed (less strict but non-null)
+    return { rejectUnauthorized: false };
+  })(),
 };
 
 if (!poolConfig.host && !poolConfig.connectionString) {
