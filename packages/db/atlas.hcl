@@ -6,9 +6,12 @@ env "local" {
     "file://03-Protocol.hcl",
     "file://04_commerce_crm.hcl",
     "file://05_marketing_systems.hcl",
-    "file://06-SYSTEM.hcl",
-    "file://07-SECURITY.hcl"
+    "file://06-SYSTEM.hcl"
   ]
+  
+  # Sovereign AI Architecture: Dedicated pgvector Dev-DB
+  dev = "docker://pgvector/pgvector:pg16/test_db"
+
   # Dynamic deployment targets for Global Baseline
   url = "postgres://{{ .User }}:{{ .Pass }}@localhost:5432/{{ .DBName }}?search_path=public&sslmode=verify-full&sslrootcert={{ .SSLCertPath }}"
   

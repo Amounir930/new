@@ -81,9 +81,7 @@ table "categories" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_cat" {
-    columns = [column.id]
-  }
+
   index "idx_categories_slug_active" {
     unique  = true
     columns = [column.slug]
@@ -176,9 +174,7 @@ table "brands" {
 
 
 
-  unique "uq_tenant_brands_composite" {
-    columns = [column.id]
-  }
+
 }
 table "products" {
   schema = schema.storefront
@@ -348,7 +344,7 @@ table "products" {
     default = sql("'[]'::jsonb")
   }
   column "embedding" {
-    type = text
+    type = sql("vector(1536)")
     null = true
   }
   column "version" {
@@ -366,9 +362,7 @@ table "products" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_product" {
-    columns = [column.id]
-  }
+
   index "idx_products_slug_active" {
     unique  = true
     columns = [column.slug]
@@ -489,15 +483,13 @@ table "product_variants" {
     type = jsonb
   }
   column "embedding" {
-    type = text
+    type = sql("vector(1536)")
     null = true
   }
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_variant" {
-    columns = [column.id]
-  }
+
   index "idx_variant_sku_active" {
     unique  = true
     columns = [column.sku]
@@ -574,9 +566,7 @@ table "product_images" {
     ref_columns = [table.products.column.id]
     on_delete = CASCADE
   }
-  unique "uq_tenant_product_images_composite" {
-    columns = [column.id]
-  }
+
 }
 table "product_attributes" {
   schema = schema.storefront
@@ -624,9 +614,7 @@ table "product_attributes" {
     ref_columns = [table.products.column.id]
     on_delete = CASCADE
   }
-  unique "uq_tenant_product_attributes_composite" {
-    columns = [column.id]
-  }
+
 }
 table "entity_metafields" {
   schema = schema.storefront
@@ -670,9 +658,7 @@ table "entity_metafields" {
   }
 
 
-  unique "uq_tenant_entity_metafields_composite" {
-    columns = [column.id]
-  }
+
 }
 table "smart_collections" {
   schema = schema.storefront
@@ -737,9 +723,7 @@ table "smart_collections" {
   }
 
 
-  unique "uq_tenant_smart_collections_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // 2. INVENTORY SCHEMA (Storefront)
@@ -781,9 +765,7 @@ table "locations" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_loc" {
-    columns = [column.id]
-  }
+
 
 
 
@@ -862,9 +844,7 @@ table "inventory_levels" {
     ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_inventory_levels_composite" {
-    columns = [column.id]
-  }
+
 }
 table "inventory_movements" {
   schema = schema.storefront
@@ -933,9 +913,7 @@ table "inventory_movements" {
     ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_inventory_movements_composite" {
-    columns = [column.id]
-  }
+
 }
 table "inventory_reservations" {
   schema = schema.storefront
@@ -1001,9 +979,7 @@ table "inventory_reservations" {
     ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_inventory_reservations_composite" {
-    columns = [column.id]
-  }
+
 }
 table "inventory_transfers" {
   schema = schema.storefront
@@ -1063,9 +1039,7 @@ table "inventory_transfers" {
     ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_inventory_transfers_composite" {
-    columns = [column.id]
-  }
+
 }
 table "inventory_transfer_items" {
   schema = schema.storefront
@@ -1101,9 +1075,7 @@ table "inventory_transfer_items" {
     ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_inventory_transfer_items_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // 3. SUPPLY CHAIN & B2B (Storefront)
@@ -1174,9 +1146,7 @@ table "suppliers" {
   }
 
 
-  unique "uq_tenant_suppliers_composite" {
-    columns = [column.id]
-  }
+
 }
 table "purchase_orders" {
   schema = schema.storefront
@@ -1259,9 +1229,7 @@ table "purchase_orders" {
     ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_purchase_orders_composite" {
-    columns = [column.id]
-  }
+
 }
 table "purchase_order_items" {
   schema = schema.storefront
@@ -1312,9 +1280,7 @@ table "purchase_order_items" {
     ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_purchase_order_items_composite" {
-    columns = [column.id]
-  }
+
 }
 table "b2b_companies" {
   schema = schema.storefront
@@ -1358,9 +1324,7 @@ table "b2b_companies" {
     type = varchar(50)
     null = true
   }
-  check "chk_credit_utilization" {
-    expr = "(credit_used <= credit_limit)"
-  }
+
   column "industry" {
     type = varchar(100)
     null = true
@@ -1381,9 +1345,7 @@ table "b2b_companies" {
   }
 
 
-  unique "uq_tenant_b2b_companies_composite" {
-    columns = [column.id]
-  }
+
 }
 table "b2b_pricing_tiers" {
   schema = schema.storefront
@@ -1476,9 +1438,7 @@ table "b2b_pricing_tiers" {
     ref_columns = [table.products.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_b2b_pricing_tiers_composite" {
-    columns = [column.id]
-  }
+
 }
 table "b2b_users" {
   schema = schema.storefront
@@ -1529,9 +1489,7 @@ table "b2b_users" {
     ref_columns = [table.b2b_companies.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_b2b_users_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // ==========================================

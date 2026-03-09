@@ -73,9 +73,7 @@ table "outbox_events" {
   }
 
 
-  unique "uq_tenant_outbox_events_composite" {
-    columns = [column.id, column.created_at]
-  }
+
 }
 table "tenant_config" {
   schema = schema.storefront
@@ -148,9 +146,7 @@ table "markets" {
   // ALTER TABLE storefront.markets ENABLE ROW LEVEL SECURITY
 
 
-  unique "uq_tenant_markets_composite" {
-    columns = [column.id]
-  }
+
 }
 table "price_lists" {
   schema = schema.storefront
@@ -220,9 +216,7 @@ table "price_lists" {
     expr = "(price) IS NOT NULL AND (price) IS NOT NULL"
   }
 
-  unique "uq_tenant_price_lists_composite" {
-    columns = [column.id]
-  }
+
 }
 table "currency_rates" {
   schema = schema.storefront
@@ -253,9 +247,7 @@ table "currency_rates" {
 
 
 
-  unique "uq_tenant_currency_rates_composite" {
-    columns = [column.id]
-  }
+
 }
 
 

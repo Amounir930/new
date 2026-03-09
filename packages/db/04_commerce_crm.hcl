@@ -125,9 +125,7 @@ table "customers" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_customer" {
-    columns = [column.id]
-  }
+
   index "idx_customer_email_hash" {
     unique  = true
     columns = [column.email_hash]
@@ -254,9 +252,7 @@ table "customer_addresses" {
     ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_customer_addresses_composite" {
-    columns = [column.id]
-  }
+
 }
 table "customer_consents" {
   schema = schema.storefront
@@ -307,9 +303,7 @@ table "customer_consents" {
     ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_customer_consents_composite" {
-    columns = [column.id]
-  }
+
 }
 table "customer_segments" {
   schema = schema.storefront
@@ -345,9 +339,7 @@ table "customer_segments" {
   }
 
 
-  unique "uq_tenant_customer_segments_composite" {
-    columns = [column.id]
-  }
+
 }
 table "orders" {
   schema = schema.storefront
@@ -512,9 +504,7 @@ table "orders" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_order" {
-    columns = [column.id]
-  }
+
   index "idx_orders_number_active" {
     unique  = true
     columns = [column.order_number]
@@ -679,9 +669,7 @@ table "order_items" {
     ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_order_items_composite" {
-    columns = [column.id]
-  }
+
 }
 table "order_edits" {
   schema = schema.storefront
@@ -742,9 +730,7 @@ table "order_edits" {
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_order_edits_composite" {
-    columns = [column.id]
-  }
+
 }
 table "order_timeline" {
   schema = schema.storefront
@@ -805,9 +791,7 @@ table "order_timeline" {
     ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_order_timeline_composite" {
-    columns = [column.id]
-  }
+
 }
 table "fulfillments" {
   schema = schema.storefront
@@ -860,9 +844,7 @@ table "fulfillments" {
     ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_fulfillments_composite" {
-    columns = [column.id]
-  }
+
 }
 table "fulfillment_items" {
   schema = schema.storefront
@@ -898,9 +880,7 @@ table "fulfillment_items" {
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_fulfillment_items_composite" {
-    columns = [column.id]
-  }
+
 }
 table "refunds" {
   schema = schema.storefront
@@ -939,9 +919,7 @@ table "refunds" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_refund" {
-    columns = [column.id]
-  }
+
   index "idx_refunds_order" {
     columns = [column.order_id]
   }
@@ -997,9 +975,7 @@ table "refund_items" {
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_refund_items_composite" {
-    columns = [column.id]
-  }
+
 }
 table "rma_requests" {
   schema = schema.storefront
@@ -1049,9 +1025,7 @@ table "rma_requests" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_rma" {
-    columns = [column.id]
-  }
+
   index "idx_rma_order" {
     columns = [column.order_id]
   }
@@ -1124,9 +1098,7 @@ table "rma_items" {
     ref_columns = [table.order_items.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_rma_items_composite" {
-    columns = [column.id]
-  }
+
 }
 table "payment_logs" {
   schema = schema.storefront
@@ -1206,9 +1178,7 @@ table "payment_logs" {
     ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_payment_logs_composite" {
-    columns = [column.id, column.created_at]
-  }
+
 }
 table "carts" {
   schema = schema.storefront
@@ -1251,9 +1221,7 @@ table "carts" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_cart" {
-    columns = [column.id]
-  }
+
   index "idx_carts_customer" {
     columns = [column.customer_id]
   }
@@ -1318,9 +1286,7 @@ table "cart_items" {
     ref_columns = [table.carts.column.id]
     on_delete = CASCADE
   }
-  unique "uq_tenant_cart_items_composite" {
-    columns = [column.id]
-  }
+
 }
 table "abandoned_checkouts" {
   schema = schema.storefront
@@ -1379,9 +1345,7 @@ table "abandoned_checkouts" {
     ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_abandoned_checkouts_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // 3. SHIPPING & TAX (Storefront)
@@ -1454,9 +1418,7 @@ table "shipping_zones" {
 
 
 
-  unique "uq_tenant_shipping_zones_composite" {
-    columns = [column.id]
-  }
+
 }
 table "tax_categories" {
   schema = schema.storefront
@@ -1487,9 +1449,7 @@ table "tax_categories" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_tax_category" {
-    columns = [column.id]
-  }
+
 
 
 }
@@ -1574,9 +1534,6 @@ table "tax_rules" {
     ref_columns = [table.tax_categories.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_tax_rules_composite" {
-    columns = [column.id]
-  }
 }
 table "reviews" {
   schema = schema.storefront
@@ -1618,7 +1575,7 @@ table "reviews" {
     default = false
   }
   column "embedding" {
-    type = text
+    type = sql("vector(1536)")
     null = true
   }
   primary_key {
@@ -1644,9 +1601,7 @@ table "reviews" {
 #    type = "HNSW"
 #  }
 
-  unique "uq_tenant_reviews_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // ==========================================

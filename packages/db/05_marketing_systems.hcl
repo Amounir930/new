@@ -69,9 +69,7 @@ table "coupons" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_coupon_id" {
-    columns = [column.id]
-  }
+
   unique "coupons_code_unique" {
     columns = [column.code]
   }
@@ -138,9 +136,7 @@ table "coupon_usages" {
     ref_columns = [table.coupons.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_coupon_usages_composite" {
-    columns = [column.id]
-  }
+
 }
 table "price_rules" {
   schema = schema.storefront
@@ -214,9 +210,7 @@ table "price_rules" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_price_rule" {
-    columns = [column.id]
-  }
+
   index "idx_price_rules_active" {
     columns = [column.is_active]
   }
@@ -273,9 +267,7 @@ table "discount_codes" {
     ref_columns = [table.price_rules.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_discount_codes_composite" {
-    columns = [column.id]
-  }
+
 }
 table "flash_sales" {
   schema = schema.storefront
@@ -319,9 +311,7 @@ table "flash_sales" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_flash_sale" {
-    columns = [column.id]
-  }
+
   index "idx_flash_sales_status" {
     columns = [column.status]
   }
@@ -400,9 +390,7 @@ table "flash_sale_products" {
     ref_columns = [table.flash_sales.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_flash_sale_products_composite" {
-    columns = [column.id]
-  }
+
 }
 table "product_bundles" {
   schema = schema.storefront
@@ -441,9 +429,7 @@ table "product_bundles" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_bundle" {
-    columns = [column.id]
-  }
+
   check "chk_bundle_discount_positive" {
     expr = "COALESCE((discount_value), 0) >= 0"
   }
@@ -480,9 +466,7 @@ table "product_bundle_items" {
     ref_columns = [table.product_bundles.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_product_bundle_items_composite" {
-    columns = [column.id]
-  }
+
 }
 table "loyalty_rules" {
   schema = schema.storefront
@@ -536,9 +520,7 @@ table "loyalty_rules" {
 
 
 
-  unique "uq_tenant_loyalty_rules_composite" {
-    columns = [column.id]
-  }
+
 }
 table "wallet_transactions" {
   schema = schema.storefront
@@ -609,9 +591,7 @@ table "wallet_transactions" {
   // Strike 27: Immutable Wallet Transactions
   // Trigger logic: Prevent Update/Delete on this table (Mandatory for financial audit)
 
-  unique "uq_tenant_wallet_transactions_composite" {
-    columns = [column.id]
-  }
+
 }
 table "affiliate_partners" {
   schema = schema.storefront
@@ -661,9 +641,7 @@ table "affiliate_partners" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_affiliate" {
-    columns = [column.id]
-  }
+
   unique "affiliate_partners_referral_code_unique" {
     columns = [column.referral_code]
   }
@@ -746,9 +724,7 @@ table "affiliate_transactions" {
     ref_columns = [table.affiliate_partners.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_affiliate_transactions_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // 2. STAFF & RBAC (Storefront)
@@ -784,9 +760,7 @@ table "staff_roles" {
 
 
 
-  unique "uq_tenant_staff_roles_composite" {
-    columns = [column.id]
-  }
+
 }
 table "staff_members" {
   schema = schema.storefront
@@ -858,9 +832,7 @@ table "staff_members" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_staff" {
-    columns = [column.id]
-  }
+
   index "idx_staff_user" {
     columns = [column.user_id]
   }
@@ -960,9 +932,7 @@ table "staff_sessions" {
     ref_columns = [table.staff_members.column.id]
     on_delete = CASCADE
   }
-  unique "uq_tenant_staff_sessions_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // 3. APPS & EXTENSIBILITY (Storefront)
@@ -1017,9 +987,7 @@ table "app_installations" {
   primary_key {
     columns = [column.id]
   }
-  unique "uq_tenant_app" {
-    columns = [column.id]
-  }
+
   check "chk_app_key_s7" {
     expr = "(api_key IS NULL OR (jsonb_typeof(api_key) = 'object' AND api_key ? 'enc' AND api_key ? 'iv' AND api_key ? 'tag' AND api_key ? 'data'))"
   }
@@ -1108,9 +1076,7 @@ table "webhook_subscriptions" {
     ref_columns = [table.app_installations.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_webhook_subscriptions_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // 4. CMS & CONTENT (Storefront)
@@ -1182,9 +1148,7 @@ table "pages" {
 
 
 
-  unique "uq_tenant_pages_composite" {
-    columns = [column.id]
-  }
+
 }
 table "blog_categories" {
   schema = schema.storefront
@@ -1205,9 +1169,7 @@ table "blog_categories" {
   unique "uq_tenant_blog_cat_slug" {
     columns = [column.slug]
   }
-  unique "uq_tenant_blog_categories_composite" {
-    columns = [column.id]
-  }
+
 }
 
 table "blog_posts" {
@@ -1304,9 +1266,7 @@ table "blog_posts" {
 
 
 
-  unique "uq_tenant_blog_posts_composite" {
-    columns = [column.id]
-  }
+
   foreign_key "fk_bp_category" {
     columns     = [column.category_id]
     ref_columns = [table.blog_categories.column.id]
@@ -1367,9 +1327,7 @@ table "legal_pages" {
   }
 
 
-  unique "uq_tenant_legal_pages_composite" {
-    columns = [column.id]
-  }
+
 }
 table "faq_categories" {
   schema = schema.storefront
@@ -1398,9 +1356,7 @@ table "faq_categories" {
   }
 
 
-  unique "uq_tenant_faq_categories_composite" {
-    columns = [column.id]
-  }
+
 }
 table "faqs" {
   schema = schema.storefront
@@ -1451,9 +1407,7 @@ table "faqs" {
     ref_columns = [table.faq_categories.column.id]
     on_delete = SET_NULL
   }
-  unique "uq_tenant_faqs_composite" {
-    columns = [column.id]
-  }
+
 }
 table "kb_categories" {
   schema = schema.storefront
@@ -1488,9 +1442,7 @@ table "kb_categories" {
   }
 
   // ALTER TABLE storefront.kb_categories ENABLE ROW LEVEL SECURITY
-  unique "uq_tenant_kb_categories_composite" {
-    columns = [column.id]
-  }
+
 }
 table "kb_articles" {
   schema = schema.storefront
@@ -1544,9 +1496,7 @@ table "kb_articles" {
     ref_columns = [table.kb_categories.column.id]
     on_delete = RESTRICT
   }
-  unique "uq_tenant_kb_articles_composite" {
-    columns = [column.id]
-  }
+
 }
 table "banners" {
   schema = schema.storefront
@@ -1593,9 +1543,7 @@ table "banners" {
   index "idx_banners_active" {
     columns = [column.is_active, column.location]
   }
-  unique "uq_tenant_banners_composite" {
-    columns = [column.id]
-  }
+
 }
 table "announcement_bars" {
   schema = schema.storefront
@@ -1631,9 +1579,7 @@ table "announcement_bars" {
     columns = [column.id]
   }
 
-  unique "uq_tenant_announcement_bars_composite" {
-    columns = [column.id]
-  }
+
 }
 table "popups" {
   schema = schema.storefront
@@ -1664,9 +1610,7 @@ table "popups" {
     columns = [column.id]
   }
 
-  unique "uq_tenant_popups_composite" {
-    columns = [column.id]
-  }
+
 }
 table "search_synonyms" {
   schema = schema.storefront
@@ -1699,9 +1643,7 @@ table "search_synonyms" {
   check "chk_synonym_no_self_loop" {
     expr = "NOT (synonyms ? term)"
   }
-  unique "uq_tenant_search_synonyms_composite" {
-    columns = [column.id]
-  }
+
 }
 
 // Requires pg_partman retention policy: 90 days.
@@ -1745,9 +1687,7 @@ table "product_views" {
 
 
 
-  unique "uq_tenant_product_views_composite" {
-    columns = [column.id]
-  }
+
 }
 
 
