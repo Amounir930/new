@@ -1949,6 +1949,43 @@ DROP POLICY IF EXISTS "tenant_isolation_policy" ON "governance"."tenant_invoices
 CREATE POLICY "tenant_isolation_policy" ON "governance"."tenant_invoices" 
   FOR ALL TO public USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
 
+-- Extended Governance RLS
+ALTER TABLE "governance"."app_usage_records" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "governance"."app_usage_records" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tenant_isolation_policy" ON "governance"."app_usage_records";
+CREATE POLICY "tenant_isolation_policy" ON "governance"."app_usage_records" 
+  FOR ALL TO public USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
+
+ALTER TABLE "governance"."dunning_events" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "governance"."dunning_events" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tenant_isolation_policy" ON "governance"."dunning_events";
+CREATE POLICY "tenant_isolation_policy" ON "governance"."dunning_events" 
+  FOR ALL TO public USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
+
+ALTER TABLE "governance"."feature_gates" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "governance"."feature_gates" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tenant_isolation_policy" ON "governance"."feature_gates";
+CREATE POLICY "tenant_isolation_policy" ON "governance"."feature_gates" 
+  FOR ALL TO public USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
+
+ALTER TABLE "governance"."leads" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "governance"."leads" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tenant_isolation_policy" ON "governance"."leads";
+CREATE POLICY "tenant_isolation_policy" ON "governance"."leads" 
+  FOR ALL TO public USING (converted_tenant_id = current_setting('app.current_tenant_id')::uuid);
+
+ALTER TABLE "governance"."order_fraud_scores" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "governance"."order_fraud_scores" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tenant_isolation_policy" ON "governance"."order_fraud_scores";
+CREATE POLICY "tenant_isolation_policy" ON "governance"."order_fraud_scores" 
+  FOR ALL TO public USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
+
+ALTER TABLE "governance"."plan_change_history" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "governance"."plan_change_history" FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "tenant_isolation_policy" ON "governance"."plan_change_history";
+CREATE POLICY "tenant_isolation_policy" ON "governance"."plan_change_history" 
+  FOR ALL TO public USING (tenant_id = current_setting('app.current_tenant_id')::uuid);
+
 -- Vault Schema
 ALTER TABLE "vault"."encryption_keys" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "vault"."encryption_keys" FORCE ROW LEVEL SECURITY;
@@ -2024,5 +2061,5 @@ CREATE INDEX IF NOT EXISTS "idx_flash_sale_product_overlap" ON "storefront"."fla
 CREATE INDEX IF NOT EXISTS "idx_price_list_overlap" ON "storefront"."price_lists" 
   USING gist (product_id, variant_id, market_id, quantity_range);
 
-CREATE INDEX IF NOT EXISTS "idx_b2b_pricing_overlap" ON "storefront"."b2b_pricing" 
-  USING gist (company_id, product_id, variant_id, valid_during);
+CREATE INDEX IF NOT EXISTS "idx_b2b_pricing_overlap" ON "storefront"."b2b_pricing_tiers" 
+  USING gist (company_id, product_id, quantity_range);
