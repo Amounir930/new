@@ -15,9 +15,7 @@ table "categories" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "parent_id" {
     type = uuid
     null = true
@@ -84,11 +82,11 @@ table "categories" {
     columns = [column.id]
   }
   unique "uq_tenant_cat" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_categories_slug_active" {
     unique  = true
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
     where   = "deleted_at IS NULL"
   }
   index "idx_categories_parent" {
@@ -107,16 +105,13 @@ table "categories" {
 
   // Strike 12: Cascading LTREE Update (Logic handled in 07-SECURITY via Trigger)
 
-  index "idx_categories_tenant" {
-    columns = [column.tenant_id]
-  }
 
-  // ELITE: RLS POLICY
-  // ALTER TABLE storefront.categories ENABLE ROW LEVEL SECURITY
+
+
 
   foreign_key "fk_cat_parent" {
-    columns     = [column.tenant_id, column.parent_id]
-    ref_columns = [table.categories.column.tenant_id, table.categories.column.id]
+    columns     = [column.parent_id]
+    ref_columns = [table.categories.column.id]
     on_delete = RESTRICT
   }
 }
@@ -126,9 +121,7 @@ table "brands" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -172,7 +165,7 @@ table "brands" {
   }
   index "idx_brands_slug_active" {
     unique  = true
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
     where   = "deleted_at IS NULL"
   }
   index "idx_brands_active" {
@@ -180,13 +173,11 @@ table "brands" {
     where   = "deleted_at IS NULL"
   }
 
-  index "idx_brands_tenant" {
-    columns = [column.tenant_id]
-  }
 
-  // ALTER TABLE storefront.brands ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_brands_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "products" {
@@ -195,9 +186,7 @@ table "products" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "brand_id" {
     type = uuid
     null = true
@@ -378,16 +367,16 @@ table "products" {
     columns = [column.id]
   }
   unique "uq_tenant_product" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_products_slug_active" {
     unique  = true
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
     where   = "deleted_at IS NULL"
   }
   index "idx_products_sku_active" {
     unique  = true
-    columns = [column.tenant_id, column.sku]
+    columns = [column.sku]
     where   = "deleted_at IS NULL"
   }
   index "idx_products_active" {
@@ -412,10 +401,9 @@ table "products" {
   index "idx_products_embedding_cosine" {
     on {
       column = column.embedding
-      
+      opclass = "vector_cosine_ops"
     }
-    type = "BTREE"
-
+    type = "HNSW"
   }
 
   // Strike 18: Digital/Shipping Logic Consistency
@@ -438,10 +426,8 @@ table "products" {
   check "chk_specs_size" {
     expr = "(pg_column_size(specifications) <= 20480)"
   }
-  index "idx_products_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.products ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_prod_brand" {
     columns     = [column.brand_id]
     ref_columns = [table.brands.column.id]
@@ -459,9 +445,7 @@ table "product_variants" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "product_id" {
     type = uuid
   }
@@ -511,11 +495,11 @@ table "product_variants" {
     columns = [column.id]
   }
   unique "uq_tenant_variant" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_variant_sku_active" {
     unique  = true
-    columns = [column.tenant_id, column.sku]
+    columns = [column.sku]
     where   = "deleted_at IS NULL"
   }
   index "idx_variants_product" {
@@ -524,10 +508,9 @@ table "product_variants" {
   index "idx_variants_embedding_cosine" {
     on {
       column = column.embedding
-      
+      opclass = "vector_cosine_ops"
     }
-    type = "BTREE"
-
+    type = "HNSW"
   }
   check "chk_variant_options_obj" {
     expr = "jsonb_typeof(options) = 'object'"
@@ -538,13 +521,11 @@ table "product_variants" {
   check "chk_variant_compare_price" {
     expr = "(compare_at_price IS NULL OR (compare_at_price) IS NOT NULL)"
   }
-  index "idx_variants_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.product_variants ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_var_prod" {
-    columns     = [column.tenant_id, column.product_id]
-    ref_columns = [table.products.column.tenant_id, table.products.column.id]
+    columns     = [column.product_id]
+    ref_columns = [table.products.column.id]
     on_delete = RESTRICT
   }
 }
@@ -554,9 +535,7 @@ table "product_images" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "product_id" {
     type = uuid
   }
@@ -583,20 +562,18 @@ table "product_images" {
   }
   index "uq_primary_image" {
     unique  = true
-    columns = [column.tenant_id, column.product_id]
+    columns = [column.product_id]
     where   = "is_primary =true"
   }
-  index "idx_product_images_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.product_images ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_img_prod" {
-    columns     = [column.tenant_id, column.product_id]
-    ref_columns = [table.products.column.tenant_id, table.products.column.id]
+    columns     = [column.product_id]
+    ref_columns = [table.products.column.id]
     on_delete = CASCADE
   }
   unique "uq_tenant_product_images_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "product_attributes" {
@@ -605,9 +582,7 @@ table "product_attributes" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "product_id" {
     type = uuid
   }
@@ -629,7 +604,7 @@ table "product_attributes" {
     columns = [column.id]
   }
   unique "uq_tenant_product_attr" {
-    columns = [column.tenant_id, column.product_id, column.attribute_name]
+    columns = [column.product_id, column.attribute_name]
   }
   index "idx_attrs_product" {
     columns = [column.product_id, column.attribute_name]
@@ -640,17 +615,15 @@ table "product_attributes" {
   check "chk_attr_val_len" {
     expr = "length(attribute_value) <= 1024"
   }
-  index "idx_product_attributes_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.product_attributes ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_attr_prod" {
-    columns     = [column.tenant_id, column.product_id]
-    ref_columns = [table.products.column.tenant_id, table.products.column.id]
+    columns     = [column.product_id]
+    ref_columns = [table.products.column.id]
     on_delete = CASCADE
   }
   unique "uq_tenant_product_attributes_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "entity_metafields" {
@@ -659,9 +632,7 @@ table "entity_metafields" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "entity_type" {
     type = varchar(50)
   }
@@ -695,12 +666,10 @@ table "entity_metafields" {
   check "chk_metafield_size" {
     expr = "(pg_column_size(value) <= 10240)"
   }
-  index "idx_metafields_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.entity_metafields ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_entity_metafields_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "smart_collections" {
@@ -709,9 +678,7 @@ table "smart_collections" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -764,14 +731,12 @@ table "smart_collections" {
     expr = "(pg_column_size(conditions) <= 10240)"
   }
   unique "idx_smart_collections_slug" {
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
   }
-  index "idx_smart_collections_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.smart_collections ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_smart_collections_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 
@@ -783,9 +748,7 @@ table "locations" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -817,13 +780,11 @@ table "locations" {
     columns = [column.id]
   }
   unique "uq_tenant_loc" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 
-  index "idx_locations_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.locations ENABLE ROW LEVEL SECURITY
+
+
 }
 table "inventory_levels" {
   schema = schema.storefront
@@ -831,9 +792,7 @@ table "inventory_levels" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "location_id" {
     type = uuid
   }
@@ -889,22 +848,20 @@ table "inventory_levels" {
     expr = "reserved <= available"
   }
 
-  index "idx_inventory_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.inventory_levels ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_inv_loc" {
-    columns     = [column.tenant_id, column.location_id]
-    ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
+    columns     = [column.location_id]
+    ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_inv_variant" {
-    columns     = [column.tenant_id, column.variant_id]
-    ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
+    columns     = [column.variant_id]
+    ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_inventory_levels_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "inventory_movements" {
@@ -913,9 +870,7 @@ table "inventory_movements" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "variant_id" {
     type = uuid
   }
@@ -964,22 +919,20 @@ table "inventory_movements" {
   check "chk_return_positive" {
     expr = "(type != 'return' OR quantity > 0)"
   }
-  index "idx_inv_mov_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.inventory_movements ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_im_variant" {
-    columns     = [column.tenant_id, column.variant_id]
-    ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
+    columns     = [column.variant_id]
+    ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_im_loc" {
-    columns     = [column.tenant_id, column.location_id]
-    ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
+    columns     = [column.location_id]
+    ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_inventory_movements_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "inventory_reservations" {
@@ -988,9 +941,7 @@ table "inventory_reservations" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "variant_id" {
     type = uuid
   }
@@ -1036,22 +987,20 @@ table "inventory_reservations" {
     columns = [column.expires_at]
     where   = "status ='active'"
   }
-  index "idx_inv_res_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.inventory_reservations ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ir_variant" {
-    columns     = [column.tenant_id, column.variant_id]
-    ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
+    columns     = [column.variant_id]
+    ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_ir_loc" {
-    columns     = [column.tenant_id, column.location_id]
-    ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
+    columns     = [column.location_id]
+    ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_inventory_reservations_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "inventory_transfers" {
@@ -1060,9 +1009,7 @@ table "inventory_transfers" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "from_location_id" {
     type = uuid
   }
@@ -1102,22 +1049,20 @@ table "inventory_transfers" {
   check "chk_transfer_future" {
     expr = "(expected_arrival IS NULL OR expected_arrival >= created_at)"
   }
-  index "idx_inv_tra_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.inventory_transfers ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_it_from_loc" {
-    columns     = [column.tenant_id, column.from_location_id]
-    ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
+    columns     = [column.from_location_id]
+    ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_it_to_loc" {
-    columns     = [column.tenant_id, column.to_location_id]
-    ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
+    columns     = [column.to_location_id]
+    ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_inventory_transfers_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "inventory_transfer_items" {
@@ -1126,9 +1071,7 @@ table "inventory_transfer_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "transfer_id" {
     type = uuid
   }
@@ -1144,9 +1087,7 @@ table "inventory_transfer_items" {
   index "idx_transfer_items" {
     columns = [column.transfer_id]
   }
-  index "idx_inv_tra_items_tenant" {
-    columns = [column.tenant_id]
-  }
+
   // ALTER TABLE storefront.inventory_transfer_items ENABLE ROW LEVEL SECURITY
   foreign_key "fk_iti_transfer" {
     columns     = [column.transfer_id]
@@ -1154,12 +1095,12 @@ table "inventory_transfer_items" {
     on_delete = RESTRICT
   }
   foreign_key "fk_iti_variant" {
-    columns     = [column.tenant_id, column.variant_id]
-    ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
+    columns     = [column.variant_id]
+    ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_inventory_transfer_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 
@@ -1171,9 +1112,7 @@ table "suppliers" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1231,12 +1170,10 @@ table "suppliers" {
   check "chk_sup_company_s7" {
     expr = "(company IS NULL OR (jsonb_typeof(company) = 'object' AND company ? 'enc' AND company ? 'iv' AND company ? 'tag' AND company ? 'data'))"
   }
-  index "idx_suppliers_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.suppliers ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_suppliers_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "purchase_orders" {
@@ -1245,9 +1182,7 @@ table "purchase_orders" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "supplier_id" {
     type = uuid
   }
@@ -1294,7 +1229,7 @@ table "purchase_orders" {
     columns = [column.id]
   }
   unique "idx_po_number_unique" {
-    columns = [column.tenant_id, column.order_number]
+    columns = [column.order_number]
   }
   index "idx_po_supplier" {
     columns = [column.supplier_id]
@@ -1310,22 +1245,20 @@ table "purchase_orders" {
   check "chk_po_inner_not_null" {
     expr = "(total) IS NOT NULL AND (subtotal) IS NOT NULL"
   }
-  index "idx_purchase_orders_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.purchase_orders ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_po_supplier" {
     columns     = [column.supplier_id]
     ref_columns = [table.suppliers.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_po_location" {
-    columns     = [column.tenant_id, column.location_id]
-    ref_columns = [table.locations.column.tenant_id, table.locations.column.id]
+    columns     = [column.location_id]
+    ref_columns = [table.locations.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_purchase_orders_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "purchase_order_items" {
@@ -1334,9 +1267,7 @@ table "purchase_order_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "po_id" {
     type = uuid
   }
@@ -1367,22 +1298,20 @@ table "purchase_order_items" {
   check "qty_positive" {
     expr = "(quantity_ordered > 0)"
   }
-  index "idx_poi_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.purchase_order_items ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_poi_po" {
     columns     = [column.po_id]
     ref_columns = [table.purchase_orders.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_poi_variant" {
-    columns     = [column.tenant_id, column.variant_id]
-    ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
+    columns     = [column.variant_id]
+    ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_purchase_order_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "b2b_companies" {
@@ -1391,9 +1320,7 @@ table "b2b_companies" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1419,7 +1346,7 @@ table "b2b_companies" {
     default = 30
   }
   column "status" {
-    type    = enum.b2b_company_status
+    type    = sql("public.b2b_company_status")
     default = "pending"
   }
   column "name" {
@@ -1428,6 +1355,9 @@ table "b2b_companies" {
   column "tax_id" {
     type = varchar(50)
     null = true
+  }
+  check "chk_credit_utilization" {
+    expr = "(credit_used <= credit_limit)"
   }
   column "industry" {
     type = varchar(100)
@@ -1443,16 +1373,14 @@ table "b2b_companies" {
   check "chk_credit_limit_positive" {
     expr = "COALESCE((credit_limit), 0) >= 0"
   }
-  // ELITE PATCH: Removed chk_credit_utilization DB constraint to avoid Admin lockout when reducing limits. Enforced strictly at App Layer.
+  // ELITE GUARD: chk_credit_utilization enforced at DB level. App Layer must handle concurrency via DEFERRABLE state.
   check "chk_tax_id_len" {
     expr = "(tax_id IS NULL OR length(tax_id) >= 5)"
   }
-  index "idx_b2b_companies_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.b2b_companies ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_b2b_companies_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "b2b_pricing_tiers" {
@@ -1461,9 +1389,7 @@ table "b2b_pricing_tiers" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "company_id" {
     type = uuid
   }
@@ -1508,6 +1434,19 @@ table "b2b_pricing_tiers" {
   primary_key {
     columns = [column.id]
   }
+  // ELITE: Prevent overlapping quantity ranges for same product/variant/market
+  index "idx_b2b_pricing_overlap" {
+    type = "GIST"
+    on {
+      column = column.company_id
+    }
+    on {
+      column = column.product_id
+    }
+    on {
+      column = column.quantity_range
+    }
+  }
 
   index "idx_b2b_pricing" {
     columns = [column.company_id, column.product_id]
@@ -1522,22 +1461,20 @@ table "b2b_pricing_tiers" {
   check "chk_b2b_price_pos" {
     expr = "(price IS NULL OR ((price) >= 0 AND (price) IS NOT NULL))"
   }
-  index "idx_b2bp_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.b2b_pricing_tiers ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_b2bpt_company" {
     columns     = [column.company_id]
     ref_columns = [table.b2b_companies.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_b2bpt_product" {
-    columns     = [column.tenant_id, column.product_id]
-    ref_columns = [table.products.column.tenant_id, table.products.column.id]
+    columns     = [column.product_id]
+    ref_columns = [table.products.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_b2b_pricing_tiers_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "b2b_users" {
@@ -1546,9 +1483,7 @@ table "b2b_users" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "company_id" {
     type = uuid
   }
@@ -1560,7 +1495,7 @@ table "b2b_users" {
     default = sql("now()")
   }
   column "role" {
-    type    = enum.b2b_user_role
+    type    = sql("public.b2b_user_role")
     default = "buyer"
   }
   column "unit_price" {
@@ -1576,7 +1511,7 @@ table "b2b_users" {
     columns = [column.id]
   }
   unique "uq_b2b_company_customer" {
-    columns = [column.tenant_id, column.company_id, column.customer_id]
+    columns = [column.company_id, column.customer_id]
   }
   index "idx_b2b_user" {
     columns = [column.company_id]
@@ -1584,17 +1519,15 @@ table "b2b_users" {
   check "chk_b2b_unit_price_pos" {
     expr = "COALESCE((unit_price), 0) >= 0"
   }
-  index "idx_b2b_users_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.b2b_users ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_b2bu_company" {
     columns     = [column.company_id]
     ref_columns = [table.b2b_companies.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_b2b_users_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 

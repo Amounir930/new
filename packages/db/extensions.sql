@@ -1,8 +1,0 @@
--- Required PostgreSQL Extensions
-CREATE EXTENSION IF NOT EXISTS "postgis" SCHEMA "public";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm" SCHEMA "public";
-CREATE EXTENSION IF NOT EXISTS "vector" SCHEMA "public";
-CREATE EXTENSION IF NOT EXISTS "pg_partman" SCHEMA "public";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" SCHEMA "public";
-CREATE EXTENSION IF NOT EXISTS "ltree" SCHEMA "public";
-CREATE EXTENSION IF NOT EXISTS "btree_gist" SCHEMA "public";

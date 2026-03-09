@@ -17,7 +17,7 @@ export interface ProvisionRequest {
   subdomain: string;
   storeName: string;
   adminEmail: string;
-  plan?: 'free' | 'basic' | 'pro' | 'enterprise';
+  plan: 'free' | 'basic' | 'pro' | 'enterprise';
   nicheType?:
     | 'retail'
     | 'wellness'
@@ -27,13 +27,13 @@ export interface ProvisionRequest {
     | 'real-estate'
     | 'creative'
     | null;
-  uiConfig?: Record<string, unknown>;
-  superAdminKey?: string;
+  uiConfig: Record<string, unknown>;
+  superAdminKey: string;
   blueprint?: BlueprintStructure;
   blueprintId?: string;
 }
 
-export const ProvisionRequestSchema: z.ZodType<ProvisionRequest> = z.object({
+export const ProvisionRequestSchema = z.object({
   /**
    * Unique subdomain for the store (e.g., "coffee-beans")
    */

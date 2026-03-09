@@ -5,7 +5,10 @@ services:
   # ═══════════════════════════════════════════════════════════════
   apex-postgres:
     # ZERO-TOLERANCE FIX: No 'latest' tags. Pinned to specific minor version.
-    image: postgres:15-alpine
+    # image: postgres:15-alpine
+    build:
+      context: ..
+      dockerfile: ops/postgres.Dockerfile
     container_name: apex-postgres
     restart: always
     user: "70:70" # Run as postgres user internally
@@ -141,7 +144,7 @@ services:
   # Tier: apex-internal + apex-data
   # ═══════════════════════════════════════════════════════════════
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
+    # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
@@ -221,7 +224,10 @@ services:
   # Tier: apex-internal + apex-data
   # ═══════════════════════════════════════════════════════════════
   worker:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
+    # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
     restart: always
     env_file: .env
     depends_on:
@@ -283,7 +289,10 @@ services:
   # Frontends (Store, Admin, Super-Admin)
   # ═══════════════════════════════════════════════════════════════
   merchant-admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:latest
+    # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:latest
+    build:
+      context: ..
+      dockerfile: apps/merchant-admin/Dockerfile
     container_name: apex-merchant-admin
     restart: always
     user: "1000:1000"
@@ -334,7 +343,10 @@ services:
         max-file: "3"
 
   super-admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
+    # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
+    build:
+      context: ..
+      dockerfile: apps/super-admin/Dockerfile
     container_name: apex-super-admin
     restart: always
     user: "1000:1000"
@@ -379,7 +391,10 @@ services:
         max-file: "3"
 
   store:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:latest
+    # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:latest
+    build:
+      context: ..
+      dockerfile: apps/store/Dockerfile
     container_name: apex-store
     restart: always
     user: "1000:1000"

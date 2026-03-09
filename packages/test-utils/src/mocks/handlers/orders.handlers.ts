@@ -7,7 +7,7 @@
  */
 
 import { HttpResponse, http } from 'msw';
-import { createMockOrder, createPendingOrder } from '../../fixtures';
+import { createMockOrder, createPendingOrder } from '../fixtures';
 
 const BASE_URL = '/api';
 

@@ -44,7 +44,9 @@ FROM oven/bun:1.3.8
 ENV NODE_ENV=production
 
 # S7: Create non-root user (Least Privilege)
-RUN groupadd -g 1001 bun-group && \
+RUN apt-get update && apt-get install -y curl && \
+    curl -sSf https://atlasgo.sh | sh && \
+    groupadd -g 1001 bun-group && \
     useradd -u 1001 -g bun-group -s /bin/sh bun-user
 
 # S4: Copy the entire built application to preserve workspace links

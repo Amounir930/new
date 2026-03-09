@@ -6,9 +6,7 @@ table "outbox_events" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -73,12 +71,10 @@ table "outbox_events" {
     type = "BRIN"
 
   }
-  index "idx_outbox_events_tenant_active" {
-    columns = [column.tenant_id]
-  }
+
 
   unique "uq_tenant_outbox_events_composite" {
-    columns = [column.tenant_id, column.id, column.created_at]
+    columns = [column.id, column.created_at]
   }
 }
 table "tenant_config" {
@@ -86,9 +82,7 @@ table "tenant_config" {
   column "key" {
     type = varchar(100)
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "value" {
     type = jsonb
   }
@@ -97,7 +91,7 @@ table "tenant_config" {
     default = sql("now()")
   }
   primary_key {
-    columns = [column.key, column.tenant_id]
+    columns = [column.key]
   }
   // Strike 05: Key Injection Protection
   check "chk_config_key" {
@@ -106,9 +100,7 @@ table "tenant_config" {
   check "chk_tc_value_size" {
     expr = "pg_column_size(value) <= 102400"
   }
-  index "idx_tenant_config_tenant_active" {
-    columns = [column.tenant_id]
-  }
+
 
 
 }
@@ -118,9 +110,7 @@ table "markets" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -151,17 +141,14 @@ table "markets" {
   }
   index "uq_tenant_primary_market" {
     unique  = true
-    columns = [column.tenant_id]
     where   = "is_primary =true"
   }
-  index "idx_markets_tenant_active" {
-    columns = [column.tenant_id]
-  }
+
   // ALTER TABLE storefront.markets ENABLE ROW LEVEL SECURITY
 
 
   unique "uq_tenant_markets_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "price_lists" {
@@ -170,9 +157,7 @@ table "price_lists" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "market_id" {
     type = uuid
   }
@@ -203,18 +188,30 @@ table "price_lists" {
   check "chk_pl_inner_not_null" {
     expr = "(price) IS NOT NULL AND (price) IS NOT NULL"
   }
-  index "idx_price_lists_tenant_active" {
-    columns = [column.tenant_id]
-  }
+
 
 
   // ELITE: Prevent overlapping quantity ranges for same product/variant/market
-
+  index "idx_price_list_overlap" {
+    type = "GIST"
+    on {
+      column = column.product_id
+    }
+    on {
+      column = column.variant_id
+    }
+    on {
+      column = column.market_id
+    }
+    on {
+      column = column.quantity_range
+    }
+  }
 
   // Strike 04: Cross-Tenant Pricing Fix (Composite FK)
   foreign_key "fk_pl_market" {
-    columns     = [column.tenant_id, column.market_id]
-    ref_columns = [table.markets.column.tenant_id, table.markets.column.id]
+    columns     = [column.market_id]
+    ref_columns = [table.markets.column.id]
     on_delete = RESTRICT
   }
   check "chk_pl_price_inner" {
@@ -222,7 +219,7 @@ table "price_lists" {
   }
 
   unique "uq_tenant_price_lists_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "currency_rates" {
@@ -231,9 +228,7 @@ table "currency_rates" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "updated_at" {
     type    = timestamptz
     default = sql("now()")
@@ -251,15 +246,13 @@ table "currency_rates" {
     columns = [column.id]
   }
   unique "uq_tenant_currency_pair" {
-    columns = [column.tenant_id, column.from_currency, column.to_currency]
+    columns = [column.from_currency, column.to_currency]
   }
-  index "idx_currency_rates_tenant_active" {
-    columns = [column.tenant_id]
-  }
+
 
 
   unique "uq_tenant_currency_rates_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 

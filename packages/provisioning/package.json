@@ -29,7 +29,8 @@
     "@apex/db": "workspace:*",
     "@apex/security": "workspace:*",
     "minio": "^7.1.0",
-    "pg": "8.11.0"
+    "pg": "8.11.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

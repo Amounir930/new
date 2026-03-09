@@ -1,11 +1,15 @@
 /**
  * Migration Runner
- * Executes Drizzle migrations against tenant schemas (S2)
+ * Executes Atlas declarative migrations against tenant schemas (Enterprise 2026)
  */
 
-import fs from 'node:fs';
+import { execFile } from 'node:child_process';
 import path from 'node:path';
+import { promisify } from 'node:util';
+import { z } from 'zod';
 import { sanitizeSchemaName } from './schema-manager';
+
+const execFileAsync = promisify(execFile);
 
 export interface MigrationResult {
   schemaName: string;
@@ -14,107 +18,78 @@ export interface MigrationResult {
 }
 
 /**
- * Run migrations for a specific tenant schema
+ * Run migrations for a specific tenant schema using Atlas
  * @param subdomain - Tenant identifier
  */
 export async function runTenantMigrations(
   subdomain: string
 ): Promise<MigrationResult> {
   const startTime = Date.now();
-  const schemaName = sanitizeSchemaName(subdomain);
+  
+  // 1. Strict Validation (Protocol Delta-Injection)
+  const SubdomainSchema = z.string().regex(/^[a-z0-9_-]+$/).min(3).max(50);
+  const validatedSubdomain = SubdomainSchema.parse(subdomain);
+  const schemaName = sanitizeSchemaName(validatedSubdomain);
 
-  // 🔒 S2 Protocol: Use isolated connection with explicit search_path
-  const { adminPool } = await import('@apex/db');
-  const { drizzle } = await import('drizzle-orm/node-postgres');
-  const client = await adminPool.connect();
+  // 2. Resolve Paths
+  const rootDir = path.resolve(
+    new URL('.', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'),
+    '..' + '/..' + '/..'
+  );
+  
+  // Source of Truth: tenant.hcl
+  const hclPath = path.join(rootDir, 'packages/db/tenant.hcl');
+  
+  // 3. Construct Secure Connection String (Protocol Alpha-Secure)
+  // We use the environment variables for database credentials
+  const { env } = await import('@apex/config');
+  
+  // CRITICAL: Atlas URL must include search_path to target the isolated schema
+  // We use the internal pgbouncer or postgres host depending on environment
+  const dbHost = process.env.DATABASE_URL?.includes('pgbouncer') ? 'apex-pgbouncer' : 'apex-postgres';
+  const dbUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=disable&search_path=${schemaName}`;
+
+  process.stdout.write(`[Runner] Orchestrating Atlas for schema: ${schemaName}\n`);
 
   try {
-    // 1. Force search_path to isolated schema ONLY (S2 Hard Isolation)
-    // We remove 'public' to prevent conflicts with global tables during migrations
-    await client.query(`SET search_path TO "${schemaName}"`);
+    // 4. Secure Atlas Execution (Process Isolation)
+    // Pass the sensitive DB URL via environment variable to prevent leak in PS/HTOP
+    const atlasEnv = {
+      ...process.env,
+      ATLAS_DB_URL: dbUrl,
+    };
 
-    // 2. Wrap client in Drizzle
-    const _db = drizzle(client);
-
-    // Fix 2: Point to the separated tenant migrations folder
-    // In local dev/test, this is usually at .. / .. / .. /db/drizzle/tenant relative to this file
-    const rootDir = path.resolve(
-      new URL('.', import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'),
-      '..' + '/..' + '/..'
+    // Use execFile to prevent shell interpolation/injection
+    const { stdout, stderr } = await execFileAsync(
+      'atlas',
+      [
+        'schema',
+        'apply',
+        '--url',
+        'env://ATLAS_DB_URL',
+        '--to',
+        `file://${hclPath}`,
+        '--auto-approve',
+      ],
+      { env: atlasEnv }
     );
-    const migrationsPath = path.join(rootDir, 'packages/db/drizzle/tenant');
 
-    process.stdout.write(`[Runner] Migrations path: ${migrationsPath}`);
-    try {
-      const files = await import('node:fs').then((fs) =>
-        fs.readdirSync(migrationsPath)
-      );
-      process.stdout.write(
-        `[Runner] Migration files found: ${files.join(', ')}`
-      );
-    } catch (e: unknown) {
-      process.stdout.write(
-        `[Runner] Failed to list migration files: ${String(e)}\n`
-      );
-    }
-
-    // 3. Execute migrations
-    // MANUAL FALLBACK: Execute the SQL file directly to ensure creation
-    // The Drizzle migrator seems to have issues with search_path in this environment
-    process.stdout.write(
-      `[Runner] Starting MANUAL migration for schema: ${schemaName}`
-    );
-    try {
-      const sqlPath = path.join(migrationsPath, '0000_nervous_landau.sql');
-      const sqlContent = fs.readFileSync(sqlPath, 'utf8');
-
-      // Execute raw SQL
-      // We need to use client directly or db.execute(sql.raw(content))
-      await client.query(sqlContent);
-      process.stdout.write(
-        '[Runner] Manual migration SQL executed successfully'
-      );
-
-      // Still run migrate to mark it as done in __drizzle_migrations (optional, but good for consistency)
-      // const { migrate } = await import('drizzle-orm/node-postgres/migrator');
-      // await migrate(db, { migrationsFolder: migrationsPath });
-
-      process.stdout.write(
-        `[Runner] Migration completed for schema: ${schemaName}`
-      );
-    } catch (e: unknown) {
-      const err = e as { code?: string; message?: string };
-      if (err.code === '42P07') {
-        // duplicate_table
-        process.stdout.write(
-          `[Runner] Migration warning: Schema ${schemaName} already has tables. Skipping creation.\n`
-        );
-      } else {
-        process.stdout.write(
-          `[Runner] Migration failed for ${schemaName}: ${String(e)}\n`
-        );
-        throw e;
-      }
-    }
+    process.stdout.write(`[Runner] Atlas Output: ${stdout}\n`);
+    if (stderr) process.stdout.write(`[Runner] Atlas Warning/Error: ${stderr}\n`);
 
     const durationMs = Date.now() - startTime;
 
     return {
       schemaName,
-      appliedCount: 1, // Success
+      appliedCount: 1, 
       durationMs,
     };
   } catch (error) {
     process.stdout.write(
-      `S2 MIGRATION FAILURE for ${schemaName}: ${String(error)}\n`
+      `S2 ATLAS MIGRATION FAILURE for ${schemaName}: ${String(error)}\n`
     );
-    throw error;
-  } finally {
-    try {
-      await client.query('SET search_path TO public');
-    } catch (_e) {
-      // Ignore reset errors
-    }
-    client.release();
+    // Sanitize error message before throwing to prevent credential leak in logs
+    const sanitizedError = new Error(`Atlas Migration Failed for ${schemaName}. See internal logs.`);
+    throw sanitizedError;
   }
 }

@@ -11,9 +11,7 @@ table "customers" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -128,16 +126,16 @@ table "customers" {
     columns = [column.id]
   }
   unique "uq_tenant_customer" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_customer_email_hash" {
     unique  = true
-    columns = [column.tenant_id, column.email_hash]
+    columns = [column.email_hash]
     where   = "deleted_at IS NULL"
   }
   index "idx_customer_phone_hash" {
     unique  = true
-    columns = [column.tenant_id, column.phone_hash]
+    columns = [column.phone_hash]
     where   = "deleted_at IS NULL"
   }
   index "idx_customers_active" {
@@ -165,12 +163,10 @@ table "customers" {
   check "chk_dob_past" {
     expr = "(date_of_birth IS NULL OR date_of_birth <= CURRENT_DATE)"
   }
-  index "idx_customers_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.customers ENABLE ROW LEVEL SECURITY
+
+
 }
 table "customer_addresses" {
   schema = schema.storefront
@@ -178,9 +174,7 @@ table "customer_addresses" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "customer_id" {
     type = uuid
   }
@@ -246,24 +240,22 @@ table "customer_addresses" {
   check "chk_city_not_empty" {
     expr = "(length(trim(city)) > 0)"
   }
-  index "idx_customer_addresses_tenant" {
-    columns = [column.tenant_id]
-  }
+
   // Strike 10: Prevent default address spam (one default per customer/tenant)
   index "uq_cust_default_addr" {
     unique  = true
-    columns = [column.tenant_id, column.customer_id]
+    columns = [column.customer_id]
     where   = "is_default = true"
   }
 
-  // ALTER TABLE storefront.customer_addresses ENABLE ROW LEVEL SECURITY
+
   foreign_key "fk_addr_cust" {
-    columns     = [column.tenant_id, column.customer_id]
-    ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
+    columns     = [column.customer_id]
+    ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_customer_addresses_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "customer_consents" {
@@ -272,9 +264,7 @@ table "customer_consents" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "customer_id" {
     type = uuid
   }
@@ -310,17 +300,15 @@ table "customer_consents" {
   index "idx_consent_customer" {
     columns = [column.customer_id]
   }
-  index "idx_customer_consents_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.customer_consents ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_consent_cust" {
-    columns     = [column.tenant_id, column.customer_id]
-    ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
+    columns     = [column.customer_id]
+    ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_customer_consents_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "customer_segments" {
@@ -329,9 +317,7 @@ table "customer_segments" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -357,12 +343,10 @@ table "customer_segments" {
   primary_key {
     columns = [column.id]
   }
-  index "idx_customer_segments_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.customer_segments ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_customer_segments_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "orders" {
@@ -371,9 +355,7 @@ table "orders" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "customer_id" {
     type = uuid
     null = true
@@ -531,16 +513,16 @@ table "orders" {
     columns = [column.id]
   }
   unique "uq_tenant_order" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_orders_number_active" {
     unique  = true
-    columns = [column.tenant_id, column.order_number]
+    columns = [column.order_number]
     where   = "deleted_at IS NULL"
   }
   index "idx_orders_idempotency" {
     unique  = true
-    columns = [column.tenant_id, column.idempotency_key]
+    columns = [column.idempotency_key]
     where   = "idempotency_key IS NOT NULL"
   }
 
@@ -550,7 +532,7 @@ table "orders" {
     null = true
   }
   index "idx_orders_payment_ref" {
-    columns = [column.tenant_id, column.payment_gateway_reference]
+    columns = [column.payment_gateway_reference]
     where   = "payment_gateway_reference IS NOT NULL"
   }
   index "idx_orders_admin" {
@@ -567,7 +549,7 @@ table "orders" {
 
   // ELITE: Alpha & Bravo applied (Directive Charlie - Logic Integrity)
   check "chk_checkout_math" {
-    expr = "(COALESCE((total), 0) = COALESCE((subtotal), 0) + COALESCE((tax), 0) + COALESCE((shipping), 0) - COALESCE((discount), 0) - COALESCE((coupon_discount), 0))"
+    expr = "(COALESCE((total), 0) = COALESCE((subtotal), 0) + COALESCE((tax), 0) + COALESCE((shipping), 0) - COALESCE((discount), 0) - COALESCE((coupon_discount), 0)) AND COALESCE((total), 0) >= 0"
   }
   check "chk_positive_costs" {
     expr = "(COALESCE((shipping), 0) >= 0 AND COALESCE((tax), 0) >= 0)"
@@ -575,15 +557,13 @@ table "orders" {
   check "chk_refund_cap" {
     expr = "COALESCE((refunded_amount), 0) <= COALESCE((total), 0)"
   }
-  index "idx_orders_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.orders ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ord_customer" {
-    columns     = [column.tenant_id, column.customer_id]
-    ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
+    columns     = [column.customer_id]
+    ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
 }
@@ -593,9 +573,7 @@ table "order_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "order_id" {
     type = uuid
   }
@@ -669,7 +647,7 @@ table "order_items" {
     columns = [column.order_id]
   }
   index "idx_oi_product" {
-    columns = [column.tenant_id, column.product_id]
+    columns = [column.product_id]
   }
   check "qty_positive" {
     expr = "quantity > 0"
@@ -689,22 +667,20 @@ table "order_items" {
   check "chk_item_discount_logic" {
     expr = "COALESCE((discount_amount), 0) <= (COALESCE((price), 0) * quantity)"
   }
-  index "idx_order_items_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.order_items ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_oi_order" {
-    columns     = [column.tenant_id, column.order_id]
-    ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
+    columns     = [column.order_id]
+    ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_oi_variant" {
-    columns     = [column.tenant_id, column.variant_id]
-    ref_columns = [table.product_variants.column.tenant_id, table.product_variants.column.id]
+    columns     = [column.variant_id]
+    ref_columns = [table.product_variants.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_order_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "order_edits" {
@@ -713,9 +689,7 @@ table "order_edits" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "order_id" {
     type = uuid
   }
@@ -756,13 +730,11 @@ table "order_edits" {
   index "idx_order_edits" {
     columns = [column.order_id]
   }
-  index "idx_order_edits_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.order_edits ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_oe_order" {
-    columns     = [column.tenant_id, column.order_id]
-    ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
+    columns     = [column.order_id]
+    ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_oe_line_item" {
@@ -771,7 +743,7 @@ table "order_edits" {
     on_delete = RESTRICT
   }
   unique "uq_tenant_order_edits_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "order_timeline" {
@@ -780,9 +752,7 @@ table "order_timeline" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "order_id" {
     type = uuid
     null = true
@@ -828,17 +798,15 @@ table "order_timeline" {
     columns = [column.created_at]
     type = "BRIN"
   }
-  index "idx_order_timeline_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.order_timeline ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ot_order" {
-    columns     = [column.tenant_id, column.order_id]
-    ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
+    columns     = [column.order_id]
+    ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_order_timeline_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "fulfillments" {
@@ -847,9 +815,7 @@ table "fulfillments" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "order_id" {
     type = uuid
   }
@@ -887,17 +853,15 @@ table "fulfillments" {
   index "idx_fulfillments_order" {
     columns = [column.order_id]
   }
-  index "idx_fulfillments_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.fulfillments ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ful_order" {
-    columns     = [column.tenant_id, column.order_id]
-    ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
+    columns     = [column.order_id]
+    ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_fulfillments_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "fulfillment_items" {
@@ -906,9 +870,7 @@ table "fulfillment_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "fulfillment_id" {
     type = uuid
   }
@@ -924,10 +886,8 @@ table "fulfillment_items" {
   index "idx_fulfill_items" {
     columns = [column.fulfillment_id]
   }
-  index "idx_fulfillment_items_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.fulfillment_items ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_fi_fulfillment" {
     columns     = [column.fulfillment_id]
     ref_columns = [table.fulfillments.column.id]
@@ -939,7 +899,7 @@ table "fulfillment_items" {
     on_delete = RESTRICT
   }
   unique "uq_tenant_fulfillment_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "refunds" {
@@ -948,9 +908,7 @@ table "refunds" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "order_id" {
     type = uuid
   }
@@ -982,7 +940,7 @@ table "refunds" {
     columns = [column.id]
   }
   unique "uq_tenant_refund" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_refunds_order" {
     columns = [column.order_id]
@@ -990,13 +948,11 @@ table "refunds" {
   check "chk_refund_positive" {
     expr = "COALESCE((amount), 0) > 0"
   }
-  index "idx_refunds_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.refunds ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ref_order" {
-    columns     = [column.tenant_id, column.order_id]
-    ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
+    columns     = [column.order_id]
+    ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
 }
@@ -1006,9 +962,7 @@ table "refund_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "refund_id" {
     type = uuid
   }
@@ -1031,13 +985,11 @@ table "refund_items" {
   check "chk_refund_item_amt" {
     expr = "(COALESCE((amount), 0) > 0 AND quantity > 0)"
   }
-  index "idx_refund_items_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.refund_items ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ri_refund" {
-    columns     = [column.tenant_id, column.refund_id]
-    ref_columns = [table.refunds.column.tenant_id, table.refunds.column.id]
+    columns     = [column.refund_id]
+    ref_columns = [table.refunds.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_ri_order_item" {
@@ -1046,7 +998,7 @@ table "refund_items" {
     on_delete = RESTRICT
   }
   unique "uq_tenant_refund_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "rma_requests" {
@@ -1055,9 +1007,7 @@ table "rma_requests" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "order_id" {
     type = uuid
   }
@@ -1100,7 +1050,7 @@ table "rma_requests" {
     columns = [column.id]
   }
   unique "uq_tenant_rma" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_rma_order" {
     columns = [column.order_id]
@@ -1108,15 +1058,13 @@ table "rma_requests" {
   index "idx_rma_status" {
     columns = [column.status]
   }
-  index "idx_rma_requests_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.rma_requests ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_rma_order" {
-    columns     = [column.tenant_id, column.order_id]
-    ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
+    columns     = [column.order_id]
+    ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_rma_order_item" {
@@ -1131,9 +1079,7 @@ table "rma_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "rma_id" {
     type = uuid
   }
@@ -1166,13 +1112,11 @@ table "rma_items" {
   check "qty_positive" {
     expr = "quantity > 0"
   }
-  index "idx_rma_items_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.rma_items ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_rmai_rma" {
-    columns     = [column.tenant_id, column.rma_id]
-    ref_columns = [table.rma_requests.column.tenant_id, table.rma_requests.column.id]
+    columns     = [column.rma_id]
+    ref_columns = [table.rma_requests.column.id]
     on_delete = RESTRICT
   }
   foreign_key "fk_rmai_order_item" {
@@ -1181,7 +1125,7 @@ table "rma_items" {
     on_delete = RESTRICT
   }
   unique "uq_tenant_rma_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "payment_logs" {
@@ -1190,9 +1134,7 @@ table "payment_logs" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "order_id" {
     type = uuid
     null = true
@@ -1251,20 +1193,21 @@ table "payment_logs" {
     columns = [column.created_at]
     type = "BRIN"
 }
+  check "chk_payment_pci_scrub" {
+    expr = "(raw_response IS NULL OR NOT (raw_response ?| array['cvv', 'card_number', 'pan']))"
+  }
   index "idx_payment_logs_order" {
     columns = [column.order_id]
   }
-  index "idx_payment_logs_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.payment_logs ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_pl_order" {
-    columns     = [column.tenant_id, column.order_id]
-    ref_columns = [table.orders.column.tenant_id, table.orders.column.id]
+    columns     = [column.order_id]
+    ref_columns = [table.orders.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_payment_logs_composite" {
-    columns = [column.tenant_id, column.id, column.created_at]
+    columns = [column.id, column.created_at]
   }
 }
 table "carts" {
@@ -1273,9 +1216,7 @@ table "carts" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "customer_id" {
     type = uuid
     null = true
@@ -1311,7 +1252,7 @@ table "carts" {
     columns = [column.id]
   }
   unique "uq_tenant_cart" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_carts_customer" {
     columns = [column.customer_id]
@@ -1329,13 +1270,11 @@ table "carts" {
   check "chk_cart_subtotal_pos" {
     expr = "subtotal IS NULL OR COALESCE((subtotal), 0) >= 0"
   }
-  index "idx_carts_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.carts ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_cart_customer" {
-    columns     = [column.tenant_id, column.customer_id]
-    ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
+    columns     = [column.customer_id]
+    ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
 }
@@ -1345,9 +1284,7 @@ table "cart_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "cart_id" {
     type = uuid
   }
@@ -1374,17 +1311,15 @@ table "cart_items" {
   check "chk_cart_item_price" {
     expr = "COALESCE((price), 0) >= 0"
   }
-  index "idx_cart_items_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.cart_items ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ci_cart" {
-    columns     = [column.tenant_id, column.cart_id]
-    ref_columns = [table.carts.column.tenant_id, table.carts.column.id]
+    columns     = [column.cart_id]
+    ref_columns = [table.carts.column.id]
     on_delete = CASCADE
   }
   unique "uq_tenant_cart_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "abandoned_checkouts" {
@@ -1393,9 +1328,7 @@ table "abandoned_checkouts" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "customer_id" {
     type = uuid
     null = true
@@ -1439,17 +1372,15 @@ table "abandoned_checkouts" {
     columns = [column.created_at]
   }
 
-  index "idx_abandoned_checkouts_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.abandoned_checkouts ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ac_customer" {
-    columns     = [column.tenant_id, column.customer_id]
-    ref_columns = [table.customers.column.tenant_id, table.customers.column.id]
+    columns     = [column.customer_id]
+    ref_columns = [table.customers.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_abandoned_checkouts_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 
@@ -1461,9 +1392,7 @@ table "shipping_zones" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1521,14 +1450,12 @@ table "shipping_zones" {
   check "chk_delivery_logic" {
     expr = "(min_delivery_days >= 0 AND min_delivery_days <= max_delivery_days)"
   }
-  index "idx_shipping_zones_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.shipping_zones ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_shipping_zones_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "tax_categories" {
@@ -1537,9 +1464,7 @@ table "tax_categories" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "priority" {
     type    = int
     default = 0
@@ -1563,12 +1488,10 @@ table "tax_categories" {
     columns = [column.id]
   }
   unique "uq_tenant_tax_category" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
-  index "idx_tax_categories_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.tax_categories ENABLE ROW LEVEL SECURITY
+
+
 }
 table "tax_rules" {
   schema = schema.storefront
@@ -1576,9 +1499,7 @@ table "tax_rules" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "tax_category_id" {
     type = uuid
     null = true
@@ -1638,7 +1559,7 @@ table "tax_rules" {
 
   // ELITE PATCH: Include zip_code in rule uniqueness constraints
   unique "uq_tax_rule" {
-    columns            = [column.tenant_id, column.country, column.state, column.zip_code, column.tax_type]
+    columns            = [column.country, column.state, column.zip_code, column.tax_type]
 }
   index "idx_tax_rules_country" {
     columns = [column.country]
@@ -1646,17 +1567,15 @@ table "tax_rules" {
   check "chk_tax_rate_bounds" {
     expr = "(rate >= 0 AND rate <= 10000)"
   }
-  index "idx_tax_rules_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.tax_rules ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_tr_tax_category" {
-    columns     = [column.tenant_id, column.tax_category_id]
-    ref_columns = [table.tax_categories.column.tenant_id, table.tax_categories.column.id]
+    columns     = [column.tax_category_id]
+    ref_columns = [table.tax_categories.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_tax_rules_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "reviews" {
@@ -1665,9 +1584,7 @@ table "reviews" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "product_id" {
     type = uuid
   }
@@ -1718,19 +1635,16 @@ table "reviews" {
   check "chk_sentiment_bounds" {
     expr = "(sentiment_score >= -1.00 AND sentiment_score <= 1.00)"
   }
-  index "idx_reviews_tenant" {
-    columns = [column.tenant_id]
-  }
+
   index "idx_reviews_embedding_cosine" {
     on {
       column = column.embedding
-      
+      opclass = "vector_cosine_ops"
     }
-    type = "BTREE"
-
+    type = "HNSW"
   }
   unique "uq_tenant_reviews_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 

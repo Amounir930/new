@@ -3,8 +3,7 @@
   "compilerOptions": {
     "composite": false,
     "outDir": "./dist",
-    "declaration": true,
-    "paths": {}
+    "declaration": true
   },
   "include": ["src/**/*", "drizzle/**/*"],
   "exclude": ["node_modules", "dist", "build", "**/*.test.ts"]

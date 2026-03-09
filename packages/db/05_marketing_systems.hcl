@@ -13,9 +13,7 @@ table "coupons" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -72,10 +70,10 @@ table "coupons" {
     columns = [column.id]
   }
   unique "uq_tenant_coupon_id" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   unique "coupons_code_unique" {
-    columns = [column.tenant_id, column.code]
+    columns = [column.code]
   }
   index "idx_coupons_code" {
     columns = [column.code]
@@ -98,10 +96,8 @@ table "coupons" {
   check "chk_coupon_min_amount" {
     expr = "COALESCE((min_order_amount), 0) >= 0"
   }
-  index "idx_coupons_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.coupons ENABLE ROW LEVEL SECURITY
+
+
 }
 
 // Strike 03: Coupon Usage Tracking (Enforce max_uses_per_customer)
@@ -111,9 +107,7 @@ table "coupon_usages" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "coupon_id" {
     type = uuid
   }
@@ -132,22 +126,20 @@ table "coupon_usages" {
     columns = [column.id]
   }
   unique "uq_coupon_cust_order" {
-    columns = [column.tenant_id, column.coupon_id, column.customer_id, column.order_id]
+    columns = [column.coupon_id, column.customer_id, column.order_id]
   }
   index "idx_coupon_usages_lookup" {
     columns = [column.coupon_id, column.customer_id]
   }
-  index "idx_coupon_usages_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.coupon_usages ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_cu_coupon" {
-    columns     = [column.tenant_id, column.coupon_id]
-    ref_columns = [table.coupons.column.tenant_id, table.coupons.column.id]
+    columns     = [column.coupon_id]
+    ref_columns = [table.coupons.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_coupon_usages_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "price_rules" {
@@ -156,9 +148,7 @@ table "price_rules" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -225,7 +215,7 @@ table "price_rules" {
     columns = [column.id]
   }
   unique "uq_tenant_price_rule" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_price_rules_active" {
     columns = [column.is_active]
@@ -240,10 +230,8 @@ table "price_rules" {
   check "chk_entitled_len" {
     expr = "(entitled_ids IS NULL OR jsonb_array_length(entitled_ids) <= 5000)"
   }
-  index "idx_price_rules_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.price_rules ENABLE ROW LEVEL SECURITY
+
+
 }
 table "discount_codes" {
   schema = schema.storefront
@@ -251,9 +239,7 @@ table "discount_codes" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "price_rule_id" {
     type = uuid
   }
@@ -272,7 +258,7 @@ table "discount_codes" {
     columns = [column.id]
   }
   unique "discount_codes_code_unique" {
-    columns = [column.tenant_id, column.code]
+    columns = [column.code]
   }
   index "idx_discount_code" {
     columns = [column.code]
@@ -280,17 +266,15 @@ table "discount_codes" {
   check "chk_code_strict" {
     expr = "( code =upper(code) AND code ~ '^[A-Z0-9_-]+$')"
   }
-  index "idx_discount_codes_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.discount_codes ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_dc_price_rule" {
-    columns     = [column.tenant_id, column.price_rule_id]
-    ref_columns = [table.price_rules.column.tenant_id, table.price_rules.column.id]
+    columns     = [column.price_rule_id]
+    ref_columns = [table.price_rules.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_discount_codes_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "flash_sales" {
@@ -299,9 +283,7 @@ table "flash_sales" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -338,7 +320,7 @@ table "flash_sales" {
     columns = [column.id]
   }
   unique "uq_tenant_flash_sale" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_flash_sales_status" {
     columns = [column.status]
@@ -349,12 +331,10 @@ table "flash_sales" {
   check "chk_flash_time" {
     expr = "(end_time > starts_at)"
   }
-  index "idx_flash_sales_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.flash_sales ENABLE ROW LEVEL SECURITY
+
+
 }
 table "flash_sale_products" {
   schema = schema.storefront
@@ -362,9 +342,7 @@ table "flash_sale_products" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "flash_sale_id" {
     type = uuid
     null = true
@@ -399,6 +377,13 @@ table "flash_sale_products" {
   check "chk_flash_limit" {
     expr = "(sold_quantity <= quantity_limit)"
   }
+  // ELITE: Prevent product overlap in multiple flash sales
+  index "idx_flash_sale_product_overlap" {
+    type = "GIST"
+    on {
+      column = column.product_id
+    }
+  }
 
   // Strike 5: Prevent product overlap in multiple flash sales via denormalized range
   column "valid_during" {
@@ -407,17 +392,15 @@ table "flash_sale_products" {
   }
 
 
-  index "idx_flash_sale_products_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.flash_sale_products ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_fsp_flash_sale" {
-    columns     = [column.tenant_id, column.flash_sale_id]
-    ref_columns = [table.flash_sales.column.tenant_id, table.flash_sales.column.id]
+    columns     = [column.flash_sale_id]
+    ref_columns = [table.flash_sales.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_flash_sale_products_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "product_bundles" {
@@ -426,9 +409,7 @@ table "product_bundles" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -460,15 +441,13 @@ table "product_bundles" {
     columns = [column.id]
   }
   unique "uq_tenant_bundle" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   check "chk_bundle_discount_positive" {
     expr = "COALESCE((discount_value), 0) >= 0"
   }
-  index "idx_product_bundles_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.product_bundles ENABLE ROW LEVEL SECURITY
+
+
 }
 table "product_bundle_items" {
   schema = schema.storefront
@@ -476,9 +455,7 @@ table "product_bundle_items" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "bundle_id" {
     type = uuid
   }
@@ -495,17 +472,15 @@ table "product_bundle_items" {
   index "idx_bundle_items" {
     columns = [column.bundle_id]
   }
-  index "idx_product_bundle_items_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.product_bundle_items ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_pbi_bundle" {
-    columns     = [column.tenant_id, column.bundle_id]
-    ref_columns = [table.product_bundles.column.tenant_id, table.product_bundles.column.id]
+    columns     = [column.bundle_id]
+    ref_columns = [table.product_bundles.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_product_bundle_items_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "loyalty_rules" {
@@ -514,9 +489,7 @@ table "loyalty_rules" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "name" {
     type = varchar(100)
   }
@@ -558,14 +531,12 @@ table "loyalty_rules" {
   check "chk_loyalty_math" {
     expr = "points_per_currency > 0 AND min_redeem_points > 0"
   }
-  index "idx_loyalty_rules_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.loyalty_rules ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_loyalty_rules_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "wallet_transactions" {
@@ -574,9 +545,7 @@ table "wallet_transactions" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "customer_id" {
     type = uuid
   }
@@ -619,7 +588,7 @@ table "wallet_transactions" {
   }
   index "wallet_tx_idempotency" {
     unique  = true
-    columns = [column.tenant_id, column.idempotency_key]
+    columns = [column.idempotency_key]
     where   = "idempotency_key IS NOT NULL"
   }
   index "idx_wallet_customer" {
@@ -635,14 +604,12 @@ table "wallet_transactions" {
   check "wallet_non_negative_balance" {
     expr = "COALESCE((balance_after), 0) >= 0"
   }
-  index "idx_wallet_transactions_tenant" {
-    columns = [column.tenant_id]
-  }
+
   // Strike 27: Immutable Wallet Transactions
   // Trigger logic: Prevent Update/Delete on this table (Mandatory for financial audit)
-  // ALTER TABLE storefront.wallet_transactions ENABLE ROW LEVEL SECURITY
+
   unique "uq_tenant_wallet_transactions_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "affiliate_partners" {
@@ -651,9 +618,7 @@ table "affiliate_partners" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "customer_id" {
     type = uuid
   }
@@ -696,10 +661,10 @@ table "affiliate_partners" {
     columns = [column.id]
   }
   unique "uq_tenant_affiliate" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   unique "affiliate_partners_referral_code_unique" {
-    columns = [column.tenant_id, column.referral_code]
+    columns = [column.referral_code]
   }
   index "idx_affiliate_email_hash" {
     columns = [column.email_hash]
@@ -716,10 +681,8 @@ table "affiliate_partners" {
   check "chk_aff_rate_cap" {
     expr = "commission_rate >= 0 AND commission_rate <= 10000"
   }
-  index "idx_affiliate_partners_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.affiliate_partners ENABLE ROW LEVEL SECURITY
+
+
 }
 table "affiliate_transactions" {
   schema = schema.storefront
@@ -727,9 +690,7 @@ table "affiliate_transactions" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "partner_id" {
     type = uuid
   }
@@ -777,17 +738,15 @@ table "affiliate_transactions" {
   check "chk_aff_comm_positive" {
     expr = "COALESCE((commission_amount), 0) > 0"
   }
-  index "idx_affiliate_transactions_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.affiliate_transactions ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_afftx_partner" {
-    columns     = [column.tenant_id, column.partner_id]
-    ref_columns = [table.affiliate_partners.column.tenant_id, table.affiliate_partners.column.id]
+    columns     = [column.partner_id]
+    ref_columns = [table.affiliate_partners.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_affiliate_transactions_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 
@@ -799,9 +758,7 @@ table "staff_roles" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -824,12 +781,10 @@ table "staff_roles" {
     columns = [column.id]
   }
 
-  index "idx_staff_roles_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.staff_roles ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_staff_roles_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "staff_members" {
@@ -838,9 +793,7 @@ table "staff_members" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "user_id" {
     type = uuid
   }
@@ -905,7 +858,7 @@ table "staff_members" {
     columns = [column.id]
   }
   unique "uq_tenant_staff" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   index "idx_staff_user" {
     columns = [column.user_id]
@@ -923,10 +876,8 @@ table "staff_members" {
   check "chk_staff_2fa_s7" {
     expr = "(two_factor_secret IS NULL OR (jsonb_typeof(two_factor_secret) = 'object' AND two_factor_secret ? 'enc' AND two_factor_secret ? 'iv' AND two_factor_secret ? 'tag' AND two_factor_secret ? 'data'))"
   }
-  index "idx_staff_members_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.staff_members ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_sm_role" {
     columns     = [column.role_id]
     ref_columns = [table.staff_roles.column.id]
@@ -939,9 +890,7 @@ table "staff_sessions" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "staff_id" {
     type = uuid
   }
@@ -992,12 +941,10 @@ table "staff_sessions" {
     columns = [column.id]
   }
   unique "staff_sessions_token_hash_unique" {
-    columns = [column.tenant_id, column.token_hash]
-  }
-  index "idx_session_token" {
     columns = [column.token_hash]
-    type = "HASH"
   }
+  // AUDIT FIX: Redundant HASH index removed — UNIQUE constraint on token_hash already creates B-Tree index
+
   index "idx_session_active" {
     columns = [column.staff_id]
     where   = "revoked_at IS NULL"
@@ -1005,18 +952,15 @@ table "staff_sessions" {
   index "idx_session_revocation_lookup" {
     columns = [column.staff_id, column.device_fingerprint, column.revoked_at]
   }
-  foreign_key "fk_ss_tenant" {
-    columns     = [column.tenant_id]
-    ref_columns = [table.tenants.column.id]
-    on_delete = RESTRICT
-  }
+  // AUDIT FIX: Removed orphaned cross-schema reference fk_ss_tenant
+
   foreign_key "fk_ss_staff" {
-    columns     = [column.tenant_id, column.staff_id]
-    ref_columns = [table.staff_members.column.tenant_id, table.staff_members.column.id]
+    columns     = [column.staff_id]
+    ref_columns = [table.staff_members.column.id]
     on_delete = CASCADE
   }
   unique "uq_tenant_staff_sessions_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 
@@ -1028,9 +972,7 @@ table "app_installations" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "installed_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1075,7 +1017,7 @@ table "app_installations" {
     columns = [column.id]
   }
   unique "uq_tenant_app" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
   check "chk_app_key_s7" {
     expr = "(api_key IS NULL OR (jsonb_typeof(api_key) = 'object' AND api_key ? 'enc' AND api_key ? 'iv' AND api_key ? 'tag' AND api_key ? 'data'))"
@@ -1083,10 +1025,8 @@ table "app_installations" {
   check "chk_app_token_s7" {
     expr = "(access_token IS NULL OR (jsonb_typeof(access_token) = 'object' AND access_token ? 'enc' AND access_token ? 'iv' AND access_token ? 'tag' AND access_token ? 'data'))"
   }
-  index "idx_app_installations_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.app_installations ENABLE ROW LEVEL SECURITY
+
+
 }
 table "webhook_subscriptions" {
   schema = schema.storefront
@@ -1094,9 +1034,7 @@ table "webhook_subscriptions" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "app_id" {
     type = uuid
   }
@@ -1108,9 +1046,14 @@ table "webhook_subscriptions" {
     type = varchar(100)
   }
 
-  // SECURITY: App layer MUST block private/local IPs in target_url to prevent SSRF
   column "target_url" {
     type = text
+  }
+  check "chk_ssrf_protection" {
+    expr = "(target_url ~ '^https://(?!localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1]))')"
+  }
+  check "chk_url_length" {
+    expr = "(length(target_url) <= 2048)"
   }
 
   column "secret" {
@@ -1157,17 +1100,15 @@ table "webhook_subscriptions" {
   check "chk_url_length" {
     expr = "(length(target_url) <= 2048)"
   }
-  index "idx_webhook_subscriptions_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.webhook_subscriptions ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_ws_app" {
-    columns     = [column.tenant_id, column.app_id]
-    ref_columns = [table.app_installations.column.tenant_id, table.app_installations.column.id]
+    columns     = [column.app_id]
+    ref_columns = [table.app_installations.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_webhook_subscriptions_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 
@@ -1179,9 +1120,7 @@ table "pages" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1229,7 +1168,7 @@ table "pages" {
   }
   index "idx_pages_slug_active" {
     unique  = true
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
     where   = "deleted_at IS NULL"
   }
   index "idx_pages_published" {
@@ -1238,25 +1177,45 @@ table "pages" {
   check "chk_page_slug" {
     expr = "(slug ~ '^[a-z0-9-]+$')"
   }
-  index "idx_pages_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.pages ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_pages_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
+table "blog_categories" {
+  schema = schema.storefront
+  column "id" {
+    type    = uuid
+    default = sql("gen_random_uuid()")
+  }
+
+  column "name" {
+    type    = jsonb
+  }
+  column "slug" {
+    type = varchar(100)
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  unique "uq_tenant_blog_cat_slug" {
+    columns = [column.slug]
+  }
+  unique "uq_tenant_blog_categories_composite" {
+    columns = [column.id]
+  }
+}
+
 table "blog_posts" {
   schema = schema.storefront
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1288,8 +1247,8 @@ table "blog_posts" {
   column "slug" {
     type = varchar(255)
   }
-  column "category" {
-    type = varchar(100)
+  column "category_id" {
+    type = uuid
     null = true
   }
   column "author_name" {
@@ -1327,7 +1286,7 @@ table "blog_posts" {
   }
   index "idx_blog_slug_active" {
     unique  = true
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
     where   = "deleted_at IS NULL"
   }
   index "idx_blog_published" {
@@ -1340,14 +1299,17 @@ table "blog_posts" {
     columns = [column.tags]
     type = "GIN"
   }
-  index "idx_blog_posts_tenant" {
-    columns = [column.tenant_id]
-  }
 
 
-  // ALTER TABLE storefront.blog_posts ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_blog_posts_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
+  }
+  foreign_key "fk_bp_category" {
+    columns     = [column.category_id]
+    ref_columns = [table.blog_categories.column.id]
+    on_delete = SET_NULL
   }
 }
 table "legal_pages" {
@@ -1356,9 +1318,7 @@ table "legal_pages" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1392,11 +1352,9 @@ table "legal_pages" {
     columns = [column.id]
   }
   unique "uq_legal_page_type" {
-    columns = [column.tenant_id, column.page_type]
+    columns = [column.page_type]
   }
-  index "idx_legal_tenant" {
-    columns = [column.tenant_id]
-  }
+
   index "idx_legal_published" {
     columns = [column.is_published]
   }
@@ -1406,12 +1364,10 @@ table "legal_pages" {
   check "ck_legal_version_positive" {
     expr = "(version > 0)"
   }
-  index "idx_legal_pages_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.legal_pages ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_legal_pages_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "faq_categories" {
@@ -1420,9 +1376,7 @@ table "faq_categories" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "name" {
     type = varchar(100)
   }
@@ -1441,12 +1395,10 @@ table "faq_categories" {
   primary_key {
     columns = [column.id]
   }
-  index "idx_faq_categories_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.faq_categories ENABLE ROW LEVEL SECURITY
+
+
   unique "uq_tenant_faq_categories_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "faqs" {
@@ -1455,9 +1407,7 @@ table "faqs" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "category_id" {
     type = uuid
     null = true
@@ -1493,17 +1443,15 @@ table "faqs" {
   index "idx_faq_active" {
     columns = [column.is_active]
   }
-  index "idx_faqs_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.faqs ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_faq_category" {
     columns     = [column.category_id]
     ref_columns = [table.faq_categories.column.id]
     on_delete = SET_NULL
   }
   unique "uq_tenant_faqs_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "kb_categories" {
@@ -1512,9 +1460,7 @@ table "kb_categories" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "name" {
     type = varchar(255)
   }
@@ -1537,14 +1483,12 @@ table "kb_categories" {
     columns = [column.id]
   }
   unique "kb_categories_slug_unique" {
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
   }
-  index "idx_kb_categories_tenant" {
-    columns = [column.tenant_id]
-  }
+
   // ALTER TABLE storefront.kb_categories ENABLE ROW LEVEL SECURITY
   unique "uq_tenant_kb_categories_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "kb_articles" {
@@ -1553,9 +1497,7 @@ table "kb_articles" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "category_id" {
     type = uuid
     null = true
@@ -1589,22 +1531,20 @@ table "kb_articles" {
     columns = [column.id]
   }
   unique "kb_articles_slug_unique" {
-    columns = [column.tenant_id, column.slug]
+    columns = [column.slug]
   }
   index "idx_kb_article_slug" {
     columns = [column.slug]
   }
-  index "idx_kb_articles_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.kb_articles ENABLE ROW LEVEL SECURITY
+
+
   foreign_key "fk_kba_category" {
     columns     = [column.category_id]
     ref_columns = [table.kb_categories.column.id]
     on_delete = RESTRICT
   }
   unique "uq_tenant_kb_articles_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "banners" {
@@ -1613,9 +1553,7 @@ table "banners" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1650,14 +1588,12 @@ table "banners" {
   primary_key {
     columns = [column.id]
   }
-  index "idx_banners_tenant" {
-    columns = [column.tenant_id]
-  }
+
   index "idx_banners_active" {
     columns = [column.is_active, column.location]
   }
   unique "uq_tenant_banners_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "announcement_bars" {
@@ -1666,9 +1602,7 @@ table "announcement_bars" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1695,11 +1629,9 @@ table "announcement_bars" {
   primary_key {
     columns = [column.id]
   }
-  index "idx_announcements_tenant" {
-    columns = [column.tenant_id]
-  }
+
   unique "uq_tenant_announcement_bars_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "popups" {
@@ -1708,9 +1640,7 @@ table "popups" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "created_at" {
     type    = timestamptz
     default = sql("now()")
@@ -1732,11 +1662,9 @@ table "popups" {
   primary_key {
     columns = [column.id]
   }
-  index "idx_popups_tenant" {
-    columns = [column.tenant_id]
-  }
+
   unique "uq_tenant_popups_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 table "search_synonyms" {
@@ -1745,9 +1673,7 @@ table "search_synonyms" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "term" {
     type = varchar(100)
   }
@@ -1767,13 +1693,13 @@ table "search_synonyms" {
     columns = [column.id]
   }
   unique "search_synonyms_term_unique" {
-    columns = [column.tenant_id, column.term]
+    columns = [column.term]
   }
   check "chk_synonym_no_self_loop" {
     expr = "NOT (synonyms ? term)"
   }
   unique "uq_tenant_search_synonyms_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 
@@ -1784,9 +1710,7 @@ table "product_views" {
     type    = uuid
     default = sql("gen_random_uuid()")
   }
-  column "tenant_id" {
-    type = uuid
-  }
+
   column "product_id" {
     type = uuid
   }
@@ -1817,15 +1741,11 @@ table "product_views" {
   index "idx_pv_product" {
     columns = [column.product_id]
   }
-  index "idx_pv_tenant" {
-    columns = [column.tenant_id]
-  }
-  index "idx_product_views_tenant" {
-    columns = [column.tenant_id]
-  }
-  // ALTER TABLE storefront.product_views ENABLE ROW LEVEL SECURITY
+
+
+
   unique "uq_tenant_product_views_composite" {
-    columns = [column.tenant_id, column.id]
+    columns = [column.id]
   }
 }
 

@@ -6,12 +6,7 @@ dotenv.config({ path: resolve(__dirname, '..' + '/..' + '/.env') });
 
 export default {
   schema: [
-    './src/schema/global.ts',
-    './src/schema/storefront/*.ts',
-    './src/schema/v5-core.ts',
-    './src/schema/governance.ts',
-    './src/schema/tenant.ts',
-    './src/schema/vault.ts',
+    './drizzle/schema.ts',
   ],
   schemaFilter: ['public', 'storefront', 'governance', 'vault', 'shared'],
   // Risk #1: Enforce Single Source of Truth.

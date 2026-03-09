@@ -25,6 +25,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import { z } from 'zod';
 
 export interface ProvisioningOptions {
   subdomain: string;
@@ -65,6 +66,14 @@ export class ProvisioningService {
       throw new InternalServerErrorException(
         'Invalid deployment environment (S1 Violation)'
       );
+    }
+
+    // PROTOCOL DELTA-INJECTION: Strict Subdomain Validation
+    const SubdomainSchema = z.string().regex(/^[a-z0-9_-]+$/).min(3).max(50);
+    try {
+      SubdomainSchema.parse(options.subdomain);
+    } catch (e) {
+      throw new ConflictException(`Invalid subdomain format: ${options.subdomain}`);
     }
 
     // Track steps for rollback if needed

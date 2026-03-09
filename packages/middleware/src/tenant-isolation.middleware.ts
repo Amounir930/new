@@ -466,10 +466,4 @@ export class SuperAdminOrTenantGuard implements CanActivate {
   }
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: unknown;
-    }
-  }
-}
+
