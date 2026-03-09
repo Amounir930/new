@@ -377,13 +377,14 @@ table "flash_sale_products" {
   check "chk_flash_limit" {
     expr = "(sold_quantity <= quantity_limit)"
   }
-  // ELITE: Prevent product overlap in multiple flash sales
-  index "idx_flash_sale_product_overlap" {
-    type = "GIST"
-    on {
-      column = column.product_id
-    }
-  }
+#  // ELITE: Prevent product overlap in multiple flash sales
+#  index "idx_flash_sale_product_overlap" {
+#    type = "GIST"
+#    on {
+#      column = column.product_id
+#    }
+#  }
+
 
   // Strike 5: Prevent product overlap in multiple flash sales via denormalized range
   column "valid_during" {
@@ -1097,7 +1098,7 @@ table "webhook_subscriptions" {
   // Strike 08.5: SSRF Hardening (Regex on IPs is bypassable App Layer must resolve DNS and block private ranges)
 
   // ELITE PATCH: Prevent OOM on Webhook Worker via URL Overflow
-  check "chk_url_length" {
+  check "chk_webhook_url_limit" {
     expr = "(length(target_url) <= 2048)"
   }
 

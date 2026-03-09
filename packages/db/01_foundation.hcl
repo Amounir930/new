@@ -347,20 +347,9 @@ table "tenants" {
   }
 
   // ELITE: RLS POLICY CORE (Governance)
-  // Activated via SQL block for FORCE keyword support
+  // Activated via Post-Migration SQL for FORCE keyword support
 }
-sql "enable_rls_tenants" {
-  content = <<-SQL
-    ALTER TABLE governance.tenants ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE governance.tenants FORCE ROW LEVEL SECURITY;
-    DO $$ 
-    BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_policy WHERE polname = 'tenant_isolation_view') THEN
-        CREATE POLICY tenant_isolation_view ON governance.tenants USING (id = current_setting('app.current_tenant')::uuid);
-      END IF;
-    END $$;
-  SQL
-}
+
 table "audit_logs" {
   schema = schema.governance
   column "id" {
@@ -476,18 +465,7 @@ table "audit_logs" {
     columns = [column.tenant_id, column.id, column.created_at]
   }
 }
-sql "enable_rls_audit_logs" {
-  content = <<-SQL
-    ALTER TABLE governance.audit_logs ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE governance.audit_logs FORCE ROW LEVEL SECURITY;
-    DO $$ 
-    BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_policy WHERE polname = 'tenant_isolation_audit') THEN
-        CREATE POLICY tenant_isolation_audit ON governance.audit_logs USING (tenant_id = current_setting('app.current_tenant')::uuid);
-      END IF;
-    END $$;
-  SQL
-}
+
 table "leads" {
   schema = schema.governance
   column "id" {

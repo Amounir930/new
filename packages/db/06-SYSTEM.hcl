@@ -141,6 +141,7 @@ table "markets" {
   }
   index "uq_tenant_primary_market" {
     unique  = true
+    columns = [column.id]
     where   = "is_primary =true"
   }
 
@@ -192,21 +193,22 @@ table "price_lists" {
 
 
   // ELITE: Prevent overlapping quantity ranges for same product/variant/market
-  index "idx_price_list_overlap" {
-    type = "GIST"
-    on {
-      column = column.product_id
-    }
-    on {
-      column = column.variant_id
-    }
-    on {
-      column = column.market_id
-    }
-    on {
-      column = column.quantity_range
-    }
-  }
+#  index "idx_price_list_overlap" {
+#    type = "GIST"
+#    on {
+#      column = column.product_id
+#    }
+#    on {
+#      column = column.variant_id
+#    }
+#    on {
+#      column = column.market_id
+#    }
+#    on {
+#      column = column.quantity_range
+#    }
+#  }
+
 
   // Strike 04: Cross-Tenant Pricing Fix (Composite FK)
   foreign_key "fk_pl_market" {

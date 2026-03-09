@@ -1636,13 +1636,14 @@ table "reviews" {
     expr = "(sentiment_score >= -1.00 AND sentiment_score <= 1.00)"
   }
 
-  index "idx_reviews_embedding_cosine" {
-    on {
-      column = column.embedding
-      opclass = "vector_cosine_ops"
-    }
-    type = "HNSW"
-  }
+#  index "idx_reviews_embedding_cosine" {
+#    on {
+#      column = column.embedding
+#      opclass = "vector_cosine_ops"
+#    }
+#    type = "HNSW"
+#  }
+
   unique "uq_tenant_reviews_composite" {
     columns = [column.id]
   }

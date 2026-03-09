@@ -398,13 +398,14 @@ table "products" {
   index "idx_products_brand" {
     columns = [column.brand_id]
   }
-  index "idx_products_embedding_cosine" {
-    on {
-      column = column.embedding
-      opclass = "vector_cosine_ops"
-    }
-    type = "HNSW"
-  }
+#  index "idx_products_embedding_cosine" {
+#    on {
+#      column = column.embedding
+#      opclass = "vector_cosine_ops"
+#    }
+#    type = "HNSW"
+#  }
+
 
   // Strike 18: Digital/Shipping Logic Consistency
   check "chk_digital_shipping" {
@@ -505,13 +506,14 @@ table "product_variants" {
   index "idx_variants_product" {
     columns = [column.product_id]
   }
-  index "idx_variants_embedding_cosine" {
-    on {
-      column = column.embedding
-      opclass = "vector_cosine_ops"
-    }
-    type = "HNSW"
-  }
+#  index "idx_variants_embedding_cosine" {
+#    on {
+#      column = column.embedding
+#      opclass = "vector_cosine_ops"
+#    }
+#    type = "HNSW"
+#  }
+
   check "chk_variant_options_obj" {
     expr = "jsonb_typeof(options) = 'object'"
   }
@@ -1434,19 +1436,20 @@ table "b2b_pricing_tiers" {
   primary_key {
     columns = [column.id]
   }
-  // ELITE: Prevent overlapping quantity ranges for same product/variant/market
-  index "idx_b2b_pricing_overlap" {
-    type = "GIST"
-    on {
-      column = column.company_id
-    }
-    on {
-      column = column.product_id
-    }
-    on {
-      column = column.quantity_range
-    }
-  }
+#  // ELITE: Prevent overlapping quantity ranges for same product/variant/market
+#  index "idx_b2b_pricing_overlap" {
+#    type = "GIST"
+#    on {
+#      column = column.company_id
+#    }
+#    on {
+#      column = column.product_id
+#    }
+#    on {
+#      column = column.quantity_range
+#    }
+#  }
+
 
   index "idx_b2b_pricing" {
     columns = [column.company_id, column.product_id]

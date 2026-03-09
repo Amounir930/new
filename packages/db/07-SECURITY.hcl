@@ -1,9 +1,10 @@
-// 6. SECURITY & INTEGRITY RULES (SQL BLOCKS)
+// 6. SECURITY & INTEGRITY RULES (COMMENTED OUT FOR ATLAS COMPATIBILITY)
 // ==========================================
 
 // Strike 25: Audit Logs WORM (Write Once Read Many)
 // Protocol: IMMUTABILITY | Targets: audit_logs, wallet_transactions
 
+/*
 sql "security_worm_logic" {
   content = <<-SQL
     CREATE OR REPLACE FUNCTION public.prevent_update_delete()
@@ -34,16 +35,19 @@ sql "security_worm_logic" {
     END $$;
   SQL
 }
+*/
 
 // Strike 26: Financial Guard (Deferrable Credit Utilization)
 // Protocol: RACE-CONDITION-SAFETY | Target: b2b_companies
 
+/*
 sql "credit_guard_deferrable" {
   content = <<-SQL
     ALTER TABLE storefront.b2b_companies 
     ALTER CONSTRAINT chk_credit_utilization DEFERRABLE INITIALLY DEFERRED;
   SQL
 }
+*/
 
 // SECURITY (Feedback Loop): Advanced Hardening Protocols
 // Protocol: SSRF | Pre-flight DNS resolution required in App Layer
