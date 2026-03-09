@@ -1050,7 +1050,7 @@ table "webhook_subscriptions" {
     type = text
   }
   check "chk_ssrf_protection" {
-    expr = "(target_url ~ '^https://(?!localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1]))')"
+    expr = "(target_url ~ '^https://(?!localhost|127\\\\.|10\\\\.|192\\\\.168\\\\.|172\\\\.(1[6-9]|2[0-9]|3[0-1]))')"
   }
   check "chk_url_length" {
     expr = "(length(target_url) <= 2048)"
