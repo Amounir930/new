@@ -67,6 +67,7 @@ export async function runTenantMigrations(
       ATLAS_DB_URL: dbUrl,
       HOME: '/tmp', // Redirect home/cache to writable /tmp (Item 54)
       XDG_CACHE_HOME: '/tmp/.cache',
+      // ATLAS_NO_UPDATE_CHECK: 'true', // Optional: disable update check to save cache space
     };
 
     // Use execFile to prevent shell interpolation/injection
@@ -76,10 +77,14 @@ export async function runTenantMigrations(
         'schema',
         'apply',
         '--url',
-        'env://ATLAS_DB_URL',
+        dbUrl, // Pass URL directly to avoid env:// environment selection requirement
         '--to',
         `file://${hclPath}`,
         '--auto-approve',
+        '--schema',
+        'storefront', // Limit to storefront schema definitions
+        '--schema-map',
+        `storefront=${schemaName}`, // Map 'storefront' in HCL to the actual tenant schema
       ],
       { env: atlasEnv }
     );
