@@ -16,7 +16,8 @@ import {
   type TenantContext,
   tenantStorage,
 } from './connection-context';
-import type { TenantCacheService } from './tenant-cache.service';
+// biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
+import { TenantCacheService } from './tenant-cache.service';
 
 export interface AuditService {
   log(data: {
