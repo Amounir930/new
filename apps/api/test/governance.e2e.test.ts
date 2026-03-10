@@ -13,7 +13,7 @@ process.env['DATABASE_URL'] =
   'postgresql://apex:ApexV2DBPassSecure2026GrowthScale!QazXswEdCv@localhost:5432/apex_v2';
 
 import type { RedisRateLimitStore } from '@apex/middleware';
-import { type Mocked, MockFactory } from '@apex/test-utils';
+import type { Mocked } from '@apex/test-utils';
 import { GovernanceService } from '../src/governance/governance.service';
 
 // Mock dependencies for GovernanceService
