@@ -39,7 +39,7 @@ export class CatalogModule implements SeederModule {
                 ${JSON.stringify({ ar: c.title, en: c.title })}, 
                 ${c.description ? JSON.stringify({ ar: c.description, en: c.description }) : null}, 
                 ${c.image || null}, true)
-        ON CONFLICT DO NOTHING
+        ON CONFLICT ("id") DO NOTHING
       `);
     }
   }
@@ -59,7 +59,7 @@ export class CatalogModule implements SeederModule {
                 ${String(p.basePrice || p.price || '0')}, 
                 ${p.image || (p.images?.[0]) || ''}, 
                 ${p.categoryId || null}, true)
-        ON CONFLICT DO NOTHING
+        ON CONFLICT ("id") DO NOTHING
       `);
     }
   }
@@ -71,7 +71,7 @@ export class CatalogModule implements SeederModule {
         VALUES (${b.id}, ${b.location || 'home_top'}, ${b.imageUrl}, ${b.link || null}, 
                 ${b.title ? JSON.stringify({ ar: b.title, en: b.title }) : null}, 
                 ${b.isActive !== false}, ${b.sortOrder || 0})
-        ON CONFLICT DO NOTHING
+        ON CONFLICT ("id") DO NOTHING
       `);
     }
   }
