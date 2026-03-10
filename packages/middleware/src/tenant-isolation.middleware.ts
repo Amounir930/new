@@ -137,6 +137,12 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
       // 2. Bypass & Maintenance Guards
       if (this.isBypassRoute(currentPath)) return next();
+      
+      // S21/Super-#21: Emergency Bypass for Administrative routes on Root Context
+      if (currentPath.includes('/blueprints') || currentPath.includes('/tenants') || currentPath.includes('/governance')) {
+        return this.handleSystemContext(identifier, req, res, next);
+      }
+
       if (await this.handleMaintenanceMode(req, res)) return;
 
       // 3. Webhook Tenant Resolution Override
@@ -228,7 +234,12 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   }
 
   private isBypassRoute(path: string): boolean {
-    const bypassRoutes = ['/health', '/api/v1/auth/login', '/api/blueprints', '/favicon.ico'];
+    const bypassRoutes = [
+      '/health',
+      '/api/v1/auth/login',
+      '/api/blueprints',
+      '/favicon.ico',
+    ];
     return bypassRoutes.some(
       (route) => path === route || path.startsWith(`${route}/`)
     );
