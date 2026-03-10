@@ -67,6 +67,8 @@ export async function runTenantMigrations(
       ATLAS_DB_URL: dbUrl,
       HOME: '/tmp', // Redirect home/cache to writable /tmp (Item 54)
       XDG_CACHE_HOME: '/tmp/.cache',
+      ATLAS_CACHE: '/tmp/.atlas-cache', // Hardened cache redirection
+      ATLAS_CONFIG: '/tmp/.atlas-config',
       // ATLAS_NO_UPDATE_CHECK: 'true', // Optional: disable update check to save cache space
     };
 
