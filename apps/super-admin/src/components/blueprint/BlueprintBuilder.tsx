@@ -295,7 +295,7 @@ export function BlueprintBuilder() {
         uiConfig: {},
       };
 
-      await apiFetch('/v1/admin/blueprints', {
+      await apiFetch('/v1/blueprints', {
         method: 'POST',
         body: JSON.stringify(payload),
       });

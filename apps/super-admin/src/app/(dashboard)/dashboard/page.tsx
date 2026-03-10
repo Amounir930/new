@@ -38,8 +38,8 @@ export default function SuperAdminDashboard() {
     setLoading(true);
     try {
       const [stats, health] = await Promise.all([
-        apiFetch<PlatformStats>('/v1/admin/governance/stats'),
-        apiFetch<InfraHealthNode[]>('/v1/admin/governance/health'),
+        apiFetch<PlatformStats>('/v1/governance/stats'),
+        apiFetch<InfraHealthNode[]>('/v1/governance/health'),
       ]);
       setStatsData(stats);
       setHealthData(health);

@@ -92,7 +92,7 @@ export function TenantGovernanceModal({
       try {
         setLoading(true);
         const data = await apiFetch<Record<string, FeatureState>>(
-          `/v1/admin/tenants/${tenantId}/features`
+          `/v1/tenants/${tenantId}/features`
         );
         setFeatures(data);
       } catch (e: unknown) {
@@ -110,7 +110,7 @@ export function TenantGovernanceModal({
     try {
       setSaving(key);
       const newState = !currentState;
-      await apiFetch(`/v1/admin/tenants/${tenantId}/features/${key}`, {
+      await apiFetch(`/v1/tenants/${tenantId}/features/${key}`, {
         method: 'PATCH',
         body: JSON.stringify({ isEnabled: newState }),
       });

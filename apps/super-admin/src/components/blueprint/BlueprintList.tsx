@@ -31,7 +31,7 @@ export function BlueprintList() {
   const fetchBlueprints = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiFetch<Blueprint[]>('/v1/admin/blueprints');
+      const data = await apiFetch<Blueprint[]>('/v1/blueprints');
       setBlueprints(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -48,7 +48,7 @@ export function BlueprintList() {
     // eslint-ignore no-restricted-globals
     if (!confirm('Are you sure you want to delete this blueprint?')) return;
     try {
-      await apiFetch(`/v1/admin/blueprints/${id}`, { method: 'DELETE' });
+      await apiFetch(`/v1/blueprints/${id}`, { method: 'DELETE' });
       fetchBlueprints();
       fetchBlueprints();
     } catch (e: unknown) {

@@ -32,7 +32,7 @@ export default function BlueprintsPage() {
   const fetchBlueprints = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiFetch<Blueprint[]>('/v1/admin/blueprints');
+      const data = await apiFetch<Blueprint[]>('/v1/blueprints');
       setBlueprints(data);
     } catch (_error) {
       /* 'Failed to fetch blueprints:', error */

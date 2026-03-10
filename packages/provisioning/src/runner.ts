@@ -65,6 +65,8 @@ export async function runTenantMigrations(
     const atlasEnv = {
       ...process.env,
       ATLAS_DB_URL: dbUrl,
+      HOME: '/tmp', // Redirect home/cache to writable /tmp (Item 54)
+      XDG_CACHE_HOME: '/tmp/.cache',
     };
 
     // Use execFile to prevent shell interpolation/injection

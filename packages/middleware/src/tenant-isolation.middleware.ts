@@ -125,6 +125,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   constructor(private readonly cache: TenantCacheService) {}
 
   async use(req: TenantRequest, res: Response, next: NextFunction) {
+    const currentPath = req.originalUrl || req.path || '';
+
     try {
       const identifier = this.extractTenantIdentifier(req);
 
@@ -133,13 +135,15 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         return this.handleSystemContext(identifier, req, res, next);
       }
 
-      const currentPath = req.originalUrl || req.path || '';
-
       // 2. Bypass & Maintenance Guards
       if (this.isBypassRoute(currentPath)) return next();
-      
+
       // S21/Super-#21: Emergency Bypass for Administrative routes on Root Context
-      if (currentPath.includes('/blueprints') || currentPath.includes('/tenants') || currentPath.includes('/governance')) {
+      if (
+        currentPath.includes('/blueprints') ||
+        currentPath.includes('/tenants') ||
+        currentPath.includes('/governance')
+      ) {
         return this.handleSystemContext(identifier, req, res, next);
       }
 
@@ -205,6 +209,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       'git',
       'admin',
       'mail',
+      'localhost',
+      '127.0.0.1',
     ];
     return systemSubdomains.includes(subdomain.toLowerCase());
   }
