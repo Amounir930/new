@@ -228,7 +228,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   }
 
   private isBypassRoute(path: string): boolean {
-    const bypassRoutes = ['/health', '/api/v1/auth/login', '/favicon.ico'];
+    const bypassRoutes = ['/health', '/api/v1/auth/login', '/api/blueprints', '/favicon.ico'];
     return bypassRoutes.some(
       (route) => path === route || path.startsWith(`${route}/`)
     );
