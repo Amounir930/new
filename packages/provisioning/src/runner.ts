@@ -83,7 +83,7 @@ export async function runTenantMigrations(
         '--to',
         `file://${hclPath}`,
         '--dev-url',
-        'docker://postgres/16/dev', // S2: Use docker-dev for schema validation
+        `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=disable&search_path=atlas_dev`, 
         '--auto-approve',
       ],
       { env: atlasEnv }
