@@ -64,7 +64,6 @@ export class ProductsController {
       },
       longDescription: { ar: body.descriptionAr, en: body.descriptionEn },
       taxBasisPoints: Math.round((body.taxPercentage || 0) * 100),
-      tenantId,
       basePrice: String(body.basePrice),
       salePrice: body.salePrice ? String(body.salePrice) : null,
     };

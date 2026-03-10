@@ -3,7 +3,7 @@
  * Verifies REST API endpoints and authorization
  */
 
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import type { AuditService } from '@apex/audit';
 import { type Mocked, MockFactory } from '@apex/test-utils';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';

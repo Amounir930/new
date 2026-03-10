@@ -99,26 +99,29 @@ export class QuotaInterceptor implements NestInterceptor {
     let max = 0;
     let current = 0;
 
+    // S2/S21 Protocol: Use tenant-scoped executor for storefront tables
+    const tenantDb = request.tenantContext?.executor;
+    if (!tenantDb) {
+      throw new ForbiddenException('Tenant database context not available');
+    }
+
     if (resource === 'products') {
       max = quotaData.overrideMaxProducts ?? quotaData.planMaxProducts;
-      const [usageResult] = await adminDb
+      const [usageResult] = await tenantDb
         .select({ count: count() })
-        .from(productsInStorefront)
-        .where(eq(productsInStorefront.tenantId, tenantId));
+        .from(productsInStorefront);
       current = usageResult?.count ?? 0;
     } else if (resource === 'orders') {
       max = quotaData.overrideMaxOrders ?? quotaData.planMaxOrders;
-      const [usageResult] = await adminDb
+      const [usageResult] = await tenantDb
         .select({ count: count() })
-        .from(ordersInStorefront)
-        .where(eq(ordersInStorefront.tenantId, tenantId));
+        .from(ordersInStorefront);
       current = usageResult?.count ?? 0;
     } else if (resource === 'staff') {
       max = quotaData.overrideMaxStaff ?? quotaData.planMaxStaff;
-      const [usageResult] = await adminDb
+      const [usageResult] = await tenantDb
         .select({ count: count() })
-        .from(staffMembersInStorefront)
-        .where(eq(staffMembersInStorefront.tenantId, tenantId));
+        .from(staffMembersInStorefront);
       current = usageResult?.count ?? 0;
     }
 

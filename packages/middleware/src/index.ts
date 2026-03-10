@@ -74,6 +74,7 @@ export {
   securityHeaders,
 } from './security';
 export { SecurityService } from './security.service';
+export { TenantCacheService } from './tenant-cache.service';
 // S2: Tenant Isolation Middleware
 export {
   type AuthenticatedUser,
@@ -82,7 +83,6 @@ export {
   type TenantRequest,
   TenantScopedGuard,
 } from './tenant-isolation.middleware';
-export { TenantCacheService } from './tenant-cache.service';
 export {
   extractTenantFromHeader,
   extractTenantFromHost,

@@ -128,18 +128,38 @@ export interface MinioMock {
   presignedGetObject: Mock<
     (_bucket: string, _name: string, _expiry?: number) => Promise<string>
   >;
-  removeObject: Mock<(_bucket: string, _name: string, _options?: { versionId?: string }) => Promise<void>>;
+  removeObject: Mock<
+    (
+      _bucket: string,
+      _name: string,
+      _options?: { versionId?: string }
+    ) => Promise<void>
+  >;
   listObjectVersions: Mock<
-    (_bucket: string, _prefix?: string, _recursive?: boolean) => {
+    (
+      _bucket: string,
+      _prefix?: string,
+      _recursive?: boolean
+    ) => {
       [Symbol.asyncIterator]: () => AsyncGenerator<unknown, void, unknown>;
     }
   >;
   listIncompleteUploads: Mock<
-    (_bucket: string, _prefix?: string, _recursive?: boolean) => {
-      [Symbol.asyncIterator]: () => AsyncGenerator<{ key: string }, void, unknown>;
+    (
+      _bucket: string,
+      _prefix?: string,
+      _recursive?: boolean
+    ) => {
+      [Symbol.asyncIterator]: () => AsyncGenerator<
+        { key: string },
+        void,
+        unknown
+      >;
     }
   >;
-  removeIncompleteUpload: Mock<(_bucket: string, _name: string) => Promise<void>>;
+  removeIncompleteUpload: Mock<
+    (_bucket: string, _name: string) => Promise<void>
+  >;
 }
 
 /**
@@ -376,18 +396,27 @@ export class MockFactory {
         (_bucket: string, _name: string, _expiry?: number) =>
           Promise.resolve('http://mock-url')
       ),
-      removeObject: mock((_bucket: string, _name: string, _options?: { versionId?: string }) => Promise.resolve()),
-      listObjectVersions: mock((_bucket: string, _prefix?: string, _recursive?: boolean) => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield* [];
-        },
-      })),
-      listIncompleteUploads: mock((_bucket: string, _prefix?: string, _recursive?: boolean) => ({
-        [Symbol.asyncIterator]: async function* () {
-          yield* [];
-        },
-      })),
-      removeIncompleteUpload: mock((_bucket: string, _name: string) => Promise.resolve()),
+      removeObject: mock(
+        (_bucket: string, _name: string, _options?: { versionId?: string }) =>
+          Promise.resolve()
+      ),
+      listObjectVersions: mock(
+        (_bucket: string, _prefix?: string, _recursive?: boolean) => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield* [];
+          },
+        })
+      ),
+      listIncompleteUploads: mock(
+        (_bucket: string, _prefix?: string, _recursive?: boolean) => ({
+          [Symbol.asyncIterator]: async function* () {
+            yield* [];
+          },
+        })
+      ),
+      removeIncompleteUpload: mock((_bucket: string, _name: string) =>
+        Promise.resolve()
+      ),
     };
     return minioMock;
   }

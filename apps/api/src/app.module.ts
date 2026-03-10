@@ -14,8 +14,8 @@ import {
   GovernanceGuard,
   QuotaInterceptor,
   RateLimitModule,
-  TenantIsolationMiddleware,
   TenantCacheService,
+  TenantIsolationMiddleware,
 } from '@apex/middleware';
 import {
   type MiddlewareConsumer,

@@ -5,9 +5,7 @@ import type { Config } from 'drizzle-kit';
 dotenv.config({ path: resolve(__dirname, '..' + '/..' + '/.env') });
 
 export default {
-  schema: [
-    './drizzle/schema.ts',
-  ],
+  schema: ['./drizzle/schema.ts'],
   schemaFilter: ['public', 'storefront', 'governance', 'vault', 'shared'],
   // Risk #1: Enforce Single Source of Truth.
   // Keep ORM from managing tables defined in raw SQL baseline.

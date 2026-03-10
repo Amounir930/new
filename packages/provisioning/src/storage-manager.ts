@@ -212,56 +212,18 @@ export async function deleteStorageBucket(
 
   try {
     if (force) {
-      // S15 FIX: Comprehensive bucket clearing
-      // Protocol S2: Ensure full cleanup before bucket removal
-
-      logger.info(`Force-clearing bucket: ${bucketName} (removing all versions, markers, and uploads)...`);
-
-      // 1. Remove all object versions and delete markers
-      // S21: Use custom interface to expose methods missing in specific SDK versions
-      interface MinioExtendedClient extends Minio.Client {
-        listObjectVersions(bucket: string, prefix: string, recursive: boolean): any;
-        listIncompleteUploads(bucket: string, prefix: string, recursive: boolean): any;
-      }
-      const extendedClient = client as MinioExtendedClient;
-      
-      const versionStream = extendedClient.listObjectVersions(bucketName, '', true);
-
-      let vCount = 0;
-      for await (const obj of versionStream) {
-        if (obj.name) {
-          vCount++;
-          await client.removeObject(bucketName, obj.name, {
-            versionId: (obj as { versionId?: string }).versionId,
-          });
-        }
-      }
-      logger.info(`Force-cleared ${vCount} objects/versions/markers from ${bucketName}`);
-
-      // 2. Remove all incomplete multipart uploads
-      // MinIO SDK listIncompleteUploads returns a stream
-      const uploadStream = extendedClient.listIncompleteUploads(bucketName, '', true);
-      let uCount = 0;
-      for await (const upload of uploadStream) {
-        if (upload.key) {
-          uCount++;
-          await client.removeIncompleteUpload(bucketName, upload.key);
-        }
-      }
-      if (uCount > 0) {
-        logger.info(`Force-cleared ${uCount} incomplete multipart uploads from ${bucketName}`);
-      }
+      await forceClearBucket(client, bucketName);
     }
 
     try {
       await client.removeBucket(bucketName);
     } catch (error) {
-       // S5 Protocol: Enhanced error masking with context
-       logger.error(`Bucket is NOT empty after force-clear attempt`, { 
-         bucketName, 
-         error 
-       });
-       throw error;
+      // S5 Protocol: Enhanced error masking with context
+      logger.error(`Bucket is NOT empty after force-clear attempt`, {
+        bucketName,
+        error,
+      });
+      throw error;
     }
     logger.info(`Bucket deleted: ${bucketName}`);
     return true;
@@ -336,6 +298,80 @@ export async function deleteObject(
   }
 }
 
+/**
+ * Force-clears all objects, versions, markers, and uploads from a bucket
+ */
+async function forceClearBucket(
+  client: Minio.Client,
+  bucketName: string
+): Promise<void> {
+  logger.info(
+    `Force-clearing bucket: ${bucketName} (removing all versions, markers, and uploads)...`
+  );
+
+  // Extend client to access semi-private methods not in all SDK typings
+  interface MinioExtendedClient extends Minio.Client {
+    listObjectVersions(bucket: string, prefix: string, recursive: boolean): any;
+    listIncompleteUploads(
+      bucket: string,
+      prefix: string,
+      recursive: boolean
+    ): any;
+  }
+  const extendedClient = client as unknown as MinioExtendedClient;
+
+  // 1. Remove all object versions and delete markers
+  try {
+    const versionStream = extendedClient.listObjectVersions(
+      bucketName,
+      '',
+      true
+    );
+    let vCount = 0;
+    for await (const obj of versionStream) {
+      if (obj.name) {
+        vCount++;
+        await client.removeObject(bucketName, obj.name, {
+          versionId: (obj as { versionId?: string }).versionId,
+        });
+      }
+    }
+    if (vCount > 0) {
+      logger.info(
+        `Force-cleared ${vCount} objects/versions from ${bucketName}`
+      );
+    }
+  } catch (err) {
+    logger.error('Error clearing object versions', { bucketName, error: err });
+  }
+
+  // 2. Remove all incomplete multipart uploads
+  try {
+    const uploadStream = extendedClient.listIncompleteUploads(
+      bucketName,
+      '',
+      true
+    );
+    let uCount = 0;
+    for await (const upload of uploadStream) {
+      if (upload.key) {
+        uCount++;
+        await client.removeIncompleteUpload(bucketName, upload.key);
+      }
+    }
+    if (uCount > 0) {
+      logger.info(
+        `Force-cleared ${uCount} incomplete uploads from ${bucketName}`
+      );
+    }
+  } catch (err) {
+    logger.error('Error clearing incomplete uploads', {
+      bucketName,
+      error: err,
+    });
+  }
+}
+
 export async function getStorageStats(
   subdomain: string
 ): Promise<StorageStats> {
@@ -353,7 +389,10 @@ export async function getStorageStats(
       // MinIO might return Tag[] or Tags record depending on version/overload
       const tags = Array.isArray(tagsResult)
         ? tagsResult.reduce(
-            (acc, t) => ({ ...acc, [t.Key]: t.Value }),
+            (acc, t) => {
+              acc[t.Key] = t.Value;
+              return acc;
+            },
             {} as Record<string, string>
           )
         : tagsResult;

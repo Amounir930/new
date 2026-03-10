@@ -68,7 +68,7 @@ export async function seedTenantData(
     await tenantScopedAdminDb.transaction(async (tx) => {
       // S2/Auth-04: Ensure the transaction also knows about the tenant context for RLS-protected tables
       await tx.execute(
-        sql`SELECT set_config('app.current_tenant', ${storeId}, true)`
+        sql`SELECT set_config('app.current_tenant_id', ${storeId}, true)`
       );
 
       await executor.execute(
@@ -91,8 +91,10 @@ export async function seedTenantData(
       );
     });
 
-    // S2/Auth-04: Set current_tenant before verification query to bypass RLS
-    await client.query(`SELECT set_config('app.current_tenant', $1, true)`, [storeId]);
+    // S2/Auth-04: Set current_tenant_id before verification query to bypass RLS in Governance
+    await client.query(`SELECT set_config('app.current_tenant_id', $1, true)`, [
+      storeId,
+    ]);
 
     const { staffMembersInStorefront } = await import('@apex/db');
     const firstUser = await tenantScopedAdminDb
@@ -101,7 +103,9 @@ export async function seedTenantData(
       .limit(1);
 
     if (!firstUser || firstUser.length === 0) {
-      throw new Error('CoreModule failed to create Admin User - Record not found in storefront schema.');
+      throw new Error(
+        'CoreModule failed to create Admin User - Record not found in storefront schema.'
+      );
     }
 
     return {

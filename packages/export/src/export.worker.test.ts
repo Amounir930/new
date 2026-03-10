@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test';
 import type { AuditService } from '@apex/audit';
 import type { ConfigService } from '@apex/config';
 import { type Mocked, MockFactory } from '@apex/test-utils';
-import { type Job, Queue } from 'bullmq';
+import type { Job } from 'bullmq';
 import { ExportWorker } from './export.worker';
 import type { ExportStrategyFactory } from './export-strategy.factory';
 import type { ExportManifest, ExportResult, ExportStrategy } from './types';

@@ -309,7 +309,7 @@ export class StorefrontService {
       return await db.transaction(async (dbTx) => {
         return await dbTx
           .insert(newsletterSubscribersInStorefront)
-          .values({ email: encryptedEmail, tenantId: _tenantId })
+          .values({ email: encryptedEmail })
           .onConflictDoUpdate({
             target: newsletterSubscribersInStorefront.email,
             set: { isActive: true },

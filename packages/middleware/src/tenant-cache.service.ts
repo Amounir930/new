@@ -1,4 +1,4 @@
-import { ConfigService, env } from '@apex/config';
+import { env } from '@apex/config';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 import type { TenantContext } from './connection-context';
@@ -23,14 +23,16 @@ export class TenantCacheService implements OnModuleInit {
     }
   }
 
-  async getTenant(identifier: string): Promise<Omit<TenantContext, 'executor'> | null> {
+  async getTenant(
+    identifier: string
+  ): Promise<Omit<TenantContext, 'executor'> | null> {
     if (!this.redis.isOpen) return null;
-    
+
     const key = `tenant:cache:${identifier.toLowerCase()}`;
     const data = await this.redis.get(key);
-    
+
     if (!data) return null;
-    
+
     try {
       return JSON.parse(data);
     } catch {
@@ -38,9 +40,12 @@ export class TenantCacheService implements OnModuleInit {
     }
   }
 
-  async setTenant(identifier: string, context: Omit<TenantContext, 'executor'>): Promise<void> {
+  async setTenant(
+    identifier: string,
+    context: Omit<TenantContext, 'executor'>
+  ): Promise<void> {
     if (!this.redis.isOpen) return;
-    
+
     const key = `tenant:cache:${identifier.toLowerCase()}`;
     await this.redis.set(key, JSON.stringify(context), {
       EX: this.CACHE_TTL,

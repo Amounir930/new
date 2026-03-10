@@ -69,11 +69,17 @@ export class ProvisioningService {
     }
 
     // PROTOCOL DELTA-INJECTION: Strict Subdomain Validation
-    const SubdomainSchema = z.string().regex(/^[a-z0-9_-]+$/).min(3).max(50);
+    const SubdomainSchema = z
+      .string()
+      .regex(/^[a-z0-9_-]+$/)
+      .min(3)
+      .max(50);
     try {
       SubdomainSchema.parse(options.subdomain);
-    } catch (e) {
-      throw new ConflictException(`Invalid subdomain format: ${options.subdomain}`);
+    } catch (_e) {
+      throw new ConflictException(
+        `Invalid subdomain format: ${options.subdomain}`
+      );
     }
 
     // Track steps for rollback if needed

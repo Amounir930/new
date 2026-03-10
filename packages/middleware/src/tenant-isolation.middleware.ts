@@ -16,8 +16,7 @@ import {
   type TenantContext,
   tenantStorage,
 } from './connection-context';
-import { TenantCacheService } from './tenant-cache.service';
-import { Inject } from '@nestjs/common';
+import type { TenantCacheService } from './tenant-cache.service';
 
 export interface AuditService {
   log(data: {
@@ -122,76 +121,69 @@ async function validateTenant(
 
 @Injectable()
 export class TenantIsolationMiddleware implements NestMiddleware {
-  constructor(
-    @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
-    private readonly cache: TenantCacheService
-  ) {}
+  constructor(private readonly cache: TenantCacheService) {}
 
   async use(req: TenantRequest, res: Response, next: NextFunction) {
     try {
-      const rawHost = req.headers.host || '';
-      const cleanHost = rawHost.split(':')[0];
-      const xTenantId = req.headers['x-tenant-id'] as string;
-      const isInternal =
-        req.headers['x-internal-secret'] === env.INTERNAL_API_SECRET;
-
-      const subdomain = extractSubdomain(cleanHost);
-      let identifier = subdomain || cleanHost;
-
-      if (xTenantId && isInternal) {
-        identifier = xTenantId;
-      }
+      const identifier = this.extractTenantIdentifier(req);
 
       // 1. System/Root Context Check
-      if (this.isSystemRequest(subdomain)) {
-        return this.handleSystemContext(subdomain, req, res, next);
+      if (this.isSystemRequest(identifier)) {
+        return this.handleSystemContext(identifier, req, res, next);
       }
 
       const currentPath = req.originalUrl || req.path || '';
 
-      // 2. Bypass Routes
-      if (this.isBypassRoute(currentPath)) {
-        return next();
-      }
+      // 2. Bypass & Maintenance Guards
+      if (this.isBypassRoute(currentPath)) return next();
+      if (await this.handleMaintenanceMode(req, res)) return;
 
-      // 3. Maintenance Mode Check
-      if (await this.handleMaintenanceMode(req, res)) {
-        return;
-      }
-
-      // 4. Webhook Tenant Resolution
-      if (this.isWebhookPath(currentPath, subdomain)) {
+      // 3. Webhook Tenant Resolution Override
+      let finalIdentifier = identifier;
+      if (this.isWebhookPath(currentPath, identifier)) {
         const resolvedId = await this.resolveWebhookTenant(req, res);
-        if (!resolvedId) return; // Response handled in helper
-        identifier = resolvedId;
+        if (!resolvedId) return;
+        finalIdentifier = resolvedId;
       }
 
-      // 5. Tenant Validation (with Redis Caching)
-      let baseContext = await this.cache.getTenant(identifier);
-      
+      // 4. Tenant Validation (with Redis Caching)
+      let baseContext = await this.cache.getTenant(finalIdentifier);
       if (!baseContext) {
-        baseContext = await validateTenant(identifier);
-        await this.cache.setTenant(identifier, baseContext);
+        baseContext = await validateTenant(finalIdentifier);
+        await this.cache.setTenant(finalIdentifier, baseContext);
       }
-      
+
       if (!this.checkTenantStatus(baseContext, req, res)) return;
 
-      // 6. Suspension Check (Steel Control)
-      const isSuspended = await this.checkSuspension(identifier);
-
-      // 7. Database Session
+      // 5. Suspension Check & Session Execution
+      const isSuspended = await this.checkSuspension(finalIdentifier);
       await this.runDatabaseSession(baseContext, isSuspended, req, res, next);
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        res.status(HttpStatus.FORBIDDEN).json({
-          statusCode: HttpStatus.FORBIDDEN,
-          message: error.message,
-          error: 'Forbidden',
-        });
-        return;
-      }
-      next(error);
+      this.handleError(error, res, next);
     }
+  }
+
+  private extractTenantIdentifier(req: Request): string {
+    const rawHost = req.headers.host || '';
+    const cleanHost = rawHost.split(':')[0];
+    const xTenantId = req.headers['x-tenant-id'] as string;
+    const isInternal =
+      req.headers['x-internal-secret'] === env.INTERNAL_API_SECRET;
+
+    const subdomain = extractSubdomain(cleanHost);
+    return xTenantId && isInternal ? xTenantId : subdomain || cleanHost;
+  }
+
+  private handleError(error: unknown, res: Response, next: NextFunction) {
+    if (error instanceof UnauthorizedException) {
+      res.status(HttpStatus.FORBIDDEN).json({
+        statusCode: HttpStatus.FORBIDDEN,
+        message: error.message,
+        error: 'Forbidden',
+      });
+      return;
+    }
+    next(error);
   }
 
   private isSystemRequest(subdomain: string | null): boolean {
@@ -465,5 +457,3 @@ export class SuperAdminOrTenantGuard implements CanActivate {
     return true;
   }
 }
-
-

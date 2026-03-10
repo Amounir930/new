@@ -27,6 +27,11 @@ export interface DrizzleSession {
  */
 export interface DrizzleExecutor {
   session?: DrizzleSession;
+  select: (fields?: Record<string, unknown>) => any; // Minimum viable type for Drizzle proxy
+  insert: (table: unknown) => any;
+  update: (table: unknown) => any;
+  delete: (table: unknown) => any;
+  execute: (query: unknown) => Promise<unknown>;
 }
 
 /**

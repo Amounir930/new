@@ -125,7 +125,7 @@ describe('StorageManager', () => {
 
     it('should delete non-empty bucket if force is true', async () => {
       mockMinioClient.bucketExists.mockResolvedValueOnce(true);
-      
+
       // Setup versions/markers
       mockMinioClient.listObjectVersions.mockReturnValue({
         [Symbol.asyncIterator]: async function* () {
@@ -146,12 +146,15 @@ describe('StorageManager', () => {
       mockMinioClient.removeBucket.mockResolvedValueOnce(undefined);
 
       const result = await deleteStorageBucket('full-tenant', true);
-      
+
       expect(result).toBe(true);
       expect(mockMinioClient.listObjectVersions).toHaveBeenCalled();
       expect(mockMinioClient.listIncompleteUploads).toHaveBeenCalled();
       expect(mockMinioClient.removeObject).toHaveBeenCalledTimes(2);
-      expect(mockMinioClient.removeIncompleteUpload).toHaveBeenCalledWith(expect.any(String), 'large-file.zip');
+      expect(mockMinioClient.removeIncompleteUpload).toHaveBeenCalledWith(
+        expect.any(String),
+        'large-file.zip'
+      );
       expect(mockMinioClient.removeBucket).toHaveBeenCalled();
     });
   });

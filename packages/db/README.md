@@ -1,122 +1,101 @@
-# `@apex/db` — Database Package
+# `@apex/db` — Sovereign Database Architecture (2026)
 
-> **قاعدة البيانات هي دستور المشروع المقدس.**
-> الملف الوحيد المسموح تعديل الـ schema منه هو `drizzle/schema.ts` — وفقط بعد تطبيق migration جديد.
+> **قاعدة البيانات هي دستور المشروع المقدس ونخاع أمنه السيادي.**
+> الملفات المصدرية الوحيدة المسموح تعديل الـ schema منها هي ملفات الحوكمة الهندسية `*.hcl`.
 
 ---
 
-## 🗺️ هيكل المجلد
+## 🗺️ هيكل المجلد السيادي
 
 ```
 packages/db/
-├── drizzle/                       ← ✅ المصدر الوحيد للحقيقة
-│   ├── 0001_baseline.sql          ← Schema كامل (Core Tables, Types, Extensions)
-│   ├── 0002_security_hardening.sql
-│   ├── 0003_definitive_hardening.sql
-│   ├── 0004_phase1_infrastructure.sql
-│   ├── 0005_commerce_completion.sql
-│   ├── 0006_financial_and_data_integrity.sql
-│   ├── 0007_isolation_and_security_hardening.sql
-│   ├── 0008_infrastructure_and_performance_tuning.sql
-│   ├── 0009_critical_fixes.sql
-│   ├── 0010_public_schema_isolation.sql
-│   ├── 0011_definitive_security_batch.sql
-│   │
-│   ├── schema.ts                  ← ORM layer (مُولَّد تلقائياً من قاعدة البيانات)
-│   ├── relations.ts               ← تعريفات العلاقات (مُولَّد تلقائياً)
-│   └── custom_types.ts            ← Custom TypeScript types
+├── migrations/                ← ✅ سجلات التاريخ المقدس (Atlas Migrations)
+│   ├── 20260309222348_initial.sql ← النسخة المحصنة (RLS, WORM, Vector, GIST)
+│   └── atlas.sum              ← بصمة التحقق الرقمي لسلامة البيانات
 │
-├── src/
-│   ├── index.ts                   ← Database connection pools (adminDb, tenantDb)
-│   └── run-migrate.ts             ← Migration runner (bun run db:migrate)
+├── *.hcl                      ← تعريفات الـ Schema (Foundation, Catalog, CRM, etc.)
+├── security_protocols.sql     ← بروتوكولات الأمان المحقنة (RLS & Triggers)
+├── atlas.hcl                  ← إعدادات محرك Atlas للبيئات المختلفة
 │
-└── ops/scripts/init-db.sh         ← Server-side deployment script
+├── drizzle/                   ← ORM Layer (مُزامنة مع قاعدة البيانات)
+│   └── schema.ts              ← تمثيل TypeScript للجداول (مُولَّد تلقائياً)
+│
+└── src/
+    └── index.ts               ← محركات الاتصال (Sovereign Dual-Pool)
 ```
 
 ---
 
-## ⚙️ القاعدة الأساسية: ترتيب العمل
+## ⚙️ بروتوكول التعديل (Enterprise Workflow)
 
-```
-قاعدة البيانات الحقيقية
-        ↓
-   drizzle/*.sql     ← تُطبق عبر init-db.sh أو bun run db:migrate
-        ↓
-   drizzle/schema.ts ← مُولَّد تلقائياً عبر bun run db:pull
-        ↓
-   الكود (API)       ← يستخدم schema.ts للاستعلامات
-```
+يُمنع التعديل اليدوي على ملفات الـ SQL في `migrations/` إلا للضرورة القصوى وبإشراف هندسي. المسار الصحيح هو:
+
+1.  **تعديل ملفات HCL**: قم بتحديث ملفات الـ `*.hcl` المناسبة (مثل `02_CATALOG_INVENTORY.hcl`).
+2.  **توليد Migration**: استخدم محرك Atlas لتوليد النسخة الجديدة:
+    ```bash
+    atlas migrate diff <name> --env local
+    ```
+3.  **حقن الأمان**: أضف بروتوكولات الـ RLS والـ Triggers اللازمة من `security_protocols.sql` للـ migration المولد.
+4.  **تحديث البصمة**:
+    ```bash
+    atlas migrate hash
+    ```
 
 ---
 
-## 🚀 Deployment على سيرفر جديد (خطوة واحدة)
+## 🚀 إعادة النشر على أي سيرفر (Deployment Protocol)
 
+لنشر قاعدة البيانات وإعدادها بالكامل:
+
+### 1. المتطلبات الأولية
+*   وجود محرك **Docker** و **Atlas CLI**.
+*   صورة `pgvector/pgvector:pg16` للذكاء الاصطناعي.
+
+### 2. خطوات النشر
 ```bash
-# 1. انسخ المشروع للسيرفر
-git clone <repo> /opt/apex-v2 && cd /opt/apex-v2
+# 1. تفعيل حاوية قاعدة البيانات السيادية
+docker run --name apex-db -e POSTGRES_PASSWORD=<pass> -p 5432:5432 -d pgvector/pgvector:pg16
 
-# 2. انسخ ملف .env
-scp .env deploy@SERVER:/opt/apex-v2/.env
+# 2. إنشاء قاعدة البيانات المستهدفة
+docker exec apex-db psql -U postgres -c "CREATE DATABASE apex_prod;"
 
-# 3. شغّل قاعدة البيانات + طبّق كل الـ migrations
-docker compose -f ops/docker-compose.prod.yml --env-file .env up -d apex-postgres
-chmod +x ops/scripts/init-db.sh
-./ops/scripts/init-db.sh
+# 3. تفعيل الإضافات الأساسية (Vector)
+docker exec apex-db psql -U postgres -d apex_prod -c "CREATE EXTENSION IF NOT EXISTS vector;"
 
-# 4. شغّل كل الخدمات
-docker compose -f ops/docker-compose.prod.yml --env-file .env up -d
+# 4. تطبيق الرحلة الزمنية (Apply Migrations)
+atlas migrate apply --url "postgres://postgres:<pass>@localhost:5432/apex_prod?sslmode=disable"
 ```
 
 ---
 
-## 🔄 إضافة Migration جديد
+## 🔗 الترابط مع باقي المشروع
 
-```bash
-# 1. عدّل ملفات .hcl أو schema.ts
-# 2. أنشئ ملف SQL جديد في drizzle/ باسم تسلسلي:
-#    drizzle/0012_your_feature_name.sql
-# 3. أضف اسم الملف في ops/scripts/init-db.sh ← قائمة MIGRATIONS
-# 4. طبّق على السيرفر:
-./ops/scripts/init-db.sh
-# الملفات السابقة ستُتخطى تلقائياً (idempotent)
-```
+*   **Drizzle ORM**: مشروع الـ API يعتمد كلياً على `drizzle/schema.ts`. بعد أي migration، يجب تحديث الـ schema:
+    ```bash
+    bun run db:pull
+    ```
+*   **Infrastructure**: ملفات الـ `.env` في المشروع يجب أن تشير إلى قاعدة البيانات الجديدة عبر `DATABASE_URL`.
+*   **Tenant Provisioning**: منطق إنشاء التاجر الجديد يعتمد على `governance.tenants` الخاضع لسياسات RLS، مما يضمن عزل بيانات كل تاجر برمجياً وفيزيائياً.
 
 ---
 
-## ⚠️ القواعد المحرّمة
+## 🔒 السياسات الأمنية (2026 Standards)
 
-| محرّم | السبب |
+| البروتوكول | الوصف |
 |---|---|
-| `drizzle-kit push` على production | يحذف Triggers و RLS policies |
-| تعديل `schema.ts` يدوياً | يُولَّد تلقائياً من قاعدة البيانات |
-| حذف أي ملف من `drizzle/` | تاريخ المشروع الكامل |
-| `DROP TABLE` بدون migration | يكسر الـ schema.ts والكود |
+| **RLS (Row Level Security)** | عزل كامل لبيانات الـ Tenatts في طبقة قاعدة البيانات. |
+| **WORM (Write Once Read Many)** | تجميد سجلات التدقيق والعمليات المالية ومنع الحذف/التعديل. |
+| **VAULT Isolation** | فصل مفاتيح التشفير في Schema مستقل (vault) مع صلاحيات ضيقة. |
+| **Deferrable Guards** | حماية الائتمان المالي عبر Triggers قابلة للتأجيل لضمان استمرارية العمل. |
 
 ---
 
-## 🛠️ أوامر التطوير
+## 🛠️ أوامر الطوارئ
 
 ```bash
-bun run db:migrate  # طبّق الـ migrations (يستخدم src/run-migrate.ts)
-bun run db:pull     # حدّث schema.ts + relations.ts من قاعدة البيانات الحقيقية
-bun run db:studio   # افتح Drizzle Studio (واجهة بصرية)
+atlas migrate status        # عرض حالة الـ migrations الحالية
+atlas migrate hash          # إعادة حساب بصمة الملفات (عند النقل اليدوي)
+atlas schema inspect -u URL # عرض هيكل قاعدة البيانات الحالية بصيغة HCL
 ```
 
----
-
-## 🏗️ Schemas في قاعدة البيانات
-
-| Schema | الوظيفة |
-|---|---|
-| `public` | الجداول العامة (users, stores, orders, ..) |
-| `governance` | إدارة الـ tenants, audit_logs, billing |
-| `storefront` | الواجهة (products, categories, customers) |
-| `vault` | مفاتيح التشفير (مُعزول تماماً) |
-
----
-
-## 🔒 Connection Policy
-
-- **Production API** → يتصل كـ `app_user` (CRUD فقط، خاضع لـ RLS)
-- **Migrations** → يتصل كـ `apex` (superuser مؤقتاً)
-- **لا يُسمح بـ** `postgres` superuser في الـ production code
+🎉🛡️ **STATUS: HARDENED | SECURITY: ZERO-TOLERANCE** 🛡️🎉

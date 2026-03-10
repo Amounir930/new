@@ -28,7 +28,7 @@ const poolConfig = {
     if (env.DB_SSL === 'false') return false;
     const caPath = process.env['DB_CA_CERT_PATH'];
     if (caPath) {
-      const { readFileSync } = require('fs') as typeof import('fs');
+      const { readFileSync } = require('node:fs') as typeof import('fs');
       return { rejectUnauthorized: true, ca: readFileSync(caPath).toString() };
     }
     // Fallback: ssl required but no CA provided — allow self-signed (less strict but non-null)
@@ -66,27 +66,42 @@ export const tenantPool = new Pool({
 
 /**
  * Zero-Trust Tenant Database Access
- * Enforces RLS by setting the app.current_tenant context
+ * Enforces RLS via app.current_tenant_id AND routes to physical isolated schema
  */
-export async function getTenantDb(tenantId: string) {
+export async function getTenantDb(tenantId: string, schemaName?: string) {
   const client = await tenantPool.connect();
 
   try {
-    // S2/Arch-Core-04: Enforce Tenant Isolation via RLS
-    await client.query(`SELECT set_config('app.current_tenant', $1, true)`, [
+    // S2/Arch-Core-04: Enforce Tenant Isolation via RLS (Governance/Shared)
+    await client.query(`SELECT set_config('app.current_tenant_id', $1, true)`, [
       tenantId,
     ]);
 
-    const db = drizzle(client, { schema: { ...schema, ...relations } });
+    // Sovereign-2026: Physical Schema Routing (Storefront/Isolated)
+    if (schemaName) {
+      // Item 43 Protocol: Explicit search_path scoping
+      await client.query(`SET search_path TO "${schemaName}", public`);
+    }
 
-    // Note: The client MUST be released when the caller is done.
-    // However, to make it compatible with Drizzle's transaction pattern,
-    // it's better to pass the client to drizzle and let the caller handle it or wrap it.
+    const db = drizzle(client, { schema: { ...schema, ...relations } });
 
     return {
       db,
-      release: () => client.release(),
-      [Symbol.asyncDispose]: async () => client.release(),
+      release: async () => {
+        try {
+          // DELTA-S5: Rigorous Reset to prevent Pool Pollution
+          await client.query('SET search_path TO public; RESET ALL;');
+        } finally {
+          client.release();
+        }
+      },
+      [Symbol.asyncDispose]: async () => {
+        try {
+          await client.query('SET search_path TO public; RESET ALL;');
+        } finally {
+          client.release();
+        }
+      },
     };
   } catch (error) {
     client.release();
@@ -96,20 +111,29 @@ export async function getTenantDb(tenantId: string) {
 
 /**
  * Helper for Transaction-Scoped Tenant DB
- * Automatically sets the tenant context inside a transaction
+ * Automatically sets the tenant context and schema routing inside a transaction
  */
 export async function withTenantDb<T>(
   tenantId: string,
+  schemaName: string,
   callback: (db: NodePgDatabase<typeof schema & typeof relations>) => Promise<T>
 ): Promise<T> {
   const client = await tenantPool.connect();
   try {
-    await client.query(`SELECT set_config('app.current_tenant', $1, true)`, [
+    // S2/Auth-04: Set context and route schema
+    await client.query(`SELECT set_config('app.current_tenant_id', $1, true)`, [
       tenantId,
     ]);
+    await client.query(`SET search_path TO "${schemaName}", public`);
+
     const db = drizzle(client, { schema: { ...schema, ...relations } });
     return await callback(db);
   } finally {
-    client.release();
+    try {
+      // DELTA-S5: Mandatory Clean-Exit Protocol
+      await client.query('SET search_path TO public; RESET ALL;');
+    } finally {
+      client.release();
+    }
   }
 }
