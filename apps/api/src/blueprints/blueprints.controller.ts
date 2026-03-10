@@ -23,7 +23,7 @@ import {
   updateBlueprintSchema,
 } from './dto/blueprint.dto';
 
-@Controller('admin/blueprints')
+@Controller('blueprints')
 @UseGuards(JwtAuthGuard, SuperAdminGuard) // Super-#21: Super Admin ONLY
 export class BlueprintsController {
   private readonly logger = new Logger(BlueprintsController.name);

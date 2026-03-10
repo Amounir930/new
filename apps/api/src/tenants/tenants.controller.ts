@@ -33,7 +33,7 @@ const UpdateFeatureSchema = z.object({
   isEnabled: z.boolean(),
 });
 
-@Controller('admin/tenants')
+@Controller('tenants')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
   private readonly logger = new Logger(TenantsController.name);
