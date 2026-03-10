@@ -21,7 +21,9 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@apex/provisioning/client": ["../../packages/provisioning/src/client.ts"],
+      "@apex/provisioning/client": [
+        "../../packages/provisioning/src/client.ts"
+      ],
       "@apex/*": ["../../packages/*/src"]
     }
   },
