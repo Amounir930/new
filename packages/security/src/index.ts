@@ -17,7 +17,7 @@ export {
   hashApiKey,
   hashSensitiveData,
   maskSensitive,
-} from './encryption.js';
+} from './encryption';
 // mTLS Module
 export {
   createMTLSClientConfig,
@@ -28,7 +28,7 @@ export {
   type MTLSConfig,
   MTLSServer,
   mtlsMiddleware,
-} from './mtls/index.js';
+} from './mtls/index';
 // Secrets Module
 export {
   generateSecret,
@@ -40,6 +40,6 @@ export {
   secretsManager,
   VaultIntegration,
   verifySecret,
-} from './secrets/index.js';
+} from './secrets/index';
 
-export { SecurityModule } from './security.module.js';
+export { SecurityModule } from './security.module';

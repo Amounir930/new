@@ -139,7 +139,7 @@ async function resolveTemplate(
   if (options.blueprint) {
     return options.blueprint;
   }
-  const { getDefaultBlueprint } = await import('./blueprint.js');
+  const { getDefaultBlueprint } = await import('./blueprint');
   const blueprintRecord = await getDefaultBlueprint(
     (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise'
   );
