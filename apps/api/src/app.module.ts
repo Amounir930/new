@@ -118,6 +118,9 @@ export class AppModule implements NestModule {
         { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
         { path: 'auth/(.*)', method: RequestMethod.POST },
         { path: 'health/(.*)', method: RequestMethod.GET },
+        { path: 'blueprints(.*)', method: RequestMethod.ALL },
+        { path: 'tenants(.*)', method: RequestMethod.ALL },
+        { path: 'governance(.*)', method: RequestMethod.ALL },
         { path: 'robots.txt', method: RequestMethod.GET },
         { path: '/', method: RequestMethod.GET }
       )
