@@ -77,14 +77,12 @@ export async function runTenantMigrations(
         'schema',
         'apply',
         '--url',
-        dbUrl, // Pass URL directly to avoid env:// environment selection requirement
+        dbUrl,
         '--to',
         `file://${hclPath}`,
+        '--dev-url',
+        'docker://postgres/16/dev', // S2: Use docker-dev for schema validation
         '--auto-approve',
-        '--schema',
-        'storefront', // Limit to storefront schema definitions
-        '--schema-map',
-        `storefront=${schemaName}`, // Map 'storefront' in HCL to the actual tenant schema
       ],
       { env: atlasEnv }
     );

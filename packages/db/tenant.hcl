@@ -5,12 +5,6 @@
 // MODULE: 01_FOUNDATION (Core & Governance)
 // ==========================================
 
-schema "public" {}
-schema "governance" {}
-schema "storefront" {}
-schema "vault" {}
-schema "shared" {}
-schema "legacy" {}
 
 
 
@@ -21,140 +15,140 @@ schema "legacy" {}
 // ELITE DIRECTIVE: Application-level role configuration activated via sql.elite_server_config
 
 enum "severity_enum" {
-  schema = schema.public
+  
   values = ["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"]
 }
 enum "audit_result_enum" {
-  schema = schema.public
+  
   values = ["SUCCESS", "FAILURE"]
 }
 enum "tenant_plan" {
-  schema = schema.public
+  
   values = ["free", "basic", "pro", "enterprise"]
 }
 enum "tenant_status" {
-  schema = schema.public
+  
   values = ["active", "suspended", "pending", "archived"]
 }
 enum "tenant_niche" {
-  schema = schema.public
+  
   values = ["retail", "wellness", "education", "services", "hospitality", "real-estate", "creative"]
 }
 // FIX (P1): Enterprise B2B lifecycle added
 enum "order_status" {
-  schema = schema.public
+  
   values = ["draft", "awaiting_approval", "pending", "processing", "shipped", "delivered", "cancelled", "returned"]
 }
 enum "payment_status" {
-  schema = schema.public
+  
   values = ["pending", "paid", "partially_refunded", "refunded", "failed"]
 }
 enum "payment_method" {
-  schema = schema.public
+  
   values = ["card", "cod", "wallet", "bnpl", "bank_transfer"]
 }
 enum "fulfillment_status" {
-  schema = schema.public
+  
   values = ["pending", "shipped", "in_transit", "delivered", "failed"]
 }
 enum "order_source" {
-  schema = schema.public
+  
   values = ["web", "mobile", "b2b", "pos"]
 }
 enum "discount_type" {
-  schema = schema.public
+  
   values = ["percentage", "fixed", "buy_x_get_y", "free_shipping"]
 }
 enum "discount_applies_to" {
-  schema = schema.public
+  
   values = ["all", "specific_products", "specific_categories", "specific_customers"]
 }
 enum "rma_status" {
-  schema = schema.public
+  
   values = ["requested", "approved", "shipped", "received", "completed", "rejected"]
 }
 enum "rma_reason_code" {
-  schema = schema.public
+  
   values = ["defective", "wrong_item", "changed_mind", "not_as_described", "damaged_in_transit"]
 }
 enum "rma_condition" {
-  schema = schema.public
+  
   values = ["new", "opened", "damaged"]
 }
 enum "rma_resolution" {
-  schema = schema.public
+  
   values = ["refund", "exchange", "store_credit"]
 }
 enum "refund_status" {
-  schema = schema.public
+  
   values = ["pending", "processed", "failed"]
 }
 enum "inventory_movement_type" {
-  schema = schema.public
+  
   values = ["in", "out", "adjustment", "return", "transfer"]
 }
 enum "reservation_status" {
-  schema = schema.public
+  
   values = ["active", "converted", "expired"]
 }
 enum "transfer_status" {
-  schema = schema.public
+  
   values = ["draft", "in_transit", "received", "cancelled"]
 }
 enum "location_type" {
-  schema = schema.public
+  
   values = ["warehouse", "retail", "dropship"]
 }
 enum "purchase_order_status" {
-  schema = schema.public
+  
   values = ["draft", "ordered", "partial", "received", "cancelled"]
 }
 enum "invoice_status" {
-  schema = schema.public
+  
   values = ["draft", "issued", "paid", "overdue"]
 }
 enum "lead_status" {
-  schema = schema.public
+  
   values = ["new", "contacted", "qualified", "converted"]
 }
 enum "dunning_status" {
-  schema = schema.public
+  
   values = ["pending", "retried", "failed", "recovered"]
 }
 enum "outbox_status" {
-  schema = schema.public
+  
   values = ["pending", "processing", "completed", "failed"]
 }
 enum "affiliate_status" {
-  schema = schema.public
+  
   values = ["active", "pending", "suspended"]
 }
 enum "affiliate_tx_status" {
-  schema = schema.public
+  
   values = ["pending", "approved", "paid", "rejected"]
 }
 enum "b2b_company_status" {
-  schema = schema.public
+  
   values = ["active", "pending", "suspended"]
 }
 enum "b2b_user_role" {
-  schema = schema.public
+  
   values = ["admin", "buyer", "viewer"]
 }
 enum "consent_channel" {
-  schema = schema.public
+  
   values = ["email", "sms", "push", "whatsapp"]
 }
 enum "actor_type" {
-  schema = schema.public
+  
   values = ["super_admin", "tenant_admin", "system"]
 }
 enum "blueprint_status" {
-  schema = schema.public
+  
   values = ["active", "paused"]
 }
 table "encryption_keys" {
-  schema = schema.vault
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -206,7 +200,7 @@ table "encryption_keys" {
 
 }
 table "archival_vault" {
-  schema = schema.vault
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -242,7 +236,7 @@ table "archival_vault" {
 
 }
 table "tenants" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -347,7 +341,7 @@ table "tenants" {
 }
 
 table "audit_logs" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -461,7 +455,7 @@ table "audit_logs" {
 }
 
 table "leads" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -549,7 +543,7 @@ table "leads" {
   }
 }
 table "subscription_plans" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -630,7 +624,7 @@ table "subscription_plans" {
   }
 }
 table "tenant_quotas" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -683,7 +677,7 @@ table "tenant_quotas" {
 
 }
 table "tenant_invoices" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -756,7 +750,7 @@ table "tenant_invoices" {
 
 }
 table "feature_gates" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -815,7 +809,7 @@ table "feature_gates" {
 
 }
 table "dunning_events" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -866,7 +860,7 @@ table "dunning_events" {
 
 }
 table "app_usage_records" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -903,7 +897,7 @@ table "app_usage_records" {
 
 }
 table "plan_change_history" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -937,7 +931,7 @@ table "plan_change_history" {
 
 }
 table "onboarding_blueprints" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -987,7 +981,7 @@ table "onboarding_blueprints" {
   }
 }
 table "system_config" {
-  schema = schema.governance
+  
   column "key" {
     type = varchar(100)
   }
@@ -1003,7 +997,7 @@ table "system_config" {
   }
 }
 table "schema_drift_log" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()::uuid")
@@ -1046,7 +1040,7 @@ table "schema_drift_log" {
   }
 }
 table "order_fraud_scores" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1116,7 +1110,7 @@ table "order_fraud_scores" {
   }
 }
 table "marketing_pages" {
-  schema = schema.governance
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1193,7 +1187,7 @@ table "marketing_pages" {
 // 1. CATALOG SCHEMA (Storefront)
 // ==========================================
 table "categories" {
-  schema = schema.storefront
+  
   // Strike 13: LTREE path recursion safety
   // (Placeholder for trigger - will be implemented in security.hcl if needed, but adding column check here)
   column "id" {
@@ -1299,7 +1293,7 @@ table "categories" {
   }
 }
 table "brands" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1362,7 +1356,7 @@ table "brands" {
 
 }
 table "products" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1620,7 +1614,7 @@ table "products" {
   }
 }
 table "product_variants" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1709,7 +1703,7 @@ table "product_variants" {
   }
 }
 table "product_images" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1754,7 +1748,7 @@ table "product_images" {
 
 }
 table "product_attributes" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1802,7 +1796,7 @@ table "product_attributes" {
 
 }
 table "entity_metafields" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1846,7 +1840,7 @@ table "entity_metafields" {
 
 }
 table "smart_collections" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1914,7 +1908,7 @@ table "smart_collections" {
 // 2. INVENTORY SCHEMA (Storefront)
 // ==========================================
 table "locations" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1956,7 +1950,7 @@ table "locations" {
 
 }
 table "inventory_levels" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2032,7 +2026,7 @@ table "inventory_levels" {
 
 }
 table "inventory_movements" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2101,7 +2095,7 @@ table "inventory_movements" {
 
 }
 table "inventory_reservations" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2167,7 +2161,7 @@ table "inventory_reservations" {
 
 }
 table "inventory_transfers" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2227,7 +2221,7 @@ table "inventory_transfers" {
 
 }
 table "inventory_transfer_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2266,7 +2260,7 @@ table "inventory_transfer_items" {
 // 3. SUPPLY CHAIN & B2B (Storefront)
 // ==========================================
 table "suppliers" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2334,7 +2328,7 @@ table "suppliers" {
 
 }
 table "purchase_orders" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2417,7 +2411,7 @@ table "purchase_orders" {
 
 }
 table "purchase_order_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2468,7 +2462,7 @@ table "purchase_order_items" {
 
 }
 table "b2b_companies" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2533,7 +2527,7 @@ table "b2b_companies" {
 
 }
 table "b2b_pricing_tiers" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2626,7 +2620,7 @@ table "b2b_pricing_tiers" {
 
 }
 table "b2b_users" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2695,7 +2689,7 @@ table "b2b_users" {
 // ==========================================
 
 table "customers" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2856,7 +2850,7 @@ table "customers" {
 
 }
 table "customer_addresses" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2944,7 +2938,7 @@ table "customer_addresses" {
 
 }
 table "customer_consents" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2995,7 +2989,7 @@ table "customer_consents" {
 
 }
 table "customer_segments" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3031,7 +3025,7 @@ table "customer_segments" {
 
 }
 table "orders" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3247,7 +3241,7 @@ table "orders" {
   }
 }
 table "order_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3361,7 +3355,7 @@ table "order_items" {
 
 }
 table "order_edits" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3422,7 +3416,7 @@ table "order_edits" {
 
 }
 table "order_timeline" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3483,7 +3477,7 @@ table "order_timeline" {
 
 }
 table "fulfillments" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3536,7 +3530,7 @@ table "fulfillments" {
 
 }
 table "fulfillment_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3572,7 +3566,7 @@ table "fulfillment_items" {
 
 }
 table "refunds" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3624,7 +3618,7 @@ table "refunds" {
   }
 }
 table "refund_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3667,7 +3661,7 @@ table "refund_items" {
 
 }
 table "rma_requests" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3737,7 +3731,7 @@ table "rma_requests" {
   }
 }
 table "rma_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3790,7 +3784,7 @@ table "rma_items" {
 
 }
 table "payment_logs" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3870,7 +3864,7 @@ table "payment_logs" {
 
 }
 table "carts" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3936,7 +3930,7 @@ table "carts" {
   }
 }
 table "cart_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3978,7 +3972,7 @@ table "cart_items" {
 
 }
 table "abandoned_checkouts" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4040,7 +4034,7 @@ table "abandoned_checkouts" {
 // 3. SHIPPING & TAX (Storefront)
 // ==========================================
 table "shipping_zones" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4110,7 +4104,7 @@ table "shipping_zones" {
 
 }
 table "tax_categories" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4143,7 +4137,7 @@ table "tax_categories" {
 
 }
 table "tax_rules" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4225,7 +4219,7 @@ table "tax_rules" {
   }
 }
 table "reviews" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4315,7 +4309,7 @@ table "reviews" {
 // 1. PROMOTIONS & DISCOUNTS (Storefront)
 // ==========================================
 table "coupons" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4407,7 +4401,7 @@ table "coupons" {
 
 // Strike 03: Coupon Usage Tracking (Enforce max_uses_per_customer)
 table "coupon_usages" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4446,7 +4440,7 @@ table "coupon_usages" {
 
 }
 table "price_rules" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4535,7 +4529,7 @@ table "price_rules" {
 
 }
 table "discount_codes" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4577,7 +4571,7 @@ table "discount_codes" {
 
 }
 table "flash_sales" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4634,7 +4628,7 @@ table "flash_sales" {
 
 }
 table "flash_sale_products" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4700,7 +4694,7 @@ table "flash_sale_products" {
 
 }
 table "product_bundles" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4744,7 +4738,7 @@ table "product_bundles" {
 
 }
 table "product_bundle_items" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4776,7 +4770,7 @@ table "product_bundle_items" {
 
 }
 table "loyalty_rules" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4830,7 +4824,7 @@ table "loyalty_rules" {
 
 }
 table "wallet_transactions" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4901,7 +4895,7 @@ table "wallet_transactions" {
 
 }
 table "affiliate_partners" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4971,7 +4965,7 @@ table "affiliate_partners" {
 
 }
 table "affiliate_transactions" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5037,7 +5031,7 @@ table "affiliate_transactions" {
 // 2. STAFF & RBAC (Storefront)
 // ==========================================
 table "staff_roles" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5070,7 +5064,7 @@ table "staff_roles" {
 
 }
 table "staff_members" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5165,7 +5159,7 @@ table "staff_members" {
   }
 }
 table "staff_sessions" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5245,7 +5239,7 @@ table "staff_sessions" {
 // 3. APPS & EXTENSIBILITY (Storefront)
 // ==========================================
 table "app_installations" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5305,7 +5299,7 @@ table "app_installations" {
 
 }
 table "webhook_subscriptions" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5389,7 +5383,7 @@ table "webhook_subscriptions" {
 // 4. CMS & CONTENT (Storefront)
 // ==========================================
 table "pages" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5458,7 +5452,7 @@ table "pages" {
 
 }
 table "blog_categories" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5480,7 +5474,7 @@ table "blog_categories" {
 }
 
 table "blog_posts" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5581,7 +5575,7 @@ table "blog_posts" {
   }
 }
 table "legal_pages" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5637,7 +5631,7 @@ table "legal_pages" {
 
 }
 table "faq_categories" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5666,7 +5660,7 @@ table "faq_categories" {
 
 }
 table "faqs" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5717,7 +5711,7 @@ table "faqs" {
 
 }
 table "kb_categories" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5752,7 +5746,7 @@ table "kb_categories" {
 
 }
 table "kb_articles" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5806,7 +5800,7 @@ table "kb_articles" {
 
 }
 table "banners" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5853,7 +5847,7 @@ table "banners" {
 
 }
 table "announcement_bars" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5889,7 +5883,7 @@ table "announcement_bars" {
 
 }
 table "popups" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5920,7 +5914,7 @@ table "popups" {
 
 }
 table "search_synonyms" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5955,7 +5949,7 @@ table "search_synonyms" {
 
 // Requires pg_partman retention policy: 90 days.
 table "product_views" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -6007,7 +6001,7 @@ table "product_views" {
 // 5. SYSTEM & LOGS (Storefront)
 // ==========================================
 table "outbox_events" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -6082,7 +6076,7 @@ table "outbox_events" {
 
 }
 table "tenant_config" {
-  schema = schema.storefront
+  
   column "key" {
     type = varchar(100)
   }
@@ -6109,7 +6103,7 @@ table "tenant_config" {
 
 }
 table "markets" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -6155,7 +6149,7 @@ table "markets" {
 
 }
 table "price_lists" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -6225,7 +6219,7 @@ table "price_lists" {
 
 }
 table "currency_rates" {
-  schema = schema.storefront
+  
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
