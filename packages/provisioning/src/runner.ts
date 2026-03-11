@@ -41,15 +41,13 @@ export async function runTenantMigrations(
     '..' + '/..' + '/..'
   );
 
-  // Source of Truth: tenant.hcl
-  const hclPath = path.join(rootDir, 'packages/db/tenant.hcl');
+  // Source of Truth: storefront.hcl
+  const hclPath = path.join(rootDir, 'packages/db/storefront.hcl');
 
   // 3. Construct Secure Connection String (Protocol Alpha-Secure)
   // We use the environment variables for database credentials
   const { env } = await import('@apex/config');
 
-  // CRITICAL: Atlas URL must include search_path to target the isolated schema
-  // We use the internal pgbouncer or postgres host depending on environment
   const dbHost = process.env.DATABASE_URL?.includes('pgbouncer')
     ? 'apex-pgbouncer'
     : 'apex-postgres';
@@ -61,15 +59,13 @@ export async function runTenantMigrations(
 
   try {
     // 4. Secure Atlas Execution (Process Isolation)
-    // Pass the sensitive DB URL via environment variable to prevent leak in PS/HTOP
     const atlasEnv = {
       ...process.env,
       ATLAS_DB_URL: dbUrl,
-      HOME: '/tmp', // Redirect home/cache to writable /tmp (Item 54)
+      HOME: '/tmp',
       XDG_CACHE_HOME: '/tmp/.cache',
-      ATLAS_CACHE: '/tmp/.atlas-cache', // Hardened cache redirection
+      ATLAS_CACHE: '/tmp/.atlas-cache',
       ATLAS_CONFIG: '/tmp/.atlas-config',
-      // ATLAS_NO_UPDATE_CHECK: 'true', // Optional: disable update check to save cache space
     };
 
     // Use execFile to prevent shell interpolation/injection
@@ -83,9 +79,9 @@ export async function runTenantMigrations(
         '--to',
         `file://${hclPath}`,
         '--dev-url',
-        `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require`, 
-        '--schema',
-        schemaName,
+        `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require&search_path=public`, 
+        '--var',
+        `tenant_schema_name=${schemaName}`,
         '--auto-approve',
       ],
       { env: atlasEnv }

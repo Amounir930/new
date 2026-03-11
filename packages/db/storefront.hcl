@@ -1,9 +1,14 @@
-// ==========================================
-// APEX V2 - 2026 STOREFRONT AGNOSTIC TEMPLATE
-// STATUS: FINAL | SECURITY: ZERO-TOLERANCE
-// ==========================================
-
 schema "public" {}
+
+// 0. DYNAMIC SCHEMA ARCHITECTURE (Hybrid Isolation)
+// ==========================================
+variable "tenant_schema_name" {
+  type = string
+}
+
+schema "dynamic_tenant" {
+  name = var.tenant_schema_name
+}
 
 // 1. DYNAMIC ENUMS (Mapped to Public)
 // ==========================================
@@ -136,7 +141,7 @@ enum "blueprint_status" {
 // 1. CATALOG SCHEMA (Storefront)
 // ==========================================
 table "categories" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   // Strike 13: LTREE path recursion safety
   // (Placeholder for trigger - will be implemented in security.hcl if needed, but adding column check here)
   column "id" {
@@ -242,7 +247,7 @@ table "categories" {
   }
 }
 table "brands" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -305,7 +310,7 @@ table "brands" {
 
 }
 table "products" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -563,7 +568,7 @@ table "products" {
   }
 }
 table "product_variants" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -652,7 +657,7 @@ table "product_variants" {
   }
 }
 table "product_images" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -697,7 +702,7 @@ table "product_images" {
 
 }
 table "product_attributes" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -745,7 +750,7 @@ table "product_attributes" {
 
 }
 table "entity_metafields" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -789,7 +794,7 @@ table "entity_metafields" {
 
 }
 table "smart_collections" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -857,7 +862,7 @@ table "smart_collections" {
 // 2. INVENTORY SCHEMA (Storefront)
 // ==========================================
 table "locations" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -899,7 +904,7 @@ table "locations" {
 
 }
 table "inventory_levels" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -975,7 +980,7 @@ table "inventory_levels" {
 
 }
 table "inventory_movements" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1044,7 +1049,7 @@ table "inventory_movements" {
 
 }
 table "inventory_reservations" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1110,7 +1115,7 @@ table "inventory_reservations" {
 
 }
 table "inventory_transfers" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1170,7 +1175,7 @@ table "inventory_transfers" {
 
 }
 table "inventory_transfer_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1209,7 +1214,7 @@ table "inventory_transfer_items" {
 // 3. SUPPLY CHAIN & B2B (Storefront)
 // ==========================================
 table "suppliers" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1277,7 +1282,7 @@ table "suppliers" {
 
 }
 table "purchase_orders" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1360,7 +1365,7 @@ table "purchase_orders" {
 
 }
 table "purchase_order_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1411,7 +1416,7 @@ table "purchase_order_items" {
 
 }
 table "b2b_companies" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1476,7 +1481,7 @@ table "b2b_companies" {
 
 }
 table "b2b_pricing_tiers" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1569,7 +1574,7 @@ table "b2b_pricing_tiers" {
 
 }
 table "b2b_users" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1633,7 +1638,7 @@ table "b2b_users" {
 // ==========================================
 
 table "customers" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1794,7 +1799,7 @@ table "customers" {
 
 }
 table "customer_addresses" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1882,7 +1887,7 @@ table "customer_addresses" {
 
 }
 table "customer_consents" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1933,7 +1938,7 @@ table "customer_consents" {
 
 }
 table "customer_segments" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -1969,7 +1974,7 @@ table "customer_segments" {
 
 }
 table "orders" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2185,7 +2190,7 @@ table "orders" {
   }
 }
 table "order_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2299,7 +2304,7 @@ table "order_items" {
 
 }
 table "order_edits" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2360,7 +2365,7 @@ table "order_edits" {
 
 }
 table "order_timeline" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2421,7 +2426,7 @@ table "order_timeline" {
 
 }
 table "fulfillments" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2474,7 +2479,7 @@ table "fulfillments" {
 
 }
 table "fulfillment_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2510,7 +2515,7 @@ table "fulfillment_items" {
 
 }
 table "refunds" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2562,7 +2567,7 @@ table "refunds" {
   }
 }
 table "refund_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2605,7 +2610,7 @@ table "refund_items" {
 
 }
 table "rma_requests" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2675,7 +2680,7 @@ table "rma_requests" {
   }
 }
 table "rma_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2728,7 +2733,7 @@ table "rma_items" {
 
 }
 table "payment_logs" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2808,7 +2813,7 @@ table "payment_logs" {
 
 }
 table "carts" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2874,7 +2879,7 @@ table "carts" {
   }
 }
 table "cart_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2916,7 +2921,7 @@ table "cart_items" {
 
 }
 table "abandoned_checkouts" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -2978,7 +2983,7 @@ table "abandoned_checkouts" {
 // 3. SHIPPING & TAX (Storefront)
 // ==========================================
 table "shipping_zones" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3048,7 +3053,7 @@ table "shipping_zones" {
 
 }
 table "tax_categories" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3081,7 +3086,7 @@ table "tax_categories" {
 
 }
 table "tax_rules" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3163,7 +3168,7 @@ table "tax_rules" {
   }
 }
 table "reviews" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3253,7 +3258,7 @@ table "reviews" {
 // 1. PROMOTIONS & DISCOUNTS (Storefront)
 // ==========================================
 table "coupons" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3345,7 +3350,7 @@ table "coupons" {
 
 // Strike 03: Coupon Usage Tracking (Enforce max_uses_per_customer)
 table "coupon_usages" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3384,7 +3389,7 @@ table "coupon_usages" {
 
 }
 table "price_rules" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3473,7 +3478,7 @@ table "price_rules" {
 
 }
 table "discount_codes" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3515,7 +3520,7 @@ table "discount_codes" {
 
 }
 table "flash_sales" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3572,7 +3577,7 @@ table "flash_sales" {
 
 }
 table "flash_sale_products" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3638,7 +3643,7 @@ table "flash_sale_products" {
 
 }
 table "product_bundles" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3682,7 +3687,7 @@ table "product_bundles" {
 
 }
 table "product_bundle_items" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3714,7 +3719,7 @@ table "product_bundle_items" {
 
 }
 table "loyalty_rules" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3768,7 +3773,7 @@ table "loyalty_rules" {
 
 }
 table "wallet_transactions" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3839,7 +3844,7 @@ table "wallet_transactions" {
 
 }
 table "affiliate_partners" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3909,7 +3914,7 @@ table "affiliate_partners" {
 
 }
 table "affiliate_transactions" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -3975,7 +3980,7 @@ table "affiliate_transactions" {
 // 2. STAFF & RBAC (Storefront)
 // ==========================================
 table "staff_roles" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4008,7 +4013,7 @@ table "staff_roles" {
 
 }
 table "staff_members" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4103,7 +4108,7 @@ table "staff_members" {
   }
 }
 table "staff_sessions" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4183,7 +4188,7 @@ table "staff_sessions" {
 // 3. APPS & EXTENSIBILITY (Storefront)
 // ==========================================
 table "app_installations" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4243,7 +4248,7 @@ table "app_installations" {
 
 }
 table "webhook_subscriptions" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4327,7 +4332,7 @@ table "webhook_subscriptions" {
 // 4. CMS & CONTENT (Storefront)
 // ==========================================
 table "pages" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4396,7 +4401,7 @@ table "pages" {
 
 }
 table "blog_categories" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4418,7 +4423,7 @@ table "blog_categories" {
 }
 
 table "blog_posts" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4519,7 +4524,7 @@ table "blog_posts" {
   }
 }
 table "legal_pages" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4575,7 +4580,7 @@ table "legal_pages" {
 
 }
 table "faq_categories" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4604,7 +4609,7 @@ table "faq_categories" {
 
 }
 table "faqs" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4655,7 +4660,7 @@ table "faqs" {
 
 }
 table "kb_categories" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4690,7 +4695,7 @@ table "kb_categories" {
 
 }
 table "kb_articles" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4744,7 +4749,7 @@ table "kb_articles" {
 
 }
 table "banners" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4791,7 +4796,7 @@ table "banners" {
 
 }
 table "announcement_bars" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4827,7 +4832,7 @@ table "announcement_bars" {
 
 }
 table "popups" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4858,7 +4863,7 @@ table "popups" {
 
 }
 table "search_synonyms" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4893,7 +4898,7 @@ table "search_synonyms" {
 
 // Requires pg_partman retention policy: 90 days.
 table "product_views" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -4945,7 +4950,7 @@ table "product_views" {
 // 5. SYSTEM & LOGS (Storefront)
 // ==========================================
 table "outbox_events" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5020,7 +5025,7 @@ table "outbox_events" {
 
 }
 table "tenant_config" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "key" {
     type = varchar(100)
   }
@@ -5047,7 +5052,7 @@ table "tenant_config" {
 
 }
 table "markets" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5093,7 +5098,7 @@ table "markets" {
 
 }
 table "price_lists" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
@@ -5163,7 +5168,7 @@ table "price_lists" {
 
 }
 table "currency_rates" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
