@@ -306,7 +306,7 @@ export class StorefrontService {
 
       // Table removed in Sovereign Baseline
       // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure
-      return await db.transaction(async (dbTx) => {
+      return await db.transaction(async (_dbTx) => {
         // return await dbTx
         //   .insert(newsletterSubscribersInStorefront)
         //   .values({ email: encryptedEmail })

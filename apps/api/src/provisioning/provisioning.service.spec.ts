@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, type Mock, mock } from 'bun:test';
-import type { AuditLogEntry, AuditService } from '@apex/audit';
+import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import type { AuditService } from '@apex/audit';
 import * as provisioning from '@apex/provisioning';
 import { MockFactory } from '@apex/test-utils';
 import {

@@ -4,7 +4,6 @@ import { EncryptionService } from '@apex/security';
 import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Job } from 'bull';
-import { eq } from 'drizzle-orm';
 
 @Processor('import-queue')
 @Injectable()

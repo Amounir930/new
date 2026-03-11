@@ -1,5 +1,4 @@
 import { beforeAll, describe, expect, it, mock } from 'bun:test';
-import { adminDb } from '@apex/db';
 
 // S1-S15 Protocols: Environment Handshake
 process.env['NODE_ENV'] = 'test';
