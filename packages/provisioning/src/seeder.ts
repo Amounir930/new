@@ -102,14 +102,14 @@ export async function seedTenantData(
       sql`SELECT id FROM "staff_members" LIMIT 1`
     );
 
-    if (!firstUser || firstUser.length === 0) {
+    if (!firstUser || !firstUser.rows || firstUser.rows.length === 0) {
       throw new Error(
         `CoreModule failed to create Admin User - Record not found in tenant schema ${schemaName}.`
       );
     }
 
     return {
-      adminId: String(firstUser[0].id),
+      adminId: String(firstUser.rows[0].id),
       storeId,
       seededAt: new Date(),
     };
