@@ -17,10 +17,10 @@ while [ $count -lt $MAX_RETRIES ]; do
   # Better: Exec into container for "Liveness", check Traefik for "Integration".
   
   # Method A: Docker Exec (Internal Health)
-  # HTTP_STATUS=$(sudo docker exec ops-api-1 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/v1/health/liveness)
+  # HTTP_STATUS=$(sudo docker exec ops-api-1 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/v1/health)
   
-  # Method B: Traefik (Integration) - Use insecure HTTPS to localhost
-  HTTP_STATUS=$(curl -k -o /dev/null -s -w "%{http_code}" -H "Host: staging.60sec.shop" https://localhost/api/v1/health/liveness)
+  # For Integration (Staging via Traefik Router)
+  HTTP_STATUS=$(curl -k -o /dev/null -s -w "%{http_code}" -H "Host: staging.60sec.shop" https://localhost/api/v1/health)
   
   if [ "$HTTP_STATUS" == "200" ]; then
     echo "✅ API is Healthy (via Traefik)."

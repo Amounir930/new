@@ -20,6 +20,11 @@ export class AppController {
     return { status: 'ok' };
   }
 
+  @Get('health')
+  checkHealth() {
+    return { status: 'ok' };
+  }
+
   @Get('robots.txt')
   @Version(VERSION_NEUTRAL)
   @Public()
