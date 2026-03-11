@@ -74,6 +74,20 @@ docker exec "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c 
 echo "✅ Tracking table ready."
 echo ""
 
+# ── Step 2.5: Enable pgvector Extension (AI/Embedding Support) ─────────
+echo "► [+] Enabling pgvector extension in apex_v2 and apex_dev_blank..."
+docker exec "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d apex_v2 \
+  -c "CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;" > /dev/null 2>&1 && \
+  echo "✅ vector extension enabled in apex_v2." || \
+  echo "⚠️  Warning: could not enable vector in apex_v2 (may not be installed)."
+
+docker exec "$POSTGRES_CONTAINER" psql -U "$POSTGRES_USER" -d apex_dev_blank \
+  -c "CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;" > /dev/null 2>&1 && \
+  echo "✅ vector extension enabled in apex_dev_blank." || \
+  echo "⚠️  Warning: could not enable vector in apex_dev_blank (may not be installed)."
+
+echo ""
+
 # ── Step 3: Apply each migration ─────────────────────────────
 echo "► [3/3] Applying migrations..."
 echo ""
