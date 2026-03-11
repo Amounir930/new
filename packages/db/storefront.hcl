@@ -477,7 +477,7 @@ table "products" {
     default = sql("'[]'::jsonb")
   }
   column "embedding" {
-    type = sql("vector(1536)")
+    type = sql("public.vector(1536)")
     null = true
   }
   column "version" {
@@ -616,7 +616,7 @@ table "product_variants" {
     type = jsonb
   }
   column "embedding" {
-    type = sql("vector(1536)")
+    type = sql("public.vector(1536)")
     null = true
   }
   primary_key {
@@ -3207,7 +3207,7 @@ table "reviews" {
     default = false
   }
   column "embedding" {
-    type = sql("vector(1536)")
+    type = sql("public.vector(1536)")
     null = true
   }
   primary_key {
