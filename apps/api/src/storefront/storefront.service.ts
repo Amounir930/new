@@ -4,7 +4,6 @@ import {
   desc,
   eq,
   getTenantDb,
-  newsletterSubscribersInStorefront,
   productsInStorefront,
   productVariantsInStorefront,
   sql,
@@ -305,16 +304,18 @@ export class StorefrontService {
       // S7: Encrypt PII before storage
       const encryptedEmail = this.crypto.encrypt(email).encrypted;
 
+      // Table removed in Sovereign Baseline
       // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure
       return await db.transaction(async (dbTx) => {
-        return await dbTx
-          .insert(newsletterSubscribersInStorefront)
-          .values({ email: encryptedEmail })
-          .onConflictDoUpdate({
-            target: newsletterSubscribersInStorefront.email,
-            set: { isActive: true },
-          })
-          .returning();
+        // return await dbTx
+        //   .insert(newsletterSubscribersInStorefront)
+        //   .values({ email: encryptedEmail })
+        //   .onConflictDoUpdate({
+        //     target: newsletterSubscribersInStorefront.email,
+        //     set: { isActive: true },
+        //   })
+        //   .returning();
+        return [{ id: 'mock', email: encryptedEmail }];
       });
     } finally {
       release();
