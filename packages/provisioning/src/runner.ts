@@ -102,13 +102,19 @@ export async function runTenantMigrations(
       durationMs,
     };
   } catch (error) {
-    process.stdout.write(
-      `S2 ATLAS MIGRATION FAILURE for ${schemaName}: ${String(error)}\n`
+    // SECURITY: Sanitize the raw error string to mask database credentials before logging
+    const rawError = String(error);
+    const maskedError = rawError.replace(
+      /postgres:\/\/[^@]+@/g,
+      'postgres://***:***@'
     );
-    // Sanitize error message before throwing to prevent credential leak in logs
-    const sanitizedError = new Error(
+
+    process.stdout.write(
+      `[S2] ATLAS MIGRATION FAILURE for ${schemaName}: ${maskedError}\n`
+    );
+
+    throw new Error(
       `Atlas Migration Failed for ${schemaName}. See internal logs.`
     );
-    throw sanitizedError;
   }
 }
