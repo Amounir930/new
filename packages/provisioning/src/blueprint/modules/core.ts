@@ -5,6 +5,7 @@
 
 // 🛡️ Zero-Any: Imports kept as comments for documentation of mapped tables
 // pagesInStorefront, staffMembersInStorefront, staffRolesInStorefront, tenantConfigInStorefront
+import { encrypt } from '@apex/security';
 import type { BlueprintConfig, BlueprintContext, SeederModule } from '../types';
 
 export class CoreModule implements SeederModule {
@@ -42,9 +43,18 @@ export class CoreModule implements SeederModule {
       `);
 
       const userId = crypto.randomUUID();
+
+      const encResult = encrypt(adminEmail);
+      const emailPayload = {
+        enc: encResult.encrypted,
+        iv: encResult.iv,
+        tag: encResult.tag,
+        data: '',
+      };
+
       await db.execute(sql`
         INSERT INTO "staff_members" ("user_id", "role_id", "email", "is_active")
-        VALUES (${userId}, ${roleId}, ${JSON.stringify({ address: adminEmail })}, true)
+        VALUES (${userId}, ${roleId}, ${JSON.stringify(emailPayload)}, true)
         ON CONFLICT DO NOTHING
       `);
     } catch (error) {
