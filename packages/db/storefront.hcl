@@ -125,6 +125,26 @@ enum "blueprint_status" {
   schema = schema.public
   values = ["active", "paused"]
 }
+enum "severity_enum" {
+  schema = schema.public
+  values = ["INFO", "WARNING", "CRITICAL", "SECURITY_ALERT"]
+}
+enum "audit_result_enum" {
+  schema = schema.public
+  values = ["SUCCESS", "FAILURE"]
+}
+enum "tenant_niche" {
+  schema = schema.public
+  values = ["retail", "wellness", "education", "services", "hospitality", "real-estate", "creative"]
+}
+enum "tenant_plan" {
+  schema = schema.public
+  values = ["free", "basic", "pro", "enterprise"]
+}
+enum "tenant_status" {
+  schema = schema.public
+  values = ["active", "suspended", "pending", "archived"]
+}
 
 // 2. CORE TABLES (Extracted from 02-06, Unified and Neutralized)
 // ==========================================
