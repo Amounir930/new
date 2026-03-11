@@ -8,6 +8,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { z } from 'zod';
 import { sanitizeSchemaName } from './schema-manager';
+import { Client } from 'pg';
 
 const execFileAsync = promisify(execFile);
 
@@ -44,24 +45,41 @@ export async function runTenantMigrations(
   // Source of Truth: storefront.hcl
   const hclPath = path.join(rootDir, 'packages/db/storefront.hcl');
 
-  // 3. Construct Secure Connection String (Protocol Alpha-Secure)
-  // We use the environment variables for database credentials
+  // 3. Construct Secure Connection Strings (Protocol Alpha-Secure)
   const { env } = await import('@apex/config');
 
   const dbHost = process.env.DATABASE_URL?.includes('pgbouncer')
     ? 'apex-pgbouncer'
     : 'apex-postgres';
-  
-  // Sovereign Split SSL Policy: PgBouncer requires SSL, while raw Postgres container does not.
+
+  // Sovereign Split SSL Policy: PgBouncer requires SSL, raw Postgres does not.
   const mainUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require`;
-  const devUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@apex-postgres:5432/apex_dev_blank?sslmode=disable`;
+
+  // Engineer's Fix: Explicit search_path=public so Atlas resolves vector(1536) → public.vector
+  const devUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@apex-postgres:5432/apex_dev_blank?sslmode=disable&options=-c%20search_path%3Dpublic`;
 
   process.stdout.write(
     `[Runner] Orchestrating Atlas for schema: ${schemaName}\n`
   );
 
+  // 4. Self-Healing Dev DB Pre-flight (Engineer's Fix)
+  // Ensures the pgvector extension exists in apex_dev_blank before every Atlas run,
+  // regardless of container restarts or volume state.
+  const devClient = new Client({ connectionString: devUrl });
   try {
-    // 4. Secure Atlas Execution (Process Isolation)
+    await devClient.connect();
+    await devClient.query('CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;');
+    process.stdout.write(`[Runner] Dev DB pre-flight: vector extension ready.\n`);
+  } catch (err) {
+    // Non-fatal warning: Atlas may still succeed if extension was already installed
+    const safeErr = String(err).replace(/postgres:\/\/[^@]+@/g, 'postgres://***:***@');
+    process.stdout.write(`[Runner] Warning: Dev DB pre-flight partial failure: ${safeErr}\n`);
+  } finally {
+    await devClient.end();
+  }
+
+  try {
+    // 5. Secure Atlas Execution (Process Isolation)
     const atlasEnv = {
       ...process.env,
       ATLAS_DB_URL: mainUrl,
@@ -71,7 +89,7 @@ export async function runTenantMigrations(
       ATLAS_CONFIG: '/tmp/.atlas-config',
     };
 
-    // Use execFile to prevent shell interpolation/injection
+    // Use execFile to prevent shell interpolation/injection (Protocol Beta)
     const { stdout, stderr } = await execFileAsync(
       'atlas',
       [
@@ -85,9 +103,11 @@ export async function runTenantMigrations(
         devUrl,
         '--var',
         `tenant_schema_name=${schemaName}`,
-        '--exclude',
-        'public.*',
         '--auto-approve',
+        // NOTE: --exclude public.* is intentionally removed.
+        // Enums live in schema.public in storefront.hcl.
+        // Atlas must manage them. The pg pre-flight ensures vector extension
+        // is present so Atlas can see it via search_path=public in devUrl.
       ],
       { env: atlasEnv }
     );
@@ -104,7 +124,7 @@ export async function runTenantMigrations(
       durationMs,
     };
   } catch (error) {
-    // SECURITY: Sanitize the raw error string to mask database credentials before logging
+    // SECURITY P0: Sanitize credentials before logging (Protocol Alpha-S7)
     const rawError = String(error);
     const maskedError = rawError.replace(
       /postgres:\/\/[^@]+@/g,
