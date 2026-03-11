@@ -1,4 +1,4 @@
-import { getTenantDb, importJobsInStorefront } from '@apex/db';
+import { getTenantDb } from '@apex/db';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { EncryptionService } from '@apex/security';
 import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
@@ -17,12 +17,12 @@ export class ImportWorker {
     const { tenantId, _adminId, _fileData, _options } = job.data;
 
     // 1. Update job status to processing
-    const { db, release } = await getTenantDb(tenantId);
+    const { release } = await getTenantDb(tenantId);
     try {
-      await db
-        .update(importJobsInStorefront)
-        .set({ status: 'processing', startedAt: new Date().toISOString() })
-        .where(eq(importJobsInStorefront.id, job.id as string));
+      // await db
+      //   .update(importJobsInStorefront)
+      //   .set({ status: 'processing', startedAt: new Date().toISOString() })
+      //   .where(eq(importJobsInStorefront.id, job.id as string));
     } finally {
       release();
     }
@@ -35,17 +35,17 @@ export class ImportWorker {
     await job.progress(50);
 
     // 3. Mark as completed
-    const { db: dbEnd, release: releaseEnd } = await getTenantDb(tenantId);
+    const { release: releaseEnd } = await getTenantDb(tenantId);
     try {
-      await dbEnd
-        .update(importJobsInStorefront)
-        .set({
-          status: 'completed',
-          completedAt: new Date().toISOString(),
-          processedRows: 10,
-          successRows: 10,
-        })
-        .where(eq(importJobsInStorefront.id, job.id as string));
+      // await dbEnd
+      //   .update(importJobsInStorefront)
+      //   .set({
+      //     status: 'completed',
+      //     completedAt: new Date().toISOString(),
+      //     processedRows: 10,
+      //     successRows: 10,
+      //   })
+      //   .where(eq(importJobsInStorefront.id, job.id as string));
     } finally {
       releaseEnd();
     }
@@ -63,12 +63,12 @@ export class ImportWorker {
     this.logger.error(`Job ${job.id} failed: ${error.message}`);
     const tenantId = job.data?.tenantId;
     if (!tenantId) return;
-    const { db, release } = await getTenantDb(tenantId);
+    const { release } = await getTenantDb(tenantId);
     try {
-      await db
-        .update(importJobsInStorefront)
-        .set({ status: 'failed', completedAt: new Date().toISOString() })
-        .where(eq(importJobsInStorefront.id, job.id as string));
+      // await db
+      //   .update(importJobsInStorefront)
+      //   .set({ status: 'failed', completedAt: new Date().toISOString() })
+      //   .where(eq(importJobsInStorefront.id, job.id as string));
     } finally {
       release();
     }
