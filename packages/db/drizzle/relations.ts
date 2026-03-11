@@ -1,65 +1,66 @@
-import { relations } from 'drizzle-orm/relations';
+import { relations } from "drizzle-orm/relations";
 import {
+  customersInStorefront,
   abandonedCheckoutsInStorefront,
   affiliatePartnersInStorefront,
   affiliateTransactionsInStorefront,
-  appInstallationsInStorefront,
+  categoriesInStorefront,
+  brandsInStorefront,
+  productsInStorefront,
   b2BCompaniesInStorefront,
   b2BPricingTiersInStorefront,
   b2BUsersInStorefront,
   blogCategoriesInStorefront,
   blogPostsInStorefront,
-  brandsInStorefront,
-  cartItemsInStorefront,
   cartsInStorefront,
-  categoriesInStorefront,
+  cartItemsInStorefront,
   couponsInStorefront,
   couponUsagesInStorefront,
   customerAddressesInStorefront,
   customerConsentsInStorefront,
-  customersInStorefront,
+  priceRulesInStorefront,
   discountCodesInStorefront,
   faqCategoriesInStorefront,
   faqsInStorefront,
-  flashSaleProductsInStorefront,
   flashSalesInStorefront,
-  fulfillmentItemsInStorefront,
+  flashSaleProductsInStorefront,
+  ordersInStorefront,
   fulfillmentsInStorefront,
+  productVariantsInStorefront,
+  orderItemsInStorefront,
+  fulfillmentItemsInStorefront,
+  locationsInStorefront,
   inventoryLevelsInStorefront,
   inventoryMovementsInStorefront,
   inventoryReservationsInStorefront,
-  inventoryTransferItemsInStorefront,
   inventoryTransfersInStorefront,
-  kbArticlesInStorefront,
-  kbCategoriesInStorefront,
-  locationsInStorefront,
-  marketsInStorefront,
+  inventoryTransferItemsInStorefront,
   orderEditsInStorefront,
-  orderItemsInStorefront,
-  ordersInStorefront,
+  kbCategoriesInStorefront,
+  kbArticlesInStorefront,
   orderTimelineInStorefront,
-  priceListsInStorefront,
-  priceRulesInStorefront,
-  productAttributesInStorefront,
-  productBundleItemsInStorefront,
   productBundlesInStorefront,
+  productBundleItemsInStorefront,
+  marketsInStorefront,
+  priceListsInStorefront,
+  productAttributesInStorefront,
   productImagesInStorefront,
-  productsInStorefront,
-  productVariantsInStorefront,
-  purchaseOrderItemsInStorefront,
   purchaseOrdersInStorefront,
-  refundItemsInStorefront,
-  refundsInStorefront,
+  suppliersInStorefront,
+  purchaseOrderItemsInStorefront,
   rmaItemsInStorefront,
   rmaRequestsInStorefront,
-  staffMembersInStorefront,
+  refundsInStorefront,
+  refundItemsInStorefront,
   staffRolesInStorefront,
+  staffMembersInStorefront,
   staffSessionsInStorefront,
-  suppliersInStorefront,
   taxCategoriesInStorefront,
   taxRulesInStorefront,
+  appInstallationsInStorefront,
   webhookSubscriptionsInStorefront,
-} from './schema';
+  categories,
+} from "./schema";
 
 export const abandonedCheckoutsInStorefrontRelations = relations(
   abandonedCheckoutsInStorefront,
@@ -68,7 +69,7 @@ export const abandonedCheckoutsInStorefrontRelations = relations(
       fields: [abandonedCheckoutsInStorefront.customerId],
       references: [customersInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const customersInStorefrontRelations = relations(
@@ -79,7 +80,7 @@ export const customersInStorefrontRelations = relations(
     customerAddressesInStorefronts: many(customerAddressesInStorefront),
     customerConsentsInStorefronts: many(customerConsentsInStorefront),
     ordersInStorefronts: many(ordersInStorefront),
-  })
+  }),
 );
 
 export const affiliateTransactionsInStorefrontRelations = relations(
@@ -89,14 +90,54 @@ export const affiliateTransactionsInStorefrontRelations = relations(
       fields: [affiliateTransactionsInStorefront.partnerId],
       references: [affiliatePartnersInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const affiliatePartnersInStorefrontRelations = relations(
   affiliatePartnersInStorefront,
   ({ many }) => ({
     affiliateTransactionsInStorefronts: many(affiliateTransactionsInStorefront),
-  })
+  }),
+);
+
+export const categoriesInStorefrontRelations = relations(
+  categoriesInStorefront,
+  ({ one, many }) => ({
+    categoriesInStorefront: one(categoriesInStorefront, {
+      fields: [categoriesInStorefront.parentId],
+      references: [categoriesInStorefront.id],
+      relationName: "categoriesInStorefront_parentId_categoriesInStorefront_id",
+    }),
+    categoriesInStorefronts: many(categoriesInStorefront, {
+      relationName: "categoriesInStorefront_parentId_categoriesInStorefront_id",
+    }),
+    productsInStorefronts: many(productsInStorefront),
+  }),
+);
+
+export const productsInStorefrontRelations = relations(
+  productsInStorefront,
+  ({ one, many }) => ({
+    brandsInStorefront: one(brandsInStorefront, {
+      fields: [productsInStorefront.brandId],
+      references: [brandsInStorefront.id],
+    }),
+    categoriesInStorefront: one(categoriesInStorefront, {
+      fields: [productsInStorefront.categoryId],
+      references: [categoriesInStorefront.id],
+    }),
+    b2BPricingTiersInStorefronts: many(b2BPricingTiersInStorefront),
+    productVariantsInStorefronts: many(productVariantsInStorefront),
+    productAttributesInStorefronts: many(productAttributesInStorefront),
+    productImagesInStorefronts: many(productImagesInStorefront),
+  }),
+);
+
+export const brandsInStorefrontRelations = relations(
+  brandsInStorefront,
+  ({ many }) => ({
+    productsInStorefronts: many(productsInStorefront),
+  }),
 );
 
 export const b2BPricingTiersInStorefrontRelations = relations(
@@ -110,7 +151,7 @@ export const b2BPricingTiersInStorefrontRelations = relations(
       fields: [b2BPricingTiersInStorefront.productId],
       references: [productsInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const b2BCompaniesInStorefrontRelations = relations(
@@ -118,47 +159,7 @@ export const b2BCompaniesInStorefrontRelations = relations(
   ({ many }) => ({
     b2BPricingTiersInStorefronts: many(b2BPricingTiersInStorefront),
     b2BUsersInStorefronts: many(b2BUsersInStorefront),
-  })
-);
-
-export const productsInStorefrontRelations = relations(
-  productsInStorefront,
-  ({ one, many }) => ({
-    b2BPricingTiersInStorefronts: many(b2BPricingTiersInStorefront),
-    brandsInStorefront: one(brandsInStorefront, {
-      fields: [productsInStorefront.brandId],
-      references: [brandsInStorefront.id],
-    }),
-    categoriesInStorefront: one(categoriesInStorefront, {
-      fields: [productsInStorefront.categoryId],
-      references: [categoriesInStorefront.id],
-    }),
-    productVariantsInStorefronts: many(productVariantsInStorefront),
-    productAttributesInStorefronts: many(productAttributesInStorefront),
-    productImagesInStorefronts: many(productImagesInStorefront),
-  })
-);
-
-export const categoriesInStorefrontRelations = relations(
-  categoriesInStorefront,
-  ({ one, many }) => ({
-    categoriesInStorefront: one(categoriesInStorefront, {
-      fields: [categoriesInStorefront.parentId],
-      references: [categoriesInStorefront.id],
-      relationName: 'categoriesInStorefront_parentId_categoriesInStorefront_id',
-    }),
-    categoriesInStorefronts: many(categoriesInStorefront, {
-      relationName: 'categoriesInStorefront_parentId_categoriesInStorefront_id',
-    }),
-    productsInStorefronts: many(productsInStorefront),
-  })
-);
-
-export const brandsInStorefrontRelations = relations(
-  brandsInStorefront,
-  ({ many }) => ({
-    productsInStorefronts: many(productsInStorefront),
-  })
+  }),
 );
 
 export const b2BUsersInStorefrontRelations = relations(
@@ -168,7 +169,7 @@ export const b2BUsersInStorefrontRelations = relations(
       fields: [b2BUsersInStorefront.companyId],
       references: [b2BCompaniesInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const blogPostsInStorefrontRelations = relations(
@@ -178,14 +179,14 @@ export const blogPostsInStorefrontRelations = relations(
       fields: [blogPostsInStorefront.categoryId],
       references: [blogCategoriesInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const blogCategoriesInStorefrontRelations = relations(
   blogCategoriesInStorefront,
   ({ many }) => ({
     blogPostsInStorefronts: many(blogPostsInStorefront),
-  })
+  }),
 );
 
 export const cartsInStorefrontRelations = relations(
@@ -196,7 +197,7 @@ export const cartsInStorefrontRelations = relations(
       references: [customersInStorefront.id],
     }),
     cartItemsInStorefronts: many(cartItemsInStorefront),
-  })
+  }),
 );
 
 export const cartItemsInStorefrontRelations = relations(
@@ -206,7 +207,7 @@ export const cartItemsInStorefrontRelations = relations(
       fields: [cartItemsInStorefront.cartId],
       references: [cartsInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const couponUsagesInStorefrontRelations = relations(
@@ -216,14 +217,14 @@ export const couponUsagesInStorefrontRelations = relations(
       fields: [couponUsagesInStorefront.couponId],
       references: [couponsInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const couponsInStorefrontRelations = relations(
   couponsInStorefront,
   ({ many }) => ({
     couponUsagesInStorefronts: many(couponUsagesInStorefront),
-  })
+  }),
 );
 
 export const customerAddressesInStorefrontRelations = relations(
@@ -233,7 +234,7 @@ export const customerAddressesInStorefrontRelations = relations(
       fields: [customerAddressesInStorefront.customerId],
       references: [customersInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const customerConsentsInStorefrontRelations = relations(
@@ -243,7 +244,7 @@ export const customerConsentsInStorefrontRelations = relations(
       fields: [customerConsentsInStorefront.customerId],
       references: [customersInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const discountCodesInStorefrontRelations = relations(
@@ -253,14 +254,14 @@ export const discountCodesInStorefrontRelations = relations(
       fields: [discountCodesInStorefront.priceRuleId],
       references: [priceRulesInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const priceRulesInStorefrontRelations = relations(
   priceRulesInStorefront,
   ({ many }) => ({
     discountCodesInStorefronts: many(discountCodesInStorefront),
-  })
+  }),
 );
 
 export const faqsInStorefrontRelations = relations(
@@ -270,14 +271,14 @@ export const faqsInStorefrontRelations = relations(
       fields: [faqsInStorefront.categoryId],
       references: [faqCategoriesInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const faqCategoriesInStorefrontRelations = relations(
   faqCategoriesInStorefront,
   ({ many }) => ({
     faqsInStorefronts: many(faqsInStorefront),
-  })
+  }),
 );
 
 export const flashSaleProductsInStorefrontRelations = relations(
@@ -287,14 +288,14 @@ export const flashSaleProductsInStorefrontRelations = relations(
       fields: [flashSaleProductsInStorefront.flashSaleId],
       references: [flashSalesInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const flashSalesInStorefrontRelations = relations(
   flashSalesInStorefront,
   ({ many }) => ({
     flashSaleProductsInStorefronts: many(flashSaleProductsInStorefront),
-  })
+  }),
 );
 
 export const ordersInStorefrontRelations = relations(
@@ -308,9 +309,9 @@ export const ordersInStorefrontRelations = relations(
     orderItemsInStorefronts: many(orderItemsInStorefront),
     orderEditsInStorefronts: many(orderEditsInStorefront),
     orderTimelineInStorefronts: many(orderTimelineInStorefront),
-    rmaRequestsInStorefronts: many(rmaRequestsInStorefront),
     refundsInStorefronts: many(refundsInStorefront),
-  })
+    rmaRequestsInStorefronts: many(rmaRequestsInStorefront),
+  }),
 );
 
 export const fulfillmentsInStorefrontRelations = relations(
@@ -321,7 +322,7 @@ export const fulfillmentsInStorefrontRelations = relations(
       references: [ordersInStorefront.id],
     }),
     fulfillmentItemsInStorefronts: many(fulfillmentItemsInStorefront),
-  })
+  }),
 );
 
 export const productVariantsInStorefrontRelations = relations(
@@ -336,10 +337,10 @@ export const productVariantsInStorefrontRelations = relations(
     inventoryMovementsInStorefronts: many(inventoryMovementsInStorefront),
     inventoryReservationsInStorefronts: many(inventoryReservationsInStorefront),
     inventoryTransferItemsInStorefronts: many(
-      inventoryTransferItemsInStorefront
+      inventoryTransferItemsInStorefront,
     ),
     purchaseOrderItemsInStorefronts: many(purchaseOrderItemsInStorefront),
-  })
+  }),
 );
 
 export const orderItemsInStorefrontRelations = relations(
@@ -355,10 +356,10 @@ export const orderItemsInStorefrontRelations = relations(
     }),
     fulfillmentItemsInStorefronts: many(fulfillmentItemsInStorefront),
     orderEditsInStorefronts: many(orderEditsInStorefront),
-    rmaRequestsInStorefronts: many(rmaRequestsInStorefront),
-    refundItemsInStorefronts: many(refundItemsInStorefront),
     rmaItemsInStorefronts: many(rmaItemsInStorefront),
-  })
+    refundItemsInStorefronts: many(refundItemsInStorefront),
+    rmaRequestsInStorefronts: many(rmaRequestsInStorefront),
+  }),
 );
 
 export const fulfillmentItemsInStorefrontRelations = relations(
@@ -372,7 +373,7 @@ export const fulfillmentItemsInStorefrontRelations = relations(
       fields: [fulfillmentItemsInStorefront.orderItemId],
       references: [orderItemsInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const inventoryLevelsInStorefrontRelations = relations(
@@ -386,52 +387,31 @@ export const inventoryLevelsInStorefrontRelations = relations(
       fields: [inventoryLevelsInStorefront.variantId],
       references: [productVariantsInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const locationsInStorefrontRelations = relations(
   locationsInStorefront,
   ({ many }) => ({
     inventoryLevelsInStorefronts: many(inventoryLevelsInStorefront),
+    inventoryMovementsInStorefronts: many(inventoryMovementsInStorefront),
+    inventoryReservationsInStorefronts: many(inventoryReservationsInStorefront),
     inventoryTransfersInStorefronts_fromLocationId: many(
       inventoryTransfersInStorefront,
       {
         relationName:
-          'inventoryTransfersInStorefront_fromLocationId_locationsInStorefront_id',
-      }
+          "inventoryTransfersInStorefront_fromLocationId_locationsInStorefront_id",
+      },
     ),
     inventoryTransfersInStorefronts_toLocationId: many(
       inventoryTransfersInStorefront,
       {
         relationName:
-          'inventoryTransfersInStorefront_toLocationId_locationsInStorefront_id',
-      }
+          "inventoryTransfersInStorefront_toLocationId_locationsInStorefront_id",
+      },
     ),
-    inventoryMovementsInStorefronts: many(inventoryMovementsInStorefront),
-    inventoryReservationsInStorefronts: many(inventoryReservationsInStorefront),
     purchaseOrdersInStorefronts: many(purchaseOrdersInStorefront),
-  })
-);
-
-export const inventoryTransfersInStorefrontRelations = relations(
-  inventoryTransfersInStorefront,
-  ({ one, many }) => ({
-    locationsInStorefront_fromLocationId: one(locationsInStorefront, {
-      fields: [inventoryTransfersInStorefront.fromLocationId],
-      references: [locationsInStorefront.id],
-      relationName:
-        'inventoryTransfersInStorefront_fromLocationId_locationsInStorefront_id',
-    }),
-    locationsInStorefront_toLocationId: one(locationsInStorefront, {
-      fields: [inventoryTransfersInStorefront.toLocationId],
-      references: [locationsInStorefront.id],
-      relationName:
-        'inventoryTransfersInStorefront_toLocationId_locationsInStorefront_id',
-    }),
-    inventoryTransferItemsInStorefronts: many(
-      inventoryTransferItemsInStorefront
-    ),
-  })
+  }),
 );
 
 export const inventoryMovementsInStorefrontRelations = relations(
@@ -445,7 +425,7 @@ export const inventoryMovementsInStorefrontRelations = relations(
       fields: [inventoryMovementsInStorefront.variantId],
       references: [productVariantsInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const inventoryReservationsInStorefrontRelations = relations(
@@ -459,7 +439,28 @@ export const inventoryReservationsInStorefrontRelations = relations(
       fields: [inventoryReservationsInStorefront.variantId],
       references: [productVariantsInStorefront.id],
     }),
-  })
+  }),
+);
+
+export const inventoryTransfersInStorefrontRelations = relations(
+  inventoryTransfersInStorefront,
+  ({ one, many }) => ({
+    locationsInStorefront_fromLocationId: one(locationsInStorefront, {
+      fields: [inventoryTransfersInStorefront.fromLocationId],
+      references: [locationsInStorefront.id],
+      relationName:
+        "inventoryTransfersInStorefront_fromLocationId_locationsInStorefront_id",
+    }),
+    locationsInStorefront_toLocationId: one(locationsInStorefront, {
+      fields: [inventoryTransfersInStorefront.toLocationId],
+      references: [locationsInStorefront.id],
+      relationName:
+        "inventoryTransfersInStorefront_toLocationId_locationsInStorefront_id",
+    }),
+    inventoryTransferItemsInStorefronts: many(
+      inventoryTransferItemsInStorefront,
+    ),
+  }),
 );
 
 export const inventoryTransferItemsInStorefrontRelations = relations(
@@ -473,24 +474,7 @@ export const inventoryTransferItemsInStorefrontRelations = relations(
       fields: [inventoryTransferItemsInStorefront.variantId],
       references: [productVariantsInStorefront.id],
     }),
-  })
-);
-
-export const kbArticlesInStorefrontRelations = relations(
-  kbArticlesInStorefront,
-  ({ one }) => ({
-    kbCategoriesInStorefront: one(kbCategoriesInStorefront, {
-      fields: [kbArticlesInStorefront.categoryId],
-      references: [kbCategoriesInStorefront.id],
-    }),
-  })
-);
-
-export const kbCategoriesInStorefrontRelations = relations(
-  kbCategoriesInStorefront,
-  ({ many }) => ({
-    kbArticlesInStorefronts: many(kbArticlesInStorefront),
-  })
+  }),
 );
 
 export const orderEditsInStorefrontRelations = relations(
@@ -504,7 +488,24 @@ export const orderEditsInStorefrontRelations = relations(
       fields: [orderEditsInStorefront.orderId],
       references: [ordersInStorefront.id],
     }),
-  })
+  }),
+);
+
+export const kbArticlesInStorefrontRelations = relations(
+  kbArticlesInStorefront,
+  ({ one }) => ({
+    kbCategoriesInStorefront: one(kbCategoriesInStorefront, {
+      fields: [kbArticlesInStorefront.categoryId],
+      references: [kbCategoriesInStorefront.id],
+    }),
+  }),
+);
+
+export const kbCategoriesInStorefrontRelations = relations(
+  kbCategoriesInStorefront,
+  ({ many }) => ({
+    kbArticlesInStorefronts: many(kbArticlesInStorefront),
+  }),
 );
 
 export const orderTimelineInStorefrontRelations = relations(
@@ -514,34 +515,7 @@ export const orderTimelineInStorefrontRelations = relations(
       fields: [orderTimelineInStorefront.orderId],
       references: [ordersInStorefront.id],
     }),
-  })
-);
-
-export const productAttributesInStorefrontRelations = relations(
-  productAttributesInStorefront,
-  ({ one }) => ({
-    productsInStorefront: one(productsInStorefront, {
-      fields: [productAttributesInStorefront.productId],
-      references: [productsInStorefront.id],
-    }),
-  })
-);
-
-export const priceListsInStorefrontRelations = relations(
-  priceListsInStorefront,
-  ({ one }) => ({
-    marketsInStorefront: one(marketsInStorefront, {
-      fields: [priceListsInStorefront.marketId],
-      references: [marketsInStorefront.id],
-    }),
-  })
-);
-
-export const marketsInStorefrontRelations = relations(
-  marketsInStorefront,
-  ({ many }) => ({
-    priceListsInStorefronts: many(priceListsInStorefront),
-  })
+  }),
 );
 
 export const productBundleItemsInStorefrontRelations = relations(
@@ -551,14 +525,41 @@ export const productBundleItemsInStorefrontRelations = relations(
       fields: [productBundleItemsInStorefront.bundleId],
       references: [productBundlesInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const productBundlesInStorefrontRelations = relations(
   productBundlesInStorefront,
   ({ many }) => ({
     productBundleItemsInStorefronts: many(productBundleItemsInStorefront),
-  })
+  }),
+);
+
+export const priceListsInStorefrontRelations = relations(
+  priceListsInStorefront,
+  ({ one }) => ({
+    marketsInStorefront: one(marketsInStorefront, {
+      fields: [priceListsInStorefront.marketId],
+      references: [marketsInStorefront.id],
+    }),
+  }),
+);
+
+export const marketsInStorefrontRelations = relations(
+  marketsInStorefront,
+  ({ many }) => ({
+    priceListsInStorefronts: many(priceListsInStorefront),
+  }),
+);
+
+export const productAttributesInStorefrontRelations = relations(
+  productAttributesInStorefront,
+  ({ one }) => ({
+    productsInStorefront: one(productsInStorefront, {
+      fields: [productAttributesInStorefront.productId],
+      references: [productsInStorefront.id],
+    }),
+  }),
 );
 
 export const productImagesInStorefrontRelations = relations(
@@ -568,22 +569,7 @@ export const productImagesInStorefrontRelations = relations(
       fields: [productImagesInStorefront.productId],
       references: [productsInStorefront.id],
     }),
-  })
-);
-
-export const rmaRequestsInStorefrontRelations = relations(
-  rmaRequestsInStorefront,
-  ({ one, many }) => ({
-    ordersInStorefront: one(ordersInStorefront, {
-      fields: [rmaRequestsInStorefront.orderId],
-      references: [ordersInStorefront.id],
-    }),
-    orderItemsInStorefront: one(orderItemsInStorefront, {
-      fields: [rmaRequestsInStorefront.orderItemId],
-      references: [orderItemsInStorefront.id],
-    }),
-    rmaItemsInStorefronts: many(rmaItemsInStorefront),
-  })
+  }),
 );
 
 export const purchaseOrdersInStorefrontRelations = relations(
@@ -598,14 +584,14 @@ export const purchaseOrdersInStorefrontRelations = relations(
       references: [suppliersInStorefront.id],
     }),
     purchaseOrderItemsInStorefronts: many(purchaseOrderItemsInStorefront),
-  })
+  }),
 );
 
 export const suppliersInStorefrontRelations = relations(
   suppliersInStorefront,
   ({ many }) => ({
     purchaseOrdersInStorefronts: many(purchaseOrdersInStorefront),
-  })
+  }),
 );
 
 export const purchaseOrderItemsInStorefrontRelations = relations(
@@ -619,32 +605,7 @@ export const purchaseOrderItemsInStorefrontRelations = relations(
       fields: [purchaseOrderItemsInStorefront.variantId],
       references: [productVariantsInStorefront.id],
     }),
-  })
-);
-
-export const refundsInStorefrontRelations = relations(
-  refundsInStorefront,
-  ({ one, many }) => ({
-    ordersInStorefront: one(ordersInStorefront, {
-      fields: [refundsInStorefront.orderId],
-      references: [ordersInStorefront.id],
-    }),
-    refundItemsInStorefronts: many(refundItemsInStorefront),
-  })
-);
-
-export const refundItemsInStorefrontRelations = relations(
-  refundItemsInStorefront,
-  ({ one }) => ({
-    orderItemsInStorefront: one(orderItemsInStorefront, {
-      fields: [refundItemsInStorefront.orderItemId],
-      references: [orderItemsInStorefront.id],
-    }),
-    refundsInStorefront: one(refundsInStorefront, {
-      fields: [refundItemsInStorefront.refundId],
-      references: [refundsInStorefront.id],
-    }),
-  })
+  }),
 );
 
 export const rmaItemsInStorefrontRelations = relations(
@@ -658,7 +619,47 @@ export const rmaItemsInStorefrontRelations = relations(
       fields: [rmaItemsInStorefront.rmaId],
       references: [rmaRequestsInStorefront.id],
     }),
-  })
+  }),
+);
+
+export const rmaRequestsInStorefrontRelations = relations(
+  rmaRequestsInStorefront,
+  ({ one, many }) => ({
+    rmaItemsInStorefronts: many(rmaItemsInStorefront),
+    ordersInStorefront: one(ordersInStorefront, {
+      fields: [rmaRequestsInStorefront.orderId],
+      references: [ordersInStorefront.id],
+    }),
+    orderItemsInStorefront: one(orderItemsInStorefront, {
+      fields: [rmaRequestsInStorefront.orderItemId],
+      references: [orderItemsInStorefront.id],
+    }),
+  }),
+);
+
+export const refundsInStorefrontRelations = relations(
+  refundsInStorefront,
+  ({ one, many }) => ({
+    ordersInStorefront: one(ordersInStorefront, {
+      fields: [refundsInStorefront.orderId],
+      references: [ordersInStorefront.id],
+    }),
+    refundItemsInStorefronts: many(refundItemsInStorefront),
+  }),
+);
+
+export const refundItemsInStorefrontRelations = relations(
+  refundItemsInStorefront,
+  ({ one }) => ({
+    orderItemsInStorefront: one(orderItemsInStorefront, {
+      fields: [refundItemsInStorefront.orderItemId],
+      references: [orderItemsInStorefront.id],
+    }),
+    refundsInStorefront: one(refundsInStorefront, {
+      fields: [refundItemsInStorefront.refundId],
+      references: [refundsInStorefront.id],
+    }),
+  }),
 );
 
 export const staffMembersInStorefrontRelations = relations(
@@ -669,14 +670,14 @@ export const staffMembersInStorefrontRelations = relations(
       references: [staffRolesInStorefront.id],
     }),
     staffSessionsInStorefronts: many(staffSessionsInStorefront),
-  })
+  }),
 );
 
 export const staffRolesInStorefrontRelations = relations(
   staffRolesInStorefront,
   ({ many }) => ({
     staffMembersInStorefronts: many(staffMembersInStorefront),
-  })
+  }),
 );
 
 export const staffSessionsInStorefrontRelations = relations(
@@ -686,7 +687,7 @@ export const staffSessionsInStorefrontRelations = relations(
       fields: [staffSessionsInStorefront.staffId],
       references: [staffMembersInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const taxRulesInStorefrontRelations = relations(
@@ -696,14 +697,14 @@ export const taxRulesInStorefrontRelations = relations(
       fields: [taxRulesInStorefront.taxCategoryId],
       references: [taxCategoriesInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const taxCategoriesInStorefrontRelations = relations(
   taxCategoriesInStorefront,
   ({ many }) => ({
     taxRulesInStorefronts: many(taxRulesInStorefront),
-  })
+  }),
 );
 
 export const webhookSubscriptionsInStorefrontRelations = relations(
@@ -713,12 +714,23 @@ export const webhookSubscriptionsInStorefrontRelations = relations(
       fields: [webhookSubscriptionsInStorefront.appId],
       references: [appInstallationsInStorefront.id],
     }),
-  })
+  }),
 );
 
 export const appInstallationsInStorefrontRelations = relations(
   appInstallationsInStorefront,
   ({ many }) => ({
     webhookSubscriptionsInStorefronts: many(webhookSubscriptionsInStorefront),
-  })
+  }),
 );
+
+export const categoriesRelations = relations(categories, ({ one, many }) => ({
+  category: one(categories, {
+    fields: [categories.parentId],
+    references: [categories.id],
+    relationName: "categories_parentId_categories_id",
+  }),
+  categories: many(categories, {
+    relationName: "categories_parentId_categories_id",
+  }),
+}));
