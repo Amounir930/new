@@ -103,11 +103,24 @@ export async function runTenantMigrations(
         devUrl,
         '--var',
         `tenant_schema_name=${schemaName}`,
+        
+        // 🔒 الحصار المعماري الإلزامي (Blast-Radius Containment)
+        '--schema',
+        schemaName,                 // التصريح بإنشاء وإدارة مخطط التاجر الجديد فقط
+        '--schema',
+        'public',                   // التصريح بقراءة الأنواع من العام فقط
+        
+        // ⛔ مناطق محرمة (No-Fly Zones) - منع المساس بالمخططات السيادية
+        '--exclude',
+        'public.*',                 // يمنع إنشاء/حذف جداول داخل public
+        '--exclude',
+        'governance.*',
+        '--exclude',
+        'vault.*',
+        '--exclude',
+        'shared.*',
+        
         '--auto-approve',
-        // NOTE: --exclude public.* is intentionally removed.
-        // Enums live in schema.public in storefront.hcl.
-        // Atlas must manage them. The pg pre-flight ensures vector extension
-        // is present so Atlas can see it via search_path=public in devUrl.
       ],
       { env: atlasEnv }
     );
