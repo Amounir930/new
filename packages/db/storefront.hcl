@@ -1,4 +1,4 @@
-schema "public" {}
+// schema "public" {}
 
 // 0. DYNAMIC SCHEMA ARCHITECTURE (Hybrid Isolation)
 // ==========================================
@@ -14,115 +14,115 @@ schema "dynamic_tenant" {
 // ==========================================
 
 enum "order_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["draft", "awaiting_approval", "pending", "processing", "shipped", "delivered", "cancelled", "returned"]
 }
 enum "payment_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["pending", "paid", "partially_refunded", "refunded", "failed"]
 }
 enum "payment_method" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["card", "cod", "wallet", "bnpl", "bank_transfer"]
 }
 enum "fulfillment_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["pending", "shipped", "in_transit", "delivered", "failed"]
 }
 enum "order_source" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["web", "mobile", "b2b", "pos"]
 }
 enum "discount_type" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["percentage", "fixed", "buy_x_get_y", "free_shipping"]
 }
 enum "discount_applies_to" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["all", "specific_products", "specific_categories", "specific_customers"]
 }
 enum "rma_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["requested", "approved", "shipped", "received", "completed", "rejected"]
 }
 enum "rma_reason_code" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["defective", "wrong_item", "changed_mind", "not_as_described", "damaged_in_transit"]
 }
 enum "rma_condition" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["new", "opened", "damaged"]
 }
 enum "rma_resolution" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["refund", "exchange", "store_credit"]
 }
 enum "refund_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["pending", "processed", "failed"]
 }
 enum "inventory_movement_type" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["in", "out", "adjustment", "return", "transfer"]
 }
 enum "reservation_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["active", "converted", "expired"]
 }
 enum "transfer_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["draft", "in_transit", "received", "cancelled"]
 }
 enum "location_type" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["warehouse", "retail", "dropship"]
 }
 enum "purchase_order_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["draft", "ordered", "partial", "received", "cancelled"]
 }
 enum "invoice_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["draft", "issued", "paid", "overdue"]
 }
 enum "lead_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["new", "contacted", "qualified", "converted"]
 }
 enum "dunning_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["pending", "retried", "failed", "recovered"]
 }
 enum "outbox_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["pending", "processing", "completed", "failed"]
 }
 enum "affiliate_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["active", "pending", "suspended"]
 }
 enum "affiliate_tx_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["pending", "approved", "paid", "rejected"]
 }
 enum "b2b_company_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["active", "pending", "suspended"]
 }
 enum "b2b_user_role" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["admin", "buyer", "viewer"]
 }
 enum "consent_channel" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["email", "sms", "push", "whatsapp"]
 }
 enum "actor_type" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["super_admin", "tenant_admin", "system"]
 }
 enum "blueprint_status" {
-  schema = schema.public
+  schema = schema.dynamic_tenant
   values = ["active", "paused"]
 }
 
@@ -477,7 +477,7 @@ table "products" {
     default = sql("'[]'::jsonb")
   }
   column "embedding" {
-    type = sql("vector(1536)")
+    type = sql("public.vector(1536)")
     null = true
   }
   column "version" {
@@ -616,7 +616,7 @@ table "product_variants" {
     type = jsonb
   }
   column "embedding" {
-    type = sql("vector(1536)")
+    type = sql("public.vector(1536)")
     null = true
   }
   primary_key {
@@ -3207,7 +3207,7 @@ table "reviews" {
     default = false
   }
   column "embedding" {
-    type = sql("vector(1536)")
+    type = sql("public.vector(1536)")
     null = true
   }
   primary_key {
