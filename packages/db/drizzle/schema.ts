@@ -777,7 +777,7 @@ export const loyaltyRulesInStorefront = storefront.table(
       .defaultNow()
       .notNull(),
   },
-  (table) => [
+  (_table) => [
     check(
       'chk_loyalty_math',
       sql`(points_per_currency > (0)::numeric) AND (min_redeem_points > 0)`
@@ -866,7 +866,7 @@ export const archivalVaultInVault = vault.table(
     payload: jsonb().notNull(),
     tombstoneHash: text('tombstone_hash').notNull(),
   },
-  (table) => [
+  (_table) => [
     pgPolicy('tenant_isolation_policy', {
       as: 'permissive',
       for: 'all',
@@ -995,7 +995,7 @@ export const tenantConfigInStorefront = storefront.table(
       .defaultNow()
       .notNull(),
   },
-  (table) => [
+  (_table) => [
     check('chk_config_key', sql`(key)::text ~ '^[a-zA-Z0-9_]+$'::text`),
     check('chk_tc_value_size', sql`pg_column_size(value) <= 102400`),
   ]
@@ -1388,7 +1388,7 @@ export const b2BCompaniesInStorefront = storefront.table(
     industry: varchar({ length: 100 }),
     lockVersion: integer('lock_version').default(1).notNull(),
   },
-  (table) => [
+  (_table) => [
     check(
       'chk_credit_limit_positive',
       sql`COALESCE(credit_limit, (0)::numeric) >= (0)::numeric`
@@ -2887,7 +2887,7 @@ export const productBundlesInStorefront = storefront.table(
       .notNull(),
     name: jsonb().notNull(),
   },
-  (table) => [
+  (_table) => [
     check(
       'chk_bundle_discount_positive',
       sql`COALESCE(discount_value, (0)::numeric) >= (0)::numeric`
@@ -2995,7 +2995,7 @@ export const suppliersInStorefront = storefront.table(
     notes: text(),
     address: jsonb(),
   },
-  (table) => [
+  (_table) => [
     check(
       'chk_sup_company_s7',
       sql`(company IS NULL) OR ((jsonb_typeof(company) = 'object'::text) AND (company ? 'enc'::text) AND (company ? 'iv'::text) AND (company ? 'tag'::text) AND (company ? 'data'::text))`
@@ -3475,7 +3475,7 @@ export const appInstallationsInStorefront = storefront.table(
       mode: 'string',
     }),
   },
-  (table) => [
+  (_table) => [
     check(
       'chk_app_key_s7',
       sql`(api_key IS NULL) OR ((jsonb_typeof(api_key) = 'object'::text) AND (api_key ? 'enc'::text) AND (api_key ? 'iv'::text) AND (api_key ? 'tag'::text) AND (api_key ? 'data'::text))`
