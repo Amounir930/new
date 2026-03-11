@@ -104,7 +104,7 @@ export class ProvisioningService {
       steps[1].status = 'done';
 
       // 3. S3 Protocol: Create Isolated Storage Bucket
-      await createStorageBucket(options.subdomain);
+      await createStorageBucket(options.subdomain, options.plan);
       steps[2].status = 'done';
 
       const seedResult = await seedTenantData({

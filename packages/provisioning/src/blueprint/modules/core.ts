@@ -12,7 +12,7 @@ export class CoreModule implements SeederModule {
   name = 'core';
 
   async run(context: BlueprintContext, config: BlueprintConfig): Promise<void> {
-    const { db, adminEmail, storeId } = context;
+    const { adminEmail, storeId } = context;
     const { sql } = await import('drizzle-orm');
 
     if (adminEmail && storeId) {
@@ -20,11 +20,11 @@ export class CoreModule implements SeederModule {
     }
 
     if (config.settings) {
-      await this.seedSettings(db, config.settings, sql);
+      await this.seedSettings(context, config.settings, sql);
     }
 
     if (config.pages && config.pages.length > 0) {
-      await this.seedPages(db, config.pages, sql);
+      await this.seedPages(context, config.pages, sql);
     }
   }
 
@@ -33,11 +33,11 @@ export class CoreModule implements SeederModule {
     adminEmail: string,
     sql: any
   ): Promise<void> {
-    const { db } = context;
+    const { db, schema } = context;
     try {
       const roleId = crypto.randomUUID();
       await db.execute(sql`
-        INSERT INTO "staff_roles" ("id", "name", "is_system", "permissions")
+        INSERT INTO ${sql.identifier(schema)}."staff_roles" ("id", "name", "is_system", "permissions")
         VALUES (${roleId}, 'Owner', true, ${JSON.stringify({ scope: '*' })})
         ON CONFLICT ("id") DO NOTHING
       `);
@@ -53,7 +53,7 @@ export class CoreModule implements SeederModule {
       };
 
       await db.execute(sql`
-        INSERT INTO "staff_members" ("user_id", "role_id", "email", "is_active")
+        INSERT INTO ${sql.identifier(schema)}."staff_members" ("user_id", "role_id", "email", "is_active")
         VALUES (${userId}, ${roleId}, ${JSON.stringify(emailPayload)}, true)
         ON CONFLICT DO NOTHING
       `);
@@ -67,23 +67,29 @@ export class CoreModule implements SeederModule {
   }
 
   private async seedSettings(
-    db: any,
+    context: BlueprintContext,
     settings: Record<string, any>,
     sql: any
   ): Promise<void> {
+    const { db, schema } = context;
     for (const [key, value] of Object.entries(settings)) {
       await db.execute(sql`
-        INSERT INTO "tenant_config" ("key", "value", "updated_at")
+        INSERT INTO ${sql.identifier(schema)}."tenant_config" ("key", "value", "updated_at")
         VALUES (${key}, ${JSON.stringify(value)}, now())
         ON CONFLICT ("key") DO NOTHING
       `);
     }
   }
 
-  private async seedPages(db: any, pages: any[], sql: any): Promise<void> {
+  private async seedPages(
+    context: BlueprintContext,
+    pages: any[],
+    sql: any
+  ): Promise<void> {
+    const { db, schema } = context;
     for (const p of pages) {
       await db.execute(sql`
-        INSERT INTO "pages" ("id", "slug", "title", "content", "is_published", "page_type", "template", "created_at", "updated_at")
+        INSERT INTO ${sql.identifier(schema)}."pages" ("id", "slug", "title", "content", "is_published", "page_type", "template", "created_at", "updated_at")
         VALUES (${p.id || crypto.randomUUID()}, ${p.slug}, 
                 ${JSON.stringify({ ar: p.title, en: p.title })}, 
                 ${p.content ? JSON.stringify({ ar: p.content, en: p.content }) : null}, 

@@ -11,30 +11,30 @@ export class CatalogModule implements SeederModule {
   name = 'catalog';
 
   async run(context: BlueprintContext, config: BlueprintConfig): Promise<void> {
-    const { db } = context;
     const { sql } = await import('drizzle-orm');
 
     if (config.categories && config.categories.length > 0) {
-      await this.seedCategories(db, config.categories, sql);
+      await this.seedCategories(context, config.categories, sql);
     }
 
     if (config.products && config.products.length > 0) {
-      await this.seedProducts(db, config.products, sql);
+      await this.seedProducts(context, config.products, sql);
     }
 
     if (config.banners && config.banners.length > 0) {
-      await this.seedBanners(db, config.banners, sql);
+      await this.seedBanners(context, config.banners, sql);
     }
   }
 
   private async seedCategories(
-    db: any,
+    context: BlueprintContext,
     categories: any[],
     sql: any
   ): Promise<void> {
+    const { db, schema } = context;
     for (const c of categories) {
       await db.execute(sql`
-        INSERT INTO "categories" ("id", "parent_id", "slug", "name", "description", "image_url", "is_active")
+        INSERT INTO ${sql.identifier(schema)}."categories" ("id", "parent_id", "slug", "name", "description", "image_url", "is_active")
         VALUES (${c.id}, ${c.parentId || null}, ${c.slug || `cat-${Math.random().toString(36).slice(2, 7)}`}, 
                 ${JSON.stringify({ ar: c.title, en: c.title })}, 
                 ${c.description ? JSON.stringify({ ar: c.description, en: c.description }) : null}, 
@@ -45,13 +45,14 @@ export class CatalogModule implements SeederModule {
   }
 
   private async seedProducts(
-    db: any,
+    context: BlueprintContext,
     products: any[],
     sql: any
   ): Promise<void> {
+    const { db, schema } = context;
     for (const p of products) {
       await db.execute(sql`
-        INSERT INTO "products" ("id", "slug", "sku", "name", "short_description", "base_price", "main_image", "category_id", "is_active")
+        INSERT INTO ${sql.identifier(schema)}."products" ("id", "slug", "sku", "name", "short_description", "base_price", "main_image", "category_id", "is_active")
         VALUES (${p.id}, ${p.slug || `prod-${Math.random().toString(36).slice(2, 7)}`}, 
                 ${p.sku || p.slug || `sku-${Math.random().toString(36).slice(2, 7)}`}, 
                 ${JSON.stringify({ ar: p.title, en: p.title })}, 
@@ -64,10 +65,15 @@ export class CatalogModule implements SeederModule {
     }
   }
 
-  private async seedBanners(db: any, banners: any[], sql: any): Promise<void> {
+  private async seedBanners(
+    context: BlueprintContext,
+    banners: any[],
+    sql: any
+  ): Promise<void> {
+    const { db, schema } = context;
     for (const b of banners) {
       await db.execute(sql`
-        INSERT INTO "banners" ("id", "location", "image_url", "link_url", "title", "is_active", "sort_order")
+        INSERT INTO ${sql.identifier(schema)}."banners" ("id", "location", "image_url", "link_url", "title", "is_active", "sort_order")
         VALUES (${b.id}, ${b.location || 'home_top'}, ${b.imageUrl}, ${b.link || null}, 
                 ${b.title ? JSON.stringify({ ar: b.title, en: b.title }) : null}, 
                 ${b.isActive !== false}, ${b.sortOrder || 0})
