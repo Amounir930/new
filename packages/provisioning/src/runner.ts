@@ -51,7 +51,10 @@ export async function runTenantMigrations(
   const dbHost = process.env.DATABASE_URL?.includes('pgbouncer')
     ? 'apex-pgbouncer'
     : 'apex-postgres';
-  const dbUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=disable`;
+  
+  // Split SSL Policy: PgBouncer requires SSL, while direct internal Postgres does not.
+  const mainSslMode = dbHost === 'apex-pgbouncer' ? 'require' : 'disable';
+  const dbUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=${mainSslMode}`;
 
   process.stdout.write(
     `[Runner] Orchestrating Atlas for schema: ${schemaName}\n`
