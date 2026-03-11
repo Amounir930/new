@@ -6,9 +6,9 @@
 import { execFile } from 'node:child_process';
 import path from 'node:path';
 import { promisify } from 'node:util';
+import { Client } from 'pg';
 import { z } from 'zod';
 import { sanitizeSchemaName } from './schema-manager';
-import { Client } from 'pg';
 
 const execFileAsync = promisify(execFile);
 
@@ -68,12 +68,21 @@ export async function runTenantMigrations(
   const devClient = new Client({ connectionString: devUrl });
   try {
     await devClient.connect();
-    await devClient.query('CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;');
-    process.stdout.write(`[Runner] Dev DB pre-flight: vector extension ready.\n`);
+    await devClient.query(
+      'CREATE EXTENSION IF NOT EXISTS vector SCHEMA public;'
+    );
+    process.stdout.write(
+      `[Runner] Dev DB pre-flight: vector extension ready.\n`
+    );
   } catch (err) {
     // Non-fatal warning: Atlas may still succeed if extension was already installed
-    const safeErr = String(err).replace(/postgres:\/\/[^@]+@/g, 'postgres://***:***@');
-    process.stdout.write(`[Runner] Warning: Dev DB pre-flight partial failure: ${safeErr}\n`);
+    const safeErr = String(err).replace(
+      /postgres:\/\/[^@]+@/g,
+      'postgres://***:***@'
+    );
+    process.stdout.write(
+      `[Runner] Warning: Dev DB pre-flight partial failure: ${safeErr}\n`
+    );
   } finally {
     await devClient.end();
   }
@@ -103,23 +112,23 @@ export async function runTenantMigrations(
         devUrl,
         '--var',
         `tenant_schema_name=${schemaName}`,
-        
+
         // 🔒 الحصار المعماري الإلزامي (Blast-Radius Containment)
         '--schema',
-        schemaName,                 // التصريح بإنشاء وإدارة مخطط التاجر الجديد فقط
+        schemaName, // التصريح بإنشاء وإدارة مخطط التاجر الجديد فقط
         '--schema',
-        'public',                   // التصريح بقراءة الأنواع من العام فقط
-        
+        'public', // التصريح بقراءة الأنواع من العام فقط
+
         // ⛔ مناطق محرمة (No-Fly Zones) - منع المساس بالمخططات السيادية
         '--exclude',
-        'public.*',                 // يمنع إنشاء/حذف جداول داخل public
+        'public.*', // يمنع إنشاء/حذف جداول داخل public
         '--exclude',
         'governance.*',
         '--exclude',
         'vault.*',
         '--exclude',
         'shared.*',
-        
+
         '--auto-approve',
       ],
       { env: atlasEnv }
