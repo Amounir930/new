@@ -172,10 +172,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB:-apex_v2}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-      OTEL_SERVICE_NAME: apex-api
-      SUPER_ADMIN_EMAIL: 'admin@60sec.shop'
       SUPER_ADMIN_PASSWORD: '$$2b$$12$$SxsPEOTZPcNdjuYKkAr5E.8xTqb04bauK.gjBl.5TuaNzbVoZFGpC'
-      DOCKER_HOST: tcp://apex-docker-proxy:2375
     networks:
       - apex-internal
       - apex-data
@@ -256,10 +253,7 @@ services:
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB:-apex_v2}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-      OTEL_SERVICE_NAME: apex-worker
-      SUPER_ADMIN_EMAIL: 'admin@60sec.shop'
       SUPER_ADMIN_PASSWORD: '$$2b$$12$$SxsPEOTZPcNdjuYKkAr5E.8xTqb04bauK.gjBl.5TuaNzbVoZFGpC'
-      DOCKER_HOST: tcp://apex-docker-proxy:2375
     command: ["/bin/sh", "-c", "bun $(find dist -name worker.js | head -n 1)"]
     networks:
       - apex-internal
@@ -461,7 +455,7 @@ services:
       - SERVICES=0
       - TASKS=0
       - EXEC=0
-      - POST=1
+      - POST=0
     networks:
       - apex-internal
     security_opt:

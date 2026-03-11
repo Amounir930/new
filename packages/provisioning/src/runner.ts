@@ -79,7 +79,7 @@ export async function runTenantMigrations(
         '--to',
         `file://${hclPath}`,
         '--dev-url',
-        'docker://postgres/16/dev', 
+        `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@apex-postgres:5432/apex_dev_blank?sslmode=require`, 
         '--var',
         `tenant_schema_name=${schemaName}`,
         '--auto-approve',
