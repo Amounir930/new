@@ -96,20 +96,20 @@ export async function seedTenantData(
       storeId,
     ]);
 
-    const { staffMembersInStorefront } = await import('@apex/db');
-    const firstUser = await tenantScopedAdminDb
-      .select({ id: staffMembersInStorefront.id })
-      .from(staffMembersInStorefront)
-      .limit(1);
+    // S2 FIX: Admin Verification Blindspot - Querying the active search path directly
+    // bypasses Drizzle's rigid schema-bound object (which targets the default 'storefront')
+    const firstUser = await tenantScopedAdminDb.execute(
+      sql`SELECT id FROM "staff_members" LIMIT 1`
+    );
 
     if (!firstUser || firstUser.length === 0) {
       throw new Error(
-        'CoreModule failed to create Admin User - Record not found in storefront schema.'
+        `CoreModule failed to create Admin User - Record not found in tenant schema ${schemaName}.`
       );
     }
 
     return {
-      adminId: firstUser[0].id,
+      adminId: String(firstUser[0].id),
       storeId,
       seededAt: new Date(),
     };
