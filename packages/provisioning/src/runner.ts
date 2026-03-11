@@ -52,9 +52,9 @@ export async function runTenantMigrations(
     ? 'apex-pgbouncer'
     : 'apex-postgres';
   
-  // Split SSL Policy: PgBouncer requires SSL, while direct internal Postgres does not.
-  const mainSslMode = dbHost === 'apex-pgbouncer' ? 'require' : 'disable';
-  const dbUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=${mainSslMode}`;
+  // Sovereign Split SSL Policy: PgBouncer requires SSL, while raw Postgres container does not.
+  const mainUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require`;
+  const devUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@apex-postgres:5432/apex_dev_blank?sslmode=disable`;
 
   process.stdout.write(
     `[Runner] Orchestrating Atlas for schema: ${schemaName}\n`
@@ -64,7 +64,7 @@ export async function runTenantMigrations(
     // 4. Secure Atlas Execution (Process Isolation)
     const atlasEnv = {
       ...process.env,
-      ATLAS_DB_URL: dbUrl,
+      ATLAS_DB_URL: mainUrl,
       HOME: '/tmp',
       XDG_CACHE_HOME: '/tmp/.cache',
       ATLAS_CACHE: '/tmp/.atlas-cache',
@@ -78,11 +78,11 @@ export async function runTenantMigrations(
         'schema',
         'apply',
         '--url',
-        dbUrl,
+        mainUrl,
         '--to',
         `file://${hclPath}`,
         '--dev-url',
-        `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@apex-postgres:5432/apex_dev_blank?sslmode=disable`, 
+        devUrl,
         '--var',
         `tenant_schema_name=${schemaName}`,
         '--auto-approve',
