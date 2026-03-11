@@ -26,3 +26,8 @@ RUN git clone https://github.com/pgvector/pgvector.git /tmp/pgvector \
     && cd / \
     && rm -rf /tmp/pgvector \
     && apk del .build-deps
+
+# ─── Init Script: Create apex_dev_blank DB and enable extensions ──────────────
+# This runs ONLY on first cluster creation (empty volume).
+# For existing volumes, run: ops/scripts/init-db.sh manually after deploy.
+COPY ops/scripts/02-enable-extensions.sql /docker-entrypoint-initdb.d/02-enable-extensions.sql
