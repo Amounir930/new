@@ -85,8 +85,6 @@ export async function runTenantMigrations(
         devUrl,
         '--var',
         `tenant_schema_name=${schemaName}`,
-        '--exclude',
-        'public.*',
         '--auto-approve',
       ],
       { env: atlasEnv }
