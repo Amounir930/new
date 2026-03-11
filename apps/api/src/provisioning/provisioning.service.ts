@@ -1,4 +1,5 @@
 import type { AuditService } from '@apex/audit';
+import type { AuthService } from '@apex/auth';
 import { env } from '@apex/config';
 import {
   adminDb,
@@ -19,6 +20,7 @@ import {
   runTenantMigrations,
   seedTenantData,
 } from '@apex/provisioning';
+import { hashSensitiveData } from '@apex/security';
 import {
   BadRequestException,
   ConflictException,
@@ -50,7 +52,10 @@ interface ProvisioningStep {
 export class ProvisioningService {
   private readonly logger = new Logger(ProvisioningService.name);
 
-  constructor(@Inject('AUDIT_SERVICE') private readonly audit: AuditService) {}
+  constructor(
+    @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
+    private readonly authService: AuthService
+  ) {}
 
   /**
    * Provision a new store in under 60 seconds
@@ -123,13 +128,20 @@ export class ProvisioningService {
       await runTenantMigrations(options.subdomain);
       steps[1].status = 'done';
 
-      // 3. S3 Protocol: Create Isolated Storage Bucket
+      // 3. S7 Protocol: Register Central Merchant Identity (Idempotent)
+      const adminId = await this.authService.registerMerchant(
+        options.adminEmail,
+        options.password || 'TemporaryPassword123!' // Fallback for CLI/Automated tests
+      );
+
+      // 4. S3 Protocol: Create Isolated Storage Bucket
       await createStorageBucket(options.subdomain, options.plan);
       steps[2].status = 'done';
 
       const seedResult = await seedTenantData({
         subdomain: options.subdomain,
         adminEmail: options.adminEmail,
+        adminId: adminId,
         storeName: options.storeName,
         plan: options.plan,
         password: options.password, // S7: Secure merchant password
@@ -306,6 +318,7 @@ export class ProvisioningService {
         name: options.storeName,
         plan: options.plan,
         status: 'active',
+        ownerEmailHash: hashSensitiveData(options.adminEmail), // Cross-link to central repo
         nicheType: options.nicheType, // S2.5: Persist niche
         uiConfig: options.uiConfig, // S2.5: Persist SDUI settings
       });

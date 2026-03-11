@@ -3312,10 +3312,7 @@ export const usersInGovernance = governance.table(
       'chk_user_email_s7',
       sql`(jsonb_typeof(email) = 'object'::text) AND (email ? 'enc'::text) AND (email ? 'iv'::text) AND (email ? 'tag'::text) AND (email ? 'data'::text)`
     ),
-    check(
-      'chk_user_pwd_hash',
-      sql`password_hash ~ '^\\$2[ayb]\\$.+$'::text`
-    ),
+    check('chk_user_pwd_hash', sql`password_hash ~ '^\\$2[ayb]\\$.+$'::text`),
   ]
 );
 

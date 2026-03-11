@@ -21,6 +21,7 @@ import { sanitizeSchemaName } from './schema-manager';
 export interface SeedOptions {
   subdomain: string;
   adminEmail: string;
+  adminId: string; // S7: Central Identity UUID
   storeName: string;
   plan?: 'free' | 'basic' | 'pro' | 'enterprise';
   password?: string; // S7: Hashed password for admin user
@@ -82,6 +83,7 @@ export async function seedTenantData(
             | 'pro'
             | 'enterprise',
           adminEmail: options.adminEmail,
+          adminId: options.adminId,
           password: options.password,
           storeId: storeId,
           nicheType: config.nicheType,
@@ -109,7 +111,7 @@ export async function seedTenantData(
     }
 
     return {
-      adminId: String(firstUser.rows[0].id),
+      adminId: options.adminId, // Return the central ID mapped to this tenant
       storeId,
       seededAt: new Date(),
     };

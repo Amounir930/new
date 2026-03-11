@@ -6,6 +6,7 @@ export interface BlueprintContext {
   schema: string; // tenant_xyz
   plan: 'free' | 'basic' | 'pro' | 'enterprise'; // S15: Standardized Enums
   adminEmail: string; // Required for Core Module
+  adminId?: string; // S7: Central Identity UUID
   password?: string; // Secure initial password
   storeId?: string; // Reference to valid store ID
   nicheType?: string; // S2.5: Industry classification

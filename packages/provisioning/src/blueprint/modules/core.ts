@@ -42,7 +42,7 @@ export class CoreModule implements SeederModule {
         ON CONFLICT ("id") DO NOTHING
       `);
 
-      const userId = crypto.randomUUID();
+      const userId = context.adminId || crypto.randomUUID();
 
       const encResult = encrypt(adminEmail);
       const emailPayload = {

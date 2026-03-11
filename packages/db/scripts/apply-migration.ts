@@ -1,7 +1,7 @@
-import { Client } from 'pg';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as dotenv from 'dotenv';
+import { Client } from 'pg';
 
 async function applyMigration() {
   // Load .env from root
@@ -13,11 +13,17 @@ async function applyMigration() {
   const dbUrl = process.env['DATABASE_URL'];
   if (!dbUrl) {
     console.error('DATABASE_URL not found in process.env');
-    console.log('Available env keys:', Object.keys(process.env).filter(k => !k.startsWith('BUN')));
+    console.log(
+      'Available env keys:',
+      Object.keys(process.env).filter((k) => !k.startsWith('BUN'))
+    );
     process.exit(1);
   }
 
-  console.log('Database URL found (masked):', dbUrl.replace(/:[^@]+@/, ':****@'));
+  console.log(
+    'Database URL found (masked):',
+    dbUrl.replace(/:[^@]+@/, ':****@')
+  );
 
   // Sanitize URL for local connection if needed (handling Docker hostnames vs 127.0.0.1)
   const sanitizedUrl = dbUrl
@@ -26,7 +32,10 @@ async function applyMigration() {
     .replace('sslmode=require', 'sslmode=disable')
     .replace('sslmode=verify-full', 'sslmode=disable');
 
-  console.log('Sanitized URL (masked):', sanitizedUrl.replace(/:[^@]+@/, ':****@'));
+  console.log(
+    'Sanitized URL (masked):',
+    sanitizedUrl.replace(/:[^@]+@/, ':****@')
+  );
 
   console.log('Connecting to database...');
   const client = new Client({
