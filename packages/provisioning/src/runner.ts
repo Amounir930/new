@@ -53,7 +53,7 @@ export async function runTenantMigrations(
   const dbHost = process.env.DATABASE_URL?.includes('pgbouncer')
     ? 'apex-pgbouncer'
     : 'apex-postgres';
-  const dbUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require&search_path=${schemaName}`;
+  const dbUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require`;
 
   process.stdout.write(
     `[Runner] Orchestrating Atlas for schema: ${schemaName}\n`
@@ -83,7 +83,9 @@ export async function runTenantMigrations(
         '--to',
         `file://${hclPath}`,
         '--dev-url',
-        `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require&search_path=atlas_dev`, 
+        `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require`, 
+        '--schema',
+        schemaName,
         '--auto-approve',
       ],
       { env: atlasEnv }
