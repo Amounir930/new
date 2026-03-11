@@ -80,7 +80,7 @@ const PLAN_QUOTAS: Record<string, number> = {
 
 export async function createStorageBucket(
   subdomain: string,
-  plan = 'free',
+  plan: string,
   injectedClient?: Minio.Client
 ): Promise<BucketCreationResult> {
   const start = Date.now();

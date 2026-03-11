@@ -3290,6 +3290,35 @@ export const staffSessionsInStorefront = storefront.table(
   ]
 );
 
+export const usersInGovernance = governance.table(
+  'users',
+  {
+    id: uuid().defaultRandom().primaryKey().notNull(),
+    email: jsonb().notNull(),
+    emailHash: text('email_hash').notNull(),
+    passwordHash: text('password_hash').notNull(),
+    roles: text().array().default(['merchant']).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    unique('users_email_hash_unique').on(table.emailHash),
+    index('idx_users_email_hash').on(table.emailHash),
+    check(
+      'chk_user_email_s7',
+      sql`(jsonb_typeof(email) = 'object'::text) AND (email ? 'enc'::text) AND (email ? 'iv'::text) AND (email ? 'tag'::text) AND (email ? 'data'::text)`
+    ),
+    check(
+      'chk_user_pwd_hash',
+      sql`password_hash ~ '^\\$2[ayb]\\$.+$'::text`
+    ),
+  ]
+);
+
 export const tenantsInGovernance = governance.table(
   'tenants',
   {

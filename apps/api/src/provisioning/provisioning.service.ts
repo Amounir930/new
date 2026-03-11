@@ -6,6 +6,7 @@ import {
   eq,
   featureGatesInGovernance,
   onboardingBlueprintsInGovernance,
+  subscriptionPlansInGovernance,
   tenantQuotasInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
@@ -19,6 +20,7 @@ import {
   seedTenantData,
 } from '@apex/provisioning';
 import {
+  BadRequestException,
   ConflictException,
   Inject,
   Injectable,
@@ -65,6 +67,24 @@ export class ProvisioningService {
     ) {
       throw new InternalServerErrorException(
         'Invalid deployment environment (S1 Violation)'
+      );
+    }
+
+    // 0. Plan Validation (Architectural Lockdown)
+    const [planExists] = await adminDb
+      .select({ id: subscriptionPlansInGovernance.id })
+      .from(subscriptionPlansInGovernance)
+      .where(
+        and(
+          eq(subscriptionPlansInGovernance.code, options.plan),
+          eq(subscriptionPlansInGovernance.isActive, true)
+        )
+      )
+      .limit(1);
+
+    if (!planExists) {
+      throw new BadRequestException(
+        `CRITICAL: The specified subscription plan does not exist: ${options.plan}`
       );
     }
 

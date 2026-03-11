@@ -1,5 +1,8 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { adminDb, usersInGovernance, eq } from '@apex/db';
+import { encrypt, hashSensitiveData } from '@apex/security';
+import * as bcrypt from 'bcrypt';
 
 export interface JwtPayload {
   sub: string;
@@ -21,6 +24,43 @@ export interface AuthUser {
 @Injectable()
 export class AuthService {
   constructor(@Inject(JwtService) private readonly jwtService: JwtService) {}
+
+  /**
+   * S7: Central Identity Registration
+   * Creates a user in the governance schema with encrypted email and hashed password.
+   */
+  async registerMerchant(email: string, password: string): Promise<string> {
+    const emailHash = hashSensitiveData(email);
+
+    // Check if user already exists
+    const [existing] = await adminDb
+      .select({ id: usersInGovernance.id })
+      .from(usersInGovernance)
+      .where(eq(usersInGovernance.emailHash, emailHash))
+      .limit(1);
+
+    if (existing) {
+      // If user exists, return existing ID (Idempotent for provisioning retries)
+      return existing.id;
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const encryptedEmail = encrypt(email);
+
+    const [newUser] = await adminDb
+      .insert(usersInGovernance)
+      .values({
+        email: encryptedEmail,
+        emailHash,
+        passwordHash,
+        roles: ['merchant'],
+      })
+      .returning({ id: usersInGovernance.id });
+
+    if (!newUser) throw new Error('Failed to create central merchant user');
+
+    return newUser.id;
+  }
 
   async generateToken(
     user: AuthUser,
