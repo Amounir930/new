@@ -17,6 +17,13 @@ interface FetchOptions extends RequestInit {
   token?: string;
 }
 
+export class ApiError extends Error {
+  constructor(public message: string, public status: number, public data?: any) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export async function apiFetch<T>(
   endpoint: string,
   options: FetchOptions = {}
@@ -39,8 +46,12 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(error.message || `API Error: ${res.status}`);
+    const errorData = await res.json().catch(() => ({ message: res.statusText }));
+    throw new ApiError(
+      errorData.message || `API Error: ${res.status}`,
+      res.status,
+      errorData
+    );
   }
 
   if (res.status === 204) return {} as T;

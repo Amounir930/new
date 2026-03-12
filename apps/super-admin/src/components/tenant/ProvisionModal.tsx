@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, ApiError } from '@/lib/api';
 
 const provisionSchema = z
   .object({
@@ -69,7 +69,6 @@ export function ProvisionModal({
   onSuccess,
 }: ProvisionModalProps) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [blueprints, setBlueprints] = useState<Blueprint[]>([]);
 
   const {
@@ -77,6 +76,7 @@ export function ProvisionModal({
     handleSubmit,
     reset,
     watch,
+    setError,
     formState: { errors, isValid },
   } = useForm<ProvisionFormValues>({
     resolver: zodResolver(provisionSchema),
@@ -118,7 +118,7 @@ export function ProvisionModal({
   async function onSubmit(values: ProvisionFormValues) {
     try {
       setLoading(true);
-      setError('');
+      setError('root', { message: '' });
       await apiFetch('/v1/provision', {
         method: 'POST',
         body: JSON.stringify(values),
@@ -127,7 +127,21 @@ export function ProvisionModal({
       onOpenChange(false);
       reset();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Provisioning failed');
+      if (e instanceof ApiError && e.data?.validationErrors) {
+        const vErrors = e.data.validationErrors;
+        vErrors.forEach((err: any) => {
+          const fieldName = err.path?.[0];
+          if (fieldName) {
+            setError(fieldName as any, {
+              type: 'server',
+              message: err.message,
+            });
+          }
+        });
+        setError('root', { message: 'Architectural Lockdown: Multiple validation failures detected.' });
+      } else {
+        setError('root', { message: e instanceof Error ? e.message : 'Provisioning failed' });
+      }
     } finally {
       setLoading(false);
     }
@@ -152,9 +166,9 @@ export function ProvisionModal({
             minute.
           </p>
 
-          {error && (
-            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md">
-              {error}
+          {errors.root?.message && (
+            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md animate-in shake-in-1 duration-200">
+              {errors.root.message}
             </div>
           )}
 
