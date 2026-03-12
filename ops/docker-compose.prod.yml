@@ -194,7 +194,6 @@ services:
       MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       SKIP_S1_COMPLEXITY_CHECK: "true"
-      DB_SSL_OPTIONAL: "true"
     networks:
       - apex-internal
       - apex-data
@@ -297,7 +296,6 @@ services:
       MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       SKIP_S1_COMPLEXITY_CHECK: "true"
-      DB_SSL_OPTIONAL: "true"
     command: ["/bin/sh", "-c", "bun $(find dist -name worker.js | head -n 1)"]
     networks:
       - apex-internal
