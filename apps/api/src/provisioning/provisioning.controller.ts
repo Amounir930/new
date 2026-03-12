@@ -3,7 +3,7 @@
  * Exposed API for Super Admins to create new store environments
  */
 
-import { AuditLog, AuditService } from '@apex/audit';
+import { AuditLog, type AuditService } from '@apex/audit';
 import {
   type AuthenticatedRequest,
   JwtAuthGuard,

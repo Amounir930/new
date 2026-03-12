@@ -130,7 +130,10 @@ function parseArgs(args: string[]): ProvisionOptions {
       options.adminEmail = arg.split('=')[1];
     } else if (arg.startsWith('--password=')) {
       options.password = arg.split('=')[1];
-    } else if (arg.startsWith('--store-name=') || arg.startsWith('--storeName=')) {
+    } else if (
+      arg.startsWith('--store-name=') ||
+      arg.startsWith('--storeName=')
+    ) {
       options.storeName = arg.split('=')[1];
     } else if (arg.startsWith('--superAdminKey=')) {
       options.superAdminKey = arg.split('=')[1];
@@ -141,8 +144,15 @@ function parseArgs(args: string[]): ProvisionOptions {
     }
   }
 
-  if (!options.subdomain || !options.adminEmail || !options.storeName || !options.superAdminKey) {
-    throw new Error('Missing required arguments: subdomain, adminEmail/email, storeName/store-name, superAdminKey');
+  if (
+    !options.subdomain ||
+    !options.adminEmail ||
+    !options.storeName ||
+    !options.superAdminKey
+  ) {
+    throw new Error(
+      'Missing required arguments: subdomain, adminEmail/email, storeName/store-name, superAdminKey'
+    );
   }
 
   return options as ProvisionOptions;

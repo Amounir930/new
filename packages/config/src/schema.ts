@@ -46,7 +46,10 @@ export const EnvSchema = z.object({
     .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD too weak')
     .optional(),
   SUPER_ADMIN_PASSWORD_FILE: z.string().optional(),
-  SUPER_ADMIN_KEY: z.string().min(32, 'S1 Violation: SUPER_ADMIN_KEY must be at least 32 characters').optional(),
+  SUPER_ADMIN_KEY: z
+    .string()
+    .min(32, 'S1 Violation: SUPER_ADMIN_KEY must be at least 32 characters')
+    .optional(),
 
   JWT_EXPIRES_IN: z.string().default('7d'),
 
