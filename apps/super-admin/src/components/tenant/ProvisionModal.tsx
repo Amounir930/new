@@ -77,9 +77,11 @@ export function ProvisionModal({
     handleSubmit,
     reset,
     watch,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<ProvisionFormValues>({
     resolver: zodResolver(provisionSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       storeName: '',
       subdomain: '',
@@ -158,7 +160,9 @@ export function ProvisionModal({
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="storeName">Store Name</Label>
+              <Label htmlFor="storeName" className="flex items-center">
+                Store Name <span className="ml-1 text-destructive font-bold">*</span>
+              </Label>
               <Input
                 id="storeName"
                 placeholder="My Awesome Store"
@@ -173,7 +177,9 @@ export function ProvisionModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subdomain">Subdomain</Label>
+              <Label htmlFor="subdomain" className="flex items-center">
+                Subdomain <span className="ml-1 text-destructive font-bold">*</span>
+              </Label>
               <div className="flex items-center space-x-2">
                 <Input
                   id="subdomain"
@@ -193,7 +199,9 @@ export function ProvisionModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="adminEmail">Admin Email</Label>
+              <Label htmlFor="adminEmail" className="flex items-center">
+                Admin Email <span className="ml-1 text-destructive font-bold">*</span>
+              </Label>
               <Input
                 id="adminEmail"
                 type="email"
@@ -210,7 +218,9 @@ export function ProvisionModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="password">Merchant Password</Label>
+                <Label htmlFor="password" title="Must contain Upper, Lower, Number, Special" className="flex items-center">
+                  Merchant Password <span className="ml-1 text-destructive font-bold">*</span>
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -260,7 +270,9 @@ export function ProvisionModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="superAdminKey">Sovereign Super Admin Key (S1/S7)</Label>
+                <Label htmlFor="superAdminKey" className="flex items-center">
+                  Sovereign Super Admin Key <span className="ml-1 text-destructive font-bold">*</span>
+                </Label>
                 <Input
                   id="superAdminKey"
                   type="password"
@@ -308,7 +320,7 @@ export function ProvisionModal({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading || !isValid} className={!isValid ? 'opacity-50 cursor-not-allowed' : ''}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {loading ? 'Provisioning...' : 'Start 60s Provisioning'}
               </Button>
