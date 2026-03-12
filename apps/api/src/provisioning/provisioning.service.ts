@@ -7,10 +7,10 @@ import {
   eq,
   featureGatesInGovernance,
   onboardingBlueprintsInGovernance,
+  sql,
   subscriptionPlansInGovernance,
   tenantQuotasInGovernance,
   tenantsInGovernance,
-  sql,
 } from '@apex/db';
 import {
   type BlueprintTemplate,
