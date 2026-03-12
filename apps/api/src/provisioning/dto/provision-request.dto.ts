@@ -72,8 +72,8 @@ export const ProvisionRequestSchema = z.object({
     )
     .max(128)
     .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      'Banking-Grade Security Compliance: Password must contain uppercase, lowercase, number, and special character'
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\.])[A-Za-z\d@$!%*?&#_\.\-]{8,}$/,
+      'Banking-Grade Security Compliance: Password must contain uppercase, lowercase, number, and special character (@$!%*?&#_.-)'
     )
     .optional(),
 
