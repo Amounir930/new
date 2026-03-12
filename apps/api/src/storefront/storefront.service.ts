@@ -302,7 +302,7 @@ export class StorefrontService {
     const { db, release } = await getTenantDb(_tenantId);
     try {
       // S7: Encrypt PII before storage
-      const encryptedEmail = this.crypto.encrypt(email).encrypted;
+      const encryptedEmail = this.crypto.encrypt(email).enc;
 
       // Table removed in Sovereign Baseline
       // S2 FIX 21C: Atomic transaction prevents orphaned data on partial failure

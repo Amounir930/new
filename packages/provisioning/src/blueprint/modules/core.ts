@@ -46,10 +46,10 @@ export class CoreModule implements SeederModule {
 
       const encResult = encrypt(adminEmail);
       const emailPayload = {
-        enc: encResult.encrypted,
+        enc: encResult.enc,
         iv: encResult.iv,
         tag: encResult.tag,
-        data: '',
+        data: encResult.data,
       };
 
       await db.execute(sql`
