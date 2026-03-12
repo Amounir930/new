@@ -3,7 +3,7 @@
  * Exposed API for Super Admins to create new store environments
  */
 
-import { AuditLog, type AuditService } from '@apex/audit';
+import { AuditLog, AuditService } from '@apex/audit';
 import {
   type AuthenticatedRequest,
   JwtAuthGuard,
@@ -23,7 +23,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
-import type { ProvisionRequestDto } from './dto/provision-request.dto';
+import { ProvisionRequestDto } from './dto/provision-request.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { ProvisioningService } from './provisioning.service';
 
