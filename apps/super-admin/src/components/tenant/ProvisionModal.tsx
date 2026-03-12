@@ -12,19 +12,35 @@ import { apiFetch } from '@/lib/api';
 
 const provisionSchema = z
   .object({
-    storeName: z.string().min(3, 'Store name is too short').max(100),
+    storeName: z
+      .string()
+      .min(2, 'Store name must be at least 2 characters')
+      .max(100)
+      .regex(
+        /^[\w\s\.\,\!\?\@\#\&\-\(\)\[\]]+$/,
+        'Store name contains forbidden characters'
+      ),
     subdomain: z
       .string()
       .min(3, 'Subdomain must be at least 3 characters')
-      .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and dashes'),
+      .regex(
+        /^(?=.*[a-z])[a-z0-9_-]+$/,
+        'Must contain a lowercase letter and use [a-z0-9_-]'
+      ),
     adminEmail: z.string().email('Invalid email address'),
     plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
     password: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
-      .max(100),
+      .min(8, 'Banking-Grade: Minimum 8 characters')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\.])[A-Za-z\d@$!%*?&#_\.\-]{8,}$/,
+        'Requires uppercase, lowercase, number, and special character'
+      ),
     confirmPassword: z.string(),
-    blueprintId: z.string().optional(),
+    superAdminKey: z
+      .string()
+      .min(32, 'Sovereign Key must be at least 32 characters'),
+    blueprintId: z.string().transform((val) => (val === '' ? undefined : val)),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -69,6 +85,7 @@ export function ProvisionModal({
       subdomain: '',
       adminEmail: '',
       plan: 'free',
+      superAdminKey: '',
     },
   });
 
@@ -145,6 +162,7 @@ export function ProvisionModal({
               <Input
                 id="storeName"
                 placeholder="My Awesome Store"
+                className="border-2 focus-visible:ring-primary/20"
                 {...register('storeName')}
               />
               {errors.storeName && (
@@ -160,6 +178,7 @@ export function ProvisionModal({
                 <Input
                   id="subdomain"
                   placeholder="my-store"
+                  className="border-2 focus-visible:ring-primary/20"
                   {...register('subdomain')}
                 />
                 <span className="text-muted-foreground text-sm">
@@ -179,6 +198,7 @@ export function ProvisionModal({
                 id="adminEmail"
                 type="email"
                 placeholder="admin@example.com"
+                className="border-2 focus-visible:ring-primary/20"
                 {...register('adminEmail')}
               />
               {errors.adminEmail && (
@@ -195,6 +215,7 @@ export function ProvisionModal({
                   id="password"
                   type="password"
                   placeholder="••••••••"
+                  className="border-2 focus-visible:ring-primary/20"
                   {...register('password')}
                 />
                 {errors.password && (
@@ -219,35 +240,51 @@ export function ProvisionModal({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="plan">Plan</Label>
-              <select
-                id="plan"
-                {...register('plan')}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="free">Free</option>
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
-              {errors.plan && (
-                <p className="text-destructive text-xs">
-                  {errors.plan.message}
-                </p>
-              )}
-            </div>
-
-            {filteredBlueprints.length > 0 && (
-              <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                <Label htmlFor="blueprintId">
-                  Initial Template (Blueprint)
-                </Label>
+              <div className="space-y-2">
+                <Label htmlFor="plan">Plan</Label>
                 <select
-                  id="blueprintId"
-                  {...register('blueprintId')}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  id="plan"
+                  {...register('plan')}
+                  className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="pro">Pro</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+                {errors.plan && (
+                  <p className="text-destructive text-xs">
+                    {errors.plan.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="superAdminKey">Sovereign Super Admin Key (S1/S7)</Label>
+                <Input
+                  id="superAdminKey"
+                  type="password"
+                  placeholder="Enter high-security master key"
+                  className="border-2 ring-1 ring-primary/10"
+                  {...register('superAdminKey')}
+                />
+                {errors.superAdminKey && (
+                  <p className="text-destructive text-xs font-medium">
+                    {errors.superAdminKey.message}
+                  </p>
+                )}
+              </div>
+
+              {filteredBlueprints.length > 0 && (
+                <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
+                  <Label htmlFor="blueprintId">
+                    Initial Template (Blueprint)
+                  </Label>
+                  <select
+                    id="blueprintId"
+                    {...register('blueprintId')}
+                    className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
                   <option value="">Default (Sector-based)</option>
                   {filteredBlueprints.map((b) => (
                     <option key={b.id} value={b.id}>
