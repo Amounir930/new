@@ -59,8 +59,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   private logError(exception: unknown, request: Request) {
     const method = request.method;
     const url = request.url;
+
+    const { status, message } = this.parseException(exception);
+
     // S4 Audit: Detailed error logging
-    this.logger.error(`${method} ${url} - ${JSON.stringify(exception)}`);
+    if (status >= 500) {
+      this.logger.error(`${method} ${url} - ${status} - ${message}`);
+      if (env.NODE_ENV !== 'production') {
+        console.error(exception);
+      }
+    } else {
+      this.logger.warn(`${method} ${url} - ${status} - ${message}`);
+    }
   }
 
   private reportToErrorTracking(exception: unknown, _request: Request) {

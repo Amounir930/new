@@ -84,7 +84,6 @@ export class StorefrontController {
   }
 
   @Get('bootstrap')
-  @AuditLog('STOREFRONT_BOOTSTRAP')
   async getBootstrap(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
     return this.storefrontService.getBootstrapData(tenantId);
