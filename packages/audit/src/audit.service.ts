@@ -131,7 +131,6 @@ export class AuditService {
     // bypass console lint
     process.stdout.write(`${logOutput}\n`);
 
-
     // 2. Persistent Logging (S4 Protocol)
     // S4 FIX: Store encrypted PII for GDPR/S7 compliance
     try {
