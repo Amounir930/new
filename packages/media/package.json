@@ -23,7 +23,7 @@
     "@apex/config": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^20.11.16",
+    "@types/node": "^25.4.0",
     "tsup": "^8.0.2",
     "typescript": "^5.3.3"
   }
