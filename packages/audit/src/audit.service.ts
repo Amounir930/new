@@ -105,8 +105,6 @@ export class AuditService {
     // 🔒 S11 Protection: Validate metadata structure
     const validatedMetadata = AuditMetadataSchema.parse(entry.metadata || {});
 
-
-
     const rawMetadata = {
       ...validatedMetadata,
       ...(entry.errorMessage ? { error: entry.errorMessage } : {}),
@@ -195,8 +193,6 @@ export class AuditService {
     }
   }
 
-
-
   /**
    * Item 42: Calculate HMAC checksum for log integrity
    */
@@ -230,8 +226,6 @@ function getService(): AuditService {
 export async function log(entry: AuditLogEntry): Promise<void> {
   return getService().log(entry);
 }
-
-
 
 export async function logProvisioning(
   storeName: string,

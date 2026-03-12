@@ -12,8 +12,6 @@ import type { Pool, PoolClient } from 'pg';
 import {
   type AuditLogEntry,
   AuditService,
-  initializeAuditTable,
-  logProvisioning,
   logSecurityEvent,
   query,
 } from './audit.service';
@@ -143,13 +141,6 @@ describe('AuditService & Helpers', () => {
       expect(mockClient.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT * FROM public.audit_logs'),
         expect.arrayContaining(['t1', 'LOGIN'])
-      );
-    });
-
-    it('initializeAuditTable should run S4 initialization', async () => {
-      await initializeAuditTable();
-      expect(mockClient.query).toHaveBeenCalledWith(
-        expect.stringContaining('CREATE TABLE IF NOT EXISTS')
       );
     });
   });

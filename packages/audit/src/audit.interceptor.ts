@@ -59,15 +59,17 @@ export class AuditInterceptor implements NestInterceptor {
           // Sovereign Checkpoint: Capture validation failures as independent events
           const status = (error as { status?: number })?.status;
           let specializedAction = auditOptions?.action;
-          
+
           if (status === 400) {
             specializedAction = 'API_VALIDATION_FAILED';
           }
-          
+
           await this.performAudit(
-            context, 
-            specializedAction ? { ...auditOptions, action: specializedAction } : undefined, 
-            error, 
+            context,
+            specializedAction
+              ? { ...auditOptions, action: specializedAction }
+              : undefined,
+            error,
             'FAILURE'
           );
         },

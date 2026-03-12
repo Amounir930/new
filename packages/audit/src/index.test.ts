@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import {
   AuditService,
-  initializeAuditTable,
   log,
   logProvisioning,
   logSecurityEvent,
@@ -27,9 +26,5 @@ describe('Audit Module Exports', () => {
 
   it('should export query function', () => {
     expect(query).toBeDefined();
-  });
-
-  it('should export initializeAuditTable function', () => {
-    expect(initializeAuditTable).toBeDefined();
   });
 });
