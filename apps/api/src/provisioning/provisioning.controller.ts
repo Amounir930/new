@@ -61,6 +61,7 @@ export class ProvisioningController {
     const result = await this.provisioningService.provision({
       subdomain: dto.subdomain,
       adminEmail: dto.adminEmail,
+      password: dto.password,
       storeName: dto.storeName,
       plan: dto.plan ?? 'free',
       nicheType: dto.nicheType ?? undefined,

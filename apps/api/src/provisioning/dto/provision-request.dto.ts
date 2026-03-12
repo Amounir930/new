@@ -17,6 +17,7 @@ export interface ProvisionRequest {
   subdomain: string;
   storeName: string;
   adminEmail: string;
+  password?: string; // S7: Initial merchant password
   plan: 'free' | 'basic' | 'pro' | 'enterprise';
   nicheType?:
     | 'retail'
@@ -59,6 +60,19 @@ export const ProvisionRequestSchema = z.object({
    * Initial administrator email
    */
   adminEmail: z.string().email().max(255),
+
+  /**
+   * Initial administrator password (S7: Bcrypt-compatible)
+   */
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128)
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+    )
+    .optional(),
 
   /**
    * Plan level for the new tenant

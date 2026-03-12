@@ -10,6 +10,7 @@ import {
   subscriptionPlansInGovernance,
   tenantQuotasInGovernance,
   tenantsInGovernance,
+  sql,
 } from '@apex/db';
 import {
   type BlueprintTemplate,
@@ -131,7 +132,7 @@ export class ProvisioningService {
       // 3. S7 Protocol: Register Central Merchant Identity (Idempotent)
       const adminId = await this.authService.registerMerchant(
         options.adminEmail,
-        options.password || 'TemporaryPassword123!' // Fallback for CLI/Automated tests
+        options.password || `Init_${crypto.randomUUID().slice(0, 12)}!_S7` // Secure dynamic fallback
       );
 
       // 4. S3 Protocol: Create Isolated Storage Bucket
@@ -405,7 +406,13 @@ export class ProvisioningService {
         await adminDb
           .insert(featureGatesInGovernance)
           .values(gates)
-          .onConflictDoNothing();
+          .onConflictDoUpdate({
+            target: [
+              featureGatesInGovernance.tenantId,
+              featureGatesInGovernance.featureKey,
+            ],
+            set: { isEnabled: sql`EXCLUDED.is_enabled` },
+          });
       }
     }
 
@@ -414,9 +421,14 @@ export class ProvisioningService {
       const { z } = await import('zod');
       const QuotaSchema = z
         .object({
-          max_products: z.number().int().min(0).max(1000000).default(0),
-          max_orders: z.number().int().min(0).max(1000000).default(0),
-          max_staff: z.number().int().min(0).max(1000).default(0),
+          max_products: z.number().int().min(0).default(0),
+          max_orders: z.number().int().min(0).default(0),
+          max_staff: z.number().int().min(0).default(0),
+          max_pages: z.number().int().min(0).default(0),
+          max_categories: z.number().int().min(0).default(0),
+          max_coupons: z.number().int().min(0).default(0),
+          storage_limit_gb: z.number().int().min(1).default(1),
+          api_rate_limit: z.number().int().min(0).default(100),
         })
         .strip();
 
@@ -429,8 +441,26 @@ export class ProvisioningService {
           maxProducts: normalizedQuotas.max_products,
           maxOrders: normalizedQuotas.max_orders,
           maxStaff: normalizedQuotas.max_staff,
+          maxPages: normalizedQuotas.max_pages,
+          maxCategories: normalizedQuotas.max_categories,
+          maxCoupons: normalizedQuotas.max_coupons,
+          storageLimitGb: normalizedQuotas.storage_limit_gb,
+          apiRateLimit: normalizedQuotas.api_rate_limit,
         })
-        .onConflictDoNothing();
+        .onConflictDoUpdate({
+          target: [tenantQuotasInGovernance.tenantId],
+          set: {
+            maxProducts: sql`EXCLUDED.max_products`,
+            maxOrders: sql`EXCLUDED.max_orders`,
+            maxStaff: sql`EXCLUDED.max_staff`,
+            maxPages: sql`EXCLUDED.max_pages`,
+            maxCategories: sql`EXCLUDED.max_categories`,
+            maxCoupons: sql`EXCLUDED.max_coupons`,
+            storageLimitGb: sql`EXCLUDED.storage_limit_gb`,
+            apiRateLimit: sql`EXCLUDED.api_rate_limit`,
+            updatedAt: sql`now()`,
+          },
+        });
     }
 
     this.logger.log(`Governance sync completed for tenant: ${subdomain}`);
