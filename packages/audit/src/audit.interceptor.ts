@@ -56,7 +56,20 @@ export class AuditInterceptor implements NestInterceptor {
           await this.performAudit(context, auditOptions, data, 'SUCCESS');
         },
         error: async (error: unknown) => {
-          await this.performAudit(context, auditOptions, error, 'FAILURE');
+          // Sovereign Checkpoint: Capture validation failures as independent events
+          const status = (error as { status?: number })?.status;
+          let specializedAction = auditOptions?.action;
+          
+          if (status === 400) {
+            specializedAction = 'API_VALIDATION_FAILED';
+          }
+          
+          await this.performAudit(
+            context, 
+            specializedAction ? { ...auditOptions, action: specializedAction } : undefined, 
+            error, 
+            'FAILURE'
+          );
         },
       })
     );
@@ -73,7 +86,11 @@ export class AuditInterceptor implements NestInterceptor {
     const user = request.user;
 
     // Determine action name
-    const action = options?.action || `${method}:${url}`;
+    let action = options?.action || `${method}:${url}`;
+    if (resultStatus === 'FAILURE') {
+      action = `${action}_FAILED`;
+    }
+
     const entityType = options?.entityType || 'api_request';
 
     // Extract entityId if possible from params or body

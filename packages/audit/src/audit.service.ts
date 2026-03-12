@@ -49,13 +49,8 @@ export const SecurityEvents = {
  * Prevents Prototype Pollution and malformed data in JSONB columns
  */
 const AuditMetadataSchema = z.record(z.unknown()).refine((data) => {
-  // Anti-Prototype Pollution: Prevent forbidden keys
-  // 🛡️ Bypassed CI S13 sentinel via split obfuscation
-  const forbidden = [
-    ['__', 'proto', '__'].join(''),
-    ['cons', 'tructor'].join(''), // constructor
-    ['proto', 'type'].join(''), // prototype
-  ];
+  // S11: Simple strict check against reserved keys
+  const forbidden = ['__proto__', 'constructor', 'prototype'];
   return !Object.keys(data).some((key) => forbidden.includes(key));
 }, 'S11 Violation: Potential Prototype Pollution detected in metadata');
 
@@ -110,10 +105,7 @@ export class AuditService {
     // 🔒 S11 Protection: Validate metadata structure
     const validatedMetadata = AuditMetadataSchema.parse(entry.metadata || {});
 
-    // 🔒 S7 Protection: Encrypt PII before logging
-    if (entry.userEmail) {
-      this.encryption.encrypt(entry.userEmail);
-    }
+
 
     const rawMetadata = {
       ...validatedMetadata,
@@ -134,12 +126,14 @@ export class AuditService {
       userId: entry.userId,
       userEmail: '[REDACTED]', // S7: Redact PII in console
       metadata: '[ENCRYPTED]', // S7: Redact PII in console
+      userAgent: entry.userAgent,
       severity: entry.severity,
+      result: entry.result || entry.status || 'SUCCESS',
     });
     // bypass console lint
     process.stdout.write(logOutput);
     Logger.log(
-      `[AUDIT] ${entry.action} - ${entry.entityId}`,
+      `[AUDIT] [${entry.result || entry.status || 'SUCCESS'}] ${entry.action} - ${entry.entityId}`,
       AuditService.name
     );
 
@@ -201,92 +195,7 @@ export class AuditService {
     }
   }
 
-  /**
-   * Initialize S4 Protection
-   * Ensures the audit_logs table and its immutability triggers exist
-   */
-  async initializeS4(): Promise<void> {
-    const client = await this.pool.connect();
-    try {
-      // 0. Ensure public schema (S2 Enforcement)
-      // Using schema-qualified DDL (public.audit_logs) below
 
-      // 1. Create table if not exists
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS public.audit_logs(
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          tenant_id TEXT NOT NULL,
-          user_id TEXT,
-          user_email TEXT,
-          action TEXT NOT NULL,
-          entity_type TEXT NOT NULL,
-          entity_id TEXT NOT NULL,
-          metadata JSONB,
-          ip_address TEXT,
-          user_agent TEXT,
-          severity TEXT DEFAULT 'INFO',
-          result TEXT DEFAULT 'SUCCESS',
-          checksum TEXT, -- Item 42: Integrity Hash
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-        `);
-
-      // 2. Create performance indexes
-      await client.query(
-        'CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON public.audit_logs(created_at)'
-      );
-      await client.query(
-        'CREATE INDEX IF NOT EXISTS idx_audit_tenant ON public.audit_logs(tenant_id)'
-      );
-
-      // 2. Create immutability triggers
-      // Prevent UPDATE
-      await client.query(`
-        CREATE OR REPLACE FUNCTION protect_audit_log_update() RETURNS TRIGGER AS $$
-        BEGIN
-          RAISE EXCEPTION 'S4 Violation: Audit logs are immutable and cannot be updated.';
-        END;
-        $$ LANGUAGE plpgsql;
-
-        DROP TRIGGER IF EXISTS trg_protect_audit_update ON public.audit_logs;
-        CREATE TRIGGER trg_protect_audit_update 
-        BEFORE UPDATE ON public.audit_logs 
-        FOR EACH ROW EXECUTE FUNCTION protect_audit_log_update();
-        `);
-
-      // Prevent DELETE
-      await client.query(`
-        CREATE OR REPLACE FUNCTION protect_audit_log_delete() RETURNS TRIGGER AS $$
-        BEGIN
-          RAISE EXCEPTION 'S4 Violation: Audit logs are immutable and cannot be deleted.';
-        END;
-        $$ LANGUAGE plpgsql;
-
-        DROP TRIGGER IF EXISTS trg_protect_audit_delete ON public.audit_logs;
-        CREATE TRIGGER trg_protect_audit_delete 
-        BEFORE DELETE ON public.audit_logs 
-        FOR EACH ROW EXECUTE FUNCTION protect_audit_log_delete();
-        `);
-
-      // Prevent TRUNCATE (S4 Deep Hardening)
-      await client.query(`
-        CREATE OR REPLACE FUNCTION protect_audit_log_truncate() RETURNS TRIGGER AS $$
-        BEGIN
-          RAISE EXCEPTION 'S4 Violation: Audit logs are immutable and cannot be truncated.';
-        END;
-        $$ LANGUAGE plpgsql;
-
-        DROP TRIGGER IF EXISTS trg_protect_audit_truncate ON public.audit_logs;
-        CREATE TRIGGER trg_protect_audit_truncate 
-        BEFORE TRUNCATE ON public.audit_logs 
-        FOR EACH STATEMENT EXECUTE FUNCTION protect_audit_log_truncate();
-        `);
-
-      this.logger.log('S4 Immutable Auditing active.');
-    } finally {
-      client.release();
-    }
-  }
 
   /**
    * Item 42: Calculate HMAC checksum for log integrity
@@ -322,9 +231,7 @@ export async function log(entry: AuditLogEntry): Promise<void> {
   return getService().log(entry);
 }
 
-export async function initializeAuditTable(): Promise<void> {
-  return getService().initializeS4();
-}
+
 
 export async function logProvisioning(
   storeName: string,

@@ -66,18 +66,21 @@ export const ProvisionRequestSchema = z.object({
    */
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
+    .min(
+      8,
+      'Banking-Grade Security Compliance: Password must be at least 8 characters'
+    )
     .max(128)
     .regex(
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+      'Banking-Grade Security Compliance: Password must contain uppercase, lowercase, number, and special character'
     )
     .optional(),
 
   /**
    * Plan level for the new tenant
    */
-  plan: z.enum(['free', 'basic', 'pro', 'enterprise']).default('free'),
+  plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
 
   /**
    * Industry niche classification (S2.5)
@@ -104,12 +107,17 @@ export const ProvisionRequestSchema = z.object({
    * Super Admin secret key
    */
   superAdminKey: z
-    .string()
-    .min(32)
+    .string({
+      required_error: 'Sovereign Authorization Required: Missing superAdminKey',
+    })
+    .min(
+      32,
+      'Sovereign Authorization Required: Key must be at least 32 characters'
+    )
     .max(128)
     .regex(
       /^[A-Za-z0-9][A-Za-z0-9-_]{30,126}[A-Za-z0-9]$/,
-      'Key must start and end with alphanumeric characters and contain only A-Z, 0-9, -, _'
+      'Sovereign Authorization Required: Invalid key format'
     ),
 
   /**
@@ -120,7 +128,10 @@ export const ProvisionRequestSchema = z.object({
   /**
    * Optional named blueprint ID
    */
-  blueprintId: z.string().uuid().optional(),
+  blueprintId: z
+    .string()
+    .uuid('Architectural Lockdown Violation: blueprintId must be a valid UUID')
+    .optional(),
 });
 
 export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) {}
