@@ -51,13 +51,6 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, options);
 
-  // S4: Initialize Audit System (Infrastructure as Code)
-  try {
-    const auditService = app.get(AuditService);
-    await auditService.initializeS4();
-  } catch (error) {
-    logger.error('Failed to initialize Audit System', error);
-  }
 
   // S6 HOTFIX: Dynamic payload limit (single parser, no double-parse conflicts)
   const bodyParser = await import('body-parser');

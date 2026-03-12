@@ -230,7 +230,7 @@ pass "15" "Active defense checked"
 info "21" "Build Integrity & Compilation Check..."
 
 # In a monorepo, a full build is expensive but ensures zero-regression
-if ! bun run lint:fix ; then
+if ! bun run build --filter=@apex/api ; then
   fail "21" "Build failed. Fix compilation errors before committing."
   exit 1
 fi

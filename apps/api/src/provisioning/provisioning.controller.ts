@@ -66,6 +66,7 @@ export class ProvisioningController {
       plan: dto.plan ?? 'free',
       nicheType: dto.nicheType ?? undefined,
       uiConfig: dto.uiConfig,
+      superAdminKey: dto.superAdminKey, // S1/S7: Propagate Sovereign Key
       blueprint: dto.blueprint, // S3: Inject custom blueprint
       blueprintId: dto.blueprintId, // S21: Pass specific blueprint ID
     });
