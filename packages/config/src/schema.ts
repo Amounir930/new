@@ -46,6 +46,7 @@ export const EnvSchema = z.object({
     .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD too weak')
     .optional(),
   SUPER_ADMIN_PASSWORD_FILE: z.string().optional(),
+  SUPER_ADMIN_KEY: z.string().min(32, 'S1 Violation: SUPER_ADMIN_KEY must be at least 32 characters').optional(),
 
   JWT_EXPIRES_IN: z.string().default('7d'),
 
@@ -99,15 +100,13 @@ export const EnvSchema = z.object({
     .regex(
       /^[0-9a-fA-F]+$/,
       'S1 Violation: IMGPROXY_KEY must be a valid hex-encoded string'
-    )
-    .optional(),
+    ),
   IMGPROXY_SALT: z
     .string()
     .regex(
       /^[0-9a-fA-F]+$/,
       'S1 Violation: IMGPROXY_SALT must be a valid hex-encoded string'
-    )
-    .optional(),
+    ),
   IMGPROXY_SOURCE_URL: z
     .string()
     .url('S1 Violation: IMGPROXY_SOURCE_URL must be a valid URL')

@@ -1,5 +1,5 @@
-import type { AuditService } from '@apex/audit';
-import type { AuthService } from '@apex/auth';
+import { AuditService } from '@apex/audit';
+import { AuthService } from '@apex/auth';
 import { env } from '@apex/config';
 import {
   adminDb,
@@ -42,6 +42,7 @@ export interface ProvisioningOptions {
   uiConfig?: Record<string, unknown>; // S2.5: SDUI/Theme configuration
   blueprint?: unknown; // S3: Custom blueprint payload
   blueprintId?: string; // S21: Named blueprint ID
+  superAdminKey: string; // S1/S7: Sovereign Authorization Key
 }
 
 interface ProvisioningStep {
@@ -75,6 +76,18 @@ export class ProvisioningService {
         'Invalid deployment environment (S1 Violation)'
       );
     }
+
+    // --- SOVEREIGN AUTHORIZATION PROTOCOL (S1/S7) ---
+    const expectedKey = env.SUPER_ADMIN_KEY;
+    if (!expectedKey || options.superAdminKey !== expectedKey) {
+      this.logger.error(
+        `S1 VIOLATION: Unauthorized provisioning attempt for ${options.subdomain}`
+      );
+      throw new InternalServerErrorException(
+        'Sovereign Authorization Required: Invalid or missing Super Admin Key'
+      );
+    }
+    // ----------------------------------------------
 
     // 0. Plan Validation (Architectural Lockdown)
     const [planExists] = await adminDb

@@ -12,6 +12,7 @@ import type { Pool, PoolClient } from 'pg';
 import {
   type AuditLogEntry,
   AuditService,
+  logProvisioning,
   logSecurityEvent,
   query,
 } from './audit.service';

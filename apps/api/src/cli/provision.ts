@@ -12,9 +12,11 @@ import { ProvisioningService } from '../provisioning/provisioning.service';
 interface ProvisionOptions {
   subdomain: string;
   plan: 'free' | 'basic' | 'pro' | 'enterprise';
-  email: string;
+  adminEmail: string;
   password?: string;
   storeName: string;
+  superAdminKey: string;
+  blueprintId?: string;
   quiet?: boolean;
 }
 
@@ -89,8 +91,11 @@ export async function main(args: string[] = process.argv.slice(2)) {
     const result = await provisioningService.provision({
       subdomain: options.subdomain,
       storeName: options.storeName,
-      adminEmail: options.email,
-      plan: options.plan || 'basic',
+      adminEmail: options.adminEmail,
+      plan: options.plan,
+      password: options.password,
+      superAdminKey: options.superAdminKey,
+      blueprintId: options.blueprintId,
     });
 
     if (!options.quiet) {
@@ -121,19 +126,23 @@ function parseArgs(args: string[]): ProvisionOptions {
       if (['free', 'basic', 'pro', 'enterprise'].includes(planValue)) {
         options.plan = planValue as ProvisionOptions['plan'];
       }
-    } else if (arg.startsWith('--email=')) {
-      options.email = arg.split('=')[1];
+    } else if (arg.startsWith('--email=') || arg.startsWith('--adminEmail=')) {
+      options.adminEmail = arg.split('=')[1];
     } else if (arg.startsWith('--password=')) {
       options.password = arg.split('=')[1];
-    } else if (arg.startsWith('--store-name=')) {
+    } else if (arg.startsWith('--store-name=') || arg.startsWith('--storeName=')) {
       options.storeName = arg.split('=')[1];
+    } else if (arg.startsWith('--superAdminKey=')) {
+      options.superAdminKey = arg.split('=')[1];
+    } else if (arg.startsWith('--blueprintId=')) {
+      options.blueprintId = arg.split('=')[1];
     } else if (arg === '--quiet') {
       options.quiet = true;
     }
   }
 
-  if (!options.subdomain || !options.email || !options.storeName) {
-    throw new Error('Missing required arguments');
+  if (!options.subdomain || !options.adminEmail || !options.storeName || !options.superAdminKey) {
+    throw new Error('Missing required arguments: subdomain, adminEmail/email, storeName/store-name, superAdminKey');
   }
 
   return options as ProvisionOptions;

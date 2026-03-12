@@ -7,7 +7,7 @@
  */
 
 import { HttpResponse, http } from 'msw';
-import { createEmptyCart, createMockCart } from '../fixtures';
+import { createEmptyCart, createMockCart } from '../../fixtures';
 
 const BASE_URL = '/api';
 
