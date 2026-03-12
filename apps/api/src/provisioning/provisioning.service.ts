@@ -79,10 +79,9 @@ export class ProvisioningService {
 
     // --- SOVEREIGN AUTHORIZATION PROTOCOL (S1/S7) ---
     const expectedKey = env.SUPER_ADMIN_KEY;
-    this.logger.error(`[DEBUG S1] Expected key length: ${expectedKey?.length}, Provided key length: ${options.superAdminKey?.length}`);
     if (!expectedKey || options.superAdminKey !== expectedKey) {
       this.logger.error(
-        `S1 VIOLATION: Unauthorized provisioning attempt for ${options.subdomain}. Provided: [${options.superAdminKey?.slice(0, 5)}...], Expected: [${expectedKey?.slice(0, 5)}...]`
+        `S1 VIOLATION: Unauthorized provisioning attempt for ${options.subdomain}`
       );
       throw new InternalServerErrorException(
         'Sovereign Authorization Required: Invalid or missing Super Admin Key'
