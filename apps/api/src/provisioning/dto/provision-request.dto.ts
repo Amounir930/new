@@ -116,7 +116,7 @@ export const ProvisionRequestSchema = z.object({
     )
     .max(128)
     .regex(
-      /^[A-Za-z0-9][A-Za-z0-9-_@#!\.\*]{30,126}[A-Za-z0-9]$/,
+      /^[A-Za-z0-9][A-Za-z0-9_@#!\.\*-]{30,126}[A-Za-z0-9]$/,
       'Sovereign Authorization Required: Invalid key format'
     ),
 
