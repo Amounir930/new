@@ -43,8 +43,8 @@ export const ProvisionRequestSchema = z.object({
     .min(3)
     .max(30)
     .regex(
-      /^[a-z0-9-]+$/,
-      'Subdomain must be lowercase alphanumeric and hyphens only'
+      /^(?=.*[a-z])[a-z0-9_-]+$/,
+      'Architectural Lockdown Violation: Subdomain must contain at least one lowercase letter and follow [a-z0-9_-] format'
     ),
 
   /**
@@ -54,7 +54,7 @@ export const ProvisionRequestSchema = z.object({
     .string()
     .min(2)
     .max(100)
-    .regex(/^[a-zA-Z0-9\s._-]+$/, 'Store name contains invalid characters'),
+    .regex(/^[\w\s\.\,\!\?\@\#\&\-\(\)\[\]]+$/, 'Store name contains invalid characters'),
 
   /**
    * Initial administrator email

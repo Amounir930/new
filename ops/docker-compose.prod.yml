@@ -457,7 +457,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
+      - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
       - "traefik.http.routers.store-main.priority=3000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
@@ -634,6 +634,28 @@ services:
         max-file: "3"
     networks:
       - apex-data
+
+  # ═══════════════════════════════════════════════════════════════
+  # Database Management UI (Adminer)
+  # ═══════════════════════════════════════════════════════════════
+  adminer:
+    image: adminer:latest
+    container_name: apex-adminer
+    restart: always
+    environment:
+      ADMINER_DEFAULT_SERVER: apex-postgres
+    networks:
+      - apex-data
+      - apex-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
+      - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
+      - "traefik.http.routers.adminer.priority=5000"
+      - "traefik.http.routers.adminer.entrypoints=websecure"
+      - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.adminer.middlewares=apex-cf-allowlist@file,apex-basic-auth@file"
+      - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
 
 # ═══════════════════════════════════════════════════════════════
   # ═══════════════════════════════════════════════════════════════
