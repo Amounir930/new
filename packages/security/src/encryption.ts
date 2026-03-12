@@ -9,9 +9,10 @@ import { ConfigService, type EnvConfig, env } from '@apex/config';
 import { Injectable } from '@nestjs/common';
 
 export interface EncryptedData {
-  encrypted: string;
+  enc: string;
   iv: string;
   tag: string;
+  data?: any;
 }
 
 /**
@@ -78,14 +79,15 @@ export class EncryptionService {
     const iv = randomBytes(12);
     const cipher = createCipheriv('aes-256-gcm', this.masterKey, iv);
 
-    let encrypted = cipher.update(value, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
+    let enc = cipher.update(value, 'utf8', 'hex');
+    enc += cipher.final('hex');
     const tag = cipher.getAuthTag().toString('hex');
 
     return {
-      encrypted,
+      enc,
       iv: iv.toString('hex'),
       tag,
+      data: { v: 1 }, // Versioning for S7
     };
   }
 
@@ -94,7 +96,7 @@ export class EncryptionService {
    */
   decrypt(data: EncryptedData): string {
     try {
-      if (!data.encrypted || !data.iv || !data.tag) {
+      if (!data.enc || !data.iv || !data.tag) {
         throw new Error('S7 Violation: Malformed encrypted data structure');
       }
 
@@ -106,7 +108,7 @@ export class EncryptionService {
 
       decipher.setAuthTag(Buffer.from(data.tag, 'hex'));
 
-      let decrypted = decipher.update(data.encrypted, 'hex', 'utf8');
+      let decrypted = decipher.update(data.enc, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
 
       return decrypted;

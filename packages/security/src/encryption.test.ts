@@ -39,10 +39,10 @@ describe('Encryption.js Utility Functions', () => {
       const encrypted = jsEncrypt(plaintext, testMasterKey);
 
       expect(encrypted).toBeDefined();
-      expect(encrypted).toHaveProperty('encrypted');
+      expect(encrypted).toHaveProperty('enc');
       expect(encrypted).toHaveProperty('iv');
       expect(encrypted).toHaveProperty('tag');
-      expect(typeof encrypted.encrypted).toBe('string');
+      expect(typeof encrypted.enc).toBe('string');
       expect(typeof encrypted.iv).toBe('string');
       expect(typeof encrypted.tag).toBe('string');
     });
@@ -52,13 +52,13 @@ describe('Encryption.js Utility Functions', () => {
       const enc1 = jsEncrypt(plaintext, testMasterKey);
       const enc2 = jsEncrypt(plaintext, testMasterKey);
 
-      expect(enc1.encrypted).not.toBe(enc2.encrypted);
+      expect(enc1.enc).not.toBe(enc2.enc);
       expect(enc1.iv).not.toBe(enc2.iv);
     });
 
     it('should handle empty string', () => {
       const encrypted = jsEncrypt('', testMasterKey);
-      expect(encrypted).toHaveProperty('encrypted');
+      expect(encrypted).toHaveProperty('enc');
     });
 
     it('should handle unicode characters', () => {
@@ -94,7 +94,7 @@ describe('Encryption.js Utility Functions', () => {
     it('should throw for tampered ciphertext', () => {
       const plaintext = 'original';
       const encrypted = jsEncrypt(plaintext, testMasterKey);
-      encrypted.encrypted = 'tampered-data';
+      encrypted.enc = 'tampered-data';
       expect(() => jsDecrypt(encrypted, testMasterKey)).toThrow('S7 Violation');
     });
   });
@@ -152,14 +152,15 @@ describe('Encryption.js Utility Functions', () => {
 // ============================================================================
 describe('EncryptionService Class', () => {
   let service: JSEncryptionService;
-  let mockConfig: Mocked<Pick<ConfigService, 'get' | 'getWithDefault'>>;
+  let mockConfig: Mocked<ConfigService>;
 
   beforeEach(() => {
     Object.assign(process.env, { NODE_ENV: 'test' });
     mockConfig = {
       get: mock((_key: string) => undefined),
       getWithDefault: mock((_key: string, defaultValue: any) => defaultValue),
-    } as unknown as Mocked<Pick<ConfigService, 'get' | 'getWithDefault'>>;
+      config: {} as any,
+    } as unknown as Mocked<ConfigService>;
   });
 
   afterEach(() => {
@@ -211,15 +212,16 @@ describe('EncryptionService Class', () => {
 
     it('should encrypt and return EncryptedData structure', () => {
       const result = service.encrypt('test-data');
-      expect(result).toHaveProperty('encrypted');
+      expect(result).toHaveProperty('enc');
       expect(result).toHaveProperty('iv');
       expect(result).toHaveProperty('tag');
+      expect(result).toHaveProperty('data');
     });
 
     it('should produce different ciphertext for same input', () => {
       const enc1 = service.encrypt('same');
       const enc2 = service.encrypt('same');
-      expect(enc1.encrypted).not.toBe(enc2.encrypted);
+      expect(enc1.enc).not.toBe(enc2.enc);
     });
   });
 
@@ -244,7 +246,7 @@ describe('EncryptionService Class', () => {
 
     it('should throw for tampered data', () => {
       const encrypted = service.encrypt('test');
-      encrypted.encrypted = 'tampered';
+      encrypted.enc = 'tampered';
       expect(() => service.decrypt(encrypted)).toThrow();
     });
   });

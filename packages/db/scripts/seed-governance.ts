@@ -1,4 +1,8 @@
-import { adminDb, subscriptionPlansInGovernance, onboardingBlueprintsInGovernance } from '@apex/db';
+import {
+  adminDb,
+  onboardingBlueprintsInGovernance,
+  subscriptionPlansInGovernance,
+} from '@apex/db';
 import { eq } from 'drizzle-orm';
 
 async function seedGovernance() {
@@ -88,51 +92,49 @@ async function seedGovernance() {
       uiConfig: { theme: 'modern', primaryColor: '#000000' },
     },
     {
+      name: 'Pro Retail',
+      plan: 'pro',
+      nicheType: 'retail',
+      isDefault: true,
+      status: 'active',
+      blueprint: {
         name: 'Pro Retail',
-        plan: 'pro',
-        nicheType: 'retail',
-        isDefault: true,
-        status: 'active',
-        blueprint: {
-          name: 'Pro Retail',
-          version: '1.0',
-          modules: {
-            core: { siteName: 'Pro Store', currency: 'USD' },
-            catalog: true,
-            inventory: true,
-            analytics: true,
-          },
+        version: '1.0',
+        modules: {
+          core: { siteName: 'Pro Store', currency: 'USD' },
+          catalog: true,
+          inventory: true,
+          analytics: true,
         },
-        uiConfig: { theme: 'premium', primaryColor: '#1a1a1a' },
       },
-      {
+      uiConfig: { theme: 'premium', primaryColor: '#1a1a1a' },
+    },
+    {
+      name: 'Enterprise Retail',
+      plan: 'enterprise',
+      nicheType: 'retail',
+      isDefault: true,
+      status: 'active',
+      blueprint: {
         name: 'Enterprise Retail',
-        plan: 'enterprise',
-        nicheType: 'retail',
-        isDefault: true,
-        status: 'active',
-        blueprint: {
-          name: 'Enterprise Retail',
-          version: '1.0',
-          modules: {
-            core: { siteName: 'Enterprise Store', currency: 'USD' },
-            catalog: true,
-            inventory: true,
-            analytics: true,
-            apiAccess: true,
-            pos: true,
-          },
+        version: '1.0',
+        modules: {
+          core: { siteName: 'Enterprise Store', currency: 'USD' },
+          catalog: true,
+          inventory: true,
+          analytics: true,
+          apiAccess: true,
+          pos: true,
         },
-        uiConfig: { theme: 'enterprise', primaryColor: '#003366' },
-      }
+      },
+      uiConfig: { theme: 'enterprise', primaryColor: '#003366' },
+    },
   ];
 
   for (const bp of blueprints) {
     console.log(`Checking blueprint: ${bp.name} for plan ${bp.plan}`);
     // Check if exists first since we don't have a simple unique constraint on name/plan/niche in schema but we should
-    await adminDb
-      .insert(onboardingBlueprintsInGovernance)
-      .values(bp as any);
+    await adminDb.insert(onboardingBlueprintsInGovernance).values(bp as any);
   }
 
   console.log('✅ Governance Seeding Task Complete');

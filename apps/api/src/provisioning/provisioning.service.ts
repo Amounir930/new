@@ -1,5 +1,5 @@
 import type { AuditService } from '@apex/audit';
-import { AuthService } from '@apex/auth';
+import type { AuthService } from '@apex/auth';
 import { env } from '@apex/config';
 import {
   adminDb,
@@ -252,12 +252,8 @@ export class ProvisioningService {
       return dbBlueprint.blueprint as BlueprintTemplate;
     }
 
-    if (options.blueprint) {
-      return options.blueprint as BlueprintTemplate;
-    }
-
     this.logger.log(
-      `Resolving default blueprint for niche: ${options.nicheType}, plan: ${options.plan}`
+      `Resolving default blueprint for niche: ${options.nicheType || 'retail'}, plan: ${options.plan}`
     );
     const [dbBlueprint] = await adminDb
       .select({
@@ -269,14 +265,7 @@ export class ProvisioningService {
         and(
           eq(
             onboardingBlueprintsInGovernance.nicheType,
-            (options.nicheType || 'retail') as
-              | 'retail'
-              | 'wellness'
-              | 'education'
-              | 'services'
-              | 'hospitality'
-              | 'real-estate'
-              | 'creative'
+            (options.nicheType || 'retail') as any
           ),
           eq(onboardingBlueprintsInGovernance.plan, options.plan)
         )
@@ -289,10 +278,13 @@ export class ProvisioningService {
       );
     }
 
-    return (
-      (dbBlueprint?.blueprint as BlueprintTemplate) ||
-      (await getDefaultBlueprint(options.plan))
-    );
+    if (!dbBlueprint) {
+      throw new ConflictException(
+        `CRITICAL: No active blueprint found for plan '${options.plan}' and niche '${options.nicheType || 'retail'}'. Provisioning aborted to prevent architectural drift.`
+      );
+    }
+
+    return dbBlueprint.blueprint as BlueprintTemplate;
   }
 
   /**

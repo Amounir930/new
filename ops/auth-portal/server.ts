@@ -1,4 +1,3 @@
-```
 import { serve } from 'bun';
 import { env } from '@apex/config';
 
