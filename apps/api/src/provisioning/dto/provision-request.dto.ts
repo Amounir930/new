@@ -51,10 +51,10 @@ export const ProvisionRequestSchema = z.object({
    * Display name of the store
    */
   storeName: z
-    .string()
-    .min(2)
-    .max(100)
-    .regex(/^[\w\s\.\,\!\?\@\#\&\-\(\)\[\]]+$/, 'Store name contains invalid characters'),
+    .string({ required_error: 'Architectural Lockdown: storeName is required' })
+    .min(2, 'Store name must be at least 2 characters')
+    .max(100, 'Store name cannot exceed 100 characters')
+    .regex(/^[\w\s\.\,\!\?\@\#\&\-\(\)\[\]]+$/, 'Store name contains forbidden characters. Use alphanumeric and standard symbols only.'),
 
   /**
    * Initial administrator email
@@ -80,7 +80,9 @@ export const ProvisionRequestSchema = z.object({
   /**
    * Plan level for the new tenant
    */
-  plan: z.enum(['free', 'basic', 'pro', 'enterprise']),
+  plan: z.enum(['free', 'basic', 'pro', 'enterprise'], {
+    errorMap: () => ({ message: 'Architectural Lockdown: plan must be one of [free, basic, pro, enterprise]' }),
+  }),
 
   /**
    * Industry niche classification (S2.5)
@@ -130,7 +132,7 @@ export const ProvisionRequestSchema = z.object({
    */
   blueprintId: z
     .string()
-    .uuid('Architectural Lockdown Violation: blueprintId must be a valid UUID')
+    .uuid('Architectural Lockdown Violation: blueprintId must be a valid UUID (e.g. 123e4567-e89b-12d3-a456-426614174000)')
     .optional(),
 });
 
