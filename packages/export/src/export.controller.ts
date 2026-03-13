@@ -50,7 +50,7 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-@Controller('api/v1/tenant/export')
+@Controller('tenant/export')
 export class ExportController {
   constructor(
     private readonly exportService: ExportService,

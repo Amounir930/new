@@ -100,7 +100,9 @@ services:
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.average=200"
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.burst=100"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowheaders=Content-Type,Authorization,X-Request-ID,X-Tenant-ID,X-Super-Admin-Key,Origin,Accept"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolalloworiginlist=https://super-admin.60sec.shop,https://60sec.shop,https://api.60sec.shop"
+      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowcredentials=true"
       - "traefik.http.middlewares.apex-security-headers.headers.browserXssFilter=true"
       - "traefik.http.middlewares.apex-security-headers.headers.contentTypeNosniff=true"
       - "traefik.http.middlewares.apex-security-headers.headers.forceSTSHeader=true"
@@ -214,6 +216,7 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--ping=true"
     ports:
       - "80:80"
       - "443:443"
