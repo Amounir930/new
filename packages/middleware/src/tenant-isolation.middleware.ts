@@ -124,10 +124,10 @@ async function validateTenant(
 export class TenantIsolationMiddleware implements NestMiddleware {
   constructor(private readonly cache: TenantCacheService) {}
   async use(req: TenantRequest, res: Response, next: NextFunction) {
-    const currentPath = req.originalUrl || req.path || '';
-
-    // S8: Early bypass for preflight OPTIONS to allow CORS handling to finish
+    // S8: Mandatory Preflight Bypass (CORS Sovereignty)
     if (req.method === 'OPTIONS') return next();
+
+    const currentPath = req.originalUrl || req.path || '';
 
     try {
       const identifier = this.extractTenantIdentifier(req);
@@ -203,11 +203,10 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     if (!subdomain) return true;
     const cleanSubdomain = subdomain.toLowerCase();
     
-    // Check if it's an IP address or a known system subdomain
-    const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(cleanSubdomain);
-    if (isIp) return true;
-
+    // S2: Hardened System Whitelist (Reject IP-based detection)
     const systemSubdomains = [
+      'api.60sec.shop',
+      'super-admin.60sec.shop',
       'api',
       'super-admin',
       'www',
@@ -253,8 +252,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       '/api/v1/health',
       '/api/v1/auth/login',
       '/api/auth/login',
-      '/api/blueprints',
-      '/api/v1/blueprints',
       '/favicon.ico',
     ];
     return bypassRoutes.some(
