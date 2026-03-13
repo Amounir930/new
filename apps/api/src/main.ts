@@ -127,15 +127,9 @@ async function bootstrap() {
   );
 
 
-  // API Versioning (Standardizes /v1/ routes)
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
-  });
-
-  // Global prefixing logic (Sovereign Reconciliation)
-  // Restoring 'api' prefix to align with Traefik PathPrefix(/api)
-  app.setGlobalPrefix('api', {
+  // 1. Global prefixing logic (Sovereign Reconciliation)
+  // Standardizing '/api' prefix to align with Traefik PathPrefix(/api)
+  app.setGlobalPrefix('/api', {
     exclude: [
       { path: '/', method: 1 },
       { path: '/robots.txt', method: 1 },
@@ -145,6 +139,12 @@ async function bootstrap() {
       { path: '/wp-login.php', method: 1 },
       { path: '/config.php', method: 1 },
     ],
+  });
+
+  // 2. API Versioning (Standardizes /v1/ routes AFTER prefix)
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
   });
 
   // ═══════════════════════════════════════════════════════════════
