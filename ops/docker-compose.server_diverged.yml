@@ -192,7 +192,7 @@ services:
   # Admin UI (Super Admin Panel)
   # ═══════════════════════════════════════════════════════════════
   super-admin:
-    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/admin:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
     build:
       context: ..
       dockerfile: apps/super-admin/Dockerfile
@@ -201,16 +201,18 @@ services:
       - ../.env
     environment:
       NODE_ENV: production
+      PORT: 3001
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     networks:
       - apex-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.admin.rule=Host(`super-admin.60sec.shop`)"
-      - "traefik.http.routers.admin.priority=5000"
-      - "traefik.http.routers.admin.entrypoints=websecure"
-      - "traefik.http.routers.admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.admin.middlewares=apex-admin-security@docker"
+      - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
+      - "traefik.http.routers.super-admin.priority=6000"
+      - "traefik.http.routers.super-admin.entrypoints=websecure"
+      - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.super-admin.middlewares=apex-admin-security@docker"
+      - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 30s
@@ -237,6 +239,7 @@ services:
       - ../.env
     environment:
       NODE_ENV: production
+      PORT: 3001
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
     networks:
