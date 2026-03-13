@@ -31,7 +31,8 @@ const poolConfig = {
       const { readFileSync } = require('node:fs') as typeof import('fs');
       return { rejectUnauthorized: true, ca: readFileSync(caPath).toString() };
     }
-    // Fallback: ssl required but no CA provided — allow self-signed (less strict but non-null)
+    // S7 Protocol: Internal Network Exception
+    // WARNING: MITM Vulnerable. Strictly for internal Docker network traffic only.
     return { rejectUnauthorized: false };
   })(),
 };

@@ -61,21 +61,6 @@ export class AuthController {
     const adminEmail = this.config.get('SUPER_ADMIN_EMAIL');
     const adminPassword = this.config.get('SUPER_ADMIN_PASSWORD');
 
-    // [DIAGNOSTIC] Sovereign Identity Audit
-    if (email === adminEmail) {
-      this.audit.log({
-        action: 'DIAGNOSTIC_AUTH_ATTEMPT',
-        entityType: 'security',
-        entityId: 'super-admin',
-        metadata: { 
-          email_match: true, 
-          has_admin_pass: !!adminPassword,
-          admin_pass_len: adminPassword?.length,
-          received_pass_len: password?.length
-        },
-      }).catch(() => {});
-    }
-
     if (adminEmail && adminPassword && email === adminEmail) {
       const isPasswordValid = await bcrypt.compare(password, adminPassword);
       if (isPasswordValid) {
@@ -88,14 +73,6 @@ export class AuthController {
           },
           response
         );
-      } else {
-        // [DIAGNOSTIC] Password Mismatch
-        await this.audit.log({
-          action: 'DIAGNOSTIC_AUTH_FAILURE',
-          entityType: 'security',
-          entityId: 'super-admin',
-          metadata: { reason: 'Password mismatch in Super Admin flow' },
-        });
       }
     }
 
