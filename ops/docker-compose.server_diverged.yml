@@ -60,7 +60,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      # MIDDLEWARES
+      # MIDDLEWARES (Scoped to apex-minio)
       - "traefik.http.middlewares.apex-minio-headers.headers.customrequestheaders.X-Minio-Proxy=Traefik"
       - "traefik.http.middlewares.apex-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
       # ROUTERS
@@ -83,23 +83,20 @@ services:
   # ═══════════════════════════════════════════════════════════════
   api:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
+    container_name: apex-api
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
     restart: always
     env_file:
       - ../.env
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-pgbouncer:5432/${POSTGRES_DB:-apex_v2}?sslmode=require"
-      REDIS_URL: ${REDIS_URL}
     networks:
       - apex-public
       - apex-internal
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      # MIDDLEWARES
+      # MIDDLEWARES (Scoped to apex-api)
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.average=200"
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.burst=100"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
@@ -107,7 +104,7 @@ services:
       - "traefik.http.middlewares.apex-security-headers.headers.browserXssFilter=true"
       - "traefik.http.middlewares.apex-security-headers.headers.contentTypeNosniff=true"
       - "traefik.http.middlewares.apex-security-headers.headers.forceSTSHeader=true"
-      - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
+      - "traefik.http.middlewares.api-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
       # ROUTERS
       - "traefik.http.routers.api-public.rule=Host(`api.60sec.shop`) && (PathPrefix(`/api/v1`) || PathPrefix(`/api/auth`))"
       - "traefik.http.routers.api-public.service=apex-api"
@@ -120,7 +117,7 @@ services:
       - "traefik.http.routers.api-shielded.priority=5000"
       - "traefik.http.routers.api-shielded.entrypoints=websecure"
       - "traefik.http.routers.api-shielded.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@docker,apex-basic-auth@docker,apex-security-headers@docker"
+      - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@docker,api-basic-auth@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-api.loadbalancer.server.port=3000"
 
   # ═══════════════════════════════════════════════════════════════
@@ -128,6 +125,7 @@ services:
   # ═══════════════════════════════════════════════════════════════
   super-admin:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
+    container_name: apex-super-admin
     build:
       context: ..
       dockerfile: apps/super-admin/Dockerfile
@@ -144,7 +142,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      # MIDDLEWARES
+      # MIDDLEWARES (Scoped to apex-super-admin)
       - "traefik.http.middlewares.apex-admin-security.headers.customresponseheaders.X-Traefik-Mode=Sovereign"
       # ROUTERS
       - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
@@ -154,9 +152,6 @@ services:
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.super-admin.middlewares=apex-admin-security@docker"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
-    healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
-      interval: 30s
 
   # ═══════════════════════════════════════════════════════════════
   # Storefront UI (Public Shop)
@@ -180,7 +175,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      # MIDDLEWARES
+      # MIDDLEWARES (Scoped to apex-store)
       - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.average=100"
       - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.burst=50"
       - "traefik.http.middlewares.apex-store-csp.headers.contentsecuritypolicy=default-src 'self'"
@@ -192,28 +187,6 @@ services:
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.store-main.middlewares=apex-store-csp@docker,apex-global-ratelimit@docker"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
-    healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3002').then(r => process.exit(r.ok ? 0 : 1))"]
-      interval: 30s
-
-  # ═══════════════════════════════════════════════════════════════
-  # Docker Socket Proxy
-  # ═══════════════════════════════════════════════════════════════
-  docker-proxy:
-    image: tecnativa/docker-socket-proxy:latest
-    container_name: apex-docker-proxy
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - CONTAINERS=1
-      - NETWORKS=1
-      - SERVICES=1
-      - EVENTS=1
-      - INFO=1
-      - VERSION=1
-    networks:
-      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Load Balancer (Traefik) (Sovereign Mode)
@@ -222,26 +195,19 @@ services:
     image: traefik:v2.11
     container_name: apex-traefik
     restart: always
-    depends_on:
-      docker-proxy:
-        condition: service_healthy
     command:
       - "--log.level=INFO"
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--providers.docker=true"
-      - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=apex-public"
-      - "--providers.file.directory=/etc/traefik/dynamic"
-      - "--providers.file.watch=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--accesslog=true"
       - "--accesslog.format=json"
-      - "--metrics.prometheus=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
@@ -254,26 +220,26 @@ services:
       - "CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}"
       - "CF_ZONE_ID=${CF_ZONE_ID}"
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./htpasswd:/etc/traefik/htpasswd:ro
       - letsencrypt_data:/letsencrypt
-      - ./logs/traefik:/var/log/traefik
     networks:
       - apex-public
       - apex-internal
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      # INTERNAL MIDDLEWARES
+      # MIDDLEWARES (Scoped to apex-traefik)
       - "traefik.http.middlewares.apex-dash-redirect.redirectregex.regex=^https://traefik.60sec.shop/$$"
       - "traefik.http.middlewares.apex-dash-redirect.redirectregex.replacement=https://traefik.60sec.shop/dashboard/"
-      - "traefik.http.middlewares.apex-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
-      - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
+      - "traefik.http.middlewares.traefik-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
+      - "traefik.http.middlewares.traefik-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
       # ROUTERS
       - "traefik.http.routers.traefikdash.rule=Host(`traefik.60sec.shop`)"
       - "traefik.http.routers.traefikdash.service=api@internal"
       - "traefik.http.routers.traefikdash.entrypoints=websecure"
       - "traefik.http.routers.traefikdash.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefikdash.middlewares=apex-ip-allowlist@docker,apex-dash-redirect@docker,apex-basic-auth@docker"
+      - "traefik.http.routers.traefikdash.middlewares=traefik-ip-allowlist@docker,apex-dash-redirect@docker,traefik-basic-auth@docker"
 
   # ═══════════════════════════════════════════════════════════════
   # Email Testing (Mailpit)
@@ -288,12 +254,16 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
+      # MIDDLEWARES (Scoped to apex-mailpit)
+      - "traefik.http.middlewares.mail-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
+      - "traefik.http.middlewares.mail-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
+      # ROUTERS
       - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
       - "traefik.http.routers.mailpit.service=apex-mailpit"
       - "traefik.http.routers.mailpit.priority=5000"
       - "traefik.http.routers.mailpit.entrypoints=websecure"
       - "traefik.http.routers.mailpit.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.mailpit.middlewares=apex-ip-allowlist@docker,apex-basic-auth@docker"
+      - "traefik.http.routers.mailpit.middlewares=mail-ip-allowlist@docker,mail-basic-auth@docker"
       - "traefik.http.services.apex-mailpit.loadbalancer.server.port=8025"
 
   # ═══════════════════════════════════════════════════════════════
