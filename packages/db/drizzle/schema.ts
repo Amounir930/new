@@ -231,6 +231,8 @@ export const tenantStatus = pgEnum('tenant_status', [
   'suspended',
   'pending',
   'archived',
+  'purging',
+  'deleted',
 ]);
 export const transferStatus = pgEnum('transfer_status', [
   'draft',

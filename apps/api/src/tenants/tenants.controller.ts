@@ -22,6 +22,7 @@ import {
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 import { SecurityService } from '../security/security.service';
+import { ProvisioningService } from '../provisioning/provisioning.service';
 
 const UpdateTenantSchema = z.object({
   plan: z.string().optional(),
@@ -41,7 +42,9 @@ export class TenantsController {
 
   constructor(
     @Inject(forwardRef(() => SecurityService))
-    private readonly security: SecurityService
+    private readonly security: SecurityService,
+    @Inject('PROVISIONING_SERVICE')
+    private readonly provisioningService: ProvisioningService
   ) {}
 
   @Get()
@@ -174,23 +177,53 @@ export class TenantsController {
   }
 
   @Delete(':id')
-  @AuditLog({ action: 'TENANT_DELETED', entityType: 'tenant' })
   async remove(@Param('id') id: string) {
     try {
-      const [deleted] = await adminDb
-        .delete(tenantsInGovernance)
+      // 1. Fetch tenant to get subdomain
+      const [tenant] = await adminDb
+        .select()
+        .from(tenantsInGovernance)
         .where(eq(tenantsInGovernance.id, id))
-        .returning();
+        .limit(1);
 
-      if (!deleted) {
+      if (!tenant) {
         throw new Error('Tenant not found');
       }
 
-      this.logger.log(`[TENANT_DELETED] ID: ${id}, Subdomain: ${deleted.subdomain}`);
-      return { success: true, message: 'Tenant permanently deleted from governance.' };
+      // Step 2: State Machine - Initial Transition (Purging)
+      // This locks the tenant in governance and signals start of destruction
+      await adminDb
+        .update(tenantsInGovernance)
+        .set({ status: 'purging', updatedAt: new Date().toISOString() })
+        .where(eq(tenantsInGovernance.id, id));
+
+      this.logger.warn(`[SAGA_DELETION] Initiated purge for ${tenant.subdomain}`);
+
+      // Step 3: Physical Purge (Extermination of Schema/Bucket/Locks)
+      await this.provisioningService.deprovisionTenant(tenant.subdomain);
+
+      // Step 4: Logical Burial (Soft Delete)
+      // S4 Protocol: We retain the record with deleted_at for Audit/Security history.
+      const [deleted] = await adminDb
+        .update(tenantsInGovernance)
+        .set({ 
+          status: 'deleted', // Final dead state
+          deletedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        })
+        .where(eq(tenantsInGovernance.id, id))
+        .returning();
+
+      this.logger.log(`[SAGA_DELETION] Successfully buried tenant: ${tenant.subdomain}`);
+      
+      return { 
+        success: true, 
+        message: 'Tenant physical assets purged and record archived.',
+        tenantId: id 
+      };
     } catch (error: unknown) {
       this.logger.error(
-        `[TENANT_DELETE_ERROR] ${error instanceof Error ? error.message : String(error)}`
+        `[SAGA_DELETE_ERROR] ${error instanceof Error ? error.message : String(error)}`
       );
       throw error;
     }

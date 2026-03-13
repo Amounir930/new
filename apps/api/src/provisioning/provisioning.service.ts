@@ -13,9 +13,10 @@ import {
   tenantsInGovernance,
 } from '@apex/db';
 import {
-  type BlueprintTemplate,
+  BlueprintTemplate,
   createStorageBucket,
   createTenantSchema,
+  deleteStorageBucket,
   dropTenantSchema,
   getDefaultBlueprint,
   runTenantMigrations,
@@ -29,8 +30,10 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  forwardRef,
 } from '@nestjs/common';
 import { z } from 'zod';
+import { SecurityService } from '../security/security.service';
 
 export interface ProvisioningOptions {
   subdomain: string;
@@ -56,7 +59,9 @@ export class ProvisioningService {
 
   constructor(
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    @Inject(forwardRef(() => SecurityService))
+    private readonly security: SecurityService
   ) {}
 
   /**
@@ -477,5 +482,40 @@ export class ProvisioningService {
     }
 
     this.logger.log(`Governance sync completed for tenant: ${subdomain}`);
+  }
+
+  /**
+   * Deep Purge Protocol (Physical Deletion)
+   * Orchestrates the destruction of all isolated assets
+   */
+  async deprovisionTenant(subdomain: string) {
+    const cleanSubdomain = subdomain.toLowerCase();
+    this.logger.warn(`[DEPROVISION] Starting Deep Purge for ${cleanSubdomain}`);
+
+    try {
+      // Step 1: Physical Lockout (Redis)
+      await this.security.setTenantLock(cleanSubdomain, true);
+      this.logger.log(`[DEPROVISION] Steel Control Lock engaged for ${cleanSubdomain}`);
+
+      // Step 2: Storage Destruction (MinIO)
+      // Force purge enabled to handle non-empty buckets/versions
+      await deleteStorageBucket(cleanSubdomain, true);
+      this.logger.log(`[DEPROVISION] Storage bucket destroyed for ${cleanSubdomain}`);
+
+      // Step 3: Schema Destruction (SQL)
+      await dropTenantSchema(cleanSubdomain);
+      this.logger.log(`[DEPROVISION] PostgreSQL schema dropped for ${cleanSubdomain}`);
+
+      this.logger.log(`[DEPROVISION] Physical Assets EXTERMINATED for ${cleanSubdomain}`);
+    } catch (error) {
+      this.logger.error(
+        `[DEPROVISION_FAILURE] Failed to purge physical assets for ${cleanSubdomain}`,
+        error
+      );
+      // S11 Mandate: Physical failures MUST halt the logical deletion to prevent orphaned data.
+      throw new InternalServerErrorException(
+        `Deep Purge Failed: Physical extermination aborted for ${cleanSubdomain}. Check logs.`
+      );
+    }
   }
 }

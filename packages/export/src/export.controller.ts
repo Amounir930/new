@@ -19,7 +19,9 @@ import {
   Param,
   Post,
   Req,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import type { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
@@ -51,6 +53,7 @@ interface AuthenticatedRequest extends Request {
 }
 
 @Controller('tenant/export')
+@UseGuards(JwtAuthGuard)
 export class ExportController {
   constructor(
     private readonly exportService: ExportService,
@@ -63,6 +66,7 @@ export class ExportController {
    * Request a new data export
    */
   @AuditLog({ action: 'EXPORT_REQUESTED', entityType: 'export' })
+  @UseGuards(SuperAdminGuard)
   @Post()
   @HttpCode(HttpStatus.ACCEPTED)
   async createExport(

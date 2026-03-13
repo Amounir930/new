@@ -31,6 +31,7 @@ import { ProvisionRequestDto } from './dto/provision-request.dto';
 import { ProvisioningService } from './provisioning.service';
 
 @Controller('provision')
+@UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class ProvisioningController {
   private readonly logger = new Logger(ProvisioningController.name);
 
@@ -44,7 +45,7 @@ export class ProvisioningController {
   /**
    * POST /api/provision
    * Core engine endpoint to create a 60-second store
-   * Protected by JWT + SuperAdmin role + Fraud Detection (S14)
+   * Protected by JWT + Hardened SuperAdminGuard (Sovereign Shield)
    */
   @AuditLog({ action: 'TENANT_PROVISIONED', entityType: 'tenant' })
   @Post()
@@ -53,28 +54,9 @@ export class ProvisioningController {
     @Req() req: any,
     @Body(ZodValidationPipe) dto: ProvisionRequestDto
   ) {
-    // S1/S7 Rescue: Allow bypass of JWT/SuperAdminGuard for Sovereign-Authenticated terminal calls
-    const sovereignKey = req.headers['x-sovereign-key'];
-    const isSovereign = sovereignKey && sovereignKey === env.SUPER_ADMIN_KEY;
-
-    if (!isSovereign) {
-      // Manual guard check if not sovereign (since we removed @UseGuards at the method level to allow this branch)
-      // Actually, it's safer to keep @UseGuards and use a custom bypass decorator,
-      // but for this surgical fix, we'll implement the logic here.
-      if (!req.user || req.user.role !== 'super_admin') {
-        throw new ForbiddenException(
-          'Sovereign access only: Valid session or X-Sovereign-Key required'
-        );
-      }
-    }
-
     this.logger.log(
-      `Received ${isSovereign ? 'SOVEREIGN ' : ''}provisioning request for: ${dto.subdomain}`
+      `Received provisioning request for: ${dto.subdomain}`
     );
-
-    // The JwtAuthGuard and SuperAdminGuard handle the common case (Admin UI call)
-    // If we wanted to allow API Key bypass, we'd add logic here, but for Super-#21
-    // the UI-based provisioning via Super Admin session is the priority.
 
     // 2. Execute 60-second engine
     const result = await this.provisioningService.provision({
