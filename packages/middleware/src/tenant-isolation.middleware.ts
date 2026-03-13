@@ -166,8 +166,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         await this.cache.setTenant(finalIdentifier, baseContext);
       }
 
-      if (!this.checkTenantStatus(baseContext, req, res)) return;
-
       // 5. Suspension Check & Session Execution
       const isSuspended = await this.checkSuspension(finalIdentifier);
       await this.runDatabaseSession(baseContext, isSuspended, req, res, next);
@@ -180,7 +178,10 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const rawHost = req.headers.host || '';
     const cleanHost = rawHost.split(':')[0];
     const xTenantId = req.headers['x-tenant-id'] as string;
+    
+    // S2 Protection: Prevent spoofing by ensuring secret is configured
     const isInternal =
+      !!env.INTERNAL_API_SECRET &&
       req.headers['x-internal-secret'] === env.INTERNAL_API_SECRET;
 
     const subdomain = extractSubdomain(cleanHost);
@@ -329,21 +330,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     }
   }
 
-  private checkTenantStatus(
-    baseContext: Omit<TenantContext, 'executor'>,
-    req: TenantRequest,
-    res: Response
-  ): boolean {
-    const userRole = req.user?.role;
-    if (!baseContext.isActive && userRole !== 'super_admin') {
-      res.status(HttpStatus.FORBIDDEN).json({
-        error: 'Tenant Suspended',
-        message: 'This storefront has been suspended by governance.',
-      });
-      return false;
-    }
-    return true;
-  }
 
   private async checkSuspension(identifier: string): Promise<boolean> {
     try {
@@ -453,14 +439,20 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 export class TenantScopedGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<TenantRequest>();
+    const user = request.user;
+
     if (!request.tenantContext) {
       throw new UnauthorizedException('Tenant context required');
     }
+
+    // S2 Sovereignty: Super Admins bypass status checks for recovery/governance
+    if (user?.role === 'super_admin') return true;
+
     if (!request.tenantContext.isActive) {
-      throw new UnauthorizedException('Tenant is inactive');
+      throw new UnauthorizedException('This storefront is inactive');
     }
     if (request.tenantContext.isSuspended) {
-      throw new UnauthorizedException('Tenant is suspended (Steel Control)');
+      throw new UnauthorizedException('This storefront has been suspended (Steel Control)');
     }
     return true;
   }
