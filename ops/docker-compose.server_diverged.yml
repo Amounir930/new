@@ -92,6 +92,7 @@ services:
     networks:
       - apex-public
       - apex-internal
+      - apex-data
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
@@ -99,7 +100,7 @@ services:
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.average=200"
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.burst=100"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
-      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolalloworiginlist=https://super-admin.60sec.shop,https://60sec.shop,https://api.60sec.shop"
       - "traefik.http.middlewares.apex-security-headers.headers.browserXssFilter=true"
       - "traefik.http.middlewares.apex-security-headers.headers.contentTypeNosniff=true"
       - "traefik.http.middlewares.apex-security-headers.headers.forceSTSHeader=true"
