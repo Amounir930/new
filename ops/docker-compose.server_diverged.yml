@@ -83,7 +83,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   api:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
-    container_name: apex-api
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
