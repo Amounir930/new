@@ -5,6 +5,7 @@
  */
 
 import { AuditModule } from '@apex/audit';
+import { AuthModule } from '@apex/auth';
 import { ConfigModule } from '@apex/config';
 import { Module } from '@nestjs/common';
 import { ExportController } from './export.controller';
@@ -17,7 +18,7 @@ import { NativeExportStrategy } from './strategies/native-export.strategy';
 import { BunShell } from './utils/bun-shell';
 
 @Module({
-  imports: [ConfigModule, AuditModule],
+  imports: [ConfigModule, AuditModule, AuthModule],
   controllers: [ExportController],
   providers: [
     BunShell,
