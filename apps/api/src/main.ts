@@ -51,6 +51,8 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule, options);
 
+  // S8: CORS Configuration (Elevated Priority)
+  app.enableCors(defaultCorsConfig);
 
   // S6 HOTFIX: Dynamic payload limit (single parser, no double-parse conflicts)
   const bodyParser = await import('body-parser');
@@ -124,8 +126,6 @@ async function bootstrap() {
     })
   );
 
-  // S8: CORS Configuration
-  app.enableCors(defaultCorsConfig);
 
   // API Versioning
   app.enableVersioning({
