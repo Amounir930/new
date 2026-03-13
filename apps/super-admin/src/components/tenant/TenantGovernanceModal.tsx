@@ -82,28 +82,64 @@ export function TenantGovernanceModal({
   onClose,
 }: TenantGovernanceModalProps) {
   const [features, setFeatures] = useState<Record<string, FeatureState>>({});
+  const [tenantMeta, setTenantMeta] = useState<{
+    plan: string;
+    status: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [metaSaving, setMetaSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    async function fetchFeatures() {
+    async function fetchData() {
       if (!tenantId) return;
       try {
         setLoading(true);
-        const data = await apiFetch<Record<string, FeatureState>>(
+        // Fetch Features Matrix
+        const featuresData = await apiFetch<Record<string, FeatureState>>(
           `/v1/tenants/${tenantId}/features`
         );
-        setFeatures(data);
+        setFeatures(featuresData);
+
+        // Fetch Tenant Metadata (Plan/Status)
+        // We'll get this from the general tenants list or a specific endpoint
+        const tenants = await apiFetch<any[]>('/v1/tenants');
+        const current = tenants.find((t) => t.id === tenantId);
+        if (current) {
+          setTenantMeta({
+            plan: current.plan,
+            status: current.isActive ? 'active' : 'suspended',
+          });
+        }
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to fetch features');
+        setError(e instanceof Error ? e.message : 'Failed to fetch governance data');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchFeatures();
+    fetchData();
   }, [tenantId]);
+
+  async function updateMetadata() {
+    if (!tenantId || !tenantMeta) return;
+    try {
+      setMetaSaving(true);
+      await apiFetch(`/v1/tenants/${tenantId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          plan: tenantMeta.plan,
+          status: tenantMeta.status,
+        }),
+      });
+      alert('Sovereign Update Successful: Tenant metadata synchronized.');
+    } catch (e: unknown) {
+      alert(`Update Failed: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setMetaSaving(false);
+    }
+  }
 
   async function toggleFeature(key: string, currentState: boolean) {
     if (!tenantId) return;
@@ -175,18 +211,85 @@ export function TenantGovernanceModal({
               <p>{error}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {Object.entries(features)
-                .sort()
-                .map(([key, state]) => (
-                  <FeatureItem
-                    key={key}
-                    featureKey={key}
-                    state={state}
-                    saving={saving === key}
-                    onToggle={() => toggleFeature(key, state.enabled)}
-                  />
-                ))}
+            <div className="space-y-6">
+              {/* Sovereign Metadata Controls */}
+              <div className="bg-slate-900/40 p-4 rounded-xl border border-white/5 space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center">
+                  <Shield className="w-3 h-3 mr-2 text-indigo-400" />
+                  Sovereign Metadata
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">
+                      Subscription Plan
+                    </label>
+                    <select
+                      value={tenantMeta?.plan || ''}
+                      onChange={(e) =>
+                        setTenantMeta((prev) =>
+                          prev ? { ...prev, plan: e.target.value } : null
+                        )
+                      }
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 outline-none"
+                    >
+                      <option value="free">Free</option>
+                      <option value="basic">Basic</option>
+                      <option value="pro">Pro</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">
+                      Governance Status
+                    </label>
+                    <select
+                      value={tenantMeta?.status || ''}
+                      onChange={(e) =>
+                        setTenantMeta((prev) =>
+                          prev ? { ...prev, status: e.target.value } : null
+                        )
+                      }
+                      className="w-full bg-slate-900 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:ring-1 focus:ring-indigo-500 outline-none"
+                    >
+                      <option value="active">Active</option>
+                      <option value="suspended">Suspended</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                  </div>
+                </div>
+                <Button
+                  onClick={updateMetadata}
+                  disabled={metaSaving}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 h-9 rounded-lg font-bold text-xs"
+                >
+                  {metaSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    'Synchronize Governance State'
+                  )}
+                </Button>
+              </div>
+
+              {/* Feature Matrix */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center">
+                  <Shield className="w-3 h-3 mr-2 text-amber-400" />
+                  Feature Matrix
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {Object.entries(features)
+                    .sort()
+                    .map(([key, state]) => (
+                      <FeatureItem
+                        key={key}
+                        featureKey={key}
+                        state={state}
+                        saving={saving === key}
+                        onToggle={() => toggleFeature(key, state.enabled)}
+                      />
+                    ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

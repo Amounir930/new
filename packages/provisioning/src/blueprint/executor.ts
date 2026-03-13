@@ -23,13 +23,21 @@ export class BlueprintExecutor {
       this.autoEnableModules(ctx, config);
     }
 
-    // 2. Determine execution order (Core must be first if present)
+    // 2. Determine execution order (Core must be first and MANDATORY)
     const requestedModules = Object.keys(config.modules).filter(
       (key) =>
         config.modules[key] === true ||
         (typeof config.modules[key] === 'object' &&
           config.modules[key] !== null)
     );
+
+    // S21/Mandate: Mandatory Core Injection - Ensure 'core' is ALWAYS executed
+    if (!requestedModules.includes('core')) {
+      process.stdout.write(
+        `[BlueprintExecutor] Sovereign Mandate: Force-injecting 'core' module.`
+      );
+      requestedModules.push('core');
+    }
 
     // Sort: 'core' always comes first
     requestedModules.sort((a, b) => {

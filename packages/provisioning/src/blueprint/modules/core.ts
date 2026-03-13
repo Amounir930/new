@@ -53,9 +53,9 @@ export class CoreModule implements SeederModule {
       };
 
       await db.execute(sql`
-        INSERT INTO ${sql.identifier(schema)}."staff_members" ("user_id", "role_id", "email", "is_active")
-        VALUES (${userId}, ${roleId}, ${JSON.stringify(emailPayload)}, true)
-        ON CONFLICT DO NOTHING
+        INSERT INTO ${sql.identifier(schema)}."staff_members" ("id", "user_id", "role_id", "email", "is_active")
+        VALUES (${userId}, ${userId}, ${roleId}, ${JSON.stringify(emailPayload)}, true)
+        ON CONFLICT ("id") DO NOTHING
       `);
     } catch (error) {
       process.stdout.write(

@@ -39,6 +39,13 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
+  // S1: Sovereign Authorization Bridge
+  // Automatically inject the Super Admin Key if set in the environment or persistent storage
+  const superAdminKey = typeof window !== 'undefined' ? localStorage.getItem('X-SUPER-ADMIN-KEY') : null;
+  if (superAdminKey) {
+    headers['X-Super-Admin-Key'] = superAdminKey;
+  }
+
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,

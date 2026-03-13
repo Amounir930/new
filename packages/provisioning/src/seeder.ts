@@ -11,7 +11,9 @@ import {
   type NodePgDatabase,
   sql,
   tenantsInGovernance,
+  tenantQuotasInGovernance,
 } from '@apex/db';
+import { encrypt, hashSensitiveData } from '@apex/security';
 import { BlueprintExecutor } from './blueprint/executor';
 import { CatalogModule } from './blueprint/modules/catalog';
 import { CoreModule } from './blueprint/modules/core';
@@ -23,7 +25,7 @@ export interface SeedOptions {
   adminEmail: string;
   adminId: string; // S7: Central Identity UUID
   storeName: string;
-  plan?: 'free' | 'basic' | 'pro' | 'enterprise';
+  plan: 'free' | 'basic' | 'pro' | 'enterprise'; // S21: Plan is now MANDATORY
   password?: string; // S7: Hashed password for admin user
   nicheType?: string; // S2.5: Industry classification
   uiConfig?: Record<string, unknown>; // S2.5: SDUI/Theme configuration
@@ -63,8 +65,23 @@ export async function seedTenantData(
     const storeId = await resolveStore(tenantScopedAdminDb, options);
 
     const executor = new BlueprintExecutor();
+    
+    // 1. Mandatory Core Injection (Sovereign Mandate)
+    // CoreModule is NEVER optional as it establishes the merchant identity.
     executor.register(new CoreModule());
-    executor.register(new CatalogModule());
+
+    // 2. Dynamic Register (Selective Feature Empowerment)
+    // Only register backend modules permitted by the Blueprint.
+    // Frontend pages (pdp, cart, etc.) are NOT registered here.
+    const moduleRegistry: Record<string, any> = {
+      catalog: CatalogModule,
+    };
+
+    for (const [moduleName, enabled] of Object.entries(config.modules)) {
+      if (enabled && moduleRegistry[moduleName]) {
+        executor.register(new moduleRegistry[moduleName]());
+      }
+    }
 
     await tenantScopedAdminDb.transaction(async (tx) => {
       // S2/Auth-04: Ensure the transaction also knows about the tenant context for RLS-protected tables
@@ -77,7 +94,7 @@ export async function seedTenantData(
           subdomain: options.subdomain,
           db: tx,
           schema: schemaName,
-          plan: (options.plan || 'free') as
+          plan: options.plan as
             | 'free'
             | 'basic'
             | 'pro'
@@ -143,7 +160,7 @@ async function resolveTemplate(
   }
   const { getDefaultBlueprint } = await import('./blueprint');
   const blueprintRecord = await getDefaultBlueprint(
-    (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise'
+    options.plan as 'free' | 'basic' | 'pro' | 'enterprise'
   );
 
   if (!blueprintRecord) {
@@ -191,17 +208,38 @@ async function resolveStore(
     return existingTenant.id;
   }
 
-  // If not in registry, create it (Provisioning flow)
+  // 1. Insert Tenant
+  const encResult = encrypt(options.adminEmail);
+  const emailHash = hashSensitiveData(options.adminEmail);
+
   const [newStore] = await adminDb
     .insert(tenantsInGovernance)
     .values({
       name: options.storeName,
       subdomain: options.subdomain,
       status: 'active',
-      plan: (options.plan || 'free') as 'free' | 'basic' | 'pro' | 'enterprise',
+      plan: options.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       nicheType: (options.nicheType || 'retail') as string,
+      ownerEmail: JSON.stringify(encResult),
+      ownerEmailHash: emailHash,
     })
     .returning({ id: tenantsInGovernance.id });
+
+  // 2. S21 MANDATE: Logic Isolation - Seed Quotas from Blueprint!
+  const template = await resolveTemplate(options);
+  const quotas = template.quotas as any; // Map Blueprint quotas to Governance schema
+
+  await adminDb.insert(tenantQuotasInGovernance).values({
+    tenantId: newStore.id,
+    maxProducts: quotas.max_products || 50,
+    maxOrders: quotas.max_orders || 100,
+    maxStaff: quotas.max_staff || 1,
+    maxPages: quotas.max_pages || 5,
+    maxCategories: quotas.max_categories || 10,
+    maxCoupons: quotas.max_coupons || 0,
+    storageLimitGb: quotas.storage_limit_gb || 1,
+    apiRateLimit: quotas.api_rate_limit || 60,
+  });
 
   return newStore.id;
 }

@@ -4,6 +4,13 @@ import { AuthService, type AuthUser } from '@apex/auth';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { ConfigService } from '@apex/config';
 import {
+  adminDb,
+  eq,
+  tenantsInGovernance,
+  usersInGovernance,
+} from '@apex/db';
+import { hashSensitiveData } from '@apex/security';
+import {
   Body,
   Controller,
   HttpCode,
@@ -43,68 +50,114 @@ export class AuthController {
   @Post('login')
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Super Admin Login' })
+  @ApiOperation({ summary: 'Login (Super Admin or Merchant)' })
   async login(
     @Body(new ZodValidationPipe(LoginSchema)) body: LoginDto,
     @Res({ passthrough: true }) response: Response
   ) {
     const { email, password } = body;
 
-    // S1: Validate against ConfigService
+    // --- 1. Super Admin Check ---
     const adminEmail = this.config.get('SUPER_ADMIN_EMAIL');
     const adminPassword = this.config.get('SUPER_ADMIN_PASSWORD');
 
-    if (!adminEmail || !adminPassword) {
-      throw new UnauthorizedException(
-        'System misconfiguration: Admin credentials not set'
-      );
+    if (adminEmail && adminPassword && email === adminEmail) {
+      const isPasswordValid = await bcrypt.compare(password, adminPassword);
+      if (isPasswordValid) {
+        return this.handleSuccessfulLogin(
+          {
+            id: 'super-admin-id',
+            email: email,
+            tenantId: 'system',
+            role: 'super_admin',
+          },
+          response
+        );
+      }
     }
 
-    // S7/Item 29: Compare hashed password using bcrypt (S1-S15 Compliance: 12 Rounds)
-    const isPasswordValid = await bcrypt.compare(password, adminPassword);
+    // --- 2. Merchant Auth Bridge (S7 Sovereign Mandate) ---
+    const emailHash = hashSensitiveData(email);
+    const [userRecord] = await adminDb
+      .select()
+      .from(usersInGovernance)
+      .where(eq(usersInGovernance.emailHash, emailHash))
+      .limit(1);
 
-    if (email === adminEmail && isPasswordValid) {
-      // S4: Audit successful login
-      await this.audit.log({
-        action: 'SUPER_ADMIN_LOGIN_SUCCESS',
-        entityType: 'user',
-        entityId: 'system-admin',
-        metadata: { email },
-      });
+    if (userRecord && userRecord.passwordHash) {
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        userRecord.passwordHash
+      );
+      if (isPasswordValid) {
+        // Find associated tenant (Sovereign Mapping)
+        // For the recovery phase, we prioritize the primary owned tenant
+        const [ownedTenant] = await adminDb
+          .select({
+            id: tenantsInGovernance.id,
+            subdomain: tenantsInGovernance.subdomain,
+          })
+          .from(tenantsInGovernance)
+          .where(eq(tenantsInGovernance.ownerEmailHash, emailHash))
+          .limit(1);
 
-      // Generate Token with super_admin role
-      const user: AuthUser = {
-        id: 'super-admin-id',
-        email: email,
-        tenantId: 'system',
-        role: 'super_admin',
-      };
+        if (!ownedTenant) {
+          throw new UnauthorizedException(
+            'Account found but no active tenant association detected'
+          );
+        }
 
-      const token = await this.authService.generateToken(user);
-
-      // S8: Set Secure, HttpOnly cookie for admin session (Prevent XSS theft)
-      const rootDomain = this.config.get('APP_ROOT_DOMAIN') || '60sec.shop';
-      response.cookie('adm_tkn', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'lax', // Use 'lax' for cross-subdomain navigation
-        domain: `.${rootDomain}`,
-        path: '/',
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      });
-
-      return { accessToken: token };
+        return this.handleSuccessfulLogin(
+          {
+            id: userRecord.id,
+            email: email,
+            tenantId: ownedTenant.id,
+            role: 'tenant_admin',
+          },
+          response
+        );
+      }
     }
 
     // S4: Audit failed login attempt
     await this.audit.log({
-      action: 'SUPER_ADMIN_LOGIN_FAILED',
+      action: 'LOGIN_FAILED',
       entityType: 'user',
-      entityId: 'system-admin',
+      entityId: 'unauthenticated',
       metadata: { email, reason: 'Invalid credentials' },
     });
 
-    // S5: Standardized error message without leaking internal match details
     throw new UnauthorizedException('Invalid credentials');
+  }
+
+  private async handleSuccessfulLogin(
+    user: AuthUser,
+    response: Response
+  ): Promise<{ accessToken: string }> {
+    // S4: Audit successful login
+    await this.audit.log({
+      action:
+        user.role === 'super_admin'
+          ? 'SUPER_ADMIN_LOGIN_SUCCESS'
+          : 'MERCHANT_LOGIN_SUCCESS',
+      entityType: 'user',
+      entityId: user.id,
+      metadata: { email: user.email, tenantId: user.tenantId },
+    });
+
+    const token = await this.authService.generateToken(user);
+
+    // S8: Set Secure, HttpOnly cookie (Prevent XSS theft)
+    const rootDomain = this.config.get('APP_ROOT_DOMAIN') || '60sec.shop';
+    response.cookie('adm_tkn', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      domain: `.${rootDomain}`,
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    return { accessToken: token };
   }
 }

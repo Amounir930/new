@@ -309,49 +309,38 @@ async function forceClearBucket(
     `Force-clearing bucket: ${bucketName} (removing all versions, markers, and uploads)...`
   );
 
-  // Extend client to access semi-private methods not in all SDK typings
-  interface MinioExtendedClient extends Minio.Client {
-    listObjectVersions(bucket: string, prefix: string, recursive: boolean): any;
-    listIncompleteUploads(
-      bucket: string,
-      prefix: string,
-      recursive: boolean
-    ): any;
-  }
-  const extendedClient = client as unknown as MinioExtendedClient;
-
-  // 1. Remove all object versions and delete markers
+  // S21 FIX: Use listObjects with versions: true or listObjectVersions if available
   try {
-    const versionStream = extendedClient.listObjectVersions(
-      bucketName,
-      '',
-      true
-    );
+    const clientAny = client as any;
+    let versionStream: any;
+
+    if (typeof clientAny.listObjectVersions === 'function') {
+      versionStream = clientAny.listObjectVersions(bucketName, '', true);
+    } else {
+      // Fallback for newer/different SDK signatures: listObjects(bucket, prefix, recursive, { versions: true })
+      versionStream = (client as any).listObjects(bucketName, '', true, {
+        versions: true,
+      });
+    }
+
     let vCount = 0;
     for await (const obj of versionStream) {
       if (obj.name) {
         vCount++;
+        // Remove specific version or delete marker
         await client.removeObject(bucketName, obj.name, {
-          versionId: (obj as { versionId?: string }).versionId,
+          versionId: obj.versionId,
         });
       }
     }
-    if (vCount > 0) {
-      logger.info(
-        `Force-cleared ${vCount} objects/versions from ${bucketName}`
-      );
-    }
-  } catch (err) {
-    logger.error('Error clearing object versions', { bucketName, error: err });
-  }
 
-  // 2. Remove all incomplete multipart uploads
-  try {
-    const uploadStream = extendedClient.listIncompleteUploads(
-      bucketName,
-      '',
-      true
-    );
+    logger.info(`Force-cleared ${vCount} objects/versions from ${bucketName}`);
+
+    // 2. Remove all incomplete multipart uploads
+    const uploadStream = clientAny.listIncompleteUploads
+      ? clientAny.listIncompleteUploads(bucketName, '', true)
+      : client.listIncompleteUploads(bucketName, '', true);
+
     let uCount = 0;
     for await (const upload of uploadStream) {
       if (upload.key) {
@@ -365,10 +354,12 @@ async function forceClearBucket(
       );
     }
   } catch (err) {
-    logger.error('Error clearing incomplete uploads', {
+    logger.error('CRITICAL: Error clearing bucket versions for rollback', {
       bucketName,
-      error: err,
+      error: err instanceof Error ? err.message : String(err),
     });
+    // Throw to prevent removeBucket from failing with 'not empty' and hiding the real cause
+    throw err;
   }
 }
 

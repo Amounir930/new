@@ -4,7 +4,13 @@ import {
   onboardingBlueprintsInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import {
+  Controller,
+  ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+} from '@nestjs/common';
 
 @Controller('public/tenants')
 export class TenantsPublicController {
@@ -20,9 +26,16 @@ export class TenantsPublicController {
       .where(eq(tenantsInGovernance.subdomain, subdomain))
       .limit(1);
 
-    if (!tenant) {
+    if (!tenant || tenant.deletedAt) {
       throw new NotFoundException(
         `Tenant with subdomain ${subdomain} not found`
+      );
+    }
+
+    // S2.5 Lockdown: Only active tenants are allowed to serve storefronts
+    if (tenant.status !== 'active') {
+      throw new ForbiddenException(
+        `Access denied: Tenant ${subdomain} is ${tenant.status}`
       );
     }
 
