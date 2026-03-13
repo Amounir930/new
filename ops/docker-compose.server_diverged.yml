@@ -132,7 +132,7 @@ services:
     env_file:
       - ../.env
     depends_on:
-      postgres:
+      apex-postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -206,8 +206,6 @@ services:
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     networks:
       - apex-network
-    security_opt:
-      - no-new-privileges:true
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.admin.rule=Host(`super-admin.60sec.shop`)"
@@ -430,7 +428,7 @@ services:
     env_file:
       - ../.env
     environment:
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: apex-postgres
       POSTGRES_USER: ${POSTGRES_USER:-apex}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
@@ -444,7 +442,7 @@ services:
     healthcheck:
       disable: true
     depends_on:
-      postgres:
+      apex-postgres:
         condition: service_healthy
     networks:
       - apex-network
@@ -597,7 +595,7 @@ services:
     container_name: apex-adminer
     restart: always
     environment:
-      - ADMINER_DEFAULT_SERVER=postgres
+      - ADMINER_DEFAULT_SERVER=apex-postgres
     networks:
       - apex-network
     labels:
