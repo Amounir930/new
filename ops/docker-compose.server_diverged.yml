@@ -104,6 +104,7 @@ services:
       
       # S3 API Endpoint
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
+      - "traefik.http.routers.minio.service=apex-minio"
       - "traefik.http.routers.minio.priority=5000"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
@@ -158,6 +159,7 @@ services:
       - "traefik.docker.network=apex-public"
       # Router 1: Public API
       - "traefik.http.routers.api-public.rule=Host(`api.60sec.shop`) && (PathPrefix(`/api/v1`) || PathPrefix(`/api/auth`))"
+      - "traefik.http.routers.api-public.service=apex-api"
       - "traefik.http.routers.api-public.priority=5500"
       - "traefik.http.routers.api-public.entrypoints=websecure"
       - "traefik.http.routers.api-public.tls.certresolver=letsencrypt"
@@ -165,6 +167,7 @@ services:
       
       # Router 2: Shielded API
       - "traefik.http.routers.api-shielded.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
+      - "traefik.http.routers.api-shielded.service=apex-api"
       - "traefik.http.routers.api-shielded.priority=5000"
       - "traefik.http.routers.api-shielded.entrypoints=websecure"
       - "traefik.http.routers.api-shielded.tls.certresolver=letsencrypt"
@@ -208,6 +211,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
       - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
+      - "traefik.http.routers.super-admin.service=apex-super-admin"
       - "traefik.http.routers.super-admin.priority=6000"
       - "traefik.http.routers.super-admin.entrypoints=websecure"
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
@@ -249,6 +253,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
       - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
+      - "traefik.http.routers.store-main.service=apex-store"
       - "traefik.http.routers.store-main.priority=3000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
@@ -376,6 +381,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
       - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
+      - "traefik.http.routers.mailpit.service=apex-mailpit"
       - "traefik.http.routers.mailpit.priority=5000"
       - "traefik.http.routers.mailpit.service=apex-mailpit"
       - "traefik.http.routers.mailpit.entrypoints=websecure"
@@ -463,6 +469,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
       - "traefik.http.routers.gitea.rule=Host(`git.60sec.shop`)"
+      - "traefik.http.routers.gitea.service=apex-gitea"
       - "traefik.http.routers.gitea.priority=5000"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
@@ -501,6 +508,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
       - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
+      - "traefik.http.routers.adminer.service=apex-adminer"
       - "traefik.http.routers.adminer.priority=5000"
       - "traefik.http.routers.adminer.entrypoints=websecure"
       - "traefik.http.routers.adminer.tls.certresolver=letsencrypt"
