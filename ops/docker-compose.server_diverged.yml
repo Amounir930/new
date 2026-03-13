@@ -105,7 +105,7 @@ services:
       - "traefik.http.middlewares.apex-security-headers.headers.forceSTSHeader=true"
       - "traefik.http.middlewares.api-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
       # ROUTERS
-      - "traefik.http.routers.api-public.rule=Host(`api.60sec.shop`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.api-public.rule=Host(`api.60sec.shop`) && (PathPrefix(`/api/v1`) || PathPrefix(`/api/auth`))"
       - "traefik.http.routers.api-public.service=apex-api"
       - "traefik.http.routers.api-public.priority=5500"
       - "traefik.http.routers.api-public.entrypoints=websecure"
