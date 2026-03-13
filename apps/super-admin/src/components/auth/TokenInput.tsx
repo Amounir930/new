@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getAuthToken, setAuthToken } from '@/lib/api';
+import { getAuthToken, setAuthToken, setManagementKey } from '@/lib/api';
 
 export function TokenInput() {
   const [token, setToken] = useState('');
@@ -14,7 +14,8 @@ export function TokenInput() {
 
   const handleSave = () => {
     setAuthToken(token);
-    alert('Token saved!');
+    setManagementKey(token); // S1: Sovereign Authorization Bridge
+    alert('Security keys synchronized!');
     window.location.reload();
   };
 

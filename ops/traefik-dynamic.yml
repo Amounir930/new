@@ -67,6 +67,8 @@ http:
           - "Content-Type"
           - "Authorization"
           - "X-Request-ID"
+          - "X-Super-Admin-Key"
+          - "X-Tenant-ID"
         accessControlAllowCredentials: true
         
     apex-store-csp:

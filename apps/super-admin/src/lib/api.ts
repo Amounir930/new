@@ -3,14 +3,33 @@ import { config } from '../config';
 const API_URL = config.apiUrl;
 
 export const getAuthToken = () => {
-  // S8: Manual token extraction disabled for HttpOnly compatibility.
-  // Browser will handle token transport automatically via credentials: 'include'.
-  return null;
+  if (typeof window === 'undefined') return null;
+  return sessionStorage.getItem('access_token');
 };
 
-export const setAuthToken = (_token: string) => {
-  // S8: Client-side cookie setting is deprecated in favor of server-side Set-Cookie.
-  // This remains only for non-HttpOnly legacy support if needed, otherwise ignore.
+export const setAuthToken = (token: string) => {
+  if (typeof window !== 'undefined') {
+    if (token) {
+      sessionStorage.setItem('access_token', token);
+    } else {
+      sessionStorage.removeItem('access_token');
+    }
+  }
+};
+
+export const getManagementKey = () => {
+  if (typeof window === 'undefined') return null;
+  return sessionStorage.getItem('X-SUPER-ADMIN-KEY');
+};
+
+export const setManagementKey = (key: string) => {
+  if (typeof window !== 'undefined') {
+    if (key) {
+      sessionStorage.setItem('X-SUPER-ADMIN-KEY', key);
+    } else {
+      sessionStorage.removeItem('X-SUPER-ADMIN-KEY');
+    }
+  }
 };
 
 interface FetchOptions extends RequestInit {
@@ -29,6 +48,7 @@ export async function apiFetch<T>(
   options: FetchOptions = {}
 ): Promise<T> {
   const token = options.token || getAuthToken();
+  const managementKey = getManagementKey();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -39,17 +59,14 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  // S1: Sovereign Authorization Bridge
-  // Automatically inject the Super Admin Key if set in the environment or persistent storage
-  const superAdminKey = typeof window !== 'undefined' ? localStorage.getItem('X-SUPER-ADMIN-KEY') : null;
-  if (superAdminKey) {
-    headers['X-Super-Admin-Key'] = superAdminKey;
+  if (managementKey) {
+    headers['X-Super-Admin-Key'] = managementKey;
   }
 
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
-    credentials: 'include', // S8: Always include cookies for session support
+    credentials: 'include',
   });
 
   if (!res.ok) {

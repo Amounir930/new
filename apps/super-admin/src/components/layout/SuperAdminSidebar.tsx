@@ -1,8 +1,8 @@
 'use client';
 
 import {
-  Box, // Added
-  LayoutDashboard, // Added
+  Box,
+  LayoutDashboard,
   Server,
   Settings,
   ShieldCheck,
@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { TokenInput } from '../auth/TokenInput';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', href: '/dashboard' },
@@ -68,7 +69,17 @@ export function SuperAdminSidebar() {
         })}
       </nav>
 
-      <div className="p-6">
+      <div className="p-6 space-y-4">
+        <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 backdrop-blur-sm">
+          <div className="flex items-center gap-3 mb-3">
+            <ShieldCheck className="w-4 h-4 text-indigo-400" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              Sovereign Keys
+            </span>
+          </div>
+          <TokenInput />
+        </div>
+
         <div className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 backdrop-blur-sm">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
