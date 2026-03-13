@@ -127,15 +127,8 @@ async function bootstrap() {
   );
 
 
-  // API Versioning (Standardizes /v1/ routes)
-  app.enableVersioning({
-    type: VersioningType.URI,
-    defaultVersion: '1',
-  });
-
   // Global prefixing logic (Sovereign Reconciliation)
-  // We remove 'api' prefix here because Traefik already handles PathPrefix(/api).
-  // This prevents double-prefixing (/api/api/v1).
+  // Versioning and prefixing are managed at the controller level for maximum precision.
   app.setGlobalPrefix('', {
     exclude: [
       { path: '/', method: 1 },

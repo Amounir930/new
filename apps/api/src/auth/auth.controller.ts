@@ -37,7 +37,7 @@ const LoginSchema = z.object({
 type LoginDto = z.infer<typeof LoginSchema>;
 
 @ApiTags('Auth')
-@Controller({ path: 'auth', version: [VERSION_NEUTRAL, '1'] })
+@Controller({ path: 'v1/auth', version: [VERSION_NEUTRAL] })
 export class AuthController {
   constructor(
     @Inject(AuthService)
