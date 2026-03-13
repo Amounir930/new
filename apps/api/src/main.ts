@@ -127,20 +127,22 @@ async function bootstrap() {
   );
 
 
+  // API Versioning (Standardizes /v1/ routes)
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
   // Global prefixing logic (Sovereign Reconciliation)
-  // Versioning and prefixing are managed at the controller level for maximum precision.
-  app.setGlobalPrefix('', {
+  // Restoring 'api' prefix to align with Traefik PathPrefix(/api)
+  app.setGlobalPrefix('api', {
     exclude: [
       { path: '/', method: 1 },
       { path: '/robots.txt', method: 1 },
-      { path: '/health/liveness', method: 1 },
-      { path: '/health/status', method: 1 },
-      { path: 'health/(.*)', method: 1 },
-      // S15: Honeypots at ROOT
+      // S15: Honeypots at ROOT (Traefik routes these separately or they bypass prefix)
       { path: '/.env', method: 1 },
       { path: '/wp-admin', method: 1 },
       { path: '/wp-login.php', method: 1 },
-      { path: '/admin/login', method: 1 },
       { path: '/config.php', method: 1 },
     ],
   });
