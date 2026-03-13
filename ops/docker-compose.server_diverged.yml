@@ -195,7 +195,7 @@ services:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/admin:latest
     build:
       context: ..
-      dockerfile: apps/admin/Dockerfile
+      dockerfile: apps/super-admin/Dockerfile
     restart: always
     env_file:
       - ../.env
