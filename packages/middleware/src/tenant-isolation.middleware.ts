@@ -123,7 +123,7 @@ async function validateTenant(
 @Injectable()
 export class TenantIsolationMiddleware implements NestMiddleware {
   constructor(private readonly cache: TenantCacheService) {}
-
+  async use(req: TenantRequest, res: Response, next: NextFunction) {
     const currentPath = req.originalUrl || req.path || '';
 
     // S8: Early bypass for preflight OPTIONS to allow CORS handling to finish
