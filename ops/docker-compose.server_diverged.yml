@@ -26,7 +26,7 @@ services:
       - DAC_OVERRIDE
       - FOWNER
     networks:
-      - apex-network
+      - apex-internal
     deploy:
       resources:
         limits:
@@ -60,7 +60,7 @@ services:
           memory: 512M
           cpus: "0.5"
     networks:
-      - apex-network
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Object Storage (MinIO)
@@ -92,8 +92,12 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+    networks:
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       # Middlewares Defined Locally for MinIO
       - "traefik.http.middlewares.apex-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
       - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
@@ -115,7 +119,7 @@ services:
       - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
     networks:
-      - apex-network
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Application Layer (Apex API)
@@ -151,9 +155,13 @@ services:
       MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
       MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-apex-assets}
     networks:
-      - apex-network
+      - apex-internal
+    networks:
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       # Router 1: Public API
       - "traefik.http.routers.api-public.rule=Host(`api.60sec.shop`) && (PathPrefix(`/api/v1`) || PathPrefix(`/api/auth`))"
       - "traefik.http.routers.api-public.priority=5500"
@@ -204,9 +212,11 @@ services:
       PORT: 3001
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
     networks:
-      - apex-network
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
       - "traefik.http.routers.super-admin.priority=6000"
       - "traefik.http.routers.super-admin.entrypoints=websecure"
@@ -243,9 +253,11 @@ services:
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
     networks:
-      - apex-network
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.store-main.rule=Host(`60sec.shop`) || Host(`adel.60sec.shop`)"
       - "traefik.http.routers.store-main.priority=3000"
       - "traefik.http.routers.store-main.entrypoints=websecure"
@@ -281,7 +293,7 @@ services:
       - INFO=1
       - VERSION=1
     networks:
-      - apex-network
+      - apex-internal
     deploy:
       resources:
         limits:
@@ -310,7 +322,7 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.network=ops_apex-network"
+      - "--providers.docker.network=apex-public"
       # SaaS SSL Certificates (DNS-01 Challenge)
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
@@ -349,8 +361,12 @@ services:
       - letsencrypt_data:/letsencrypt
       # S4: Persistent Audit Logging
       - ./logs/traefik:/var/log/traefik
+    networks:
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       # Global Middlewares Consistently Defined Here
       - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
       - "traefik.http.middlewares.apex-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
@@ -386,7 +402,7 @@ services:
       - "traefik.http.routers.traefikdash.tls.certresolver=letsencrypt"
       - "traefik.http.routers.traefikdash.middlewares=apex-ip-allowlist@docker,apex-dash-redirect@docker,apex-basic-auth@docker"
     networks:
-      - apex-network
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Email Testing (Mailpit) - Internal SMTP
@@ -400,8 +416,12 @@ services:
       MP_UI_BIND_ADDR: 0.0.0.0:8025
     volumes:
       - mailpit_data:/data
+    networks:
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
       - "traefik.http.routers.mailpit.priority=5000"
       - "traefik.http.routers.mailpit.service=apex-mailpit"
@@ -415,7 +435,7 @@ services:
       timeout: 3s
       retries: 3
     networks:
-      - apex-network
+      - apex-internal
 
 
   # ═══════════════════════════════════════════════════════════════
@@ -445,7 +465,7 @@ services:
       apex-postgres:
         condition: service_healthy
     networks:
-      - apex-network
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Gitea Isolated Database (S2 Compliance)
@@ -471,7 +491,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - apex-network
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Gitea Database Backup
@@ -495,7 +515,7 @@ services:
       gitea-db:
         condition: service_healthy
     networks:
-      - apex-network
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Gitea (The Fortress) - Self-hosted Git Server
@@ -534,9 +554,13 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     networks:
-      - apex-network
+      - apex-internal
+    networks:
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.gitea.rule=Host(`git.60sec.shop`)"
       - "traefik.http.routers.gitea.priority=5000"
       - "traefik.http.routers.gitea.entrypoints=websecure"
@@ -565,7 +589,7 @@ services:
       # Mount the entire repo so we can pull changes to HOST
       - /opt/apex-v2:/app:ro
     networks:
-      - apex-network
+      - apex-internal
     labels:
       - "traefik.enable=true"
       # Local Middleware for unique range
@@ -597,9 +621,13 @@ services:
     environment:
       - ADMINER_DEFAULT_SERVER=apex-postgres
     networks:
-      - apex-network
+      - apex-internal
+    networks:
+      - apex-public
+      - apex-internal
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=apex-public"
       - "traefik.http.routers.adminer.rule=Host(`db.60sec.shop`)"
       - "traefik.http.routers.adminer.priority=5000"
       - "traefik.http.routers.adminer.entrypoints=websecure"
@@ -625,5 +653,9 @@ volumes:
   gitea_backups:
 
 networks:
-  apex-network:
-    driver: bridge
+  apex-public:
+    external: true
+  apex-internal:
+    external: true
+  apex-data:
+    external: true
