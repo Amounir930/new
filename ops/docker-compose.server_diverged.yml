@@ -98,9 +98,6 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      # Middlewares Defined Locally for MinIO
-      - "traefik.http.middlewares.apex-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
-      - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
       
       # S3 API Endpoint
       - "traefik.http.routers.minio.rule=Host(`storage.60sec.shop`)"
@@ -108,16 +105,15 @@ services:
       - "traefik.http.routers.minio.priority=5000"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio.service=apex-minio"
       - "traefik.http.services.apex-minio.loadbalancer.server.port=9000"
       
-      # Console UI (Flattened for Cloudflare SSL Support)
+      # Console UI
       - "traefik.http.routers.minio-console.rule=Host(`storage-admin.60sec.shop`)"
+      - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.routers.minio-console.priority=5500"
       - "traefik.http.routers.minio-console.entrypoints=websecure"
       - "traefik.http.routers.minio-console.tls.certresolver=letsencrypt"
       - "traefik.http.routers.minio-console.middlewares=apex-ip-allowlist@docker,apex-minio-headers@docker"
-      - "traefik.http.routers.minio-console.service=apex-minio-console"
       - "traefik.http.services.apex-minio-console.loadbalancer.server.port=9001"
 
   # ═══════════════════════════════════════════════════════════════
@@ -173,21 +169,12 @@ services:
       - "traefik.http.routers.api-shielded.tls.certresolver=letsencrypt"
       - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@docker,apex-basic-auth@docker,apex-security-headers@docker"
       - "traefik.http.services.apex-api.loadbalancer.server.port=3000"
-    cap_add:
-      - NET_BIND_SERVICE
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/v1/health').then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 30s
-    deploy:
-      replicas: 2
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 512M
 
   # ═══════════════════════════════════════════════════════════════
   # Admin UI (Super Admin Panel)
@@ -223,11 +210,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
   # Storefront UI (Public Shop)
@@ -265,14 +247,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
-  # S15: Docker Socket Proxy (Container Escape Protection)
+  # Docker Socket Proxy
   # ═══════════════════════════════════════════════════════════════
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest
@@ -289,10 +266,6 @@ services:
       - VERSION=1
     networks:
       - apex-internal
-    deploy:
-      resources:
-        limits:
-          memory: 64M
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:2375/version"]
       interval: 10s
@@ -300,14 +273,12 @@ services:
       retries: 3
 
   # ═══════════════════════════════════════════════════════════════
-  # Load Balancer (Traefik) - Dynamic SSL w/ Let's Encrypt
+  # Load Balancer (Traefik)
   # ═══════════════════════════════════════════════════════════════
   traefik:
     image: traefik:v2.11
     container_name: apex-traefik
     restart: always
-    cap_add:
-      - NET_BIND_SERVICE
     depends_on:
       docker-proxy:
         condition: service_healthy
@@ -355,6 +326,24 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
+      # MIDDLEWARES
+      - "traefik.http.middlewares.apex-admin-security.headers.customresponseheaders.X-Traefik-Mode=Sovereign"
+      - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.apex-global-ratelimit.ratelimit.burst=50"
+      - "traefik.http.middlewares.apex-security-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.apex-security-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.apex-security-headers.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.average=200"
+      - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.burst=100"
+      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolalloworiginlist=*"
+      - "traefik.http.middlewares.apex-store-csp.headers.contentsecuritypolicy=default-src 'self'"
+      - "traefik.http.middlewares.apex-minio-headers.headers.customrequestheaders.X-Minio-Proxy=Traefik"
+      - "traefik.http.middlewares.apex-dash-redirect.redirectregex.regex=^https://traefik.60sec.shop/$$"
+      - "traefik.http.middlewares.apex-dash-redirect.redirectregex.replacement=https://traefik.60sec.shop/dashboard/"
+      - "traefik.http.middlewares.apex-ip-allowlist.ipallowlist.sourcerange=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22"
+      - "traefik.http.middlewares.apex-basic-auth.basicauth.usersfile=/etc/traefik/htpasswd"
+      # ROUTERS
       - "traefik.http.routers.traefikdash.rule=Host(`traefik.60sec.shop`)"
       - "traefik.http.routers.traefikdash.priority=6000"
       - "traefik.http.routers.traefikdash.service=api@internal"
@@ -363,17 +352,12 @@ services:
       - "traefik.http.routers.traefikdash.middlewares=apex-ip-allowlist@docker,apex-dash-redirect@docker,apex-basic-auth@docker"
 
   # ═══════════════════════════════════════════════════════════════
-  # Email Testing (Mailpit) - Internal SMTP
+  # Email Testing
   # ═══════════════════════════════════════════════════════════════
   mailpit:
     image: axllent/mailpit:latest
     container_name: apex-mailpit
     restart: always
-    environment:
-      MP_SMTP_BIND_ADDR: 0.0.0.0:1025
-      MP_UI_BIND_ADDR: 0.0.0.0:8025
-    volumes:
-      - mailpit_data:/data
     networks:
       - apex-public
       - apex-internal
@@ -383,19 +367,13 @@ services:
       - "traefik.http.routers.mailpit.rule=Host(`mail.60sec.shop`)"
       - "traefik.http.routers.mailpit.service=apex-mailpit"
       - "traefik.http.routers.mailpit.priority=5000"
-      - "traefik.http.routers.mailpit.service=apex-mailpit"
       - "traefik.http.routers.mailpit.entrypoints=websecure"
       - "traefik.http.routers.mailpit.tls.certresolver=letsencrypt"
       - "traefik.http.routers.mailpit.middlewares=apex-ip-allowlist@docker,apex-basic-auth@docker"
       - "traefik.http.services.apex-mailpit.loadbalancer.server.port=8025"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
 
   # ═══════════════════════════════════════════════════════════════
-  # Database Backup (Postgres)
+  # Database Backup
   # ═══════════════════════════════════════════════════════════════
   db-backup:
     image: prodrigestivill/postgres-backup-local:15
@@ -409,9 +387,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
       SCHEDULE: "@daily"
-      BACKUP_KEEP_DAYS: 7
-    volumes:
-      - db_backups:/backups
     networks:
       - apex-internal
     depends_on:
@@ -419,7 +394,7 @@ services:
         condition: service_healthy
 
   # ═══════════════════════════════════════════════════════════════
-  # Gitea Isolated Database (S2 Compliance)
+  # Gitea Isolated Database
   # ═══════════════════════════════════════════════════════════════
   gitea-db:
     image: postgres:15-alpine
@@ -434,13 +409,11 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gitea -d gitea"]
       interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
-  # Gitea (The Fortress) - Self-hosted Git Server
+  # Gitea
   # ═══════════════════════════════════════════════════════════════
   gitea:
     image: gitea/gitea:1.21-rootless
@@ -449,19 +422,6 @@ services:
     depends_on:
       gitea-db:
         condition: service_healthy
-    environment:
-      - GITEA__database__DB_TYPE=postgres
-      - GITEA__database__HOST=gitea-db:5432
-      - GITEA__database__NAME=gitea
-      - GITEA__database__USER=gitea
-      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
-      - GITEA__server__DOMAIN=git.60sec.shop
-      - GITEA__server__HTTP_PORT=3000
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     networks:
       - apex-public
       - apex-internal
@@ -476,7 +436,7 @@ services:
       - "traefik.http.services.gitea.loadbalancer.server.port=3000"
 
   # ═══════════════════════════════════════════════════════════════
-  # Deployment Webhook (Surgical Sync)
+  # Webhook
   # ═══════════════════════════════════════════════════════════════
   webhook:
     build:
@@ -487,13 +447,11 @@ services:
     environment:
       - WEBHOOK_SECRET=${WEBHOOK_SECRET}
       - DOCKER_HOST=tcp://apex-docker-proxy:2375
-    volumes:
-      - /opt/apex-v2:/app:ro
     networks:
       - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
-  # Database Explorer (Adminer) - Internal Access Only
+  # Database Explorer
   # ═══════════════════════════════════════════════════════════════
   adminer:
     image: adminer:latest
