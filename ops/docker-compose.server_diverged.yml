@@ -2,7 +2,7 @@ services:
   # ═══════════════════════════════════════════════════════════════
   # Database Layer (PostgreSQL 15)
   # ═══════════════════════════════════════════════════════════════
-  postgres:
+  apex-postgres:
     image: pgvector/pgvector:pg15
     container_name: apex-postgres
     restart: always
@@ -193,7 +193,7 @@ services:
   # ═══════════════════════════════════════════════════════════════
   # Admin UI (Super Admin Panel)
   # ═══════════════════════════════════════════════════════════════
-  admin:
+  super-admin:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/admin:latest
     build:
       context: ..
