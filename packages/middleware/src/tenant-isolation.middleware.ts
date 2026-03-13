@@ -223,8 +223,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       'git',
       'admin',
       'mail',
-      'localhost',
-      '127.0.0.1',
     ];
     return systemSubdomains.includes(cleanSubdomain);
   }
