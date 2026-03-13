@@ -55,7 +55,7 @@ export function TenantList() {
   const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiFetch<Tenant[]>('/v1/tenants');
+      const data = await apiFetch<Tenant[]>('/tenants');
       setTenants(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -79,7 +79,7 @@ export function TenantList() {
   async function updateTenant(id: string, data: unknown) {
     try {
       setUpdatingId(id);
-      await apiFetch(`/v1/tenants/${id}`, {
+      await apiFetch(`/tenants/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });

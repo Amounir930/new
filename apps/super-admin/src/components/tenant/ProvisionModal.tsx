@@ -96,7 +96,7 @@ export function ProvisionModal({
   useEffect(() => {
     async function fetchBlueprints() {
       try {
-        const data = await apiFetch('/v1/blueprints');
+        const data = await apiFetch('/blueprints');
         // Filter blueprints by selected plan if they exist
         setBlueprints(Array.isArray(data) ? data : []);
       } catch (_e) {
@@ -119,7 +119,7 @@ export function ProvisionModal({
     try {
       setLoading(true);
       setError('root', { message: '' });
-      await apiFetch('/v1/provision', {
+      await apiFetch('/provision', {
         method: 'POST',
         body: JSON.stringify(values),
       });

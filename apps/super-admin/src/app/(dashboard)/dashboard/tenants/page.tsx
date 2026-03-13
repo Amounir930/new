@@ -42,7 +42,7 @@ export default function TenantsPage() {
   const fetchTenants = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiFetch('/v1/tenants');
+      const data = await apiFetch('/tenants');
       setTenants(Array.isArray(data) ? data : []);
     } catch (_e) {
       /* 'Failed to fetch tenants:', e */

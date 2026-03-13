@@ -98,13 +98,13 @@ export function TenantGovernanceModal({
         setLoading(true);
         // Fetch Features Matrix
         const featuresData = await apiFetch<Record<string, FeatureState>>(
-          `/v1/tenants/${tenantId}/features`
+          `/tenants/${tenantId}/features`
         );
         setFeatures(featuresData);
 
         // Fetch Tenant Metadata (Plan/Status)
         // We'll get this from the general tenants list or a specific endpoint
-        const tenants = await apiFetch<any[]>('/v1/tenants');
+        const tenants = await apiFetch<any[]>('/tenants');
         const current = tenants.find((t) => t.id === tenantId);
         if (current) {
           setTenantMeta({
@@ -126,7 +126,7 @@ export function TenantGovernanceModal({
     if (!tenantId || !tenantMeta) return;
     try {
       setMetaSaving(true);
-      await apiFetch(`/v1/tenants/${tenantId}`, {
+      await apiFetch(`/tenants/${tenantId}`, {
         method: 'PATCH',
         body: JSON.stringify({
           plan: tenantMeta.plan,
@@ -146,7 +146,7 @@ export function TenantGovernanceModal({
     try {
       setSaving(key);
       const newState = !currentState;
-      await apiFetch(`/v1/tenants/${tenantId}/features/${key}`, {
+      await apiFetch(`/tenants/${tenantId}/features/${key}`, {
         method: 'PATCH',
         body: JSON.stringify({ isEnabled: newState }),
       });

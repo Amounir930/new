@@ -144,6 +144,7 @@ export const defaultCorsConfig: CorsConfig = {
     'Authorization',
     'X-Request-ID',
     'X-Tenant-ID',
+    'X-Super-Admin-Key',
     'Origin',
     'Accept',
   ],
