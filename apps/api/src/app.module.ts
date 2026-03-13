@@ -114,10 +114,12 @@ export class AppModule implements NestModule {
     consumer
       .apply(TenantIsolationMiddleware)
       .exclude(
-        { path: 'api/v1/auth/(.*)', method: RequestMethod.POST },
-        { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
-        { path: 'auth/(.*)', method: RequestMethod.POST },
-        { path: 'health/(.*)', method: RequestMethod.GET },
+        { path: 'api/v1/auth/(.*)', method: RequestMethod.ALL },
+        { path: 'api/v1/health/(.*)', method: RequestMethod.ALL },
+        { path: 'api/auth/(.*)', method: RequestMethod.ALL },
+        { path: 'api/health/(.*)', method: RequestMethod.ALL },
+        { path: 'auth/(.*)', method: RequestMethod.ALL },
+        { path: 'health/(.*)', method: RequestMethod.ALL },
         { path: 'v1/blueprints(.*)', method: RequestMethod.ALL },
         { path: 'v1/tenants(.*)', method: RequestMethod.ALL },
         { path: 'v1/governance(.*)', method: RequestMethod.ALL },

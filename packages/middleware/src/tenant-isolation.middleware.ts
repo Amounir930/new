@@ -124,8 +124,10 @@ async function validateTenant(
 export class TenantIsolationMiddleware implements NestMiddleware {
   constructor(private readonly cache: TenantCacheService) {}
 
-  async use(req: TenantRequest, res: Response, next: NextFunction) {
     const currentPath = req.originalUrl || req.path || '';
+
+    // S8: Early bypass for preflight OPTIONS to allow CORS handling to finish
+    if (req.method === 'OPTIONS') return next();
 
     try {
       const identifier = this.extractTenantIdentifier(req);
@@ -199,6 +201,12 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
   private isSystemRequest(subdomain: string | null): boolean {
     if (!subdomain) return true;
+    const cleanSubdomain = subdomain.toLowerCase();
+    
+    // Check if it's an IP address or a known system subdomain
+    const isIp = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(cleanSubdomain);
+    if (isIp) return true;
+
     const systemSubdomains = [
       'api',
       'super-admin',
@@ -212,7 +220,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       'localhost',
       '127.0.0.1',
     ];
-    return systemSubdomains.includes(subdomain.toLowerCase());
+    return systemSubdomains.includes(cleanSubdomain);
   }
 
   private handleSystemContext(
@@ -241,9 +249,12 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
   private isBypassRoute(path: string): boolean {
     const bypassRoutes = [
-      '/health',
+      '/api/health',
+      '/api/v1/health',
       '/api/v1/auth/login',
+      '/api/auth/login',
       '/api/blueprints',
+      '/api/v1/blueprints',
       '/favicon.ico',
     ];
     return bypassRoutes.some(
