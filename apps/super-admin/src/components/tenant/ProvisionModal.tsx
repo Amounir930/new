@@ -148,83 +148,91 @@ export function ProvisionModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-background border rounded-lg shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="p-6 space-y-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+      <div className="bg-background/80 backdrop-blur-xl border-2 border-primary/20 rounded-xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="p-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Provision New Tenant</h2>
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Sovereign Provisioning
+              </h2>
+              <p className="text-muted-foreground text-xs mt-1 uppercase tracking-widest font-semibold opacity-70">
+                Architectural Lockdown Protocol
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" />
             </button>
           </div>
-          <p className="text-muted-foreground text-sm">
-            Create a new 60-second store environment. This process takes about a
-            minute.
-          </p>
+
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 
           {errors.root?.message && (
-            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md animate-in shake-in-1 duration-200">
-              {errors.root.message}
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-4 rounded-lg animate-in shake-in-1 duration-300 flex items-start space-x-2">
+              <span className="font-bold">⚠️</span>
+              <span>{errors.root.message}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="storeName" className="flex items-center">
-                Store Name <span className="ml-1 text-destructive font-bold">*</span>
+              <Label htmlFor="storeName" className="text-sm font-medium flex items-center">
+                Store Identity <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 id="storeName"
-                placeholder="My Awesome Store"
-                className="border-2 focus-visible:ring-primary/20"
+                placeholder="Apex Global Ventures"
+                className="border-2 bg-background/50 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200"
                 {...register('storeName')}
               />
               {errors.storeName && (
-                <p className="text-destructive text-xs">
+                <p className="text-destructive text-[11px] font-medium mt-1">
                   {errors.storeName.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subdomain" className="flex items-center">
-                Subdomain <span className="ml-1 text-destructive font-bold">*</span>
+              <Label htmlFor="subdomain" className="text-sm font-medium flex items-center">
+                Sovereign Subdomain <span className="ml-1 text-destructive">*</span>
               </Label>
-              <div className="flex items-center space-x-2">
+              <div className="relative">
                 <Input
                   id="subdomain"
-                  placeholder="my-store"
-                  className="border-2 focus-visible:ring-primary/20"
+                  placeholder="global-market"
+                  className="border-2 bg-background/50 pr-24 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200"
                   {...register('subdomain')}
                 />
-                <span className="text-muted-foreground text-sm">
-                  .60sec.shop
-                </span>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                  <span className="text-muted-foreground/60 text-sm font-mono border-l pl-3">
+                    .60sec.shop
+                  </span>
+                </div>
               </div>
               {errors.subdomain && (
-                <p className="text-destructive text-xs">
+                <p className="text-destructive text-[11px] font-medium mt-1">
                   {errors.subdomain.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="adminEmail" className="flex items-center">
-                Admin Email <span className="ml-1 text-destructive font-bold">*</span>
+              <Label htmlFor="adminEmail" className="text-sm font-medium flex items-center">
+                Merchant Custodian <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 id="adminEmail"
                 type="email"
-                placeholder="admin@example.com"
-                className="border-2 focus-visible:ring-primary/20"
+                placeholder="custodian@apex.com"
+                className="border-2 bg-background/50 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200"
                 {...register('adminEmail')}
               />
               {errors.adminEmail && (
-                <p className="text-destructive text-xs">
+                <p className="text-destructive text-[11px] font-medium mt-1">
                   {errors.adminEmail.message}
                 </p>
               )}
@@ -232,111 +240,114 @@ export function ProvisionModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="password" title="Must contain Upper, Lower, Number, Special" className="flex items-center">
-                  Merchant Password <span className="ml-1 text-destructive font-bold">*</span>
+                <Label htmlFor="password" title="Military-Grade: Upper, Lower, Number, Special" className="text-sm font-medium flex items-center">
+                  Access Key <span className="ml-1 text-destructive">*</span>
                 </Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  className="border-2 focus-visible:ring-primary/20"
+                  className="border-2 bg-background/50 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200"
                   {...register('password')}
                 />
                 {errors.password && (
-                  <p className="text-destructive text-xs">
+                  <p className="text-destructive text-[10px] leading-tight font-medium mt-1">
                     {errors.password.message}
                   </p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium">Verification</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
+                  className="border-2 bg-background/50 focus-visible:ring-primary/30 transition-all duration-200"
                   {...register('confirmPassword')}
                 />
                 {errors.confirmPassword && (
-                  <p className="text-destructive text-xs">
+                  <p className="text-destructive text-[10px] font-medium mt-1">
                     {errors.confirmPassword.message}
                   </p>
                 )}
               </div>
             </div>
 
+            <div className="grid grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="plan">Plan</Label>
+                <Label htmlFor="plan" className="text-sm font-medium">Service Tier</Label>
                 <select
                   id="plan"
                   {...register('plan')}
-                  className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border-2 border-input bg-background/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-all duration-200"
                 >
-                  <option value="free">Free</option>
-                  <option value="basic">Basic</option>
-                  <option value="pro">Pro</option>
-                  <option value="enterprise">Enterprise</option>
+                  <option value="free">Free Tier</option>
+                  <option value="basic">Basic Growth</option>
+                  <option value="pro">Pro Scale</option>
+                  <option value="enterprise">Enterprise Sovereign</option>
                 </select>
-                {errors.plan && (
-                  <p className="text-destructive text-xs">
-                    {errors.plan.message}
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="superAdminKey" className="flex items-center">
-                  Sovereign Super Admin Key <span className="ml-1 text-destructive font-bold">*</span>
-                </Label>
-                <Input
-                  id="superAdminKey"
-                  type="password"
-                  placeholder="Enter high-security master key"
-                  className="border-2 ring-1 ring-primary/10"
-                  {...register('superAdminKey')}
-                />
-                {errors.superAdminKey && (
-                  <p className="text-destructive text-xs font-medium">
-                    {errors.superAdminKey.message}
-                  </p>
-                )}
-              </div>
-
-              {filteredBlueprints.length > 0 && (
-                <div className="space-y-2 animate-in slide-in-from-top-2 duration-200">
-                  <Label htmlFor="blueprintId">
-                    Initial Template (Blueprint)
-                  </Label>
-                  <select
-                    id="blueprintId"
-                    {...register('blueprintId')}
-                    className="flex h-10 w-full rounded-md border-2 border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                  <option value="">Default (Sector-based)</option>
+                <Label htmlFor="blueprintId" className="text-sm font-medium">Blueprint Override</Label>
+                <select
+                  id="blueprintId"
+                  {...register('blueprintId')}
+                  className="flex h-10 w-full rounded-md border-2 border-input bg-background/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-all duration-200"
+                  disabled={filteredBlueprints.length === 0}
+                >
+                  <option value="">System Default</option>
                   {filteredBlueprints.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name} (v{b.version})
                     </option>
                   ))}
                 </select>
-                <p className="text-muted-foreground text-[10px]">
-                  Override the default sector logic by picking a named
-                  blueprint.
-                </p>
               </div>
-            )}
+            </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="superAdminKey" className="text-sm font-medium flex items-center text-primary/80">
+                Sovereign Authorization <span className="ml-1 text-destructive">*</span>
+              </Label>
+              <Input
+                id="superAdminKey"
+                type="password"
+                placeholder="APEX-MASTER-KEY-••••••••"
+                className="border-2 bg-primary/5 focus-visible:ring-primary/40 focus-visible:border-primary transition-all duration-200 border-primary/20"
+                {...register('superAdminKey')}
+              />
+              {errors.superAdminKey && (
+                <p className="text-destructive text-[11px] font-bold mt-1">
+                  {errors.superAdminKey.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-6">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => onOpenChange(false)}
                 disabled={loading}
+                className="hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading || !isValid} className={!isValid ? 'opacity-50 cursor-not-allowed' : ''}>
+              <Button 
+                type="submit" 
+                disabled={loading || !isValid} 
+                className={`relative overflow-hidden transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 ${
+                  !isValid ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
+                }`}
+              >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {loading ? 'Provisioning...' : 'Start 60s Provisioning'}
+                <span className="relative z-10">
+                  {loading ? 'Executing Protocol...' : 'Initialize Provisioning'}
+                </span>
+                {!loading && isValid && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 animate-shimmer" />
+                )}
               </Button>
             </div>
           </form>

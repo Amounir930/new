@@ -439,9 +439,30 @@ export class ProvisioningService {
 
       const normalizedQuotas = QuotaSchema.parse(blueprint.quotas);
 
-      await adminDb
-        .insert(tenantQuotasInGovernance)
-        .values({
+      // S21 FIX: Use Manual Sync to bypass DB Lock/Indexing walls
+      const [existingQuota] = await adminDb
+        .select({ id: tenantQuotasInGovernance.id })
+        .from(tenantQuotasInGovernance)
+        .where(eq(tenantQuotasInGovernance.tenantId, tenant.id))
+        .limit(1);
+
+      if (existingQuota) {
+        await adminDb
+          .update(tenantQuotasInGovernance)
+          .set({
+            maxProducts: normalizedQuotas.max_products,
+            maxOrders: normalizedQuotas.max_orders,
+            maxStaff: normalizedQuotas.max_staff,
+            maxPages: normalizedQuotas.max_pages,
+            maxCategories: normalizedQuotas.max_categories,
+            maxCoupons: normalizedQuotas.max_coupons,
+            storageLimitGb: normalizedQuotas.storage_limit_gb,
+            apiRateLimit: normalizedQuotas.api_rate_limit,
+            updatedAt: sql`now()`,
+          })
+          .where(eq(tenantQuotasInGovernance.id, existingQuota.id));
+      } else {
+        await adminDb.insert(tenantQuotasInGovernance).values({
           tenantId: tenant.id,
           maxProducts: normalizedQuotas.max_products,
           maxOrders: normalizedQuotas.max_orders,
@@ -451,21 +472,8 @@ export class ProvisioningService {
           maxCoupons: normalizedQuotas.max_coupons,
           storageLimitGb: normalizedQuotas.storage_limit_gb,
           apiRateLimit: normalizedQuotas.api_rate_limit,
-        })
-        .onConflictDoUpdate({
-          target: [tenantQuotasInGovernance.tenantId],
-          set: {
-            maxProducts: sql`EXCLUDED.max_products`,
-            maxOrders: sql`EXCLUDED.max_orders`,
-            maxStaff: sql`EXCLUDED.max_staff`,
-            maxPages: sql`EXCLUDED.max_pages`,
-            maxCategories: sql`EXCLUDED.max_categories`,
-            maxCoupons: sql`EXCLUDED.max_coupons`,
-            storageLimitGb: sql`EXCLUDED.storage_limit_gb`,
-            apiRateLimit: sql`EXCLUDED.api_rate_limit`,
-            updatedAt: sql`now()`,
-          },
         });
+      }
     }
 
     this.logger.log(`Governance sync completed for tenant: ${subdomain}`);

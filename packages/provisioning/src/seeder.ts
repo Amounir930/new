@@ -162,7 +162,8 @@ function buildBlueprintConfig(
   template: BlueprintTemplate
 ): BlueprintConfig {
   return {
-    modules: { core: true, catalog: true },
+    // S21 FIX: Remove hardcoded modules. Use Blueprint's logical configuration.
+    modules: template.modules,
     settings: { ...template.settings, site_name: options.storeName },
     pages: template.pages,
     products: template.products,

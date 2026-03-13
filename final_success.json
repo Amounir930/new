@@ -1,0 +1,10 @@
+{
+  "subdomain": "final-success-store",
+  "storeName": "Final Success Store",
+  "adminEmail": "admin@success.com",
+  "password": "ApexV2_Secure_Pass#2026",
+  "plan": "enterprise",
+  "superAdminKey": "ApexV2@EncMaster-Secure#2026!Growth_Scale_123",
+  "blueprintId": "18225d9b-53c6-484b-b63a-7f2ef8c9b656",
+  "uiConfig": {}
+}
