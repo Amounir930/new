@@ -96,7 +96,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      # MIDDLEWARES (Scoped to apex-api)
+      # MIDDLEWARES
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.average=200"
       - "traefik.http.middlewares.apex-api-ratelimit.ratelimit.burst=100"
       - "traefik.http.middlewares.apex-saas-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
@@ -135,7 +135,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
     networks:
       - apex-public
       - apex-internal
@@ -168,7 +168,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3002
-      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
     networks:
       - apex-public
       - apex-internal
