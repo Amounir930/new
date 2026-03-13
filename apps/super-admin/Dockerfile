@@ -29,7 +29,7 @@ RUN bun install
 # Copy source and build
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=https://api.60sec.shop/api
+ARG NEXT_PUBLIC_API_URL=https://api.60sec.shop/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 # S1 FIX: Increase memory for Next.js build to prevent OOM (137)
 ENV NODE_OPTIONS="--max-old-space-size=4096"
