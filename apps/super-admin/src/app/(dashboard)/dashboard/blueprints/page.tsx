@@ -82,6 +82,7 @@ export default function BlueprintsPage() {
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </Button>
           <Button
+            onClick={() => window.location.href = '/dashboard/blueprints/new'}
             className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20 px-6 font-bold"
           >
             <Plus className="w-4 h-4 mr-2" />

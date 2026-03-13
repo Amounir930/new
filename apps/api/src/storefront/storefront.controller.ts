@@ -34,7 +34,7 @@ const ProductsQuerySchema = z.object({
 
 type ProductsQueryDto = z.infer<typeof ProductsQuerySchema>;
 
-@Controller({ path: 'storefront', version: VERSION_NEUTRAL })
+@Controller({ path: 'storefront', version: '1' })
 @UsePipes(ZodValidationPipe)
 export class StorefrontController {
   constructor(private readonly storefrontService: StorefrontService) {}

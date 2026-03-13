@@ -9,6 +9,7 @@ import {
   Plus,
   Search,
   Shield,
+  Trash2,
   Users,
   XCircle,
 } from 'lucide-react';
@@ -50,6 +51,17 @@ export default function TenantsPage() {
       setLoading(false);
     }
   }, []);
+
+  const handleDeleteTenant = async (id: string) => {
+    if (!confirm('Are you absolutely sure you want to PERMANENTLY delete this tenant? All store data will be lost.')) return;
+    try {
+      await apiFetch(`/tenants/${id}`, { method: 'DELETE' });
+      alert('Sovereign Purge Successful: Tenant removed from registry.');
+      fetchTenants();
+    } catch (e: any) {
+      alert(`Purge Failed: ${e.message}`);
+    }
+  };
 
   useEffect(() => {
     fetchTenants();
@@ -235,9 +247,10 @@ export default function TenantsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-slate-500 hover:text-white rounded-lg"
+                        className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 rounded-lg"
+                        onClick={() => handleDeleteTenant(tenant.id)}
                       >
-                        <MoreVertical className="w-4 h-4" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>
                   </tr>

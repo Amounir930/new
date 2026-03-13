@@ -10,6 +10,7 @@ import {
 import {
   Body,
   Controller,
+  Delete,
   forwardRef,
   Get,
   Inject,
@@ -170,5 +171,28 @@ export class TenantsController {
     // S21: If plan or niche changed, we might want to suggest a re-sync or
     // automate it. For now, we return the updated tenant.
     return updated;
+  }
+
+  @Delete(':id')
+  @AuditLog({ action: 'TENANT_DELETED', entityType: 'tenant' })
+  async remove(@Param('id') id: string) {
+    try {
+      const [deleted] = await adminDb
+        .delete(tenantsInGovernance)
+        .where(eq(tenantsInGovernance.id, id))
+        .returning();
+
+      if (!deleted) {
+        throw new Error('Tenant not found');
+      }
+
+      this.logger.log(`[TENANT_DELETED] ID: ${id}, Subdomain: ${deleted.subdomain}`);
+      return { success: true, message: 'Tenant permanently deleted from governance.' };
+    } catch (error: unknown) {
+      this.logger.error(
+        `[TENANT_DELETE_ERROR] ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
   }
 }
