@@ -188,9 +188,9 @@ services:
         delay: 10s
         order: start-first
 
-  # ═══════════════════════════════════════════════════════════════
+  # u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550
   # Admin UI (Super Admin Panel)
-  # ═══════════════════════════════════════════════════════════════
+  # u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550
   super-admin:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
     build:
@@ -214,7 +214,7 @@ services:
       - "traefik.http.routers.super-admin.middlewares=apex-admin-security@docker"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3001').then(r => process.exit(r.ok ? 0 : 1))"]
+      test: ["CMD", "bun", "-e", "fetch(`http://localhost:3001`).then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -225,9 +225,9 @@ services:
           memory: 1G
           cpus: "0.5"
 
-  # ═══════════════════════════════════════════════════════════════
+  # u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550
   # Storefront UI (Public Shop)
-  # ═══════════════════════════════════════════════════════════════
+  # u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550u2550
   store:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:latest
     container_name: apex-store
@@ -239,7 +239,7 @@ services:
       - ../.env
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 3002
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
     networks:
@@ -253,7 +253,7 @@ services:
       - "traefik.http.routers.store-main.middlewares=apex-store-csp@docker,apex-global-ratelimit@docker"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
     healthcheck:
-      test: ["CMD", "bun", "-e", "fetch('http://localhost:3002').then(r => process.exit(r.ok ? 0 : 1))"]
+      test: ["CMD", "bun", "-e", "fetch(`http://localhost:3002`).then(r => process.exit(r.ok ? 0 : 1))"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -263,7 +263,6 @@ services:
         limits:
           memory: 1G
           cpus: "0.5"
-
   # ═══════════════════════════════════════════════════════════════
   # S15: Docker Socket Proxy (Container Escape Protection)
   # ═══════════════════════════════════════════════════════════════
