@@ -137,8 +137,8 @@ services:
     environment:
       # S1 Protocol: Strict production validation.
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
-      DB_SSL: ${DB_SSL:-false}
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-pgbouncer:5432/${POSTGRES_DB:-apex_v2}?sslmode=require"
+      DB_SSL: "true"
       REDIS_URL: ${REDIS_URL}
       JWT_SECRET: ${JWT_SECRET}
       ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
