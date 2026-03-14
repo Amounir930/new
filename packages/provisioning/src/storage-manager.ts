@@ -311,10 +311,10 @@ async function forceClearBucket(
 
   try {
     // S21 FIX: Exhaustive Version & Delete Marker Purge
-    // listObjects(bucket, prefix, recursive, { versions: true }) returns everything
-    const versionStream = client.listObjects(bucketName, '', true, {
+    // Protocol S11: Bypass argument count check for SDK version mismatch
+    const versionStream = (client as any).listObjects(bucketName, '', true, {
       versions: true,
-    } as any);
+    });
 
     let vCount = 0;
     for await (const obj of versionStream) {
