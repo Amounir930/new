@@ -41,7 +41,6 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   experimental: {
-    instrumentationHook: true,
     // Protocol S11: Disable worker threads to resolve Bun "resourceLimits" incompatibility
     workerThreads: false,
     cpus: 1,
