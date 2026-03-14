@@ -48,13 +48,19 @@ export default function LoginPage() {
     setError(null);
     try {
       // Assuming apiFetch handles the base URL correctly
-      const res = await apiFetch<{ accessToken: string }>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      const res = await apiFetch<{ accessToken: string; managementKey?: string }>(
+        '/auth/login',
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+        }
+      );
 
       if (res?.accessToken) {
         setAuthToken(res.accessToken);
+        if (res.managementKey) {
+          sessionStorage.setItem('X-SUPER-ADMIN-KEY', res.managementKey);
+        }
         // Redirect to dashboard
         router.push('/dashboard');
       } else {

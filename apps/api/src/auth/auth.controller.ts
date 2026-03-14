@@ -133,7 +133,7 @@ export class AuthController {
   private async handleSuccessfulLogin(
     user: AuthUser,
     response: Response
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string; managementKey?: string }> {
     // S4: Audit successful login
     await this.audit.log({
       action:
@@ -158,6 +158,11 @@ export class AuthController {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
-    return { accessToken: token };
+    return {
+      accessToken: token,
+      ...(user.role === 'super_admin'
+        ? { managementKey: this.config.get('SUPER_ADMIN_KEY') }
+        : {}),
+    };
   }
 }
