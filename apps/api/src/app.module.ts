@@ -14,7 +14,7 @@ import {
   GovernanceGuard,
   QuotaInterceptor,
   RateLimitModule,
-  TenantCacheService,
+  TenantCacheModule,
   TenantIsolationMiddleware,
 } from '@apex/middleware';
 import {
@@ -48,6 +48,7 @@ import { TenantsModule } from './tenants/tenants.module';
 
     // S1: Configuration
     ConfigModule,
+    TenantCacheModule,
 
     // Media (Imgproxy) Global Module
     MediaModule,
@@ -81,7 +82,6 @@ import { TenantsModule } from './tenants/tenants.module';
       provide: APP_INTERCEPTOR,
       useClass: QuotaInterceptor,
     },
-    TenantCacheService,
   ],
   controllers: [
     AppController,

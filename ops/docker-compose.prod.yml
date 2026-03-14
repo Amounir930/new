@@ -369,7 +369,7 @@ services:
       - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.routers.merchant-tenant.service=apex-merchant-admin"
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:3001/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -421,7 +421,7 @@ services:
       - "traefik.http.routers.super-admin.service=apex-super-admin"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:3001/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -474,7 +474,7 @@ services:
       - "traefik.http.routers.store-main.service=apex-store"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3002/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
+      test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:3002/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
       interval: 10s
       timeout: 5s
       retries: 3

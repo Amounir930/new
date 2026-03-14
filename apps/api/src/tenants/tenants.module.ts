@@ -4,12 +4,14 @@ import { AuthModule } from '../auth/auth.module';
 import { ProvisioningModule } from '../provisioning/provisioning.module';
 import { TenantsPublicController } from './tenants-public.controller';
 import { TenantsController } from './tenants.controller';
+import { TenantCacheModule } from '@apex/middleware';
 
 @Module({
   imports: [
     AuditModule,
     forwardRef(() => AuthModule),
     forwardRef(() => ProvisioningModule),
+    TenantCacheModule,
   ],
   controllers: [TenantsController, TenantsPublicController],
   providers: [],

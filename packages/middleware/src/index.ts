@@ -75,6 +75,7 @@ export {
 } from './security';
 export { SecurityService } from './security.service';
 export { TenantCacheService } from './tenant-cache.service';
+export { TenantCacheModule } from './tenant-cache.module';
 // S2: Tenant Isolation Middleware
 export {
   type AuthenticatedUser,
