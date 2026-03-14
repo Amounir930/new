@@ -104,6 +104,7 @@ export class AppModule implements NestModule {
       .apply(BotProtectionMiddleware)
       .exclude(
         { path: 'api/v1/health/(.*)', method: RequestMethod.GET },
+        { path: 'api/v1/provision/(.*)', method: RequestMethod.POST },
         { path: 'health/(.*)', method: RequestMethod.GET },
         { path: 'robots.txt', method: RequestMethod.GET },
         { path: '/', method: RequestMethod.GET }
@@ -116,16 +117,21 @@ export class AppModule implements NestModule {
       .exclude(
         { path: 'api/v1/auth/(.*)', method: RequestMethod.ALL },
         { path: 'api/v1/health/(.*)', method: RequestMethod.ALL },
+        { path: 'api/v1/provision/(.*)', method: RequestMethod.ALL },
         { path: 'api/auth/(.*)', method: RequestMethod.ALL },
         { path: 'api/health/(.*)', method: RequestMethod.ALL },
+        { path: 'api/provision/(.*)', method: RequestMethod.ALL },
         { path: 'auth/(.*)', method: RequestMethod.ALL },
         { path: 'health/(.*)', method: RequestMethod.ALL },
+        { path: 'provision/(.*)', method: RequestMethod.ALL },
         { path: 'v1/blueprints(.*)', method: RequestMethod.ALL },
         { path: 'v1/tenants(.*)', method: RequestMethod.ALL },
         { path: 'v1/governance(.*)', method: RequestMethod.ALL },
+        { path: 'v1/provision(.*)', method: RequestMethod.ALL },
         { path: 'blueprints(.*)', method: RequestMethod.ALL },
         { path: 'tenants(.*)', method: RequestMethod.ALL },
         { path: 'governance(.*)', method: RequestMethod.ALL },
+        { path: 'provision(.*)', method: RequestMethod.ALL },
         { path: 'robots.txt', method: RequestMethod.GET },
         { path: '/', method: RequestMethod.GET }
       )

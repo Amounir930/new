@@ -255,6 +255,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const bypassRoutes = [
       '/api/health',
       '/api/v1/health',
+      '/api/v1/provision',
+      '/api/provision',
       '/api/v1/auth/login',
       '/api/auth/login',
       '/favicon.ico',
