@@ -27,7 +27,11 @@ const nextConfig = {
     }
     return config;
   },
-  turbopack: {},
+  experimental: {
+    // Protocol S11: Disable worker threads to resolve Bun "resourceLimits" incompatibility
+    workerThreads: false,
+    cpus: 1,
+  },
 };
 
 export default nextConfig;
