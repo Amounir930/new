@@ -7,7 +7,7 @@ import {
   featureGatesInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
-import type { TenantCacheService } from '@apex/middleware';
+import { TenantCacheService } from '@apex/middleware';
 import {
   Body,
   Controller,
@@ -22,7 +22,7 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import type { ProvisioningService } from '../provisioning/provisioning.service';
+import { ProvisioningService } from '../provisioning/provisioning.service';
 import { SecurityService } from '../security/security.service';
 
 const UpdateTenantSchema = z.object({
