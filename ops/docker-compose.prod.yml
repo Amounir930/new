@@ -205,11 +205,13 @@ services:
       - "traefik.http.routers.api-public.entrypoints=websecure"
       - "traefik.http.routers.api-public.tls.certresolver=letsencrypt"
       - "traefik.http.routers.api-public.middlewares=apex-api-ratelimit@file,apex-saas-cors@file,apex-security-headers@file"
+      - "traefik.http.routers.api-public.service=apex-api"
       - "traefik.http.routers.api-shielded.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
       - "traefik.http.routers.api-shielded.priority=5000"
       - "traefik.http.routers.api-shielded.entrypoints=websecure"
       - "traefik.http.routers.api-shielded.tls.certresolver=letsencrypt"
       - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@file,apex-basic-auth@file,apex-security-headers@file"
+      - "traefik.http.routers.api-shielded.service=apex-api"
       - "traefik.http.services.apex-api.loadbalancer.server.port=3000"
 
       # Global middlewares migrated to traefik-dynamic.yml
@@ -337,6 +339,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
+      - /app/apps/merchant-admin/.next/cache:uid=1000,gid=1000,size=100m
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
@@ -357,6 +360,7 @@ services:
       - "traefik.http.routers.merchant-admin.entrypoints=websecure"
       - "traefik.http.routers.merchant-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.merchant-admin.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
+      - "traefik.http.routers.merchant-admin.service=apex-merchant-admin"
       - "traefik.http.services.apex-merchant-admin.loadbalancer.server.port=3001"
       - "traefik.http.routers.merchant-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
       - "traefik.http.routers.merchant-tenant.priority=4500"
@@ -391,6 +395,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
+      - /app/apps/super-admin/.next/cache:uid=1000,gid=1000,size=100m
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
@@ -411,6 +416,7 @@ services:
       - "traefik.http.routers.super-admin.entrypoints=websecure"
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
       - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
+      - "traefik.http.routers.super-admin.service=apex-super-admin"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3001/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
@@ -439,6 +445,7 @@ services:
     read_only: true
     tmpfs:
       - /tmp:noexec,nosuid,size=50m
+      - /app/apps/store/.next/cache:uid=1000,gid=1000,size=100m
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
@@ -462,6 +469,7 @@ services:
       - "traefik.http.routers.store-main.entrypoints=websecure"
       - "traefik.http.routers.store-main.tls.certresolver=letsencrypt"
       - "traefik.http.routers.store-main.middlewares=apex-store-csp@file,apex-global-ratelimit@file"
+      - "traefik.http.routers.store-main.service=apex-store"
       - "traefik.http.services.apex-store.loadbalancer.server.port=3002"
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3002/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
