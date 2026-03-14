@@ -48,6 +48,7 @@ RUN groupadd -g 1001 node-group && \
 # Copy standalone build
 COPY --from=builder /app/apps/merchant-admin/.next/standalone ./
 COPY --from=builder /app/apps/merchant-admin/.next/static ./apps/merchant-admin/.next/static
+COPY --from=builder /app/apps/merchant-admin/public ./apps/merchant-admin/public
 
 # Secure permissions
 RUN chown -R node-user:node-group /app
@@ -58,4 +59,4 @@ ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-CMD ["bun", "apps/merchant-admin/server.js"]
+CMD ["bun", "server.js"]

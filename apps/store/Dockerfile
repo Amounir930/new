@@ -60,5 +60,4 @@ ENV PORT=3002
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-# In standalone mode, server.js is in apps/store/server.js relative to standalone root
-CMD ["bun", "apps/store/server.js"]
+CMD ["bun", "server.js"]

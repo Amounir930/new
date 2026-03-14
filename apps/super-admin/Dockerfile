@@ -47,9 +47,9 @@ RUN groupadd -g 1001 node-group && \
     useradd -u 1001 -g node-group -s /bin/sh node-user
 
 # Copy standalone build
-# Copy standalone build
 COPY --from=builder /app/apps/super-admin/.next/standalone ./
 COPY --from=builder /app/apps/super-admin/.next/static ./apps/super-admin/.next/static
+COPY --from=builder /app/apps/super-admin/public ./apps/super-admin/public
 
 # Secure permissions
 RUN chown -R node-user:node-group /app
@@ -60,4 +60,4 @@ ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-CMD ["bun", "apps/super-admin/server.js"]
+CMD ["bun", "server.js"]
