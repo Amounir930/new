@@ -206,6 +206,8 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     
     // S2: Hardened System Whitelist (Reject IP-based detection)
     const systemSubdomains = [
+      'localhost',
+      '127.0.0.1',
       'api.60sec.shop',
       'super-admin.60sec.shop',
       'api',

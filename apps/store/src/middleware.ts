@@ -37,6 +37,8 @@ function resolveTenantIdentifier(cleanHost: string): string {
 
 function getInfraStatus(tenantIdentifier: string): boolean {
   const infraSubdomains = [
+    'localhost',
+    '127.0.0.1',
     'api',
     'super-admin',
     'git',
