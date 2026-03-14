@@ -178,7 +178,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const rawHost = req.headers.host || '';
     const cleanHost = rawHost.split(':')[0];
     const xTenantId = req.headers['x-tenant-id'] as string;
-    
+
     // S2 Protection: Prevent spoofing by ensuring secret is configured
     const isInternal =
       !!env.INTERNAL_API_SECRET &&
@@ -203,7 +203,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   private isSystemRequest(subdomain: string | null): boolean {
     if (!subdomain) return true;
     const cleanSubdomain = subdomain.toLowerCase();
-    
+
     // S2: Hardened System Whitelist (Reject IP-based detection)
     const systemSubdomains = [
       'localhost',
@@ -338,7 +338,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     }
   }
 
-
   private async checkSuspension(identifier: string): Promise<boolean> {
     try {
       const { SecurityService } = await import('./security.service');
@@ -460,7 +459,9 @@ export class TenantScopedGuard implements CanActivate {
       throw new UnauthorizedException('This storefront is inactive');
     }
     if (request.tenantContext.isSuspended) {
-      throw new UnauthorizedException('This storefront has been suspended (Steel Control)');
+      throw new UnauthorizedException(
+        'This storefront has been suspended (Steel Control)'
+      );
     }
     return true;
   }

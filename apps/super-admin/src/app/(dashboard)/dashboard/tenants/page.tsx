@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ExternalLink,
   Filter,
-  MoreVertical,
   Plus,
   Search,
   Shield,
@@ -53,7 +52,12 @@ export default function TenantsPage() {
   }, []);
 
   const handleDeleteTenant = async (id: string) => {
-    if (!confirm('Are you absolutely sure you want to PERMANENTLY delete this tenant? All store data will be lost.')) return;
+    if (
+      !confirm(
+        'Are you absolutely sure you want to PERMANENTLY delete this tenant? All store data will be lost.'
+      )
+    )
+      return;
     try {
       await apiFetch(`/tenants/${id}`, { method: 'DELETE' });
       alert('Sovereign Purge Successful: Tenant removed from registry.');

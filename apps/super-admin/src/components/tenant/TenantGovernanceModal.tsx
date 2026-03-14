@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertCircle, Check, Loader2, Shield, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 
@@ -91,36 +91,40 @@ export function TenantGovernanceModal({
   const [metaSaving, setMetaSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const fetchFeatures = useCallback(async () => {
+    const data = await apiFetch<Record<string, FeatureState>>(
+      `/tenants/${tenantId}/features`
+    );
+    setFeatures(data);
+  }, [tenantId]);
+
+  const fetchTenantMeta = useCallback(async () => {
+    const tenants = await apiFetch<any[]>('/tenants');
+    const current = tenants.find((t) => t.id === tenantId);
+    if (current) {
+      setTenantMeta({
+        plan: current.plan,
+        status: current.isActive ? 'active' : 'suspended',
+      });
+    }
+  }, [tenantId]);
+
   useEffect(() => {
-    async function fetchData() {
+    async function init() {
       if (!tenantId) return;
       try {
         setLoading(true);
-        // Fetch Features Matrix
-        const featuresData = await apiFetch<Record<string, FeatureState>>(
-          `/tenants/${tenantId}/features`
-        );
-        setFeatures(featuresData);
-
-        // Fetch Tenant Metadata (Plan/Status)
-        // We'll get this from the general tenants list or a specific endpoint
-        const tenants = await apiFetch<any[]>('/tenants');
-        const current = tenants.find((t) => t.id === tenantId);
-        if (current) {
-          setTenantMeta({
-            plan: current.plan,
-            status: current.isActive ? 'active' : 'suspended',
-          });
-        }
+        await Promise.all([fetchFeatures(), fetchTenantMeta()]);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to fetch governance data');
+        setError(
+          e instanceof Error ? e.message : 'Failed to fetch governance data'
+        );
       } finally {
         setLoading(false);
       }
     }
-
-    fetchData();
-  }, [tenantId]);
+    init();
+  }, [tenantId, fetchFeatures, fetchTenantMeta]);
 
   async function updateMetadata() {
     if (!tenantId || !tenantMeta) return;
@@ -220,10 +224,14 @@ export function TenantGovernanceModal({
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">
+                    <label
+                      htmlFor="plan-select"
+                      className="text-[10px] font-bold text-slate-400 uppercase"
+                    >
                       Subscription Plan
                     </label>
                     <select
+                      id="plan-select"
                       value={tenantMeta?.plan || ''}
                       onChange={(e) =>
                         setTenantMeta((prev) =>
@@ -239,10 +247,14 @@ export function TenantGovernanceModal({
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">
+                    <label
+                      htmlFor="status-select"
+                      className="text-[10px] font-bold text-slate-400 uppercase"
+                    >
                       Governance Status
                     </label>
                     <select
+                      id="status-select"
                       value={tenantMeta?.status || ''}
                       onChange={(e) =>
                         setTenantMeta((prev) =>

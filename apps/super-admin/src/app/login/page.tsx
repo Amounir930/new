@@ -48,13 +48,13 @@ export default function LoginPage() {
     setError(null);
     try {
       // Assuming apiFetch handles the base URL correctly
-      const res = await apiFetch<{ accessToken: string; managementKey?: string }>(
-        '/auth/login',
-        {
-          method: 'POST',
-          body: JSON.stringify(data),
-        }
-      );
+      const res = await apiFetch<{
+        accessToken: string;
+        managementKey?: string;
+      }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
 
       if (res?.accessToken) {
         setAuthToken(res.accessToken);

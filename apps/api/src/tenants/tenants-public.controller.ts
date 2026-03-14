@@ -4,6 +4,7 @@ import {
   onboardingBlueprintsInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
+import type { TenantCacheService } from '@apex/middleware';
 import {
   Controller,
   ForbiddenException,
@@ -11,10 +12,6 @@ import {
   NotFoundException,
   Param,
 } from '@nestjs/common';
-
-import {
-  TenantCacheService,
-} from '@apex/middleware';
 
 @Controller('public/tenants')
 export class TenantsPublicController {
@@ -87,9 +84,13 @@ export class TenantsPublicController {
     };
 
     // Protocol S11: Cache Discovery Result (TTL: 1 Hour)
-    await (this.tenantCache as any).redis.set(cacheKey, JSON.stringify(result), {
-      EX: 3600,
-    });
+    await (this.tenantCache as any).redis.set(
+      cacheKey,
+      JSON.stringify(result),
+      {
+        EX: 3600,
+      }
+    );
 
     return result;
   }

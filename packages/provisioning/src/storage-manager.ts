@@ -219,11 +219,14 @@ export async function deleteStorageBucket(
       await client.removeBucket(bucketName);
     } catch (error: any) {
       // S5 Protocol: Handle idempotency - if it doesn't exist, we succeeded in our goal
-      if (error.code === 'NoSuchBucket' || error.message?.includes('does not exist')) {
+      if (
+        error.code === 'NoSuchBucket' ||
+        error.message?.includes('does not exist')
+      ) {
         logger.info(`Bucket already gone: ${bucketName}`);
         return true;
       }
-      
+
       logger.error(`Bucket is NOT empty after force-clear attempt`, {
         bucketName,
         error,
@@ -234,7 +237,10 @@ export async function deleteStorageBucket(
     return true;
   } catch (error: any) {
     // Gracefully handle NoSuchBucket even at the top level
-    if (error.code === 'NoSuchBucket' || error.message?.includes('does not exist')) {
+    if (
+      error.code === 'NoSuchBucket' ||
+      error.message?.includes('does not exist')
+    ) {
       return true;
     }
     logger.error('Failed to delete bucket', { bucketName, error });
@@ -302,6 +308,74 @@ export async function deleteObject(
 }
 
 /**
+ * Collects all versioned entries (objects and delete markers) from a bucket.
+ */
+async function getBucketVersions(
+  client: Minio.Client,
+  bucketName: string
+): Promise<{ name: string; versionId: string }[]> {
+  const objects: { name: string; versionId: string }[] = [];
+  const versionStream = (client as any).listObjects(bucketName, '', true, {
+    IncludeVersion: true,
+  });
+
+  for await (const obj of versionStream) {
+    const name: string | undefined = obj.name ?? obj.key;
+    const versionId: string | undefined = obj.versionId;
+    if (name || versionId) {
+      objects.push({
+        name: name || '',
+        versionId: versionId || '',
+      });
+    }
+  }
+  return objects;
+}
+
+/**
+ * Deletes objects from MinIO in batches of 1000.
+ */
+async function deleteObjectsInBatch(
+  client: Minio.Client,
+  bucketName: string,
+  objects: { name: string; versionId: string }[]
+): Promise<void> {
+  const CHUNK_SIZE = 1000;
+  for (let i = 0; i < objects.length; i += CHUNK_SIZE) {
+    const chunk = objects.slice(i, i + CHUNK_SIZE);
+    const results = await (client as any).removeObjects(bucketName, chunk);
+    if (results && Array.isArray(results) && results.length > 0) {
+      logger.error(
+        `removeObjects reported errors for ${results.length} entries`,
+        { bucketName, errors: results }
+      );
+    }
+  }
+}
+
+/**
+ * Removes all incomplete multipart uploads from a bucket.
+ */
+async function clearIncompleteUploads(
+  client: Minio.Client,
+  bucketName: string
+): Promise<number> {
+  const clientAny = client as any;
+  const uploadStream = clientAny.listIncompleteUploads
+    ? clientAny.listIncompleteUploads(bucketName, '', true)
+    : client.listIncompleteUploads(bucketName, '', true);
+
+  let uCount = 0;
+  for await (const upload of uploadStream) {
+    if (upload.key) {
+      uCount++;
+      await client.removeIncompleteUpload(bucketName, upload.key);
+    }
+  }
+  return uCount;
+}
+
+/**
  * Force-clears ALL objects, versions, and delete markers from a bucket.
  * Uses batch removeObjects to guarantee exhaustive clearance before deletion.
  */
@@ -314,73 +388,35 @@ async function forceClearBucket(
   );
 
   try {
-    // Loop until the bucket is confirmed empty — handles pagination edge-cases
-    // where a single pass may miss newly revealed versions after deletion.
     let totalRemoved = 0;
     let passCount = 0;
     const MAX_PASSES = 10;
 
     while (passCount < MAX_PASSES) {
       passCount++;
-
-      // Collect ALL versioned entries (objects + delete markers)
-      // We must NOT filter on obj.name because delete markers may have an
-      // empty name in some MinIO SDK versions but always have a versionId.
-      const objectsToDelete: { name: string; versionId: string }[] = [];
-
-      const versionStream = (client as any).listObjects(bucketName, '', true, {
-        IncludeVersion: true,
-      });
-
-      for await (const obj of versionStream) {
-        const name: string | undefined = obj.name ?? obj.key;
-        const versionId: string | undefined = obj.versionId;
-        if (name || versionId) {
-          objectsToDelete.push({ name: name || '', versionId: versionId || '' });
-        }
-      }
+      const objectsToDelete = await getBucketVersions(client, bucketName);
 
       if (objectsToDelete.length === 0) {
-        logger.info(`Bucket ${bucketName} confirmed empty after ${passCount} pass(es). Total removed: ${totalRemoved}`);
+        logger.info(
+          `Bucket ${bucketName} confirmed empty after ${passCount} pass(es). Total removed: ${totalRemoved}`
+        );
         break;
       }
 
-      // Batch-delete in chunks of 1000 (MinIO max batch size)
-      const CHUNK_SIZE = 1000;
-      for (let i = 0; i < objectsToDelete.length; i += CHUNK_SIZE) {
-        const chunk = objectsToDelete.slice(i, i + CHUNK_SIZE);
-        // removeObjects accepts {name, versionId} objects directly
-        const results = await (client as any).removeObjects(bucketName, chunk);
-        // Log any per-object errors but do not abort — keep clearing
-        if (results && Array.isArray(results) && results.length > 0) {
-          logger.error(`removeObjects reported errors for ${results.length} entries`, {
-            bucketName,
-            errors: results,
-          });
-        }
-      }
-
+      await deleteObjectsInBatch(client, bucketName, objectsToDelete);
       totalRemoved += objectsToDelete.length;
-      logger.info(`Force-cleared ${objectsToDelete.length} objects/versions/markers from ${bucketName} (pass ${passCount})`);
+      logger.info(
+        `Force-cleared ${objectsToDelete.length} objects/versions/markers from ${bucketName} (pass ${passCount})`
+      );
     }
 
     if (passCount >= MAX_PASSES) {
-      throw new Error(`Bucket ${bucketName} could not be emptied after ${MAX_PASSES} passes — aborting purge.`);
+      throw new Error(
+        `Bucket ${bucketName} could not be emptied after ${MAX_PASSES} passes — aborting purge.`
+      );
     }
 
-    // 2. Remove all incomplete multipart uploads
-    const clientAny = client as any;
-    const uploadStream = clientAny.listIncompleteUploads
-      ? clientAny.listIncompleteUploads(bucketName, '', true)
-      : client.listIncompleteUploads(bucketName, '', true);
-
-    let uCount = 0;
-    for await (const upload of uploadStream) {
-      if (upload.key) {
-        uCount++;
-        await client.removeIncompleteUpload(bucketName, upload.key);
-      }
-    }
+    const uCount = await clearIncompleteUploads(client, bucketName);
     if (uCount > 0) {
       logger.info(
         `Force-cleared ${uCount} incomplete uploads from ${bucketName}`
@@ -394,7 +430,6 @@ async function forceClearBucket(
     throw err;
   }
 }
-
 
 export async function getStorageStats(
   subdomain: string

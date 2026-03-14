@@ -54,7 +54,10 @@ export const ProvisionRequestSchema = z.object({
     .string({ required_error: 'Architectural Lockdown: storeName is required' })
     .min(2, 'Store name must be at least 2 characters')
     .max(100, 'Store name cannot exceed 100 characters')
-    .regex(/^[\w\s\.\,\!\?\@\#\&\-\(\)\[\]]+$/, 'Store name contains forbidden characters. Use alphanumeric and standard symbols only.'),
+    .regex(
+      /^[\w\s.,!?@#&\-()[\]]+$/,
+      'Store name contains forbidden characters. Use alphanumeric and standard symbols only.'
+    ),
 
   /**
    * Initial administrator email
@@ -72,7 +75,7 @@ export const ProvisionRequestSchema = z.object({
     )
     .max(128)
     .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\.])[A-Za-z\d@$!%*?&#_\.\-]{8,}$/,
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_.])[A-Za-z\d@$!%*?&#_.-]{8,}$/,
       'Banking-Grade Security Compliance: Password must contain uppercase, lowercase, number, and special character (@$!%*?&#_.-)'
     )
     .optional(),
@@ -81,7 +84,10 @@ export const ProvisionRequestSchema = z.object({
    * Plan level for the new tenant
    */
   plan: z.enum(['free', 'basic', 'pro', 'enterprise'], {
-    errorMap: () => ({ message: 'Architectural Lockdown: plan must be one of [free, basic, pro, enterprise]' }),
+    errorMap: () => ({
+      message:
+        'Architectural Lockdown: plan must be one of [free, basic, pro, enterprise]',
+    }),
   }),
 
   /**
@@ -118,7 +124,7 @@ export const ProvisionRequestSchema = z.object({
     )
     .max(128)
     .regex(
-      /^[A-Za-z0-9][A-Za-z0-9_@#!\.\*-]{30,126}[A-Za-z0-9]$/,
+      /^[A-Za-z0-9][A-Za-z0-9_@#!.*-]{30,126}[A-Za-z0-9]$/,
       'Sovereign Authorization Required: Invalid key format'
     ),
 
@@ -132,7 +138,9 @@ export const ProvisionRequestSchema = z.object({
    */
   blueprintId: z
     .string()
-    .uuid('Architectural Lockdown Violation: blueprintId must be a valid UUID (e.g. 123e4567-e89b-12d3-a456-426614174000)')
+    .uuid(
+      'Architectural Lockdown Violation: blueprintId must be a valid UUID (e.g. 123e4567-e89b-12d3-a456-426614174000)'
+    )
     .optional(),
 });
 

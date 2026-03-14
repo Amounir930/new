@@ -89,7 +89,11 @@ export class AuditInterceptor implements NestInterceptor {
 
     // Determine action name
     let action = options?.action || `${method}:${url}`;
-    if (resultStatus === 'FAILURE' && !action.includes('FAILED') && !action.includes('FAILURE')) {
+    if (
+      resultStatus === 'FAILURE' &&
+      !action.includes('FAILED') &&
+      !action.includes('FAILURE')
+    ) {
       action = `${action}_FAILED`;
     }
 

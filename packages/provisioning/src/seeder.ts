@@ -10,8 +10,8 @@ import {
   eq,
   type NodePgDatabase,
   sql,
-  tenantsInGovernance,
   tenantQuotasInGovernance,
+  tenantsInGovernance,
 } from '@apex/db';
 import { encrypt, hashSensitiveData } from '@apex/security';
 import { BlueprintExecutor } from './blueprint/executor';
@@ -65,7 +65,7 @@ export async function seedTenantData(
     const storeId = await resolveStore(tenantScopedAdminDb, options);
 
     const executor = new BlueprintExecutor();
-    
+
     // 1. Mandatory Core Injection (Sovereign Mandate)
     // CoreModule is NEVER optional as it establishes the merchant identity.
     executor.register(new CoreModule());
@@ -94,11 +94,7 @@ export async function seedTenantData(
           subdomain: options.subdomain,
           db: tx,
           schema: schemaName,
-          plan: options.plan as
-            | 'free'
-            | 'basic'
-            | 'pro'
-            | 'enterprise',
+          plan: options.plan as 'free' | 'basic' | 'pro' | 'enterprise',
           adminEmail: options.adminEmail,
           adminId: options.adminId,
           password: options.password,

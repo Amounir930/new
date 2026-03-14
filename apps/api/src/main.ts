@@ -126,7 +126,6 @@ async function bootstrap() {
     })
   );
 
-
   // 1. Global prefixing logic (Sovereign Reconciliation)
   // Standardizing '/api' prefix to align with Traefik PathPrefix(/api)
   app.setGlobalPrefix('/api', {

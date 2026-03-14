@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { apiFetch, ApiError } from '@/lib/api';
+import { ApiError, apiFetch } from '@/lib/api';
 
 const provisionSchema = z
   .object({
@@ -17,7 +17,7 @@ const provisionSchema = z
       .min(2, 'Store name must be at least 2 characters')
       .max(100)
       .regex(
-        /^[\w\s\.\,\!\?\@\#\&\-\(\)\[\]]+$/,
+        /^[\w\s.,!?@#&\-()[\]]+$/,
         'Store name contains forbidden characters'
       ),
     subdomain: z
@@ -33,7 +33,7 @@ const provisionSchema = z
       .string()
       .min(8, 'Banking-Grade: Minimum 8 characters')
       .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\.])[A-Za-z\d@$!%*?&#_\.\-]{8,}$/,
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_.])[A-Za-z\d@$!%*?&#_.-]{8,}$/,
         'Requires uppercase, lowercase, number, and special character'
       ),
     confirmPassword: z.string(),
@@ -138,9 +138,14 @@ export function ProvisionModal({
             });
           }
         });
-        setError('root', { message: 'Architectural Lockdown: Multiple validation failures detected.' });
+        setError('root', {
+          message:
+            'Architectural Lockdown: Multiple validation failures detected.',
+        });
       } else {
-        setError('root', { message: e instanceof Error ? e.message : 'Provisioning failed' });
+        setError('root', {
+          message: e instanceof Error ? e.message : 'Provisioning failed',
+        });
       }
     } finally {
       setLoading(false);
@@ -180,7 +185,10 @@ export function ProvisionModal({
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="storeName" className="text-sm font-medium flex items-center">
+              <Label
+                htmlFor="storeName"
+                className="text-sm font-medium flex items-center"
+              >
                 Store Identity <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
@@ -197,8 +205,12 @@ export function ProvisionModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subdomain" className="text-sm font-medium flex items-center">
-                Sovereign Subdomain <span className="ml-1 text-destructive">*</span>
+              <Label
+                htmlFor="subdomain"
+                className="text-sm font-medium flex items-center"
+              >
+                Sovereign Subdomain{' '}
+                <span className="ml-1 text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -221,8 +233,12 @@ export function ProvisionModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="adminEmail" className="text-sm font-medium flex items-center">
-                Merchant Custodian <span className="ml-1 text-destructive">*</span>
+              <Label
+                htmlFor="adminEmail"
+                className="text-sm font-medium flex items-center"
+              >
+                Merchant Custodian{' '}
+                <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 id="adminEmail"
@@ -240,7 +256,11 @@ export function ProvisionModal({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="password" title="Military-Grade: Upper, Lower, Number, Special" className="text-sm font-medium flex items-center">
+                <Label
+                  htmlFor="password"
+                  title="Military-Grade: Upper, Lower, Number, Special"
+                  className="text-sm font-medium flex items-center"
+                >
                   Access Key <span className="ml-1 text-destructive">*</span>
                 </Label>
                 <Input
@@ -257,7 +277,12 @@ export function ProvisionModal({
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">Verification</Label>
+                <Label
+                  htmlFor="confirmPassword"
+                  className="text-sm font-medium"
+                >
+                  Verification
+                </Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -275,7 +300,9 @@ export function ProvisionModal({
 
             <div className="grid grid-cols-2 gap-4 items-end">
               <div className="space-y-2">
-                <Label htmlFor="plan" className="text-sm font-medium">Service Tier</Label>
+                <Label htmlFor="plan" className="text-sm font-medium">
+                  Service Tier
+                </Label>
                 <select
                   id="plan"
                   {...register('plan')}
@@ -289,7 +316,9 @@ export function ProvisionModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="blueprintId" className="text-sm font-medium">Blueprint Override</Label>
+                <Label htmlFor="blueprintId" className="text-sm font-medium">
+                  Blueprint Override
+                </Label>
                 <select
                   id="blueprintId"
                   {...register('blueprintId')}
@@ -307,8 +336,12 @@ export function ProvisionModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="superAdminKey" className="text-sm font-medium flex items-center text-primary/80">
-                Sovereign Authorization <span className="ml-1 text-destructive">*</span>
+              <Label
+                htmlFor="superAdminKey"
+                className="text-sm font-medium flex items-center text-primary/80"
+              >
+                Sovereign Authorization{' '}
+                <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 id="superAdminKey"
@@ -334,16 +367,20 @@ export function ProvisionModal({
               >
                 Cancel
               </Button>
-              <Button 
-                type="submit" 
-                disabled={loading || !isValid} 
+              <Button
+                type="submit"
+                disabled={loading || !isValid}
                 className={`relative overflow-hidden transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 ${
-                  !isValid ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
+                  !isValid
+                    ? 'opacity-50 grayscale cursor-not-allowed'
+                    : 'hover:scale-[1.02] active:scale-[0.98]'
                 }`}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <span className="relative z-10">
-                  {loading ? 'Executing Protocol...' : 'Initialize Provisioning'}
+                  {loading
+                    ? 'Executing Protocol...'
+                    : 'Initialize Provisioning'}
                 </span>
                 {!loading && isValid && (
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 animate-shimmer" />

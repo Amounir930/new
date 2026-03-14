@@ -7,6 +7,7 @@ import {
   featureGatesInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
+import type { TenantCacheService } from '@apex/middleware';
 import {
   Body,
   Controller,
@@ -21,8 +22,8 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
+import type { ProvisioningService } from '../provisioning/provisioning.service';
 import { SecurityService } from '../security/security.service';
-import { ProvisioningService } from '../provisioning/provisioning.service';
 
 const UpdateTenantSchema = z.object({
   plan: z.string().optional(),
@@ -44,7 +45,8 @@ export class TenantsController {
     @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService,
     @Inject('PROVISIONING_SERVICE')
-    private readonly provisioningService: ProvisioningService
+    private readonly provisioningService: ProvisioningService,
+    private readonly cache: TenantCacheService
   ) {}
 
   @Get()
@@ -146,33 +148,62 @@ export class TenantsController {
       nicheType?: string;
     }
   ) {
-    const [updated] = await adminDb
-      .update(tenantsInGovernance)
-      .set({
-        ...body,
-        status: body.status as
-          | 'active'
-          | 'pending'
-          | 'suspended'
-          | 'archived'
-          | undefined,
-        plan: body.plan as 'free' | 'basic' | 'pro' | 'enterprise' | undefined,
-        updatedAt: new Date().toISOString(),
-      })
-      .where(eq(tenantsInGovernance.id, id))
-      .returning();
+    let subdomain = '';
+    const updated = await adminDb.transaction(async (tx) => {
+      const [updatedRecord] = await tx
+        .update(tenantsInGovernance)
+        .set({
+          ...body,
+          status: body.status as
+            | 'active'
+            | 'pending'
+            | 'suspended'
+            | 'archived'
+            | undefined,
+          plan: body.plan as
+            | 'free'
+            | 'basic'
+            | 'pro'
+            | 'enterprise'
+            | undefined,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(tenantsInGovernance.id, id))
+        .returning();
 
-    // S15: Steel Control Sync
-    // If status changed, update the global Redis lock for instant enforcement
-    if (body.status) {
-      await this.security.setTenantLock(
-        updated.subdomain,
-        body.status === 'suspended'
-      );
+      if (!updatedRecord) {
+        throw new Error('Tenant not found');
+      }
+
+      subdomain = updatedRecord.subdomain;
+
+      // S15: Steel Control Sync
+      // If status changed, update the global Redis lock for instant enforcement
+      if (body.status) {
+        await this.security.setTenantLock(
+          updatedRecord.subdomain,
+          body.status === 'suspended'
+        );
+      }
+
+      // Phase 13: Sovereign Governance Sync (ACID Mandate)
+      // If plan or niche changed, synchronize physical enforcements
+      if (body.plan || body.nicheType) {
+        await this.provisioningService.synchronizeTenantGovernance(
+          subdomain,
+          tx as any
+        );
+      }
+
+      return updatedRecord;
+    });
+
+    // Post-Commit Invalidation: Clear Cache Strictly AFTER Transaction Success
+    if (subdomain) {
+      await this.cache.invalidateTenant(subdomain);
+      this.logger.log(`[SOVEREIGN_CACHE] Invalidated cache for ${subdomain}`);
     }
 
-    // S21: If plan or niche changed, we might want to suggest a re-sync or
-    // automate it. For now, we return the updated tenant.
     return updated;
   }
 
@@ -197,29 +228,33 @@ export class TenantsController {
         .set({ status: 'purging', updatedAt: new Date().toISOString() })
         .where(eq(tenantsInGovernance.id, id));
 
-      this.logger.warn(`[SAGA_DELETION] Initiated purge for ${tenant.subdomain}`);
+      this.logger.warn(
+        `[SAGA_DELETION] Initiated purge for ${tenant.subdomain}`
+      );
 
       // Step 3: Physical Purge (Extermination of Schema/Bucket/Locks)
       await this.provisioningService.deprovisionTenant(tenant.subdomain);
 
       // Step 4: Logical Burial (Soft Delete)
       // S4 Protocol: We retain the record with deleted_at for Audit/Security history.
-      const [deleted] = await adminDb
+      const [_deleted] = await adminDb
         .update(tenantsInGovernance)
-        .set({ 
+        .set({
           status: 'deleted', // Final dead state
           deletedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         })
         .where(eq(tenantsInGovernance.id, id))
         .returning();
 
-      this.logger.log(`[SAGA_DELETION] Successfully buried tenant: ${tenant.subdomain}`);
-      
-      return { 
-        success: true, 
+      this.logger.log(
+        `[SAGA_DELETION] Successfully buried tenant: ${tenant.subdomain}`
+      );
+
+      return {
+        success: true,
         message: 'Tenant physical assets purged and record archived.',
-        tenantId: id 
+        tenantId: id,
       };
     } catch (error: unknown) {
       this.logger.error(

@@ -6,6 +6,7 @@
 
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditLog, AuditService } from '@apex/audit';
+import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import {
   Body,
   Controller,
@@ -21,7 +22,6 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import type { Request } from 'express';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';

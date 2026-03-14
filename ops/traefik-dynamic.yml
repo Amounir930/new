@@ -81,6 +81,11 @@ http:
         customResponseHeaders:
           Content-Security-Policy: "default-src 'self' 'unsafe-inline' https://*.60sec.shop; script-src 'self' 'unsafe-inline' https://*.60sec.shop https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'self';"
 
+    apex-api-version-bridge:
+      replacePathRegex:
+        regex: "^/api/(auth/login|provision|tenants|blueprints|governance/health)(.*)"
+        replacement: "/api/v1/${1}${2}"
+
     apex-basic-auth:
       basicAuth:
         usersFile: "/etc/traefik/htpasswd"

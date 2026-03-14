@@ -37,7 +37,11 @@ interface FetchOptions extends RequestInit {
 }
 
 export class ApiError extends Error {
-  constructor(public message: string, public status: number, public data?: any) {
+  constructor(
+    public message: string,
+    public status: number,
+    public data?: any
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -70,7 +74,9 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({ message: res.statusText }));
+    const errorData = await res
+      .json()
+      .catch(() => ({ message: res.statusText }));
     throw new ApiError(
       errorData.message || `API Error: ${res.status}`,
       res.status,

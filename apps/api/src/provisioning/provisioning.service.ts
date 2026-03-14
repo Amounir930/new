@@ -1,5 +1,5 @@
-import { AuditService } from '@apex/audit';
-import { AuthService } from '@apex/auth';
+import type { AuditService } from '@apex/audit';
+import type { AuthService } from '@apex/auth';
 import { env } from '@apex/config';
 import {
   adminDb,
@@ -12,8 +12,9 @@ import {
   tenantQuotasInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
+import type { DrizzleExecutor } from '@apex/middleware';
 import {
-  BlueprintTemplate,
+  type BlueprintTemplate,
   createStorageBucket,
   createTenantSchema,
   deleteStorageBucket,
@@ -26,11 +27,11 @@ import { encrypt, hashSensitiveData } from '@apex/security';
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
   Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
-  forwardRef,
 } from '@nestjs/common';
 import { z } from 'zod';
 import { SecurityService } from '../security/security.service';
@@ -177,7 +178,11 @@ export class ProvisioningService {
       // await this.registerTenant(options, seedResult.adminId);
 
       // 6. S21 FIX: Sync Governance (Link Blueprint to Enforcement)
-      await this.syncGovernance(options.subdomain, effectiveBlueprint);
+      await this.syncGovernance(
+        options.subdomain,
+        effectiveBlueprint,
+        adminDb as any
+      );
       steps[4].status = 'done';
 
       const durationMs = Date.now() - startTime;
@@ -397,14 +402,15 @@ export class ProvisioningService {
    * Sync Blueprint JSON modules and quotas to the central Governance system
    * This ensures that "Frontend" settings in the Blueprint become "Backend" enforcements.
    */
-  private async syncGovernance(
+  public async syncGovernance(
     subdomain: string,
-    blueprint: BlueprintTemplate
+    blueprint: BlueprintTemplate,
+    tx: DrizzleExecutor
   ) {
     if (!blueprint || typeof blueprint !== 'object') return;
 
     // Resolve Tenant ID
-    const [tenant] = await adminDb
+    const [tenant] = await tx
       .select({ id: tenantsInGovernance.id })
       .from(tenantsInGovernance)
       .where(eq(tenantsInGovernance.subdomain, subdomain))
@@ -426,7 +432,7 @@ export class ProvisioningService {
       }));
 
       if (gates.length > 0) {
-        await adminDb
+        await tx
           .insert(featureGatesInGovernance)
           .values(gates)
           .onConflictDoUpdate({
@@ -458,14 +464,14 @@ export class ProvisioningService {
       const normalizedQuotas = QuotaSchema.parse(blueprint.quotas);
 
       // S21 FIX: Use Manual Sync to bypass DB Lock/Indexing walls
-      const [existingQuota] = await adminDb
+      const [existingQuota] = await tx
         .select({ id: tenantQuotasInGovernance.id })
         .from(tenantQuotasInGovernance)
         .where(eq(tenantQuotasInGovernance.tenantId, tenant.id))
         .limit(1);
 
       if (existingQuota) {
-        await adminDb
+        await tx
           .update(tenantQuotasInGovernance)
           .set({
             maxProducts: normalizedQuotas.max_products,
@@ -480,7 +486,7 @@ export class ProvisioningService {
           })
           .where(eq(tenantQuotasInGovernance.id, existingQuota.id));
       } else {
-        await adminDb.insert(tenantQuotasInGovernance).values({
+        await tx.insert(tenantQuotasInGovernance).values({
           tenantId: tenant.id,
           maxProducts: normalizedQuotas.max_products,
           maxOrders: normalizedQuotas.max_orders,
@@ -498,6 +504,47 @@ export class ProvisioningService {
   }
 
   /**
+   * Full Synchronization Mandate (Phase 13 Sovereign Execution)
+   * Orchestrates metadata resolution and physical enforcement within a transaction context.
+   */
+  public async synchronizeTenantGovernance(
+    subdomain: string,
+    tx: DrizzleExecutor
+  ) {
+    this.logger.log(
+      `[SOVEREIGN_SYNC] Initiating synchronization for ${subdomain}`
+    );
+
+    // 1. Fetch current tenant metadata via tx
+    const [tenant] = await tx
+      .select()
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.subdomain, subdomain))
+      .limit(1);
+
+    if (!tenant) {
+      throw new Error(`Tenant ${subdomain} not found for governance sync.`);
+    }
+
+    // 2. Resolve authoritative blueprint for current Plan/Niche
+    const blueprint = await this.resolveBlueprint({
+      subdomain: tenant.subdomain,
+      adminEmail: '', // Not required for resolution
+      storeName: tenant.name || '',
+      plan: tenant.plan as any,
+      nicheType: tenant.nicheType || 'retail',
+      superAdminKey: '', // Bypass internal check
+    });
+
+    // 3. Manifest enforcements
+    await this.syncGovernance(subdomain, blueprint, tx);
+
+    this.logger.log(
+      `[SOVEREIGN_SYNC] Synchronization complete for ${subdomain}`
+    );
+  }
+
+  /**
    * Deep Purge Protocol (Physical Deletion)
    * Orchestrates the destruction of all isolated assets
    */
@@ -511,7 +558,9 @@ export class ProvisioningService {
     // Step 1: Physical Lockout (Redis)
     try {
       await this.security.setTenantLock(cleanSubdomain, true);
-      this.logger.log(`[DEPROVISION] Steel Control Lock engaged for ${cleanSubdomain}`);
+      this.logger.log(
+        `[DEPROVISION] Steel Control Lock engaged for ${cleanSubdomain}`
+      );
     } catch (error) {
       this.logger.error(`[DEPROVISION] Failed to engage Redis lock`, error);
       errors.push(error as Error);
@@ -521,7 +570,9 @@ export class ProvisioningService {
     try {
       // Force purge enabled to handle non-empty buckets/versions
       await deleteStorageBucket(cleanSubdomain, true);
-      this.logger.log(`[DEPROVISION] Storage bucket destroyed for ${cleanSubdomain}`);
+      this.logger.log(
+        `[DEPROVISION] Storage bucket destroyed for ${cleanSubdomain}`
+      );
     } catch (error) {
       this.logger.error(`[DEPROVISION] Storage destruction failed`, error);
       errors.push(error as Error);
@@ -530,7 +581,9 @@ export class ProvisioningService {
     // Step 3: Schema Destruction (SQL)
     try {
       await dropTenantSchema(cleanSubdomain);
-      this.logger.log(`[DEPROVISION] PostgreSQL schema dropped for ${cleanSubdomain}`);
+      this.logger.log(
+        `[DEPROVISION] PostgreSQL schema dropped for ${cleanSubdomain}`
+      );
     } catch (error) {
       this.logger.error(`[DEPROVISION] Schema destruction failed`, error);
       errors.push(error as Error);
@@ -542,13 +595,19 @@ export class ProvisioningService {
       );
       // If we failed to drop the schema, we MUST NOT proceed to logical delete
       // in the controller to prevent orphaned schemas.
-      if (errors.some(e => e.message.includes('Schema') || e.message.includes('schema'))) {
+      if (
+        errors.some(
+          (e) => e.message.includes('Schema') || e.message.includes('schema')
+        )
+      ) {
         throw new InternalServerErrorException(
           `Deep Purge Failed: Physical schema extermination aborted for ${cleanSubdomain}.`
         );
       }
     }
 
-    this.logger.log(`[DEPROVISION] Physical Purge Sequence Concluded for ${cleanSubdomain}`);
+    this.logger.log(
+      `[DEPROVISION] Physical Purge Sequence Concluded for ${cleanSubdomain}`
+    );
   }
 }

@@ -16,6 +16,7 @@ export {
 export { BotProtectionMiddleware } from './bot-protection';
 // S2: Tenant Resolution & Context Management
 export {
+  type DrizzleExecutor,
   getCurrentTenantContext,
   getCurrentTenantId,
   getTenantContext,
@@ -74,8 +75,8 @@ export {
   securityHeaders,
 } from './security';
 export { SecurityService } from './security.service';
-export { TenantCacheService } from './tenant-cache.service';
 export { TenantCacheModule } from './tenant-cache.module';
+export { TenantCacheService } from './tenant-cache.service';
 // S2: Tenant Isolation Middleware
 export {
   type AuthenticatedUser,

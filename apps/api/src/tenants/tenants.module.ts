@@ -1,10 +1,10 @@
 import { AuditModule } from '@apex/audit';
-import { Module, forwardRef } from '@nestjs/common';
+import { TenantCacheModule } from '@apex/middleware';
+import { forwardRef, Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { ProvisioningModule } from '../provisioning/provisioning.module';
-import { TenantsPublicController } from './tenants-public.controller';
 import { TenantsController } from './tenants.controller';
-import { TenantCacheModule } from '@apex/middleware';
+import { TenantsPublicController } from './tenants-public.controller';
 
 @Module({
   imports: [

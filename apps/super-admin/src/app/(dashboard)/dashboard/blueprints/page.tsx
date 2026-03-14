@@ -1,16 +1,14 @@
 'use client';
 
-import { 
-  Box, 
-  Camera, 
-  ChevronRight, 
-  Cpu, 
-  Globe, 
-  Layout, 
-  Loader2, 
-  Plus, 
-  RefreshCw, 
-  Trash2 
+import {
+  Box,
+  Camera,
+  Cpu,
+  Globe,
+  Layout,
+  Plus,
+  RefreshCw,
+  Trash2,
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -54,7 +52,12 @@ export default function BlueprintsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you absolutely sure you want to delete this blueprint? This is IRREVERSIBLE.')) return;
+    if (
+      !confirm(
+        'Are you absolutely sure you want to delete this blueprint? This is IRREVERSIBLE.'
+      )
+    )
+      return;
     try {
       await apiFetch(`/blueprints/${id}`, { method: 'DELETE' });
       fetchBlueprints();
@@ -79,10 +82,12 @@ export default function BlueprintsPage() {
             className="border-white/5 bg-slate-900/50 rounded-xl px-4"
             disabled={refreshing}
           >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+            />
           </Button>
           <Button
-            onClick={() => window.location.href = '/dashboard/blueprints/new'}
+            onClick={() => (window.location.href = '/dashboard/blueprints/new')}
             className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-500/20 px-6 font-bold"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -94,7 +99,10 @@ export default function BlueprintsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading ? (
           [1, 2, 3].map((i) => (
-            <div key={i} className="h-48 rounded-2xl bg-white/5 animate-pulse" />
+            <div
+              key={i}
+              className="h-48 rounded-2xl bg-white/5 animate-pulse"
+            />
           ))
         ) : blueprints.length === 0 ? (
           <div className="col-span-full py-20 flex flex-col items-center gap-4 bg-slate-900/40 rounded-3xl border border-white/5 border-dashed">
@@ -105,18 +113,21 @@ export default function BlueprintsPage() {
           </div>
         ) : (
           blueprints.map((bp) => (
-            <Card key={bp.id} className="group bg-slate-900/40 border-white/5 overflow-hidden backdrop-blur-md hover:border-indigo-500/30 transition-all hover:translate-y-[-4px]">
+            <Card
+              key={bp.id}
+              className="group bg-slate-900/40 border-white/5 overflow-hidden backdrop-blur-md hover:border-indigo-500/30 transition-all hover:translate-y-[-4px]"
+            >
               <div className="p-6 space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/10 text-indigo-400">
                     <Layout className="w-6 h-6" />
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button 
-                       variant="ghost" 
-                       size="icon" 
-                       className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 rounded-lg"
-                       onClick={() => handleDelete(bp.id)}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 rounded-lg"
+                      onClick={() => handleDelete(bp.id)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -124,7 +135,9 @@ export default function BlueprintsPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-white tracking-tight">{bp.name}</h3>
+                  <h3 className="text-lg font-bold text-white tracking-tight">
+                    {bp.name}
+                  </h3>
                   <p className="text-sm text-slate-500 line-clamp-2 mt-1 min-h-[40px]">
                     {bp.description || 'No system description provided.'}
                   </p>
@@ -132,17 +145,25 @@ export default function BlueprintsPage() {
 
                 <div className="pt-4 border-t border-white/5 grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Niche</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      Niche
+                    </span>
                     <div className="flex items-center gap-2">
-                       <Globe className="w-3 h-3 text-indigo-400" />
-                       <span className="text-xs font-semibold text-slate-300 capitalize">{bp.nicheType}</span>
+                      <Globe className="w-3 h-3 text-indigo-400" />
+                      <span className="text-xs font-semibold text-slate-300 capitalize">
+                        {bp.nicheType}
+                      </span>
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core Version</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                      Core Version
+                    </span>
                     <div className="flex items-center gap-2">
-                       <Cpu className="w-3 h-3 text-emerald-400" />
-                       <span className="text-xs font-semibold text-slate-300">v{bp.version || '1.0'}</span>
+                      <Cpu className="w-3 h-3 text-emerald-400" />
+                      <span className="text-xs font-semibold text-slate-300">
+                        v{bp.version || '1.0'}
+                      </span>
                     </div>
                   </div>
                 </div>
