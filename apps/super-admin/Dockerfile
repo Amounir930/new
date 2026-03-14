@@ -50,6 +50,8 @@ RUN groupadd -g 1001 node-group && \
 COPY --from=builder /app/apps/super-admin/.next/standalone ./
 COPY --from=builder /app/apps/super-admin/.next/static ./apps/super-admin/.next/static
 COPY --from=builder /app/apps/super-admin/public ./apps/super-admin/public
+# Critical: Copy the server entrypoint from the standalone workspace
+COPY --from=builder /app/apps/super-admin/.next/standalone/apps/super-admin/server.js ./apps/super-admin/server.js
 
 # Secure permissions
 RUN chown -R node-user:node-group /app
