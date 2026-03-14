@@ -21,12 +21,12 @@ import { apiFetch } from '@/lib/api';
 
 interface Tenant {
   id: string;
-  storeName: string;
+  name: string;
   subdomain: string;
   plan: string;
-  isActive: boolean;
+  status: string;
   createdAt: string;
-  adminEmail: string;
+  ownerEmail: string;
 }
 
 export default function TenantsPage() {
@@ -73,13 +73,11 @@ export default function TenantsPage() {
 
   const filteredTenants = tenants.filter(
     (t) =>
-      (t?.storeName || '')
-        .toLowerCase()
-        .includes((search || '').toLowerCase()) ||
+      (t?.name || '').toLowerCase().includes((search || '').toLowerCase()) ||
       (t?.subdomain || '')
         .toLowerCase()
         .includes((search || '').toLowerCase()) ||
-      (t?.adminEmail || '').toLowerCase().includes((search || '').toLowerCase())
+      (t?.ownerEmail || '').toLowerCase().includes((search || '').toLowerCase())
   );
 
   return (
@@ -172,10 +170,10 @@ export default function TenantsPage() {
                     <td className="px-6 py-4">
                       <div>
                         <p className="text-sm font-bold text-white">
-                          {tenant.storeName}
+                          {tenant.name}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {tenant.adminEmail}
+                          {tenant.ownerEmail}
                         </p>
                       </div>
                     </td>
@@ -209,7 +207,7 @@ export default function TenantsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        {tenant.isActive ? (
+                        {tenant.status === 'active' ? (
                           <>
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                             <span className="text-xs font-bold text-emerald-500">
@@ -220,7 +218,8 @@ export default function TenantsPage() {
                           <>
                             <XCircle className="w-4 h-4 text-rose-500" />
                             <span className="text-xs font-bold text-rose-500">
-                              Suspended
+                              {tenant.status.charAt(0).toUpperCase() +
+                                tenant.status.slice(1)}
                             </span>
                           </>
                         )}
@@ -242,7 +241,7 @@ export default function TenantsPage() {
                         onClick={() =>
                           setGovernanceTenant({
                             id: tenant.id,
-                            name: tenant.storeName,
+                            name: tenant.name,
                           })
                         }
                       >

@@ -99,12 +99,15 @@ export function TenantGovernanceModal({
   }, [tenantId]);
 
   const fetchTenantMeta = useCallback(async () => {
-    const tenants = await apiFetch<any[]>('/tenants');
-    const current = tenants.find((t) => t.id === tenantId);
+    // S4 Protocol: Fetch strictly what is needed. NO BULK FETCHING.
+    const current = await apiFetch<any>(`/tenants/${tenantId}`);
     if (current) {
       setTenantMeta({
         plan: current.plan,
-        status: current.isActive ? 'active' : 'suspended',
+        status:
+          current.status === 'active' || current.isActive === true
+            ? 'active'
+            : current.status,
       });
     }
   }, [tenantId]);

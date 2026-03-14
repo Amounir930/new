@@ -60,6 +60,27 @@ export class TenantsController {
       throw error;
     }
   }
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    try {
+      const [tenant] = await adminDb
+        .select()
+        .from(tenantsInGovernance)
+        .where(eq(tenantsInGovernance.id, id))
+        .limit(1);
+
+      if (!tenant) {
+        throw new Error('Tenant not found');
+      }
+
+      return tenant;
+    } catch (error: unknown) {
+      this.logger.error(
+        `[TENANT_FIND_ONE_ERROR] ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+  }
 
   @Get(':id/features')
   async getFeatures(@Param('id') id: string) {
