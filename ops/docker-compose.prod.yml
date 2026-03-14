@@ -399,6 +399,8 @@ services:
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
+      SUPER_ADMIN_KEY: ${SUPER_ADMIN_KEY}
+      SUPER_ADMIN_KEY_HEADER: X-Super-Admin-Key
       JWT_SECRET: ${JWT_SECRET}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       OTEL_SERVICE_NAME: apex-super-admin
