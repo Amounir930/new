@@ -3,9 +3,10 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { ProvisioningController } from './provisioning.controller';
 import { ProvisioningService } from './provisioning.service';
+import { SecurityModule } from '../security/security.module';
 
 @Module({
-  imports: [AuditModule, AuthModule],
+  imports: [AuditModule, AuthModule, SecurityModule],
   controllers: [ProvisioningController],
   providers: [
     ProvisioningService,

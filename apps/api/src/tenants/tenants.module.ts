@@ -5,6 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { ProvisioningModule } from '../provisioning/provisioning.module';
 import { TenantsController } from './tenants.controller';
 import { TenantsPublicController } from './tenants-public.controller';
+import { SecurityModule } from '../security/security.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { TenantsPublicController } from './tenants-public.controller';
     forwardRef(() => AuthModule),
     forwardRef(() => ProvisioningModule),
     TenantCacheModule,
+    SecurityModule,
   ],
   controllers: [TenantsController, TenantsPublicController],
   providers: [],
