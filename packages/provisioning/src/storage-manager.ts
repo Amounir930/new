@@ -309,34 +309,28 @@ async function forceClearBucket(
     `Force-clearing bucket: ${bucketName} (removing all versions, markers, and uploads)...`
   );
 
-  // S21 FIX: Use listObjects with versions: true or listObjectVersions if available
   try {
-    const clientAny = client as any;
-    let versionStream: any;
-
-    if (typeof clientAny.listObjectVersions === 'function') {
-      versionStream = clientAny.listObjectVersions(bucketName, '', true);
-    } else {
-      // Fallback for newer/different SDK signatures: listObjects(bucket, prefix, recursive, { versions: true })
-      versionStream = (client as any).listObjects(bucketName, '', true, {
-        versions: true,
-      });
-    }
+    // S21 FIX: Exhaustive Version & Delete Marker Purge
+    // listObjects(bucket, prefix, recursive, { versions: true }) returns everything
+    const versionStream = client.listObjects(bucketName, '', true, {
+      versions: true,
+    } as any);
 
     let vCount = 0;
     for await (const obj of versionStream) {
       if (obj.name) {
         vCount++;
-        // Remove specific version or delete marker
+        // Protocol S11: Remove specific version or delete marker
         await client.removeObject(bucketName, obj.name, {
           versionId: obj.versionId,
         });
       }
     }
 
-    logger.info(`Force-cleared ${vCount} objects/versions from ${bucketName}`);
+    logger.info(`Force-cleared ${vCount} objects/versions/markers from ${bucketName}`);
 
     // 2. Remove all incomplete multipart uploads
+    const clientAny = client as any;
     const uploadStream = clientAny.listIncompleteUploads
       ? clientAny.listIncompleteUploads(bucketName, '', true)
       : client.listIncompleteUploads(bucketName, '', true);
@@ -358,7 +352,7 @@ async function forceClearBucket(
       bucketName,
       error: err instanceof Error ? err.message : String(err),
     });
-    // Throw to prevent removeBucket from failing with 'not empty' and hiding the real cause
+    // Protocol S11: Do not swallow, but rethrow to notify the orchestration layer
     throw err;
   }
 }

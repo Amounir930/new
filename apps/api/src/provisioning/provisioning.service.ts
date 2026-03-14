@@ -344,11 +344,12 @@ export class ProvisioningService {
 
   /**
    * Rollback partially created resources on failure
+   * S11 Mandate: Unbreakable sequence ensuring zero "Zombie Tenants"
    */
   private async rollback(subdomain: string, steps: ProvisioningStep[]) {
     this.logger.warn(`ROLLING BACK provisioning for ${subdomain}`);
 
-    // Reverse order cleanup
+    // 1. S2 Protocol: Drop Schema
     if (
       steps.find((s) => s.name === 'schema_creation' && s.status === 'done')
     ) {
@@ -356,19 +357,18 @@ export class ProvisioningService {
         await dropTenantSchema(subdomain);
         this.logger.log(`Rollback: Dropped schema for ${subdomain}`);
       } catch (e) {
+        // Protocol S5: Log and continue - we must not let one failure block the registry purge
         this.logger.error(`Rollback FAILED to drop schema for ${subdomain}`, e);
       }
     }
 
-    // In a real implementation, we would also:
-    // 1. Delete the MinIO bucket
+    // 2. S3 Protocol: Delete MinIO Bucket
     if (
       steps.find((s) => s.name === 'bucket_creation' && s.status === 'done')
     ) {
       try {
-        await import('@apex/provisioning').then((m) =>
-          m.deleteStorageBucket(subdomain, true)
-        );
+        const { deleteStorageBucket } = await import('@apex/provisioning');
+        await deleteStorageBucket(subdomain, true);
         this.logger.log(`Rollback: Deleted storage bucket for ${subdomain}`);
       } catch (e) {
         this.logger.error(
@@ -377,7 +377,19 @@ export class ProvisioningService {
         );
       }
     }
-    // 2. Log the failure in audit
+
+    // 3. S7 Protocol: Unregister from Central Registry (Physical Extermination)
+    try {
+      await adminDb
+        .delete(tenantsInGovernance)
+        .where(eq(tenantsInGovernance.subdomain, subdomain));
+      this.logger.log(`Rollback: Purged registry entry for ${subdomain}`);
+    } catch (e) {
+      this.logger.error(
+        `Rollback FAILED to purge registry for ${subdomain}`,
+        e
+      );
+    }
   }
 
   /**

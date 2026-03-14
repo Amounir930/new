@@ -66,7 +66,7 @@ function getCSPHeader(): string {
     .trim();
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const tenantIdentifier = getTenantIdentifier(host);
   const isInfra = getInfraStatus(tenantIdentifier);
@@ -78,6 +78,32 @@ export function middleware(request: NextRequest) {
   requestHeaders.set('Content-Security-Policy', cspHeader);
 
   if (tenantIdentifier && !isInfra) {
+    // Protocol S11: Forensic Tenant Validation (Check if tenant exists in Registry)
+    try {
+      const apiUrl = process.env.INTERNAL_API_URL || 'http://api:3000/api/v1';
+      const checkRes = await fetch(
+        `${apiUrl}/public/tenants/discovery/${tenantIdentifier.toLowerCase()}`,
+        {
+          headers: { 'User-Agent': 'Apex-Middleware-Forensics' },
+          next: { revalidate: 3600 }, // S12: Cache result for 1 hour to prevent API DDOS
+        } as any // cast any for next extensions in native fetch
+      );
+
+      if (checkRes.status === 404 || checkRes.status === 403) {
+        // Ghost Tenant Detected: Exterminate request with 404 rewrite
+        const url = request.nextUrl.clone();
+        url.pathname = '/404'; // S11 Mandate: Show sterile not-found page
+        return NextResponse.rewrite(url, { headers: requestHeaders });
+      }
+    } catch (err) {
+      console.error(
+        `[CRITICAL] Middleware failed to validate tenant ${tenantIdentifier}:`,
+        err
+      );
+      // Fail open to public if validation service is down?
+      // No, for SaaS we should probably show 503 or 404 if tenant is uncertain.
+    }
+
     requestHeaders.set('x-tenant-id', tenantIdentifier);
 
     // S12 HOTFIX: Use tenantIdentifier for internal path-based ISR isolation
