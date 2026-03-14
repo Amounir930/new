@@ -12,14 +12,26 @@ import {
   Param,
 } from '@nestjs/common';
 
+import {
+  TenantCacheService,
+} from '@apex/middleware';
+
 @Controller('public/tenants')
 export class TenantsPublicController {
+  constructor(private readonly tenantCache: TenantCacheService) {}
+
   /**
    * S2.5: Discovery API for Storefronts
    * Returns metadata required for SDUI and Theme initialization
    */
   @Get('discovery/:subdomain')
   async discover(@Param('subdomain') subdomain: string) {
+    // Protocol S11: Redis Cache Lookup (Performance Guardrail)
+    const cacheKey = `discovery:${subdomain.toLowerCase()}`;
+    const cached = await (this.tenantCache as any).redis.get(cacheKey);
+    if (cached) {
+      return JSON.parse(cached);
+    }
     const [tenant] = await adminDb
       .select()
       .from(tenantsInGovernance)
@@ -68,10 +80,17 @@ export class TenantsPublicController {
       }
     }
 
-    return {
+    const result = {
       subdomain: tenant.subdomain,
       nicheType,
       uiConfig: uiConfig || {},
     };
+
+    // Protocol S11: Cache Discovery Result (TTL: 1 Hour)
+    await (this.tenantCache as any).redis.set(cacheKey, JSON.stringify(result), {
+      EX: 3600,
+    });
+
+    return result;
   }
 }

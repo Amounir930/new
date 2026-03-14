@@ -1,5 +1,5 @@
 # 🏗️ Build Stage
-FROM oven/bun:1.3.8 AS builder
+FROM oven/bun:1.1.18 AS builder
 WORKDIR /app
 
 # Copy root manifests
@@ -31,13 +31,13 @@ COPY . .
 
 ARG NEXT_PUBLIC_API_URL=https://api.60sec.shop/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-# S1 FIX: Increase memory for Next.js build to prevent OOM (137)
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# S1 FIX: Calibrate memory for Next.js build (Infrastructure Limit: 2G)
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 
 RUN bun run build --filter=super-admin
 
 # 🚀 Production Stage
-FROM oven/bun:1.3.8-slim
+FROM oven/bun:1.1.18-slim
 WORKDIR /app
 
 ENV NODE_ENV=production

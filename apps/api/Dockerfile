@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════
 # 🏗️ Build Stage
 # ═══════════════════════════════════════════════════════════════
-FROM oven/bun:1.3.8 AS builder
+FROM oven/bun:1.1.18 AS builder
 WORKDIR /app
 
 # 📦 S1: Copy root manifests
@@ -31,15 +31,15 @@ RUN bun install
 
 # 🧪 S4: Copy source and build
 COPY . .
-# S1 FIX: Increase memory for build and skip env validation (secrets not present)
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# S1 FIX: Calibrate memory for build (Infrastructure Limit: 2G)
+ENV NODE_OPTIONS="--max-old-space-size=1536"
 ENV SKIP_ENV_VALIDATION="true"
 RUN bun run build --filter=@apex/api
 
 # ═══════════════════════════════════════════════════════════════
 # 🚀 Production Stage (Hardened)
 # ═══════════════════════════════════════════════════════════════
-FROM oven/bun:1.3.8
+FROM oven/bun:1.1.18
 # S1: Environment
 ENV NODE_ENV=production
 
