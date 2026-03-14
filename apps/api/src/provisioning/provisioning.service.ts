@@ -173,8 +173,8 @@ export class ProvisioningService {
       // S2 FIX 1D: Removed SET search_path on shared pool (was contaminating connections)
       // registerTenant and syncGovernance use schema-qualified queries via publicDb
 
-      // 5. Register in Public Schema (CRITICAL: Must happen before syncGovernance)
-      await this.registerTenant(options, seedResult.adminId);
+      // 5. Register in Public Schema (HANDLED by seedTenantData -> resolveStore)
+      // await this.registerTenant(options, seedResult.adminId);
 
       // 6. S21 FIX: Sync Governance (Link Blueprint to Enforcement)
       await this.syncGovernance(options.subdomain, effectiveBlueprint);
@@ -329,7 +329,8 @@ export class ProvisioningService {
         name: options.storeName,
         plan: options.plan,
         status: 'active',
-        ownerEmailHash: hashSensitiveData(options.adminEmail), // Cross-link to central repo
+        ownerEmail: encrypt(options.adminEmail), // Protocol S7: Store encrypted PII
+        ownerEmailHash: hashSensitiveData(options.adminEmail), // Protocol S7: Store searchable hash
         nicheType: options.nicheType, // S2.5: Persist niche
         uiConfig: options.uiConfig, // S2.5: Persist SDUI settings
       });

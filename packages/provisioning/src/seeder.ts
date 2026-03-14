@@ -220,7 +220,7 @@ async function resolveStore(
       status: 'active',
       plan: options.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       nicheType: (options.nicheType || 'retail') as string,
-      ownerEmail: JSON.stringify(encResult),
+      ownerEmail: encResult,
       ownerEmailHash: emailHash,
     })
     .returning({ id: tenantsInGovernance.id });
