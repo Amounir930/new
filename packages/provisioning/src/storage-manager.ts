@@ -217,8 +217,13 @@ export async function deleteStorageBucket(
 
     try {
       await client.removeBucket(bucketName);
-    } catch (error) {
-      // S5 Protocol: Enhanced error masking with context
+    } catch (error: any) {
+      // S5 Protocol: Handle idempotency - if it doesn't exist, we succeeded in our goal
+      if (error.code === 'NoSuchBucket' || error.message?.includes('does not exist')) {
+        logger.info(`Bucket already gone: ${bucketName}`);
+        return true;
+      }
+      
       logger.error(`Bucket is NOT empty after force-clear attempt`, {
         bucketName,
         error,
@@ -227,16 +232,14 @@ export async function deleteStorageBucket(
     }
     logger.info(`Bucket deleted: ${bucketName}`);
     return true;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('not empty')) {
-      logger.error('Bucket is NOT empty after force-clear attempt', {
-        bucketName,
-        error,
-      });
-      throw error;
+  } catch (error: any) {
+    // Gracefully handle NoSuchBucket even at the top level
+    if (error.code === 'NoSuchBucket' || error.message?.includes('does not exist')) {
+      return true;
     }
     logger.error('Failed to delete bucket', { bucketName, error });
-    return false;
+    // Re-throw to ensure the saga/rollback knows about the failure
+    throw error;
   }
 }
 

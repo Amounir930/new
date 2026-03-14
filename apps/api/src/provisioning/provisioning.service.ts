@@ -505,30 +505,50 @@ export class ProvisioningService {
     const cleanSubdomain = subdomain.toLowerCase();
     this.logger.warn(`[DEPROVISION] Starting Deep Purge for ${cleanSubdomain}`);
 
+    // Track errors but continue the circuit to ensure maximum asset extermination
+    const errors: Error[] = [];
+
+    // Step 1: Physical Lockout (Redis)
     try {
-      // Step 1: Physical Lockout (Redis)
       await this.security.setTenantLock(cleanSubdomain, true);
       this.logger.log(`[DEPROVISION] Steel Control Lock engaged for ${cleanSubdomain}`);
+    } catch (error) {
+      this.logger.error(`[DEPROVISION] Failed to engage Redis lock`, error);
+      errors.push(error as Error);
+    }
 
-      // Step 2: Storage Destruction (MinIO)
+    // Step 2: Storage Destruction (MinIO)
+    try {
       // Force purge enabled to handle non-empty buckets/versions
       await deleteStorageBucket(cleanSubdomain, true);
       this.logger.log(`[DEPROVISION] Storage bucket destroyed for ${cleanSubdomain}`);
+    } catch (error) {
+      this.logger.error(`[DEPROVISION] Storage destruction failed`, error);
+      errors.push(error as Error);
+    }
 
-      // Step 3: Schema Destruction (SQL)
+    // Step 3: Schema Destruction (SQL)
+    try {
       await dropTenantSchema(cleanSubdomain);
       this.logger.log(`[DEPROVISION] PostgreSQL schema dropped for ${cleanSubdomain}`);
-
-      this.logger.log(`[DEPROVISION] Physical Assets EXTERMINATED for ${cleanSubdomain}`);
     } catch (error) {
-      this.logger.error(
-        `[DEPROVISION_FAILURE] Failed to purge physical assets for ${cleanSubdomain}`,
-        error
-      );
-      // S11 Mandate: Physical failures MUST halt the logical deletion to prevent orphaned data.
-      throw new InternalServerErrorException(
-        `Deep Purge Failed: Physical extermination aborted for ${cleanSubdomain}. Check logs.`
-      );
+      this.logger.error(`[DEPROVISION] Schema destruction failed`, error);
+      errors.push(error as Error);
     }
+
+    if (errors.length > 0) {
+      this.logger.error(
+        `[DEPROVISION_PARTIAL_FAILURE] Completed with ${errors.length} errors for ${cleanSubdomain}`
+      );
+      // If we failed to drop the schema, we MUST NOT proceed to logical delete
+      // in the controller to prevent orphaned schemas.
+      if (errors.some(e => e.message.includes('Schema') || e.message.includes('schema'))) {
+        throw new InternalServerErrorException(
+          `Deep Purge Failed: Physical schema extermination aborted for ${cleanSubdomain}.`
+        );
+      }
+    }
+
+    this.logger.log(`[DEPROVISION] Physical Purge Sequence Concluded for ${cleanSubdomain}`);
   }
 }
