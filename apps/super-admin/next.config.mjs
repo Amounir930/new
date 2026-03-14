@@ -32,6 +32,7 @@ const nextConfig = {
     workerThreads: false,
     cpus: 1,
   },
+  turbopack: {},
 };
 
 export default nextConfig;

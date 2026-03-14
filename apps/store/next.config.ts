@@ -46,6 +46,8 @@ const nextConfig = {
     workerThreads: false,
     cpus: 1,
   },
+  // Protocol S11: Parity for Next.js 16 + Turbopack
+  turbopack: {},
   async headers() {
     return [
       {
