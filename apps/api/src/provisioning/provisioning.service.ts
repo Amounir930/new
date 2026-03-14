@@ -22,7 +22,7 @@ import {
   runTenantMigrations,
   seedTenantData,
 } from '@apex/provisioning';
-import { hashSensitiveData } from '@apex/security';
+import { encrypt, hashSensitiveData } from '@apex/security';
 import {
   BadRequestException,
   ConflictException,
