@@ -60,4 +60,4 @@ ENV PORT=3002
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-CMD ["bun", "server.js"]
+CMD ["bun", "apps/store/server.js"]
