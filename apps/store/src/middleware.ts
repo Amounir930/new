@@ -85,12 +85,13 @@ export async function middleware(request: NextRequest) {
     // Protocol S11: Forensic Tenant Validation (Check if tenant exists in Registry)
     try {
       const apiUrl = process.env.INTERNAL_API_URL || 'http://api:3000/api/v1';
+      // Edge-compatible fetch caching relies on standard Cache-Control headers from your backend
+      // S12 FIX: Removed invalid 'next.revalidate' logic from Edge context to prevent Self-DDoS
       const checkRes = await fetch(
         `${apiUrl}/public/tenants/discovery/${tenantIdentifier.toLowerCase()}`,
         {
           headers: { 'User-Agent': 'Apex-Middleware-Forensics' },
-          next: { revalidate: 3600 }, // S12: Cache result for 1 hour to prevent API DDOS
-        } as any // cast any for next extensions in native fetch
+        }
       );
 
       if (checkRes.status === 404 || checkRes.status === 403) {
@@ -99,13 +100,19 @@ export async function middleware(request: NextRequest) {
         url.pathname = '/404'; // S11 Mandate: Show sterile not-found page
         return NextResponse.rewrite(url, { headers: requestHeaders });
       }
+
+      if (!checkRes.ok) {
+        throw new Error(`API returned status ${checkRes.status}`);
+      }
     } catch (err) {
       console.error(
         `[CRITICAL] Middleware failed to validate tenant ${tenantIdentifier}:`,
         err
       );
-      // Fail open to public if validation service is down?
-      // No, for SaaS we should probably show 503 or 404 if tenant is uncertain.
+      // S11 Mandate: Fail-Closed. Show a 503 Service Unavailable page if backend is unreachable.
+      const url = request.nextUrl.clone();
+      url.pathname = '/503'; // Architectural Requirement: Prevent Fail-Open leaks
+      return NextResponse.rewrite(url, { headers: requestHeaders });
     }
 
     requestHeaders.set('x-tenant-id', tenantIdentifier);
