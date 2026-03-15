@@ -57,7 +57,7 @@ export class TenantsController {
       const tenants = await adminDb.select().from(tenantsInGovernance);
       return tenants.map((t) => ({
         ...t,
-        ownerEmail: t.ownerEmail ? decrypt(t.ownerEmail as EncryptedData) : null,
+        ownerEmail: this.safeDecrypt(t.ownerEmail),
       }));
     } catch (error: unknown) {
       this.logger.error(
@@ -81,9 +81,7 @@ export class TenantsController {
 
       return {
         ...tenant,
-        ownerEmail: tenant.ownerEmail
-          ? decrypt(tenant.ownerEmail as EncryptedData)
-          : null,
+        ownerEmail: this.safeDecrypt(tenant.ownerEmail),
       };
     } catch (error: unknown) {
       this.logger.error(
@@ -293,6 +291,25 @@ export class TenantsController {
         `[SAGA_DELETE_ERROR] ${error instanceof Error ? error.message : String(error)}`
       );
       throw error;
+    }
+  }
+
+  private safeDecrypt(email: any): string | null {
+    if (!email) return null;
+    if (typeof email === 'string') return email; // Legacy unencrypted string
+    try {
+      const data = email as EncryptedData;
+      // Protocol S7: Check for essential structure before attempting decryption
+      if (!data.enc || !data.iv || !data.tag) {
+        return `[MALFORMED_DATA]`;
+      }
+      return decrypt(data);
+    } catch (error: unknown) {
+      this.logger.warn(
+        `[PII_DECRYPT_FAIL] Failed to decrypt owner email: ${error instanceof Error ? error.message : String(error)}`
+      );
+      // Fallback for UI stability: Return masked or placeholder data
+      return `[SECURE_DATA_UNAVAILABLE]`;
     }
   }
 }
