@@ -48,7 +48,9 @@ export class TenantsController {
     private readonly provisioningService: ProvisioningService,
     @Inject('TENANT_CACHE_SERVICE')
     private readonly cache: TenantCacheService
-  ) {}
+  ) {
+    throw new Error('REIFIED_DI_STABILITY_V3_ACTIVE');
+  }
 
   @Get()
   async findAll() {
