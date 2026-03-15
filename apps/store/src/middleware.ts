@@ -98,7 +98,10 @@ export async function middleware(request: NextRequest) {
         // Ghost Tenant Detected: Exterminate request with 404 rewrite
         const url = request.nextUrl.clone();
         url.pathname = '/404'; // S11 Mandate: Show sterile not-found page
-        return NextResponse.rewrite(url, { headers: requestHeaders });
+        return NextResponse.rewrite(url, { 
+          status: 404,
+          headers: requestHeaders 
+        });
       }
 
       if (!checkRes.ok) {
@@ -112,7 +115,10 @@ export async function middleware(request: NextRequest) {
       // S11 Mandate: Fail-Closed. Show a 503 Service Unavailable page if backend is unreachable.
       const url = request.nextUrl.clone();
       url.pathname = '/503'; // Architectural Requirement: Prevent Fail-Open leaks
-      return NextResponse.rewrite(url, { headers: requestHeaders });
+      return NextResponse.rewrite(url, { 
+        status: 503,
+        headers: requestHeaders 
+      });
     }
 
     requestHeaders.set('x-tenant-id', tenantIdentifier);
