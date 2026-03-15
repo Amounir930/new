@@ -61,6 +61,7 @@ export class ProvisioningService {
   constructor(
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
     private readonly authService: AuthService,
+    @Inject(forwardRef(() => SecurityService))
     private readonly security: SecurityService
   ) {}
 
