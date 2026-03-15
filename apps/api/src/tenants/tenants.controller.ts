@@ -10,6 +10,7 @@ import {
 import { type EncryptedData, decrypt } from '@apex/security';
 import { TenantCacheService } from '@apex/middleware';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -55,10 +56,9 @@ export class TenantsController {
   async findAll() {
     try {
       const tenants = await adminDb.select().from(tenantsInGovernance);
-      return tenants.map((t) => ({
-        ...t,
-        ownerEmail: this.safeDecrypt(t.ownerEmail),
-      }));
+      // S7 & Architecture Mandate: Do NOT decrypt PII in bulk to avoid Event Loop blocking.
+      // Super Admin must retrieve individual records via findOne() for decrypted PII.
+      return tenants;
     } catch (error: unknown) {
       this.logger.error(
         `[TENANT_FIND_ALL_ERROR] ${error instanceof Error ? error.message : String(error)}`
@@ -134,7 +134,7 @@ export class TenantsController {
       'advanced-seo',
     ];
     if (!MASTER_FEATURES.includes(key)) {
-      throw new Error(`Invalid feature key: ${key}`);
+      throw new BadRequestException(`Invalid feature key: ${key}`);
     }
 
     const [existing] = await adminDb
