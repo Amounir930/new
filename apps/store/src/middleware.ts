@@ -18,7 +18,9 @@ function getTenantIdentifier(host: string): string {
 
 function resolveTenantIdentifier(cleanHost: string): string {
   const isApexDomain =
-    cleanHost.endsWith('.60sec.shop') || cleanHost.includes('localhost');
+    cleanHost === '60sec.shop' ||
+    cleanHost.endsWith('.60sec.shop') ||
+    cleanHost.includes('localhost');
 
   if (isApexDomain) {
     const parts = cleanHost.split('.');
