@@ -7,6 +7,7 @@ import {
   featureGatesInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
+import { type EncryptedData, decrypt } from '@apex/security';
 import { TenantCacheService } from '@apex/middleware';
 import {
   Body,
@@ -53,7 +54,11 @@ export class TenantsController {
   @Get()
   async findAll() {
     try {
-      return await adminDb.select().from(tenantsInGovernance);
+      const tenants = await adminDb.select().from(tenantsInGovernance);
+      return tenants.map((t) => ({
+        ...t,
+        ownerEmail: t.ownerEmail ? decrypt(t.ownerEmail as EncryptedData) : null,
+      }));
     } catch (error: unknown) {
       this.logger.error(
         `[TENANT_FIND_ALL_ERROR] ${error instanceof Error ? error.message : String(error)}`
@@ -74,7 +79,12 @@ export class TenantsController {
         throw new Error('Tenant not found');
       }
 
-      return tenant;
+      return {
+        ...tenant,
+        ownerEmail: tenant.ownerEmail
+          ? decrypt(tenant.ownerEmail as EncryptedData)
+          : null,
+      };
     } catch (error: unknown) {
       this.logger.error(
         `[TENANT_FIND_ONE_ERROR] ${error instanceof Error ? error.message : String(error)}`
