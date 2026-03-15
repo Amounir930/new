@@ -5,7 +5,10 @@ import { SecurityService } from './security.service';
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [SecurityService],
-  exports: [SecurityService],
+  providers: [
+    SecurityService,
+    { provide: 'SECURITY_SERVICE', useExisting: SecurityService },
+  ],
+  exports: [SecurityService, 'SECURITY_SERVICE'],
 })
 export class SecurityModule {}

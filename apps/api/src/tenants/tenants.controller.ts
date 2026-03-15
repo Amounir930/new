@@ -42,10 +42,11 @@ export class TenantsController {
   private readonly logger = new Logger(TenantsController.name);
 
   constructor(
-    @Inject(forwardRef(() => SecurityService))
+    @Inject('SECURITY_SERVICE')
     private readonly security: SecurityService,
     @Inject('PROVISIONING_SERVICE')
     private readonly provisioningService: ProvisioningService,
+    @Inject('TENANT_CACHE_SERVICE')
     private readonly cache: TenantCacheService
   ) {}
 
