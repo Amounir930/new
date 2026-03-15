@@ -329,6 +329,16 @@ export class TenantsController {
       if (!data.enc || !data.iv || !data.tag) {
         return `[MALFORMED_DATA]`;
       }
+
+      // Forensic Hardening: Handle cases where 'data' is malformed (e.g., string instead of object)
+      // This specifically prevents the client-side crash observed in Super Admin
+      if (typeof data.data !== 'object' || data.data === null) {
+        this.logger.warn(
+          `[PII_DECRYPT_FAIL] Invalid metadata structure for record. Expected object, got ${typeof data.data}`
+        );
+        return `[INCOMPATIBLE_ENCRYPTION_V0]`;
+      }
+
       return decrypt(data);
     } catch (error: unknown) {
       this.logger.warn(
