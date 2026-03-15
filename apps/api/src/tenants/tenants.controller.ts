@@ -3,6 +3,7 @@ import { JwtAuthGuard, SuperAdminGuard } from '@apex/auth';
 import {
   adminDb,
   and,
+  count,
   eq,
   featureGatesInGovernance,
   tenantsInGovernance,
@@ -20,6 +21,7 @@ import {
   Logger,
   Param,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -53,12 +55,36 @@ export class TenantsController {
   ) {}
 
   @Get()
-  async findAll() {
+  async findAll(@Query('page') page = 1, @Query('limit') limit = 50) {
     try {
-      const tenants = await adminDb.select().from(tenantsInGovernance);
-      // S7 & Architecture Mandate: Do NOT decrypt PII in bulk to avoid Event Loop blocking.
-      // Super Admin must retrieve individual records via findOne() for decrypted PII.
-      return tenants;
+      const offset = (page - 1) * limit;
+      const sanitizedLimit = Math.min(limit, 100); // S12: Guard against mass PII scraping
+
+      const [totalResult] = await adminDb
+        .select({ value: count() })
+        .from(tenantsInGovernance);
+      const total = totalResult?.value || 0;
+
+      const tenants = await adminDb
+        .select()
+        .from(tenantsInGovernance)
+        .limit(sanitizedLimit)
+        .offset(offset);
+
+      // S7: Decryption is safe for small paginated batches (neutralizes Event Loop Trap)
+      const data = tenants.map((t) => ({
+        ...t,
+        ownerEmail: this.safeDecrypt(t.ownerEmail),
+      }));
+
+      return {
+        data,
+        meta: {
+          total,
+          page: Number(page),
+          lastPage: Math.ceil(total / sanitizedLimit),
+        },
+      };
     } catch (error: unknown) {
       this.logger.error(
         `[TENANT_FIND_ALL_ERROR] ${error instanceof Error ? error.message : String(error)}`

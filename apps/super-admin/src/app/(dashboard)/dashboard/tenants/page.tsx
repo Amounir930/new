@@ -34,16 +34,20 @@ export default function TenantsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [provisionOpen, setProvisionOpen] = useState(false);
+  const [meta, setMeta] = useState({ total: 0, page: 1, lastPage: 1 });
   const [governanceTenant, setGovernanceTenant] = useState<{
     id: string;
     name: string;
   } | null>(null);
 
-  const fetchTenants = useCallback(async () => {
+  const fetchTenants = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      const data = await apiFetch('/tenants');
-      setTenants(Array.isArray(data) ? data : []);
+      const res = await apiFetch<{ data: Tenant[]; meta: any }>(
+        `/tenants?page=${page}`
+      );
+      setTenants(res.data || []);
+      setMeta(res.meta || { total: 0, page: 1, lastPage: 1 });
     } catch (_e) {
       /* 'Failed to fetch tenants:', e */
     } finally {
@@ -234,10 +238,9 @@ export default function TenantsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-500 hover:text-indigo-400 rounded-lg"
+                      <button
+                        type="button"
+                        className="p-2 text-slate-500 hover:text-indigo-400 rounded-lg transition-colors"
                         onClick={() =>
                           setGovernanceTenant({
                             id: tenant.id,
@@ -246,15 +249,14 @@ export default function TenantsPage() {
                         }
                       >
                         <Shield className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 rounded-lg"
+                      </button>
+                      <button
+                        type="button"
+                        className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
                         onClick={() => handleDeleteTenant(tenant.id)}
                       >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -262,6 +264,34 @@ export default function TenantsPage() {
             </tbody>
           </table>
         </div>
+        {meta.lastPage > 1 && (
+          <div className="px-6 py-4 border-t border-white/5 bg-white/5 flex items-center justify-between">
+            <p className="text-xs text-slate-500 font-mono italic">
+              Governing {meta.total} stores | Page {meta.page} of{' '}
+              {meta.lastPage}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-500 h-8 rounded-lg"
+                disabled={meta.page <= 1}
+                onClick={() => fetchTenants(meta.page - 1)}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white h-8 rounded-lg bg-white/5"
+                disabled={meta.page >= meta.lastPage}
+                onClick={() => fetchTenants(meta.page + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </Card>
 
       <ProvisionModal
