@@ -4,18 +4,22 @@ import {
   onboardingBlueprintsInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
-import type { TenantCacheService } from '@apex/middleware';
+import { TenantCacheService } from '@apex/middleware';
 import {
   Controller,
   ForbiddenException,
   Get,
+  Inject,
   NotFoundException,
   Param,
 } from '@nestjs/common';
 
 @Controller('public/tenants')
 export class TenantsPublicController {
-  constructor(private readonly tenantCache: TenantCacheService) {}
+  constructor(
+    @Inject('TENANT_CACHE_SERVICE')
+    private readonly tenantCache: TenantCacheService
+  ) {}
 
   /**
    * S2.5: Discovery API for Storefronts
