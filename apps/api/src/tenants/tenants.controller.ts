@@ -281,57 +281,61 @@ export class TenantsController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      return await adminDb.transaction(async (tx) => {
-        // S2/FIX: Set local sovereign context
+      // 1. Initial State Transition & Fetch (Inside Transaction for RLS Bypass)
+      // This locks the tenant in governance and signals start of destruction
+      const tenant = await adminDb.transaction(async (tx) => {
         await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
-
-        // 1. Fetch tenant to get subdomain
-        const [tenant] = await tx
+        
+        const [t] = await tx
           .select()
           .from(tenantsInGovernance)
           .where(eq(tenantsInGovernance.id, id))
           .limit(1);
-
-        if (!tenant) {
+        
+        if (!t) {
           throw new Error('Tenant not found');
         }
 
-        // Step 2: State Machine - Initial Transition (Purging)
-        // This locks the tenant in governance and signals start of destruction
         await tx
           .update(tenantsInGovernance)
           .set({ status: 'purging', updatedAt: new Date().toISOString() })
           .where(eq(tenantsInGovernance.id, id));
+        
+        return t;
+      });
 
-        this.logger.warn(
-          `[SAGA_DELETION] Initiated purge for ${tenant.subdomain}`
-        );
+      this.logger.warn(
+        `[SAGA_DELETION] Initiated purge for ${tenant.subdomain}`
+      );
 
-        // Step 3: Physical Purge (Extermination of Schema/Bucket/Locks)
-        await this.provisioningService.deprovisionTenant(tenant.subdomain);
+      // 2. Physical Purge (Outside Transaction - External Systems: MinIO, Redis, Schema)
+      // This prevents the "Zombie Tenant" trap where database rolls back but assets are gone.
+      await this.provisioningService.deprovisionTenant(tenant.subdomain);
 
-        // Step 4: Logical Burial (Soft Delete)
-        // S4 Protocol: We retain the record with deleted_at for Audit/Security history.
-        const [_deleted] = await tx
+      // 3. Logical Burial (Inside New Transaction for RLS Bypass)
+      // S4 Protocol: We retain the record with deleted_at for Audit/Security history.
+      await adminDb.transaction(async (tx) => {
+        await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
+        
+        await tx
           .update(tenantsInGovernance)
           .set({
             status: 'deleted', // Final dead state
             deletedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })
-          .where(eq(tenantsInGovernance.id, id))
-          .returning();
-
-        this.logger.log(
-          `[SAGA_DELETION] Successfully buried tenant: ${tenant.subdomain}`
-        );
-
-        return {
-          success: true,
-          message: 'Tenant physical assets purged and record archived.',
-          tenantId: id,
-        };
+          .where(eq(tenantsInGovernance.id, id));
       });
+
+      this.logger.log(
+        `[SAGA_DELETION] Successfully buried tenant: ${tenant.subdomain}`
+      );
+
+      return {
+        success: true,
+        message: 'Tenant physical assets purged and record archived.',
+        tenantId: id,
+      };
     } catch (error: unknown) {
       this.logger.error(
         `[SAGA_DELETE_ERROR] ${error instanceof Error ? error.message : String(error)}`
