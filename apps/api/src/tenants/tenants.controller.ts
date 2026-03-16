@@ -6,6 +6,7 @@ import {
   count,
   eq,
   featureGatesInGovernance,
+  sql,
   tenantsInGovernance,
 } from '@apex/db';
 import { type EncryptedData, decrypt } from '@apex/security';
@@ -60,22 +61,30 @@ export class TenantsController {
       const offset = (page - 1) * limit;
       const sanitizedLimit = Math.min(limit, 100); // S12: Guard against mass PII scraping
 
-      const [totalResult] = await adminDb
-        .select({ value: count() })
-        .from(tenantsInGovernance);
-      const total = totalResult?.value || 0;
+      const { data, total } = await adminDb.transaction(async (tx) => {
+        // S2/FIX: Set local sovereign context to bypass RLS for this transaction only
+        // This prevents connection pool contamination (S1-S15 Mandate)
+        await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
 
-      const tenants = await adminDb
-        .select()
-        .from(tenantsInGovernance)
-        .limit(sanitizedLimit)
-        .offset(offset);
+        const [totalResult] = await tx
+          .select({ value: count() })
+          .from(tenantsInGovernance);
+        const totalCount = Number(totalResult?.value || 0);
 
-      // S7: Decryption is safe for small paginated batches (neutralizes Event Loop Trap)
-      const data = tenants.map((t) => ({
-        ...t,
-        ownerEmail: this.safeDecrypt(t.ownerEmail),
-      }));
+        const tenantRecords = await tx
+          .select()
+          .from(tenantsInGovernance)
+          .limit(sanitizedLimit)
+          .offset(offset);
+
+        return {
+          data: tenantRecords.map((t) => ({
+            ...t,
+            ownerEmail: this.safeDecrypt(t.ownerEmail),
+          })),
+          total: totalCount,
+        };
+      });
 
       return {
         data,
@@ -95,20 +104,23 @@ export class TenantsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
-      const [tenant] = await adminDb
-        .select()
-        .from(tenantsInGovernance)
-        .where(eq(tenantsInGovernance.id, id))
-        .limit(1);
+      return await adminDb.transaction(async (tx) => {
+        await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
+        const [tenant] = await tx
+          .select()
+          .from(tenantsInGovernance)
+          .where(eq(tenantsInGovernance.id, id))
+          .limit(1);
 
-      if (!tenant) {
-        throw new Error('Tenant not found');
-      }
+        if (!tenant) {
+          throw new Error('Tenant not found');
+        }
 
-      return {
-        ...tenant,
-        ownerEmail: this.safeDecrypt(tenant.ownerEmail),
-      };
+        return {
+          ...tenant,
+          ownerEmail: this.safeDecrypt(tenant.ownerEmail),
+        };
+      });
     } catch (error: unknown) {
       this.logger.error(
         `[TENANT_FIND_ONE_ERROR] ${error instanceof Error ? error.message : String(error)}`
@@ -206,6 +218,9 @@ export class TenantsController {
   ) {
     let subdomain = '';
     const updated = await adminDb.transaction(async (tx) => {
+      // S2/FIX: Set local sovereign context
+      await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
+
       const [updatedRecord] = await tx
         .update(tenantsInGovernance)
         .set({
@@ -266,52 +281,57 @@ export class TenantsController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      // 1. Fetch tenant to get subdomain
-      const [tenant] = await adminDb
-        .select()
-        .from(tenantsInGovernance)
-        .where(eq(tenantsInGovernance.id, id))
-        .limit(1);
+      return await adminDb.transaction(async (tx) => {
+        // S2/FIX: Set local sovereign context
+        await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
 
-      if (!tenant) {
-        throw new Error('Tenant not found');
-      }
+        // 1. Fetch tenant to get subdomain
+        const [tenant] = await tx
+          .select()
+          .from(tenantsInGovernance)
+          .where(eq(tenantsInGovernance.id, id))
+          .limit(1);
 
-      // Step 2: State Machine - Initial Transition (Purging)
-      // This locks the tenant in governance and signals start of destruction
-      await adminDb
-        .update(tenantsInGovernance)
-        .set({ status: 'purging', updatedAt: new Date().toISOString() })
-        .where(eq(tenantsInGovernance.id, id));
+        if (!tenant) {
+          throw new Error('Tenant not found');
+        }
 
-      this.logger.warn(
-        `[SAGA_DELETION] Initiated purge for ${tenant.subdomain}`
-      );
+        // Step 2: State Machine - Initial Transition (Purging)
+        // This locks the tenant in governance and signals start of destruction
+        await tx
+          .update(tenantsInGovernance)
+          .set({ status: 'purging', updatedAt: new Date().toISOString() })
+          .where(eq(tenantsInGovernance.id, id));
 
-      // Step 3: Physical Purge (Extermination of Schema/Bucket/Locks)
-      await this.provisioningService.deprovisionTenant(tenant.subdomain);
+        this.logger.warn(
+          `[SAGA_DELETION] Initiated purge for ${tenant.subdomain}`
+        );
 
-      // Step 4: Logical Burial (Soft Delete)
-      // S4 Protocol: We retain the record with deleted_at for Audit/Security history.
-      const [_deleted] = await adminDb
-        .update(tenantsInGovernance)
-        .set({
-          status: 'deleted', // Final dead state
-          deletedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(tenantsInGovernance.id, id))
-        .returning();
+        // Step 3: Physical Purge (Extermination of Schema/Bucket/Locks)
+        await this.provisioningService.deprovisionTenant(tenant.subdomain);
 
-      this.logger.log(
-        `[SAGA_DELETION] Successfully buried tenant: ${tenant.subdomain}`
-      );
+        // Step 4: Logical Burial (Soft Delete)
+        // S4 Protocol: We retain the record with deleted_at for Audit/Security history.
+        const [_deleted] = await tx
+          .update(tenantsInGovernance)
+          .set({
+            status: 'deleted', // Final dead state
+            deletedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(tenantsInGovernance.id, id))
+          .returning();
 
-      return {
-        success: true,
-        message: 'Tenant physical assets purged and record archived.',
-        tenantId: id,
-      };
+        this.logger.log(
+          `[SAGA_DELETION] Successfully buried tenant: ${tenant.subdomain}`
+        );
+
+        return {
+          success: true,
+          message: 'Tenant physical assets purged and record archived.',
+          tenantId: id,
+        };
+      });
     } catch (error: unknown) {
       this.logger.error(
         `[SAGA_DELETE_ERROR] ${error instanceof Error ? error.message : String(error)}`

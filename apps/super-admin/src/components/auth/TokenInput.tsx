@@ -2,34 +2,41 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { getAuthToken, setAuthToken, setManagementKey } from '@/lib/api';
+import { getManagementKey, setManagementKey } from '@/lib/api';
 
 export function TokenInput() {
-  const [token, setToken] = useState('');
+  const [mKey, setMKey] = useState('');
 
   useEffect(() => {
-    const t = getAuthToken();
-    if (t) setToken(t);
+    // S1: Forensic retrieval of current management key from storage
+    const currentKey = getManagementKey();
+    if (currentKey) setMKey(currentKey);
   }, []);
 
   const handleSave = () => {
-    setAuthToken(token);
-    setManagementKey(token); // S1: Sovereign Authorization Bridge
-    alert('Security keys synchronized!');
+    // S7: Sovereign Authorization Bridge
+    // Persist the specific Super Admin key (Governance Bypass)
+    setManagementKey(mKey);
+    alert('Sovereign management key synchronized!');
     window.location.reload();
   };
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex flex-col gap-2">
       <Input
         type="password"
-        placeholder="Enter auth code"
-        value={token}
-        onChange={(e) => setToken(e.target.value)}
-        className="max-w-xs"
+        placeholder="Enter Super Admin Key"
+        value={mKey}
+        onChange={(e) => setMKey(e.target.value)}
+        className="bg-slate-900 border-white/10 text-white placeholder:text-slate-600 focus:ring-indigo-500"
       />
-      <Button onClick={handleSave} variant="outline" size="sm">
-        Save Token
+      <Button 
+        onClick={handleSave} 
+        variant="outline" 
+        size="sm"
+        className="w-full border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10"
+      >
+        Sync Sovereign Key
       </Button>
     </div>
   );
