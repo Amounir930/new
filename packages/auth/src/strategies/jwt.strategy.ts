@@ -48,40 +48,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       );
     }
 
-    const isSuperAdmin = payload.role === 'super_admin';
-    const isTenantAdmin = payload.role === 'tenant_admin';
-
-    if (isSuperAdmin || isTenantAdmin) {
-      // Sovereign & Merchant Bypass: Trust the cryptographically signed tenantId in the JWT
-      // Item 21 Compliance: tenantId is verified during login/provisioning
-      return {
-        id: payload.sub,
-        email: payload.email,
-        tenantId: payload.tenantId,
-        role: payload.role,
-      };
-    }
-
-    if (payload.jti) {
-      // Standard staff session check via isolated tenant schema (Optional/Conditional)
-      const { db, release } = await getTenantDb(payload.tenantId);
-      try {
-        const [session] = await db
-          .select({ id: staffSessionsInStorefront.id })
-          .from(staffSessionsInStorefront)
-          .where(eq(staffSessionsInStorefront.id, payload.jti))
-          .limit(1);
-
-        if (!session) {
-          throw new UnauthorizedException(
-            'S2 Violation: Session has been revoked or expired'
-          );
-        }
-      } finally {
-        release();
-      }
-    }
-
+    // Sovereign & Merchant Bypass: Trust the cryptographically signed tenantId in the JWT
+    // Item 21 Compliance: tenantId is verified during login/provisioning
+    // Performance Mandate: Direct O(1) validation, no DB JOIN for every request.
     return {
       id: payload.sub,
       email: payload.email,

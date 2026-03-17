@@ -86,21 +86,21 @@ export default function MerchantDashboard() {
     },
     {
       name: 'Active Orders',
-      value: data?.totalOrders?.toString() ?? '0',
+      value: (data?.totalOrders ?? 0).toString(),
       icon: ShoppingCart,
       color: 'bg-blue-500/10 text-blue-600',
       label: 'Transaction Queue',
     },
     {
       name: 'Catalog Inventory',
-      value: data?.totalProducts?.toString() ?? '0',
+      value: (data?.totalProducts ?? 0).toString(),
       icon: Package,
       color: 'bg-indigo-500/10 text-indigo-600',
       label: 'Asset Management',
     },
     {
       name: 'Consumer Base',
-      value: data?.totalCustomers?.toString() ?? '0',
+      value: (data?.totalCustomers ?? 0).toString(),
       icon: Users,
       color: 'bg-purple-500/10 text-purple-600',
       label: 'Identity Registry',
@@ -149,7 +149,7 @@ export default function MerchantDashboard() {
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
               <Card
-                key={`skeleton-${i}`}
+                key={`stats-skeleton-${i + 1}`}
                 className="border-slate-100 shadow-sm"
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
