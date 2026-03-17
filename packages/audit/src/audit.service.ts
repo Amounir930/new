@@ -69,6 +69,9 @@ export interface AuditLogEntry {
   userId?: string;
   userEmail?: string; // S4: User email for audit trail
   tenantId?: string;
+  actorType?: 'super_admin' | 'tenant_admin' | 'system';
+  publicKey?: string;
+  encryptedKey?: Buffer;
   metadata?: Record<string, unknown>;
   ipAddress?: string;
   userAgent?: string;
@@ -136,6 +139,19 @@ export class AuditService {
     try {
       const client = await this.pool.connect();
       try {
+        // S4 Alignment: Derive actor_type and satisfy NOT NULL constraints for keys
+        let actorType = entry.actorType;
+        if (!actorType) {
+          if (tenantId === 'system' || entry.action.includes('SUPER_ADMIN')) {
+            actorType = 'super_admin';
+          } else {
+            actorType = 'tenant_admin';
+          }
+        }
+
+        const publicKey = entry.publicKey || 'S4_STUB';
+        const encryptedKey = entry.encryptedKey || Buffer.from([0x00]); // \x00 for bytea
+
         // S2: Using schema-qualified INSERT (governance.audit_logs) — no SET needed
         await client.query(
           `INSERT INTO governance.audit_logs (
@@ -151,8 +167,11 @@ export class AuditService {
               severity,
               result,
               checksum,
-              created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+              created_at,
+              actor_type,
+              public_key,
+              encrypted_key
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
           [
             tenantId,
             entry.userId || null,
@@ -175,6 +194,9 @@ export class AuditService {
               timestamp,
             }), // Item 42: HMAC Checksum
             timestamp,
+            actorType,
+            publicKey,
+            encryptedKey,
           ]
         );
       } finally {

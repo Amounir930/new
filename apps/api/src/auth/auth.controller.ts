@@ -143,6 +143,7 @@ export class AuthController {
           : 'MERCHANT_LOGIN_SUCCESS',
       entityType: 'user',
       entityId: user.id,
+      actorType: user.role === 'super_admin' ? 'super_admin' : 'tenant_admin',
       metadata: { email: user.email, tenantId: user.tenantId },
     });
 
