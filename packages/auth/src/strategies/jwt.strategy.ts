@@ -36,6 +36,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthUser> {
+    console.log(`[AUTH-DEBUG] Validating payload:`, JSON.stringify(payload));
     // Item 21: Enforce mandatory tenantId in JWT
     if (!payload?.sub || !payload?.tenantId) {
       throw new UnauthorizedException(
@@ -45,7 +46,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     // Item 28: DB Validation — Check if session is still valid
     // Skip this check for super_admin and tenant_admin as they are managed centrally
-    if (payload.jti && !['super_admin', 'tenant_admin'].includes(payload.role as string)) {
+    const skipSessionCheck = ['super_admin', 'tenant_admin'].includes(payload.role as string);
+    console.log(`[AUTH-DEBUG] Role: ${payload.role} | Skip Session Check: ${skipSessionCheck}`);
+    
+    if (payload.jti && !skipSessionCheck) {
+      console.log(`[AUTH-DEBUG] Performing session check for JTI: ${payload.jti} in Tenant: ${payload.tenantId}`);
       // For staff sessions, we check the DB directly using admin connection scoped to tenant
       const { db, release } = await getTenantDb(payload.tenantId);
       try {
