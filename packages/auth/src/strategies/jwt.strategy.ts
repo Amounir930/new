@@ -1,5 +1,13 @@
 import { ConfigService } from '@apex/config';
-import { eq, getTenantDb, staffSessionsInStorefront } from '@apex/db';
+import {
+  adminDb,
+  and,
+  eq,
+  getTenantDb,
+  staffSessionsInStorefront,
+  tenantsInGovernance,
+  usersInGovernance,
+} from '@apex/db';
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
@@ -36,7 +44,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<AuthUser> {
-    console.log(`[AUTH-DEBUG] Validating payload:`, JSON.stringify(payload));
+    // S7: Sanitize logs (No full payload logging as per Military Directive)
+    console.log(
+      `[AUTH-DEBUG] Auth attempt: Sub=${payload.sub}, Role=${payload.role}, Tenant=${payload.tenantId}`
+    );
+
     // Item 21: Enforce mandatory tenantId in JWT
     if (!payload?.sub || !payload?.tenantId) {
       throw new UnauthorizedException(
@@ -44,14 +56,44 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       );
     }
 
-    // Item 28: DB Validation — Check if session is still valid
-    // Skip this check for super_admin and tenant_admin as they are managed centrally
-    const skipSessionCheck = ['super_admin', 'tenant_admin'].includes(payload.role as string);
-    console.log(`[AUTH-DEBUG] Role: ${payload.role} | Skip Session Check: ${skipSessionCheck}`);
-    
-    if (payload.jti && !skipSessionCheck) {
-      console.log(`[AUTH-DEBUG] Performing session check for JTI: ${payload.jti} in Tenant: ${payload.tenantId}`);
-      // For staff sessions, we check the DB directly using admin connection scoped to tenant
+    const isSuperAdmin = payload.role === 'super_admin';
+    const isTenantAdmin = payload.role === 'tenant_admin';
+
+    if (isSuperAdmin) {
+      // Super admin bypasses per-tenant session checks (Sovereign override)
+      return {
+        id: payload.sub,
+        email: payload.email,
+        tenantId: payload.tenantId,
+        role: payload.role,
+      };
+    }
+
+    if (isTenantAdmin) {
+      // TACTICAL MANDATE: Resolve Cross-Tenant IDOR Trap
+      // Verify merchant owns the tenant they are accessing via Governance schema
+      const [record] = await adminDb
+        .select({ id: usersInGovernance.id })
+        .from(usersInGovernance)
+        .innerJoin(
+          tenantsInGovernance,
+          eq(tenantsInGovernance.ownerEmailHash, usersInGovernance.emailHash)
+        )
+        .where(
+          and(
+            eq(usersInGovernance.id, payload.sub),
+            eq(tenantsInGovernance.id, payload.tenantId)
+          )
+        )
+        .limit(1);
+
+      if (!record) {
+        throw new UnauthorizedException(
+          'S2 Violation: Tenant isolation breach detected'
+        );
+      }
+    } else if (payload.jti) {
+      // Standard staff session check via isolated tenant schema
       const { db, release } = await getTenantDb(payload.tenantId);
       try {
         const [session] = await db
