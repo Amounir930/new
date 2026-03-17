@@ -357,7 +357,7 @@ export class TenantsController {
       // Forensic Hardening: Handle cases where 'data' is malformed (e.g., string instead of object)
       // This specifically prevents the client-side crash observed in Super Admin
       if (typeof data.data !== 'object' || data.data === null) {
-        this.logger.warn(
+        this.logger.debug(
           `[PII_DECRYPT_FAIL] Invalid metadata structure for record. Expected object, got ${typeof data.data}`
         );
         return `[INCOMPATIBLE_ENCRYPTION_V0]`;
@@ -365,7 +365,7 @@ export class TenantsController {
 
       return decrypt(data);
     } catch (error: unknown) {
-      this.logger.warn(
+      this.logger.debug(
         `[PII_DECRYPT_FAIL] Failed to decrypt owner email: ${error instanceof Error ? error.message : String(error)}`
       );
       // Fallback for UI stability: Return masked or placeholder data

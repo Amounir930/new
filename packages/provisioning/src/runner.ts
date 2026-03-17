@@ -52,8 +52,8 @@ export async function runTenantMigrations(
     ? 'apex-pgbouncer'
     : 'apex-postgres';
 
-  // Sovereign Split SSL Policy: PgBouncer requires SSL, raw Postgres does not.
-  const mainUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=require`;
+  // Sovereign Split SSL Policy: Internal traffic is unencrypted (DB_SSL_OPTIONAL=true)
+  const mainUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@${dbHost}:5432/${env.POSTGRES_DB}?sslmode=disable`;
 
   // Engineer's Fix: Explicit search_path=public so Atlas resolves vector(1536) → public.vector
   const devUrl = `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@apex-postgres:5432/apex_dev_blank?sslmode=disable&options=-c%20search_path%3Dpublic`;
