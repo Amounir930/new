@@ -58,4 +58,9 @@ export const env: EnvConfig = (() => {
   return validateEnv();
 })();
 
+// S1: Success log for manual validation runs
+if (import.meta.main || process.argv[1]?.includes('index.ts')) {
+  console.log('✅ S1 PROTOCOL: Environment Verified Successfully');
+}
+
 export * from './config.service';

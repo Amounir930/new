@@ -19,6 +19,7 @@
     "typecheck": "turbo run typecheck",
     "audit": "bun audit",
     "cli": "cd apps/api && bun run cli",
+    "validate:env": "bun run packages/config/src/index.ts",
     "db:push": "echo 'No migrations to push'",
     "postinstall": "echo 'Run: bun install'",
     "prepare": "husky"

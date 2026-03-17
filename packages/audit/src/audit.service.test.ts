@@ -72,7 +72,7 @@ describe('AuditService & Helpers', () => {
 
       // Verify persistence
       expect(mockClient.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO public.audit_logs'),
+        expect.stringContaining('INSERT INTO governance.audit_logs'),
         expect.arrayContaining([
           'mock-tenant',
           'user-1',
@@ -97,7 +97,7 @@ describe('AuditService & Helpers', () => {
         }
       );
       expect(mockClient.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO public.audit_logs'),
+        expect.stringContaining('INSERT INTO governance.audit_logs'),
         expect.arrayContaining(['fallback-tenant'])
       );
     });
@@ -123,7 +123,7 @@ describe('AuditService & Helpers', () => {
       process.env['ENCRYPTION_MASTER_KEY'] = 'T3st_Mock_K3y_32_Ch@rs_L0ng_1234'; // gitleaks:allow
       await logProvisioning('test-store', 'pro', 'u1', '1.1.1.1', true);
       expect(mockClient.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO public.audit_logs'),
+        expect.stringContaining('INSERT INTO governance.audit_logs'),
         expect.arrayContaining(['TENANT_PROVISIONED'])
       );
     });
@@ -132,7 +132,7 @@ describe('AuditService & Helpers', () => {
       process.env['ENCRYPTION_MASTER_KEY'] = 'T3st_Mock_K3y_32_Ch@rs_L0ng_1234'; // gitleaks:allow
       await logSecurityEvent('SQLI_ATTEMPT', 'actor', 'target', '2.2.2.2');
       expect(mockClient.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT INTO public.audit_logs'),
+        expect.stringContaining('INSERT INTO governance.audit_logs'),
         expect.arrayContaining(['SQLI_ATTEMPT'])
       );
     });
@@ -140,7 +140,7 @@ describe('AuditService & Helpers', () => {
     it('query should execute select with filters', async () => {
       await query({ tenantId: 't1', action: 'LOGIN' });
       expect(mockClient.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT * FROM public.audit_logs'),
+        expect.stringContaining('SELECT * FROM governance.audit_logs'),
         expect.arrayContaining(['t1', 'LOGIN'])
       );
     });

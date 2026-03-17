@@ -1,0 +1,35 @@
+http:
+  routers:
+    api:
+      rule: "Host(`api.60sec.shop`) && PathPrefix(`/api`)"
+      service: api
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    admin-api:
+      rule: "Host(`admin.60sec.shop`) && PathPrefix(`/api/v1/admin`)"
+      service: api
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+    super-admin:
+      rule: "Host(`admin.60sec.shop`) || Host(`super-admin.60sec.shop`)"
+      service: super-admin
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://api:3000"
+    super-admin:
+      loadBalancer:
+        servers:
+          - url: "http://super-admin:3001"

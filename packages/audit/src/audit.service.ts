@@ -136,9 +136,9 @@ export class AuditService {
     try {
       const client = await this.pool.connect();
       try {
-        // S2: Using schema-qualified INSERT (public.audit_logs) — no SET needed
+        // S2: Using schema-qualified INSERT (governance.audit_logs) — no SET needed
         await client.query(
-          `INSERT INTO public.audit_logs (
+          `INSERT INTO governance.audit_logs (
               tenant_id, 
               user_id, 
               user_email,
@@ -262,7 +262,7 @@ export async function query(options: AuditQueryOptions): Promise<unknown[]> {
   try {
     // S2: Using schema-qualified query — no SET search_path needed
     const { rows } = await client.query(
-      'SELECT * FROM public.audit_logs WHERE tenant_id = $1 AND action = $2',
+      'SELECT * FROM governance.audit_logs WHERE tenant_id = $1 AND action = $2',
       [options.tenantId, options.action]
     );
     return rows;

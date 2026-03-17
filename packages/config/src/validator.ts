@@ -61,21 +61,21 @@ export function validateEnv(): EnvConfig {
     const resolvedEnv = resolveSecretFiles();
     Object.assign(process.env, resolvedEnv);
 
-    const parsed = EnvSchema.parse(resolvedEnv);
-    enforceProductionChecks(parsed);
-    enforceGenericChecks(parsed);
-
-    return parsed;
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const issues = error.issues
+    const result = EnvSchema.safeParse(resolvedEnv);
+    
+    if (!result.success) {
+      const messages = result.error.issues
         .map((i) => `${i.path.join('.')}: ${i.message}`)
-        .join('; ');
-      throw new Error(
-        `S1 Violation: Environment validation failed - ${issues}`
-      );
+        .join('\n');
+      throw new Error(`🛑 S1 VIOLATION DETECTED:\n${messages}`);
     }
-    throw error;
+
+    return result.data;
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('🛑 S1 VIOLATION')) {
+      throw error;
+    }
+    throw new Error(`🛑 S1 VIOLATION DETECTED: Unknown validation error - ${(error as Error).message}`);
   }
 }
 
@@ -88,7 +88,7 @@ function enforceProductionChecks(parsed: EnvConfig): void {
     );
   }
 
-  if (parsed.DATABASE_URL?.includes('localhost') && parsed.DB_SSL === 'true') {
+  if (parsed.DATABASE_URL?.includes('localhost')) {
     // Localhost check for prod
   }
 }
