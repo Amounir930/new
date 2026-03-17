@@ -55,6 +55,7 @@ export async function apiFetch<T>(
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
+    credentials: 'include', // S8 Compliance: Ensure HttpOnly cookies are sent/received
   });
 
   if (!res.ok) {

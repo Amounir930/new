@@ -52,7 +52,8 @@ async function handleMerchantAuthRedirect(
 }
 
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get('adm_tkn')?.value;
+  // S8: Check both HttpOnly cookie (adm_tkn) and Frontend fallback (adm_tkn_fe)
+  const token = request.cookies.get('adm_tkn')?.value || request.cookies.get('adm_tkn_fe')?.value;
   const { pathname } = request.nextUrl;
 
   const isProtected = MERCHANT_PROTECTED_ROUTES.some((route) =>
