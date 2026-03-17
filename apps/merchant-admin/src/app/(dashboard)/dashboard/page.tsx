@@ -79,28 +79,28 @@ export default function MerchantDashboard() {
   const statConfig = [
     {
       name: 'Gross Revenue',
-      value: data ? `$${data.totalRevenue.toLocaleString()}` : '$0.00',
+      value: data ? `$${(data.totalRevenue ?? 0).toLocaleString()}` : '$0.00',
       icon: TrendingUp,
       color: 'bg-emerald-500/10 text-emerald-600',
       label: 'Financial Output',
     },
     {
       name: 'Active Orders',
-      value: data?.totalOrders.toString() || '0',
+      value: data?.totalOrders?.toString() ?? '0',
       icon: ShoppingCart,
       color: 'bg-blue-500/10 text-blue-600',
       label: 'Transaction Queue',
     },
     {
       name: 'Catalog Inventory',
-      value: data?.totalProducts.toString() || '0',
+      value: data?.totalProducts?.toString() ?? '0',
       icon: Package,
       color: 'bg-indigo-500/10 text-indigo-600',
       label: 'Asset Management',
     },
     {
       name: 'Consumer Base',
-      value: data?.totalCustomers.toString() || '0',
+      value: data?.totalCustomers?.toString() ?? '0',
       icon: Users,
       color: 'bg-purple-500/10 text-purple-600',
       label: 'Identity Registry',

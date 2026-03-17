@@ -4,6 +4,7 @@ import {
   getTenantDb,
   ordersInStorefront,
   productsInStorefront,
+  customersInStorefront,
   sql,
 } from '@apex/db';
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
@@ -32,9 +33,17 @@ export class MerchantStatsController {
         .from(productsInStorefront)
         .where(eq(productsInStorefront.isActive, true));
 
+      const [customerStats] = await db
+        .select({
+          totalCustomers: sql<number>`count(*)`,
+        })
+        .from(customersInStorefront);
+
       return {
-        ...orderStats,
-        ...productStats,
+        totalOrders: Number(orderStats?.totalOrders || 0),
+        totalRevenue: Number(orderStats?.totalRevenue || 0),
+        totalProducts: Number(productStats?.totalProducts || 0),
+        totalCustomers: Number(customerStats?.totalCustomers || 0),
       };
     } finally {
       release();
