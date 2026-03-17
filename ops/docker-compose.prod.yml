@@ -668,47 +668,6 @@ services:
       - "traefik.http.routers.adminer.middlewares=apex-cf-allowlist@file,apex-basic-auth@file"
       - "traefik.http.services.apex-adminer.loadbalancer.server.port=8080"
 
-# ═══════════════════════════════════════════════════════════════
-  # ═══════════════════════════════════════════════════════════════
-  # Connection Pooler (PgBouncer) - Hyper-Scale Ready
-  # ═══════════════════════════════════════════════════════════════
-  pgbouncer:
-    image: edoburu/pgbouncer:latest
-    container_name: apex-pgbouncer
-    restart: always
-    environment:
-      - DB_USER=${POSTGRES_USER:-apex}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - DB_HOST=apex-postgres
-      - DB_NAME=${POSTGRES_DB:-apex_v2}
-      - MAX_CLIENT_CONN=5000
-      - DEFAULT_POOL_SIZE=150
-      - POOL_MODE=transaction
-      - AUTH_TYPE=scram-sha-256
-      - ADMIN_USERS=${PGBOUNCER_ADMIN_USERS:-postgres,apex}
-      - CLIENT_TLS_SSLMODE=require
-      - SERVER_TLS_SSLMODE=prefer
-      - CLIENT_TLS_CERT_FILE=/etc/pgbouncer/certs/server.crt
-      - CLIENT_TLS_KEY_FILE=/etc/pgbouncer/certs/server.key
-    volumes:
-      - ./db-certs:/etc/pgbouncer/certs:ro
-    depends_on:
-      apex-postgres:
-        condition: service_healthy
-    networks:
-      - apex-data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER:-apex} || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    security_opt:
-      - no-new-privileges:true
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: "0.5"
 
   # ═══════════════════════════════════════════════════════════════
   # High-Performance Catalog Search (Meilisearch)
