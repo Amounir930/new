@@ -16,7 +16,8 @@ async function verifyMerchantToken(token: string) {
 function isMerchantAuthorized(payload: unknown): boolean {
   if (!payload || typeof payload !== 'object') return false;
   const p = payload as { role?: string; tenantId?: string };
-  return ['admin', 'staff'].includes(p.role as string) && !!p.tenantId;
+  // Authorized roles for merchant admin portal
+  return ['admin', 'staff', 'tenant_admin', 'super_admin'].includes(p.role as string) && !!p.tenantId;
 }
 
 async function handleMerchantProtected(request: NextRequest, token?: string) {

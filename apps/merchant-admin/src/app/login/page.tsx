@@ -50,8 +50,8 @@ export default function LoginPage() {
 
       if (res?.accessToken) {
         setAuthToken(res.accessToken);
-        // S21: Redirect to merchant dashboard, NOT super-admin
-        router.push('/dashboard');
+        // S21: Use window.location for hard reload to ensure middleware catches the new cookie
+        window.location.href = '/dashboard';
       } else {
         throw new Error('Authentication failed');
       }

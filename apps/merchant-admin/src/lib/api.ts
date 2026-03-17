@@ -2,7 +2,7 @@ import { config } from '../config';
 
 const API_URL = config.apiUrl;
 
-const ADM_TKN = 'adm_tkn=';
+const ADM_TKN = 'adm_tkn_fe=';
 
 export const getAuthToken = () => {
   if (typeof window !== 'undefined') {
@@ -29,7 +29,7 @@ export const setAuthToken = (token: string) => {
     d.setTime(d.getTime() + 1 * 24 * 60 * 60 * 1000);
     const expires = `expires=${d.toUTCString()}`;
     // biome-ignore lint/suspicious/noDocumentCookie: S1-S15 Compliance: Token management
-    document.cookie = `adm_tkn=${token}; ${expires}; path=/; SameSite=Strict; Secure`;
+    document.cookie = `adm_tkn_fe=${token}; ${expires}; path=/; SameSite=Lax; Secure`;
   }
 };
 
