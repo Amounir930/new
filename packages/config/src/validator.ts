@@ -48,9 +48,23 @@ function resolveRedisUrl(secretEnv: Record<string, string | undefined>) {
   secretEnv.REDIS_URL = `redis://:${secretEnv.REDIS_PASSWORD}@${host}:${port}`;
 }
 
+function resolveB64Secrets(secretEnv: Record<string, string | undefined>) {
+  for (const key of Object.keys(secretEnv)) {
+    const value = secretEnv[key];
+    if (value?.startsWith('B64:')) {
+      try {
+        secretEnv[key] = Buffer.from(value.slice(4), 'base64').toString('utf8');
+      } catch (err) {
+        console['warn'](`⚠️ Failed to decode B64 secret for ${key}`);
+      }
+    }
+  }
+}
+
 function resolveSecretFiles() {
   const secretEnv = { ...process.env };
   resolveFileSecrets(secretEnv);
+  resolveB64Secrets(secretEnv);
   resolvePostgresUrl(secretEnv);
   resolveRedisUrl(secretEnv);
   return secretEnv;
