@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Logger,
   Post,
   Res,
   UnauthorizedException,
@@ -34,6 +35,7 @@ type LoginDto = z.infer<typeof LoginSchema>;
 @ApiTags('Auth')
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   constructor(
     @Inject(AuthService)
     private readonly authService: AuthService,
@@ -56,7 +58,10 @@ export class AuthController {
     const adminEmail = this.config.get('SUPER_ADMIN_EMAIL');
     const adminPassword = this.config.get('SUPER_ADMIN_PASSWORD');
 
+    this.logger.log(`Auth Attempt: ${email} (SuperAdmin configured: ${adminEmail})`);
+
     if (adminEmail && adminPassword && email === adminEmail) {
+      this.logger.log(`Super Admin check triggered for ${email}`);
       const isPasswordValid = await bcrypt.compare(password, adminPassword);
       if (isPasswordValid) {
         return this.handleSuccessfulLogin(
@@ -69,6 +74,7 @@ export class AuthController {
           response
         );
       }
+      this.logger.warn(`Super Admin password invalid for ${email}`);
     }
 
     // --- 2. Merchant Auth Bridge (S7 Sovereign Mandate) ---

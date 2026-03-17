@@ -1,4 +1,5 @@
 import { applyDecorators, SetMetadata } from '@nestjs/common';
+import { AuditSeverity } from './audit.service';
 
 /**
  * Metadata key for audit logging
@@ -11,7 +12,7 @@ export const AUDIT_LOG_METADATA_KEY = 'audit_log_action';
 export interface AuditLogOptions {
   action: string;
   entityType?: string;
-  severity?: 'INFO' | 'HIGH' | 'CRITICAL';
+  severity?: AuditSeverity;
 }
 
 /**

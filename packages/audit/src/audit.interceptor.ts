@@ -119,7 +119,7 @@ export class AuditInterceptor implements NestInterceptor {
         ipAddress: ip,
         userAgent: headers['user-agent'],
         severity:
-          options?.severity || (resultStatus === 'FAILURE' ? 'HIGH' : 'INFO'),
+          options?.severity || (resultStatus === 'FAILURE' ? 'WARNING' : 'INFO'),
         result: resultStatus,
         metadata: {
           path: url,

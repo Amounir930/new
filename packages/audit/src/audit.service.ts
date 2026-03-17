@@ -11,7 +11,7 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 // Define types missing in original file but required by index/tests
 export type AuditAction = string;
-export type AuditSeverity = 'INFO' | 'HIGH' | 'CRITICAL';
+export type AuditSeverity = 'INFO' | 'WARNING' | 'CRITICAL' | 'SECURITY_ALERT';
 
 /**
  * Interface for Drizzle executor session client (S4 Reset Protocol)
