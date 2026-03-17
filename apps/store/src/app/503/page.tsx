@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-
 export default function ServiceUnavailable() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0a0a] text-white p-4">
@@ -12,17 +10,23 @@ export default function ServiceUnavailable() {
             <div className="w-16 h-16 bg-red-600 rounded-full blur-2xl opacity-50 animate-pulse" />
           </div>
         </div>
-        
+
         <div className="space-y-4">
-          <h2 className="text-3xl font-bold tracking-tight">النظام تحت الصيانة</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            النظام تحت الصيانة
+          </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            نواجه حالياً ضغطاً كبيراً أو نقوم ببعض التحسينات الأمنية. يرجى المحاولة مرة أخرى خلال بضع دقائق.
+            نواجه حالياً ضغطاً كبيراً أو نقوم ببعض التحسينات الأمنية. يرجى المحاولة
+            مرة أخرى خلال بضع دقائق.
           </p>
         </div>
 
         <div className="pt-8">
           <button
-            onClick={() => typeof window !== 'undefined' && window.location.reload()}
+            type="button"
+            onClick={() =>
+              typeof window !== 'undefined' && window.location.reload()
+            }
             className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-white text-black font-semibold hover:bg-gray-200 transition-colors duration-200 shadow-lg shadow-white/5"
           >
             تحديث الصفحة

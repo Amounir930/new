@@ -1,16 +1,17 @@
 'use client';
 
 import {
+  AlertCircle,
+  ArrowRight,
   Package,
+  PlusCircle,
   ShoppingCart,
   TrendingUp,
   Users,
-  AlertCircle,
-  PlusCircle,
-  ArrowRight,
   Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -19,7 +20,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 
 interface DashboardStats {
@@ -40,7 +40,9 @@ export default function MerchantDashboard() {
         const stats = await apiFetch<DashboardStats>('/tenants/stats');
         setData(stats);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'System synchronization failure');
+        setError(
+          err instanceof Error ? err.message : 'System synchronization failure'
+        );
       } finally {
         setLoading(false);
       }
@@ -55,14 +57,16 @@ export default function MerchantDashboard() {
           <AlertCircle className="h-12 w-12 text-red-500" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-slate-900">Connection Interrupted</h2>
+          <h2 className="text-2xl font-black text-slate-900">
+            Connection Interrupted
+          </h2>
           <p className="text-slate-500 max-w-md mx-auto">
-            We encountered a protocol error while synchronizing with the Merchant Cluster. 
-            Please verify your credentials or network status.
+            We encountered a protocol error while synchronizing with the
+            Merchant Cluster. Please verify your credentials or network status.
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => window.location.reload()}
           className="font-bold uppercase tracking-widest border-slate-300"
         >
@@ -125,10 +129,14 @@ export default function MerchantDashboard() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-end">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Status</span>
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              System Status
+            </span>
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-              <span className="text-sm font-bold text-slate-900">Synchronized</span>
+              <span className="text-sm font-bold text-slate-900">
+                Synchronized
+              </span>
             </div>
           </div>
           <Button className="font-black uppercase tracking-widest bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-200">
@@ -140,7 +148,10 @@ export default function MerchantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading
           ? Array.from({ length: 4 }).map((_, i) => (
-              <Card key={`skeleton-${i}`} className="border-slate-100 shadow-sm">
+              <Card
+                key={`skeleton-${i}`}
+                className="border-slate-100 shadow-sm"
+              >
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-10 w-10 rounded-xl" />
@@ -160,7 +171,9 @@ export default function MerchantDashboard() {
                   <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                     {stat.label}
                   </CardTitle>
-                  <div className={`p-2.5 rounded-xl ${stat.color} transition-transform group-hover:scale-110 duration-300`}>
+                  <div
+                    className={`p-2.5 rounded-xl ${stat.color} transition-transform group-hover:scale-110 duration-300`}
+                  >
                     <stat.icon className="w-5 h-5" />
                   </div>
                 </CardHeader>
@@ -179,7 +192,9 @@ export default function MerchantDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 border-none shadow-xl shadow-slate-200/40 bg-white ring-1 ring-slate-100 overflow-hidden">
           <CardHeader className="border-b border-slate-50 bg-slate-50/30">
-            <CardTitle className="text-lg font-black text-slate-900 uppercase italic">Operational Dynamics</CardTitle>
+            <CardTitle className="text-lg font-black text-slate-900 uppercase italic">
+              Operational Dynamics
+            </CardTitle>
             <CardDescription className="text-slate-500 font-medium">
               Real-time transaction and engagement monitoring.
             </CardDescription>
@@ -192,10 +207,13 @@ export default function MerchantDashboard() {
                   <PlusCircle className="h-16 w-16 text-indigo-200 relative" />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Ready for Deployment</h3>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                    Ready for Deployment
+                  </h3>
                   <p className="text-slate-500 max-w-sm mx-auto font-medium">
-                    Your Merchant Node is active but no transactions have been detected. 
-                    Initialize your storefront catalog to begin operations.
+                    Your Merchant Node is active but no transactions have been
+                    detected. Initialize your storefront catalog to begin
+                    operations.
                   </p>
                 </div>
                 <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest px-8 shadow-lg shadow-indigo-600/20">
@@ -204,7 +222,11 @@ export default function MerchantDashboard() {
               </div>
             ) : (
               <div className="py-24 text-center text-slate-400 font-medium italic">
-                {loading ? <Skeleton className="h-40 w-full" /> : "Data visualization engine initialization..."}
+                {loading ? (
+                  <Skeleton className="h-40 w-full" />
+                ) : (
+                  'Data visualization engine initialization...'
+                )}
               </div>
             )}
           </CardContent>
@@ -215,14 +237,18 @@ export default function MerchantDashboard() {
             <Zap className="h-32 w-32 fill-white" />
           </div>
           <CardHeader>
-            <CardTitle className="text-lg font-black uppercase tracking-widest italic">Node Intelligence</CardTitle>
+            <CardTitle className="text-lg font-black uppercase tracking-widest italic">
+              Node Intelligence
+            </CardTitle>
             <CardDescription className="text-slate-400 font-medium">
               Automated insights from your cluster telemetry.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 relative">
             <div className="space-y-1">
-              <span className="text-[10px] font-black text-slate-500 uppercase">Operational Efficiency</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase">
+                Operational Efficiency
+              </span>
               <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                 <div className="h-full bg-indigo-500 w-[94%]" />
               </div>
@@ -234,11 +260,19 @@ export default function MerchantDashboard() {
 
             <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-2">
               <p className="text-xs font-bold leading-relaxed">
-                Strategic Recommendation: <span className="text-indigo-400">Increase product metadata density</span> to improve search indexing by approximately 18% in the Meilisearch cluster.
+                Strategic Recommendation:{' '}
+                <span className="text-indigo-400">
+                  Increase product metadata density
+                </span>{' '}
+                to improve search indexing by approximately 18% in the
+                Meilisearch cluster.
               </p>
             </div>
 
-            <Button variant="outline" className="w-full border-slate-700 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] h-10">
+            <Button
+              variant="outline"
+              className="w-full border-slate-700 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] h-10"
+            >
               View Analytics Terminal
             </Button>
           </CardContent>

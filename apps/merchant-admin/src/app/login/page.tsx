@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, ShieldCheck, Mail, Lock } from 'lucide-react';
+import { Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -27,7 +27,7 @@ const loginSchema = z.object({
 type LoginSchema = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const router = useRouter();
+  const _router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,7 +79,9 @@ export default function LoginPage() {
 
         <Card className="border-slate-800 bg-slate-900 shadow-2xl shadow-black/50 overflow-hidden">
           <CardHeader className="space-y-1 bg-slate-800/50 pb-8 pt-8">
-            <CardTitle className="text-xl font-bold text-white">Login Required</CardTitle>
+            <CardTitle className="text-xl font-bold text-white">
+              Login Required
+            </CardTitle>
             <CardDescription className="text-slate-400 text-xs uppercase tracking-widest font-bold">
               Secure Session Initialization
             </CardDescription>
@@ -92,9 +94,12 @@ export default function LoginPage() {
                   {error}
                 </div>
               )}
-              
+
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-black text-slate-500 uppercase ml-1">
+                <Label
+                  htmlFor="email"
+                  className="text-xs font-black text-slate-500 uppercase ml-1"
+                >
                   Mail Protocol
                 </Label>
                 <div className="relative group">
@@ -108,31 +113,38 @@ export default function LoginPage() {
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-[10px] font-bold text-red-500 ml-1 uppercase">{errors.email.message}</p>
+                  <p className="text-[10px] font-bold text-red-500 ml-1 uppercase">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-black text-slate-500 uppercase ml-1">
+                <Label
+                  htmlFor="password"
+                  className="text-xs font-black text-slate-500 uppercase ml-1"
+                >
                   Access Key
                 </Label>
                 <div className="relative group">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500 group-focus-within:text-indigo-500 transition-colors" />
-                  <Input 
-                    id="password" 
-                    type="password" 
+                  <Input
+                    id="password"
+                    type="password"
                     className="bg-slate-950 border-slate-800 focus:border-indigo-500 h-11 pl-10 text-slate-200 font-medium"
-                    {...register('password')} 
+                    {...register('password')}
                   />
                 </div>
                 {errors.password && (
-                  <p className="text-[10px] font-bold text-red-500 ml-1 uppercase">{errors.password.message}</p>
+                  <p className="text-[10px] font-bold text-red-500 ml-1 uppercase">
+                    {errors.password.message}
+                  </p>
                 )}
               </div>
 
-              <Button 
-                className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 relative group overflow-hidden" 
-                type="submit" 
+              <Button
+                className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 relative group overflow-hidden"
+                type="submit"
                 disabled={loading}
               >
                 <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -147,7 +159,8 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-          Sovereign Security Protocols Active<br/>
+          Sovereign Security Protocols Active
+          <br />
           Standardized Merchant Cluster • v4.0.1
         </p>
       </div>

@@ -46,14 +46,25 @@ export const serverEnvSchema = baseSchema.extend({
     return true;
   }, 'S1 Violation: ENCRYPTION_MASTER_KEY must be exactly 32 secure characters in production'),
 
-  SUPER_ADMIN_EMAIL: z.string().email('S1 Violation: Invalid SUPER_ADMIN_EMAIL format'),
-  SUPER_ADMIN_PASSWORD: z.string().min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD too weak').optional(),
-  SUPER_ADMIN_KEY: z.string().min(32, 'S1 Violation: SUPER_ADMIN_KEY must be at least 32 characters').optional(),
-  
+  SUPER_ADMIN_EMAIL: z
+    .string()
+    .email('S1 Violation: Invalid SUPER_ADMIN_EMAIL format'),
+  SUPER_ADMIN_PASSWORD: z
+    .string()
+    .min(8, 'S1 Violation: SUPER_ADMIN_PASSWORD too weak')
+    .optional(),
+  SUPER_ADMIN_KEY: z
+    .string()
+    .min(32, 'S1 Violation: SUPER_ADMIN_KEY must be at least 32 characters')
+    .optional(),
+
   JWT_EXPIRES_IN: z.string().default('7d'),
 
   // Database Configuration
-  DATABASE_URL: z.string().url().startsWith('postgresql://', 'S1 Violation: Only PostgreSQL supported')
+  DATABASE_URL: z
+    .string()
+    .url()
+    .startsWith('postgresql://', 'S1 Violation: Only PostgreSQL supported')
     .refine((url) => {
       if (process.env['NODE_ENV'] === 'production') {
         if (process.env['DB_SSL_OPTIONAL'] === 'true') return true;
@@ -61,7 +72,7 @@ export const serverEnvSchema = baseSchema.extend({
       }
       return true;
     }, 'S1 Violation: DATABASE_URL must require SSL in production'),
-  
+
   PGHOST: z.string().optional(),
   PGUSER: z.string().optional(),
   PGPASSWORD: z.string().optional(),
@@ -95,8 +106,12 @@ export const serverEnvSchema = baseSchema.extend({
   MINIO_ROOT_PASSWORD: z.string().optional(),
 
   // Imgproxy Configuration
-  IMGPROXY_KEY: z.string().regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_KEY must be hex'),
-  IMGPROXY_SALT: z.string().regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_SALT must be hex'),
+  IMGPROXY_KEY: z
+    .string()
+    .regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_KEY must be hex'),
+  IMGPROXY_SALT: z
+    .string()
+    .regex(/^[0-9a-fA-F]+$/, 'S1 Violation: IMGPROXY_SALT must be hex'),
   IMGPROXY_SOURCE_URL: z.string().url().optional(),
 
   // Meilisearch
@@ -135,7 +150,7 @@ export const serverEnvSchema = baseSchema.extend({
 
   // Gitea & Webhook
   GITEA_DB_PASSWORD: z.string().optional(),
-  
+
   // Performance & AI
   HOME_CACHE_TTL: z.string().default('10'),
   PGVECTOR_DIMENSION: z.string().default('1536'),
@@ -145,7 +160,7 @@ export const serverEnvSchema = baseSchema.extend({
   ENABLE_S1_ENFORCEMENT: z.coerce.boolean().default(true),
   SKIP_ENV_VALIDATION: z.coerce.boolean().default(false),
   SKIP_S1_COMPLEXITY_CHECK: z.coerce.boolean().default(false),
-  
+
   // Database Docker/Seed Context
   POSTGRES_USER: z.string().optional(),
   POSTGRES_PASSWORD: z.string().optional(),

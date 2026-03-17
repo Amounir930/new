@@ -1,5 +1,4 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { z } from 'zod';
 import { type EnvConfig, EnvSchema } from './schema';
 
 /**
@@ -54,7 +53,7 @@ function resolveB64Secrets(secretEnv: Record<string, string | undefined>) {
     if (value?.startsWith('B64:')) {
       try {
         secretEnv[key] = Buffer.from(value.slice(4), 'base64').toString('utf8');
-      } catch (err) {
+      } catch (_err) {
         console['warn'](`⚠️ Failed to decode B64 secret for ${key}`);
       }
     }
@@ -76,7 +75,7 @@ export function validateEnv(): EnvConfig {
     Object.assign(process.env, resolvedEnv);
 
     const result = EnvSchema.safeParse(resolvedEnv);
-    
+
     if (!result.success) {
       const messages = result.error.issues
         .map((i) => `${i.path.join('.')}: ${i.message}`)
@@ -84,12 +83,18 @@ export function validateEnv(): EnvConfig {
       throw new Error(`🛑 S1 VIOLATION DETECTED:\n${messages}`);
     }
 
+    // S1 Security Gate: Mandatory Post-Parsing Checks (Military Compliance)
+    enforceGenericChecks(result.data);
+    enforceProductionChecks(result.data);
+
     return result.data;
   } catch (error) {
     if (error instanceof Error && error.message.includes('🛑 S1 VIOLATION')) {
       throw error;
     }
-    throw new Error(`🛑 S1 VIOLATION DETECTED: Unknown validation error - ${(error as Error).message}`);
+    throw new Error(
+      `🛑 S1 VIOLATION DETECTED: Unknown validation error - ${(error as Error).message}`
+    );
   }
 }
 

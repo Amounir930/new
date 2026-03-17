@@ -11,10 +11,14 @@ async function verifyMerchantToken(token: string) {
     const { payload } = await jwtVerify(token, secret, {
       requiredClaims: ['exp'],
     });
-    console.log(`[MW] JWT Verified for: ${payload.sub} | Role: ${payload.role} | Tenant: ${payload.tenantId}`);
+    console.log(
+      `[MW] JWT Verified for: ${payload.sub} | Role: ${payload.role} | Tenant: ${payload.tenantId}`
+    );
     return payload;
   } catch (err) {
-    console.error(`[MW] JWT Verification Failed: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(
+      `[MW] JWT Verification Failed: ${err instanceof Error ? err.message : String(err)}`
+    );
     throw err;
   }
 }
@@ -23,7 +27,11 @@ function isMerchantAuthorized(payload: unknown): boolean {
   if (!payload || typeof payload !== 'object') return false;
   const p = payload as { role?: string; tenantId?: string };
   // Authorized roles for merchant admin portal
-  return ['admin', 'staff', 'tenant_admin', 'super_admin'].includes(p.role as string) && !!p.tenantId;
+  return (
+    ['admin', 'staff', 'tenant_admin', 'super_admin'].includes(
+      p.role as string
+    ) && !!p.tenantId
+  );
 }
 
 async function handleMerchantProtected(request: NextRequest, token?: string) {
@@ -59,16 +67,20 @@ async function handleMerchantAuthRedirect(
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // S8: Check both HttpOnly cookie (adm_tkn) and Frontend fallback (adm_tkn_fe)
-  const token = request.cookies.get('adm_tkn')?.value || request.cookies.get('adm_tkn_fe')?.value;
+  const token =
+    request.cookies.get('adm_tkn')?.value ||
+    request.cookies.get('adm_tkn_fe')?.value;
 
   const isProtected = MERCHANT_PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
 
   if (isProtected) {
-    console.log(`[MW] Protected Access: ${pathname} | Token Present: ${!!token}`);
+    console.log(
+      `[MW] Protected Access: ${pathname} | Token Present: ${!!token}`
+    );
     const res = await handleMerchantProtected(request, token);
     if (res.status === 307 || res.status === 302) {
       console.log(`[MW] Redirecting to Login from ${pathname}`);

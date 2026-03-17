@@ -10,11 +10,14 @@ export default function NotFound() {
             <div className="w-16 h-16 bg-blue-600 rounded-full blur-2xl opacity-50 animate-pulse" />
           </div>
         </div>
-        
+
         <div className="space-y-4">
-          <h2 className="text-3xl font-bold tracking-tight">المتجر غير موجود</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            المتجر غير موجود
+          </h2>
           <p className="text-gray-400 text-lg leading-relaxed">
-            عذراً، المتجر الذي تحاول الوصول إليه غير مسجل في نظامنا أو قد تم حذفه.
+            عذراً، المتجر الذي تحاول الوصول إليه غير مسجل في نظامنا أو قد تم
+            حذفه.
           </p>
         </div>
 

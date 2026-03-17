@@ -1,11 +1,6 @@
 import { adminDb, eq, usersInGovernance } from '@apex/db';
 import { encrypt, hashSensitiveData } from '@apex/security';
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
