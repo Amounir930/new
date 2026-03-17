@@ -165,7 +165,7 @@ services:
       NODE_ENV: production
       MINIO_ENDPOINT: apex-minio
       PGHOST: apex-postgres
-      DB_SSL: "true"
+      DB_SSL: "false"
       DB_SSL_OPTIONAL: "true"
       DATABASE_URL: "postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}?sslmode=disable"
       REDIS_URL: "redis://:${REDIS_PASSWORD}@apex-redis:6379"
@@ -269,9 +269,9 @@ services:
       ENABLE_WORKERS: "true"
       MINIO_ENDPOINT: apex-minio
       PGHOST: apex-postgres
-      DB_SSL: "true"
-      DB_SSL_OPTIONAL: "false"
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}?sslmode=require"
+      DB_SSL: "false"
+      DB_SSL_OPTIONAL: "true"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB:-apex_v2}?sslmode=disable"
       REDIS_URL: "redis://:${REDIS_PASSWORD}@apex-redis:6379"
       PGUSER: ${POSTGRES_USER:-apex}
       PGPASSWORD: ${POSTGRES_PASSWORD}
