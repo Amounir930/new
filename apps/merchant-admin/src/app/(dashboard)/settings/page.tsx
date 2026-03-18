@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/lib/api';
+import { LogoUploader } from '@/components/settings/LogoUploader';
 
 const SettingsSchema = z.object({
   store_name: z.string().min(1, 'Store name is required').max(100),
@@ -27,6 +28,7 @@ export default function SettingsPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<SettingsForm>({
     resolver: zodResolver(SettingsSchema),
@@ -35,6 +37,8 @@ export default function SettingsPage() {
       logo_url: '',
     },
   });
+
+  const formValues = watch();
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -119,32 +123,18 @@ export default function SettingsPage() {
               )}
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="logo_url" className="font-bold text-slate-700">
-                Store Logo (URL)
+            <div className="grid gap-4">
+              <Label className="font-bold text-slate-700">
+                Store Branding (Logo)
               </Label>
-              <div className="flex gap-4 items-start">
-                <div className="flex-1">
-                  <Input
-                    id="logo_url"
-                    disabled={saving}
-                    placeholder="https://example.com/logo.png"
-                    className="h-12 border-slate-200 focus:ring-indigo-500"
-                    {...register('logo_url')}
-                  />
-                  {errors.logo_url && (
-                    <p className="text-sm text-red-500 font-medium">
-                      {errors.logo_url.message}
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-400 mt-2">
-                    Tip: Use imgproxy-compatible URLs for optimized delivery.
-                  </p>
-                </div>
-                <div className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 overflow-hidden">
-                  <ImageIcon className="w-8 h-8 text-slate-300" />
-                </div>
-              </div>
+              <LogoUploader 
+                value={formValues.logo_url} 
+                onChange={(url) => setValue('logo_url', url)} 
+              />
+              <p className="text-xs text-slate-500">
+                We recommend a square logo (512x512px) for optimal storefront display. 
+                Images are automatically optimized via Imgproxy.
+              </p>
             </div>
           </CardContent>
         </Card>

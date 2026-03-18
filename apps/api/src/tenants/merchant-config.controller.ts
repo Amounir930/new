@@ -3,16 +3,22 @@ import {
   TenantJwtMatchGuard,
   type TenantRequest,
 } from '@apex/auth';
-import { getTenantDb, tenantConfigInStorefront } from '@apex/db';
+import { 
+  getTenantDb, 
+  tenantConfigInStorefront, 
+  adminDb, 
+  tenantsInGovernance, 
+  eq 
+} from '@apex/db';
 import { RedisRateLimitStore } from '@apex/middleware';
 import {
   Body,
   Controller,
   Get,
-  Inject,
   Patch,
   Req,
   UseGuards,
+  NotFoundException,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
@@ -27,6 +33,25 @@ const UpdateConfigSchema = z.object({
 export class MerchantConfigController {
   constructor(private readonly redisStore: RedisRateLimitStore) {}
 
+  /**
+   * Phase 1: DB Context Reconciliation
+   * Fetches the tenant's isolated schema name from governance
+   */
+  private async getResolvedTenantDb(tenantId: string) {
+    const [tenant] = await adminDb
+      .select({ subdomain: tenantsInGovernance.subdomain })
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.id, tenantId))
+      .limit(1);
+
+    if (!tenant) {
+      throw new NotFoundException('Merchant tenant not found in governance');
+    }
+
+    // Explicitly route to isolated physical schema (S2 Mandate)
+    return getTenantDb(tenantId, `tenant_${tenant.subdomain}`);
+  }
+
   @Get()
   async getConfig(@Req() req: TenantRequest) {
     const tenantId = req.user?.tenantId;
@@ -34,7 +59,7 @@ export class MerchantConfigController {
       throw new Error('Tenant ID not found in session');
     }
 
-    const { db, release } = await getTenantDb(tenantId);
+    const { db, release } = await this.getResolvedTenantDb(tenantId);
     try {
       const configEntries = await db.select().from(tenantConfigInStorefront);
 
@@ -51,7 +76,7 @@ export class MerchantConfigController {
         logo_url: (config.logo_url as string) || '',
       };
     } finally {
-      release();
+      await release();
     }
   }
 
@@ -67,9 +92,10 @@ export class MerchantConfigController {
       throw new Error('Tenant ID not found in session');
     }
 
-    const { db, release } = await getTenantDb(tenantId);
+    const { db, release } = await this.getResolvedTenantDb(tenantId);
     try {
-      await db.transaction(async (tx: any) => {
+      // S2 Fix: Ensure all operations use the transaction 'tx' to stay within scope
+      await db.transaction(async (tx) => {
         if (body.store_name) {
           await tx
             .insert(tenantConfigInStorefront)
@@ -105,15 +131,17 @@ export class MerchantConfigController {
         }
       });
     } finally {
-      release();
+      await release();
     }
 
     // Surgical Cache Invalidation (S12 Mandate)
     const client = await this.redisStore.getClient();
     if (client) {
-      await client.del(`storefront:home:${tenantId}`);
-      await client.del(`storefront:config:${tenantId}`);
-      await client.del(`storefront:bootstrap:${tenantId}`);
+      await Promise.all([
+        client.del(`storefront:home:${tenantId}`),
+        client.del(`storefront:config:${tenantId}`),
+        client.del(`storefront:bootstrap:${tenantId}`),
+      ]);
     }
 
     return { success: true };

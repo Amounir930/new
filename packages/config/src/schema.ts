@@ -101,7 +101,9 @@ export const serverEnvSchema = baseSchema.extend({
   MINIO_ACCESS_KEY: z.string().min(3).optional(),
   MINIO_SECRET_KEY: z.string().min(8).optional(),
   MINIO_BUCKET_NAME: z.string().default('apex-assets'),
+  MINIO_BUCKET: z.string().default('apex-assets'),
   MINIO_REGION: z.string().default('us-east-1'),
+  STORAGE_PUBLIC_URL: z.string().url().default('https://storage.60sec.shop'),
   MINIO_ROOT_USER: z.string().optional(),
   MINIO_ROOT_PASSWORD: z.string().optional(),
 

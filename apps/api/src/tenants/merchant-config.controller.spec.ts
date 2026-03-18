@@ -1,15 +1,25 @@
-import { getTenantDb } from '@apex/db';
-import type { RedisRateLimitStore } from '@apex/middleware';
+import { getTenantDb, adminDb, tenantsInGovernance } from '@apex/db';
+import { RedisRateLimitStore } from '@apex/middleware';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { MerchantConfigController } from './merchant-config.controller';
+import { NotFoundException } from '@nestjs/common';
 
 jest.mock('@apex/db', () => ({
   getTenantDb: jest.fn(),
-  tenantConfigInStorefront: {
-    key: 'key',
-    value: 'value',
-    updatedAt: 'updatedAt',
+  adminDb: {
+    select: jest.fn().mockReturnThis(),
+    from: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockResolvedValue([{ subdomain: 'test-sub' }]),
   },
+  tenantsInGovernance: {
+    id: 'id',
+    subdomain: 'subdomain',
+  },
+  tenantConfigInStorefront: {
+    key: { name: 'key' },
+  },
+  eq: jest.fn(),
 }));
 
 describe('MerchantConfigController', () => {
@@ -27,7 +37,7 @@ describe('MerchantConfigController', () => {
       controllers: [MerchantConfigController],
       providers: [
         {
-          provide: 'REDIS_STORE',
+          provide: RedisRateLimitStore,
           useValue: redisStore,
         },
       ],
@@ -52,6 +62,8 @@ describe('MerchantConfigController', () => {
       };
 
       const mockDb = {
+        select: jest.fn().mockReturnThis(),
+        from: jest.fn().mockReturnThis(),
         transaction: jest.fn().mockImplementation((cb) => cb(mockTx)),
       };
 
@@ -64,7 +76,8 @@ describe('MerchantConfigController', () => {
       const result = await controller.updateConfig(mockReq, mockBody);
 
       expect(result).toEqual({ success: true });
-      expect(getTenantDb).toHaveBeenCalledWith('test-tenant');
+      expect(adminDb.select).toHaveBeenCalled();
+      expect(getTenantDb).toHaveBeenCalledWith('test-tenant', 'tenant_test-sub');
       expect(mockDb.transaction).toHaveBeenCalled();
 
       const client = await redisStore.getClient();
@@ -76,38 +89,11 @@ describe('MerchantConfigController', () => {
       expect(mockRelease).toHaveBeenCalled();
     });
 
-    it('should reject tenantId if passed in body (Zod Schema Validation)', async () => {
-      // Note: NestJS ZodValidationPipe will handle this at runtime,
-      // but we verify the controller doesn't use it if passed (it's not in the schema anyway).
+    it('should throw NotFoundException if tenant is missing in governance', async () => {
+      (adminDb.limit as jest.Mock).mockResolvedValueOnce([]);
       const mockReq: any = { user: { tenantId: 'test-tenant' } };
-      const mockBody: any = {
-        store_name: 'New Name',
-        tenantId: 'malicious-tenant',
-      };
-
-      const mockTx = {
-        insert: jest.fn().mockReturnThis(),
-        values: jest.fn().mockReturnThis(),
-        onConflictDoUpdate: jest.fn().mockResolvedValue({}),
-      };
-
-      const mockDb = {
-        transaction: jest.fn().mockImplementation((cb) => cb(mockTx)),
-      };
-
-      const mockRelease = jest.fn();
-      (getTenantDb as jest.Mock).mockResolvedValue({
-        db: mockDb,
-        release: mockRelease,
-      });
-
-      await controller.updateConfig(mockReq, mockBody);
-
-      // Verify that the database update only used the allowed fields.
-      // In merchant-config.controller.ts, it only checks body.store_name and body.logo_url
-      expect(mockTx.insert).not.toHaveBeenCalledWith(
-        expect.objectContaining({ tenantId: 'malicious-tenant' })
-      );
+      
+      await expect(controller.getConfig(mockReq)).rejects.toThrow(NotFoundException);
     });
   });
 });

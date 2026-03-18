@@ -5,6 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { ProvisioningModule } from '../provisioning/provisioning.module';
 import { SecurityModule } from '../security/security.module';
 import { MerchantConfigController } from './merchant-config.controller';
+import { MerchantUploadController } from './merchant-upload.controller';
 import { TenantsController } from './tenants.controller';
 import { TenantsPublicController } from './tenants-public.controller';
 
@@ -20,6 +21,7 @@ import { TenantsPublicController } from './tenants-public.controller';
     TenantsController,
     TenantsPublicController,
     MerchantConfigController,
+    MerchantUploadController,
   ],
   providers: [],
 })
