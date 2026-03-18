@@ -60,6 +60,7 @@ export class MerchantUploadController {
     }
 
     const tenantId = req.user.tenantId;
+    (req as any).auditTenantId = tenantId;
     const fileId = crypto.randomUUID();
     const key = `merchants/${tenantId}/logos/${fileId}.${extension}`;
     

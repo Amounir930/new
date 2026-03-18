@@ -58,6 +58,7 @@ export class MerchantConfigController {
     if (!tenantId) {
       throw new Error('Tenant ID not found in session');
     }
+    (req as any).auditTenantId = tenantId;
 
     const { db, release } = await this.getResolvedTenantDb(tenantId);
     try {
@@ -91,6 +92,7 @@ export class MerchantConfigController {
     if (!tenantId) {
       throw new Error('Tenant ID not found in session');
     }
+    (req as any).auditTenantId = tenantId;
 
     const { db, release } = await this.getResolvedTenantDb(tenantId);
     try {

@@ -17,6 +17,7 @@ import { AuditService } from './audit.service';
 
 interface AuthenticatedRequest extends Request {
   user?: AuthenticatedUser;
+  auditTenantId?: string;
 }
 
 /**
@@ -116,6 +117,7 @@ export class AuditInterceptor implements NestInterceptor {
         entityId,
         userId: user?.id,
         userEmail: user?.email,
+        tenantId: request.auditTenantId,
         actorType:
           user?.role === 'super_admin' ? 'super_admin' : 'tenant_admin',
         ipAddress: ip,
