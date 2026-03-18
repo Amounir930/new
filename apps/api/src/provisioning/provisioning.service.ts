@@ -1,5 +1,5 @@
 import type { AuditService } from '@apex/audit';
-import type { AuthService } from '@apex/auth';
+import { AuthService } from '@apex/auth';
 import { env } from '@apex/config';
 import {
   adminDb,
