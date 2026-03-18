@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json bun.lock ./
 
 # Copy workspace manifests
-COPY apps/store/package.json ./apps/store/
+COPY apps/merchant-admin/package.json ./apps/merchant-admin/
 COPY apps/api/package.json ./apps/api/
 COPY packages/audit/package.json ./packages/audit/
 COPY packages/auth/package.json ./packages/auth/
@@ -22,18 +22,20 @@ COPY packages/validators/package.json ./packages/validators/
 COPY packages/monitoring/package.json ./packages/monitoring/
 COPY packages/media/package.json ./packages/media/
 
-# Install dependencies (frozen-lockfile equivalent for bun is default if lockfile present)
+# Install dependencies
 RUN bun install
 
 # Copy source and build
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=https://api.60sec.shop/api/v1
+ARG NEXT_PUBLIC_API_URL=https://api.60sec.shop/api
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-# S1 FIX: Calibrate memory for Next.js build (Infrastructure Limit: 2G)
+# S1 FIX: Calibrate memory and suppress problematic source maps for Bun reconciliation
 ENV NODE_OPTIONS="--max-old-space-size=1536"
+ENV GENERATE_SOURCEMAP=false
+ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN bun run build --filter=store
+RUN bun run build --filter=merchant-admin
 
 # 🚀 Production Stage
 FROM oven/bun:1.1.25-slim
@@ -46,18 +48,19 @@ RUN groupadd -g 1001 node-group && \
     useradd -u 1001 -g node-group -s /bin/sh node-user
 
 # Copy standalone build
-# Next.js standalone build puts everything in the root of the standalone folder
-COPY --from=builder /app/apps/store/.next/standalone ./
-COPY --from=builder /app/apps/store/.next/static ./apps/store/.next/static
-COPY --from=builder /app/apps/store/public ./apps/store/public
+COPY --from=builder /app/apps/merchant-admin/.next/standalone ./
+COPY --from=builder /app/apps/merchant-admin/.next/static ./apps/merchant-admin/.next/static
+COPY --from=builder /app/apps/merchant-admin/public ./apps/merchant-admin/public
+# Critical: Copy the server entrypoint from the standalone workspace
+COPY --from=builder /app/apps/merchant-admin/.next/standalone/apps/merchant-admin/server.js ./apps/merchant-admin/server.js
 
 # Secure permissions
 RUN chown -R node-user:node-group /app
 USER node-user
 
-EXPOSE 3002
-ENV PORT=3002
+EXPOSE 3001
+ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-CMD ["bun", "apps/store/server.js"]
+CMD ["bun", "apps/merchant-admin/server.js"]

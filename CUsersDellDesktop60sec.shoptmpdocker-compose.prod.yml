@@ -6,7 +6,9 @@ services:
   apex-postgres:
     # ZERO-TOLERANCE FIX: No 'latest' tags. Pinned to specific minor version.
     # image: postgres:15-alpine
-    image: postgres:15-alpine
+    build:
+      context: ..
+      dockerfile: ops/postgres.Dockerfile
     container_name: apex-postgres
     restart: always
     user: "70:70" # Run as postgres user internally
@@ -322,8 +324,6 @@ services:
     build:
       context: ..
       dockerfile: apps/merchant-admin/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.60sec.shop/api/v1}
     container_name: apex-merchant-admin
     restart: always
     user: "1000:1000"
@@ -432,8 +432,6 @@ services:
     build:
       context: ..
       dockerfile: apps/store/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.60sec.shop/api/v1}
     container_name: apex-store
     restart: always
     user: "1000:1000"

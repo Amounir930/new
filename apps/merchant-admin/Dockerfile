@@ -28,7 +28,7 @@ RUN bun install
 # Copy source and build
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL=https://api.60sec.shop/api
+ARG NEXT_PUBLIC_API_URL=https://api.60sec.shop/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 # S1 FIX: Calibrate memory and suppress problematic source maps for Bun reconciliation
 ENV NODE_OPTIONS="--max-old-space-size=1536"
