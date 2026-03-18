@@ -1,5 +1,5 @@
-import { AuditService } from '@apex/audit';
-import { AuthService } from '@apex/auth';
+import type { AuditService } from '@apex/audit';
+import type { AuthService } from '@apex/auth';
 import { env } from '@apex/config';
 import {
   adminDb,
@@ -19,22 +19,19 @@ import {
   createTenantSchema,
   deleteStorageBucket,
   dropTenantSchema,
-  getDefaultBlueprint,
   runTenantMigrations,
   seedTenantData,
 } from '@apex/provisioning';
-import { encrypt, hashSensitiveData } from '@apex/security';
 import {
   BadRequestException,
   ConflictException,
-  forwardRef,
   Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { z } from 'zod';
-import { SecurityService } from '../security/security.service';
+import type { SecurityService } from '../security/security.service';
 
 export interface ProvisioningOptions {
   subdomain: string;
@@ -308,44 +305,6 @@ export class ProvisioningService {
     }
 
     return dbBlueprint.blueprint as BlueprintTemplate;
-  }
-
-  /**
-   * Register tenant in the Global Tenant Registry
-   */
-  private async registerTenant(options: ProvisioningOptions, _adminId: string) {
-    try {
-      // Idempotency Check: Don't fail if already registered (e.g. retry)
-      const [exists] = await adminDb
-        .select({ id: tenantsInGovernance.id })
-        .from(tenantsInGovernance)
-        .where(eq(tenantsInGovernance.subdomain, options.subdomain))
-        .limit(1);
-
-      if (exists) {
-        this.logger.log(
-          `Tenant ${options.subdomain} already registered. Skipping registry insert.`
-        );
-        return;
-      }
-
-      await adminDb.insert(tenantsInGovernance).values({
-        subdomain: options.subdomain,
-        name: options.storeName,
-        plan: options.plan,
-        status: 'active',
-        ownerEmail: encrypt(options.adminEmail), // Protocol S7: Store encrypted PII
-        ownerEmailHash: hashSensitiveData(options.adminEmail), // Protocol S7: Store searchable hash
-        nicheType: options.nicheType, // S2.5: Persist niche
-        uiConfig: options.uiConfig, // S2.5: Persist SDUI settings
-      });
-    } catch (error) {
-      this.logger.error(
-        `S2 FAILURE: Failed to register tenant ${options.subdomain} in registry`,
-        error
-      );
-      throw error;
-    }
   }
 
   /**

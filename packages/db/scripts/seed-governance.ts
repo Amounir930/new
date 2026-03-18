@@ -3,7 +3,6 @@ import {
   onboardingBlueprintsInGovernance,
   subscriptionPlansInGovernance,
 } from '@apex/db';
-import { eq } from 'drizzle-orm';
 
 async function seedGovernance() {
   console.log('🚀 Seeding Governance Subscription Plans...');

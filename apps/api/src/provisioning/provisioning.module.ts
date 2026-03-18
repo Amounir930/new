@@ -1,9 +1,9 @@
 import { AuditModule } from '@apex/audit';
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { SecurityModule } from '../security/security.module';
 import { ProvisioningController } from './provisioning.controller';
 import { ProvisioningService } from './provisioning.service';
-import { SecurityModule } from '../security/security.module';
 
 @Module({
   imports: [AuditModule, AuthModule, SecurityModule],

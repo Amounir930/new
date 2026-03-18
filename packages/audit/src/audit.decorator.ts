@@ -1,5 +1,5 @@
 import { applyDecorators, SetMetadata } from '@nestjs/common';
-import { AuditSeverity } from './audit.service';
+import type { AuditSeverity } from './audit.service';
 
 /**
  * Metadata key for audit logging

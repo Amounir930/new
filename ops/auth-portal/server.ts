@@ -1,5 +1,5 @@
-import { serve } from 'bun';
 import { env } from '@apex/config';
+import { serve } from 'bun';
 
 const PORT = 8080;
 const COOKIE_NAME = 'apex_auth_session';
@@ -8,12 +8,14 @@ const SESSION_VALUE = Bun.hash(env.JWT_SECRET || 'default_secret').toString();
 const EMAIL = env.SUPER_ADMIN_EMAIL || 'admin@60sec.shop';
 const PASSWORD = env.SUPER_ADMIN_PASSWORD || 'Admin@60SecShop!2026';
 
-process.stdout.write(`;
+process.stdout.write(
+  `;
 🛡️  Apex Auth Portal starting on port $
 {
   PORT;
 }
-...` + '\n');
+...` + '\n'
+);
 
 serve({
   port: PORT,
@@ -51,7 +53,7 @@ serve({
         const password = formData.get('password');
 
         if (email === EMAIL && password === PASSWORD) {
-          process.stdout.write(`✅ Successful login for ${email}` + '\n');
+          process.stdout.write(`✅ Successful login for ${email}\n`);
           return new Response('OK', {
             status: 302,
             headers: {
@@ -61,7 +63,7 @@ serve({
           });
         }
 
-        process.stderr.write(`❌ Failed login attempt for ${email}` + '\n');
+        process.stderr.write(`❌ Failed login attempt for ${email}\n`);
         return new Response(
           getLoginHTML('Invalid credentials. Please try again.'),
           {

@@ -8,7 +8,6 @@ import { startTracing } from '@apex/monitoring';
 startTracing('apex-api');
 
 import 'reflect-metadata';
-import { AuditService } from '@apex/audit';
 import { env } from '@apex/config';
 import { defaultCorsConfig, GlobalExceptionFilter } from '@apex/middleware';
 import {

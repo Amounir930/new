@@ -11,7 +11,6 @@ import {
   Query,
   Req,
   UsePipes,
-  VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';

@@ -1,13 +1,12 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
 
 function walk(dir) {
   let results = [];
   const list = fs.readdirSync(dir);
   list.forEach((file) => {
-    file = dir + '/' + file;
+    file = `${dir}/${file}`;
     const stat = fs.statSync(file);
-    if (stat && stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       results = results.concat(walk(file));
     } else {
       if (file.endsWith('.ts')) results.push(file);
@@ -25,6 +24,4 @@ files.forEach((file) => {
   content = content.replace(/(import\s+.*from\s+['"].*)\.js(['"])/g, '$1$2');
   fs.writeFileSync(file, content);
 });
-console.log(
-  'Successfully replaced .js extensions in ' + files.length + ' files.'
-);
+console.log(`Successfully replaced .js extensions in ${files.length} files.`);

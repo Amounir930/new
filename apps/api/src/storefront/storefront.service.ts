@@ -176,32 +176,53 @@ export class StorefrontService {
     try {
       const now = new Date();
 
-      const [, activeBanners] = await Promise.all([
-        Promise.resolve([]),
-        db
-          .select()
-          .from(bannersInStorefront)
-          .where(
-            and(
-              eq(bannersInStorefront.isActive, true),
-              eq(bannersInStorefront.location, 'hero')
-            )
+      // Logical Correction (Saga Fix): Sorting MUST happen in SQL to avoid "random 10" trap
+      const products = await db
+        .select({
+          id: productsInStorefront.id,
+          slug: productsInStorefront.slug,
+          name: productsInStorefront.name,
+          price: productsInStorefront.basePrice,
+          compareAtPrice: productsInStorefront.salePrice,
+          imageUrl: productsInStorefront.mainImage,
+          soldCount: productsInStorefront.soldCount,
+          createdAt: productsInStorefront.createdAt,
+        })
+        .from(productsInStorefront)
+        .where(eq(productsInStorefront.isActive, true))
+        .orderBy(
+          desc(productsInStorefront.soldCount),
+          desc(productsInStorefront.createdAt)
+        )
+        .limit(10);
+
+      const hasSales = products.some((p) => (p.soldCount ?? 0) > 0);
+
+      const activeBanners = await db
+        .select()
+        .from(bannersInStorefront)
+        .where(
+          and(
+            eq(bannersInStorefront.isActive, true),
+            eq(bannersInStorefront.location, 'hero')
           )
-          .limit(5)
-          .orderBy(desc(bannersInStorefront.sortOrder)),
-      ]);
+        )
+        .limit(5)
+        .orderBy(desc(bannersInStorefront.sortOrder));
 
       const homeData = {
         banners: activeBanners,
-        bestSellers: [], // bestSellers,
+        bestSellers: products,
+        sectionTitle: hasSales ? 'Best Sellers' : 'New Arrivals',
         meta: {
           lastUpdated: now.toISOString(),
           tenantId: _tenantId,
+          sorting: hasSales ? 'sales' : 'newest',
         },
       };
 
       if (client) {
-        await client.setEx(cacheKey, 10, JSON.stringify(homeData));
+        await client.setEx(cacheKey, 300, JSON.stringify(homeData));
       }
 
       return homeData;
@@ -274,24 +295,49 @@ export class StorefrontService {
     const { db, release } = await getTenantDb(_tenantId);
     try {
       const now = new Date();
-      const [, activeBanners] = await Promise.all([
-        Promise.resolve([]),
-        db
-          .select()
-          .from(bannersInStorefront)
-          .where(
-            and(
-              eq(bannersInStorefront.isActive, true),
-              eq(bannersInStorefront.location, 'hero')
-            )
+
+      const products = await db
+        .select({
+          id: productsInStorefront.id,
+          slug: productsInStorefront.slug,
+          name: productsInStorefront.name,
+          price: productsInStorefront.basePrice,
+          compareAtPrice: productsInStorefront.salePrice,
+          imageUrl: productsInStorefront.mainImage,
+          soldCount: productsInStorefront.soldCount,
+          createdAt: productsInStorefront.createdAt,
+        })
+        .from(productsInStorefront)
+        .where(eq(productsInStorefront.isActive, true))
+        .orderBy(
+          desc(productsInStorefront.soldCount),
+          desc(productsInStorefront.createdAt)
+        )
+        .limit(10);
+
+      const hasSales = products.some((p) => (p.soldCount ?? 0) > 0);
+
+      const activeBanners = await db
+        .select()
+        .from(bannersInStorefront)
+        .where(
+          and(
+            eq(bannersInStorefront.isActive, true),
+            eq(bannersInStorefront.location, 'hero')
           )
-          .limit(5)
-          .orderBy(desc(bannersInStorefront.sortOrder)),
-      ]);
+        )
+        .limit(5)
+        .orderBy(desc(bannersInStorefront.sortOrder));
+
       return {
         banners: activeBanners,
-        bestSellers: [], // bestSellers,
-        meta: { lastUpdated: now.toISOString(), tenantId: _tenantId },
+        bestSellers: products,
+        sectionTitle: hasSales ? 'Best Sellers' : 'New Arrivals',
+        meta: {
+          lastUpdated: now.toISOString(),
+          tenantId: _tenantId,
+          sorting: hasSales ? 'sales' : 'newest',
+        },
       };
     } finally {
       release();

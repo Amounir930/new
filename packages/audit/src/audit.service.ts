@@ -105,18 +105,34 @@ export class AuditService {
     const tenantId = entry.tenantId || getCurrentTenantId() || 'system';
     const timestamp = new Date();
 
-    // 🔒 S11 Protection: Validate metadata structure
-    const validatedMetadata = AuditMetadataSchema.parse(entry.metadata || {});
+    const encryptedMetadata = this.prepareMetadata(entry);
+    this.consoleLog(tenantId, timestamp, entry);
 
+    try {
+      await this.persistLog(tenantId, timestamp, entry, encryptedMetadata);
+    } catch (error) {
+      this.logger.error(
+        'S4 CRITICAL: Audit Persistence Failure',
+        error instanceof Error ? error.message : error
+      );
+      throw new Error('Audit Persistence Failure');
+    }
+  }
+
+  private prepareMetadata(entry: AuditLogEntry): string {
+    const validatedMetadata = AuditMetadataSchema.parse(entry.metadata || {});
     const rawMetadata = {
       ...validatedMetadata,
       ...(entry.errorMessage ? { error: entry.errorMessage } : {}),
     };
-    const encryptedMetadata = this.encryption.encrypt(
-      JSON.stringify(rawMetadata)
-    );
+    return JSON.stringify(this.encryption.encrypt(JSON.stringify(rawMetadata)));
+  }
 
-    // 1. Console Logging (Sanitized for S4 monitoring)
+  private consoleLog(
+    tenantId: string,
+    timestamp: Date,
+    entry: AuditLogEntry
+  ): void {
     const logOutput = JSON.stringify({
       level: 'audit',
       tenantId,
@@ -125,89 +141,69 @@ export class AuditService {
       entityType: entry.entityType,
       entityId: entry.entityId,
       userId: entry.userId,
-      userEmail: '[REDACTED]', // S7: Redact PII in console
-      metadata: '[ENCRYPTED]', // S7: Redact PII in console
+      userEmail: '[REDACTED]',
+      metadata: '[ENCRYPTED]',
       userAgent: entry.userAgent,
       severity: entry.severity,
       result: entry.result || entry.status || 'SUCCESS',
     });
-    // bypass console lint
     process.stdout.write(`${logOutput}\n`);
+  }
 
-    // 2. Persistent Logging (S4 Protocol)
-    // S4 FIX: Store encrypted PII for GDPR/S7 compliance
+  private determineActorType(entry: AuditLogEntry, tenantId: string): string {
+    if (entry.actorType) return entry.actorType;
+    if (tenantId === 'system' || entry.action.includes('SUPER_ADMIN')) {
+      return 'super_admin';
+    }
+    return 'tenant_admin';
+  }
+
+  private async persistLog(
+    tenantId: string,
+    timestamp: Date,
+    entry: AuditLogEntry,
+    encryptedMetadata: string
+  ): Promise<void> {
+    const actorType = this.determineActorType(entry, tenantId);
+    const publicKey = entry.publicKey || 'S4_STUB';
+    const encryptedKey = entry.encryptedKey || Buffer.from([0x00]);
+
+    const client = await this.pool.connect();
     try {
-      const client = await this.pool.connect();
-      try {
-        // S4 Alignment: Derive actor_type and satisfy NOT NULL constraints for keys
-        let actorType = entry.actorType;
-        if (!actorType) {
-          if (tenantId === 'system' || entry.action.includes('SUPER_ADMIN')) {
-            actorType = 'super_admin';
-          } else {
-            actorType = 'tenant_admin';
-          }
-        }
-
-        const publicKey = entry.publicKey || 'S4_STUB';
-        const encryptedKey = entry.encryptedKey || Buffer.from([0x00]); // \x00 for bytea
-
-        // S2: Using schema-qualified INSERT (governance.audit_logs) — no SET needed
-        await client.query(
-          `INSERT INTO governance.audit_logs (
-              tenant_id, 
-              user_id, 
-              user_email,
-              action, 
-              entity_type, 
-              entity_id, 
-              metadata, 
-              ip_address, 
-              user_agent,
-              severity,
-              result,
-              checksum,
-              created_at,
-              actor_type,
-              public_key,
-              encrypted_key
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
-          [
+      await client.query(
+        `INSERT INTO governance.audit_logs (
+            tenant_id, user_id, user_email, action, entity_type, entity_id, 
+            metadata, ip_address, user_agent, severity, result, checksum, 
+            created_at, actor_type, public_key, encrypted_key
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+        [
+          tenantId,
+          entry.userId || null,
+          entry.userEmail
+            ? JSON.stringify(this.encryption.encrypt(entry.userEmail))
+            : null,
+          entry.action,
+          entry.entityType,
+          entry.entityId,
+          encryptedMetadata,
+          entry.ipAddress || null,
+          entry.userAgent || null,
+          entry.severity || 'INFO',
+          entry.result || entry.status || 'SUCCESS',
+          this.calculateChecksum({
             tenantId,
-            entry.userId || null,
-            // S7 FIX 2A: Store FULL cipher object (encrypted + iv + tag + salt)
-            entry.userEmail
-              ? JSON.stringify(this.encryption.encrypt(entry.userEmail))
-              : null,
-            entry.action,
-            entry.entityType,
-            entry.entityId,
-            encryptedMetadata,
-            entry.ipAddress || null,
-            entry.userAgent || null,
-            entry.severity || 'INFO',
-            entry.result || entry.status || 'SUCCESS',
-            this.calculateChecksum({
-              tenantId,
-              action: entry.action,
-              entityId: entry.entityId,
-              timestamp,
-            }), // Item 42: HMAC Checksum
+            action: entry.action,
+            entityId: entry.entityId,
             timestamp,
-            actorType,
-            publicKey,
-            encryptedKey,
-          ]
-        );
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      this.logger.error(
-        'S4 CRITICAL: Audit Persistence Failure',
-        error instanceof Error ? error.message : error
+          }),
+          timestamp,
+          actorType,
+          publicKey,
+          encryptedKey,
+        ]
       );
-      throw new Error('Audit Persistence Failure');
+    } finally {
+      client.release();
     }
   }
 

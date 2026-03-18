@@ -68,6 +68,7 @@
 | Master ID | Feature Name | Technical Implementation Strategy | Architecture Dependency | Definition of Done | Sprint |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Store-#01** | Home Page | Next.js page: Dynamic sections (banners, best sellers). Data fetched via `GET /api/storefront/home?tenantId={id}`. | `@apex/db`, Redis Cache | Visit `store.apex.localhost` → Renders tenant-specific banners/products; Loads in `<1.5s` (Lighthouse) | 5 |
+
 | **Store-#03** | Product Details (PDP) | Page: `[slug]/page.tsx`. Fetches product + variants + reviews. `"Add to Cart"` triggers Zustand cart store. **Images via Imgproxy**. | Zustand 🐻, pgvector, **Imgproxy** | View PDP → See optimized WebP images; Click `"Add to Cart"` → Cart badge increments; Related products shown | 5 |
 | **Store-#13** | Login Modal | Radix UI Dialog. Form validation via Zod. JWT stored in httpOnly cookie. Social login via NextAuth.js. | `@apex/auth`, S3 Validation | Enter valid creds → Redirects to `/account`; Invalid → Shows error; Google login → Creates account | 5 |
 | **Store-#06** | Checkout (One-Page) | Multi-step form (Address → Shipping → Payment). Stripe Elements embedded. Zod validation on all fields. | Stripe SDK, S3 Validation, S7 Encryption | Enter test card → Order created in DB; Admin shows `"Paid"` status; Email confirmation sent | 6 |

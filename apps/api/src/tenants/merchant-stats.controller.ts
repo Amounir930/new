@@ -1,10 +1,10 @@
 import { type AuthenticatedRequest, JwtAuthGuard } from '@apex/auth';
 import {
+  customersInStorefront,
   eq,
   getTenantDb,
   ordersInStorefront,
   productsInStorefront,
-  customersInStorefront,
   sql,
 } from '@apex/db';
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';

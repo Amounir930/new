@@ -9,9 +9,7 @@ function resolveSecrets() {
         const secretKey = key.replace('_FILE', '');
         process.env[secretKey] = readFileSync(value, 'utf8').trim();
       } catch (e) {
-        process.stderr.write(
-          `⚠️ Failed to read secret file ${value}: ${e}` + '\n'
-        );
+        process.stderr.write(`⚠️ Failed to read secret file ${value}: ${e}\n`);
       }
     }
   }
@@ -24,7 +22,7 @@ const PORT = 9000;
 const REPO_DIR = '/app';
 
 process.stdout.write(
-  `🛡️  Apex Webhook Listener v1.1 starting on port ${PORT}...` + '\n'
+  `🛡️  Apex Webhook Listener v1.1 starting on port ${PORT}...\n`
 );
 
 serve({

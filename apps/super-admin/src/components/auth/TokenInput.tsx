@@ -30,9 +30,9 @@ export function TokenInput() {
         onChange={(e) => setMKey(e.target.value)}
         className="bg-slate-900 border-white/10 text-white placeholder:text-slate-600 focus:ring-indigo-500"
       />
-      <Button 
-        onClick={handleSave} 
-        variant="outline" 
+      <Button
+        onClick={handleSave}
+        variant="outline"
         size="sm"
         className="w-full border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10"
       >

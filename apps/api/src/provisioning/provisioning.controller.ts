@@ -10,19 +10,15 @@ import {
   SuperAdminGuard,
 } from '@apex/auth';
 import { env } from '@apex/config';
-import { FraudGuard } from '@apex/middleware';
 import {
   Body,
   Controller,
-  ForbiddenException,
   HttpCode,
   HttpStatus,
   Inject,
-  InternalServerErrorException,
   Logger,
   Post,
   Req,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -51,7 +47,7 @@ export class ProvisioningController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async provisionStore(
-    @Req() req: any,
+    @Req() _req: any,
     @Body(ZodValidationPipe) dto: ProvisionRequestDto
   ) {
     this.logger.log(`Received provisioning request for: ${dto.subdomain}`);

@@ -16,7 +16,6 @@ import {
   Res,
   UnauthorizedException,
   UseGuards,
-  VERSION_NEUTRAL,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -58,7 +57,9 @@ export class AuthController {
     const adminEmail = this.config.get('SUPER_ADMIN_EMAIL');
     const adminPassword = this.config.get('SUPER_ADMIN_PASSWORD');
 
-    this.logger.log(`Auth Attempt: ${email} (SuperAdmin configured: ${adminEmail})`);
+    this.logger.log(
+      `Auth Attempt: ${email} (SuperAdmin configured: ${adminEmail})`
+    );
 
     if (adminEmail && adminPassword && email === adminEmail) {
       this.logger.log(`Super Admin check triggered for ${email}`);
@@ -85,7 +86,7 @@ export class AuthController {
       .where(eq(usersInGovernance.emailHash, emailHash))
       .limit(1);
 
-    if (userRecord && userRecord.passwordHash) {
+    if (userRecord?.passwordHash) {
       const isPasswordValid = await bcrypt.compare(
         password,
         userRecord.passwordHash

@@ -3,7 +3,13 @@ export interface Tenant {
   name: string;
   subdomain: string;
   plan: 'free' | 'basic' | 'pro' | 'enterprise';
-  status: 'active' | 'pending' | 'suspended' | 'archived' | 'purging' | 'deleted';
+  status:
+    | 'active'
+    | 'pending'
+    | 'suspended'
+    | 'archived'
+    | 'purging'
+    | 'deleted';
   createdAt: string;
   ownerEmail: string;
 }

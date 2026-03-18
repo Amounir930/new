@@ -85,7 +85,7 @@ export default async function TenantHome({ params }: TenantPageProps) {
                 Customer Favorites
               </span>
               <h2 className="text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
-                Best Sellers
+                {homeData?.sectionTitle || 'Best Sellers'}
               </h2>
             </div>
             <a

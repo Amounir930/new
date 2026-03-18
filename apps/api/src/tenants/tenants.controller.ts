@@ -9,14 +9,13 @@ import {
   sql,
   tenantsInGovernance,
 } from '@apex/db';
-import { type EncryptedData, decrypt } from '@apex/security';
-import { TenantCacheService } from '@apex/middleware';
+import type { TenantCacheService } from '@apex/middleware';
+import { decrypt, type EncryptedData } from '@apex/security';
 import {
   BadRequestException,
   Body,
   Controller,
   Delete,
-  forwardRef,
   Get,
   Inject,
   Logger,
@@ -27,8 +26,8 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
-import { ProvisioningService } from '../provisioning/provisioning.service';
-import { SecurityService } from '../security/security.service';
+import type { ProvisioningService } from '../provisioning/provisioning.service';
+import type { SecurityService } from '../security/security.service';
 
 const UpdateTenantSchema = z.object({
   plan: z.string().optional(),
@@ -285,13 +284,13 @@ export class TenantsController {
       // This locks the tenant in governance and signals start of destruction
       const tenant = await adminDb.transaction(async (tx) => {
         await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
-        
+
         const [t] = await tx
           .select()
           .from(tenantsInGovernance)
           .where(eq(tenantsInGovernance.id, id))
           .limit(1);
-        
+
         if (!t) {
           throw new Error('Tenant not found');
         }
@@ -300,7 +299,7 @@ export class TenantsController {
           .update(tenantsInGovernance)
           .set({ status: 'purging', updatedAt: new Date().toISOString() })
           .where(eq(tenantsInGovernance.id, id));
-        
+
         return t;
       });
 
@@ -316,7 +315,7 @@ export class TenantsController {
       // S4 Protocol: We retain the record with deleted_at for Audit/Security history.
       await adminDb.transaction(async (tx) => {
         await tx.execute(sql`SET LOCAL app.is_super_admin = 'true'`);
-        
+
         await tx
           .update(tenantsInGovernance)
           .set({

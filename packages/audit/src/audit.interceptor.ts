@@ -116,11 +116,13 @@ export class AuditInterceptor implements NestInterceptor {
         entityId,
         userId: user?.id,
         userEmail: user?.email,
-        actorType: user?.role === 'super_admin' ? 'super_admin' : 'tenant_admin',
+        actorType:
+          user?.role === 'super_admin' ? 'super_admin' : 'tenant_admin',
         ipAddress: ip,
         userAgent: headers['user-agent'],
         severity:
-          options?.severity || (resultStatus === 'FAILURE' ? 'WARNING' : 'INFO'),
+          options?.severity ||
+          (resultStatus === 'FAILURE' ? 'WARNING' : 'INFO'),
         result: resultStatus,
         metadata: {
           path: url,
