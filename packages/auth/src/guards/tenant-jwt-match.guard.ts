@@ -41,7 +41,18 @@ export class TenantJwtMatchGuard implements CanActivate {
     }
 
     const jwtTenantId = request.user.tenantId;
-    const contextTenantId = request.tenantContext.tenantId;
+    const userRole = request.user.role;
+    const contextTenantId = request.tenantContext?.tenantId;
+
+    // S2 Sovereignty Fix: Allow 'system' context ONLY for authenticated Tenant Admins
+    // operating from the centralized control plane (admin.60sec.shop)
+    if (
+      contextTenantId === 'system' &&
+      jwtTenantId &&
+      userRole === 'tenant_admin'
+    ) {
+      return true;
+    }
 
     // CRITICAL FIX (S2): Validate JWT tenant matches request tenant
     if (jwtTenantId && jwtTenantId !== contextTenantId) {
