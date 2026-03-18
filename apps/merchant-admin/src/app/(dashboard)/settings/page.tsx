@@ -40,7 +40,7 @@ export default function SettingsPage() {
     const fetchConfig = async () => {
       setLoading(true);
       try {
-        const data = await apiFetch<SettingsForm>('/api/v1/merchant/config');
+        const data = await apiFetch<SettingsForm>('/merchant/config');
         if (data) {
           setValue('store_name', data.store_name);
           setValue('logo_url', data.logo_url);
@@ -57,7 +57,7 @@ export default function SettingsPage() {
   const onSubmit = async (data: SettingsForm) => {
     setSaving(true);
     try {
-      await apiFetch('/api/v1/merchant/config', {
+      await apiFetch('/merchant/config', {
         method: 'PATCH',
         body: JSON.stringify(data),
       });
