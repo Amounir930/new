@@ -5,7 +5,9 @@ import {
   UseGuards, 
   Req, 
   BadRequestException,
-  UnauthorizedException
+  UnauthorizedException,
+  InternalServerErrorException,
+  Logger
 } from '@nestjs/common';
 import { 
   JwtAuthGuard, 
@@ -17,29 +19,10 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@apex/config';
 import crypto from 'node:crypto';
 
-/**
- * Server-Side Extension Derivation Dictionary
- * Prevents Extension Spoofing by mapping MIME types to trusted extensions
- */
-const ALLOWED_MIME_TYPES: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/svg+xml': 'svg'
-};
-
 @Controller('merchant/upload-url')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class MerchantUploadController {
-  private s3Client = new S3Client({
-    endpoint: env.MINIO_ENDPOINT,
-    region: 'us-east-1', // Required by SDK even for MinIO
-    credentials: {
-      accessKeyId: env.MINIO_ACCESS_KEY!,
-      secretAccessKey: env.MINIO_SECRET_KEY!,
-    },
-    forcePathStyle: true,
-  });
+  private readonly logger = new Logger(MerchantUploadController.name);
 
   @Get()
   async getUploadUrl(
@@ -51,7 +34,20 @@ export class MerchantUploadController {
       throw new UnauthorizedException('Authentication context missing');
     }
 
+    // S1 Check: Verify MinIO Credentials Presence (S1 Violation Prevention)
+    if (!env.MINIO_ACCESS_KEY || !env.MINIO_SECRET_KEY) {
+      this.logger.error('S1 VIOLATION: MinIO Access/Secret keys are missing from environment');
+      throw new InternalServerErrorException('Storage service configuration error');
+    }
+
     // S3-Hardening: Server-Side Extension Derivation
+    const ALLOWED_MIME_TYPES: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/svg+xml': 'svg'
+    };
+
     const extension = ALLOWED_MIME_TYPES[contentType];
     if (!extension) {
       throw new BadRequestException(
@@ -64,22 +60,31 @@ export class MerchantUploadController {
     const fileId = crypto.randomUUID();
     const key = `merchants/${tenantId}/logos/${fileId}.${extension}`;
     
-    const command = new PutObjectCommand({
-      Bucket: env.MINIO_BUCKET,
-      Key: key,
-      ContentType: contentType, // S3-Hardening: Explicit ContentType for Signature Integrity
-    });
+    try {
+      const s3Client = new S3Client({
+        endpoint: env.MINIO_ENDPOINT,
+        region: env.MINIO_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: env.MINIO_ACCESS_KEY,
+          secretAccessKey: env.MINIO_SECRET_KEY,
+        },
+        forcePathStyle: true,
+      });
 
-    // Generate Pre-signed URL valid for 5 minutes
-    const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 300 });
+      const command = new PutObjectCommand({
+        Bucket: env.MINIO_BUCKET,
+        Key: key,
+        ContentType: contentType,
+      });
 
-    /**
-     * Public URL Transformation
-     * Maps the internal MinIO path to the public-facing storage domain
-     * Ensure STORAGE_PUBLIC_URL is configured (e.g., https://storage.60sec.shop)
-     */
-    const publicUrl = `${env.STORAGE_PUBLIC_URL}/${key}`;
+      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+      const publicUrl = `${env.STORAGE_PUBLIC_URL}/${key}`;
 
-    return { uploadUrl, publicUrl };
+      return { uploadUrl, publicUrl };
+    } catch (error) {
+      // S5 Protocol: Log specific error for forensics, mask for client
+      this.logger.error(`S3_PRESIGN_FAILURE: Failed to generate upload URL for tenant ${tenantId}`, (error as Error).stack);
+      throw new InternalServerErrorException('Failed to initialize secure upload pipeline');
+    }
   }
 }

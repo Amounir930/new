@@ -25,7 +25,7 @@ import { z } from 'zod';
 
 const UpdateConfigSchema = z.object({
   store_name: z.string().min(1).max(100).optional(),
-  logo_url: z.string().url().optional(),
+  logo_url: z.string().url().or(z.literal('')).or(z.null()).optional(),
 });
 
 @Controller('merchant/config')
