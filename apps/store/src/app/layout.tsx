@@ -1,23 +1,39 @@
+import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import './globals.css';
+import { getTenantConfig } from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'Apex Storefront',
   description: 'High performance e-commerce by Apex v2',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const headersList = await headers();
+  const tenantId = headersList.get('x-tenant-id') || 'public';
+  
+  // S12 FIX: Fetch config for branding
+  const config = await getTenantConfig(tenantId);
+  const storeName = config?.store_name || 'APEX STORE';
+  const logoUrl = config?.logo_url;
+
   return (
     <html lang="en">
       <body className="antialiased font-sans bg-gray-50 text-gray-900">
         <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              APEX STORE
+            <div className="flex items-center gap-3">
+              {logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={storeName} className="h-10 w-auto object-contain" />
+              )}
+              <div className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                {storeName}
+              </div>
             </div>
             <nav className="hidden md:flex items-center gap-8">
               <a
@@ -87,7 +103,7 @@ export default function RootLayout({
         <main>{children}</main>
         <footer className="bg-white border-t py-12">
           <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-            © 2026 Apex v2 Storefront. Secure & High Performance.
+            © 2026 {storeName} | Apex v2. Secure & High Performance.
           </div>
         </footer>
       </body>
