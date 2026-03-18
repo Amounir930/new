@@ -25,10 +25,7 @@ const UpdateConfigSchema = z.object({
 @Controller('merchant/config')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class MerchantConfigController {
-  constructor(
-    @Inject('REDIS_STORE')
-    private readonly redisStore: RedisRateLimitStore
-  ) {}
+  constructor(private readonly redisStore: RedisRateLimitStore) {}
 
   @Get()
   async getConfig(@Req() req: TenantRequest) {
