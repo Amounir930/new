@@ -4,7 +4,7 @@ import {
   type TenantRequest,
 } from '@apex/auth';
 import { getTenantDb, tenantConfigInStorefront } from '@apex/db';
-import type { RedisRateLimitStore } from '@apex/middleware';
+import { RedisRateLimitStore } from '@apex/middleware';
 import {
   Body,
   Controller,
