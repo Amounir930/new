@@ -161,7 +161,7 @@ services:
       - /home/node:noexec,nosuid,size=10m
     environment:
       NODE_ENV: production
-      MINIO_ENDPOINT: apex-minio
+      MINIO_ENDPOINT: http://apex-minio:9000
       PGHOST: apex-postgres
       DB_SSL: "false"
       DB_SSL_OPTIONAL: "true"
@@ -260,7 +260,7 @@ services:
     environment:
       NODE_ENV: production
       ENABLE_WORKERS: "true"
-      MINIO_ENDPOINT: apex-minio
+      MINIO_ENDPOINT: http://apex-minio:9000
       PGHOST: apex-postgres
       DB_SSL: "false"
       DB_SSL_OPTIONAL: "true"
