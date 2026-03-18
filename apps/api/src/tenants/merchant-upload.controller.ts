@@ -61,8 +61,9 @@ export class MerchantUploadController {
     const key = `merchants/${tenantId}/logos/${fileId}.${extension}`;
     
     try {
-      const s3Client = new S3Client({
-        endpoint: env.MINIO_ENDPOINT,
+      // Dedicated Presign Client using the Public URL (S3 Signature V4 Integrity)
+      const s3PresignClient = new S3Client({
+        endpoint: env.STORAGE_PUBLIC_URL,
         region: env.MINIO_REGION || 'us-east-1',
         credentials: {
           accessKeyId: env.MINIO_ACCESS_KEY,
@@ -77,7 +78,7 @@ export class MerchantUploadController {
         ContentType: contentType,
       });
 
-      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+      const uploadUrl = await getSignedUrl(s3PresignClient, command, { expiresIn: 300 });
       const publicUrl = `${env.STORAGE_PUBLIC_URL}/${key}`;
 
       return { uploadUrl, publicUrl };

@@ -5,8 +5,9 @@ services:
   # ═══════════════════════════════════════════════════════════════
   apex-postgres:
     # ZERO-TOLERANCE FIX: No 'latest' tags. Pinned to specific minor version.
-    # image: postgres:15-alpine
-    image: postgres:15-alpine
+    build:
+      context: ..
+      dockerfile: ops/postgres.Dockerfile
     container_name: apex-postgres
     restart: always
     user: "70:70" # Run as postgres user internally
