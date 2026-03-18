@@ -96,56 +96,49 @@ export class MerchantConfigController {
 
     const { db, release } = await this.getResolvedTenantDb(tenantId);
     try {
-      // S2 Fix: Ensure all operations use the transaction 'tx' to stay within scope
+      // S2 Isolation: Explicit insertion/update into the merchant's isolated schema
       await db.transaction(async (tx) => {
-        if (body.store_name) {
+        // De-falsification: Check for property existence (!== undefined), not truthiness
+        if (body.store_name !== undefined) {
           await tx
             .insert(tenantConfigInStorefront)
             .values({
               key: 'store_name',
               value: body.store_name,
-              updatedAt: new Date().toISOString(),
             })
             .onConflictDoUpdate({
               target: tenantConfigInStorefront.key,
-              set: {
-                value: body.store_name,
-                updatedAt: new Date().toISOString(),
-              },
+              set: { value: body.store_name },
             });
         }
 
-        if (body.logo_url) {
+        if (body.logo_url !== undefined) {
           await tx
             .insert(tenantConfigInStorefront)
             .values({
               key: 'logo_url',
-              value: body.logo_url,
-              updatedAt: new Date().toISOString(),
+              value: body.logo_url ?? '',
             })
             .onConflictDoUpdate({
               target: tenantConfigInStorefront.key,
-              set: {
-                value: body.logo_url,
-                updatedAt: new Date().toISOString(),
-              },
+              set: { value: body.logo_url ?? '' },
             });
         }
       });
+
+      // Surgical Cache Invalidation (S12 Mandate)
+      const client = await this.redisStore.getClient();
+      if (client) {
+        await Promise.all([
+          client.del(`storefront:home:${tenantId}`),
+          client.del(`storefront:config:${tenantId}`),
+          client.del(`storefront:bootstrap:${tenantId}`),
+        ]);
+      }
+
+      return { success: true };
     } finally {
       await release();
     }
-
-    // Surgical Cache Invalidation (S12 Mandate)
-    const client = await this.redisStore.getClient();
-    if (client) {
-      await Promise.all([
-        client.del(`storefront:home:${tenantId}`),
-        client.del(`storefront:config:${tenantId}`),
-        client.del(`storefront:bootstrap:${tenantId}`),
-      ]);
-    }
-
-    return { success: true };
   }
 }
