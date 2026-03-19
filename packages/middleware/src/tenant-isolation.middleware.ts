@@ -67,6 +67,16 @@ function extractSubdomain(host: string): string | null {
 }
 
 /**
+ * S1: Strict UUID Validation
+ * Prevents 22P02 Type Mismatch errors in Governance DB
+ */
+function isUuid(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    id
+  );
+}
+
+/**
  * Validates tenant exists and is active
  */
 async function validateTenant(
@@ -223,7 +233,9 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         const payload = token.split('.')[1];
         if (payload) {
           const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
-          return decoded.tenantId || null;
+          const tenantId = decoded.tenantId || null;
+          // S1: Strict Validation to prevent 22P02 (UUID Type Mismatch)
+          return tenantId && isUuid(tenantId) ? tenantId : null;
         }
       } catch {
         return null; // Malformed token peek failure

@@ -68,6 +68,15 @@ export class TenantCacheService implements OnModuleInit {
   async resolveTenantById(
     tenantId: string
   ): Promise<Omit<TenantContext, 'executor'> | null> {
+    // S1: Strict UUID Validation (Prevent 22P02)
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        tenantId
+      )
+    ) {
+      return null;
+    }
+
     // Attempt cache hit
     const cached = await this.getTenant(tenantId);
     if (cached) return cached;
