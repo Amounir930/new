@@ -18,6 +18,7 @@ import {
 } from './connection-context';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { TenantCacheService } from './tenant-cache.service';
+import { isUuid } from './utils';
 
 export interface AuditService {
   log(data: {
@@ -70,11 +71,6 @@ function extractSubdomain(host: string): string | null {
  * S1: Strict UUID Validation
  * Prevents 22P02 Type Mismatch errors in Governance DB
  */
-export function isUuid(id: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-    id
-  );
-}
 
 /**
  * Validates tenant exists and is active

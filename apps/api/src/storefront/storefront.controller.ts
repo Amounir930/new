@@ -49,19 +49,7 @@ export class StorefrontController {
   @Get('config')
   @AuditLog('STOREFRONT_CONFIG_VIEW')
   async getConfig(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
-    const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || !isUuid(tenantId)) {
-      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
-    }
-
-    let schemaName = req.tenantContext?.schemaName;
-    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
-    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
-      const context = await this.tenantCache.resolveTenantById(tenantId);
-      if (!context) throw new NotFoundException('Tenant not found');
-      schemaName = context.schemaName;
-    }
-
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
     return this.storefrontService.getTenantConfig(tenantId, schemaName);
   }
 
@@ -72,19 +60,7 @@ export class StorefrontController {
     @Query() query: ProductsQueryDto,
     @Query() tenantQuery: TenantIdDto
   ) {
-    const tenantId = req.tenantContext?.tenantId || tenantQuery.tenantId;
-    if (!tenantId || !isUuid(tenantId)) {
-      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
-    }
-
-    let schemaName = req.tenantContext?.schemaName;
-    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
-    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
-      const context = await this.tenantCache.resolveTenantById(tenantId);
-      if (!context) throw new NotFoundException('Tenant not found');
-      schemaName = context.schemaName;
-    }
-
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, tenantQuery.tenantId);
     return this.storefrontService.getProducts(tenantId, schemaName, query);
   }
 
@@ -95,19 +71,7 @@ export class StorefrontController {
     @Param('slug') slug: string,
     @Query() query: TenantIdDto
   ) {
-    const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || !isUuid(tenantId)) {
-      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
-    }
-
-    let schemaName = req.tenantContext?.schemaName;
-    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
-    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
-      const context = await this.tenantCache.resolveTenantById(tenantId);
-      if (!context) throw new NotFoundException('Tenant not found');
-      schemaName = context.schemaName;
-    }
-
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
     const product = await this.storefrontService.getProductBySlug(
       tenantId,
       schemaName,
@@ -122,38 +86,41 @@ export class StorefrontController {
   @Get('home')
   @AuditLog('STOREFRONT_HOME_VIEW')
   async getHome(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
-    const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || !isUuid(tenantId)) {
-      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
-    }
-
-    let schemaName = req.tenantContext?.schemaName;
-    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
-    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
-      const context = await this.tenantCache.resolveTenantById(tenantId);
-      if (!context) throw new NotFoundException('Tenant not found');
-      schemaName = context.schemaName;
-    }
-
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
     return this.storefrontService.getHomeData(tenantId, schemaName);
   }
 
   @Get('bootstrap')
   async getBootstrap(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
-    const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || !isUuid(tenantId)) {
-      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
-    }
-
-    let schemaName = req.tenantContext?.schemaName;
-    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
-    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
-      const context = await this.tenantCache.resolveTenantById(tenantId);
-      if (!context) throw new NotFoundException('Tenant not found');
-      schemaName = context.schemaName;
-    }
-
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
     return this.storefrontService.getBootstrapData(tenantId, schemaName);
+  }
+
+  /**
+   * 🛡️ Sovereign Translation Helper
+   * Implements Late Validation. Resolves ID or Subdomain to full context.
+   */
+  private async resolveStorefrontContext(req: TenantRequest, queryId?: string) {
+    const rawId = req.tenantContext?.tenantId || queryId;
+
+    if (!rawId) {
+      throw new BadRequestException('MANDATORY: Tenant identifier is required');
+    }
+
+    // Attempt resolution through Smart Cache (handles ID and Subdomain)
+    const context = await this.tenantCache.resolveTenant(rawId);
+
+    if (!context || !isUuid(context.tenantId)) {
+      throw new BadRequestException(`S2 Failure: Tenant resolution failed for identifier ${rawId}`);
+    }
+
+    // Set audit ID for forensic traceability
+    (req as any).auditTenantId = context.tenantId;
+
+    return {
+      tenantId: context.tenantId,
+      schemaName: context.schemaName
+    };
   }
 
   @Post('newsletter')

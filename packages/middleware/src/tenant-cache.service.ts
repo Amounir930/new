@@ -3,6 +3,7 @@ import { adminDb, eq, tenantsInGovernance } from '@apex/db';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 import type { TenantContext } from './connection-context';
+import { isUuid } from './utils';
 
 @Injectable()
 export class TenantCacheService implements OnModuleInit {
@@ -103,6 +104,62 @@ export class TenantCacheService implements OnModuleInit {
 
     // Populate cache for S1/S2 high-speed routing
     await this.setTenant(tenantId, context);
+    return context;
+  }
+
+  /**
+   * 🚀 Phase 2: Sovereign Translation Layer
+   * Resolves any identifier (UUID or Subdomain) to a full TenantContext.
+   * Implements dual-caching (ID and Subdomain) to minimize DB hits.
+   */
+  async resolveTenant(
+    identifier: string
+  ): Promise<Omit<TenantContext, 'executor'> | null> {
+    if (!identifier) return null;
+
+    // 1. Level 1 Cache: Direct Identifier Hit (ID or Subdomain)
+    const cached = await this.getTenant(identifier);
+    if (cached) return cached;
+
+    // 2. Level 2 Resolution: UUID Direct Path
+    if (isUuid(identifier)) {
+      return this.resolveTenantById(identifier);
+    }
+
+    // 3. Level 3 Resolution: Subdomain/Domain DB Fallback
+    const { or, sql: dbSql } = await import('@apex/db');
+    const [tenant] = await adminDb
+      .select()
+      .from(tenantsInGovernance)
+      .where(
+        or(
+          eq(tenantsInGovernance.subdomain, identifier),
+          dbSql`custom_domain = ${identifier}`
+        )
+      )
+      .limit(1);
+
+    if (!tenant) return null;
+
+    const context: Omit<TenantContext, 'executor'> = {
+      tenantId: tenant.id,
+      schemaName: `tenant_${tenant.subdomain
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '_')}`,
+      subdomain: tenant.subdomain,
+      plan: (tenant.plan as any) || 'free',
+      isActive: tenant.status === 'active',
+      isSuspended: false,
+      features: [],
+      createdAt: new Date(tenant.createdAt),
+    };
+
+    // 4. Dual-Cache Population (Soverign Speed Protocol)
+    await Promise.all([
+      this.setTenant(identifier, context), // Cache by Subdomain
+      this.setTenant(tenant.id, context),  // Cache by UUID
+    ]);
+
     return context;
   }
 }
