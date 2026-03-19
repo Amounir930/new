@@ -253,7 +253,7 @@ export const apexMigrations = pgTable(
   (table) => [unique('apex_migrations_filename_key').on(table.filename)]
 );
 
-export const pagesInStorefront = storefront.table(
+export const pagesInStorefront = pgTable(
   'pages',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -313,7 +313,7 @@ export const appUsageRecordsInGovernance = governance.table(
   ]
 );
 
-export const legalPagesInStorefront = storefront.table(
+export const legalPagesInStorefront = pgTable(
   'legal_pages',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -730,7 +730,7 @@ export const encryptionKeysInVault = vault.table(
   ]
 );
 
-export const entityMetafieldsInStorefront = storefront.table(
+export const entityMetafieldsInStorefront = pgTable(
   'entity_metafields',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -757,7 +757,7 @@ export const entityMetafieldsInStorefront = storefront.table(
   ]
 );
 
-export const loyaltyRulesInStorefront = storefront.table(
+export const loyaltyRulesInStorefront = pgTable(
   'loyalty_rules',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -791,7 +791,7 @@ export const loyaltyRulesInStorefront = storefront.table(
   ]
 );
 
-export const walletTransactionsInStorefront = storefront.table(
+export const walletTransactionsInStorefront = pgTable(
   'wallet_transactions',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -837,7 +837,7 @@ export const walletTransactionsInStorefront = storefront.table(
   ]
 );
 
-export const announcementBarsInStorefront = storefront.table(
+export const announcementBarsInStorefront = pgTable(
   'announcement_bars',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -879,7 +879,7 @@ export const archivalVaultInVault = vault.table(
   ]
 );
 
-export const customerSegmentsInStorefront = storefront.table(
+export const customerSegmentsInStorefront = pgTable(
   'customer_segments',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -894,7 +894,7 @@ export const customerSegmentsInStorefront = storefront.table(
   }
 );
 
-export const customersInStorefront = storefront.table(
+export const customersInStorefront = pgTable(
   'customers',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -988,7 +988,7 @@ export const customersInStorefront = storefront.table(
   ]
 );
 
-export const tenantConfigInStorefront = storefront.table(
+export const tenantConfigInStorefront = pgTable(
   'tenant_config',
   {
     key: varchar({ length: 100 }).primaryKey().notNull(),
@@ -1003,7 +1003,7 @@ export const tenantConfigInStorefront = storefront.table(
   ]
 );
 
-export const bannersInStorefront = storefront.table(
+export const bannersInStorefront = pgTable(
   'banners',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1027,7 +1027,7 @@ export const bannersInStorefront = storefront.table(
   ]
 );
 
-export const smartCollectionsInStorefront = storefront.table(
+export const smartCollectionsInStorefront = pgTable(
   'smart_collections',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1059,7 +1059,7 @@ export const smartCollectionsInStorefront = storefront.table(
   ]
 );
 
-export const shippingZonesInStorefront = storefront.table(
+export const shippingZonesInStorefront = pgTable(
   'shipping_zones',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1099,7 +1099,7 @@ export const shippingZonesInStorefront = storefront.table(
   ]
 );
 
-export const searchSynonymsInStorefront = storefront.table(
+export const searchSynonymsInStorefront = pgTable(
   'search_synonyms',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1157,7 +1157,7 @@ export const subscriptionPlansInGovernance = governance.table(
   ]
 );
 
-export const reviewsInStorefront = storefront.table(
+export const reviewsInStorefront = pgTable(
   'reviews',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1190,7 +1190,7 @@ export const reviewsInStorefront = storefront.table(
   ]
 );
 
-export const productViewsInStorefront = storefront.table(
+export const productViewsInStorefront = pgTable(
   'product_views',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1211,7 +1211,7 @@ export const productViewsInStorefront = storefront.table(
   ]
 );
 
-export const popupsInStorefront = storefront.table('popups', {
+export const popupsInStorefront = pgTable('popups', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
     .defaultNow()
@@ -1224,7 +1224,7 @@ export const popupsInStorefront = storefront.table('popups', {
   settings: jsonb().notNull(),
 });
 
-export const currencyRatesInStorefront = storefront.table(
+export const currencyRatesInStorefront = pgTable(
   'currency_rates',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1240,7 +1240,7 @@ export const currencyRatesInStorefront = storefront.table(
   ]
 );
 
-export const abandonedCheckoutsInStorefront = storefront.table(
+export const abandonedCheckoutsInStorefront = pgTable(
   'abandoned_checkouts',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1274,7 +1274,7 @@ export const abandonedCheckoutsInStorefront = storefront.table(
   ]
 );
 
-export const affiliatePartnersInStorefront = storefront.table(
+export const affiliatePartnersInStorefront = pgTable(
   'affiliate_partners',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1320,7 +1320,7 @@ export const affiliatePartnersInStorefront = storefront.table(
   ]
 );
 
-export const affiliateTransactionsInStorefront = storefront.table(
+export const affiliateTransactionsInStorefront = pgTable(
   'affiliate_transactions',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1366,7 +1366,7 @@ export const affiliateTransactionsInStorefront = storefront.table(
   ]
 );
 
-export const b2BCompaniesInStorefront = storefront.table(
+export const b2BCompaniesInStorefront = pgTable(
   'b2b_companies',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1402,7 +1402,7 @@ export const b2BCompaniesInStorefront = storefront.table(
   ]
 );
 
-export const brandsInStorefront = storefront.table(
+export const brandsInStorefront = pgTable(
   'brands',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1431,7 +1431,7 @@ export const brandsInStorefront = storefront.table(
   ]
 );
 
-export const categoriesInStorefront = storefront.table(
+export const categoriesInStorefront = pgTable(
   'categories',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1479,7 +1479,7 @@ export const categoriesInStorefront = storefront.table(
   ]
 );
 
-export const productsInStorefront = storefront.table(
+export const productsInStorefront = pgTable(
   'products',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1599,7 +1599,7 @@ export const productsInStorefront = storefront.table(
   ]
 );
 
-export const b2BPricingTiersInStorefront = storefront.table(
+export const b2BPricingTiersInStorefront = pgTable(
   'b2b_pricing_tiers',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1655,7 +1655,7 @@ export const b2BPricingTiersInStorefront = storefront.table(
   ]
 );
 
-export const b2BUsersInStorefront = storefront.table(
+export const b2BUsersInStorefront = pgTable(
   'b2b_users',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1688,7 +1688,7 @@ export const b2BUsersInStorefront = storefront.table(
   ]
 );
 
-export const blogCategoriesInStorefront = storefront.table(
+export const blogCategoriesInStorefront = pgTable(
   'blog_categories',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1698,7 +1698,7 @@ export const blogCategoriesInStorefront = storefront.table(
   (table) => [unique('uq_tenant_blog_cat_slug').on(table.slug)]
 );
 
-export const blogPostsInStorefront = storefront.table(
+export const blogPostsInStorefront = pgTable(
   'blog_posts',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1751,7 +1751,7 @@ export const blogPostsInStorefront = storefront.table(
   ]
 );
 
-export const cartsInStorefront = storefront.table(
+export const cartsInStorefront = pgTable(
   'carts',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1792,7 +1792,7 @@ export const cartsInStorefront = storefront.table(
   ]
 );
 
-export const cartItemsInStorefront = storefront.table(
+export const cartItemsInStorefront = pgTable(
   'cart_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1821,7 +1821,7 @@ export const cartItemsInStorefront = storefront.table(
   ]
 );
 
-export const couponsInStorefront = storefront.table(
+export const couponsInStorefront = pgTable(
   'coupons',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1870,7 +1870,7 @@ export const couponsInStorefront = storefront.table(
   ]
 );
 
-export const couponUsagesInStorefront = storefront.table(
+export const couponUsagesInStorefront = pgTable(
   'coupon_usages',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1900,7 +1900,7 @@ export const couponUsagesInStorefront = storefront.table(
   ]
 );
 
-export const customerAddressesInStorefront = storefront.table(
+export const customerAddressesInStorefront = pgTable(
   'customer_addresses',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1947,7 +1947,7 @@ export const customerAddressesInStorefront = storefront.table(
   ]
 );
 
-export const customerConsentsInStorefront = storefront.table(
+export const customerConsentsInStorefront = pgTable(
   'customer_consents',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -1978,7 +1978,7 @@ export const customerConsentsInStorefront = storefront.table(
   ]
 );
 
-export const priceRulesInStorefront = storefront.table(
+export const priceRulesInStorefront = pgTable(
   'price_rules',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2021,7 +2021,7 @@ export const priceRulesInStorefront = storefront.table(
   ]
 );
 
-export const discountCodesInStorefront = storefront.table(
+export const discountCodesInStorefront = pgTable(
   'discount_codes',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2050,7 +2050,7 @@ export const discountCodesInStorefront = storefront.table(
   ]
 );
 
-export const faqCategoriesInStorefront = storefront.table('faq_categories', {
+export const faqCategoriesInStorefront = pgTable('faq_categories', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   name: varchar({ length: 100 }).notNull(),
   order: integer().default(0).notNull(),
@@ -2060,7 +2060,7 @@ export const faqCategoriesInStorefront = storefront.table('faq_categories', {
     .notNull(),
 });
 
-export const faqsInStorefront = storefront.table(
+export const faqsInStorefront = pgTable(
   'faqs',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2093,7 +2093,7 @@ export const faqsInStorefront = storefront.table(
   ]
 );
 
-export const flashSalesInStorefront = storefront.table(
+export const flashSalesInStorefront = pgTable(
   'flash_sales',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2128,7 +2128,7 @@ export const flashSalesInStorefront = storefront.table(
   ]
 );
 
-export const flashSaleProductsInStorefront = storefront.table(
+export const flashSaleProductsInStorefront = pgTable(
   'flash_sale_products',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2164,7 +2164,7 @@ export const flashSaleProductsInStorefront = storefront.table(
   ]
 );
 
-export const ordersInStorefront = storefront.table(
+export const ordersInStorefront = pgTable(
   'orders',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2276,7 +2276,7 @@ export const ordersInStorefront = storefront.table(
   ]
 );
 
-export const fulfillmentsInStorefront = storefront.table(
+export const fulfillmentsInStorefront = pgTable(
   'fulfillments',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2307,7 +2307,7 @@ export const fulfillmentsInStorefront = storefront.table(
   ]
 );
 
-export const productVariantsInStorefront = storefront.table(
+export const productVariantsInStorefront = pgTable(
   'product_variants',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2352,7 +2352,7 @@ export const productVariantsInStorefront = storefront.table(
   ]
 );
 
-export const orderItemsInStorefront = storefront.table(
+export const orderItemsInStorefront = pgTable(
   'order_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2415,7 +2415,7 @@ export const orderItemsInStorefront = storefront.table(
   ]
 );
 
-export const fulfillmentItemsInStorefront = storefront.table(
+export const fulfillmentItemsInStorefront = pgTable(
   'fulfillment_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2441,7 +2441,7 @@ export const fulfillmentItemsInStorefront = storefront.table(
   ]
 );
 
-export const locationsInStorefront = storefront.table('locations', {
+export const locationsInStorefront = pgTable('locations', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
     .defaultNow()
@@ -2456,7 +2456,7 @@ export const locationsInStorefront = storefront.table('locations', {
   coordinates: text(),
 });
 
-export const inventoryLevelsInStorefront = storefront.table(
+export const inventoryLevelsInStorefront = pgTable(
   'inventory_levels',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2496,7 +2496,7 @@ export const inventoryLevelsInStorefront = storefront.table(
   ]
 );
 
-export const inventoryMovementsInStorefront = storefront.table(
+export const inventoryMovementsInStorefront = pgTable(
   'inventory_movements',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2545,7 +2545,7 @@ export const inventoryMovementsInStorefront = storefront.table(
   ]
 );
 
-export const inventoryReservationsInStorefront = storefront.table(
+export const inventoryReservationsInStorefront = pgTable(
   'inventory_reservations',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2587,7 +2587,7 @@ export const inventoryReservationsInStorefront = storefront.table(
   ]
 );
 
-export const inventoryTransfersInStorefront = storefront.table(
+export const inventoryTransfersInStorefront = pgTable(
   'inventory_transfers',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2624,7 +2624,7 @@ export const inventoryTransfersInStorefront = storefront.table(
   ]
 );
 
-export const inventoryTransferItemsInStorefront = storefront.table(
+export const inventoryTransferItemsInStorefront = pgTable(
   'inventory_transfer_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2650,7 +2650,7 @@ export const inventoryTransferItemsInStorefront = storefront.table(
   ]
 );
 
-export const orderEditsInStorefront = storefront.table(
+export const orderEditsInStorefront = pgTable(
   'order_edits',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2686,7 +2686,7 @@ export const orderEditsInStorefront = storefront.table(
   ]
 );
 
-export const kbCategoriesInStorefront = storefront.table(
+export const kbCategoriesInStorefront = pgTable(
   'kb_categories',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2701,7 +2701,7 @@ export const kbCategoriesInStorefront = storefront.table(
   (table) => [unique('kb_categories_slug_unique').on(table.slug)]
 );
 
-export const kbArticlesInStorefront = storefront.table(
+export const kbArticlesInStorefront = pgTable(
   'kb_articles',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2732,7 +2732,7 @@ export const kbArticlesInStorefront = storefront.table(
   ]
 );
 
-export const orderTimelineInStorefront = storefront.table(
+export const orderTimelineInStorefront = pgTable(
   'order_timeline',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2765,7 +2765,7 @@ export const orderTimelineInStorefront = storefront.table(
   ]
 );
 
-export const productBundleItemsInStorefront = storefront.table(
+export const productBundleItemsInStorefront = pgTable(
   'product_bundle_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2786,7 +2786,7 @@ export const productBundleItemsInStorefront = storefront.table(
   ]
 );
 
-export const marketsInStorefront = storefront.table(
+export const marketsInStorefront = pgTable(
   'markets',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2809,7 +2809,7 @@ export const marketsInStorefront = storefront.table(
   ]
 );
 
-export const priceListsInStorefront = storefront.table(
+export const priceListsInStorefront = pgTable(
   'price_lists',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2845,7 +2845,7 @@ export const priceListsInStorefront = storefront.table(
   ]
 );
 
-export const productAttributesInStorefront = storefront.table(
+export const productAttributesInStorefront = pgTable(
   'product_attributes',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2871,7 +2871,7 @@ export const productAttributesInStorefront = storefront.table(
   ]
 );
 
-export const productBundlesInStorefront = storefront.table(
+export const productBundlesInStorefront = pgTable(
   'product_bundles',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2897,7 +2897,7 @@ export const productBundlesInStorefront = storefront.table(
   ]
 );
 
-export const productImagesInStorefront = storefront.table(
+export const productImagesInStorefront = pgTable(
   'product_images',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2923,7 +2923,7 @@ export const productImagesInStorefront = storefront.table(
   ]
 );
 
-export const purchaseOrdersInStorefront = storefront.table(
+export const purchaseOrdersInStorefront = pgTable(
   'purchase_orders',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -2977,7 +2977,7 @@ export const purchaseOrdersInStorefront = storefront.table(
   ]
 );
 
-export const suppliersInStorefront = storefront.table(
+export const suppliersInStorefront = pgTable(
   'suppliers',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3013,7 +3013,7 @@ export const suppliersInStorefront = storefront.table(
   ]
 );
 
-export const purchaseOrderItemsInStorefront = storefront.table(
+export const purchaseOrderItemsInStorefront = pgTable(
   'purchase_order_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3043,7 +3043,7 @@ export const purchaseOrderItemsInStorefront = storefront.table(
   ]
 );
 
-export const rmaItemsInStorefront = storefront.table(
+export const rmaItemsInStorefront = pgTable(
   'rma_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3076,7 +3076,7 @@ export const rmaItemsInStorefront = storefront.table(
   ]
 );
 
-export const refundsInStorefront = storefront.table(
+export const refundsInStorefront = pgTable(
   'refunds',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3107,7 +3107,7 @@ export const refundsInStorefront = storefront.table(
   ]
 );
 
-export const refundItemsInStorefront = storefront.table(
+export const refundItemsInStorefront = pgTable(
   'refund_items',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3138,7 +3138,7 @@ export const refundItemsInStorefront = storefront.table(
   ]
 );
 
-export const rmaRequestsInStorefront = storefront.table(
+export const rmaRequestsInStorefront = pgTable(
   'rma_requests',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3179,7 +3179,7 @@ export const rmaRequestsInStorefront = storefront.table(
   ]
 );
 
-export const staffRolesInStorefront = storefront.table('staff_roles', {
+export const staffRolesInStorefront = pgTable('staff_roles', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
     .defaultNow()
@@ -3190,7 +3190,7 @@ export const staffRolesInStorefront = storefront.table('staff_roles', {
   permissions: jsonb().notNull(),
 });
 
-export const staffMembersInStorefront = storefront.table(
+export const staffMembersInStorefront = pgTable(
   'staff_members',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3246,7 +3246,7 @@ export const staffMembersInStorefront = storefront.table(
   ]
 );
 
-export const staffSessionsInStorefront = storefront.table(
+export const staffSessionsInStorefront = pgTable(
   'staff_sessions',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3376,7 +3376,7 @@ export const tenantsInGovernance = governance.table(
   ]
 );
 
-export const taxCategoriesInStorefront = storefront.table('tax_categories', {
+export const taxCategoriesInStorefront = pgTable('tax_categories', {
   id: uuid().defaultRandom().primaryKey().notNull(),
   priority: integer().default(0).notNull(),
   isDefault: boolean('is_default').default(false).notNull(),
@@ -3385,7 +3385,7 @@ export const taxCategoriesInStorefront = storefront.table('tax_categories', {
   description: text(),
 });
 
-export const taxRulesInStorefront = storefront.table(
+export const taxRulesInStorefront = pgTable(
   'tax_rules',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3481,7 +3481,7 @@ export const orderFraudScoresInGovernance = governance.table(
   ]
 );
 
-export const appInstallationsInStorefront = storefront.table(
+export const appInstallationsInStorefront = pgTable(
   'app_installations',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
@@ -3519,7 +3519,7 @@ export const appInstallationsInStorefront = storefront.table(
   ]
 );
 
-export const webhookSubscriptionsInStorefront = storefront.table(
+export const webhookSubscriptionsInStorefront = pgTable(
   'webhook_subscriptions',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
