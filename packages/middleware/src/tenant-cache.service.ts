@@ -1,4 +1,5 @@
 import { env } from '@apex/config';
+import { adminDb, eq, tenantsInGovernance } from '@apex/db';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 import type { TenantContext } from './connection-context';
@@ -59,5 +60,40 @@ export class TenantCacheService implements OnModuleInit {
     if (!this.redis.isOpen) return;
     const key = `tenant:cache:${identifier.toLowerCase()}`;
     await this.redis.del(key);
+  }
+
+  /**
+   * Sovereign Cache: Resolve full tenant context by ID (admin/shared endpoints)
+   */
+  async resolveTenantById(
+    tenantId: string
+  ): Promise<Omit<TenantContext, 'executor'> | null> {
+    // Attempt cache hit
+    const cached = await this.getTenant(tenantId);
+    if (cached) return cached;
+
+    // Item 44 Protocol: Persistent Governance Resolution
+    const [tenant] = await adminDb
+      .select()
+      .from(tenantsInGovernance)
+      .where(eq(tenantsInGovernance.id, tenantId))
+      .limit(1);
+
+    if (!tenant) return null;
+
+    const context: Omit<TenantContext, 'executor'> = {
+      tenantId: tenant.id,
+      schemaName: `tenant_${tenant.subdomain}`,
+      subdomain: tenant.subdomain,
+      plan: (tenant.plan as any) || 'free',
+      isActive: tenant.status === 'active',
+      isSuspended: false,
+      features: [], // Placeholder for future feature flags
+      createdAt: new Date(tenant.createdAt),
+    };
+
+    // Populate cache for S1/S2 high-speed routing
+    await this.setTenant(tenantId, context);
+    return context;
   }
 }

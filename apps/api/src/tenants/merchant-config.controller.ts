@@ -1,14 +1,8 @@
-import {
-  JwtAuthGuard,
-  TenantJwtMatchGuard,
-  type TenantRequest,
-} from '@apex/auth';
+import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
+import type { AuthenticatedRequest } from '@apex/auth';
 import { 
   getTenantDb, 
-  tenantConfigInStorefront, 
-  adminDb, 
-  tenantsInGovernance, 
-  eq 
+  tenantConfigInStorefront,
 } from '@apex/db';
 import { RedisRateLimitStore } from '@apex/middleware';
 import {
@@ -33,34 +27,16 @@ const UpdateConfigSchema = z.object({
 export class MerchantConfigController {
   constructor(private readonly redisStore: RedisRateLimitStore) {}
 
-  /**
-   * Phase 1: DB Context Reconciliation
-   * Fetches the tenant's isolated schema name from governance
-   */
-  private async getResolvedTenantDb(tenantId: string) {
-    const [tenant] = await adminDb
-      .select({ subdomain: tenantsInGovernance.subdomain })
-      .from(tenantsInGovernance)
-      .where(eq(tenantsInGovernance.id, tenantId))
-      .limit(1);
-
-    if (!tenant) {
-      throw new NotFoundException('Merchant tenant not found in governance');
-    }
-
-    // Explicitly route to isolated physical schema (S2 Mandate)
-    return getTenantDb(tenantId, `tenant_${tenant.subdomain}`);
-  }
-
   @Get()
-  async getConfig(@Req() req: TenantRequest) {
+  async getConfig(@Req() req: AuthenticatedRequest) {
     const tenantId = req.user?.tenantId;
     if (!tenantId) {
       throw new Error('Tenant ID not found in session');
     }
     (req as any).auditTenantId = tenantId;
 
-    const { db, release } = await this.getResolvedTenantDb(tenantId);
+    const schemaName = req.tenantContext?.schemaName || 'storefront';
+    const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
       const configEntries = await db.select().from(tenantConfigInStorefront);
 
@@ -83,7 +59,7 @@ export class MerchantConfigController {
 
   @Patch()
   async updateConfig(
-    @Req() req: TenantRequest,
+    @Req() req: AuthenticatedRequest,
     @Body(new ZodValidationPipe(UpdateConfigSchema)) body: z.infer<
       typeof UpdateConfigSchema
     >
@@ -94,7 +70,8 @@ export class MerchantConfigController {
     }
     (req as any).auditTenantId = tenantId;
 
-    const { db, release } = await this.getResolvedTenantDb(tenantId);
+    const schemaName = req.tenantContext?.schemaName || 'storefront';
+    const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
       // S2 Isolation: Explicit insertion/update into the merchant's isolated schema
       await db.transaction(async (tx) => {

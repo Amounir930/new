@@ -1,9 +1,6 @@
 import { AuditLog } from '@apex/audit';
-import {
-  type AuthenticatedRequest,
-  JwtAuthGuard,
-  TenantJwtMatchGuard,
-} from '@apex/auth';
+import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
+import type { AuthenticatedRequest } from '@apex/auth';
 import {
   adminDb,
   eq,
@@ -29,20 +26,6 @@ import { Parser } from 'json2csv';
 export class BulkExportController {
   private readonly logger = new Logger(BulkExportController.name);
 
-  private async getResolvedTenantDb(tenantId: string) {
-    const [tenant] = await adminDb
-      .select({ subdomain: tenantsInGovernance.subdomain })
-      .from(tenantsInGovernance)
-      .where(eq(tenantsInGovernance.id, tenantId))
-      .limit(1);
-
-    if (!tenant) {
-      throw new NotFoundException('Merchant tenant not found in governance');
-    }
-
-    return getTenantDb(tenantId, `tenant_${tenant.subdomain}`);
-  }
-
   @Get()
   @AuditLog({ action: 'PRODUCT_BULK_EXPORT', entityType: 'product' })
   async exportProducts(@Req() req: AuthenticatedRequest, @Res() res: Response) {
@@ -51,7 +34,8 @@ export class BulkExportController {
       return res.status(401).send('Unauthorized');
     }
 
-    const { db, release } = await this.getResolvedTenantDb(tenantId);
+    const schemaName = req.tenantContext?.schemaName || 'storefront';
+    const { db, release } = await getTenantDb(tenantId, schemaName);
     let allProducts: InferSelectModel<typeof productsInStorefront>[];
     try {
       allProducts = await db.select().from(productsInStorefront);

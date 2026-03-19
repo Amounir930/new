@@ -132,8 +132,16 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     try {
       const identifier = this.extractTenantIdentifier(req);
 
-      // 1. System/Root Context Check
+      // 1. System/Root Context Check & Sovereign Upgrade (S1 Mandate)
       if (this.isSystemRequest(identifier)) {
+        const peekedId = this.peekTenantId(req);
+        if (peekedId) {
+          const context = await this.cache.resolveTenantById(peekedId);
+          if (context) {
+            // S1 Guarantee: Upgraded context will be verified by S2 Guard
+            return this.runDatabaseSession(context, false, req, res, next);
+          }
+        }
         return this.handleSystemContext(identifier, req, res, next);
       }
 
@@ -186,6 +194,33 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
     const subdomain = extractSubdomain(cleanHost);
     return xTenantId && isInternal ? xTenantId : subdomain || cleanHost;
+  }
+
+  /**
+   * S1 Security: Peek at unverified tenant identity (Fast-Path routing)
+   * CWE-345 Mitigation: Verified by downstream S2 Guard comparison
+   */
+  private peekTenantId(req: Request): string | null {
+    // 1. Check explicit header override (Fastest)
+    const xTenantId = req.headers['x-tenant-id'] as string;
+    if (xTenantId) return xTenantId;
+
+    // 2. Peek at JWT Bearer token
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const payload = token.split('.')[1];
+        if (payload) {
+          const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
+          return decoded.tenantId || null;
+        }
+      } catch {
+        return null; // Malformed token peek failure
+      }
+    }
+
+    return null;
   }
 
   private handleError(error: unknown, res: Response, next: NextFunction) {

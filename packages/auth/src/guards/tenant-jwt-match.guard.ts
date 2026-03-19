@@ -15,6 +15,7 @@ import type { Request } from 'express';
 export interface TenantRequest extends Request {
   tenantContext?: {
     tenantId: string;
+    schemaName?: string; // Sovereign Cache Pattern (Pattern A)
     [key: string]: unknown;
   };
   user?: {
