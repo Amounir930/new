@@ -9,21 +9,28 @@ import {
   sql,
 } from '@apex/db';
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { isUuid, TenantCacheService } from '@apex/middleware';
 
 @Controller('tenants/stats')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class MerchantStatsController {
+  constructor(private readonly tenantCache: TenantCacheService) {}
+
   @Get()
   async getStats(@Req() req: AuthenticatedRequest) {
     const tenantId = req.user.tenantId;
-    if (!tenantId) throw new Error('S2 CRITICAL: Tenant context missing');
+    if (!tenantId || !isUuid(tenantId)) {
+      throw new Error('S2 CRITICAL: Verified Tenant UUID missing in session');
+    }
 
-    const schemaName =
-      req.tenantContext?.tenantId === tenantId
-        ? req.tenantContext.schemaName
-        : undefined;
+    // Surgical Resolve: On shared domains (api.60sec.shop), req.tenantContext is 'system'.
+    // We must strictly resolve the merchant's physical schema from their UUID.
+    const context = await this.tenantCache.resolveTenantById(tenantId);
+    if (!context) {
+      throw new Error(`S2 CRITICAL: Physical schema mapping failed for tenant ${tenantId}`);
+    }
 
-    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const { db, release } = await getTenantDb(tenantId, context.schemaName);
 
     try {
       // Basic aggregate stats query
