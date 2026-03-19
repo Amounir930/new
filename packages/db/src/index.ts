@@ -84,7 +84,7 @@ export async function getTenantDb(tenantId: string, schemaName?: string) {
       await client.query(`SET search_path TO "${schemaName}", public`);
     } else {
       // Diamond Fix 3.0: High-Safety Default for Unqualified System Requests
-      await client.query(`SET search_path TO storefront, public`);
+      await client.query(`SET search_path TO public`);
     }
 
     const db = drizzle(client, { schema: { ...schema, ...relations } });

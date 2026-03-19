@@ -294,7 +294,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   ) {
     const systemContext: TenantContext = {
       tenantId: 'system',
-      schemaName: 'storefront',
+      schemaName: 'public',
       subdomain: subdomain || 'root',
       plan: 'enterprise',
       isActive: true,

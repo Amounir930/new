@@ -55,7 +55,8 @@ export class StorefrontController {
     }
 
     let schemaName = req.tenantContext?.schemaName;
-    if (!schemaName) {
+    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
+    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
       const context = await this.tenantCache.resolveTenantById(tenantId);
       if (!context) throw new NotFoundException('Tenant not found');
       schemaName = context.schemaName;
@@ -77,7 +78,8 @@ export class StorefrontController {
     }
 
     let schemaName = req.tenantContext?.schemaName;
-    if (!schemaName) {
+    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
+    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
       const context = await this.tenantCache.resolveTenantById(tenantId);
       if (!context) throw new NotFoundException('Tenant not found');
       schemaName = context.schemaName;
@@ -99,7 +101,8 @@ export class StorefrontController {
     }
 
     let schemaName = req.tenantContext?.schemaName;
-    if (!schemaName) {
+    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
+    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
       const context = await this.tenantCache.resolveTenantById(tenantId);
       if (!context) throw new NotFoundException('Tenant not found');
       schemaName = context.schemaName;
@@ -125,7 +128,8 @@ export class StorefrontController {
     }
 
     let schemaName = req.tenantContext?.schemaName;
-    if (!schemaName) {
+    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
+    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
       const context = await this.tenantCache.resolveTenantById(tenantId);
       if (!context) throw new NotFoundException('Tenant not found');
       schemaName = context.schemaName;
@@ -142,7 +146,8 @@ export class StorefrontController {
     }
 
     let schemaName = req.tenantContext?.schemaName;
-    if (!schemaName) {
+    // S1 Sovereign Rule: If on 'public' or 'storefront' schema, force dynamic resolution
+    if (!schemaName || schemaName === 'public' || schemaName === 'storefront') {
       const context = await this.tenantCache.resolveTenantById(tenantId);
       if (!context) throw new NotFoundException('Tenant not found');
       schemaName = context.schemaName;
