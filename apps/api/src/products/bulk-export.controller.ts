@@ -25,7 +25,10 @@ export class BulkExportController {
       return res.status(401).send('Unauthorized');
     }
 
-    const { db, release } = await getTenantDb(tenantId);
+    const { db, release } = await getTenantDb(
+      tenantId,
+      req.tenantContext?.schemaName || 'public'
+    );
     let allProducts: InferSelectModel<typeof productsInStorefront>[];
     try {
       allProducts = await db.select().from(productsInStorefront);

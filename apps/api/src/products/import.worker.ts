@@ -13,7 +13,7 @@ export class ImportWorker {
 
   @Process('product-import')
   async handleImport(job: Job) {
-    const { tenantId, _adminId, _fileData, _options } = job.data;
+    const { tenantId, schemaName, _adminId, _fileData, _options } = job.data;
 
     // 1. Update job status to processing
     const { release } = await getTenantDb(tenantId);
@@ -34,7 +34,7 @@ export class ImportWorker {
     await job.progress(50);
 
     // 3. Mark as completed
-    const { release: releaseEnd } = await getTenantDb(tenantId);
+    const { release: releaseEnd } = await getTenantDb(tenantId, schemaName || 'public');
     try {
       // await dbEnd
       //   .update(importJobsInStorefront)

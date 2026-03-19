@@ -37,7 +37,10 @@ export class ProductsController {
   @Get()
   @RequireFeature('ecommerce')
   async findAll(@Req() req: AuthenticatedRequest) {
-    const { db, release } = await getTenantDb(req.user.tenantId!);
+    const { db, release } = await getTenantDb(
+      req.user.tenantId!,
+      req.tenantContext?.schemaName || 'public'
+    );
     try {
       return await db.select().from(productsInStorefront);
     } finally {
@@ -68,7 +71,10 @@ export class ProductsController {
       salePrice: body.salePrice ? String(body.salePrice) : null,
     };
 
-    const { db, release } = await getTenantDb(tenantId);
+    const { db, release } = await getTenantDb(
+      tenantId,
+      req.tenantContext?.schemaName || 'public'
+    );
     try {
       const [product] = await db
         .insert(productsInStorefront)
@@ -109,7 +115,10 @@ export class ProductsController {
       mappedData.name = { ar: body.nameAr || '', en: body.nameEn || '' };
     }
 
-    const { db, release } = await getTenantDb(tenantId);
+    const { db, release } = await getTenantDb(
+      tenantId,
+      req.tenantContext?.schemaName || 'public'
+    );
     try {
       const [product] = await db
         .update(productsInStorefront)
@@ -135,7 +144,10 @@ export class ProductsController {
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_DELETED', entityType: 'product' })
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
-    const { db, release } = await getTenantDb(req.user.tenantId!);
+    const { db, release } = await getTenantDb(
+      req.user.tenantId!,
+      req.tenantContext?.schemaName || 'public'
+    );
     try {
       await db
         .update(productsInStorefront)

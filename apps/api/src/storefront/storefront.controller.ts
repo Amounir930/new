@@ -42,7 +42,8 @@ export class StorefrontController {
   @AuditLog('STOREFRONT_CONFIG_VIEW')
   async getConfig(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
-    return this.storefrontService.getTenantConfig(tenantId);
+    const schemaName = req.tenantContext?.schemaName || 'public';
+    return this.storefrontService.getTenantConfig(tenantId, schemaName);
   }
 
   @Get('products')
@@ -54,7 +55,8 @@ export class StorefrontController {
   ) {
     const tenantId =
       req.tenantContext?.tenantId || tenantQuery.tenantId || 'public';
-    return this.storefrontService.getProducts(tenantId, query);
+    const schemaName = req.tenantContext?.schemaName || 'public';
+    return this.storefrontService.getProducts(tenantId, schemaName, query);
   }
 
   @Get('products/:slug')
@@ -65,8 +67,10 @@ export class StorefrontController {
     @Query() query: TenantIdDto
   ) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
+    const schemaName = req.tenantContext?.schemaName || 'public';
     const product = await this.storefrontService.getProductBySlug(
       tenantId,
+      schemaName,
       slug
     );
     if (!product) {
@@ -79,13 +83,15 @@ export class StorefrontController {
   @AuditLog('STOREFRONT_HOME_VIEW')
   async getHome(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
-    return this.storefrontService.getHomeData(tenantId);
+    const schemaName = req.tenantContext?.schemaName || 'public';
+    return this.storefrontService.getHomeData(tenantId, schemaName);
   }
 
   @Get('bootstrap')
   async getBootstrap(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
-    return this.storefrontService.getBootstrapData(tenantId);
+    const schemaName = req.tenantContext?.schemaName || 'public';
+    return this.storefrontService.getBootstrapData(tenantId, schemaName);
   }
 
   @Post('newsletter')
@@ -97,6 +103,7 @@ export class StorefrontController {
     @Query() query: TenantIdDto
   ) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
-    return this.storefrontService.subscribeToNewsletter(tenantId, body.email);
+    const schemaName = req.tenantContext?.schemaName || 'public';
+    return this.storefrontService.subscribeToNewsletter(tenantId, schemaName, body.email);
   }
 }

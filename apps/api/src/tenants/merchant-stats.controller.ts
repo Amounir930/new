@@ -16,7 +16,10 @@ export class MerchantStatsController {
   async getStats(@Req() req: AuthenticatedRequest) {
     const tenantId = req.user.tenantId;
     if (!tenantId) throw new Error('S2 CRITICAL: Tenant context missing');
-    const { db, release } = await getTenantDb(tenantId);
+    const { db, release } = await getTenantDb(
+      tenantId,
+      req.tenantContext?.schemaName || 'public'
+    );
     try {
       // Basic aggregate stats query
       const [orderStats] = await db

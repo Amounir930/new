@@ -34,7 +34,10 @@ export class TenantCacheService implements OnModuleInit {
     if (!data) return null;
 
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      // Item 44 Protocol: Restore Date objects from JSON
+      if (parsed.createdAt) parsed.createdAt = new Date(parsed.createdAt);
+      return parsed;
     } catch {
       return null;
     }

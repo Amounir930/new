@@ -22,8 +22,8 @@ export class StorefrontService {
     private readonly crypto: EncryptionService
   ) {}
 
-  async getTenantConfig(tenantId: string) {
-    const { db, release } = await getTenantDb(tenantId);
+  async getTenantConfig(tenantId: string, schemaName: string) {
+    const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
       const cacheKey = `storefront:config:${tenantId}`;
       const client = await this.redisStore.getClient();
@@ -76,6 +76,7 @@ export class StorefrontService {
 
   async getProducts(
     _tenantId: string,
+    schemaName: string,
     params: {
       featured?: boolean;
       category?: string;
@@ -83,7 +84,7 @@ export class StorefrontService {
       sort?: 'newest' | 'price_asc' | 'price_desc';
     }
   ) {
-    const { db, release } = await getTenantDb(_tenantId);
+    const { db, release } = await getTenantDb(_tenantId, schemaName);
     try {
       const conditions = [eq(productsInStorefront.isActive, true)];
 
@@ -123,8 +124,8 @@ export class StorefrontService {
     }
   }
 
-  async getProductBySlug(_tenantId: string, slug: string) {
-    const { db, release } = await getTenantDb(_tenantId);
+  async getProductBySlug(_tenantId: string, schemaName: string, slug: string) {
+    const { db, release } = await getTenantDb(_tenantId, schemaName);
     try {
       const productData = await db
         .select()
@@ -161,7 +162,7 @@ export class StorefrontService {
     }
   }
 
-  async getHomeData(_tenantId: string) {
+  async getHomeData(_tenantId: string, schemaName: string) {
     const cacheKey = `storefront:home:${_tenantId}`;
     const client = await this.redisStore.getClient();
 
@@ -172,7 +173,7 @@ export class StorefrontService {
       }
     }
 
-    const { db, release } = await getTenantDb(_tenantId);
+    const { db, release } = await getTenantDb(_tenantId, schemaName);
     try {
       const now = new Date();
 
@@ -232,7 +233,7 @@ export class StorefrontService {
   }
 
   // S12 FIX 19C: Aggregated Bootstrap (uses middleware connection, no second pool hit)
-  async getBootstrapData(_tenantId: string) {
+  async getBootstrapData(_tenantId: string, schemaName: string) {
     const cacheKey = `storefront:bootstrap:${_tenantId}`;
     const client = await this.redisStore.getClient();
     if (client) {
@@ -241,8 +242,8 @@ export class StorefrontService {
     }
 
     const [config, home] = await Promise.all([
-      this.fetchConfigInternal(_tenantId),
-      this.fetchHomeInternal(_tenantId),
+      this.fetchConfigInternal(_tenantId, schemaName),
+      this.fetchHomeInternal(_tenantId, schemaName),
     ]);
 
     const result = { config, homeData: home };
@@ -255,8 +256,8 @@ export class StorefrontService {
   }
 
   /** Internal helpers — use middleware-provided DB context */
-  private async fetchConfigInternal(_tenantId: string) {
-    const { db, release } = await getTenantDb(_tenantId);
+  private async fetchConfigInternal(_tenantId: string, schemaName: string) {
+    const { db, release } = await getTenantDb(_tenantId, schemaName);
     try {
       const configEntries = await db.select().from(tenantConfigInStorefront);
       const config = configEntries.reduce(
@@ -291,8 +292,8 @@ export class StorefrontService {
     }
   }
 
-  private async fetchHomeInternal(_tenantId: string) {
-    const { db, release } = await getTenantDb(_tenantId);
+  private async fetchHomeInternal(_tenantId: string, schemaName: string) {
+    const { db, release } = await getTenantDb(_tenantId, schemaName);
     try {
       const now = new Date();
 
@@ -344,8 +345,8 @@ export class StorefrontService {
     }
   }
 
-  async subscribeToNewsletter(_tenantId: string, email: string) {
-    const { db, release } = await getTenantDb(_tenantId);
+  async subscribeToNewsletter(_tenantId: string, schemaName: string, email: string) {
+    const { db, release } = await getTenantDb(_tenantId, schemaName);
     try {
       // S7: Encrypt PII before storage
       const encryptedEmail = this.crypto.encrypt(email).enc;
