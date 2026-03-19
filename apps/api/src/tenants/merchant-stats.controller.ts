@@ -18,7 +18,11 @@ export class MerchantStatsController {
     const tenantId = req.user.tenantId;
     if (!tenantId) throw new Error('S2 CRITICAL: Tenant context missing');
 
-    const schemaName = req.tenantContext?.schemaName || 'public';
+    const schemaName =
+      req.tenantContext?.tenantId === tenantId
+        ? req.tenantContext.schemaName
+        : undefined;
+
     const { db, release } = await getTenantDb(tenantId, schemaName);
 
     try {

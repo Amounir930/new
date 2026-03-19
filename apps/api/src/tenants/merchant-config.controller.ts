@@ -35,7 +35,11 @@ export class MerchantConfigController {
     }
     (req as any).auditTenantId = tenantId;
 
-    const schemaName = req.tenantContext?.schemaName || 'storefront';
+    const schemaName =
+      req.tenantContext?.tenantId === tenantId
+        ? req.tenantContext.schemaName
+        : undefined;
+
     const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
       const configEntries = await db.select().from(tenantConfigInStorefront);

@@ -205,11 +205,21 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const xTenantId = req.headers['x-tenant-id'] as string;
     if (xTenantId) return xTenantId;
 
-    // 2. Peek at JWT Bearer token
+    // 2. Peek at JWT (Bearer or Cookie)
+    let token: string | null = null;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else {
+      // S1 Fix: Support administrative cookies for dashboard requests
+      const cookies = (req as any).cookies;
+      if (cookies && typeof cookies === 'object') {
+        token = cookies.adm_tkn || null;
+      }
+    }
+
+    if (token) {
       try {
-        const token = authHeader.split(' ')[1];
         const payload = token.split('.')[1];
         if (payload) {
           const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
