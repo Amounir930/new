@@ -35,10 +35,10 @@ export class MerchantConfigController {
     }
     (req as any).auditTenantId = tenantId;
 
-    const schemaName =
-      req.tenantContext?.tenantId === tenantId
-        ? req.tenantContext.schemaName
-        : undefined;
+    const schemaName = req.tenantContext?.schemaName;
+    if (!schemaName) {
+      throw new Error('S1 PROTECT: Schema context missing in authenticated route');
+    }
 
     const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
@@ -74,7 +74,10 @@ export class MerchantConfigController {
     }
     (req as any).auditTenantId = tenantId;
 
-    const schemaName = req.tenantContext?.schemaName || 'storefront';
+    const schemaName = req.tenantContext?.schemaName;
+    if (!schemaName) {
+      throw new Error('S1 PROTECT: Schema context missing in authenticated route');
+    }
     const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
       // S2 Isolation: Explicit insertion/update into the merchant's isolated schema
