@@ -80,6 +80,7 @@ export { TenantCacheService } from './tenant-cache.service';
 // S2: Tenant Isolation Middleware
 export {
   type AuthenticatedUser,
+  isUuid,
   SuperAdminOrTenantGuard,
   TenantIsolationMiddleware,
   type TenantRequest,

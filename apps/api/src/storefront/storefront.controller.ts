@@ -1,6 +1,4 @@
 import { AuditLog } from '@apex/audit';
-import type { TenantRequest } from '@apex/middleware';
-import { RateLimit } from '@apex/middleware';
 import {
   BadRequestException,
   Body,
@@ -18,6 +16,12 @@ import { z } from 'zod';
 import type { NewsletterSubscriptionDto } from './dto/newsletter.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { StorefrontService } from './storefront.service';
+import {
+  isUuid,
+  RateLimit,
+  TenantCacheService,
+  type TenantRequest,
+} from '@apex/middleware';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
@@ -37,16 +41,26 @@ type ProductsQueryDto = z.infer<typeof ProductsQuerySchema>;
 @Controller({ path: 'storefront', version: '1' })
 @UsePipes(ZodValidationPipe)
 export class StorefrontController {
-  constructor(private readonly storefrontService: StorefrontService) {}
+  constructor(
+    private readonly storefrontService: StorefrontService,
+    private readonly tenantCache: TenantCacheService
+  ) {}
 
   @Get('config')
   @AuditLog('STOREFRONT_CONFIG_VIEW')
   async getConfig(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || tenantId === 'public') {
-      throw new BadRequestException('MANDATORY: Valid tenantId is required');
+    if (!tenantId || !isUuid(tenantId)) {
+      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
     }
-    const schemaName = req.tenantContext?.schemaName || 'storefront';
+
+    let schemaName = req.tenantContext?.schemaName;
+    if (!schemaName) {
+      const context = await this.tenantCache.resolveTenantById(tenantId);
+      if (!context) throw new NotFoundException('Tenant not found');
+      schemaName = context.schemaName;
+    }
+
     return this.storefrontService.getTenantConfig(tenantId, schemaName);
   }
 
@@ -58,10 +72,17 @@ export class StorefrontController {
     @Query() tenantQuery: TenantIdDto
   ) {
     const tenantId = req.tenantContext?.tenantId || tenantQuery.tenantId;
-    if (!tenantId || tenantId === 'public') {
-      throw new BadRequestException('MANDATORY: Valid tenantId is required');
+    if (!tenantId || !isUuid(tenantId)) {
+      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
     }
-    const schemaName = req.tenantContext?.schemaName || 'storefront';
+
+    let schemaName = req.tenantContext?.schemaName;
+    if (!schemaName) {
+      const context = await this.tenantCache.resolveTenantById(tenantId);
+      if (!context) throw new NotFoundException('Tenant not found');
+      schemaName = context.schemaName;
+    }
+
     return this.storefrontService.getProducts(tenantId, schemaName, query);
   }
 
@@ -73,10 +94,17 @@ export class StorefrontController {
     @Query() query: TenantIdDto
   ) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || tenantId === 'public') {
-      throw new BadRequestException('MANDATORY: Valid tenantId is required');
+    if (!tenantId || !isUuid(tenantId)) {
+      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
     }
-    const schemaName = req.tenantContext?.schemaName || 'public';
+
+    let schemaName = req.tenantContext?.schemaName;
+    if (!schemaName) {
+      const context = await this.tenantCache.resolveTenantById(tenantId);
+      if (!context) throw new NotFoundException('Tenant not found');
+      schemaName = context.schemaName;
+    }
+
     const product = await this.storefrontService.getProductBySlug(
       tenantId,
       schemaName,
@@ -92,20 +120,34 @@ export class StorefrontController {
   @AuditLog('STOREFRONT_HOME_VIEW')
   async getHome(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || tenantId === 'public') {
-      throw new BadRequestException('MANDATORY: Valid tenantId is required');
+    if (!tenantId || !isUuid(tenantId)) {
+      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
     }
-    const schemaName = req.tenantContext?.schemaName || 'storefront';
+
+    let schemaName = req.tenantContext?.schemaName;
+    if (!schemaName) {
+      const context = await this.tenantCache.resolveTenantById(tenantId);
+      if (!context) throw new NotFoundException('Tenant not found');
+      schemaName = context.schemaName;
+    }
+
     return this.storefrontService.getHomeData(tenantId, schemaName);
   }
 
   @Get('bootstrap')
   async getBootstrap(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const tenantId = req.tenantContext?.tenantId || query.tenantId;
-    if (!tenantId || tenantId === 'public') {
-      throw new BadRequestException('MANDATORY: Valid tenantId is required');
+    if (!tenantId || !isUuid(tenantId)) {
+      throw new BadRequestException('MANDATORY: Valid UUID tenantId is required');
     }
-    const schemaName = req.tenantContext?.schemaName || 'storefront';
+
+    let schemaName = req.tenantContext?.schemaName;
+    if (!schemaName) {
+      const context = await this.tenantCache.resolveTenantById(tenantId);
+      if (!context) throw new NotFoundException('Tenant not found');
+      schemaName = context.schemaName;
+    }
+
     return this.storefrontService.getBootstrapData(tenantId, schemaName);
   }
 

@@ -70,7 +70,7 @@ function extractSubdomain(host: string): string | null {
  * S1: Strict UUID Validation
  * Prevents 22P02 Type Mismatch errors in Governance DB
  */
-function isUuid(id: string): boolean {
+export function isUuid(id: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
     id
   );
