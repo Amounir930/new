@@ -57,11 +57,11 @@ export class StorefrontService {
         .limit(1);
 
       const result = {
+        ...config,
         storeName: (config.store_name as string) || 'APEX STORE',
         logoUrl: config.logo_url as string | undefined,
         primaryColor: (config.primary_color as string) || '#000000',
         heroBanner: heroBanners[0],
-        ...(config as Record<string, unknown>),
       };
 
       if (client) {
@@ -281,11 +281,11 @@ export class StorefrontService {
         .limit(1);
 
       return {
+        ...config,
         storeName: (config.store_name as string) || 'APEX STORE',
         logoUrl: config.logo_url as string | undefined,
         primaryColor: (config.primary_color as string) || '#000000',
         heroBanner: heroBanners[0],
-        ...(config as Record<string, unknown>),
       };
     } finally {
       release();

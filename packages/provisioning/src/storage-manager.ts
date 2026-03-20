@@ -40,11 +40,31 @@ export let minioClient: Minio.Client | null = null;
 
 function getMinioClient(): Minio.Client {
   if (!minioClient) {
-    const useSSL = env.MINIO_USE_SSL === 'true'; // Protocol S14: Support internal HTTP and external HTTPS via env toggle
+    let endpoint = env.MINIO_ENDPOINT || 'localhost';
+    let port = Number.parseInt(env.MINIO_PORT || '9000', 10);
+    let useSSL = env.MINIO_USE_SSL === 'true';
+
+    // S2 FIX: Parse endpoint to strip protocol and extract port if present
+    try {
+      if (endpoint.includes('://')) {
+        const url = new URL(endpoint);
+        endpoint = url.hostname;
+        if (url.port) {
+          port = Number.parseInt(url.port, 10);
+        }
+        if (url.protocol === 'https:') {
+          useSSL = true;
+        } else if (url.protocol === 'http:') {
+          useSSL = false;
+        }
+      }
+    } catch (e) {
+      logger.error('Failed to parse MINIO_ENDPOINT', { endpoint, error: (e as Error).message });
+    }
 
     minioClient = new Minio.Client({
-      endPoint: env.MINIO_ENDPOINT,
-      port: Number.parseInt(env.MINIO_PORT, 10),
+      endPoint: endpoint,
+      port,
       useSSL,
       accessKey: env.MINIO_ACCESS_KEY!,
       secretKey: env.MINIO_SECRET_KEY!,

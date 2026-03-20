@@ -12,28 +12,43 @@ const PUBLIC_API_URL = config.publicApiUrl;
 
 export const API_BASE = IS_SERVER ? INTERNAL_API_URL : PUBLIC_API_URL;
 
+interface StorefrontFetchOptions extends RequestInit {
+  cache?: RequestCache;
+  next?: {
+    revalidate?: number | false;
+    tags?: string[];
+  };
+}
+
 export async function fetchStorefront(
-  endpoint: string,
+  path: string,
   tenantId?: string,
-  options: RequestInit = {}
+  options: StorefrontFetchOptions = {}
 ) {
   // 🛡️ S2 FIX: Enforce hostname-based discovery if tenantId is missing or generic
   const resolvedTenantId = (!tenantId || tenantId === 'public')
     ? ((await extractTenantFromHost()) || 'public')
     : tenantId;
 
-  const url = `${API_BASE}${endpoint}`;
-
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${API_BASE}${path}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
         'x-tenant-id': resolvedTenantId, // Crucial for S2 Isolation in API
         ...options.headers,
       },
-      // S12: Cache policy
+      // S12: Cache policy with Vector 4 Tagging
       cache: options.cache || (IS_SERVER ? 'force-cache' : 'default'),
+      next: {
+        revalidate: options.next?.revalidate,
+        tags: [
+          'storefront',
+          `tenant-${resolvedTenantId}`,
+          ...(tenantId && tenantId !== 'public' ? [`tenant-${tenantId}`] : []),
+          ...(options.next?.tags || []),
+        ],
+      },
     });
 
     if (!res.ok) {
