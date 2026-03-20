@@ -143,6 +143,19 @@ async function setupBucket(
   plan: string,
   subdomain: string
 ): Promise<void> {
+  // 🛡️ Protocol Delta: Use interface extension to workaround broken SDK type definitions safely
+  interface PatchedMinioClient extends Omit<Minio.Client, 'setBucketTagging'> {
+    setBucketTagging(
+      bucketName: string,
+      tags: Record<string, string>
+    ): Promise<void>;
+    setBucketCors(
+      bucketName: string,
+      corsConfig: any
+    ): Promise<void>;
+  }
+  const patchedClient = client as unknown as PatchedMinioClient;
+
   // 1. Enable versioning for audit trail
   await client.setBucketVersioning(bucketName, { Status: 'Enabled' });
 
@@ -150,18 +163,30 @@ async function setupBucket(
   const policy = await getPublicReadPolicy(bucketName);
   await client.setBucketPolicy(bucketName, JSON.stringify(policy));
 
-  // 3. Set bucket tagging with plan info
-  // 🛡️ Protocol Delta: Use interface extension to workaround broken SDK type definitions safely
-  // MinIO SDK dist/main/internal/client.d.ts incorrectly types setBucketTagging as taking 'Tag'
-  // but runtime expects 'Record<string, string>' (Tags).
-  interface PatchedMinioClient extends Omit<Minio.Client, 'setBucketTagging'> {
-    setBucketTagging(
-      bucketName: string,
-      tags: Record<string, string>
-    ): Promise<void>;
+  // 2.5 Set CORS policy (S8 Mandate)
+  try {
+    const corsConfig = {
+      CORSRules: [
+        {
+          AllowedHeaders: ['*'],
+          AllowedMethods: ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
+          AllowedOrigins: [
+            'https://admin.60sec.shop',
+            `https://${subdomain}.${env.APP_ROOT_DOMAIN}`,
+          ],
+          ExposeHeaders: ['ETag'],
+          MaxAgeSeconds: 3000,
+        },
+      ],
+    };
+    await patchedClient.setBucketCors(bucketName, corsConfig);
+  } catch (corsError) {
+    logger.error(`S8 Warning: Failed to set CORS for bucket ${bucketName}`, {
+      corsError,
+    });
   }
 
-  const patchedClient = client as PatchedMinioClient;
+  // 3. Set bucket tagging with plan info
   await patchedClient.setBucketTagging(bucketName, {
     plan,
     tenant: subdomain,

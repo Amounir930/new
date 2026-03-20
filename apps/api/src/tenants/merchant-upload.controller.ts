@@ -56,9 +56,19 @@ export class MerchantUploadController {
     }
 
     const tenantId = req.user.tenantId;
+    const subdomain = (req as any).tenantContext?.subdomain as string | undefined;
+
+    if (!subdomain || subdomain === 'root' || subdomain === 'system') {
+      this.logger.error(`S2 VIOLATION: Invalid tenant subdomain for upload: ${subdomain}`);
+      throw new BadRequestException('Sovereign bucket resolution failed: Invalid subdomain');
+    }
+
     (req as any).auditTenantId = tenantId;
     const fileId = crypto.randomUUID();
-    const key = `merchants/${tenantId}/logos/${fileId}.${extension}`;
+    
+    // S8 Architecture: Assets reside in 'public/logos' for anonymous access
+    const bucketName = `tenant-${subdomain.toLowerCase().replace(/[^a-z0-9]/g, '')}-assets`;
+    const key = `public/logos/${fileId}.${extension}`;
     
     try {
       // Dedicated Presign Client using the Public URL (S3 Signature V4 Integrity)
@@ -73,13 +83,13 @@ export class MerchantUploadController {
       });
 
       const command = new PutObjectCommand({
-        Bucket: env.MINIO_BUCKET,
+        Bucket: bucketName,
         Key: key,
         ContentType: contentType,
       });
 
       const uploadUrl = await getSignedUrl(s3PresignClient, command, { expiresIn: 300 });
-      const publicUrl = `${env.STORAGE_PUBLIC_URL}/${key}`;
+      const publicUrl = `${env.STORAGE_PUBLIC_URL}/${bucketName}/${key}`;
 
       return { uploadUrl, publicUrl };
     } catch (error) {
