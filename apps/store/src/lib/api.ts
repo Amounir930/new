@@ -19,7 +19,7 @@ export async function fetchStorefront(
 ) {
   // 🛡️ S2 FIX: Enforce hostname-based discovery if tenantId is missing or generic
   const resolvedTenantId = (!tenantId || tenantId === 'public')
-    ? (extractTenantFromHost() || 'public')
+    ? ((await extractTenantFromHost()) || 'public')
     : tenantId;
 
   const url = `${API_BASE}${endpoint}`;
@@ -101,14 +101,24 @@ export async function getProductBySlug(tenantId: string, slug: string) {
 }
 
 /**
- * 🛡️ S2 FIX: Helper to extract tenant identifier from current hostname
+ * 🛡️ S2 FIX: Universal helper to extract tenant identifier from Host header (SSR) or hostname (Client)
  */
-function extractTenantFromHost(): string | null {
-  if (typeof window === 'undefined') return null;
-  const host = window.location.hostname;
+export async function extractTenantFromHost(): Promise<string | null> {
+  let host = '';
+
+  if (typeof window !== 'undefined') {
+    // Client-side
+    host = window.location.hostname;
+  } else {
+    // Server-side (SSR)
+    const { headers } = await import('next/headers');
+    const headersList = await headers();
+    host = headersList.get('host') || '';
+  }
+
   const parts = host.split('.');
   // Check if we are on a tenant subdomain (e.g., tenant.60sec.shop)
-  if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'api' && parts[0] !== 'admin') {
+  if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'api' && parts[0] !== 'admin' && parts[0] !== 'super-admin') {
     return parts[0];
   }
   return null;
