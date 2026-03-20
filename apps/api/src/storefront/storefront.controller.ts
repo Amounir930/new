@@ -113,8 +113,9 @@ export class StorefrontController {
       ? (queryId || headerId) 
       : (ambientId || queryId || headerId);
 
-    if (!rawId || rawId === 'system') {
-      throw new BadRequestException('MANDATORY: Tenant identifier (subdomain or UUID) is required on shared domains');
+    // S2 Protection: Reject generic/default identifiers which lack a real schema context.
+    if (!rawId || rawId === 'system' || rawId === 'public') {
+      throw new BadRequestException('MANDATORY: Valid tenant identifier (subdomain or UUID) is required');
     }
 
     // Attempt resolution through Smart Cache (handles ID and Subdomain)
