@@ -64,11 +64,18 @@ http:
           - "https://admin.60sec.shop"
           - "https://60sec.shop"
         accessControlAllowHeaders:
+          - "Origin"
           - "Content-Type"
           - "Authorization"
           - "X-Request-ID"
           - "X-Super-Admin-Key"
           - "X-Tenant-ID"
+          - "amz-sdk-invocation-id"
+          - "amz-sdk-request"
+          - "x-amz-content-sha256"
+          - "x-amz-date"
+          - "x-amz-user-agent"
+          - "x-amz-decoded-content-length"
         accessControlAllowCredentials: true
         
     apex-store-csp:
