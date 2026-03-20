@@ -141,8 +141,9 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       // 1. System/Root Context Check & Sovereign Upgrade (S1 Mandate)
       if (this.isSystemRequest(identifier)) {
         const peekedId = this.peekTenantId(req);
+        // S2 Upgrade Path: Attempt full context resolution from peeked ID (Header/JWT)
         if (peekedId) {
-          const context = await this.cache.resolveTenantById(peekedId);
+          const context = await this.cache.resolveTenant(peekedId);
           if (context) {
             // S1 Guarantee: Upgraded context will be verified by S2 Guard
             return this.runDatabaseSession(context, false, req, res, next);

@@ -103,10 +103,15 @@ export class StorefrontController {
    */
   private async resolveStorefrontContext(req: TenantRequest, queryId?: string) {
     const ambientId = req.tenantContext?.tenantId;
+    const headerId = req.headers['x-tenant-id'] as string;
     
-    // S2 Protocol: If we are on a system/shared domain, we MUST use the queryId.
-    // If we are on a dedicated tenant domain, ambientId is already the UUID.
-    const rawId = (ambientId === 'system' || !ambientId) ? queryId : ambientId;
+    // S2 Protocol: Priority 1: Query string (?tenantId=)
+    // Priority 2: Header (x-tenant-id)
+    // Priority 3: Ambient context (from subdomain)
+    // On shared domains ('system'), explicit overrides MUST take precedence.
+    const rawId = (ambientId === 'system' || !ambientId) 
+      ? (queryId || headerId) 
+      : (ambientId || queryId || headerId);
 
     if (!rawId || rawId === 'system') {
       throw new BadRequestException('MANDATORY: Tenant identifier (subdomain or UUID) is required on shared domains');
