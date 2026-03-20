@@ -20,7 +20,7 @@ export default async function RootLayout({
   // S12 FIX: Fetch config for branding only if a valid tenant is detected.
   // Root domain (60sec.shop) uses default branding to prevent 400 errors.
   const config = tenantId !== 'public' ? await getTenantConfig(tenantId) : null;
-  const storeName = config?.storeName || 'APEX STORE';
+  const storeName = config?.storeName || (tenantId !== 'public' ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1) : 'APEX STORE');
   const logoUrl = config?.logoUrl;
 
   return (

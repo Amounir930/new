@@ -92,7 +92,7 @@ export class MerchantConfigController {
     const subdomain = req.tenantContext?.subdomain;
 
     try {
-      // Vector 2: Fetch current logo for garbage collection before update
+      // Step 1: Pre-fetch current logo for garbage collection before update
       const existingConfig = await db
         .select()
         .from(tenantConfigInStorefront)
@@ -101,9 +101,8 @@ export class MerchantConfigController {
       
       const oldLogoUrl = existingConfig[0]?.value as string | undefined;
 
-      // S2 Isolation: Explicit insertion/update into the merchant's isolated schema
+      // Step 2 & 3: Atomic update into the merchant's isolated schema
       await db.transaction(async (tx) => {
-        // De-falsification: Check for property existence (!== undefined), not truthiness
         if (body.store_name !== undefined) {
           await tx
             .insert(tenantConfigInStorefront)
@@ -121,8 +120,6 @@ export class MerchantConfigController {
           // Vector 2: Physical Garbage Collection of orphaned assets
           if (oldLogoUrl && oldLogoUrl !== body.logo_url && subdomain) {
             try {
-              // Parse key from URL: https://host/bucket/key...
-              // We extract everything after the bucket-name/
               const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
               if (oldLogoUrl.includes(bucketName)) {
                 const key = oldLogoUrl.split(`${bucketName}/`)[1];
@@ -131,9 +128,10 @@ export class MerchantConfigController {
                 }
               }
             } catch (e) {
-              // S5: Log but don't block the update if deletion fails
               const loggerReq = req as RequestWithLogger;
-              loggerReq.log?.warn?.('Storage GC Failed', { error: (e as Error).message, oldLogoUrl });
+              if (loggerReq.log?.warn) {
+                loggerReq.log.warn('Storage GC Failed', { error: (e as Error).message, oldLogoUrl });
+              }
             }
           }
 
@@ -150,18 +148,36 @@ export class MerchantConfigController {
         }
       });
 
-      // Vector 4: Trigger On-Demand Revalidation for Instant UI Sync
+      // Step 4: Backend Cache Purge (Redis Vector 4)
+      try {
+        const client = await this.redisStore.getClient();
+        if (client) {
+          await Promise.all([
+            client.del(`storefront:config:${tenantId}`),
+            client.del(`storefront:home:${tenantId}`),
+            client.del(`storefront:bootstrap:${tenantId}`),
+          ]);
+        }
+      } catch (e) {
+        const loggerReq = req as RequestWithLogger;
+        if (loggerReq.log?.warn) {
+          loggerReq.log.warn('Redis Cache Purge Failed', { error: (e as Error).message });
+        }
+      }
+
+      // Step 5: Frontend ISR Purge (Vector 4 Trigger)
       if (subdomain) {
         try {
-          const revalidateUrl = `http://store:3002/api/revalidate?tag=config-${tenantId}&secret=${env.INTERNAL_API_SECRET}`;
-          // Use fetch with timeout to prevent blocking response
+          const revalidateUrl = `http://store:3002/api/revalidate?tag=tenant-${tenantId}&secret=${env.INTERNAL_API_SECRET}`;
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 2000);
           
           fetch(revalidateUrl, { signal: controller.signal })
             .catch(e => {
               const loggerReq = req as RequestWithLogger;
-              loggerReq.log?.warn?.('Revalidation Trigger Failed', { error: e.message });
+              if (loggerReq.log?.warn) {
+                loggerReq.log.warn('Revalidation Trigger Failed', { error: e.message });
+              }
             })
             .finally(() => clearTimeout(timeout));
         } catch (e) {
