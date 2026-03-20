@@ -199,7 +199,7 @@ services:
       - "traefik.http.routers.api-public.priority=5500"
       - "traefik.http.routers.api-public.entrypoints=websecure"
       - "traefik.http.routers.api-public.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api-public.middlewares=apex-api-version-bridge@file,apex-api-ratelimit@file,apex-saas-cors@file,apex-security-headers@file"
+      - "traefik.http.routers.api-public.middlewares=apex-api-version-bridge@file,apex-api-ratelimit@file,apex-storage-cors@file,apex-security-headers@file"
       - "traefik.http.routers.api-public.service=apex-api"
       - "traefik.http.routers.api-shielded.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
       - "traefik.http.routers.api-shielded.priority=5000"
