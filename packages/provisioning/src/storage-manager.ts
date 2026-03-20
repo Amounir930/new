@@ -43,19 +43,29 @@ function getMinioClient(): Minio.Client {
     // Vector 1: Robust MinIO Endpoint Sanitization (Protocol Alpha S1/S7)
     // Native URL parsing prevents SDK InvalidEndpointError
     const endpoint = env.MINIO_ENDPOINT || 'localhost';
-    const minioUri = new URL(endpoint.includes('://') ? endpoint : `http://${endpoint}`);
-    
-    const minioEndpoint = minioUri.hostname;
-    const minioPort = minioUri.port ? parseInt(minioUri.port, 10) : (minioUri.protocol === 'https:' ? 443 : 9000);
-    const useSSL = minioUri.protocol === 'https:';
-
-    minioClient = new Minio.Client({
-      endPoint: minioEndpoint,
-      port: minioPort,
-      useSSL: useSSL,
-      accessKey: env.MINIO_ACCESS_KEY!,
-      secretKey: env.MINIO_SECRET_KEY!,
-    });
+  
+    try {
+      // S10: Robust URL Parsing to prevent InvalidEndpointError (strips http:// prefixes)
+      const isUrl = endpoint.startsWith('http://') || endpoint.startsWith('https://');
+      const parsedUrl = new URL(isUrl ? endpoint : `http://${endpoint}`);
+      
+      minioClient = new Minio.Client({
+        endPoint: parsedUrl.hostname,
+        port: parseInt(parsedUrl.port) || (parsedUrl.protocol === 'https:' ? 443 : 9000),
+        useSSL: parsedUrl.protocol === 'https:' || env.MINIO_USE_SSL === 'true',
+        accessKey: env.MINIO_ACCESS_KEY!,
+        secretKey: env.MINIO_SECRET_KEY!,
+      });
+    } catch (e) {
+      // Fallback for non-URL hostnames
+      minioClient = new Minio.Client({
+        endPoint: endpoint,
+        port: parseInt(env.MINIO_PORT || '9000'),
+        useSSL: env.MINIO_USE_SSL === 'true',
+        accessKey: env.MINIO_ACCESS_KEY!,
+        secretKey: env.MINIO_SECRET_KEY!,
+      });
+    }
   }
   return minioClient;
 }

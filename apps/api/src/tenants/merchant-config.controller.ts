@@ -12,7 +12,7 @@ import {
   tenantConfigInStorefront,
   eq,
 } from '@apex/db';
-import { RedisRateLimitStore } from '@apex/middleware';
+import { RedisRateLimitStore, TenantCacheService } from '@apex/middleware';
 import { env } from '@apex/config';
 import { deleteObject } from '@apex/provisioning';
 import {
@@ -23,6 +23,7 @@ import {
   Req,
   UseGuards,
   NotFoundException,
+  Inject,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
@@ -35,7 +36,11 @@ const UpdateConfigSchema = z.object({
 @Controller('merchant/config')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class MerchantConfigController {
-  constructor(private readonly redisStore: RedisRateLimitStore) {}
+  constructor(
+    private readonly redisStore: RedisRateLimitStore,
+    @Inject('TENANT_CACHE_SERVICE')
+    private readonly tenantCache: TenantCacheService
+  ) {}
 
   @Get()
   async getConfig(@Req() req: AuthenticatedRequest) {
@@ -89,7 +94,15 @@ export class MerchantConfigController {
       throw new Error('S1 PROTECT: Schema context missing in authenticated route');
     }
     const { db, release } = await getTenantDb(tenantId, schemaName);
-    const subdomain = req.tenantContext?.subdomain;
+
+    // S2 Fix: Explicitly resolve subdomain via TenantCacheService to fix lexical scope trap
+    const tenantContext = await this.tenantCache.resolveTenantById(tenantId);
+    const resolvedSubdomain = tenantContext?.subdomain;
+
+    if (!resolvedSubdomain) {
+      this.tenantCache.invalidateTenant(tenantId); // Force discovery refresh on failure
+      throw new NotFoundException(`S2 Error: Could not resolve subdomain for tenant ${tenantId}`);
+    }
 
     try {
       // Step 1: Pre-fetch current logo for garbage collection before update
@@ -118,13 +131,13 @@ export class MerchantConfigController {
 
         if (body.logo_url !== undefined) {
           // Vector 2: Physical Garbage Collection of orphaned assets
-          if (oldLogoUrl && oldLogoUrl !== body.logo_url && subdomain) {
+          if (oldLogoUrl && oldLogoUrl !== body.logo_url) {
             try {
-              const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
+              const bucketName = `tenant-${resolvedSubdomain.toLowerCase()}-assets`;
               if (oldLogoUrl.includes(bucketName)) {
                 const key = oldLogoUrl.split(`${bucketName}/`)[1];
                 if (key) {
-                  await deleteObject(subdomain, key);
+                  await deleteObject(resolvedSubdomain, key);
                 }
               }
             } catch (e) {
@@ -148,7 +161,7 @@ export class MerchantConfigController {
         }
       });
 
-      // Step 4: Backend Cache Purge (Redis Vector 4)
+      // Step 4: Backend Cache Purge (Redis Vector 3 + Discovery Fix)
       try {
         const client = await this.redisStore.getClient();
         if (client) {
@@ -156,6 +169,7 @@ export class MerchantConfigController {
             client.del(`storefront:config:${tenantId}`),
             client.del(`storefront:home:${tenantId}`),
             client.del(`storefront:bootstrap:${tenantId}`),
+            client.del(`discovery:${resolvedSubdomain.toLowerCase()}`),
           ]);
         }
       } catch (e) {
@@ -165,29 +179,27 @@ export class MerchantConfigController {
         }
       }
 
-      // Step 5: Frontend ISR Purge (Vector 4 Trigger)
-      if (subdomain) {
-        try {
-          const revalidateUrl = `http://store:3002/api/revalidate?tag=tenant-${tenantId}&secret=${env.INTERNAL_API_SECRET}`;
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 2000);
-          
-          fetch(revalidateUrl, { signal: controller.signal })
-            .catch(e => {
-              const loggerReq = req as RequestWithLogger;
-              if (loggerReq.log?.warn) {
-                loggerReq.log.warn('Revalidation Trigger Failed', { error: e.message });
-              }
-            })
-            .finally(() => clearTimeout(timeout));
-        } catch (e) {
-          // S5: Fail-Safe
-        }
+      // Step 5: Frontend ISR Purge (Vector 4 Trigger: Standardized to Subdomain)
+      try {
+        const revalidateUrl = `http://store:3002/api/revalidate?tag=tenant-${resolvedSubdomain}&secret=${env.INTERNAL_API_SECRET}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 2000);
+        
+        fetch(revalidateUrl, { signal: controller.signal })
+          .catch(e => {
+            const loggerReq = req as RequestWithLogger;
+            if (loggerReq.log?.warn) {
+              loggerReq.log.warn('Revalidation Trigger Failed', { error: e.message });
+            }
+          })
+          .finally(() => clearTimeout(timeout));
+      } catch (e) {
+        // S5: Fail-Safe
       }
 
       return { success: true };
     } finally {
-      await release();
+      release();
     }
   }
 }

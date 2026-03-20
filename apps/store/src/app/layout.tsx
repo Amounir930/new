@@ -2,7 +2,10 @@ import Image from 'next/image';
 import { headers } from 'next/headers';
 import type { Metadata } from 'next';
 import './globals.css';
-import { getTenantConfig } from '@/lib/api';
+import { 
+  getStoreBootstrap, 
+  getTenantConfig 
+} from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'Apex Storefront',
@@ -19,7 +22,8 @@ export default async function RootLayout({
   
   // S12 FIX: Fetch config for branding only if a valid tenant is detected.
   // Root domain (60sec.shop) uses default branding to prevent 400 errors.
-  const config = tenantId !== 'public' ? await getTenantConfig(tenantId) : null;
+  const bootstrap = tenantId !== 'public' ? await getStoreBootstrap(tenantId) : null;
+  const config = bootstrap?.config;
   const storeName = config?.storeName || (tenantId !== 'public' ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1) : 'APEX STORE');
   const logoUrl = config?.logoUrl;
 
