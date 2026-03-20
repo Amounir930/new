@@ -66,6 +66,7 @@ http:
           - "https://admin.60sec.shop"
           - "https://60sec.shop"
         accessControlMaxAge: 100
+        accessControlAllowCredentials: true
         addVaryHeader: true
         
     apex-store-csp:
