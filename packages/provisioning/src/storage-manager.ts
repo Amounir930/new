@@ -40,32 +40,19 @@ export let minioClient: Minio.Client | null = null;
 
 function getMinioClient(): Minio.Client {
   if (!minioClient) {
-    let endpoint = env.MINIO_ENDPOINT || 'localhost';
-    let port = Number.parseInt(env.MINIO_PORT || '9000', 10);
-    let useSSL = env.MINIO_USE_SSL === 'true';
-
-    // S2 FIX: Parse endpoint to strip protocol and extract port if present
-    try {
-      if (endpoint.includes('://')) {
-        const url = new URL(endpoint);
-        endpoint = url.hostname;
-        if (url.port) {
-          port = Number.parseInt(url.port, 10);
-        }
-        if (url.protocol === 'https:') {
-          useSSL = true;
-        } else if (url.protocol === 'http:') {
-          useSSL = false;
-        }
-      }
-    } catch (e) {
-      logger.error('Failed to parse MINIO_ENDPOINT', { endpoint, error: (e as Error).message });
-    }
+    // Vector 1: Robust MinIO Endpoint Sanitization (Protocol Alpha S1/S7)
+    // Native URL parsing prevents SDK InvalidEndpointError
+    const endpoint = env.MINIO_ENDPOINT || 'localhost';
+    const minioUri = new URL(endpoint.includes('://') ? endpoint : `http://${endpoint}`);
+    
+    const minioEndpoint = minioUri.hostname;
+    const minioPort = minioUri.port ? parseInt(minioUri.port, 10) : (minioUri.protocol === 'https:' ? 443 : 9000);
+    const useSSL = minioUri.protocol === 'https:';
 
     minioClient = new Minio.Client({
-      endPoint: endpoint,
-      port,
-      useSSL,
+      endPoint: minioEndpoint,
+      port: minioPort,
+      useSSL: useSSL,
       accessKey: env.MINIO_ACCESS_KEY!,
       secretKey: env.MINIO_SECRET_KEY!,
     });
