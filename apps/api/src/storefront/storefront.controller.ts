@@ -114,7 +114,8 @@ export class StorefrontController {
       : (ambientId || queryId || headerId);
 
     // S2 Protection: Reject generic/default identifiers which lack a real schema context.
-    if (!rawId || rawId === 'system' || rawId === 'public') {
+    const isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(rawId || '');
+    if (!rawId || rawId === 'system' || rawId === 'public' || isIP || rawId === '127') {
       throw new BadRequestException('MANDATORY: Valid tenant identifier (subdomain or UUID) is required');
     }
 
