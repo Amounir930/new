@@ -125,7 +125,7 @@ services:
       - "traefik.http.routers.minio.priority=5000"
       - "traefik.http.routers.minio.entrypoints=websecure"
       - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.minio.middlewares=apex-saas-cors@file"
+      - "traefik.http.routers.minio.middlewares=apex-storage-cors@file"
       - "traefik.http.routers.minio.service=apex-minio"
       - "traefik.http.services.apex-minio.loadbalancer.server.port=9000"
       - "traefik.http.routers.minio-console.rule=Host(`storage-admin.60sec.shop`)"

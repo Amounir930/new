@@ -42,11 +42,16 @@ export async function apiFetch<T>(
   options: FetchOptions = {}
 ): Promise<T> {
   const token = options.token || getAuthToken();
+  const tenantId = extractTenantFromHost();
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   };
+
+  if (tenantId) {
+    headers['X-Tenant-ID'] = tenantId;
+  }
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -55,7 +60,7 @@ export async function apiFetch<T>(
   const res = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
-    credentials: 'include', // S8 Compliance: Ensure HttpOnly cookies are sent/received
+    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -66,4 +71,18 @@ export async function apiFetch<T>(
   if (res.status === 204) return {} as T;
 
   return res.json();
+}
+
+/**
+ * 🛡️ S2 FIX: Helper to extract tenant identifier from current hostname
+ */
+function extractTenantFromHost(): string | null {
+  if (typeof window === 'undefined') return null;
+  const host = window.location.hostname;
+  const parts = host.split('.');
+  // Check if we are on a tenant subdomain (e.g., tenant.60sec.shop)
+  if (parts.length >= 3 && parts[0] !== 'www' && parts[0] !== 'api' && parts[0] !== 'admin') {
+    return parts[0];
+  }
+  return null;
 }
