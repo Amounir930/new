@@ -99,11 +99,14 @@ export class StorefrontController {
   /**
    * 🛡️ Sovereign Translation Helper
    * Trace: Identifies if request is on a shared domain (system) and resolves the peer tenant.
+   * Logic: Prioritizes explicit queryId over ambient 'system' context to prevent short-circuit traps.
    */
   private async resolveStorefrontContext(req: TenantRequest, queryId?: string) {
-    // S2 Protection: On shared domains (api.60sec.shop), the middleware identifies as 'system'.
-    // We must strictly fallback to the explicit query parameter in this case.
-    const rawId = req.tenantContext?.tenantId === 'system' ? queryId : (req.tenantContext?.tenantId || queryId);
+    const ambientId = req.tenantContext?.tenantId;
+    
+    // S2 Protocol: If we are on a system/shared domain, we MUST use the queryId.
+    // If we are on a dedicated tenant domain, ambientId is already the UUID.
+    const rawId = (ambientId === 'system' || !ambientId) ? queryId : ambientId;
 
     if (!rawId || rawId === 'system') {
       throw new BadRequestException('MANDATORY: Tenant identifier (subdomain or UUID) is required on shared domains');
@@ -133,8 +136,7 @@ export class StorefrontController {
     @Body() body: NewsletterSubscriptionDto,
     @Query() query: TenantIdDto
   ) {
-    const tenantId = req.tenantContext?.tenantId || query.tenantId || 'public';
-    const schemaName = req.tenantContext?.schemaName || 'public';
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
     return this.storefrontService.subscribeToNewsletter(tenantId, schemaName, body.email);
   }
 }
