@@ -157,7 +157,7 @@ export class TenantCacheService implements OnModuleInit {
     // 4. Dual-Cache Population (Soverign Speed Protocol)
     await Promise.all([
       this.setTenant(identifier, context), // Cache by Subdomain
-      this.setTenant(tenant.id, context),  // Cache by UUID
+      this.setTenant(tenant.id, context), // Cache by UUID
     ]);
 
     return context;

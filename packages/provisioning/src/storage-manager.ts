@@ -43,24 +43,27 @@ function getMinioClient(): Minio.Client {
     // Vector 1: Robust MinIO Endpoint Sanitization (Protocol Alpha S1/S7)
     // Native URL parsing prevents SDK InvalidEndpointError
     const endpoint = env.MINIO_ENDPOINT || 'localhost';
-  
+
     try {
       // S10: Robust URL Parsing to prevent InvalidEndpointError (strips http:// prefixes)
-      const isUrl = endpoint.startsWith('http://') || endpoint.startsWith('https://');
+      const isUrl =
+        endpoint.startsWith('http://') || endpoint.startsWith('https://');
       const parsedUrl = new URL(isUrl ? endpoint : `http://${endpoint}`);
-      
+
       minioClient = new Minio.Client({
         endPoint: parsedUrl.hostname,
-        port: parseInt(parsedUrl.port) || (parsedUrl.protocol === 'https:' ? 443 : 9000),
+        port:
+          Number.parseInt(parsedUrl.port, 10) ||
+          (parsedUrl.protocol === 'https:' ? 443 : 9000),
         useSSL: parsedUrl.protocol === 'https:' || env.MINIO_USE_SSL === 'true',
         accessKey: env.MINIO_ACCESS_KEY!,
         secretKey: env.MINIO_SECRET_KEY!,
       });
-    } catch (e) {
+    } catch {
       // Fallback for non-URL hostnames
       minioClient = new Minio.Client({
         endPoint: endpoint,
-        port: parseInt(env.MINIO_PORT || '9000'),
+        port: Number.parseInt(env.MINIO_PORT || '9000', 10),
         useSSL: env.MINIO_USE_SSL === 'true',
         accessKey: env.MINIO_ACCESS_KEY!,
         secretKey: env.MINIO_SECRET_KEY!,
@@ -166,10 +169,7 @@ async function setupBucket(
       bucketName: string,
       tags: Record<string, string>
     ): Promise<void>;
-    setBucketCors(
-      bucketName: string,
-      corsConfig: any
-    ): Promise<void>;
+    setBucketCors(bucketName: string, corsConfig: any): Promise<void>;
   }
   const patchedClient = client as unknown as PatchedMinioClient;
 

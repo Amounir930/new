@@ -1,23 +1,12 @@
 import { AuditLog } from '@apex/audit';
-import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
 import type { AuthenticatedRequest } from '@apex/auth';
+import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
 import {
-  adminDb,
-  eq,
   getTenantDb,
   type InferSelectModel,
   productsInStorefront,
-  tenantsInGovernance,
 } from '@apex/db';
-import {
-  Controller,
-  Get,
-  Logger,
-  NotFoundException,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Logger, Req, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { Parser } from 'json2csv';
 

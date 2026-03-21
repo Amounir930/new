@@ -143,6 +143,15 @@ export const orderStatus = pgEnum('order_status', [
   'cancelled',
   'returned',
 ]);
+export const nicheType = pgEnum('niche_type', [
+  'retail',
+  'wellness',
+  'education',
+  'services',
+  'hospitality',
+  'real_estate',
+  'creative',
+]);
 export const outboxStatus = pgEnum('outbox_status', [
   'pending',
   'processing',
@@ -837,22 +846,17 @@ export const walletTransactionsInStorefront = pgTable(
   ]
 );
 
-export const announcementBarsInStorefront = pgTable(
-  'announcement_bars',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
-      .defaultNow()
-      .notNull(),
-    isActive: boolean('is_active').default(true).notNull(),
-    bgColor: varchar('bg_color', { length: 20 }).default('#000000').notNull(),
-    textColor: varchar('text_color', { length: 20 })
-      .default('#ffffff')
-      .notNull(),
-    content: jsonb().notNull(),
-    linkUrl: text('link_url'),
-  }
-);
+export const announcementBarsInStorefront = pgTable('announcement_bars', {
+  id: uuid().defaultRandom().primaryKey().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
+    .defaultNow()
+    .notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  bgColor: varchar('bg_color', { length: 20 }).default('#000000').notNull(),
+  textColor: varchar('text_color', { length: 20 }).default('#ffffff').notNull(),
+  content: jsonb().notNull(),
+  linkUrl: text('link_url'),
+});
 
 export const archivalVaultInVault = vault.table(
   'archival_vault',
@@ -879,20 +883,17 @@ export const archivalVaultInVault = vault.table(
   ]
 );
 
-export const customerSegmentsInStorefront = pgTable(
-  'customer_segments',
-  {
-    id: uuid().defaultRandom().primaryKey().notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
-      .defaultNow()
-      .notNull(),
-    customerCount: integer('customer_count').default(0).notNull(),
-    autoUpdate: boolean('auto_update').default(true).notNull(),
-    matchType: varchar('match_type', { length: 5 }).default('all').notNull(),
-    name: jsonb().notNull(),
-    conditions: jsonb().notNull(),
-  }
-);
+export const customerSegmentsInStorefront = pgTable('customer_segments', {
+  id: uuid().defaultRandom().primaryKey().notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
+    .defaultNow()
+    .notNull(),
+  customerCount: integer('customer_count').default(0).notNull(),
+  autoUpdate: boolean('auto_update').default(true).notNull(),
+  matchType: varchar('match_type', { length: 5 }).default('all').notNull(),
+  name: jsonb().notNull(),
+  conditions: jsonb().notNull(),
+});
 
 export const customersInStorefront = pgTable(
   'customers',
@@ -1483,6 +1484,8 @@ export const productsInStorefront = pgTable(
   'products',
   {
     id: uuid().defaultRandom().primaryKey().notNull(),
+    niche: nicheType('niche').default('retail').notNull(),
+    attributes: jsonb().default({}).notNull(),
     brandId: uuid('brand_id'),
     categoryId: uuid('category_id'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })

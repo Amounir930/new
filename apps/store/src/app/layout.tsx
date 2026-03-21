@@ -1,11 +1,8 @@
-import Image from 'next/image';
-import { headers } from 'next/headers';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
+import Image from 'next/image';
 import './globals.css';
-import { 
-  getStoreBootstrap, 
-  getTenantConfig 
-} from '@/lib/api';
+import { getStoreBootstrap, getTenantConfig } from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'Apex Storefront',
@@ -19,12 +16,17 @@ export default async function RootLayout({
 }) {
   const headersList = await headers();
   const tenantId = headersList.get('x-tenant-id') || 'public';
-  
+
   // S12 FIX: Fetch config for branding only if a valid tenant is detected.
   // Root domain (60sec.shop) uses default branding to prevent 400 errors.
-  const bootstrap = tenantId !== 'public' ? await getStoreBootstrap(tenantId) : null;
+  const bootstrap =
+    tenantId !== 'public' ? await getStoreBootstrap(tenantId) : null;
   const config = bootstrap?.config;
-  const storeName = config?.storeName || (tenantId !== 'public' ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1) : 'APEX STORE');
+  const storeName =
+    config?.storeName ||
+    (tenantId !== 'public'
+      ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1)
+      : 'APEX STORE');
   const logoUrl = config?.logoUrl;
 
   return (
@@ -35,9 +37,9 @@ export default async function RootLayout({
             <div className="flex items-center gap-3">
               {logoUrl && (
                 <div className="relative h-8 w-32">
-                  <Image 
-                    src={logoUrl} 
-                    alt={storeName} 
+                  <Image
+                    src={logoUrl}
+                    alt={storeName}
                     fill
                     className="object-contain object-left"
                     sizes="128px"

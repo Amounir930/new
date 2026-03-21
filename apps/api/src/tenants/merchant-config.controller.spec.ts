@@ -1,8 +1,8 @@
-import { getTenantDb, adminDb, tenantsInGovernance } from '@apex/db';
+import { adminDb, getTenantDb } from '@apex/db';
 import { RedisRateLimitStore } from '@apex/middleware';
+import { NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { MerchantConfigController } from './merchant-config.controller';
-import { NotFoundException } from '@nestjs/common';
 
 jest.mock('@apex/db', () => ({
   getTenantDb: jest.fn(),
@@ -77,7 +77,10 @@ describe('MerchantConfigController', () => {
 
       expect(result).toEqual({ success: true });
       expect(adminDb.select).toHaveBeenCalled();
-      expect(getTenantDb).toHaveBeenCalledWith('test-tenant', 'tenant_test-sub');
+      expect(getTenantDb).toHaveBeenCalledWith(
+        'test-tenant',
+        'tenant_test-sub'
+      );
       expect(mockDb.transaction).toHaveBeenCalled();
 
       const client = await redisStore.getClient();
@@ -92,8 +95,10 @@ describe('MerchantConfigController', () => {
     it('should throw NotFoundException if tenant is missing in governance', async () => {
       (adminDb.limit as jest.Mock).mockResolvedValueOnce([]);
       const mockReq: any = { user: { tenantId: 'test-tenant' } };
-      
-      await expect(controller.getConfig(mockReq)).rejects.toThrow(NotFoundException);
+
+      await expect(controller.getConfig(mockReq)).rejects.toThrow(
+        NotFoundException
+      );
     });
   });
 });

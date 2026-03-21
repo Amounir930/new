@@ -438,6 +438,16 @@
         "typescript": "^5.3.3",
       },
     },
+    "packages/validation": {
+      "name": "@apex/validation",
+      "version": "1.0.0",
+      "dependencies": {
+        "zod": "^3.22.4",
+      },
+      "devDependencies": {
+        "typescript": "^5.3.3",
+      },
+    },
     "packages/validators": {
       "name": "@apex/validators",
       "version": "1.0.0",
@@ -517,6 +527,8 @@
     "@apex/security": ["@apex/security@workspace:packages/security"],
 
     "@apex/test-utils": ["@apex/test-utils@workspace:packages/test-utils"],
+
+    "@apex/validation": ["@apex/validation@workspace:packages/validation"],
 
     "@apex/validators": ["@apex/validators@workspace:packages/validators"],
 
@@ -2859,6 +2871,8 @@
     "@apex/test-utils/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
 
     "@apex/test-utils/ts-morph": ["ts-morph@21.0.1", "", { "dependencies": { "@ts-morph/common": "~0.22.0", "code-block-writer": "^12.0.0" } }, "sha512-dbDtVdEAncKctzrVZ+Nr7kHpHkv+0JDJb2MjjpBaj8bFeCkePU9rHfMklmhuLFnpeq/EJZk2IhStY6NzqgjOkg=="],
+
+    "@apex/validation/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "@apex/validators/bun-types": ["bun-types@1.3.11", "", { "dependencies": { "@types/node": "*" } }, "sha512-1KGPpoxQWl9f6wcZh57LvrPIInQMn2TQ7jsgxqpRzg+l0QPOFvJVH7HmvHo/AiPgwXy+/Thf6Ov3EdVn1vOabg=="],
 

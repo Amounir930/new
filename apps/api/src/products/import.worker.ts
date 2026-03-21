@@ -34,7 +34,10 @@ export class ImportWorker {
     await job.progress(50);
 
     // 3. Mark as completed
-    const { release: releaseEnd } = await getTenantDb(tenantId, schemaName || 'public');
+    const { release: releaseEnd } = await getTenantDb(
+      tenantId,
+      schemaName || 'public'
+    );
     try {
       // await dbEnd
       //   .update(importJobsInStorefront)

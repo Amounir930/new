@@ -1,5 +1,5 @@
-import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
 import type { AuthenticatedRequest } from '@apex/auth';
+import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
 import {
   customersInStorefront,
   eq,
@@ -8,8 +8,8 @@ import {
   productsInStorefront,
   sql,
 } from '@apex/db';
+import { isUuid, type TenantCacheService } from '@apex/middleware';
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { isUuid, TenantCacheService } from '@apex/middleware';
 
 @Controller('tenants/stats')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
@@ -27,7 +27,9 @@ export class MerchantStatsController {
     // We must strictly resolve the merchant's physical schema from their UUID.
     const context = await this.tenantCache.resolveTenantById(tenantId);
     if (!context) {
-      throw new Error(`S2 CRITICAL: Physical schema mapping failed for tenant ${tenantId}`);
+      throw new Error(
+        `S2 CRITICAL: Physical schema mapping failed for tenant ${tenantId}`
+      );
     }
 
     const { db, release } = await getTenantDb(tenantId, context.schemaName);

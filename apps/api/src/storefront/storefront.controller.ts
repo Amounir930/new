@@ -1,5 +1,11 @@
 import { AuditLog } from '@apex/audit';
 import {
+  isUuid,
+  RateLimit,
+  type TenantCacheService,
+  type TenantRequest,
+} from '@apex/middleware';
+import {
   BadRequestException,
   Body,
   Controller,
@@ -16,12 +22,6 @@ import { z } from 'zod';
 import type { NewsletterSubscriptionDto } from './dto/newsletter.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { StorefrontService } from './storefront.service';
-import {
-  isUuid,
-  RateLimit,
-  TenantCacheService,
-  type TenantRequest,
-} from '@apex/middleware';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
@@ -49,7 +49,10 @@ export class StorefrontController {
   @Get('config')
   @AuditLog('STOREFRONT_CONFIG_VIEW')
   async getConfig(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
-    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
     return this.storefrontService.getTenantConfig(tenantId, schemaName);
   }
 
@@ -60,7 +63,10 @@ export class StorefrontController {
     @Query() query: ProductsQueryDto,
     @Query() tenantQuery: TenantIdDto
   ) {
-    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, tenantQuery.tenantId);
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      tenantQuery.tenantId
+    );
     return this.storefrontService.getProducts(tenantId, schemaName, query);
   }
 
@@ -71,7 +77,10 @@ export class StorefrontController {
     @Param('slug') slug: string,
     @Query() query: TenantIdDto
   ) {
-    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
     const product = await this.storefrontService.getProductBySlug(
       tenantId,
       schemaName,
@@ -86,13 +95,19 @@ export class StorefrontController {
   @Get('home')
   @AuditLog('STOREFRONT_HOME_VIEW')
   async getHome(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
-    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
     return this.storefrontService.getHomeData(tenantId, schemaName);
   }
 
   @Get('bootstrap')
   async getBootstrap(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
-    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
     return this.storefrontService.getBootstrapData(tenantId, schemaName);
   }
 
@@ -104,26 +119,37 @@ export class StorefrontController {
   private async resolveStorefrontContext(req: TenantRequest, queryId?: string) {
     const ambientId = req.tenantContext?.tenantId;
     const headerId = req.headers['x-tenant-id'] as string;
-    
+
     // S2 Protocol: Priority 1: Query string (?tenantId=)
     // Priority 2: Header (x-tenant-id)
     // Priority 3: Ambient context (from subdomain)
     // On shared domains ('system'), explicit overrides MUST take precedence.
-    const rawId = (ambientId === 'system' || !ambientId) 
-      ? (queryId || headerId) 
-      : (ambientId || queryId || headerId);
+    const rawId =
+      ambientId === 'system' || !ambientId
+        ? queryId || headerId
+        : ambientId || queryId || headerId;
 
     // S2 Protection: Reject generic/default identifiers which lack a real schema context.
     const isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(rawId || '');
-    if (!rawId || rawId === 'system' || rawId === 'public' || isIP || rawId === '127') {
-      throw new BadRequestException('MANDATORY: Valid tenant identifier (subdomain or UUID) is required');
+    if (
+      !rawId ||
+      rawId === 'system' ||
+      rawId === 'public' ||
+      isIP ||
+      rawId === '127'
+    ) {
+      throw new BadRequestException(
+        'MANDATORY: Valid tenant identifier (subdomain or UUID) is required'
+      );
     }
 
     // Attempt resolution through Smart Cache (handles ID and Subdomain)
     const context = await this.tenantCache.resolveTenant(rawId);
 
     if (!context || !isUuid(context.tenantId)) {
-      throw new BadRequestException(`S2 Failure: Tenant resolution failed for identifier ${rawId}`);
+      throw new BadRequestException(
+        `S2 Failure: Tenant resolution failed for identifier ${rawId}`
+      );
     }
 
     // Set audit ID for forensic traceability
@@ -131,7 +157,7 @@ export class StorefrontController {
 
     return {
       tenantId: context.tenantId,
-      schemaName: context.schemaName
+      schemaName: context.schemaName,
     };
   }
 
@@ -143,7 +169,14 @@ export class StorefrontController {
     @Body() body: NewsletterSubscriptionDto,
     @Query() query: TenantIdDto
   ) {
-    const { tenantId, schemaName } = await this.resolveStorefrontContext(req, query.tenantId);
-    return this.storefrontService.subscribeToNewsletter(tenantId, schemaName, body.email);
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+    return this.storefrontService.subscribeToNewsletter(
+      tenantId,
+      schemaName,
+      body.email
+    );
   }
 }

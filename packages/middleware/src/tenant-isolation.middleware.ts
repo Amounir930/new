@@ -130,7 +130,6 @@ async function validateTenant(
 export class TenantIsolationMiddleware implements NestMiddleware {
   constructor(private readonly cache: TenantCacheService) {}
   async use(req: TenantRequest, res: Response, next: NextFunction) {
-    // S8: Mandatory Preflight Bypass (CORS Sovereignty)
     if (req.method === 'OPTIONS') return next();
 
     const currentPath = req.originalUrl || req.path || '';
@@ -138,55 +137,80 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     try {
       const identifier = this.extractTenantIdentifier(req);
 
-      // 1. System/Root Context Check & Sovereign Upgrade (S1 Mandate)
+      // 1. System/Upgrade Handlers
       if (this.isSystemRequest(identifier)) {
-        const peekedId = this.peekTenantId(req);
-        // S2 Upgrade Path: Attempt full context resolution from peeked ID (Header/JWT)
-        if (peekedId) {
-          const context = await this.cache.resolveTenant(peekedId);
-          if (context) {
-            // S1 Guarantee: Upgraded context will be verified by S2 Guard
-            return this.runDatabaseSession(context, false, req, res, next);
-          }
-        }
-        return this.handleSystemContext(identifier, req, res, next);
+        return this.handleSystemOrUpgrade(req, res, next, identifier);
       }
 
-      // 2. Bypass & Maintenance Guards
+      // 2. Bypass & Maintenance
+      if (this.shouldBypass(currentPath)) {
+        return this.handleSystemContext(identifier, req, res, next);
+      }
       if (this.isBypassRoute(currentPath)) return next();
-
-      // S21/Super-#21: Emergency Bypass for Administrative routes on Root Context
-      if (
-        currentPath.includes('/blueprints') ||
-        currentPath.includes('/tenants') ||
-        currentPath.includes('/governance')
-      ) {
-        return this.handleSystemContext(identifier, req, res, next);
-      }
-
       if (await this.handleMaintenanceMode(req, res)) return;
 
-      // 3. Webhook Tenant Resolution Override
-      let finalIdentifier = identifier;
-      if (this.isWebhookPath(currentPath, identifier)) {
-        const resolvedId = await this.resolveWebhookTenant(req, res);
-        if (!resolvedId) return;
-        finalIdentifier = resolvedId;
-      }
+      // 3. Resolution & Execution
+      const finalIdentifier = await this.resolveFinalIdentifier(
+        req,
+        res,
+        currentPath,
+        identifier
+      );
+      if (!finalIdentifier) return;
 
-      // 4. Tenant Validation (with Redis Caching)
-      let baseContext = await this.cache.getTenant(finalIdentifier);
-      if (!baseContext) {
-        baseContext = await validateTenant(finalIdentifier);
-        await this.cache.setTenant(finalIdentifier, baseContext);
-      }
-
-      // 5. Suspension Check & Session Execution
+      const baseContext = await this.getValidatedContext(finalIdentifier);
       const isSuspended = await this.checkSuspension(finalIdentifier);
+
       await this.runDatabaseSession(baseContext, isSuspended, req, res, next);
     } catch (error) {
       this.handleError(error, res, next);
     }
+  }
+
+  private async handleSystemOrUpgrade(
+    req: TenantRequest,
+    res: Response,
+    next: NextFunction,
+    identifier: string
+  ) {
+    const peekedId = this.peekTenantId(req);
+    if (peekedId) {
+      const context = await this.cache.resolveTenant(peekedId);
+      if (context) {
+        return this.runDatabaseSession(context, false, req, res, next);
+      }
+    }
+    return this.handleSystemContext(identifier, req, res, next);
+  }
+
+  private shouldBypass(currentPath: string): boolean {
+    return (
+      currentPath.includes('/blueprints') ||
+      currentPath.includes('/tenants') ||
+      currentPath.includes('/governance')
+    );
+  }
+
+  private async resolveFinalIdentifier(
+    req: Request,
+    res: Response,
+    currentPath: string,
+    identifier: string
+  ): Promise<string | null> {
+    if (this.isWebhookPath(currentPath, identifier)) {
+      const resolvedId = await this.resolveWebhookTenant(req, res);
+      return resolvedId || null;
+    }
+    return identifier;
+  }
+
+  private async getValidatedContext(identifier: string) {
+    let context = await this.cache.getTenant(identifier);
+    if (!context) {
+      context = await validateTenant(identifier);
+      await this.cache.setTenant(identifier, context);
+    }
+    return context;
   }
 
   private extractTenantIdentifier(req: Request): string {
@@ -208,38 +232,41 @@ export class TenantIsolationMiddleware implements NestMiddleware {
    * CWE-345 Mitigation: Verified by downstream S2 Guard comparison
    */
   private peekTenantId(req: Request): string | null {
-    // 1. Check explicit header override (Fastest)
     const xTenantId = req.headers['x-tenant-id'] as string;
     if (xTenantId) return xTenantId;
 
-    // 2. Peek at JWT (Bearer or Cookie)
-    let token: string | null = null;
+    const token = this.extractTokenFromRequest(req);
+    if (!token) return null;
+
+    return this.parseTenantIdFromToken(token);
+  }
+
+  private extractTokenFromRequest(req: Request): string | null {
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
-    } else {
-      // S1 Fix: Support administrative cookies for dashboard requests
-      const cookies = (req as any).cookies;
-      if (cookies && typeof cookies === 'object') {
-        token = cookies.adm_tkn || null;
-      }
+    if (authHeader?.startsWith('Bearer ')) {
+      return authHeader.split(' ')[1];
     }
 
-    if (token) {
-      try {
-        const payload = token.split('.')[1];
-        if (payload) {
-          const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
-          const tenantId = decoded.tenantId || null;
-          // S1: Strict Validation to prevent 22P02 (UUID Type Mismatch)
-          return tenantId && isUuid(tenantId) ? tenantId : null;
-        }
-      } catch {
-        return null; // Malformed token peek failure
-      }
+    const cookies = (req as any).cookies;
+    if (cookies && typeof cookies === 'object') {
+      return cookies.adm_tkn || null;
     }
 
     return null;
+  }
+
+  private parseTenantIdFromToken(token: string): string | null {
+    try {
+      const payload = token.split('.')[1];
+      if (!payload) return null;
+
+      const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
+      const tenantId = decoded.tenantId || null;
+
+      return tenantId && isUuid(tenantId) ? tenantId : null;
+    } catch {
+      return null;
+    }
   }
 
   private handleError(error: unknown, res: Response, next: NextFunction) {

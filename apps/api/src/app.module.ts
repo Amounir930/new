@@ -30,8 +30,6 @@ import { BlueprintsModule } from './blueprints/blueprints.module';
 import { MediaModule } from './common/media/media.module';
 import { GovernanceModule } from './governance/governance.module';
 import { HealthModule } from './health/health.module';
-import { BulkImportController } from './products/bulk-import.controller';
-import { ProductsController } from './products/products.controller';
 import { ProvisioningModule } from './provisioning/provisioning.module';
 import { HoneyTokensController } from './security/honey-tokens.controller';
 import { SecurityModule } from './security/security.module';
@@ -83,13 +81,7 @@ import { TenantsModule } from './tenants/tenants.module';
       useClass: QuotaInterceptor,
     },
   ],
-  controllers: [
-    AppController,
-    ProductsController,
-    BulkImportController,
-    HoneyTokensController,
-    MerchantStatsController,
-  ],
+  controllers: [AppController, HoneyTokensController, MerchantStatsController],
 })
 export class AppModule implements NestModule {
   // S2: Apply Tenant Isolation & S11: Bot Protection with specific exclusions

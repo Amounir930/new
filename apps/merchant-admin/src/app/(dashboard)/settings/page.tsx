@@ -1,17 +1,17 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Image as ImageIcon, Loader2, Store } from 'lucide-react';
+import { Loader2, Store } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { LogoUploader } from '@/components/settings/LogoUploader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiFetch } from '@/lib/api';
-import { LogoUploader } from '@/components/settings/LogoUploader';
 
 const SettingsSchema = z.object({
   store_name: z.string().min(1, 'Store name is required').max(100),
@@ -127,13 +127,13 @@ export default function SettingsPage() {
               <Label className="font-bold text-slate-700">
                 Store Branding (Logo)
               </Label>
-              <LogoUploader 
-                value={formValues.logo_url} 
-                onChange={(url) => setValue('logo_url', url)} 
+              <LogoUploader
+                value={formValues.logo_url}
+                onChange={(url) => setValue('logo_url', url)}
               />
               <p className="text-xs text-slate-500">
-                We recommend a square logo (512x512px) for optimal storefront display. 
-                Images are automatically optimized via Imgproxy.
+                We recommend a square logo (512x512px) for optimal storefront
+                display. Images are automatically optimized via Imgproxy.
               </p>
             </div>
           </CardContent>

@@ -78,16 +78,16 @@ export async function apiFetch<T>(
  * Works for both Client-side and SSR.
  */
 async function extractTenantFromHost(): Promise<string | null> {
-  let host = "";
-  if (typeof window !== "undefined") {
+  let host = '';
+  if (typeof window !== 'undefined') {
     // Client-side
     host = window.location.hostname;
   } else {
     // Server-side (SSR)
     try {
-      const { headers } = await import("next/headers");
+      const { headers } = await import('next/headers');
       const headersList = await headers();
-      host = headersList.get("host") || "";
+      host = headersList.get('host') || '';
     } catch {
       return null;
     }
@@ -95,15 +95,15 @@ async function extractTenantFromHost(): Promise<string | null> {
 
   if (!host) return null;
 
-  const parts = host.split(".");
+  const parts = host.split('.');
   // 🛡️ S2 FIX: Only treat as tenant if it's a subdomain and not an IP address or internal host
   const isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
   const isInternal =
-    parts[0] === "www" ||
-    parts[0] === "api" ||
-    parts[0] === "admin" ||
-    parts[0] === "super-admin" ||
-    parts[0] === "localhost";
+    parts[0] === 'www' ||
+    parts[0] === 'api' ||
+    parts[0] === 'admin' ||
+    parts[0] === 'super-admin' ||
+    parts[0] === 'localhost';
 
   if (parts.length >= 3 && !isIP && !isInternal) {
     return parts[0];

@@ -26,9 +26,10 @@ export async function fetchStorefront(
   options: StorefrontFetchOptions = {}
 ) {
   // 🛡️ S2 FIX: Enforce hostname-based discovery if tenantId is missing or generic
-  const resolvedTenantId = (!tenantId || tenantId === 'public')
-    ? ((await extractTenantFromHost()) || 'public')
-    : tenantId;
+  const resolvedTenantId =
+    !tenantId || tenantId === 'public'
+      ? (await extractTenantFromHost()) || 'public'
+      : tenantId;
 
   try {
     const res = await fetch(`${API_BASE}${path}`, {
@@ -134,7 +135,12 @@ export async function extractTenantFromHost(): Promise<string | null> {
   const parts = host.split('.');
   // 🛡️ S2 FIX: Only treat as tenant if it's a subdomain and not an IP address or internal host
   const isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
-  const isInternal = parts[0] === 'www' || parts[0] === 'api' || parts[0] === 'admin' || parts[0] === 'super-admin' || parts[0] === 'localhost';
+  const isInternal =
+    parts[0] === 'www' ||
+    parts[0] === 'api' ||
+    parts[0] === 'admin' ||
+    parts[0] === 'super-admin' ||
+    parts[0] === 'localhost';
 
   if (parts.length >= 3 && !isIP && !isInternal) {
     return parts[0];

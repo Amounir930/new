@@ -1,7 +1,7 @@
-import { Test, type TestingModule } from '@nestjs/testing';
-import { MerchantUploadController } from './merchant-upload.controller';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { MerchantUploadController } from './merchant-upload.controller';
 
 jest.mock('@aws-sdk/client-s3', () => ({
   S3Client: jest.fn().mockImplementation(() => ({})),
@@ -39,8 +39,10 @@ describe('MerchantUploadController', () => {
 
   describe('getUploadUrl', () => {
     it('should return a pre-signed URL and public URL for valid MIME types', async () => {
-      (getSignedUrl as jest.Mock).mockResolvedValue('https://signed-url.com/upload');
-      
+      (getSignedUrl as jest.Mock).mockResolvedValue(
+        'https://signed-url.com/upload'
+      );
+
       const mockReq: any = {
         user: { tenantId: 'tenant-123' },
       };
@@ -54,8 +56,10 @@ describe('MerchantUploadController', () => {
     });
 
     it('should correctly derive extensions (Server-Side Extension Derivation)', async () => {
-      (getSignedUrl as jest.Mock).mockResolvedValue('https://signed-url.com/upload');
-      
+      (getSignedUrl as jest.Mock).mockResolvedValue(
+        'https://signed-url.com/upload'
+      );
+
       const mockReq: any = { user: { tenantId: 'tenant-123' } };
 
       const jpegResult = await controller.getUploadUrl(mockReq, 'image/jpeg');
@@ -67,7 +71,7 @@ describe('MerchantUploadController', () => {
 
     it('should throw BadRequestException for unsupported MIME types', async () => {
       const mockReq: any = { user: { tenantId: 'tenant-123' } };
-      
+
       await expect(
         controller.getUploadUrl(mockReq, 'application/pdf')
       ).rejects.toThrow(BadRequestException);
@@ -75,7 +79,7 @@ describe('MerchantUploadController', () => {
 
     it('should throw UnauthorizedException if user context is missing', async () => {
       const mockReq: any = {};
-      
+
       await expect(
         controller.getUploadUrl(mockReq, 'image/png')
       ).rejects.toThrow(UnauthorizedException);

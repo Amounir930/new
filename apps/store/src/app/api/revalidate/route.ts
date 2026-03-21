@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
+import { type NextRequest, NextResponse } from 'next/server';
 
 /**
  * Vector 4: Secure ISR Revalidation Endpoint
@@ -23,17 +23,20 @@ export async function GET(request: NextRequest) {
     // S12: Perform on-demand revalidation
     // Satisfy linter: Next.js 16.1.7 expects a profile/config as second argument
     revalidateTag(tag, 'default');
-    
+
     // Also revalidate the specific tenant tag if it's a config/bootstrap update
     if (tag.startsWith('config-') || tag.startsWith('bootstrap-')) {
-        const tenantId = tag.split('-')[1];
-        if (tenantId) {
-            revalidateTag(`tenant-${tenantId}`, 'default');
-        }
+      const tenantId = tag.split('-')[1];
+      if (tenantId) {
+        revalidateTag(`tenant-${tenantId}`, 'default');
+      }
     }
 
     return NextResponse.json({ revalidated: true, now: Date.now() });
   } catch (err) {
-    return NextResponse.json({ message: 'Error revalidating', error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Error revalidating', error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }

@@ -5,7 +5,9 @@ import { z } from 'zod';
  * 7 Sections of Product Data
  * S3: Input Validation
  */
-export const CreateProductSchema = z.object({
+import { PolymorphicAttributesSchema } from './niche-attributes.schema';
+
+const BaseProductSchema = z.object({
   // 1. Primary Info
   nameAr: z.string().min(1, 'Arabic name is required'),
   nameEn: z.string().min(1, 'English name is required'),
@@ -55,19 +57,8 @@ export const CreateProductSchema = z.object({
     .default([]),
   videoUrl: z.string().url().optional(),
 
-  // ... (existing trust and SEO)
-
-  // 7. Dynamic Niche-Specific
+  // 7. Dynamic Niche-Specific (Base)
   specifications: z.record(z.unknown()).default({}),
-  attributes: z
-    .array(
-      z.object({
-        name: z.string(),
-        value: z.string(),
-        group: z.string().optional(),
-      })
-    )
-    .default([]),
   metafields: z
     .array(
       z.object({
@@ -79,6 +70,11 @@ export const CreateProductSchema = z.object({
     )
     .default([]),
 });
+
+export const CreateProductSchema = z.intersection(
+  BaseProductSchema,
+  PolymorphicAttributesSchema
+);
 
 export class CreateProductDto extends createZodDto(CreateProductSchema) {}
 

@@ -105,6 +105,8 @@ export class StorefrontService {
           compareAtPrice: productsInStorefront.salePrice,
           rating: sql<number>`4.5`,
           imageUrl: productsInStorefront.mainImage,
+          niche: productsInStorefront.niche,
+          attributes: productsInStorefront.attributes,
         })
         .from(productsInStorefront)
         .where(and(...conditions))
@@ -345,7 +347,11 @@ export class StorefrontService {
     }
   }
 
-  async subscribeToNewsletter(_tenantId: string, schemaName: string, email: string) {
+  async subscribeToNewsletter(
+    _tenantId: string,
+    schemaName: string,
+    email: string
+  ) {
     const { db, release } = await getTenantDb(_tenantId, schemaName);
     try {
       // S7: Encrypt PII before storage

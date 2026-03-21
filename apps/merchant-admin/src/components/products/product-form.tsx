@@ -1,5 +1,6 @@
 'use client';
 
+import { CreateProductSchema } from '@apex/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   DollarSign,
@@ -11,10 +12,13 @@ import {
   Settings2,
   ShieldCheck,
   Truck,
+  Upload,
+  X,
 } from 'lucide-react';
-import { useState } from 'react';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
+import type { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -34,39 +38,10 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { apiFetch } from '@/lib/api';
+import { NicheAttributes } from './niche-attributes';
 
-// Reuse the schema logic from the API DTO (simplified for frontend)
-const ProductSchema = z.object({
-  nameAr: z.string().min(1, 'Arabic name is required'),
-  nameEn: z.string().min(1, 'English name is required'),
-  slug: z
-    .string()
-    .min(1, 'Slug is required')
-    .regex(
-      /^[a-z0-9-]+$/,
-      'Slug must be valid URL format (lowercase, numbers, dashes)'
-    ),
-  sku: z.string().min(1, 'SKU is required'),
-  basePrice: z.coerce.number().min(0, 'Base price must be positive'),
-  salePrice: z.coerce.number().min(0, 'Sale price must be positive').optional(),
-  taxPercentage: z.coerce
-    .number()
-    .min(0, 'Tax cannot be negative')
-    .max(100, 'Tax cannot exceed 100%')
-    .default(0),
-  stockQuantity: z.coerce
-    .number()
-    .int('Stock must be an integer')
-    .min(0, 'Stock cannot be negative')
-    .default(0),
-  weight: z.coerce.number().min(0, 'Weight cannot be negative').optional(),
-  mainImage: z.string().url('Main image must be a valid URL'),
-  shortDescriptionAr: z.string().max(1000).optional(),
-  shortDescriptionEn: z.string().max(1000).optional(),
-  metaTitle: z.string().max(70, 'Meta title too long').optional(),
-  metaDescription: z.string().max(160, 'Meta description too long').optional(),
-  isActive: z.boolean().default(true),
-});
+// Schema is now imported from @apex/validation
 
 type ProductFormData = z.infer<typeof ProductSchema>;
 
@@ -74,23 +49,48 @@ export function ProductForm({
   initialData,
   onSubmit,
 }: {
-  initialData?: unknown;
-  onSubmit: (data: unknown) => Promise<void>;
+  initialData?: any;
+  onSubmit: (data: any) => Promise<void>;
 }) {
   const [loading, setLoading] = useState(false);
+  const [niche, setNiche] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchNiche = async () => {
+      try {
+        const config = await apiFetch<any>('/merchant/config');
+        setNiche(config.niche || 'retail');
+      } catch (err) {
+        console.error('Failed to fetch store niche', err);
+        setNiche('retail');
+      }
+    };
+    fetchNiche();
+  }, []);
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
-  } = useForm<ProductFormData>({
-    resolver: zodResolver(ProductSchema),
+  } = useForm<any>({
+    resolver: zodResolver(CreateProductSchema),
     defaultValues: initialData || {
       isActive: true,
       taxPercentage: 0,
       stockQuantity: 0,
+      niche: 'retail', // Fallback until fetched
+      attributes: {},
     },
   });
+
+  // Automatically update form niche once fetched
+  useEffect(() => {
+    if (niche) {
+      setValue('niche', niche);
+    }
+  }, [niche, setValue]);
 
   const onFormSubmit = async (data: ProductFormData) => {
     setLoading(true);
@@ -307,15 +307,98 @@ export function ProductForm({
               <CardDescription>Visuals and descriptions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="mainImage">Main Image URL</Label>
-                <Input
-                  id="mainImage"
-                  {...register('mainImage')}
-                  className="bg-background/50"
-                  placeholder="https://..."
-                />
+              <div className="space-y-4">
+                <Label>Product Images (Upload to Temp)</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Simplified Media Grid */}
+                  <button
+                    type="button"
+                    className="border-2 border-dashed border-white/10 rounded-xl aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-indigo-500/50 transition-colors"
+                    onClick={() =>
+                      document.getElementById('media-upload')?.click()
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        document.getElementById('media-upload')?.click();
+                      }
+                    }}
+                    aria-label="Upload Product Image"
+                  >
+                    <Upload className="w-8 h-8 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground mt-2">
+                      Add Image
+                    </span>
+                  </button>
+                  <input
+                    id="media-upload"
+                    type="file"
+                    className="hidden"
+                    multiple
+                    onChange={async (e) => {
+                      const files = e.target.files;
+                      if (!files) return;
+                      for (const file of Array.from(files)) {
+                        try {
+                          // 1. Get Presigned URL
+                          const { uploadUrl, publicUrl } = await apiFetch<any>(
+                            `/merchant/media/products/upload-url?contentType=${file.type}`
+                          );
+                          // 2. Direct PUT to S3
+                          await fetch(uploadUrl, {
+                            method: 'PUT',
+                            body: file,
+                            headers: { 'Content-Type': file.type },
+                          });
+                          // 3. Update Form State
+                          const current = watch('galleryImages') || [];
+                          setValue('galleryImages', [
+                            ...current,
+                            {
+                              url: publicUrl,
+                              altText: file.name,
+                              order: current.length,
+                            },
+                          ]);
+                        } catch (err) {
+                          console.error('Upload failed', err);
+                        }
+                      }
+                    }}
+                  />
+
+                  {watch('galleryImages')?.map((img: any, idx: number) => (
+                    <div
+                      key={img.url}
+                      className="relative aspect-square rounded-xl overflow-hidden group border border-white/10"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={`Gallery ${idx + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={async () => {
+                          await apiFetch(
+                            `/merchant/media/products?url=${encodeURIComponent(img.url)}`,
+                            { method: 'DELETE' }
+                          );
+                          const current = watch('galleryImages');
+                          setValue(
+                            'galleryImages',
+                            current.filter((_: any, i: number) => i !== idx)
+                          );
+                        }}
+                      >
+                        <X className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="shortDescriptionEn">
                   Short Description (EN)
@@ -342,8 +425,20 @@ export function ProductForm({
           </Card>
         </TabsContent>
         <TabsContent value="specs">
-          <Card className="border-white/10 bg-muted/20 h-48 flex items-center justify-center text-muted-foreground italic">
-            Dynamic Sector Specifications...
+          <Card className="border-white/10 bg-muted/20 backdrop-blur-sm p-6">
+            {niche ? (
+              <NicheAttributes
+                niche={niche}
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+              />
+            ) : (
+              <div className="flex items-center justify-center p-12">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+            )}
           </Card>
         </TabsContent>
       </Tabs>
