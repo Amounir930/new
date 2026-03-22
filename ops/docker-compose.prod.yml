@@ -530,6 +530,7 @@ services:
   traefik:
     image: traefik:2.11.10
     container_name: apex-traefik
+    user: root
     restart: always
     security_opt:
       - no-new-privileges:true
