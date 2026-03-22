@@ -543,7 +543,7 @@ services:
     command:
       - "--log.level=INFO"
       - "--providers.docker=true"
-      - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.network=apex-internal"
       - "--providers.file.directory=/etc/traefik/dynamic"
@@ -574,6 +574,7 @@ services:
     volumes:
       # HTpasswd converted to docker secret where applicable, but for Traefik we can mount directly securely
       - ./htpasswd:/etc/traefik/htpasswd:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt_data:/letsencrypt
       - ./logs/traefik:/var/log/traefik
       - ./traefik-dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
