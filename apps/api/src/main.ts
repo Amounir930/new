@@ -146,33 +146,8 @@ async function bootstrap() {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // OpenAPI / Swagger Documentation (Temporarily disabled for Bun compatibility)
+  // OpenAPI / Swagger Documentation (Permanently decommissioned due to AJV crashes)
   // ═══════════════════════════════════════════════════════════════
-  /*
-  const config = new DocumentBuilder()
-    .setTitle('KIMI API')
-    .setDescription('60-Second Store Provisioning Engine API')
-    .setVersion('2.0.0')
-    .addBearerAuth()
-    .addTag('Provisioning', 'Store provisioning endpoints')
-    .addTag('Export', 'Tenant data export (S14)')
-    .addTag('Health', 'Health check endpoints')
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  // Swagger is mounted at /api/docs (prefix 'api' + path 'docs')
-  SwaggerModule.setup('docs', app, document, {
-    swaggerOptions: {
-      persistAuthorization: true,
-    },
-    // S8 FIX: Localize Swagger assets to prevent external CDN dependence (Critical)
-    customCssUrl: '/api/docs/swagger-ui.css',
-    customJs: [
-      '/api/docs/swagger-ui-bundle.js',
-      '/api/docs/swagger-ui-standalone-preset.js',
-    ],
-  });
-  */
 
   const port = env.PORT || 3000;
   await app.listen(port);

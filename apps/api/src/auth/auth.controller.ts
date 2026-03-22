@@ -17,7 +17,6 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import * as bcrypt from 'bcrypt';
 import type { Response } from 'express';
@@ -31,7 +30,6 @@ const LoginSchema = z.object({
 
 type LoginDto = z.infer<typeof LoginSchema>;
 
-@ApiTags('Auth')
 @Controller({ path: 'auth', version: '1' })
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
@@ -46,7 +44,6 @@ export class AuthController {
   @Post('login')
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login (Super Admin or Merchant)' })
   async login(
     @Body(new ZodValidationPipe(LoginSchema)) body: LoginDto,
     @Res({ passthrough: true }) response: Response
