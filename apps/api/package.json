@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 nest build",
-    "start": "nest start",
-    "dev": "nest start --watch",
+    "start": "bun src/main.ts",
+    "dev": "bun --watch src/main.ts",
     "test": "bun test src",
     "test:coverage": "bun test src --coverage",
     "lint": "biome check .",
