@@ -393,7 +393,11 @@ export function ProductForm({
                         <Button
                           type="button"
                           size="sm"
-                          variant={watch('mainImage') === img.url ? 'default' : 'secondary'}
+                          variant={
+                            watch('mainImage') === img.url
+                              ? 'default'
+                              : 'secondary'
+                          }
                           className="h-8 text-xs gap-1"
                           onClick={() => setValue('mainImage', img.url)}
                         >
@@ -413,7 +417,9 @@ export function ProductForm({
                               { method: 'DELETE' }
                             );
                             const current = watch('galleryImages');
-                            const newGallery = current.filter((_, i) => i !== idx);
+                            const newGallery = current.filter(
+                              (_, i) => i !== idx
+                            );
                             setValue('galleryImages', newGallery);
                             if (watch('mainImage') === img.url) {
                               setValue('mainImage', newGallery[0]?.url || '');

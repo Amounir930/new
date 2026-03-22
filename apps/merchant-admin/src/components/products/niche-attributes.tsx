@@ -1,5 +1,12 @@
 'use client';
 
+import type { CreateProductInput } from '@apex/validation';
+import type {
+  FieldErrors,
+  UseFormRegister,
+  UseFormSetValue,
+  UseFormWatch,
+} from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,14 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-
-import {
-  UseFormRegister,
-  FieldErrors,
-  UseFormSetValue,
-  UseFormWatch,
-} from 'react-hook-form';
-import type { CreateProductInput } from '@apex/validation';
 
 interface NicheAttributesProps {
   niche: string;
@@ -47,7 +46,9 @@ export function NicheAttributes({
                   valueAsNumber: true,
                 })}
               />
-              {errors?.attributes?.['bedrooms' as keyof typeof errors.attributes] && (
+              {errors?.attributes?.[
+                'bedrooms' as keyof typeof errors.attributes
+              ] && (
                 <p className="text-xs text-red-500">
                   {(errors.attributes as any).bedrooms.message}
                 </p>
@@ -62,7 +63,9 @@ export function NicheAttributes({
                   valueAsNumber: true,
                 })}
               />
-              {errors?.attributes?.['bathrooms' as keyof typeof errors.attributes] && (
+              {errors?.attributes?.[
+                'bathrooms' as keyof typeof errors.attributes
+              ] && (
                 <p className="text-xs text-red-500">
                   {(errors.attributes as any).bathrooms.message}
                 </p>
@@ -74,7 +77,9 @@ export function NicheAttributes({
                 type="number"
                 {...register('attributes.sqft' as any, { valueAsNumber: true })}
               />
-              {errors?.attributes?.['sqft' as keyof typeof errors.attributes] && (
+              {errors?.attributes?.[
+                'sqft' as keyof typeof errors.attributes
+              ] && (
                 <p className="text-xs text-red-500">
                   {(errors.attributes as any).sqft.message}
                 </p>

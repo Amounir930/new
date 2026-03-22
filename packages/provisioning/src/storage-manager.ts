@@ -217,7 +217,7 @@ async function setupBucket(
       corsError,
     });
   }
-  
+
   // 3. Set Lifecycle Policy for temp/products (Sovereign Hygiene Mandate)
   try {
     const lifeCycleConfig = {
@@ -244,7 +244,7 @@ async function setupBucket(
       { lcError }
     );
   }
-  
+
   // 4. Set bucket tagging with plan info
   await patchedClient.setBucketTagging(bucketName, {
     plan,
@@ -408,7 +408,7 @@ export async function deletePrefix(
     const objectsList: string[] = [];
     // Ensure prefix ends with / to prevent deleting similar-named prefixes
     const cleanPrefix = prefix.endsWith('/') ? prefix : `${prefix}/`;
-    
+
     const stream = client.listObjectsV2(bucketName, cleanPrefix, true);
     for await (const obj of stream) {
       if (obj.name) objectsList.push(obj.name);
@@ -421,7 +421,9 @@ export async function deletePrefix(
         `SUCCESS: Prefix ${cleanPrefix} purged from ${bucketName} (${objectsList.length} objects)`
       );
     } else {
-      logger.info(`SKIP: Prefix ${cleanPrefix} empty or non-existent in ${bucketName}`);
+      logger.info(
+        `SKIP: Prefix ${cleanPrefix} empty or non-existent in ${bucketName}`
+      );
     }
     return true;
   } catch (error) {
