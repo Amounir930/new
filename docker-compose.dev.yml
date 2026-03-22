@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # ═══════════════════════════════════════════════════════════════
-  # Infrastructure (Renamed to match sovereign .env expectations)
+  # Infrastructure (Hardened Security alignment)
   # ═══════════════════════════════════════════════════════════════
   apex-postgres:
     image: pgvector/pgvector:pg15
@@ -26,11 +26,12 @@ services:
   apex-redis:
     image: redis:7-alpine
     container_name: apex-redis-dev
-    command: redis-server --appendonly yes
+    # S7: Security Hardening - Aligning with .env password requirements
+    command: redis-server --requirepass "ApexV2DBPassSecure2026GrowthScale!QazXswEdCv" --appendonly yes
     ports:
       - "6379:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "ApexV2DBPassSecure2026GrowthScale!QazXswEdCv", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
