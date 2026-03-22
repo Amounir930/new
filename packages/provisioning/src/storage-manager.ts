@@ -181,6 +181,10 @@ async function setupBucket(
         }>;
       }
     ): Promise<void>;
+    setBucketLifecycle(
+      bucketName: string,
+      lifeCycleConfig: any
+    ): Promise<void>;
   }
   const patchedClient = client as unknown as PatchedMinioClient;
 
@@ -213,8 +217,32 @@ async function setupBucket(
       corsError,
     });
   }
-
-  // 3. Set bucket tagging with plan info
+  
+  // 3. Set Lifecycle Policy for temp/products (Sovereign Hygiene Mandate)
+  try {
+    const lifeCycleConfig = {
+      Rule: [
+        {
+          ID: 'TempProductsCleanup',
+          Status: 'Enabled',
+          Filter: {
+            Prefix: 'temp/products/',
+          },
+          Expiration: {
+            Days: 1,
+          },
+        },
+      ],
+    };
+    await patchedClient.setBucketLifecycle(bucketName, lifeCycleConfig);
+  } catch (lcError) {
+    logger.error(
+      `Sovereign Warning: Failed to set ILM for bucket ${bucketName}`,
+      { lcError }
+    );
+  }
+  
+  // 4. Set bucket tagging with plan info
   await patchedClient.setBucketTagging(bucketName, {
     plan,
     tenant: subdomain,
@@ -360,6 +388,105 @@ export async function deleteObject(
     logger.error('Failed to delete object', { bucketName, objectName, error });
     return false;
   }
+}
+
+/**
+ * 🛡️ Mandate 2: S3 Prefix Deletion (Corrected)
+ * Executes ListObjectsV2 followed by Batch DeleteObjectsCommand
+ */
+export async function deletePrefix(
+  subdomain: string,
+  prefix: string
+): Promise<boolean> {
+  const bucketName = sanitizeBucketName(subdomain);
+  const client = getMinioClient();
+
+  try {
+    const objectsList: string[] = [];
+    // Ensure prefix ends with / to prevent deleting similar-named prefixes
+    const cleanPrefix = prefix.endsWith('/') ? prefix : `${prefix}/`;
+    
+    const stream = client.listObjectsV2(bucketName, cleanPrefix, true);
+    for await (const obj of stream) {
+      if (obj.name) objectsList.push(obj.name);
+    }
+
+    if (objectsList.length > 0) {
+      // S3 Batch Delete Protocol: All or Nothing (Mandate 2)
+      await client.removeObjects(bucketName, objectsList);
+      logger.info(
+        `SUCCESS: Prefix ${cleanPrefix} purged from ${bucketName} (${objectsList.length} objects)`
+      );
+    } else {
+      logger.info(`SKIP: Prefix ${cleanPrefix} empty or non-existent in ${bucketName}`);
+    }
+    return true;
+  } catch (error) {
+    logger.error('CRITICAL_STORAGE_FAILURE: Failed to execute prefix purge', {
+      bucketName,
+      prefix,
+      error,
+    });
+    return false;
+  }
+}
+
+/**
+ * 🛡️ Mandate 3: Publish/Move Transaction
+ * Atomic migration from temp to public product directory
+ */
+export async function migrateProductMedia(
+  subdomain: string,
+  productId: string,
+  mainImageUrl: string,
+  galleryImages: { url: string; altText?: string; order: number }[]
+) {
+  const client = getMinioClient();
+  const bucketName = sanitizeBucketName(subdomain);
+
+  const migrate = async (url: string) => {
+    // S3 Forensic: Stop if not a temp asset
+    if (!url || !url.includes('/temp/products/')) return url;
+
+    try {
+      const urlObj = new URL(url);
+      const parts = urlObj.pathname.split(`${bucketName}/`);
+      if (parts.length < 2) return url;
+
+      const sourceKey = parts[1];
+      const fileName = sourceKey.split('/').pop();
+      const targetKey = `public/products/${productId}/${fileName}`;
+
+      // 🚛 Distributed Transaction Step: Copy + Delete
+      await client.copyObject(
+        bucketName,
+        targetKey,
+        `/${bucketName}/${sourceKey}`,
+        new Minio.CopyConditions()
+      );
+      await client.removeObject(bucketName, sourceKey);
+
+      const storageUrl = env.STORAGE_PUBLIC_URL || `http://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}`;
+      return `${storageUrl}/${bucketName}/${targetKey}`;
+    } catch (err) {
+      logger.error('MEDIA_MIGRATION_FAILURE: Terminating transaction', {
+        url,
+        error: err,
+      });
+      // 🛑 Throwing is MANDATORY to trigger DB Rollback (Mandate 3.3)
+      throw new Error(`Critical asset migration failed for ${url}`);
+    }
+  };
+
+  const newMainImage = await migrate(mainImageUrl);
+  const newGallery = await Promise.all(
+    galleryImages.map(async (img) => ({
+      ...img,
+      url: await migrate(img.url),
+    }))
+  );
+
+  return { mainImage: newMainImage, galleryImages: newGallery };
 }
 
 /**

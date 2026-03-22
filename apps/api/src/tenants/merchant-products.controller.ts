@@ -12,6 +12,7 @@ import {
   type InferInsertModel,
   productsInStorefront,
 } from '@apex/db';
+import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
 import {
   CheckQuota,
   QuotaInterceptor,
@@ -19,8 +20,6 @@ import {
   type TenantCacheService,
 } from '@apex/middleware';
 import {
-  CopyObjectCommand,
-  DeleteObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import {
@@ -96,110 +95,59 @@ export class MerchantProductsController {
 
     const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
-      // 1. Drizzle Insert เพื่อสร้าง productId
-      const [product] = await db
-        .insert(productsInStorefront)
-        .values(productData)
-        .returning();
+      // 🛡️ Mandate 3: Strict Distributed Transaction (All or Nothing)
+      const result = await db.transaction(async (tx) => {
+        // 1. Drizzle Insert เพื่อสร้าง productId
+        const [product] = await tx
+          .insert(productsInStorefront)
+          .values(productData)
+          .returning();
 
-      // 2. Asset Migration Engine: Move from temp/ to public/products/{productId}
-      const migratedUrls = await this.migrateMedia(
-        subdomain,
-        product.id,
-        body.mainImage,
-        body.galleryImages || []
-      );
+        // 2. Asset Migration Engine: Move from temp/ to public/products/{productId}
+        // 🛑 If this throws, Drizzle triggers ROLLBACK automatically (Mandate 3.3)
+        const migratedUrls = await migrateProductMedia(
+          subdomain,
+          product.id,
+          body.mainImage,
+          body.galleryImages || []
+        );
 
-      // 3. Update DB with final URLs
-      await db
-        .update(productsInStorefront)
-        .set({
-          mainImage: migratedUrls.mainImage,
-          galleryImages: migratedUrls.galleryImages,
-        })
-        .where(eq(productsInStorefront.id, product.id));
+        // 3. Update DB with final URLs within the SAME transaction
+        const [finalProduct] = await tx
+          .update(productsInStorefront)
+          .set({
+            mainImage: migratedUrls.mainImage,
+            galleryImages: migratedUrls.galleryImages,
+          })
+          .where(eq(productsInStorefront.id, product.id))
+          .returning();
 
-      // 4. Cache Sync & ISR Revalidation
+        return { ...finalProduct, ...migratedUrls };
+      });
+
+      // 4. Cache Sync & ISR Revalidation (Post-Commit)
       await this.syncCache(subdomain);
 
       return {
         success: true,
-        data: { ...product, ...migratedUrls },
+        data: result,
       };
     } catch (error) {
       this.logger.error(
-        `PRODUCT_CREATE_ERROR: ${error instanceof Error ? error.message : String(error)}`
+        `PRODUCT_CREATE_TRANSACTION_FAILURE: ${error instanceof Error ? error.message : String(error)}`
       );
-      throw new InternalServerErrorException(
-        'Failed to create product and migrate assets'
-      );
+      // Ensure we re-throw to trigger 500/Rollback visibility
+      throw error instanceof InternalServerErrorException
+        ? error
+        : new InternalServerErrorException(
+            'Failed to create product because asset migration failed. Database rolled back.'
+          );
     } finally {
       release();
     }
   }
 
-  /**
-   * 🛡️ Server-side "Copy & Delete" Migration Engine
-   */
-  private async migrateMedia(
-    subdomain: string,
-    productId: string,
-    mainImageUrl: string,
-    galleryImages: { url: string; altText?: string; order: number }[]
-  ) {
-    const s3Client = new S3Client({
-      endpoint: env.MINIO_ENDPOINT || 'http://apex-minio:9000',
-      region: env.MINIO_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: env.MINIO_ACCESS_KEY || '',
-        secretAccessKey: env.MINIO_SECRET_KEY || '',
-      },
-      forcePathStyle: true,
-    });
 
-    const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
-
-    const migrate = async (url: string) => {
-      if (!url.includes('/temp/products/')) return url;
-
-      try {
-        const urlObj = new URL(url);
-        const sourceKey = urlObj.pathname.split(`${bucketName}/`)[1];
-        const fileName = sourceKey.split('/').pop();
-        const targetKey = `public/products/${productId}/${fileName}`;
-
-        // 🚛 Move operation
-        await s3Client.send(
-          new CopyObjectCommand({
-            Bucket: bucketName,
-            CopySource: `${bucketName}/${sourceKey}`,
-            Key: targetKey,
-          })
-        );
-        await s3Client.send(
-          new DeleteObjectCommand({
-            Bucket: bucketName,
-            Key: sourceKey,
-          })
-        );
-
-        return `${env.STORAGE_PUBLIC_URL}/${bucketName}/${targetKey}`;
-      } catch (_err) {
-        this.logger.warn(`MEDIA_MIGRATION_SKIP: ${url}`);
-        return url;
-      }
-    };
-
-    const newMainImage = await migrate(mainImageUrl);
-    const newGallery = await Promise.all(
-      galleryImages.map(async (img) => ({
-        ...img,
-        url: await migrate(img.url),
-      }))
-    );
-
-    return { mainImage: newMainImage, galleryImages: newGallery };
-  }
 
   private async syncCache(subdomain: string) {
     try {
@@ -289,8 +237,8 @@ export class MerchantProductsController {
 
       await this.syncCache(subdomain);
 
-      // 🚛 Delete physical folder
-      // (Implementation for prefix deletion would go here)
+      // 🚛 Mandate 2: Physical Prefix Garbage Collection (List + Batch Delete)
+      await deletePrefix(subdomain, `public/products/${id}`);
 
       return { success: true };
     } finally {
