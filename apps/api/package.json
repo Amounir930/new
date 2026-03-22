@@ -34,7 +34,6 @@
     "@nestjs/jwt": "10.2.0",
     "@nestjs/passport": "11.0.5",
     "@nestjs/platform-express": "10.4.16",
-    "@nestjs/swagger": "7.4.2",
     "@nestjs/throttler": "5.2.0",
     "@sentry/nestjs": "10.38.0",
     "@types/bcrypt": "^6.0.0",
