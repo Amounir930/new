@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   # ═══════════════════════════════════════════════════════════════
   # Infrastructure (Reused from root compose)
@@ -14,7 +16,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-apex} -d ${POSTGRES_DB:-apex_v2}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-apex} -d $${POSTGRES_DB:-apex_v2}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -56,6 +58,26 @@ services:
       - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
+  # Bootstrap (Init Container - High-Velocity Hydration)
+  # ═══════════════════════════════════════════════════════════════
+  bootstrap:
+    image: oven/bun:1.1.25
+    container_name: apex-bootstrap-dev
+    working_dir: /app
+    volumes:
+      - ./:/app:delegated
+      - nm_root:/app/node_modules
+      - nm_api:/app/apps/api/node_modules
+      - nm_store:/app/apps/store/node_modules
+      - nm_merchant:/app/apps/merchant-admin/node_modules
+      - nm_super:/app/apps/super-admin/node_modules
+      - bun_global_cache:/root/.bun/install/cache
+    # Performs atomic installation for all workspaces sharing Named Volumes
+    command: bun install --ignore-scripts
+    networks:
+      - apex-internal
+
+  # ═══════════════════════════════════════════════════════════════
   # Compute (Remote-First with Bind Mounts)
   # ═══════════════════════════════════════════════════════════════
   api:
@@ -64,7 +86,9 @@ services:
     working_dir: /app
     volumes:
       - ./:/app:delegated
-      - /app/node_modules
+      - nm_root:/app/node_modules
+      - nm_api:/app/apps/api/node_modules
+      - bun_global_cache:/root/.bun/install/cache
     env_file:
       - .env
     environment:
@@ -72,11 +96,13 @@ services:
     ports:
       - "3000:3000"
     depends_on:
+      bootstrap:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: sh -c "bun install --ignore-scripts && cd apps/api && bun run dev"
+    command: sh -c "cd apps/api && bun run dev"
     networks:
       - apex-internal
     labels:
@@ -92,7 +118,9 @@ services:
     working_dir: /app
     volumes:
       - ./:/app:delegated
-      - /app/node_modules
+      - nm_root:/app/node_modules
+      - nm_store:/app/apps/store/node_modules
+      - bun_global_cache:/root/.bun/install/cache
     environment:
       NODE_ENV: development
       HUSKY: "0"
@@ -102,9 +130,11 @@ services:
     ports:
       - "3002:3002"
     depends_on:
+      bootstrap:
+        condition: service_completed_successfully
       api:
         condition: service_started
-    command: sh -c "sleep 10 && bun install --ignore-scripts && bun x turbo run dev --filter=store"
+    command: bun x turbo run dev --filter=store
     networks:
       - apex-internal
     labels:
@@ -120,7 +150,9 @@ services:
     working_dir: /app
     volumes:
       - ./:/app:delegated
-      - /app/node_modules
+      - nm_root:/app/node_modules
+      - nm_merchant:/app/apps/merchant-admin/node_modules
+      - bun_global_cache:/root/.bun/install/cache
     environment:
       NODE_ENV: development
       HUSKY: "0"
@@ -130,9 +162,11 @@ services:
     ports:
       - "3001:3001"
     depends_on:
+      bootstrap:
+        condition: service_completed_successfully
       api:
         condition: service_started
-    command: sh -c "sleep 20 && bun install --ignore-scripts && bun x turbo run dev --filter=merchant-admin"
+    command: bun x turbo run dev --filter=merchant-admin
     networks:
       - apex-internal
     labels:
@@ -148,7 +182,9 @@ services:
     working_dir: /app
     volumes:
       - ./:/app:delegated
-      - /app/node_modules
+      - nm_root:/app/node_modules
+      - nm_super:/app/apps/super-admin/node_modules
+      - bun_global_cache:/root/.bun/install/cache
     environment:
       NODE_ENV: development
       HUSKY: "0"
@@ -158,9 +194,11 @@ services:
     ports:
       - "3003:3003"
     depends_on:
+      bootstrap:
+        condition: service_completed_successfully
       api:
         condition: service_started
-    command: sh -c "sleep 30 && bun install --ignore-scripts && bun x turbo run dev --filter=super-admin"
+    command: bun x turbo run dev --filter=super-admin
     networks:
       - apex-internal
     labels:
@@ -174,6 +212,11 @@ volumes:
   postgres_dev_data:
   minio_dev_data:
   bun_global_cache:
+  nm_root:
+  nm_api:
+  nm_store:
+  nm_merchant:
+  nm_super:
 
 networks:
   apex-internal:
