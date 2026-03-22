@@ -2,7 +2,7 @@ import { AuditLog } from '@apex/audit';
 import {
   isUuid,
   RateLimit,
-  type TenantCacheService,
+  TenantCacheService,
   type TenantRequest,
 } from '@apex/middleware';
 import {

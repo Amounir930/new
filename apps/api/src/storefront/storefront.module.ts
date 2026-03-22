@@ -1,11 +1,12 @@
 import { AuditModule } from '@apex/audit';
 
 import { Module } from '@nestjs/common';
+import { TenantCacheModule } from '@apex/middleware';
 import { StorefrontController } from './storefront.controller';
 import { StorefrontService } from './storefront.service';
 
 @Module({
-  imports: [AuditModule],
+  imports: [AuditModule, TenantCacheModule],
   controllers: [StorefrontController],
   providers: [
     StorefrontService,
