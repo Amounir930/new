@@ -70,6 +70,7 @@ services:
       - /app/apps/api/node_modules
     environment:
       NODE_ENV: development
+      HUSKY: "0"
       DATABASE_URL: postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD:-apex_secret}@postgres:5432/${POSTGRES_DB:-apex_v2}?sslmode=disable
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -96,6 +97,7 @@ services:
       - /app/apps/store/node_modules
     environment:
       NODE_ENV: development
+      HUSKY: "0"
       # Used by the browser (Client-side)
       NEXT_PUBLIC_API_URL: http://localhost:3000/api
       # Used by Next.js Server (SSR)
