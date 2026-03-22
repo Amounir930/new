@@ -5,6 +5,7 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "manualRestart": true,
+    "webpack": true,
     "assets": [],
     "plugins": []
   }
