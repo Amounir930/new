@@ -146,8 +146,9 @@ async function bootstrap() {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // OpenAPI / Swagger Documentation
+  // OpenAPI / Swagger Documentation (Temporarily disabled for Bun compatibility)
   // ═══════════════════════════════════════════════════════════════
+  /*
   const config = new DocumentBuilder()
     .setTitle('KIMI API')
     .setDescription('60-Second Store Provisioning Engine API')
@@ -171,6 +172,7 @@ async function bootstrap() {
       '/api/docs/swagger-ui-standalone-preset.js',
     ],
   });
+  */
 
   const port = env.PORT || 3000;
   await app.listen(port);
