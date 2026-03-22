@@ -1,9 +1,13 @@
 import { ConfigService } from '@apex/config';
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Logger } from '@nestjs/common';
 import type { AuthUser, JwtPayload } from '../auth.service';
 
 @Injectable()

@@ -12,16 +12,14 @@ import {
   type InferInsertModel,
   productsInStorefront,
 } from '@apex/db';
-import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
 import {
   CheckQuota,
   QuotaInterceptor,
   RequireFeature,
-  TenantCacheService,
+  type TenantCacheService,
 } from '@apex/middleware';
-import {
-  S3Client,
-} from '@aws-sdk/client-s3';
+import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
+import { S3Client } from '@aws-sdk/client-s3';
 import {
   Body,
   Controller,
@@ -146,8 +144,6 @@ export class MerchantProductsController {
       release();
     }
   }
-
-
 
   private async syncCache(subdomain: string) {
     try {

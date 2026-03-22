@@ -8,7 +8,7 @@ import {
   productsInStorefront,
   sql,
 } from '@apex/db';
-import { isUuid, TenantCacheService } from '@apex/middleware';
+import { isUuid, type TenantCacheService } from '@apex/middleware';
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 
 @Controller('tenants/stats')

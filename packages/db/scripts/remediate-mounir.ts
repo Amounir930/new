@@ -1,4 +1,4 @@
-import { adminDb, eq, and, featureGatesInGovernance } from '@apex/db';
+import { adminDb, and, eq, featureGatesInGovernance } from '@apex/db';
 
 async function remediateMounir() {
   const MOUNIR_TENANT_ID = '20cd61b6-6573-4f99-bea6-f6439761177a';
@@ -13,7 +13,10 @@ async function remediateMounir() {
       rolloutPercentage: 100,
     })
     .onConflictDoUpdate({
-      target: [featureGatesInGovernance.tenantId, featureGatesInGovernance.featureKey],
+      target: [
+        featureGatesInGovernance.tenantId,
+        featureGatesInGovernance.featureKey,
+      ],
       set: { isEnabled: true },
     });
 

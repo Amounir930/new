@@ -32,52 +32,62 @@ function isMerchantAuthorized(payload: any): boolean {
   );
 }
 
+function extractAuthToken(request: NextRequest): string | undefined {
+  return (
+    request.cookies.get('adm_tkn')?.value ||
+    request.cookies.get('adm_tkn_fe')?.value
+  );
+}
+
+function handleLoginRedirect(
+  request: NextRequest,
+  payload: any
+): NextResponse | undefined {
+  const { pathname } = request.nextUrl;
+  if (
+    (pathname === '/login' || pathname === '/') &&
+    isMerchantAuthorized(payload)
+  ) {
+    console.log('[MW] Redirecting authenticated user to /dashboard');
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+  return undefined;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // S8: Check both HttpOnly cookie (adm_tkn) and Frontend fallback (adm_tkn_fe)
-  const token =
-    request.cookies.get('adm_tkn')?.value ||
-    request.cookies.get('adm_tkn_fe')?.value;
-
+  const token = extractAuthToken(request);
   const isProtected = MERCHANT_PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
 
-  if (isProtected) {
-    if (!token) {
-      console.log(`[MW] Blocking unauthenticated access to ${pathname}`);
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    try {
-      const payload = await verifyMerchantToken(token);
-      if (!isMerchantAuthorized(payload)) {
-        console.warn(`[MW] Unauthorized role for user: ${payload.sub}`);
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
-      return NextResponse.next();
-    } catch (_error) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  }
-
-  // Redirect authenticated users away from Login/Root to Dashboard
-  if (pathname === '/login' || pathname === '/') {
+  if (!isProtected) {
     if (token) {
       try {
         const payload = await verifyMerchantToken(token);
-        if (isMerchantAuthorized(payload)) {
-          console.log('[MW] Redirecting authenticated user to /dashboard');
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
-      } catch (_e) {
-        // Token invalid, allow /login access
+        return handleLoginRedirect(request, payload) || NextResponse.next();
+      } catch {
+        return NextResponse.next();
       }
     }
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  if (!token) {
+    console.log(`[MW] Blocking unauthenticated access to ${pathname}`);
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  try {
+    const payload = await verifyMerchantToken(token);
+    if (!isMerchantAuthorized(payload)) {
+      console.warn(`[MW] Unauthorized role for user: ${payload.sub}`);
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return NextResponse.next();
+  } catch (_error) {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
 }
 
 export const config = {
