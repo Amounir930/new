@@ -1,94 +1,42 @@
 http:
-  middlewares:
-    apex-cf-allowlist:
-      ipAllowList:
-        sourceRange:
-          - "173.245.48.0/20"
-          - "103.21.244.0/22"
-          - "103.22.200.0/22"
-          - "103.31.4.0/22"
-          - "141.101.64.0/18"
-          - "108.162.192.0/18"
-          - "190.93.240.0/20"
-          - "188.114.96.0/20"
-          - "197.234.240.0/22"
-          - "198.41.128.0/17"
-          - "162.158.0.0/15"
-          - "104.16.0.0/13"
-          - "104.24.0.0/14"
-          - "172.64.0.0/13"
-          - "131.0.72.0/22"
-    
-    apex-internal-allowlist:
-      ipAllowList:
-        sourceRange:
-          - "10.0.0.0/8"
-          - "172.16.0.0/12"
-          - "192.168.0.0/16"
-          
-    apex-security-headers:
-      headers:
-        stsSeconds: 31536000
-        stsIncludeSubdomains: true
-        contentTypeNosniff: true
-        browserXssFilter: true
-        referrerPolicy: "strict-origin-when-cross-origin"
-        frameDeny: true
-        
-    apex-api-ratelimit:
-      rateLimit:
-        average: 100
-        burst: 150
-        
-    apex-admin-ratelimit:
-      rateLimit:
-        average: 60
-        burst: 80
-        
-    apex-global-ratelimit:
-      rateLimit:
-        average: 50
-        burst: 100
-        
-    apex-storage-cors:
-      headers:
-        accessControlAllowMethods:
-          - "GET"
-          - "PUT"
-          - "POST"
-          - "DELETE"
-          - "OPTIONS"
-          - "PATCH"
-        accessControlAllowHeaders:
-          - "*"
-        accessControlAllowOriginList:
-          - "https://super-admin.60sec.shop"
-          - "https://admin.60sec.shop"
-          - "https://60sec.shop"
-        accessControlMaxAge: 100
-        accessControlAllowCredentials: true
-        addVaryHeader: true
-        
-    apex-store-csp:
-      headers:
-        customResponseHeaders:
-          Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.60sec.shop; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://fonts.gstatic.com https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
-          
-    apex-minio-headers:
-      headers:
-        customResponseHeaders:
-          Content-Security-Policy: "default-src 'self' 'unsafe-inline' https://*.60sec.shop; script-src 'self' 'unsafe-inline' https://*.60sec.shop https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://*.60sec.shop; img-src 'self' data: https: https://*.60sec.shop; font-src 'self' data: https://*.60sec.shop; connect-src 'self' https://*.60sec.shop; frame-ancestors 'self';"
+  routers:
+    apex-super-admin-dev:
+      rule: "Host(`super-admin.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: apex-super-admin-dev
+      tls:
+        certResolver: letsencrypt
+      priority: 20000
 
-    apex-api-version-bridge:
-      replacePathRegex:
-        regex: "^/api/(auth/login|provision|tenants|blueprints|governance/health)(.*)"
-        replacement: "/api/v1/${1}${2}"
+    apex-merchant-admin-dev:
+      rule: "Host(`admin.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: apex-merchant-admin-dev
+      tls:
+        certResolver: letsencrypt
+      priority: 20000
 
-    apex-basic-auth:
-      basicAuth:
-        usersFile: "/etc/traefik/htpasswd"
-        
-    apex-dash-redirect:
-      redirectRegex:
-        regex: "^(https?://traefik\\.60sec\\.shop/dashboard)$"
-        replacement: "$${1}/"
+    apex-storefront-dev:
+      rule: "HostRegexp(`{host:.+}.60sec.shop`) || Host(`60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: apex-storefront-dev
+      tls:
+        certResolver: letsencrypt
+      priority: 20000
+
+  services:
+    apex-super-admin-dev:
+      loadBalancer:
+        servers:
+          - url: "http://172.19.0.14:3001"
+    apex-merchant-admin-dev:
+      loadBalancer:
+        servers:
+          - url: "http://172.19.0.12:3001"
+    apex-storefront-dev:
+      loadBalancer:
+        servers:
+          - url: "http://172.19.0.13:3002"
