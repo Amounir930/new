@@ -6,9 +6,18 @@ This guide documents how to maintain a high-performance development environment 
 - **Local Machine**: VS Code with "Remote - SSH" extension.
 - **Remote Server**: Docker, Docker Compose, and Bun installed.
 
+## 📋 Connection Metadata
+- **Remote IP**: `34.18.192.25`
+- **SSH User**: `deploy`
+- **Identity Key**: `C:\Users\Dell\Desktop\60sec.shop\ops\keys\apex-deploy`
+- **Root Directory**: `/opt/apex-v2`
+
 ## 🚀 Step 1: Initialize Remote Infrastructure
-1. SSH into your remote server.
-2. Clone or copy the repository.
+1. SSH into the server:
+   ```bash
+   ssh -i "C:\Users\Dell\Desktop\60sec.shop\ops\keys\apex-deploy" deploy@34.18.192.25
+   ```
+2. Navigate to the project: `cd /opt/apex-v2`
 3. Start the development stack (Automated `bun install` + HMR):
    ```bash
    docker-compose -f docker-compose.dev.yml up -d
