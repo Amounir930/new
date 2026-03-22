@@ -107,6 +107,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-api-dev.rule=Host(`api.60sec.shop`)"
+      - "traefik.http.routers.apex-api-dev.priority=10000"
       - "traefik.http.routers.apex-api-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-api-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-api-dev.loadbalancer.server.port=3000"
@@ -140,6 +141,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-storefront-dev.rule=HostRegexp(`{host:.+}.60sec.shop`) || Host(`60sec.shop`)"
+      - "traefik.http.routers.apex-storefront-dev.priority=10000"
       - "traefik.http.routers.apex-storefront-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-storefront-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-storefront-dev.loadbalancer.server.port=3002"
@@ -173,6 +175,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-merchant-admin-dev.rule=Host(`admin.60sec.shop`)"
+      - "traefik.http.routers.apex-merchant-admin-dev.priority=10000"
       - "traefik.http.routers.apex-merchant-admin-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-merchant-admin-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-merchant-admin-dev.loadbalancer.server.port=3001"
@@ -206,6 +209,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-super-admin-dev.rule=Host(`super-admin.60sec.shop`)"
+      - "traefik.http.routers.apex-super-admin-dev.priority=10000"
       - "traefik.http.routers.apex-super-admin-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-super-admin-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-super-admin-dev.loadbalancer.server.port=3003"
