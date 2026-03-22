@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - apex-dev-network
+      - apex-network
 
   redis:
     image: redis:7-alpine
@@ -33,7 +33,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - apex-dev-network
+      - apex-network
 
   minio:
     image: minio/minio:latest
@@ -53,7 +53,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - apex-dev-network
+      - apex-network
 
   # ═══════════════════════════════════════════════════════════════
   # Compute (Remote-First with Bind Mounts)
