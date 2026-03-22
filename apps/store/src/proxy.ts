@@ -70,7 +70,7 @@ function getCSPHeader(): string {
     .trim();
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const tenantIdentifier = getTenantIdentifier(host);
   const isInfra = getInfraStatus(tenantIdentifier);

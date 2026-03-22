@@ -9,23 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "@apex/config": ["../../packages/config/src/index.ts"],
-      "@apex/audit": ["../../packages/audit/src/index.ts"],
-      "@apex/db": ["../../packages/db/src/index.ts"],
-      "@apex/middleware": ["../../packages/middleware/src/index.ts"],
-      "@apex/provisioning": ["../../packages/provisioning/src/index.ts"],
-      "@apex/auth": ["../../packages/auth/src/index.ts"],
-      "@apex/events": ["../../packages/events/src/index.ts"],
-      "@apex/security": ["../../packages/security/src/index.ts"],
-      "@apex/test-utils": ["../../packages/test-utils/src/index.ts"],
-      "@apex/ui": ["../../packages/ui/src/index.ts"],
-      "@apex/validators": ["../../packages/validators/src/index.ts"],
-      "@apex/validators/storefront": [
-        "../../packages/validators/src/storefront/index.ts"
-      ],
-      "@apex/template-config": ["../../packages/template-config/src/index.ts"],
-      "@apex/export": ["../../packages/export/src/index.ts"],
-      "@apex/validation": ["../../packages/validation/src/index.ts"]
+      "@apex/*": ["../../packages/*/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

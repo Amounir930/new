@@ -12,6 +12,12 @@ This guide documents how to maintain a high-performance development environment 
 - **Identity Key**: `C:\Users\Dell\Desktop\60sec.shop\ops\keys\apex-deploy`
 - **Root Directory**: `/opt/apex-v2`
 
+### 🛡️ Security Protocol (Fingerprint Verification)
+To prevent Man-in-the-Middle attacks, populate your `known_hosts` file BEFORE the first connection:
+```bash
+ssh-keyscan 34.18.192.25 >> ~/.ssh/known_hosts
+```
+
 ## 🚀 Step 1: Initialize Remote Infrastructure
 1. SSH into the server:
    ```bash
