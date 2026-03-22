@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - apex-network
+      - apex-internal
 
   redis:
     image: redis:7-alpine
@@ -33,7 +33,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - apex-network
+      - apex-internal
 
   minio:
     image: minio/minio:latest
@@ -53,7 +53,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - apex-network
+      - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
   # Compute (Remote-First with Bind Mounts)
@@ -83,7 +83,7 @@ services:
         condition: service_healthy
     command: sh -c "bun install && bun run dev --filter=@apex/api"
     networks:
-      - apex-network
+      - apex-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-api-dev.rule=Host(`api.60sec.shop`)"
@@ -112,7 +112,7 @@ services:
         condition: service_started
     command: sh -c "bun install && bun run dev --filter=store"
     networks:
-      - apex-network
+      - apex-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-storefront-dev.rule=HostRegexp(`{host:.+}.60sec.shop`) || Host(`60sec.shop`)"
@@ -141,7 +141,7 @@ services:
         condition: service_started
     command: sh -c "bun install && bun run dev --filter=merchant-admin"
     networks:
-      - apex-network
+      - apex-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-merchant-admin-dev.rule=Host(`admin.60sec.shop`)"
@@ -170,7 +170,7 @@ services:
         condition: service_started
     command: sh -c "bun install && bun run dev --filter=super-admin"
     networks:
-      - apex-network
+      - apex-internal
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.apex-super-admin-dev.rule=Host(`super-admin.60sec.shop`)"
