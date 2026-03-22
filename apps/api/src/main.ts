@@ -21,8 +21,8 @@ import * as Sentry from '@sentry/nestjs';
 import cookieParser from 'cookie-parser';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
-import { ZodValidationPipe } from 'nestjs-zod';
 import { AppModule } from './app.module';
+import { SovereignZodPipe } from './common/pipes/zod-validation.pipe';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -94,8 +94,8 @@ async function bootstrap() {
     })
   );
 
-  // S3: Global Zod Validation Pipe
-  app.useGlobalPipes(new ZodValidationPipe());
+  // S3: Global Zod Validation Pipe (Sovereign Refactor)
+  app.useGlobalPipes(new SovereignZodPipe());
 
   // S8 FIX 6A: CSP Nonce REMOVED from API.
   // This API returns JSON only — browsers don't execute scripts from JSON.
