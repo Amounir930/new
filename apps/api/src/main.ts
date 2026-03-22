@@ -17,7 +17,6 @@ import {
   VersioningType,
 } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as Sentry from '@sentry/nestjs';
 import cookieParser from 'cookie-parser';
 import type { NextFunction, Request, Response } from 'express';
