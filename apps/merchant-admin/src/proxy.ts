@@ -65,7 +65,7 @@ async function handleMerchantAuthRedirect(
   return NextResponse.next();
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // S8: Check both HttpOnly cookie (adm_tkn) and Frontend fallback (adm_tkn_fe)
