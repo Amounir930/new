@@ -56,21 +56,25 @@ export class GovernanceGuard implements CanActivate {
     }
 
     // Direct check against Drizzle definitive schema
-    // S2 FIX: Set Session Context to fulfill RLS requirements
-    await adminDb.execute(sql`SELECT set_config('app.current_tenant_id', ${tenantId}, true)`);
+    // S2 FIX: Use strict transaction block to maintain RLS session context
+    const isEnabled = await adminDb.transaction(async (tx) => {
+      await tx.execute(
+        sql`SELECT set_config('app.current_tenant_id', ${tenantId}, true)`
+      );
 
-    const [gate] = await adminDb
-      .select({ isEnabled: featureGatesInGovernance.isEnabled })
-      .from(featureGatesInGovernance)
-      .where(
-        and(
-          eq(featureGatesInGovernance.tenantId, tenantId),
-          eq(featureGatesInGovernance.featureKey, feature)
+      const [gate] = await tx
+        .select({ isEnabled: featureGatesInGovernance.isEnabled })
+        .from(featureGatesInGovernance)
+        .where(
+          and(
+            eq(featureGatesInGovernance.tenantId, tenantId),
+            eq(featureGatesInGovernance.featureKey, feature)
+          )
         )
-      )
-      .limit(1);
+        .limit(1);
 
-    const isEnabled = gate?.isEnabled || false;
+      return gate?.isEnabled || false;
+    });
 
     if (!isEnabled) {
       throw new ForbiddenException(
