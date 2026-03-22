@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # ═══════════════════════════════════════════════════════════════
-  # Infrastructure (Hardened Security alignment)
+  # Infrastructure
   # ═══════════════════════════════════════════════════════════════
   apex-postgres:
     image: pgvector/pgvector:pg15
@@ -26,7 +26,6 @@ services:
   apex-redis:
     image: redis:7-alpine
     container_name: apex-redis-dev
-    # S7: Security Hardening - Aligning with .env password requirements
     command: redis-server --requirepass "ApexV2DBPassSecure2026GrowthScale!QazXswEdCv" --appendonly yes
     ports:
       - "6379:6379"
@@ -59,7 +58,7 @@ services:
       - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
-  # Bootstrap (Init Container - High-Velocity Hydration)
+  # Bootstrap
   # ═══════════════════════════════════════════════════════════════
   bootstrap:
     image: oven/bun:1.1.25
@@ -78,7 +77,7 @@ services:
       - apex-internal
 
   # ═══════════════════════════════════════════════════════════════
-  # Compute (Remote-First with Bind Mounts)
+  # Compute
   # ═══════════════════════════════════════════════════════════════
   api:
     image: oven/bun:1.1.25
@@ -111,6 +110,7 @@ services:
       - "traefik.http.routers.apex-api-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-api-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-api-dev.loadbalancer.server.port=3000"
+      - "traefik.docker.network=apex-internal"
 
   storefront:
     image: oven/bun:1.1.25
@@ -143,6 +143,7 @@ services:
       - "traefik.http.routers.apex-storefront-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-storefront-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-storefront-dev.loadbalancer.server.port=3002"
+      - "traefik.docker.network=apex-internal"
 
   merchant-admin:
     image: oven/bun:1.1.25
@@ -175,6 +176,7 @@ services:
       - "traefik.http.routers.apex-merchant-admin-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-merchant-admin-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-merchant-admin-dev.loadbalancer.server.port=3001"
+      - "traefik.docker.network=apex-internal"
 
   super-admin:
     image: oven/bun:1.1.25
@@ -207,6 +209,7 @@ services:
       - "traefik.http.routers.apex-super-admin-dev.entrypoints=websecure"
       - "traefik.http.routers.apex-super-admin-dev.tls.certresolver=letsencrypt"
       - "traefik.http.services.apex-super-admin-dev.loadbalancer.server.port=3003"
+      - "traefik.docker.network=apex-internal"
 
 volumes:
   postgres_dev_data:
