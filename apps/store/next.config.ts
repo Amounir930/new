@@ -37,6 +37,23 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: [
+    '@apex/ui',
+    '@apex/db',
+    '@apex/provisioning',
+    '@apex/config',
+    '@apex/security',
+    '@apex/validation',
+    '@apex/validators',
+    '@apex/middleware',
+    '@apex/audit',
+    '@apex/auth',
+    '@apex/events',
+    '@apex/export',
+    '@apex/media',
+    '@apex/monitoring',
+    '@apex/test-utils',
+  ],
   output: 'standalone',
   poweredByHeader: false,
   reactStrictMode: true,

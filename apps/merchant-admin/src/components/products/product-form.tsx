@@ -1,6 +1,6 @@
 'use client';
 
-import { CreateProductSchema } from '@apex/validation';
+import { type CreateProductInput, CreateProductSchema } from '@apex/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   DollarSign,
@@ -18,7 +18,6 @@ import {
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import type { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -43,14 +42,14 @@ import { NicheAttributes } from './niche-attributes';
 
 // Schema is now imported from @apex/validation
 
-type ProductFormData = z.infer<typeof ProductSchema>;
+type ProductFormData = CreateProductInput;
 
 export function ProductForm({
   initialData,
   onSubmit,
 }: {
-  initialData?: any;
-  onSubmit: (data: any) => Promise<void>;
+  initialData?: Partial<CreateProductInput>;
+  onSubmit: (data: CreateProductInput) => Promise<void>;
 }) {
   const [loading, setLoading] = useState(false);
   const [niche, setNiche] = useState<string | null>(null);
@@ -58,7 +57,10 @@ export function ProductForm({
   useEffect(() => {
     const fetchNiche = async () => {
       try {
-        const config = await apiFetch<any>('/merchant/config');
+        const config = await apiFetch<{
+          niche?: CreateProductInput['niche'];
+          [key: string]: unknown;
+        }>('/merchant/config');
         setNiche(config.niche || 'retail');
       } catch (err) {
         console.error('Failed to fetch store niche', err);
@@ -74,13 +76,17 @@ export function ProductForm({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<CreateProductInput>({
     resolver: zodResolver(CreateProductSchema),
     defaultValues: initialData || {
-      isActive: true,
+      nameAr: '',
+      nameEn: '',
+      slug: '',
+      sku: '',
+      mainImage: '',
       taxPercentage: 0,
       stockQuantity: 0,
-      niche: 'retail', // Fallback until fetched
+      niche: 'retail',
       attributes: {},
     },
   });
@@ -88,7 +94,7 @@ export function ProductForm({
   // Automatically update form niche once fetched
   useEffect(() => {
     if (niche) {
-      setValue('niche', niche);
+      setValue('niche', niche as CreateProductInput['niche']);
     }
   }, [niche, setValue]);
 
@@ -340,7 +346,10 @@ export function ProductForm({
                       for (const file of Array.from(files)) {
                         try {
                           // 1. Get Presigned URL
-                          const { uploadUrl, publicUrl } = await apiFetch<any>(
+                          const { uploadUrl, publicUrl } = await apiFetch<{
+                            uploadUrl: string;
+                            publicUrl: string;
+                          }>(
                             `/merchant/media/products/upload-url?contentType=${file.type}`
                           );
                           // 2. Direct PUT to S3
@@ -366,7 +375,7 @@ export function ProductForm({
                     }}
                   />
 
-                  {watch('galleryImages')?.map((img: any, idx: number) => (
+                  {watch('galleryImages')?.map((img, idx) => (
                     <div
                       key={img.url}
                       className="relative aspect-square rounded-xl overflow-hidden group border border-white/10"
@@ -388,7 +397,7 @@ export function ProductForm({
                           const current = watch('galleryImages');
                           setValue(
                             'galleryImages',
-                            current.filter((_: any, i: number) => i !== idx)
+                            current.filter((_, i) => i !== idx)
                           );
                         }}
                       >

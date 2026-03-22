@@ -3,10 +3,12 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Logger } from '@nestjs/common';
 import type { AuthUser, JwtPayload } from '../auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  private readonly logger = new Logger(JwtStrategy.name);
   constructor(@Inject(ConfigService) configService: ConfigService) {
     if (!configService) {
       throw new Error('ConfigService is missing in JwtStrategy constructor');
@@ -36,7 +38,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: JwtPayload): Promise<AuthUser> {
     // S7: Sanitize logs (No full payload logging as per Military Directive)
-    console.log(
+    this.logger.log(
       `[AUTH-DEBUG] Auth attempt: Sub=${payload.sub}, Role=${payload.role}, Tenant=${payload.tenantId}`
     );
 

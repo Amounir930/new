@@ -1,0 +1,119 @@
+version: "3.8"
+
+services:
+  # ═══════════════════════════════════════════════════════════════
+  # Infrastructure (Reused from root compose)
+  # ═══════════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:15-alpine
+    container_name: apex-postgres-dev
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-apex}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apex_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-apex_v2}
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-apex} -d ${POSTGRES_DB:-apex_v2}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apex-dev-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: apex-redis-dev
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - apex-dev-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: apex-minio-dev
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_dev_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apex-dev-network
+
+  # ═══════════════════════════════════════════════════════════════
+  # Compute (Remote-First with Bind Mounts)
+  # ═══════════════════════════════════════════════════════════════
+  api:
+    image: oven/bun:1.1.25
+    container_name: apex-api-dev
+    working_dir: /app
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+      - /app/apps/api/node_modules
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-apex}:${POSTGRES_PASSWORD:-apex_secret}@postgres:5432/${POSTGRES_DB:-apex_v2}?sslmode=disable
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: sh -c "bun install && bun run dev --filter=@apex/api"
+    networks:
+      - apex-dev-network
+
+  storefront:
+    image: oven/bun:1.1.25
+    container_name: apex-storefront-dev
+    working_dir: /app
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+      - /app/apps/store/node_modules
+    environment:
+      NODE_ENV: development
+      # Used by the browser (Client-side)
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+      # Used by Next.js Server (SSR)
+      INTERNAL_API_URL: http://api:3000/api
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    depends_on:
+      api:
+        condition: service_started
+    command: sh -c "bun install && bun run dev --filter=store"
+    networks:
+      - apex-dev-network
+
+volumes:
+  postgres_dev_data:
+  minio_dev_data:
+
+networks:
+  apex-dev-network:
+    driver: bridge

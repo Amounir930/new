@@ -223,7 +223,7 @@ async function resolveStore(
 
   // 2. S21 MANDATE: Logic Isolation - Seed Quotas from Blueprint!
   const template = await resolveTemplate(options);
-  const quotas = template.quotas as any; // Map Blueprint quotas to Governance schema
+  const quotas = template.quotas || {};
 
   await adminDb.insert(tenantQuotasInGovernance).values({
     tenantId: newStore.id,

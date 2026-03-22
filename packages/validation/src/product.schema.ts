@@ -68,6 +68,17 @@ export const BaseProductSchema = z.object({
   minOrderQty: z.coerce.number().int().min(1).default(1),
   trackInventory: z.boolean().default(true),
   weight: z.coerce.number().min(0).optional(),
+  dimensions: z
+    .object({
+      h: z.number().min(0).optional(),
+      w: z.number().min(0).optional(),
+      l: z.number().min(0).optional(),
+    })
+    .optional(),
+  videoUrl: z.string().url().optional(),
+  packageContentsAr: z.string().optional(),
+  packageContentsEn: z.string().optional(),
+  countryOfOrigin: z.string().optional(),
   mainImage: z.string().url('Main image must be a valid URL'),
   galleryImages: z.array(
     z.object({
@@ -85,9 +96,65 @@ export const BaseProductSchema = z.object({
   specifications: z.record(z.unknown()).default({}),
 });
 
-export const CreateProductSchema = z.intersection(
-  BaseProductSchema,
-  PolymorphicAttributesSchema
-);
+export const BaseCreateProductSchema = BaseProductSchema.extend({
+  niche: z.enum([
+    'retail',
+    'wellness',
+    'education',
+    'services',
+    'hospitality',
+    'real_estate',
+    'creative',
+  ]),
+  attributes: z.record(z.unknown()),
+});
 
-export type CreateProductInput = z.infer<typeof CreateProductSchema>;
+export const CreateProductSchema = BaseCreateProductSchema.superRefine((data, ctx) => {
+  let result;
+  const { niche, attributes } = data;
+
+  switch (niche) {
+    case 'retail':
+      result = RetailAttributes.safeParse(attributes);
+      break;
+    case 'wellness':
+      result = WellnessAttributes.safeParse(attributes);
+      break;
+    case 'education':
+      result = EducationAttributes.safeParse(attributes);
+      break;
+    case 'services':
+      result = ServicesAttributes.safeParse(attributes);
+      break;
+    case 'hospitality':
+      result = HospitalityAttributes.safeParse(attributes);
+      break;
+    case 'real_estate':
+      result = RealEstateAttributes.safeParse(attributes);
+      break;
+    case 'creative':
+      result = CreativeAttributes.safeParse(attributes);
+      break;
+  }
+
+  if (result && !result.success) {
+    for (const issue of result.error.issues) {
+      ctx.addIssue({
+        ...issue,
+        path: ['attributes', ...issue.path],
+      });
+    }
+  }
+}) as z.ZodType<CreateProductInput>;
+
+// Use interface extension for better compiler performance
+type AttributesType = 
+  | { niche: 'retail'; attributes: z.infer<typeof RetailAttributes> }
+  | { niche: 'wellness'; attributes: z.infer<typeof WellnessAttributes> }
+  | { niche: 'education'; attributes: z.infer<typeof EducationAttributes> }
+  | { niche: 'services'; attributes: z.infer<typeof ServicesAttributes> }
+  | { niche: 'hospitality'; attributes: z.infer<typeof HospitalityAttributes> }
+  | { niche: 'real_estate'; attributes: z.infer<typeof RealEstateAttributes> }
+  | { niche: 'creative'; attributes: z.infer<typeof CreativeAttributes> };
+
+export type CreateProductInput = z.infer<typeof BaseProductSchema> & AttributesType;

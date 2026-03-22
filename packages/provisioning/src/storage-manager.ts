@@ -164,12 +164,23 @@ async function setupBucket(
   subdomain: string
 ): Promise<void> {
   // 🛡️ Protocol Delta: Use interface extension to workaround broken SDK type definitions safely
-  interface PatchedMinioClient extends Omit<Minio.Client, 'setBucketTagging'> {
+  interface PatchedMinioClient extends Minio.Client {
     setBucketTagging(
       bucketName: string,
       tags: Record<string, string>
     ): Promise<void>;
-    setBucketCors(bucketName: string, corsConfig: any): Promise<void>;
+    setBucketCors(
+      bucketName: string,
+      corsConfig: {
+        CORSRules: Array<{
+          AllowedHeaders?: string[];
+          AllowedMethods?: string[];
+          AllowedOrigins?: string[];
+          ExposeHeaders?: string[];
+          MaxAgeSeconds?: number;
+        }>;
+      }
+    ): Promise<void>;
   }
   const patchedClient = client as unknown as PatchedMinioClient;
 
@@ -259,7 +270,8 @@ export async function deleteStorageBucket(
 
     try {
       await client.removeBucket(bucketName);
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
       // S5 Protocol: Handle idempotency - if it doesn't exist, we succeeded in our goal
       if (
         error.code === 'NoSuchBucket' ||
@@ -277,7 +289,8 @@ export async function deleteStorageBucket(
     }
     logger.info(`Bucket deleted: ${bucketName}`);
     return true;
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
     // Gracefully handle NoSuchBucket even at the top level
     if (
       error.code === 'NoSuchBucket' ||
@@ -357,7 +370,16 @@ async function getBucketVersions(
   bucketName: string
 ): Promise<{ name: string; versionId: string }[]> {
   const objects: { name: string; versionId: string }[] = [];
-  const versionStream = (client as any).listObjects(bucketName, '', true, {
+  const versionStream = (
+    client as Minio.Client & {
+      listObjects(
+        bucketName: string,
+        prefix: string,
+        recursive: boolean,
+        options: { IncludeVersion: boolean }
+      ): any;
+    }
+  ).listObjects(bucketName, '', true, {
     IncludeVersion: true,
   });
 
@@ -385,7 +407,14 @@ async function deleteObjectsInBatch(
   const CHUNK_SIZE = 1000;
   for (let i = 0; i < objects.length; i += CHUNK_SIZE) {
     const chunk = objects.slice(i, i + CHUNK_SIZE);
-    const results = await (client as any).removeObjects(bucketName, chunk);
+    const results = await (
+      client as Minio.Client & {
+        removeObjects(
+          bucketName: string,
+          objects: { name: string; versionId: string }[]
+        ): Promise<any[]>;
+      }
+    ).removeObjects(bucketName, chunk);
     if (results && Array.isArray(results) && results.length > 0) {
       logger.error(
         `removeObjects reported errors for ${results.length} entries`,
@@ -402,9 +431,15 @@ async function clearIncompleteUploads(
   client: Minio.Client,
   bucketName: string
 ): Promise<number> {
-  const clientAny = client as any;
-  const uploadStream = clientAny.listIncompleteUploads
-    ? clientAny.listIncompleteUploads(bucketName, '', true)
+  const clientWithUploads = client as Minio.Client & {
+    listIncompleteUploads?: (
+      bucketName: string,
+      prefix: string,
+      recursive: boolean
+    ) => any;
+  };
+  const uploadStream = clientWithUploads.listIncompleteUploads
+    ? clientWithUploads.listIncompleteUploads(bucketName, '', true)
     : client.listIncompleteUploads(bucketName, '', true);
 
   let uCount = 0;

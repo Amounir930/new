@@ -152,8 +152,8 @@ export class StorefrontController {
       );
     }
 
-    // Set audit ID for forensic traceability
-    (req as any).auditTenantId = context.tenantId;
+    (req as unknown as Request & { auditTenantId?: string }).auditTenantId =
+      context.tenantId;
 
     return {
       tenantId: context.tenantId,

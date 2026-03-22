@@ -16,10 +16,10 @@ build/
 *.tsbuildinfo
 
 # ─── TSC Build Artifacts in Source Dirs ───
-packages/*/src/**/*.js
-packages/*/src/**/*.js.map
-packages/*/src/**/*.d.ts
-packages/*/src/**/*.d.ts.map
+**/src/**/*.js
+**/src/**/*.js.map
+**/src/**/*.d.ts
+**/src/**/*.d.ts.map
 
 # ─── Coverage ───
 coverage/

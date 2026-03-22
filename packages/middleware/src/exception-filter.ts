@@ -66,7 +66,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (status >= 500) {
       this.logger.error(`${method} ${url} - ${status} - ${message}`);
       if (env.NODE_ENV !== 'production') {
-        console.error(exception);
+        this.logger.error(exception);
       }
     } else {
       this.logger.warn(`${method} ${url} - ${status} - ${message}`);

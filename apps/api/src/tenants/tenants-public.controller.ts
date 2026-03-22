@@ -29,7 +29,7 @@ export class TenantsPublicController {
   async discover(@Param('subdomain') subdomain: string) {
     // Protocol S11: Redis Cache Lookup (Performance Guardrail)
     const cacheKey = `discovery:${subdomain.toLowerCase()}`;
-    const cached = await (this.tenantCache as any).redis.get(cacheKey);
+    const cached = await this.tenantCache.getCustom(cacheKey);
     if (cached) {
       return JSON.parse(cached);
     }
@@ -88,13 +88,9 @@ export class TenantsPublicController {
     };
 
     // Protocol S11: Cache Discovery Result (TTL: 1 Hour)
-    await (this.tenantCache as any).redis.set(
-      cacheKey,
-      JSON.stringify(result),
-      {
-        EX: 3600,
-      }
-    );
+    await this.tenantCache.setCustom(cacheKey, JSON.stringify(result), {
+      EX: 3600,
+    });
 
     return result;
   }

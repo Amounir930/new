@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
 import './globals.css';
-import { getStoreBootstrap, getTenantConfig } from '@/lib/api';
+import { getStoreBootstrap } from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'Apex Storefront',

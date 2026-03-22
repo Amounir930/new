@@ -11,12 +11,20 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 
+import {
+  UseFormRegister,
+  FieldErrors,
+  UseFormSetValue,
+  UseFormWatch,
+} from 'react-hook-form';
+import type { CreateProductInput } from '@apex/validation';
+
 interface NicheAttributesProps {
   niche: string;
-  register: any;
-  errors: any;
-  setValue: any;
-  watch: any;
+  register: UseFormRegister<CreateProductInput>;
+  errors: FieldErrors<CreateProductInput>;
+  setValue: UseFormSetValue<CreateProductInput>;
+  watch: UseFormWatch<CreateProductInput>;
 }
 
 export function NicheAttributes({
@@ -28,18 +36,20 @@ export function NicheAttributes({
 }: NicheAttributesProps) {
   const renderFields = () => {
     switch (niche) {
-      case 'real_estate':
+      case 'real_estate': {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Bedrooms</Label>
               <Input
                 type="number"
-                {...register('attributes.bedrooms', { valueAsNumber: true })}
+                {...register('attributes.bedrooms' as any, {
+                  valueAsNumber: true,
+                })}
               />
-              {errors?.attributes?.bedrooms && (
+              {errors?.attributes?.['bedrooms' as keyof typeof errors.attributes] && (
                 <p className="text-xs text-red-500">
-                  {errors.attributes.bedrooms.message}
+                  {(errors.attributes as any).bedrooms.message}
                 </p>
               )}
             </div>
@@ -48,21 +58,35 @@ export function NicheAttributes({
               <Input
                 type="number"
                 step="0.5"
-                {...register('attributes.bathrooms', { valueAsNumber: true })}
+                {...register('attributes.bathrooms' as any, {
+                  valueAsNumber: true,
+                })}
               />
+              {errors?.attributes?.['bathrooms' as keyof typeof errors.attributes] && (
+                <p className="text-xs text-red-500">
+                  {(errors.attributes as any).bathrooms.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Area (SQFT)</Label>
               <Input
                 type="number"
-                {...register('attributes.sqft', { valueAsNumber: true })}
+                {...register('attributes.sqft' as any, { valueAsNumber: true })}
               />
+              {errors?.attributes?.['sqft' as keyof typeof errors.attributes] && (
+                <p className="text-xs text-red-500">
+                  {(errors.attributes as any).sqft.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Property Type</Label>
               <Select
-                onValueChange={(v) => setValue('attributes.property_type', v)}
-                defaultValue={watch('attributes.property_type')}
+                onValueChange={(v) =>
+                  setValue('attributes.property_type' as any, v as any)
+                }
+                defaultValue={watch('attributes.property_type' as any)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -76,23 +100,33 @@ export function NicheAttributes({
             </div>
           </div>
         );
+      }
 
-      case 'wellness':
+      case 'wellness': {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Duration (Minutes)</Label>
               <Input
                 type="number"
-                {...register('attributes.duration_min', {
+                {...register('attributes.duration_min' as any, {
                   valueAsNumber: true,
                 })}
               />
+              {errors?.attributes?.[
+                'duration_min' as keyof typeof errors.attributes
+              ] && (
+                <p className="text-xs text-red-500">
+                  {(errors.attributes as any).duration_min.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Session Type</Label>
               <Select
-                onValueChange={(v) => setValue('attributes.session_type', v)}
+                onValueChange={(v) =>
+                  setValue('attributes.session_type' as any, v as any)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -105,35 +139,51 @@ export function NicheAttributes({
             </div>
           </div>
         );
+      }
 
-      case 'education':
+      case 'education': {
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label>Instructor Name</Label>
-              <Input {...register('attributes.instructor')} />
+              <Input {...register('attributes.instructor' as any)} />
+              {errors?.attributes?.[
+                'instructor' as keyof typeof errors.attributes
+              ] && (
+                <p className="text-xs text-red-500">
+                  {(errors.attributes as any).instructor.message}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Number of Lessons</Label>
               <Input
                 type="number"
-                {...register('attributes.lessons_count', {
+                {...register('attributes.lessons_count' as any, {
                   valueAsNumber: true,
                 })}
               />
+              {errors?.attributes?.[
+                'lessons_count' as keyof typeof errors.attributes
+              ] && (
+                <p className="text-xs text-red-500">
+                  {(errors.attributes as any).lessons_count.message}
+                </p>
+              )}
             </div>
             <div className="flex items-center space-x-2 pt-8">
               <Switch
                 id="cert"
-                checked={watch('attributes.has_certificate')}
+                checked={!!watch('attributes.has_certificate' as any)}
                 onCheckedChange={(checked: boolean) =>
-                  setValue('attributes.has_certificate', !!checked)
+                  setValue('attributes.has_certificate' as any, !!checked)
                 }
               />
               <Label htmlFor="cert">Includes Certificate</Label>
             </div>
           </div>
         );
+      }
 
       default:
         return (

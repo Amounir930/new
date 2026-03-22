@@ -49,6 +49,7 @@ export interface TenantRequest extends Request {
   tenantContext?: TenantContext;
   user?: AuthenticatedUser;
   rawBody?: Buffer;
+  cookies: Record<string, string>;
 }
 
 /**
@@ -192,7 +193,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   }
 
   private async resolveFinalIdentifier(
-    req: Request,
+    req: TenantRequest,
     res: Response,
     currentPath: string,
     identifier: string
@@ -247,9 +248,9 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       return authHeader.split(' ')[1];
     }
 
-    const cookies = (req as any).cookies;
+    const cookies = req.cookies;
     if (cookies && typeof cookies === 'object') {
-      return cookies.adm_tkn || null;
+      return (cookies as Record<string, string>).adm_tkn || null;
     }
 
     return null;
@@ -367,7 +368,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
   }
 
   private async resolveWebhookTenant(
-    req: TenantRequest,
+    req: Request & { rawBody?: Buffer },
     res: Response
   ): Promise<string | null> {
     try {

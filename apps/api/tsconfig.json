@@ -24,7 +24,8 @@
         "../../packages/validators/src/storefront/index.ts"
       ],
       "@apex/template-config": ["../../packages/template-config/src/index.ts"],
-      "@apex/export": ["../../packages/export/src/index.ts"]
+      "@apex/export": ["../../packages/export/src/index.ts"],
+      "@apex/validation": ["../../packages/validation/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

@@ -53,8 +53,8 @@ export class MerchantProductsController {
   @Get()
   @RequireFeature('ecommerce')
   async findAll(@Req() req: AuthenticatedRequest) {
-    const tenantId = req.user?.tenantId;
-    const schemaName = req.tenantContext?.schemaName;
+    const tenantId = req.user.tenantId;
+    const { schemaName } = this.getRequiredContext(req);
 
     const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
@@ -76,18 +76,22 @@ export class MerchantProductsController {
     @Body() body: CreateProductDto
   ) {
     const tenantId = req.user.tenantId;
-    const schemaName = req.tenantContext?.schemaName;
-    const subdomain = req.tenantContext?.subdomain;
+    const { schemaName, subdomain } = this.getRequiredContext(req);
 
-    const b = body as any;
     const productData: InferInsertModel<typeof productsInStorefront> = {
-      ...b,
-      name: { ar: b.nameAr, en: b.nameEn },
-      shortDescription: { ar: b.shortDescriptionAr, en: b.shortDescriptionEn },
-      longDescription: { ar: b.descriptionAr, en: b.descriptionEn },
-      taxBasisPoints: Math.round((b.taxPercentage || 0) * 100),
-      basePrice: String(b.basePrice),
-      salePrice: b.salePrice ? String(b.salePrice) : null,
+      ...body,
+      name: { ar: body.nameAr, en: body.nameEn },
+      shortDescription: {
+        ar: body.shortDescriptionAr || null,
+        en: body.shortDescriptionEn || null,
+      },
+      longDescription: {
+        ar: body.descriptionAr || null,
+        en: body.descriptionEn || null,
+      },
+      taxBasisPoints: Math.round((body.taxPercentage || 0) * 100),
+      basePrice: String(body.basePrice),
+      salePrice: body.salePrice ? String(body.salePrice) : null,
     };
 
     const { db, release } = await getTenantDb(tenantId, schemaName);
@@ -102,8 +106,8 @@ export class MerchantProductsController {
       const migratedUrls = await this.migrateMedia(
         subdomain,
         product.id,
-        b.mainImage,
-        b.galleryImages || []
+        body.mainImage,
+        body.galleryImages || []
       );
 
       // 3. Update DB with final URLs
@@ -123,7 +127,9 @@ export class MerchantProductsController {
         data: { ...product, ...migratedUrls },
       };
     } catch (error) {
-      this.logger.error(`PRODUCT_CREATE_ERROR: ${(error as any).message}`);
+      this.logger.error(
+        `PRODUCT_CREATE_ERROR: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw new InternalServerErrorException(
         'Failed to create product and migrate assets'
       );
@@ -139,7 +145,7 @@ export class MerchantProductsController {
     subdomain: string,
     productId: string,
     mainImageUrl: string,
-    galleryImages: any[]
+    galleryImages: { url: string; altText?: string; order: number }[]
   ) {
     const s3Client = new S3Client({
       endpoint: env.MINIO_ENDPOINT || 'http://apex-minio:9000',
@@ -186,7 +192,7 @@ export class MerchantProductsController {
 
     const newMainImage = await migrate(mainImageUrl);
     const newGallery = await Promise.all(
-      galleryImages.map(async (img: any) => ({
+      galleryImages.map(async (img) => ({
         ...img,
         url: await migrate(img.url),
       }))
@@ -217,7 +223,9 @@ export class MerchantProductsController {
         }),
       });
     } catch (err) {
-      this.logger.warn(`CACHE_SYNC_ERROR: ${(err as any).message}`);
+      this.logger.warn(
+        `CACHE_SYNC_ERROR: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 
@@ -230,20 +238,18 @@ export class MerchantProductsController {
     @Body() body: UpdateProductDto
   ) {
     const tenantId = req.user.tenantId;
-    const schemaName = req.tenantContext?.schemaName;
-    const subdomain = req.tenantContext?.subdomain;
+    const { schemaName, subdomain } = this.getRequiredContext(req);
 
-    const b = body as any;
-    const { version, ...updateData } = b;
+    const { version, basePrice, salePrice, ...updateData } = body;
 
     const mappedData: Partial<InferInsertModel<typeof productsInStorefront>> = {
       ...updateData,
     };
 
-    if (b.basePrice) mappedData.basePrice = String(b.basePrice);
-    if (b.salePrice) mappedData.salePrice = String(b.salePrice);
-    if (b.nameAr || b.nameEn) {
-      mappedData.name = { ar: b.nameAr || '', en: b.nameEn || '' };
+    if (body.basePrice) mappedData.basePrice = String(body.basePrice);
+    if (body.salePrice) mappedData.salePrice = String(body.salePrice);
+    if (body.nameAr || body.nameEn) {
+      mappedData.name = { ar: body.nameAr || '', en: body.nameEn || '' };
     }
 
     const { db, release } = await getTenantDb(tenantId, schemaName);
@@ -272,8 +278,7 @@ export class MerchantProductsController {
   @AuditLog({ action: 'PRODUCT_DELETED', entityType: 'product' })
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     const tenantId = req.user.tenantId;
-    const schemaName = req.tenantContext?.schemaName;
-    const subdomain = req.tenantContext?.subdomain;
+    const { schemaName, subdomain } = this.getRequiredContext(req);
 
     const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
@@ -291,5 +296,13 @@ export class MerchantProductsController {
     } finally {
       release();
     }
+  }
+
+  private getRequiredContext(req: AuthenticatedRequest) {
+    const context = req.tenantContext;
+    if (!context || !context.schemaName || !context.subdomain) {
+      throw new InternalServerErrorException('Tenant context is missing');
+    }
+    return context;
   }
 }

@@ -16,6 +16,15 @@ interface FeatureState {
   source: 'plan' | 'tenant';
 }
 
+interface TenantMetadataResponse {
+  id: string;
+  subdomain: string;
+  name: string;
+  plan: string;
+  status: string;
+  isActive?: boolean;
+}
+
 interface FeatureItemProps {
   featureKey: string;
   state: FeatureState;
@@ -100,7 +109,9 @@ export function TenantGovernanceModal({
 
   const fetchTenantMeta = useCallback(async () => {
     // S4 Protocol: Fetch strictly what is needed. NO BULK FETCHING.
-    const current = await apiFetch<any>(`/tenants/${tenantId}`);
+    const current = await apiFetch<TenantMetadataResponse>(
+      `/tenants/${tenantId}`
+    );
     if (current) {
       setTenantMeta({
         plan: current.plan,

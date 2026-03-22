@@ -96,7 +96,7 @@ export function ProvisionModal({
   useEffect(() => {
     async function fetchBlueprints() {
       try {
-        const data = await apiFetch('/blueprints');
+        const data = await apiFetch<Blueprint[]>('/blueprints');
         // Filter blueprints by selected plan if they exist
         setBlueprints(Array.isArray(data) ? data : []);
       } catch (_e) {
@@ -129,10 +129,10 @@ export function ProvisionModal({
     } catch (e: unknown) {
       if (e instanceof ApiError && e.data?.validationErrors) {
         const vErrors = e.data.validationErrors;
-        vErrors.forEach((err: any) => {
+        vErrors.forEach((err: { path?: string[]; message: string }) => {
           const fieldName = err.path?.[0];
           if (fieldName) {
-            setError(fieldName as any, {
+            setError(fieldName as keyof ProvisionFormValues, {
               type: 'server',
               message: err.message,
             });

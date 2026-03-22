@@ -178,7 +178,7 @@ export class ProvisioningService {
       await this.syncGovernance(
         options.subdomain,
         effectiveBlueprint,
-        adminDb as any
+        adminDb as unknown as DrizzleExecutor
       );
       steps[4].status = 'done';
 
@@ -285,7 +285,14 @@ export class ProvisioningService {
         and(
           eq(
             onboardingBlueprintsInGovernance.nicheType,
-            (options.nicheType || 'retail') as any
+            (options.nicheType || 'retail') as
+              | 'retail'
+              | 'wellness'
+              | 'education'
+              | 'services'
+              | 'hospitality'
+              | 'real-estate'
+              | 'creative'
           ),
           eq(onboardingBlueprintsInGovernance.plan, options.plan)
         )
@@ -490,7 +497,7 @@ export class ProvisioningService {
       subdomain: tenant.subdomain,
       adminEmail: '', // Not required for resolution
       storeName: tenant.name || '',
-      plan: tenant.plan as any,
+      plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       nicheType: tenant.nicheType || 'retail',
       superAdminKey: '', // Bypass internal check
     });

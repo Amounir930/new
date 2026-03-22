@@ -62,10 +62,18 @@ async function seedGovernance() {
     console.log(`Checking plan: ${plan.code}`);
     await adminDb
       .insert(subscriptionPlansInGovernance)
-      .values(plan as any)
+      .values({
+        ...plan,
+        priceMonthly: BigInt(plan.priceMonthly),
+        priceYearly: BigInt(plan.priceYearly),
+      })
       .onConflictDoUpdate({
         target: subscriptionPlansInGovernance.code,
-        set: plan as any,
+        set: {
+          ...plan,
+          priceMonthly: BigInt(plan.priceMonthly),
+          priceYearly: BigInt(plan.priceYearly),
+        },
       });
   }
 
@@ -133,7 +141,19 @@ async function seedGovernance() {
   for (const bp of blueprints) {
     console.log(`Checking blueprint: ${bp.name} for plan ${bp.plan}`);
     // Check if exists first since we don't have a simple unique constraint on name/plan/niche in schema but we should
-    await adminDb.insert(onboardingBlueprintsInGovernance).values(bp as any);
+    await adminDb.insert(onboardingBlueprintsInGovernance).values({
+      ...bp,
+      plan: bp.plan as 'free' | 'basic' | 'pro' | 'enterprise',
+      nicheType: bp.nicheType as
+        | 'retail'
+        | 'wellness'
+        | 'education'
+        | 'services'
+        | 'hospitality'
+        | 'real-estate'
+        | 'creative',
+      status: bp.status as 'active' | 'paused',
+    });
   }
 
   console.log('✅ Governance Seeding Task Complete');

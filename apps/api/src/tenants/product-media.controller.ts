@@ -112,7 +112,9 @@ export class ProductMediaController {
 
       return { uploadUrl, publicUrl, key };
     } catch (error) {
-      this.logger.error(`S3_TEMP_UPLOAD_URL_ERROR: ${(error as any).message}`);
+      this.logger.error(
+        `S3_TEMP_UPLOAD_URL_ERROR: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw new InternalServerErrorException(
         'Failed to generate secure upload pipeline'
       );
@@ -169,7 +171,9 @@ export class ProductMediaController {
       ) {
         throw error;
       }
-      this.logger.error(`S3_DELETE_ERROR: ${(error as any).message}`);
+      this.logger.error(
+        `S3_DELETE_ERROR: ${error instanceof Error ? error.message : String(error)}`
+      );
       throw new InternalServerErrorException(
         'Failed to execute asset garbage collection'
       );

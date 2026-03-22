@@ -64,6 +64,23 @@ export class TenantCacheService implements OnModuleInit {
   }
 
   /**
+   * Safe Generic Cache Access (Protocol Delta)
+   */
+  async getCustom(key: string): Promise<string | null> {
+    if (!this.redis.isOpen) return null;
+    return this.redis.get(key);
+  }
+
+  async setCustom(
+    key: string,
+    value: string,
+    options?: { EX: number }
+  ): Promise<void> {
+    if (!this.redis.isOpen) return;
+    await this.redis.set(key, value, options || {});
+  }
+
+  /**
    * Sovereign Cache: Resolve full tenant context by ID (admin/shared endpoints)
    */
   async resolveTenantById(
@@ -95,7 +112,7 @@ export class TenantCacheService implements OnModuleInit {
       tenantId: tenant.id,
       schemaName: `tenant_${tenant.subdomain}`,
       subdomain: tenant.subdomain,
-      plan: (tenant.plan as any) || 'free',
+      plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       isActive: tenant.status === 'active',
       isSuspended: false,
       features: [], // Placeholder for future feature flags
@@ -147,7 +164,7 @@ export class TenantCacheService implements OnModuleInit {
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '_')}`,
       subdomain: tenant.subdomain,
-      plan: (tenant.plan as any) || 'free',
+      plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       isActive: tenant.status === 'active',
       isSuspended: false,
       features: [],

@@ -163,7 +163,7 @@ export class MerchantConfigController {
   private async executeStorageGc(
     subdomain: string,
     oldUrl: string | undefined,
-    newUrl: string,
+    newUrl: string | null | undefined,
     req: RequestWithLogger
   ) {
     if (oldUrl && oldUrl !== newUrl) {

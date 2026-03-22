@@ -9,7 +9,7 @@ import {
   sql,
   tenantsInGovernance,
 } from '@apex/db';
-import type { TenantCacheService } from '@apex/middleware';
+import type { DrizzleExecutor, TenantCacheService } from '@apex/middleware';
 import { decrypt, type EncryptedData } from '@apex/security';
 import {
   BadRequestException,
@@ -79,7 +79,9 @@ export class TenantsController {
         return {
           data: tenantRecords.map((t) => ({
             ...t,
-            ownerEmail: this.safeDecrypt(t.ownerEmail),
+            ownerEmail: this.safeDecrypt(
+              t.ownerEmail as string | EncryptedData | null
+            ),
           })),
           total: totalCount,
         };
@@ -117,7 +119,9 @@ export class TenantsController {
 
         return {
           ...tenant,
-          ownerEmail: this.safeDecrypt(tenant.ownerEmail),
+          ownerEmail: this.safeDecrypt(
+            tenant.ownerEmail as string | EncryptedData | null
+          ),
         };
       });
     } catch (error: unknown) {
@@ -261,7 +265,7 @@ export class TenantsController {
       if (body.plan || body.nicheType) {
         await this.provisioningService.synchronizeTenantGovernance(
           subdomain,
-          tx as any
+          tx as unknown as DrizzleExecutor
         );
       }
 
@@ -343,7 +347,9 @@ export class TenantsController {
     }
   }
 
-  private safeDecrypt(email: any): string | null {
+  private safeDecrypt(
+    email: string | EncryptedData | null | undefined
+  ): string | null {
     if (!email) return null;
     if (typeof email === 'string') return email; // Legacy unencrypted string
     try {
