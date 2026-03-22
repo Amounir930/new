@@ -65,8 +65,6 @@ services:
     volumes:
       - ./:/app:delegated
       - /app/node_modules
-      - /app/apps/api/node_modules
-      - bun_global_cache:/root/.bun/install/cache
     env_file:
       - .env
     environment:
@@ -95,8 +93,6 @@ services:
     volumes:
       - ./:/app:delegated
       - /app/node_modules
-      - /app/apps/store/node_modules
-      - bun_global_cache:/root/.bun/install/cache
     environment:
       NODE_ENV: development
       HUSKY: "0"
@@ -125,8 +121,6 @@ services:
     volumes:
       - ./:/app:delegated
       - /app/node_modules
-      - /app/apps/merchant-admin/node_modules
-      - bun_global_cache:/root/.bun/install/cache
     environment:
       NODE_ENV: development
       HUSKY: "0"
@@ -155,8 +149,6 @@ services:
     volumes:
       - ./:/app:delegated
       - /app/node_modules
-      - /app/apps/super-admin/node_modules
-      - bun_global_cache:/root/.bun/install/cache
     environment:
       NODE_ENV: development
       HUSKY: "0"
