@@ -94,6 +94,7 @@ async function seedGovernance() {
           catalog: true,
           cart: true,
           checkout: true,
+          ecommerce: true,
         },
       },
       uiConfig: { theme: 'modern', primaryColor: '#000000' },
