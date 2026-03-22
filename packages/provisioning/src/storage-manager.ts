@@ -183,7 +183,7 @@ async function setupBucket(
     ): Promise<void>;
     setBucketLifecycle(
       bucketName: string,
-      lifeCycleConfig: any
+      lifeCycleConfig: Minio.LifecycleConfig
     ): Promise<void>;
   }
   const patchedClient = client as unknown as PatchedMinioClient;
@@ -234,7 +234,10 @@ async function setupBucket(
         },
       ],
     };
-    await patchedClient.setBucketLifecycle(bucketName, lifeCycleConfig);
+    await patchedClient.setBucketLifecycle(
+      bucketName,
+      lifeCycleConfig as unknown as Minio.LifecycleConfig
+    );
   } catch (lcError) {
     logger.error(
       `Sovereign Warning: Failed to set ILM for bucket ${bucketName}`,

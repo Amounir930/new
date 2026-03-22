@@ -110,6 +110,52 @@ services:
     networks:
       - apex-dev-network
 
+  merchant-admin:
+    image: oven/bun:1.1.25
+    container_name: apex-merchant-admin-dev
+    working_dir: /app
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+      - /app/apps/merchant-admin/node_modules
+    environment:
+      NODE_ENV: development
+      HUSKY: "0"
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+      INTERNAL_API_URL: http://api:3000/api
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      api:
+        condition: service_started
+    command: sh -c "bun install && bun run dev --filter=merchant-admin"
+    networks:
+      - apex-dev-network
+
+  super-admin:
+    image: oven/bun:1.1.25
+    container_name: apex-super-admin-dev
+    working_dir: /app
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+      - /app/apps/super-admin/node_modules
+    environment:
+      NODE_ENV: development
+      HUSKY: "0"
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+      INTERNAL_API_URL: http://api:3000/api
+      PORT: 3003
+    ports:
+      - "3003:3003"
+    depends_on:
+      api:
+        condition: service_started
+    command: sh -c "bun install && bun run dev --filter=super-admin"
+    networks:
+      - apex-dev-network
+
 volumes:
   postgres_dev_data:
   minio_dev_data:
