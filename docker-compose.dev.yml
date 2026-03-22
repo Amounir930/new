@@ -2,9 +2,9 @@ version: '3.8'
 
 services:
   # ═══════════════════════════════════════════════════════════════
-  # Infrastructure (Reused from root compose)
+  # Infrastructure (Renamed to match sovereign .env expectations)
   # ═══════════════════════════════════════════════════════════════
-  postgres:
+  apex-postgres:
     image: pgvector/pgvector:pg15
     container_name: apex-postgres-dev
     environment:
@@ -23,7 +23,7 @@ services:
     networks:
       - apex-internal
 
-  redis:
+  apex-redis:
     image: redis:7-alpine
     container_name: apex-redis-dev
     command: redis-server --appendonly yes
@@ -37,7 +37,7 @@ services:
     networks:
       - apex-internal
 
-  minio:
+  apex-minio:
     image: minio/minio:latest
     container_name: apex-minio-dev
     command: server /data --console-address ":9001"
@@ -72,7 +72,6 @@ services:
       - nm_merchant:/app/apps/merchant-admin/node_modules
       - nm_super:/app/apps/super-admin/node_modules
       - bun_global_cache:/root/.bun/install/cache
-    # Performs atomic installation for all workspaces sharing Named Volumes
     command: bun install --ignore-scripts
     networks:
       - apex-internal
@@ -98,9 +97,9 @@ services:
     depends_on:
       bootstrap:
         condition: service_completed_successfully
-      postgres:
+      apex-postgres:
         condition: service_healthy
-      redis:
+      apex-redis:
         condition: service_healthy
     command: sh -c "cd apps/api && bun run dev"
     networks:
