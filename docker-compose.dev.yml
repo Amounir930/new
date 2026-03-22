@@ -78,7 +78,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: sh -c "bun install --ignore-scripts && bun x turbo run dev --filter=@apex/api"
+    command: sh -c "bun install --ignore-scripts && cd apps/api && bun run dev"
     networks:
       - apex-internal
     labels:
