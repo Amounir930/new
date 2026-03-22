@@ -57,6 +57,7 @@ export const MASTER_FEATURE_LIST = [
   'multicurrency',
   'pos',
   'b2b',
+  'ecommerce',
 ] as const;
 
 export type MasterFeature = (typeof MASTER_FEATURE_LIST)[number];

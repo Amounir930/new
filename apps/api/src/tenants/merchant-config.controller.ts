@@ -10,7 +10,7 @@ interface RequestWithLogger extends AuthenticatedRequest {
 
 import { env } from '@apex/config';
 import { eq, getTenantDb, tenantConfigInStorefront } from '@apex/db';
-import type { RedisRateLimitStore, TenantCacheService } from '@apex/middleware';
+import { RedisRateLimitStore, TenantCacheService } from '@apex/middleware';
 import { deleteObject } from '@apex/provisioning';
 import {
   Body,

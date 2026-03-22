@@ -20,6 +20,7 @@ const defaultBlueprintTemplate: BlueprintTemplate = {
       siteName: 'New Store',
       currency: 'USD',
     },
+    ecommerce: true,
   },
 };
 

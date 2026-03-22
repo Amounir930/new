@@ -17,7 +17,7 @@ import {
   CheckQuota,
   QuotaInterceptor,
   RequireFeature,
-  type TenantCacheService,
+  TenantCacheService,
 } from '@apex/middleware';
 import {
   S3Client,
