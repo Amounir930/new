@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 /**
  * Storefront Middleware
@@ -7,7 +7,6 @@ import type { NextRequest } from 'next/server';
  */
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
-  const { pathname } = request.nextUrl;
 
   // S11: Device Fingerprinting/Session Management (Simplified)
   // Ensure we have a session ID for cart persistence even for guests
