@@ -83,7 +83,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: sh -c "mkdir -p apps/api/dist && ln -sf apps/api/dist/apps/api/src/main.js apps/api/dist/main.js && bun x turbo run dev --filter=@apex/api"
+    command: sh -c "mkdir -p apps/api/dist && ln -sf apps/api/dist/apps/api/src/main.js apps/api/dist/main.js && bun run dev --filter=@apex/api"
     networks:
       - apex-internal
     labels:
@@ -96,7 +96,7 @@ services:
   storefront:
     image: oven/bun:1.1.25
     container_name: apex-storefront-dev
-    working_dir: /app
+    working_dir: /app/apps/store
     volumes:
       - ./:/app:delegated
       - /app/node_modules
@@ -112,7 +112,7 @@ services:
     depends_on:
       api:
         condition: service_started
-    command: sh -c "bun x turbo run dev --filter=store"
+    command: sh -c "bun x next dev --port 3002"
     networks:
       - apex-internal
     labels:
@@ -125,7 +125,7 @@ services:
   merchant-admin:
     image: oven/bun:1.1.25
     container_name: apex-merchant-admin-dev
-    working_dir: /app
+    working_dir: /app/apps/merchant-admin
     volumes:
       - ./:/app:delegated
       - /app/node_modules
@@ -141,7 +141,7 @@ services:
     depends_on:
       api:
         condition: service_started
-    command: sh -c "bun x turbo run dev --filter=merchant-admin"
+    command: sh -c "bun x next dev --port 3001"
     networks:
       - apex-internal
     labels:
@@ -154,7 +154,7 @@ services:
   super-admin:
     image: oven/bun:1.1.25
     container_name: apex-super-admin-dev
-    working_dir: /app
+    working_dir: /app/apps/super-admin
     volumes:
       - ./:/app:delegated
       - /app/node_modules
@@ -170,7 +170,7 @@ services:
     depends_on:
       api:
         condition: service_started
-    command: sh -c "bun x turbo run dev --filter=super-admin"
+    command: sh -c "bun x next dev --port 3003"
     networks:
       - apex-internal
     labels:
