@@ -183,5 +183,5 @@ volumes:
   minio_dev_data:
 
 networks:
-  apex-network:
+  apex-internal:
     external: true
