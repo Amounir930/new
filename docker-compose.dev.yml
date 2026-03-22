@@ -83,7 +83,13 @@ services:
         condition: service_healthy
     command: sh -c "bun install && bun run dev --filter=@apex/api"
     networks:
-      - apex-dev-network
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apex-api-dev.rule=Host(`api.60sec.shop`)"
+      - "traefik.http.routers.apex-api-dev.entrypoints=websecure"
+      - "traefik.http.routers.apex-api-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.apex-api-dev.loadbalancer.server.port=3000"
 
   storefront:
     image: oven/bun:1.1.25
@@ -96,9 +102,7 @@ services:
     environment:
       NODE_ENV: development
       HUSKY: "0"
-      # Used by the browser (Client-side)
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api
-      # Used by Next.js Server (SSR)
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
       PORT: 3002
     ports:
@@ -108,7 +112,13 @@ services:
         condition: service_started
     command: sh -c "bun install && bun run dev --filter=store"
     networks:
-      - apex-dev-network
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apex-storefront-dev.rule=HostRegexp(`{host:.+}.60sec.shop`) || Host(`60sec.shop`)"
+      - "traefik.http.routers.apex-storefront-dev.entrypoints=websecure"
+      - "traefik.http.routers.apex-storefront-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.apex-storefront-dev.loadbalancer.server.port=3002"
 
   merchant-admin:
     image: oven/bun:1.1.25
@@ -121,7 +131,7 @@ services:
     environment:
       NODE_ENV: development
       HUSKY: "0"
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
       PORT: 3001
     ports:
@@ -131,7 +141,13 @@ services:
         condition: service_started
     command: sh -c "bun install && bun run dev --filter=merchant-admin"
     networks:
-      - apex-dev-network
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apex-merchant-admin-dev.rule=Host(`admin.60sec.shop`)"
+      - "traefik.http.routers.apex-merchant-admin-dev.entrypoints=websecure"
+      - "traefik.http.routers.apex-merchant-admin-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.apex-merchant-admin-dev.loadbalancer.server.port=3001"
 
   super-admin:
     image: oven/bun:1.1.25
@@ -144,7 +160,7 @@ services:
     environment:
       NODE_ENV: development
       HUSKY: "0"
-      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
       INTERNAL_API_URL: http://api:3000/api
       PORT: 3003
     ports:
@@ -154,12 +170,18 @@ services:
         condition: service_started
     command: sh -c "bun install && bun run dev --filter=super-admin"
     networks:
-      - apex-dev-network
+      - apex-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.apex-super-admin-dev.rule=Host(`super-admin.60sec.shop`)"
+      - "traefik.http.routers.apex-super-admin-dev.entrypoints=websecure"
+      - "traefik.http.routers.apex-super-admin-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.services.apex-super-admin-dev.loadbalancer.server.port=3003"
 
 volumes:
   postgres_dev_data:
   minio_dev_data:
 
 networks:
-  apex-dev-network:
-    driver: bridge
+  apex-network:
+    external: true
