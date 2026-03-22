@@ -447,9 +447,14 @@ export async function migrateProductMedia(
   const client = getMinioClient();
   const bucketName = sanitizeBucketName(subdomain);
 
+  const migrationCache = new Map<string, string>();
+
   const migrate = async (url: string) => {
     // S3 Forensic: Stop if not a temp asset
     if (!url || !url.includes('/temp/products/')) return url;
+
+    // S3 Resilience: Return cached URL if already migrated in this transaction
+    if (migrationCache.has(url)) return migrationCache.get(url)!;
 
     try {
       const urlObj = new URL(url);
@@ -469,8 +474,13 @@ export async function migrateProductMedia(
       );
       await client.removeObject(bucketName, sourceKey);
 
-      const storageUrl = env.STORAGE_PUBLIC_URL || `http://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}`;
-      return `${storageUrl}/${bucketName}/${targetKey}`;
+      const storageUrl =
+        env.STORAGE_PUBLIC_URL ||
+        `http://${env.MINIO_ENDPOINT}:${env.MINIO_PORT}`;
+      const finalUrl = `${storageUrl}/${bucketName}/${targetKey}`;
+
+      migrationCache.set(url, finalUrl);
+      return finalUrl;
     } catch (err) {
       logger.error('MEDIA_MIGRATION_FAILURE: Terminating transaction', {
         url,

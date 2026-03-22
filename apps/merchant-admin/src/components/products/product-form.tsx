@@ -360,14 +360,17 @@ export function ProductForm({
                           });
                           // 3. Update Form State
                           const current = watch('galleryImages') || [];
-                          setValue('galleryImages', [
-                            ...current,
-                            {
-                              url: publicUrl,
-                              altText: file.name,
-                              order: current.length,
-                            },
-                          ]);
+                          const newImage = {
+                            url: publicUrl,
+                            altText: file.name,
+                            order: current.length,
+                          };
+                          setValue('galleryImages', [...current, newImage]);
+
+                          // UX Mandate: Set first image as mainImage automatically
+                          if (!watch('mainImage') || current.length === 0) {
+                            setValue('mainImage', publicUrl);
+                          }
                         } catch (err) {
                           console.error('Upload failed', err);
                         }
@@ -386,23 +389,40 @@ export function ProductForm({
                         fill
                         className="object-cover"
                       />
-                      <button
-                        type="button"
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={async () => {
-                          await apiFetch(
-                            `/merchant/media/products?url=${encodeURIComponent(img.url)}`,
-                            { method: 'DELETE' }
-                          );
-                          const current = watch('galleryImages');
-                          setValue(
-                            'galleryImages',
-                            current.filter((_, i) => i !== idx)
-                          );
-                        }}
-                      >
-                        <X className="w-4 h-4 text-white" />
-                      </button>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={watch('mainImage') === img.url ? 'default' : 'secondary'}
+                          className="h-8 text-xs gap-1"
+                          onClick={() => setValue('mainImage', img.url)}
+                        >
+                          {watch('mainImage') === img.url ? (
+                            <ShieldCheck className="w-3 h-3" />
+                          ) : (
+                            <Upload className="w-3 h-3" />
+                          )}
+                          {watch('mainImage') === img.url ? 'Main' : 'Set Main'}
+                        </Button>
+                        <button
+                          type="button"
+                          className="p-1.5 bg-red-500 rounded-lg"
+                          onClick={async () => {
+                            await apiFetch(
+                              `/merchant/media/products?url=${encodeURIComponent(img.url)}`,
+                              { method: 'DELETE' }
+                            );
+                            const current = watch('galleryImages');
+                            const newGallery = current.filter((_, i) => i !== idx);
+                            setValue('galleryImages', newGallery);
+                            if (watch('mainImage') === img.url) {
+                              setValue('mainImage', newGallery[0]?.url || '');
+                            }
+                          }}
+                        >
+                          <X className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
