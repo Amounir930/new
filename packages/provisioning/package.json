@@ -28,13 +28,13 @@
     "@apex/config": "workspace:*",
     "@apex/db": "workspace:*",
     "@apex/security": "workspace:*",
-    "minio": "^7.1.0",
-    "pg": "^8.11.0",
-    "zod": "^3.22.4"
+    "minio": "^8.0.7",
+    "pg": "^8.20.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/pg": "^8.11.0",
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
     "bun-types": "latest",
     "typescript": "^5.3.0"
   }
