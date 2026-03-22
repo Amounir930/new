@@ -30,7 +30,7 @@ if (!DATABASE_URL) {
 }
 
 // Ordered list of SQL files to apply (0000 is intentionally excluded)
-const DRIZZLE_DIR = join(import.meta.dir, '..' + '/..' + '/drizzle');
+const DRIZZLE_DIR = join(import.meta.dir, '..', 'drizzle');
 
 function getSqlFiles(): string[] {
   const all = readdirSync(DRIZZLE_DIR)
