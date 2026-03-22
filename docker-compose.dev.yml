@@ -83,7 +83,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: sh -c "mkdir -p apps/api/dist && ln -sf apps/api/dist/apps/api/src/main.js apps/api/dist/main.js && bun run dev --filter=@apex/api"
+    command: sh -c "mkdir -p apps/api/dist && ln -sf apps/api/dist/apps/api/src/main.js apps/api/dist/main.js && bun x turbo run dev --filter=@apex/api"
     networks:
       - apex-internal
     labels:
@@ -112,7 +112,7 @@ services:
     depends_on:
       api:
         condition: service_started
-    command: sh -c "bun run dev --filter=store"
+    command: sh -c "bun x turbo run dev --filter=store"
     networks:
       - apex-internal
     labels:
@@ -141,7 +141,7 @@ services:
     depends_on:
       api:
         condition: service_started
-    command: sh -c "bun run dev --filter=merchant-admin"
+    command: sh -c "bun x turbo run dev --filter=merchant-admin"
     networks:
       - apex-internal
     labels:
@@ -170,7 +170,7 @@ services:
     depends_on:
       api:
         condition: service_started
-    command: sh -c "bun run dev --filter=super-admin"
+    command: sh -c "bun x turbo run dev --filter=super-admin"
     networks:
       - apex-internal
     labels:
