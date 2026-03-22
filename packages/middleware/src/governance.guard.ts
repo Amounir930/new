@@ -4,7 +4,7 @@
  * Enforces feature-level access control based on plan and tenant specific gates.
  */
 
-import { adminDb, and, eq, featureGatesInGovernance } from '@apex/db';
+import { adminDb, and, eq, featureGatesInGovernance, sql } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -56,6 +56,9 @@ export class GovernanceGuard implements CanActivate {
     }
 
     // Direct check against Drizzle definitive schema
+    // S2 FIX: Set Session Context to fulfill RLS requirements
+    await adminDb.execute(sql`SELECT set_config('app.current_tenant_id', ${tenantId}, true)`);
+
     const [gate] = await adminDb
       .select({ isEnabled: featureGatesInGovernance.isEnabled })
       .from(featureGatesInGovernance)
