@@ -1,25 +1,32 @@
-import { AuditLog } from '@apex/audit';
+import { AuditLog   Inject,
+} from '@apex/audit';
 import {
   type AuthenticatedRequest,
   JwtAuthGuard,
   TenantJwtMatchGuard,
+  Inject,
 } from '@apex/auth';
-import { env } from '@apex/config';
+import { env   Inject,
+} from '@apex/config';
 import {
   and,
   eq,
   getTenantDb,
   type InferInsertModel,
   productsInStorefront,
+  Inject,
 } from '@apex/db';
 import {
   CheckQuota,
   QuotaInterceptor,
   RequireFeature,
   TenantCacheService,
+  Inject,
 } from '@apex/middleware';
-import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
-import { S3Client } from '@aws-sdk/client-s3';
+import { deletePrefix, migrateProductMedia   Inject,
+} from '@apex/provisioning';
+import { S3Client   Inject,
+} from '@aws-sdk/client-s3';
 import {
   Body,
   Controller,
@@ -33,6 +40,7 @@ import {
   Req,
   UseGuards,
   UseInterceptors,
+  Inject,
 } from '@nestjs/common';
 import type {
   CreateProductDto,

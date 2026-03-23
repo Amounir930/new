@@ -1,5 +1,6 @@
 import type { AuthenticatedRequest } from '@apex/auth';
-import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
+import { JwtAuthGuard, TenantJwtMatchGuard   Inject,
+} from '@apex/auth';
 import {
   customersInStorefront,
   eq,
@@ -7,10 +8,14 @@ import {
   ordersInStorefront,
   productsInStorefront,
   sql,
+  Inject,
 } from '@apex/db';
-import { Inject } from '@nestjs/common';
-import { isUuid, TenantCacheService } from '@apex/middleware';
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Inject   Inject,
+} from '@nestjs/common';
+import { isUuid, TenantCacheService   Inject,
+} from '@apex/middleware';
+import { Controller, Get, Req, UseGuards   Inject,
+} from '@nestjs/common';
 
 @Controller('tenants/stats')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
