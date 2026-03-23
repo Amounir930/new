@@ -8,13 +8,14 @@ import {
   productsInStorefront,
   sql,
 } from '@apex/db';
-import { isUuid, type TenantCacheService } from '@apex/middleware';
+import { Inject } from '@nestjs/common';
+import { isUuid, TenantCacheService } from '@apex/middleware';
 import { Controller, Get, Req, UseGuards } from '@nestjs/common';
 
 @Controller('tenants/stats')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class MerchantStatsController {
-  constructor(private readonly tenantCache: TenantCacheService) {}
+  constructor(@Inject('TENANT_CACHE_SERVICE') private readonly tenantCache: TenantCacheService) {}
 
   @Get()
   async getStats(@Req() req: AuthenticatedRequest) {

@@ -45,7 +45,10 @@ import type {
 export class MerchantProductsController {
   private readonly logger = new Logger(MerchantProductsController.name);
 
-  constructor(readonly _tenantCache: TenantCacheService) {}
+  constructor(
+    @Inject('TENANT_CACHE_SERVICE')
+    readonly _tenantCache: TenantCacheService
+  ) {}
 
   @Get()
   @RequireFeature('ecommerce')
