@@ -18,6 +18,24 @@ http:
         certResolver: letsencrypt
       priority: 20000
 
+    apex-storage-admin-dev:
+      rule: "Host(`storage-admin.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: apex-super-admin-dev
+      tls:
+        certResolver: letsencrypt
+      priority: 20000
+
+    apex-api-dev:
+      rule: "Host(`api.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: apex-api-dev
+      tls:
+        certResolver: letsencrypt
+      priority: 20000
+
     apex-storefront-dev:
       rule: "HostRegexp(`{host:.+}.60sec.shop`) || Host(`60sec.shop`)"
       entryPoints:
@@ -28,6 +46,10 @@ http:
       priority: 20000
 
   services:
+    apex-api-dev:
+      loadBalancer:
+        servers:
+          - url: "http://172.19.0.15:3000"
     apex-super-admin-dev:
       loadBalancer:
         servers:
