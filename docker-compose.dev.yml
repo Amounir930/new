@@ -9,8 +9,6 @@ services:
     container_name: apex-traefik-dev
     command:
       - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
@@ -21,9 +19,7 @@ services:
       - "--providers.file.watch=true"
     environment:
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
-      - DOCKER_API_VERSION=1.24
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./ops/acme.json:/acme.json
       - ./ops/traefik-dynamic.yml:/traefik-dynamic.yml
     ports:
