@@ -22,6 +22,7 @@ export {
   getTenantContext,
   hasTenantContext,
   requireTenantContext,
+  requireExecutor,
   runWithTenantContext,
   type TenantContext,
   tenantStorage,
@@ -85,6 +86,7 @@ export {
   type TenantRequest,
   TenantScopedGuard,
 } from './tenant-isolation.middleware';
+export { TenantSessionInterceptor } from './tenant-session.interceptor';
 export {
   extractTenantFromHeader,
   extractTenantFromHost,

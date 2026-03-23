@@ -35,7 +35,7 @@ export default function ProductsPage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const data = await apiFetch<Product[]>('/products');
+        const data = await apiFetch<Product[]>('/merchant/products');
         setProducts(data);
       } catch (_error) {
         /* 'Failed to fetch products:', error */

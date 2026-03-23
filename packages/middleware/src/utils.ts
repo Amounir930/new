@@ -12,3 +12,19 @@ export function isUuid(id: string): boolean {
     id
   );
 }
+
+/**
+ * Normalizes subdomain to official tenant schema name
+ * Protocol: S2 - Case Insensitive + Regex Sanitized
+ */
+export function toSchemaName(subdomain: string): string {
+  if (!subdomain) return 'public';
+  if (subdomain.toLowerCase() === 'system') return 'public';
+
+  const normalized = subdomain
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  return `tenant_${normalized}`;
+}

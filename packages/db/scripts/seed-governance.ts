@@ -1,7 +1,11 @@
 import {
   adminDb,
+  and,
+  eq,
+  featureGatesInGovernance,
   onboardingBlueprintsInGovernance,
   subscriptionPlansInGovernance,
+  tenantsInGovernance,
 } from '@apex/db';
 
 async function seedGovernance() {
@@ -159,7 +163,69 @@ async function seedGovernance() {
     });
   }
 
-  console.log('✅ Governance Seeding Task Complete');
+  console.log('🩹 Starting Self-Healing Phase for Existing Tenants...');
+
+  const allTenants = await adminDb
+    .select({
+      id: tenantsInGovernance.id,
+      plan: tenantsInGovernance.plan,
+      nicheType: tenantsInGovernance.nicheType,
+      subdomain: tenantsInGovernance.subdomain,
+    })
+    .from(tenantsInGovernance);
+
+  console.log(`Found ${allTenants.length} tenants. Syncing feature gates...`);
+
+  for (const tenant of allTenants) {
+    // Find the matching blueprint for this tenant's plan and niche
+    const [blueprintRecord] = await adminDb
+      .select({ blueprint: onboardingBlueprintsInGovernance.blueprint })
+      .from(onboardingBlueprintsInGovernance)
+      .where(
+        and(
+          eq(onboardingBlueprintsInGovernance.plan, tenant.plan),
+          eq(onboardingBlueprintsInGovernance.nicheType, tenant.nicheType),
+          eq(onboardingBlueprintsInGovernance.isDefault, true)
+        )
+      )
+      .limit(1);
+
+    const bp = blueprintRecord?.blueprint as any;
+    if (!bp || !bp.modules) {
+      console.warn(
+        `⚠️ No valid blueprint found for tenant ${tenant.subdomain} (Plan: ${tenant.plan}, Niche: ${tenant.nicheType}). Skipping.`
+      );
+      continue;
+    }
+
+    const modules = bp.modules;
+    const featureGates = Object.entries(modules)
+      .filter(([key]) => typeof key === 'string')
+      .map(([key, value]) => ({
+        tenantId: tenant.id,
+        featureKey: key,
+        isEnabled: !!value,
+        planCode: tenant.plan,
+      }));
+
+    if (featureGates.length > 0) {
+      console.log(`Syncing ${featureGates.length} gates for ${tenant.subdomain}...`);
+      for (const gate of featureGates) {
+        await adminDb
+          .insert(featureGatesInGovernance)
+          .values(gate)
+          .onConflictDoUpdate({
+            target: [featureGatesInGovernance.tenantId, featureGatesInGovernance.featureKey],
+            set: {
+              isEnabled: gate.isEnabled,
+              planCode: gate.planCode,
+            },
+          });
+      }
+    }
+  }
+
+  console.log('✅ Governance Seeding & Self-Healing Complete');
   process.exit(0);
 }
 

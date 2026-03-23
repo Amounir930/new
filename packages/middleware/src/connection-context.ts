@@ -32,6 +32,7 @@ export interface DrizzleExecutor {
   update: (table: unknown) => any;
   delete: (table: unknown) => any;
   execute: (query: unknown) => Promise<unknown>;
+  transaction: (callback: (tx: any) => Promise<any>) => Promise<any>;
 }
 
 /**
@@ -127,4 +128,18 @@ export function requireTenantContext(): TenantContext {
  */
 export function hasTenantContext(): boolean {
   return tenantStorage.getStore() !== undefined;
+}
+
+/**
+ * Require context-bound executor - throws if not present or uninitialized
+ * This ensures queries ALWAYS inherit the pre-configured search_path from the Interceptor.
+ */
+export function requireExecutor(): DrizzleExecutor {
+  const context = requireTenantContext();
+  if (!context.executor) {
+    throw new Error(
+      'S2 Violation: Database executor not initialized in current session.'
+    );
+  }
+  return context.executor;
 }

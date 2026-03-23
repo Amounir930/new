@@ -3,7 +3,7 @@ import { adminDb, eq, tenantsInGovernance } from '@apex/db';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
 import type { TenantContext } from './connection-context';
-import { isUuid } from './utils';
+import { isUuid, toSchemaName } from './utils';
 
 @Injectable()
 export class TenantCacheService implements OnModuleInit {
@@ -110,7 +110,7 @@ export class TenantCacheService implements OnModuleInit {
 
     const context: Omit<TenantContext, 'executor'> = {
       tenantId: tenant.id,
-      schemaName: `tenant_${tenant.subdomain}`,
+      schemaName: toSchemaName(tenant.subdomain),
       subdomain: tenant.subdomain,
       plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       isActive: tenant.status === 'active',
@@ -160,9 +160,7 @@ export class TenantCacheService implements OnModuleInit {
 
     const context: Omit<TenantContext, 'executor'> = {
       tenantId: tenant.id,
-      schemaName: `tenant_${tenant.subdomain
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '_')}`,
+      schemaName: toSchemaName(tenant.subdomain),
       subdomain: tenant.subdomain,
       plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       isActive: tenant.status === 'active',

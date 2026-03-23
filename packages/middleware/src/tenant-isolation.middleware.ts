@@ -1,5 +1,5 @@
 import { env } from '@apex/config';
-import { adminDb, adminPool, eq, tenantsInGovernance } from '@apex/db';
+import { adminDb, adminPool, eq, tenantsInGovernance, SYSTEM_TENANT_ID } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -18,7 +18,7 @@ import {
 } from './connection-context';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { TenantCacheService } from './tenant-cache.service';
-import { isUuid } from './utils';
+import { isUuid, toSchemaName } from './utils';
 
 export interface AuditService {
   log(data: {
@@ -110,7 +110,7 @@ async function validateTenant(
 
     return {
       tenantId: tenant.id,
-      schemaName: `tenant_${tenant.subdomain.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+      schemaName: toSchemaName(tenant.subdomain),
       subdomain: tenant.subdomain,
       plan: tenant.plan as 'free' | 'basic' | 'pro' | 'enterprise',
       isActive: true,
@@ -140,17 +140,18 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
       // 1. System/Upgrade Handlers
       if (this.isSystemRequest(identifier)) {
-        return this.handleSystemOrUpgrade(req, res, next, identifier);
+        req.tenantContext = this.getSystemContext(identifier);
+        return next();
       }
 
       // 2. Bypass & Maintenance
       if (this.shouldBypass(currentPath)) {
-        return this.handleSystemContext(identifier, req, res, next);
+        req.tenantContext = this.getSystemContext(identifier);
+        return next();
       }
       if (this.isBypassRoute(currentPath)) return next();
-      if (await this.handleMaintenanceMode(req, res)) return;
-
-      // 3. Resolution & Execution
+      
+      // 3. Resolution
       const finalIdentifier = await this.resolveFinalIdentifier(
         req,
         res,
@@ -162,34 +163,18 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       const baseContext = await this.getValidatedContext(finalIdentifier);
       const isSuspended = await this.checkSuspension(finalIdentifier);
 
-      await this.runDatabaseSession(baseContext, isSuspended, req, res, next);
+      // S2/Arch-Core-04: Attach resolution context to request. 
+      // The session/middleware lifecycle fix relocates DB connection to Global Interceptor.
+      req.tenantContext = {
+        ...baseContext,
+        isSuspended,
+      };
+
+      res.setHeader('X-Tenant-ID', baseContext.tenantId);
+      next();
     } catch (error) {
       this.handleError(error, res, next);
     }
-  }
-
-  private async handleSystemOrUpgrade(
-    req: TenantRequest,
-    res: Response,
-    next: NextFunction,
-    identifier: string
-  ) {
-    const peekedId = this.peekTenantId(req);
-    if (peekedId) {
-      const context = await this.cache.resolveTenant(peekedId);
-      if (context) {
-        return this.runDatabaseSession(context, false, req, res, next);
-      }
-    }
-    return this.handleSystemContext(identifier, req, res, next);
-  }
-
-  private shouldBypass(currentPath: string): boolean {
-    return (
-      currentPath.includes('/blueprints') ||
-      currentPath.includes('/tenants') ||
-      currentPath.includes('/governance')
-    );
   }
 
   private async resolveFinalIdentifier(
@@ -226,48 +211,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
 
     const subdomain = extractSubdomain(cleanHost);
     return xTenantId && isInternal ? xTenantId : subdomain || cleanHost;
-  }
-
-  /**
-   * S1 Security: Peek at unverified tenant identity (Fast-Path routing)
-   * CWE-345 Mitigation: Verified by downstream S2 Guard comparison
-   */
-  private peekTenantId(req: Request): string | null {
-    const xTenantId = req.headers['x-tenant-id'] as string;
-    if (xTenantId) return xTenantId;
-
-    const token = this.extractTokenFromRequest(req);
-    if (!token) return null;
-
-    return this.parseTenantIdFromToken(token);
-  }
-
-  private extractTokenFromRequest(req: Request): string | null {
-    const authHeader = req.headers.authorization;
-    if (authHeader?.startsWith('Bearer ')) {
-      return authHeader.split(' ')[1];
-    }
-
-    const cookies = req.cookies;
-    if (cookies && typeof cookies === 'object') {
-      return (cookies as Record<string, string>).adm_tkn || null;
-    }
-
-    return null;
-  }
-
-  private parseTenantIdFromToken(token: string): string | null {
-    try {
-      const payload = token.split('.')[1];
-      if (!payload) return null;
-
-      const decoded = JSON.parse(Buffer.from(payload, 'base64').toString());
-      const tenantId = decoded.tenantId || null;
-
-      return tenantId && isUuid(tenantId) ? tenantId : null;
-    } catch {
-      return null;
-    }
   }
 
   private handleError(error: unknown, res: Response, next: NextFunction) {
@@ -311,28 +254,12 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     return systemSubdomains.includes(cleanSubdomain);
   }
 
-  private handleSystemContext(
-    subdomain: string | null,
-    req: TenantRequest,
-    _res: Response,
-    next: NextFunction
-  ) {
-    const systemContext: TenantContext = {
-      tenantId: 'system',
-      schemaName: 'public',
-      subdomain: subdomain || 'root',
-      plan: 'enterprise',
-      isActive: true,
-      isSuspended: false,
-      features: [],
-      createdAt: new Date(),
-      executor: toExecutor(adminDb),
-    };
-
-    tenantStorage.run(systemContext, () => {
-      req.tenantContext = systemContext;
-      next();
-    });
+  private shouldBypass(currentPath: string): boolean {
+    return (
+      currentPath.includes('/blueprints') ||
+      currentPath.includes('/tenants') ||
+      currentPath.includes('/governance')
+    );
   }
 
   private isBypassRoute(path: string): boolean {
@@ -348,15 +275,6 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     return bypassRoutes.some(
       (route) => path === route || path.startsWith(`${route}/`)
     );
-  }
-
-  private async handleMaintenanceMode(
-    _req: TenantRequest,
-    _res: Response
-  ): Promise<boolean> {
-    // Maintenance mode logic has been temporarily disabled
-    // as the legacy `system_settings` table was removed in the Zero-Trust refactor.
-    return false;
   }
 
   private isWebhookPath(path: string, subdomain: string | null): boolean {
@@ -433,94 +351,17 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     }
   }
 
-  private async runDatabaseSession(
-    baseContext: Omit<TenantContext, 'executor'>,
-    isSuspended: boolean,
-    req: TenantRequest,
-    res: Response,
-    next: NextFunction
-  ) {
-    const client = await adminPool.connect();
-    let cleanupRegistered = false;
-    try {
-      await client.query("SELECT set_config('app.current_tenant', $1, true)", [
-        baseContext.tenantId,
-      ]);
-      await client.query("SET statement_timeout = '10s'");
-
-      const scopedDb = drizzle(client);
-      const tenantContext: TenantContext = {
-        ...baseContext,
-        isSuspended,
-        executor: toExecutor(scopedDb),
-      };
-
-      await tenantStorage.run(tenantContext, async () => {
-        req.tenantContext = tenantContext;
-        res.setHeader('X-Tenant-ID', tenantContext.tenantId);
-
-        this.registerCleanup(client, res, tenantContext);
-        cleanupRegistered = true;
-        next();
-      });
-    } catch (error) {
-      if (!cleanupRegistered) {
-        // Only cleanup here if it wasn't registered to the response lifecycle
-        await client.query('ROLLBACK').catch(() => {});
-        await client.query('RESET ALL; DISCARD ALL;').catch(() => {});
-        client.release();
-      }
-
-      res.status(HttpStatus.FORBIDDEN).json({
-        statusCode: HttpStatus.FORBIDDEN,
-        message:
-          error instanceof Error ? error.message : 'Tenant Access Denied',
-        error: 'Forbidden',
-      });
-    }
-  }
-
-  private registerCleanup(
-    client: PoolClient,
-    res: Response,
-    tenantContext: TenantContext
-  ) {
-    let isCleanedUp = false;
-    const cleanup = async () => {
-      if (isCleanedUp) return;
-      isCleanedUp = true;
-
-      // Item 31: Force cleanup of context properties to prevent bleeding/leaks
-      tenantContext.isActive = false;
-      tenantContext.executor = undefined;
-
-      // Explicitly clear request context reference
-      const req = res.req as TenantRequest | undefined;
-      if (req) {
-        req.tenantContext = undefined;
-      }
-
-      try {
-        // S2: Robust cleanup - ROLLBACK ensures we aren't stuck in a failed transaction
-        await client.query('ROLLBACK').catch(() => {});
-        await client.query(`
-          RESET app.current_tenant;
-          RESET app.role;
-          RESET search_path;
-          RESET ALL;
-        `);
-        client.release();
-      } catch (err) {
-        process.stdout.write(`S2 DB Cleanup Error: ${String(err)}\n`);
-        // If cleanup fails, we must DESTROY the client to prevent contamination
-        client.release(true);
-      }
+  private getSystemContext(subdomain: string | null): TenantContext {
+    return {
+      tenantId: SYSTEM_TENANT_ID,
+      schemaName: 'public',
+      subdomain: subdomain || 'root',
+      plan: 'enterprise',
+      isActive: true,
+      isSuspended: false,
+      features: [],
+      createdAt: new Date(),
     };
-
-    // Ensure cleanup runs on all termination paths
-    res.once('finish', cleanup);
-    res.once('close', cleanup);
-    res.once('error', cleanup);
   }
 }
 

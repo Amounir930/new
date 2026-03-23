@@ -16,7 +16,7 @@ export default function EditProductPage() {
   useEffect(() => {
     async function fetchProduct() {
       try {
-        const data = await apiFetch<unknown>(`/products/${id}`);
+        const data = await apiFetch<unknown>(`/merchant/products/${id}`);
         setProduct(data);
       } catch (_error) {
         /* 'Failed to fetch product:', error */
@@ -29,7 +29,7 @@ export default function EditProductPage() {
 
   const handleUpdateProduct = async (data: unknown) => {
     try {
-      await apiFetch(`/products/${id}`, {
+      await apiFetch(`/merchant/products/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
       });

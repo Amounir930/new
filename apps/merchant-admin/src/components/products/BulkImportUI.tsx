@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { config } from '@/config';
+import { apiFetch } from '@/lib/api';
 import {
   Card,
   CardContent,
@@ -39,12 +41,10 @@ export default function BulkImportUI() {
       const base64 = e.target?.result as string;
 
       try {
-        const res = await fetch('/api/admin/products/import', {
+        const data = await apiFetch<{ jobId: string }>('/merchant/products/import', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fileData: base64 }),
         });
-        const data = await res.json();
         setJobId(data.jobId);
       } catch (_err) {
         /* 'Import failed', err */
@@ -60,8 +60,13 @@ export default function BulkImportUI() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/admin/products/import/${jobId}`);
-        const data = await res.json();
+        const data = await apiFetch<{
+          status?: string;
+          progress?: number;
+          totalRows?: number;
+          successRows?: number;
+          errorRows?: number;
+        }>(`/merchant/products/import/${jobId}`);
         setStatus(data);
         if (data.status === 'completed' || data.status === 'failed') {
           clearInterval(interval);
@@ -166,7 +171,7 @@ export default function BulkImportUI() {
         <CardContent>
           <Button
             variant="outline"
-            onClick={() => window.open('/api/admin/products/export', '_blank')}
+            onClick={() => window.open(`${config.apiUrl}/merchant/products/export`, '_blank')}
             className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
           >
             Export All to CSV

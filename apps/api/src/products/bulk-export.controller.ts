@@ -2,15 +2,15 @@ import { AuditLog } from '@apex/audit';
 import type { AuthenticatedRequest } from '@apex/auth';
 import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
 import {
-  getTenantDb,
   type InferSelectModel,
   productsInStorefront,
 } from '@apex/db';
+import { requireExecutor } from '@apex/middleware';
 import { Controller, Get, Logger, Req, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import { Parser } from 'json2csv';
 
-@Controller('admin/products/export')
+@Controller('merchant/products/export')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class BulkExportController {
   private readonly logger = new Logger(BulkExportController.name);
@@ -18,22 +18,13 @@ export class BulkExportController {
   @Get()
   @AuditLog({ action: 'PRODUCT_BULK_EXPORT', entityType: 'product' })
   async exportProducts(@Req() req: AuthenticatedRequest, @Res() res: Response) {
-    const tenantId = req.user?.tenantId;
-    if (!tenantId) {
-      return res.status(401).send('Unauthorized');
-    }
-
-    const schemaName =
-      req.tenantContext?.tenantId === tenantId
-        ? req.tenantContext.schemaName
-        : undefined;
-
-    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const db = requireExecutor();
     let allProducts: InferSelectModel<typeof productsInStorefront>[];
     try {
       allProducts = await db.select().from(productsInStorefront);
-    } finally {
-      release();
+    } catch (e) {
+      this.logger.error('Database query FAILED:', e);
+      return res.status(500).send('Database error');
     }
 
     const fields = [

@@ -6,7 +6,7 @@ services:
   apex-postgres:
     # ZERO-TOLERANCE FIX: No 'latest' tags. Pinned to specific minor version.
     build:
-      context: ..
+      context: /opt/apex-v2
       dockerfile: ops/postgres.Dockerfile
     container_name: apex-postgres
     restart: always
@@ -146,8 +146,8 @@ services:
   api:
     # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
     build:
-      context: ..
-      dockerfile: apps/api/Dockerfile
+      context: /opt/apex-v2
+      dockerfile: /opt/apex-v2/apps/api/Dockerfile
     restart: always
     env_file: .env
     depends_on:
@@ -242,8 +242,8 @@ services:
   worker:
     # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/api:latest
     build:
-      context: ..
-      dockerfile: apps/api/Dockerfile
+      context: /opt/apex-v2
+      dockerfile: /opt/apex-v2/apps/api/Dockerfile
     restart: always
     env_file: .env
     depends_on:
@@ -321,8 +321,8 @@ services:
   merchant-admin:
     # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/merchant-admin:latest
     build:
-      context: ..
-      dockerfile: apps/merchant-admin/Dockerfile
+      context: /opt/apex-v2
+      dockerfile: /opt/apex-v2/apps/merchant-admin/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.60sec.shop/api/v1}
     container_name: apex-merchant-admin
@@ -379,8 +379,8 @@ services:
   super-admin:
     # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/super-admin:latest
     build:
-      context: ..
-      dockerfile: apps/super-admin/Dockerfile
+      context: /opt/apex-v2
+      dockerfile: /opt/apex-v2/apps/super-admin/Dockerfile
     container_name: apex-super-admin
     restart: always
     user: "1000:1000"
@@ -431,8 +431,8 @@ services:
   store:
     # image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/adel}/store:latest
     build:
-      context: ..
-      dockerfile: apps/store/Dockerfile
+      context: /opt/apex-v2
+      dockerfile: /opt/apex-v2/apps/store/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.60sec.shop/api/v1}
     container_name: apex-store

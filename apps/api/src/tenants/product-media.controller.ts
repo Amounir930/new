@@ -5,7 +5,8 @@ import {
   TenantJwtMatchGuard,
 } from '@apex/auth';
 import { env } from '@apex/config';
-import { eq, getTenantDb, productsInStorefront } from '@apex/db';
+import { eq, productsInStorefront } from '@apex/db';
+import { requireExecutor } from '@apex/middleware';
 import {
   DeleteObjectCommand,
   PutObjectCommand,
@@ -37,11 +38,9 @@ export class ProductMediaController {
    * Verify product existence and ownership ONLY for public products
    */
   private async verifyProductOwnership(
-    tenantId: string,
-    schemaName: string,
     productId: string
   ) {
-    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const db = requireExecutor();
     try {
       const [product] = await db
         .select()
@@ -53,8 +52,8 @@ export class ProductMediaController {
         throw new NotFoundException(`Product ${productId} not found`);
       }
       return product;
-    } finally {
-      release();
+    } catch (e) {
+      throw e;
     }
   }
 
@@ -143,7 +142,7 @@ export class ProductMediaController {
       const key = pathParts.slice(keyIndex).join('/');
 
       // 🛡️ S2 IDOR Mandate: Verify Authority
-      await this.verifyDeletionAuthority(tenantId, schemaName, key, productId);
+      await this.verifyDeletionAuthority(key, productId);
 
       const s3Client = new S3Client({
         endpoint: env.MINIO_ENDPOINT || 'http://apex-minio:9000',
@@ -183,15 +182,13 @@ export class ProductMediaController {
   }
 
   private async verifyDeletionAuthority(
-    tenantId: string,
-    schemaName: string,
     key: string,
     productId?: string
   ) {
     if (key.startsWith('temp/products/')) return;
 
     if (key.startsWith('public/products/') && productId) {
-      await this.verifyProductOwnership(tenantId, schemaName, productId);
+      await this.verifyProductOwnership(productId);
       if (key.startsWith(`public/products/${productId}/`)) return;
 
       throw new ForbiddenException(

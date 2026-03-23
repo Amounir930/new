@@ -8,6 +8,7 @@ import {
   adminPool,
   drizzle,
   eq,
+  featureGatesInGovernance,
   type NodePgDatabase,
   sql,
   tenantQuotasInGovernance,
@@ -17,6 +18,7 @@ import { encrypt, hashSensitiveData } from '@apex/security';
 import { BlueprintExecutor } from './blueprint/executor';
 import { CatalogModule } from './blueprint/modules/catalog';
 import { CoreModule } from './blueprint/modules/core';
+import { EcommerceModule } from './blueprint/modules/ecommerce';
 import type { BlueprintConfig, BlueprintTemplate } from './blueprint/types';
 import { sanitizeSchemaName } from './schema-manager';
 
@@ -75,6 +77,7 @@ export async function seedTenantData(
     // Frontend pages (pdp, cart, etc.) are NOT registered here.
     const moduleRegistry: Record<string, any> = {
       catalog: CatalogModule,
+      ecommerce: EcommerceModule,
     };
 
     for (const [moduleName, enabled] of Object.entries(config.modules)) {
@@ -236,6 +239,21 @@ async function resolveStore(
     storageLimitGb: quotas.storage_limit_gb || 1,
     apiRateLimit: quotas.api_rate_limit || 60,
   });
+
+  // 3. S21 MANDATE: Feature Gate Hydration from Blueprint!
+  const modules = template.modules || {};
+  const featureGates = Object.entries(modules)
+    .filter(([key]) => typeof key === 'string')
+    .map(([key, value]) => ({
+      tenantId: newStore.id,
+      featureKey: key,
+      isEnabled: !!value,
+      planCode: options.plan,
+    }));
+
+  if (featureGates.length > 0) {
+    await adminDb.insert(featureGatesInGovernance).values(featureGates);
+  }
 
   return newStore.id;
 }

@@ -10,6 +10,7 @@ export * from 'drizzle-orm';
 export * from 'drizzle-orm/node-postgres';
 export * from '../drizzle/relations';
 export * from '../drizzle/schema';
+export * from './constants';
 
 const { Pool } = pg;
 

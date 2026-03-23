@@ -1136,7 +1136,7 @@ export const subscriptionPlansInGovernance = governance.table(
     defaultMaxStorageGb: integer('default_max_storage_gb').default(1).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
     isActive: boolean('is_active').default(true).notNull(),
-    code: varchar({ length: 50 }).notNull(),
+    code: tenantPlan().notNull(),
     name: varchar({ length: 100 }).notNull(),
     currency: varchar({ length: 3 }).default('USD').notNull(),
     description: text(),

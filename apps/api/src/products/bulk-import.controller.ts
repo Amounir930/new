@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import type { BulkImportDto } from './dto/bulk-import.dto';
-@Controller('admin/products/import')
+@Controller('merchant/products/import')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 @UsePipes(ZodValidationPipe)
 export class BulkImportController {
