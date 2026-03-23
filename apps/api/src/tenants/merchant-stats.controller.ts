@@ -1,6 +1,5 @@
 import type { AuthenticatedRequest } from '@apex/auth';
-import { JwtAuthGuard, TenantJwtMatchGuard   Inject,
-} from '@apex/auth';
+import { JwtAuthGuard, TenantJwtMatchGuard } from '@apex/auth';
 import {
   customersInStorefront,
   eq,
@@ -8,19 +7,17 @@ import {
   ordersInStorefront,
   productsInStorefront,
   sql,
-  Inject,
 } from '@apex/db';
-import { Inject   Inject,
-} from '@nestjs/common';
-import { isUuid, TenantCacheService   Inject,
-} from '@apex/middleware';
-import { Controller, Get, Req, UseGuards   Inject,
-} from '@nestjs/common';
+import { isUuid, TenantCacheService } from '@apex/middleware';
+import { Controller, Get, Inject, Req, UseGuards } from '@nestjs/common';
 
 @Controller('tenants/stats')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
 export class MerchantStatsController {
-  constructor(@Inject('TENANT_CACHE_SERVICE') private readonly tenantCache: TenantCacheService) {}
+  constructor(
+    @Inject('TENANT_CACHE_SERVICE')
+    private readonly tenantCache: TenantCacheService
+  ) {}
 
   @Get()
   async getStats(@Req() req: AuthenticatedRequest) {
