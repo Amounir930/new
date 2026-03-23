@@ -24,6 +24,7 @@ http:
 
     apex-storefront:
       rule: "HostRegexp(`{subdomain:.+}.60sec.shop`) || Host(`60sec.shop`)"
+      priority: 3000
       service: apex-storefront
       entryPoints:
         - web
