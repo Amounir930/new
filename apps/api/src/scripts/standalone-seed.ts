@@ -15,15 +15,15 @@ async function main() {
     const queries = [
       `INSERT INTO governance.tenants (subdomain, name, plan, status, niche_type) 
        VALUES ('admin', 'System Admin', 'enterprise', 'active', 'retail')
-       ON CONFLICT (subdomain) DO UPDATE SET status = 'active';`,
+       ON CONFLICT (subdomain) WHERE deleted_at IS NULL DO UPDATE SET status = 'active';`,
       
       `INSERT INTO governance.tenants (subdomain, name, plan, status, niche_type) 
        VALUES ('storage-admin', 'Storage Admin', 'enterprise', 'active', 'retail')
-       ON CONFLICT (subdomain) DO UPDATE SET status = 'active';`,
+       ON CONFLICT (subdomain) WHERE deleted_at IS NULL DO UPDATE SET status = 'active';`,
 
       `INSERT INTO governance.tenants (subdomain, name, plan, status, niche_type) 
        VALUES ('super-admin', 'Super Admin', 'enterprise', 'active', 'retail')
-       ON CONFLICT (subdomain) DO UPDATE SET status = 'active';`
+       ON CONFLICT (subdomain) WHERE deleted_at IS NULL DO UPDATE SET status = 'active';`
     ];
 
     for (const q of queries) {
