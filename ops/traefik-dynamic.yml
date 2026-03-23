@@ -1,4 +1,8 @@
 http:
+  tls:
+    options:
+      default:
+        sniStrict: false
   routers:
     apex-api:
       rule: "Host(`api.60sec.shop`)"
