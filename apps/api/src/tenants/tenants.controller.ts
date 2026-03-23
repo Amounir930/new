@@ -25,7 +25,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ZodValidationPipe } from 'nestjs-zod';
+import { SovereignZodPipe } from '../common/pipes/zod-validation.pipe';
 import { z } from 'zod';
 import { ProvisioningService } from '../provisioning/provisioning.service';
 import { SecurityService } from '../security/security.service';
@@ -163,7 +163,7 @@ export class TenantsController {
   async updateFeature(
     @Param('id') id: string,
     @Param('key') key: string,
-    @Body(new ZodValidationPipe(UpdateFeatureSchema)) body: {
+    @Body(new SovereignZodPipe()) body: {
       isEnabled: boolean;
     }
   ) {
@@ -212,7 +212,7 @@ export class TenantsController {
   @AuditLog({ action: 'TENANT_UPDATED', entityType: 'tenant' })
   async update(
     @Param('id') id: string,
-    @Body(new ZodValidationPipe(UpdateTenantSchema))
+    @Body(new SovereignZodPipe())
     body: {
       plan?: string;
       name?: string;

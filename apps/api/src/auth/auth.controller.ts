@@ -20,7 +20,7 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import * as bcrypt from 'bcrypt';
 import type { Response } from 'express';
-import { ZodValidationPipe } from 'nestjs-zod';
+import { SovereignZodPipe } from '../common/pipes/zod-validation.pipe';
 import { z } from 'zod';
 
 const LoginSchema = z.object({
@@ -45,7 +45,7 @@ export class AuthController {
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force
   @HttpCode(HttpStatus.OK)
   async login(
-    @Body(new ZodValidationPipe(LoginSchema)) body: LoginDto,
+    @Body(new SovereignZodPipe()) body: LoginDto,
     @Res({ passthrough: true }) response: Response
   ) {
     const { email, password } = body;

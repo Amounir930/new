@@ -42,7 +42,7 @@
     "jsdom": "28.1.0",
     "pg": "8.11.0",
     "redis": "5.11.0",
-    "reflect-metadata": "0.2.2",
+    "reflect-metadata": "0.1.13",
     "supertest": "7.2.2",
     "ts-morph": "27.0.2",
     "turbo": "2.8.11",
