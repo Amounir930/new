@@ -24,6 +24,9 @@ http:
       rateLimit:
         average: 500
         burst: 200
+    apex-store-csp:
+      headers:
+        contentSecurityPolicy: "default-src 'self'"
     apex-basic-auth:
       basicAuth:
         usersFile: "/etc/traefik/htpasswd"
