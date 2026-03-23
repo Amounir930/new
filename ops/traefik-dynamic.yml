@@ -1,8 +1,8 @@
+tls:
+  options:
+    default:
+      sniStrict: false
 http:
-  tls:
-    options:
-      default:
-        sniStrict: false
   middlewares:
     apex-security-headers:
       headers:
