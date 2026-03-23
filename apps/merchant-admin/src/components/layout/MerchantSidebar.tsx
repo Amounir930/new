@@ -16,16 +16,16 @@ import { getSession, type UserSession } from '@/lib/session';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Orders', href: '/orders', icon: ShoppingCart },
-  { name: 'Products', href: '/products', icon: Package },
+  { name: 'Orders', href: '/dashboard/orders', icon: ShoppingCart },
+  { name: 'Products', href: '/dashboard/products', icon: Package },
   {
     name: 'Bulk Import',
-    href: '/products/import',
+    href: '/dashboard/products/import',
     icon: UploadCloud,
   },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Customers', href: '/dashboard/customers', icon: Users },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 export function MerchantSidebar() {
