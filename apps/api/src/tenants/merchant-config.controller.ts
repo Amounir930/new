@@ -9,8 +9,13 @@ interface RequestWithLogger extends AuthenticatedRequest {
 }
 
 import { env } from '@apex/config';
-import { eq, getTenantDb, tenantConfigInStorefront } from '@apex/db';
-import { RedisRateLimitStore, TenantCacheService } from '@apex/middleware';
+import { eq, sql, tenantConfigInStorefront } from '@apex/db';
+import { 
+  RedisRateLimitStore, 
+  TenantCacheService, 
+  TenantSessionInterceptor, 
+  requireExecutor 
+} from '@apex/middleware';
 import { deleteObject } from '@apex/provisioning';
 import {
   Body,
@@ -21,6 +26,7 @@ import {
   Patch,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
@@ -32,6 +38,7 @@ const UpdateConfigSchema = z.object({
 
 @Controller('merchant/config')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
+@UseInterceptors(TenantSessionInterceptor)
 export class MerchantConfigController {
   constructor(
     private readonly redisStore: RedisRateLimitStore,
@@ -47,14 +54,8 @@ export class MerchantConfigController {
     }
     (req as RequestWithLogger).auditTenantId = tenantId;
 
-    const schemaName = req.tenantContext?.schemaName;
-    if (!schemaName) {
-      throw new Error(
-        'S1 PROTECT: Schema context missing in authenticated route'
-      );
-    }
+    const db = requireExecutor();
 
-    const { db, release } = await getTenantDb(tenantId, schemaName);
     try {
       const configEntries = await db.select().from(tenantConfigInStorefront);
 
@@ -70,8 +71,8 @@ export class MerchantConfigController {
         store_name: (config.store_name as string) || '',
         logo_url: (config.logo_url as string) || '',
       };
-    } finally {
-      await release();
+    } catch (e) {
+       throw e;
     }
   }
 
@@ -88,14 +89,7 @@ export class MerchantConfigController {
     }
     (req as RequestWithLogger).auditTenantId = tenantId;
 
-    const schemaName = req.tenantContext?.schemaName;
-    if (!schemaName) {
-      throw new Error(
-        'S1 PROTECT: Schema context missing in authenticated route'
-      );
-    }
-    const { db, release } = await getTenantDb(tenantId, schemaName);
-
+    const db = requireExecutor();
     // S2 Fix: Explicitly resolve subdomain via TenantCacheService to fix lexical scope trap
     const tenantContext = await this.tenantCache.resolveTenantById(tenantId);
     const resolvedSubdomain = tenantContext?.subdomain;
@@ -155,8 +149,8 @@ export class MerchantConfigController {
       );
 
       return { success: true };
-    } finally {
-      release();
+    } catch (e) {
+      throw e;
     }
   }
 

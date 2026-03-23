@@ -8,7 +8,6 @@ import { env } from '@apex/config';
 import {
   and,
   eq,
-  getTenantDb,
   type InferInsertModel,
   productsInStorefront,
 } from '@apex/db';
@@ -17,6 +16,8 @@ import {
   QuotaInterceptor,
   RequireFeature,
   TenantCacheService,
+  TenantSessionInterceptor,
+  requireExecutor,
 } from '@apex/middleware';
 import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
 import { S3Client } from '@aws-sdk/client-s3';
@@ -42,7 +43,7 @@ import type {
 
 @Controller('merchant/products')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
-@UseInterceptors(QuotaInterceptor)
+@UseInterceptors(QuotaInterceptor, TenantSessionInterceptor)
 export class MerchantProductsController {
   private readonly logger = new Logger(MerchantProductsController.name);
 
@@ -55,16 +56,14 @@ export class MerchantProductsController {
   @RequireFeature('ecommerce')
   async findAll(@Req() req: AuthenticatedRequest) {
     const tenantId = req.user.tenantId;
-    const { schemaName } = this.getRequiredContext(req);
-
-    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const db = requireExecutor();
     try {
       return await db
         .select()
         .from(productsInStorefront)
         .where(eq(productsInStorefront.isActive, true));
-    } finally {
-      release();
+    } catch (e) {
+      throw e;
     }
   }
 
@@ -77,7 +76,7 @@ export class MerchantProductsController {
     @Body() body: CreateProductDto
   ) {
     const tenantId = req.user.tenantId;
-    const { schemaName, subdomain } = this.getRequiredContext(req);
+    const { subdomain } = this.getRequiredContext(req);
 
     const productData: InferInsertModel<typeof productsInStorefront> = {
       ...body,
@@ -95,10 +94,10 @@ export class MerchantProductsController {
       salePrice: body.salePrice ? String(body.salePrice) : null,
     };
 
-    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const db = requireExecutor();
     try {
       // 🛡️ Mandate 3: Strict Distributed Transaction (All or Nothing)
-      const result = await db.transaction(async (tx) => {
+      const result = await db.transaction(async (tx: any) => {
         // 1. Drizzle Insert เพื่อสร้าง productId
         const [product] = await tx
           .insert(productsInStorefront)
@@ -144,8 +143,6 @@ export class MerchantProductsController {
         : new InternalServerErrorException(
             'Failed to create product because asset migration failed. Database rolled back.'
           );
-    } finally {
-      release();
     }
   }
 
@@ -186,7 +183,7 @@ export class MerchantProductsController {
     @Body() body: UpdateProductDto
   ) {
     const tenantId = req.user.tenantId;
-    const { schemaName, subdomain } = this.getRequiredContext(req);
+    const { subdomain } = this.getRequiredContext(req);
 
     const { version, basePrice, salePrice, ...updateData } = body;
 
@@ -200,7 +197,7 @@ export class MerchantProductsController {
       mappedData.name = { ar: body.nameAr || '', en: body.nameEn || '' };
     }
 
-    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const db = requireExecutor();
     try {
       const [product] = await db
         .update(productsInStorefront)
@@ -216,8 +213,8 @@ export class MerchantProductsController {
       await this.syncCache(subdomain);
 
       return { success: true, data: product };
-    } finally {
-      release();
+    } catch (e) {
+      throw e;
     }
   }
 
@@ -226,9 +223,9 @@ export class MerchantProductsController {
   @AuditLog({ action: 'PRODUCT_DELETED', entityType: 'product' })
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     const tenantId = req.user.tenantId;
-    const { schemaName, subdomain } = this.getRequiredContext(req);
+    const { subdomain } = this.getRequiredContext(req);
 
-    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const db = requireExecutor();
     try {
       await db
         .update(productsInStorefront)
@@ -241,8 +238,8 @@ export class MerchantProductsController {
       await deletePrefix(subdomain, `public/products/${id}`);
 
       return { success: true };
-    } finally {
-      release();
+    } catch (e) {
+      throw e;
     }
   }
 

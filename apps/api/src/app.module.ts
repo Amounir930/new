@@ -16,6 +16,7 @@ import {
   RateLimitModule,
   TenantCacheModule,
   TenantIsolationMiddleware,
+  TenantSessionInterceptor,
 } from '@apex/middleware';
 import {
   type MiddlewareConsumer,
@@ -78,6 +79,10 @@ import { TenantsModule } from './tenants/tenants.module';
     },
     {
       provide: APP_INTERCEPTOR,
+      useClass: TenantSessionInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
       useClass: QuotaInterceptor,
     },
   ],
@@ -127,6 +132,9 @@ export class AppModule implements NestModule {
         { path: 'robots.txt', method: RequestMethod.GET },
         { path: '/', method: RequestMethod.GET }
       )
-      .forRoutes('*');
+      .forRoutes(
+        { path: 'merchant/(.*)', method: RequestMethod.ALL },
+        '*'
+      );
   }
 }

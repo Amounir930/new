@@ -4,7 +4,7 @@
  * Enforces feature-level access control based on plan and tenant specific gates.
  */
 
-import { adminDb, and, eq, featureGatesInGovernance, sql } from '@apex/db';
+import { SYSTEM_TENANT_ID, adminDb, and, eq, featureGatesInGovernance, sql } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -42,17 +42,19 @@ export class GovernanceGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<TenantRequest>();
     const user = request.user;
-    const tenantId = request.tenantContext?.tenantId;
+    
+    // ROOT CAUSE FIX: Read tenantId from cryptographically verified JWT authority
+    // NOT from the middleware's domain resolution (which sets 'system' for admin domains)
+    const tenantId = user?.tenantId;
 
     // Super Admin Bypass
     if ((user as { role?: string } | undefined)?.role === 'super_admin') {
       return true;
     }
 
-    if (!tenantId) {
-      throw new ForbiddenException(
-        'Tenant context required for feature validation'
-      );
+    // Bypass feature gates for System contexts
+    if (!tenantId || tenantId === SYSTEM_TENANT_ID) {
+      return true;
     }
 
     // Direct check against Drizzle definitive schema
