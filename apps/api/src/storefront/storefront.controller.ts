@@ -43,6 +43,7 @@ type ProductsQueryDto = z.infer<typeof ProductsQuerySchema>;
 export class StorefrontController {
   constructor(
     private readonly storefrontService: StorefrontService,
+    @Inject('TENANT_CACHE_SERVICE')
     private readonly tenantCache: TenantCacheService
   ) {}
 
