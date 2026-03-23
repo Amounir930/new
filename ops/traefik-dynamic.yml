@@ -1,68 +1,39 @@
 http:
   routers:
-    apex-super-admin-dev:
-      rule: "Host(`super-admin.60sec.shop`)"
-      entryPoints:
-        - websecure
-      service: apex-super-admin-dev
-      tls:
-        certResolver: letsencrypt
-      priority: 20000
-
-    apex-merchant-admin-dev:
-      rule: "Host(`admin.60sec.shop`)"
-      entryPoints:
-        - websecure
-      service: apex-merchant-admin-dev
-      tls:
-        certResolver: letsencrypt
-      priority: 20000
-
-    apex-storage-admin-dev:
-      rule: "Host(`storage-admin.60sec.shop`)"
-      entryPoints:
-        - websecure
-      service: apex-storage-admin-dev
-      tls:
-        certResolver: letsencrypt
-      priority: 20000
-
-    apex-api-dev:
+    apex-api:
       rule: "Host(`api.60sec.shop`)"
+      service: apex-api
       entryPoints:
         - websecure
-      service: apex-api-dev
       tls:
         certResolver: letsencrypt
-      priority: 20000
 
-    apex-storefront-dev:
-      rule: "HostRegexp(`{host:.+}.60sec.shop`) || Host(`60sec.shop`)"
+    apex-admin:
+      rule: "Host(`admin.60sec.shop`)"
+      service: apex-admin
       entryPoints:
         - websecure
-      service: apex-storefront-dev
       tls:
         certResolver: letsencrypt
-      priority: 20000
+
+    apex-storefront:
+      rule: "HostRegexp(`{subdomain:.+}.60sec.shop`) || Host(`60sec.shop`)"
+      service: apex-storefront
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
 
   services:
-    apex-api-dev:
+    apex-api:
       loadBalancer:
         servers:
           - url: "http://apex-api-dev:3000"
-    apex-super-admin-dev:
-      loadBalancer:
-        servers:
-          - url: "http://apex-super-admin-dev:3001"
-    apex-merchant-admin-dev:
+    apex-admin:
       loadBalancer:
         servers:
           - url: "http://apex-merchant-admin-dev:3001"
-    apex-storefront-dev:
+    apex-storefront:
       loadBalancer:
         servers:
           - url: "http://apex-storefront-dev:3002"
-    apex-storage-admin-dev:
-      loadBalancer:
-        servers:
-          - url: "http://apex-storage-admin-dev:3001"

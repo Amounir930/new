@@ -17,12 +17,15 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=admin@60sec.shop"
       - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
+      - "--providers.file.filename=/traefik-dynamic.yml"
+      - "--providers.file.watch=true"
     environment:
       - CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}
       - DOCKER_API_VERSION=1.24
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./ops/acme.json:/acme.json
+      - ./ops/traefik-dynamic.yml:/traefik-dynamic.yml
     ports:
       - "80:80"
       - "443:443"
