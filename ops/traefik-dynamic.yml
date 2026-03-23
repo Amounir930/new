@@ -22,7 +22,7 @@ http:
       rule: "Host(`storage-admin.60sec.shop`)"
       entryPoints:
         - websecure
-      service: apex-super-admin-dev
+      service: apex-storage-admin-dev
       tls:
         certResolver: letsencrypt
       priority: 20000
@@ -49,16 +49,20 @@ http:
     apex-api-dev:
       loadBalancer:
         servers:
-          - url: "http://172.19.0.15:3000"
+          - url: "http://apex-api-dev:3000"
     apex-super-admin-dev:
       loadBalancer:
         servers:
-          - url: "http://172.19.0.14:3001"
+          - url: "http://apex-super-admin-dev:3001"
     apex-merchant-admin-dev:
       loadBalancer:
         servers:
-          - url: "http://172.19.0.12:3001"
+          - url: "http://apex-merchant-admin-dev:3001"
     apex-storefront-dev:
       loadBalancer:
         servers:
-          - url: "http://172.19.0.13:3002"
+          - url: "http://apex-storefront-dev:3002"
+    apex-storage-admin-dev:
+      loadBalancer:
+        servers:
+          - url: "http://apex-storage-admin-dev:3001"
