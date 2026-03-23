@@ -107,6 +107,7 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'none'"],
+          connectSrc: ["'self'", 'https://*.60sec.shop', 'https://api.60sec.shop'],
           frameAncestors: ["'none'"], // Item 41: Prevent clickjacking
           baseUri: ["'none'"],
           formAction: ["'none'"],
