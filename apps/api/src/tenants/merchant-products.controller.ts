@@ -16,7 +16,7 @@ import {
   CheckQuota,
   QuotaInterceptor,
   RequireFeature,
-  type TenantCacheService,
+  TenantCacheService,
 } from '@apex/middleware';
 import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
 import { S3Client } from '@aws-sdk/client-s3';
