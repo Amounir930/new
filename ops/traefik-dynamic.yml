@@ -4,6 +4,7 @@ http:
       rule: "Host(`api.60sec.shop`)"
       service: apex-api
       entryPoints:
+        - web
         - websecure
       tls:
         certResolver: letsencrypt
@@ -12,6 +13,7 @@ http:
       rule: "Host(`admin.60sec.shop`)"
       service: apex-admin
       entryPoints:
+        - web
         - websecure
       tls:
         certResolver: letsencrypt
@@ -20,6 +22,7 @@ http:
       rule: "HostRegexp(`{subdomain:.+}.60sec.shop`) || Host(`60sec.shop`)"
       service: apex-storefront
       entryPoints:
+        - web
         - websecure
       tls:
         certResolver: letsencrypt
