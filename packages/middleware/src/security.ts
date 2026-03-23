@@ -20,7 +20,7 @@ export const securityHeaders = {
     "style-src 'self' 'unsafe-inline'", // CSS inline is lower risk
     "img-src 'self' data: https:",
     "font-src 'self'",
-    "connect-src 'self' https://api.apex.com wss://localhost:*", // wss for HMR
+    "connect-src 'self' https://*.60sec.shop wss://localhost:*", // wss for HMR
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
