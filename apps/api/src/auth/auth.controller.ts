@@ -67,6 +67,7 @@ export class AuthController {
             id: 'super-admin-id',
             email: email,
             tenantId: 'system',
+            subdomain: 'admin',
             role: 'super_admin',
           },
           response
@@ -111,6 +112,7 @@ export class AuthController {
             id: userRecord.id,
             email: email,
             tenantId: ownedTenant.id,
+            subdomain: ownedTenant.subdomain,
             role: 'tenant_admin',
           },
           response

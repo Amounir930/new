@@ -15,6 +15,7 @@ import {
   tenantStorage,
 } from './connection-context';
 import type { TenantRequest } from './tenant-isolation.middleware';
+import { toSchemaName } from './utils';
 
 /**
  * 🛡️ Protocol Delta Guard: Safe type assertion for Drizzle executors
@@ -31,27 +32,37 @@ export class TenantSessionInterceptor implements NestInterceptor {
     next: CallHandler
   ): Promise<Observable<unknown>> {
     const http = context.switchToHttp();
-    const req = http.getRequest<TenantRequest>();
+    const req = http.getRequest<TenantRequest & { user?: any }>();
 
     const baseContext = req.tenantContext;
 
-    // 1. Bypass if no tenant context (system/auth routes)
-    if (!baseContext || baseContext.tenantId === SYSTEM_TENANT_ID) {
+    // S2 Lean Fix: Prioritize JWT authority over Domain authority if domain is 'system'
+    const isSystemContext = baseContext?.tenantId === SYSTEM_TENANT_ID;
+    const hasMerchantIdentity = req.user?.tenantId && req.user.tenantId !== SYSTEM_TENANT_ID;
+
+    // 1. Bypass only if truly no tenant identity is possible
+    if (!baseContext || (isSystemContext && !hasMerchantIdentity)) {
       return next.handle();
     }
 
-    // 2. Establish Database Session
+    // 2. Resolve Active Identities (Lean Upgrade)
+    const activeTenantId = hasMerchantIdentity ? req.user.tenantId : baseContext.tenantId;
+    const activeSchema = hasMerchantIdentity && req.user.subdomain 
+      ? toSchemaName(req.user.subdomain) 
+      : baseContext.schemaName;
+
+    // 3. Establish Database Session
     const client = await adminPool.connect();
 
     try {
       // S2/Arch-Core-04: Strict Tenant Isolation in Session
       await client.query("SELECT set_config('app.current_tenant', $1, true)", [
-        baseContext.tenantId,
+        activeTenantId,
       ]);
 
-      const safeSchema = baseContext.schemaName.replace(/[^a-z0-9_]/g, '');
-      if (!safeSchema.startsWith('tenant_')) {
-        throw new Error('S2 Security Violation: Invalid schema routing target');
+      const safeSchema = activeSchema.replace(/[^a-z0-9_]/g, '');
+      if (!safeSchema.startsWith('tenant_') && safeSchema !== 'public') {
+        throw new Error(`S2 Security Violation: Invalid schema routing target (${safeSchema})`);
       }
 
       await client.query(`SET search_path TO "${safeSchema}", public`);

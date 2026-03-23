@@ -8,6 +8,7 @@ export interface JwtPayload {
   sub: string;
   email: string;
   tenantId: string; // Item 21: Mandatory
+  subdomain?: string; // S2: Needed for lean schema resolution
   role?: string;
   jti: string; // Item 24: Mandatory replay protection
   dfp?: string; // Item 26: Device Fingerprint
@@ -17,6 +18,7 @@ export interface AuthUser {
   id: string;
   email: string;
   tenantId: string; // Item 21: Mandatory
+  subdomain?: string; // S2: Needed for lean schema resolution
   role?: string;
   sessionId?: string; // For rotation tracking
 }
@@ -77,6 +79,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
+      subdomain: user.subdomain,
       role: user.role,
       jti: user.sessionId || crypto.randomUUID(), // Item 24/25: Bind to sessionId if available
       dfp: deviceFingerprint, // Item 26: Fingerprinting
@@ -109,6 +112,7 @@ export class AuthService {
       id: payload.sub,
       email: payload.email,
       tenantId: payload.tenantId,
+      subdomain: payload.subdomain,
       role: payload.role,
     };
   }

@@ -10,6 +10,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { SYSTEM_TENANT_ID } from '@apex/db';
 import type { Request } from 'express';
 
 export interface TenantRequest extends Request {
@@ -48,7 +49,7 @@ export class TenantJwtMatchGuard implements CanActivate {
     // S2 Sovereignty Fix: Allow 'system' context ONLY for authenticated Tenant Admins
     // operating from the centralized control plane (admin.60sec.shop)
     if (
-      contextTenantId === 'system' &&
+      contextTenantId === SYSTEM_TENANT_ID &&
       jwtTenantId &&
       userRole === 'tenant_admin'
     ) {
