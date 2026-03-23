@@ -140,6 +140,18 @@ export async function proxy(request: NextRequest) {
     request: { headers: requestHeaders },
   });
   response.headers.set('Content-Security-Policy', cspHeader);
+  // S11: Session Management (Merged from middleware.ts)
+  let sessionId = request.cookies.get('cart_sid')?.value;
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    response.cookies.set('cart_sid', sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+    });
+  }
+
   return response;
 }
 
