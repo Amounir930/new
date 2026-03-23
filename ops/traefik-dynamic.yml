@@ -68,45 +68,4 @@ http:
       redirectRegex:
         regex: "^https://api.60sec.shop/?$$"
         replacement: "https://api.60sec.shop/api/v1/health"
-  routers:
-    apex-api:
-      rule: "Host(`api.60sec.shop`)"
-      service: apex-api
-      entryPoints:
-        - web
-        - websecure
-      tls:
-        certResolver: letsencrypt
-
-    apex-admin:
-      rule: "Host(`admin.60sec.shop`)"
-      service: apex-admin
-      entryPoints:
-        - web
-        - websecure
-      tls:
-        certResolver: letsencrypt
-
-    apex-storefront:
-      rule: "HostRegexp(`{subdomain:.+}.60sec.shop`) || Host(`60sec.shop`)"
-      priority: 3000
-      service: apex-storefront
-      entryPoints:
-        - web
-        - websecure
-      tls:
-        certResolver: letsencrypt
-
-  services:
-    apex-api:
-      loadBalancer:
-        servers:
-          - url: "http://api:3000"
-    apex-admin:
-      loadBalancer:
-        servers:
-          - url: "http://merchant-admin:3001"
-    apex-storefront:
-      loadBalancer:
-        servers:
-          - url: "http://storefront:3002"
+  # Static routers and services removed to prioritize Docker provider labels.
