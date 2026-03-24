@@ -119,6 +119,88 @@ http:
       tls:
         certResolver: letsencrypt
 
+    # MinIO Storage
+    storage-http:
+      rule: "Host(`storage.60sec.shop`)"
+      entryPoints:
+        - web
+      service: storage-svc
+    storage-https:
+      rule: "Host(`storage.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: storage-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - apex-storage-cors@file
+
+    # MinIO Console
+    storage-admin-http:
+      rule: "Host(`storage-admin.60sec.shop`)"
+      entryPoints:
+        - web
+      service: storage-admin-svc
+    storage-admin-https:
+      rule: "Host(`storage-admin.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: storage-admin-svc
+      tls:
+        certResolver: letsencrypt
+
+    # Database (Adminer)
+    db-http:
+      rule: "Host(`db.60sec.shop`)"
+      entryPoints:
+        - web
+      service: db-svc
+    db-https:
+      rule: "Host(`db.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: db-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - apex-cf-allowlist@file
+        - apex-basic-auth@file
+
+    # Traefik Dashboard
+    traefik-http:
+      rule: "Host(`traefik.60sec.shop`)"
+      entryPoints:
+        - web
+      service: traefik-svc
+      middlewares:
+        - apex-dash-redirect@file
+    traefik-https:
+      rule: "Host(`traefik.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: traefik-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - apex-basic-auth@file
+
+    # Storefront (Main & Subdomains)
+    store-http:
+      rule: "Host(`60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      entryPoints:
+        - web
+      service: store-svc
+    store-https:
+      rule: "Host(`60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      entryPoints:
+        - websecure
+      service: store-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - apex-store-csp@file
+        - apex-global-ratelimit@file
+
   services:
     merchant-admin-svc:
       loadBalancer:
@@ -133,3 +215,23 @@ http:
         servers:
           - url: "http://ops-api-1:3000"
           - url: "http://ops-api-2:3000"
+    storage-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-minio:9000"
+    storage-admin-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-minio:9001"
+    db-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-adminer:8080"
+    traefik-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-traefik-v2:8080"
+    store-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-store:3002"
