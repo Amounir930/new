@@ -79,16 +79,25 @@ http:
   routers:
     merchant-admin:
       rule: "Host(`admin.60sec.shop`)"
+      entryPoints:
+        - web
+        - websecure
       service: merchant-admin-svc
       tls:
         certResolver: letsencrypt
     super-admin:
       rule: "Host(`super-admin.60sec.shop`)"
+      entryPoints:
+        - web
+        - websecure
       service: super-admin-svc
       tls:
         certResolver: letsencrypt
     api-direct:
       rule: "Host(`api.60sec.shop`)"
+      entryPoints:
+        - web
+        - websecure
       service: api-svc
       tls:
         certResolver: letsencrypt
