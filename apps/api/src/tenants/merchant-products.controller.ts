@@ -43,7 +43,6 @@ import type {
 
 @Controller('merchant/products')
 @UseGuards(JwtAuthGuard, TenantJwtMatchGuard)
-@UseInterceptors(QuotaInterceptor, TenantSessionInterceptor)
 export class MerchantProductsController {
   private readonly logger = new Logger(MerchantProductsController.name);
 
