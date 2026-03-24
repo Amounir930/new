@@ -529,7 +529,7 @@ services:
   # Traefik (Reverse Proxy)
   # ═══════════════════════════════════════════════════════════════
   traefik:
-    image: traefik:v3.1
+    image: traefik:2.11.10
     container_name: apex-traefik
     user: root
     restart: always
