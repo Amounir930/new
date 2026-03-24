@@ -533,15 +533,6 @@ services:
     container_name: apex-traefik
     user: root
     restart: always
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - NET_BIND_SERVICE
-    depends_on:
-      docker-proxy:
-        condition: service_healthy
     command:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
@@ -550,22 +541,16 @@ services:
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedbydefault=true"
       - "--providers.docker.network=apex-public"
-      - "--providers.file.directory=/etc/traefik/dynamic"
-      - "--providers.file.watch=true"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
-      - "--certificatesresolvers.letsencrypt.acme.email=${CF_API_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
-      - "--accesslog=true"
-      - "--accesslog.format=json"
-      - "--accesslog.filepath=/var/log/traefik/access.log"
-      - "--metrics.prometheus=true"
-      - "--ping=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
-      - "--entrypoints.websecure.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15,104.16.0.0/13,104.24.0.0/14,172.64.0.0/13,131.0.72.0/22,188.114.96.0/20,190.93.240.0/20,197.234.240.0/22,198.41.128.0/17,162.158.0.0/15"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.letsencrypt.acme.email=${CF_API_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme.json"
+      - "--accesslog=true"
+      - "--metrics.prometheus=true"
     ports:
       - "80:80"
       - "443:443"
@@ -575,9 +560,9 @@ services:
       - "CLOUDFLARE_DNS_API_TOKEN=${CF_DNS_API_TOKEN}"
       - "CLOUDFLARE_ZONE_API_TOKEN=${CF_ZONE_ID}"
     volumes:
-      # HTpasswd converted to docker secret where applicable, but for Traefik we can mount directly securely
       - ./htpasswd:/etc/traefik/htpasswd:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./acme.json:/etc/traefik/acme.json
       - letsencrypt_data:/letsencrypt
       - ./logs/traefik:/var/log/traefik
       - ./traefik-dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
