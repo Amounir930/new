@@ -532,7 +532,7 @@ services:
   # Traefik (Reverse Proxy)
   # ═══════════════════════════════════════════════════════════════
   traefik:
-    image: traefik:v3.1
+    image: traefik:v2.10
     container_name: apex-traefik-v2
     user: root
     restart: always
@@ -540,10 +540,8 @@ services:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
-      - "--providers.docker.exposedbydefault=true"
-      - "--providers.docker.network=apex-public"
+      - "--providers.file.directory=/etc/traefik/dynamic/"
+      - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
@@ -551,9 +549,7 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
       - "--certificatesresolvers.letsencrypt.acme.email=${CF_API_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme.json"
-      - "--accesslog=true"
-      - "--metrics.prometheus=true"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
     ports:
       - "80:80"
       - "443:443"
@@ -565,21 +561,13 @@ services:
     volumes:
       - ./htpasswd:/etc/traefik/htpasswd:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./acme.json:/etc/traefik/acme.json
-      - letsencrypt_data:/letsencrypt
-      - ./logs/traefik:/var/log/traefik
+      - ./acme.json:/acme.json
       - ./traefik-dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik-middlewares.rule=Host(`localhost`)"
-      - "traefik.http.routers.traefik-middlewares.entrypoints=web"
-      - "traefik.http.routers.traefik-middlewares.service=api@internal"
-      - "traefik.http.routers.traefikdash.rule=Host(`traefik.60sec.shop`)"
-      - "traefik.http.routers.traefikdash.priority=6000"
-      - "traefik.http.routers.traefikdash.service=api@internal"
-      - "traefik.http.routers.traefikdash.entrypoints=websecure"
-      - "traefik.http.routers.traefikdash.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.traefikdash.middlewares=apex-cf-allowlist@file,apex-dash-redirect@file,apex-basic-auth@file"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     deploy:
       resources:
         limits:
