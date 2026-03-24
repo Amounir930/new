@@ -76,8 +76,9 @@ CREATE TYPE "public"."consent_channel" AS ENUM ('email', 'sms', 'push', 'whatsap
 CREATE TYPE "public"."tenant_plan" AS ENUM ('free', 'basic', 'pro', 'enterprise');
 -- Create enum type "tenant_status"
 CREATE TYPE "public"."tenant_status" AS ENUM ('active', 'suspended', 'pending', 'archived');
--- Create enum type "tenant_niche"
 CREATE TYPE "public"."tenant_niche" AS ENUM ('retail', 'wellness', 'education', 'services', 'hospitality', 'real-estate', 'creative');
+-- Create enum type "niche_type"
+CREATE TYPE "public"."niche_type" AS ENUM ('retail', 'wellness', 'education', 'services', 'hospitality', 'real_estate', 'creative');
 -- Create enum type "order_status"
 CREATE TYPE "public"."order_status" AS ENUM ('draft', 'awaiting_approval', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned');
 -- Create enum type "payment_status"
@@ -862,6 +863,7 @@ CREATE TABLE "storefront"."products" (
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   "published_at" timestamptz NULL,
   "deleted_at" timestamptz NULL,
+  "niche" "public"."niche_type" NOT NULL DEFAULT 'retail',
   "base_price" numeric(12,4) NOT NULL,
   "sale_price" numeric(12,4) NULL,
   "cost_price" numeric(12,4) NULL,

@@ -31,7 +31,7 @@ http:
       basicAuth:
         usersFile: "/etc/traefik/htpasswd"
     apex-cf-allowlist:
-      ipAllowList:
+      ipWhiteList:
         sourceRange:
           - "173.245.48.0/20"
           - "103.21.244.0/22"
