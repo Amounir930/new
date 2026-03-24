@@ -1,4 +1,4 @@
-import { adminPool, SYSTEM_TENANT_ID } from '@apex/db';
+import { tenantPool, SYSTEM_TENANT_ID } from '@apex/db';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -20,9 +20,8 @@ import { toSchemaName } from './utils';
 /**
  * 🛡️ Protocol Delta Guard: Safe type assertion for Drizzle executors
  */
-function toExecutor(db: unknown): DrizzleExecutor {
-  const isExecutor = (d: unknown): d is DrizzleExecutor => true;
-  return isExecutor(db) ? db : ({} as DrizzleExecutor);
+function toExecutor(db: any): DrizzleExecutor {
+  return db as DrizzleExecutor;
 }
 
 @Injectable()
@@ -52,7 +51,8 @@ export class TenantSessionInterceptor implements NestInterceptor {
       : baseContext.schemaName;
 
     // 3. Establish Database Session
-    const client = await adminPool.connect();
+    // We use tenantPool (50 max) instead of adminPool (10 max) for high-concurrency merchant requests
+    const client = await tenantPool.connect();
 
     try {
       // S2/Arch-Core-04: Strict Tenant Isolation in Session
@@ -66,42 +66,41 @@ export class TenantSessionInterceptor implements NestInterceptor {
       }
 
       await client.query(`SET search_path TO "${safeSchema}", public`);
-      await client.query("SET statement_timeout = '10s'");
+      await client.query("SET statement_timeout = '20s'");
 
       const scopedDb = drizzle(client);
       const tenantContext: TenantContext = {
         ...baseContext,
+        tenantId: activeTenantId,
+        schemaName: safeSchema,
         executor: toExecutor(scopedDb),
       };
 
-      // 3. Wrap execution in AsyncLocalStorage scope via Observable wrapper
-      // This ensures that the context is maintained across all async boundaries
-      // during the stream execution (including interceptors and controllers).
-      return new Observable((subscriber) => {
-        tenantStorage.run(tenantContext, () => {
-          next.handle().subscribe(subscriber);
-        });
-      }).pipe(
-        finalize(async () => {
-          try {
-            // S2: Robust cleanup - ROLLBACK ensures we aren't stuck in a failed transaction
-            await client.query('ROLLBACK').catch(() => {});
-            await client.query(`
-              RESET app.current_tenant_id;
-              RESET app.role;
-              RESET search_path;
-              RESET ALL;
-            `);
-            client.release();
-          } catch (err) {
-            process.stdout.write(`S2 DB Cleanup Error: ${String(err)}\n`);
-            client.release(true);
-          }
-        })
-      );
+      // 4. Wrap execution in AsyncLocalStorage scope
+      // By wrapping the return of next.handle(), we ensure the controller execution
+      // starts within the context and remains sticky through its async lifecycle.
+      return tenantStorage.run(tenantContext, () => {
+        return next.handle().pipe(
+          finalize(async () => {
+            try {
+              // S2: Robust cleanup - ROLLBACK ensures we aren't stuck in a failed transaction
+              await client.query('ROLLBACK').catch(() => {});
+              await client.query(`
+                RESET app.current_tenant_id;
+                RESET app.role;
+                RESET search_path;
+              `);
+            } finally {
+              client.release();
+            }
+          })
+        );
+      });
     } catch (error) {
-      await client.query('ROLLBACK').catch(() => {});
-      client.release();
+      if (client) {
+        await client.query('ROLLBACK').catch(() => {});
+        client.release();
+      }
 
       throw new InternalServerErrorException(
         error instanceof Error
