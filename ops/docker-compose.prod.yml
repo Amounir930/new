@@ -540,8 +540,12 @@ services:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--api.dashboard=true"
-      - "--providers.file.directory=/etc/traefik/dynamic/"
+      - "--providers.file.filename=/etc/traefik/traefik-dynamic.yml"
       - "--providers.file.watch=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.network=apex-public"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
@@ -562,7 +566,7 @@ services:
       - ./htpasswd:/etc/traefik/htpasswd:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./acme.json:/acme.json
-      - ./traefik-dynamic.yml:/etc/traefik/dynamic/dynamic.yml:ro
+      - ./traefik-dynamic.yml:/etc/traefik/traefik-dynamic.yml:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ping || exit 1"]
       interval: 30s
