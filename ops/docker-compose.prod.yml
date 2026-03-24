@@ -488,7 +488,7 @@ services:
   # Docker Socket Proxy
   # ═══════════════════════════════════════════════════════════════
   docker-proxy:
-    image: tecnativa/docker-socket-proxy:0.3
+    image: tecnativa/docker-socket-proxy:latest
     container_name: apex-docker-proxy
     restart: always
     volumes:
