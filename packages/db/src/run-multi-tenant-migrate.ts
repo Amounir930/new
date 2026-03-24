@@ -18,7 +18,8 @@ if (!DATABASE_URL) {
   process.exit(1);
 }
 
-const DRIZZLE_DIR = join(import.meta.dir, '..', 'drizzle');
+// Support override for read-only containers
+const DRIZZLE_DIR = process.env.DRIZZLE_DIR || join(import.meta.dir, '..', 'drizzle');
 
 /**
  * Get ordered list of SQL migration files
