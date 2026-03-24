@@ -54,7 +54,7 @@ git pull origin refactor/single-source-env
 rm -rf ops/secrets/ 2>/dev/null || true
 
 # Execution Phase: Docker Compose atomic restart (Requires sudo for socket access)
-sudo docker compose -f ops/docker-compose.prod.yml up -d --build --force-recreate
+sudo docker compose -f ops/docker-compose.prod.yml up -d --build --no-cache --force-recreate
 
 echo ""
 echo "🚀 GATE AUTHORIZED: All services synchronized with .env"
