@@ -340,6 +340,7 @@ services:
       OTEL_SERVICE_NAME: apex-merchant-admin
     networks:
       - apex-public
+      - apex-internal
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -399,6 +400,7 @@ services:
       OTEL_SERVICE_NAME: apex-super-admin
     networks:
       - apex-public
+      - apex-internal
     security_opt:
       - no-new-privileges:true
     cap_drop:
