@@ -71,4 +71,51 @@ http:
       redirectRegex:
         regex: "^https://api.60sec.shop/?$$"
         replacement: "https://api.60sec.shop/api/v1/health"
-  # Static routers and services removed to prioritize Docker provider labels.
+  # ═══════════════════════════════════════════════════════════════
+  # DECOUPLING LAYER: Static Routers & Services
+  # Bypasses Docker Provider handshake bugs on Engine 29.3
+  # ═══════════════════════════════════════════════════════════════
+
+  routers:
+    # Merchant Admin Portal
+    merchant-admin:
+      rule: "Host(`admin.60sec.shop`)"
+      priority: 4000
+      entryPoints: ["websecure"]
+      service: merchant-admin-svc
+      tls:
+        certResolver: letsencrypt
+
+    # Super Admin Portal
+    super-admin:
+      rule: "Host(`super-admin.60sec.shop`)"
+      priority: 5000
+      entryPoints: ["websecure"]
+      service: super-admin-svc
+      tls:
+        certResolver: letsencrypt
+
+    # API Backend (Direct)
+    api-direct:
+      rule: "Host(`api.60sec.shop`)"
+      priority: 6000
+      entryPoints: ["websecure"]
+      service: api-svc
+      middlewares: ["apex-api-version-bridge"]
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    merchant-admin-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-merchant-admin:3001"
+    super-admin-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-super-admin:3001"
+    api-svc:
+      loadBalancer:
+        servers:
+          - url: "http://ops-api-1:3000"
+          - url: "http://ops-api-2:3000"
