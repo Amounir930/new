@@ -552,7 +552,7 @@ services:
       - "--providers.file.watch=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${CF_API_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--accesslog=true"
       - "--accesslog.format=json"
@@ -568,9 +568,9 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      - "CLOUDFLARE_EMAIL=${CLOUDFLARE_EMAIL}"
-      - "CLOUDFLARE_DNS_API_TOKEN=${CLOUDFLARE_DNS_API_TOKEN}"
-      - "CLOUDFLARE_ZONE_API_TOKEN=${CLOUDFLARE_ZONE_API_TOKEN}"
+      - "CLOUDFLARE_EMAIL=${CF_API_EMAIL}"
+      - "CLOUDFLARE_DNS_API_TOKEN=${CF_DNS_API_TOKEN}"
+      - "CLOUDFLARE_ZONE_API_TOKEN=${CF_ZONE_ID}"
     volumes:
       # HTpasswd converted to docker secret where applicable, but for Traefik we can mount directly securely
       - ./htpasswd:/etc/traefik/htpasswd:ro
