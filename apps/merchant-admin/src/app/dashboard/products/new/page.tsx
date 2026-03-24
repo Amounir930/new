@@ -1,25 +1,26 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { ProductForm } from '@/components/products/product-form';
 import { apiFetch } from '@/lib/api';
 
 export default function NewProductPage() {
   const router = useRouter();
 
-  const handleCreateProduct = async (data: unknown) => {
+  const handleCreateProduct = async (data: any) => {
+    const toastId = toast.loading('Creating product...');
     try {
       await apiFetch('/merchant/products', {
         method: 'POST',
         body: JSON.stringify(data),
       });
 
-      // toast.success('Product created successfully');
+      toast.success('Product created successfully', { id: toastId });
       router.push('/dashboard/products');
       router.refresh();
-    } catch (_error: unknown) {
-      /* 'Failed to create product:', error */
-      // toast.error(error.message || 'Failed to create product');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create product', { id: toastId });
     }
   };
 

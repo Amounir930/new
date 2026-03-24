@@ -42,6 +42,8 @@ import { NicheAttributes } from './niche-attributes';
 
 // Schema is now imported from @apex/validation
 
+import { toast } from 'sonner';
+
 type ProductFormData = CreateProductInput;
 
 export function ProductForm({
@@ -53,6 +55,7 @@ export function ProductForm({
 }) {
   const [loading, setLoading] = useState(false);
   const [niche, setNiche] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchNiche = async () => {
@@ -108,8 +111,14 @@ export function ProductForm({
     }
   };
 
+  const onInvalid = () => {
+    toast.error('Please check the form for errors');
+    // Log errors for easier debugging in dev
+    console.warn('Form Validation Failed:', errors);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-12 pb-24">
+    <form onSubmit={handleSubmit(onFormSubmit, onInvalid)} className="space-y-12 pb-24">
       {/* Sticky Header for Actions */}
       <div className="sticky top-0 z-50 -mx-4 px-4 py-4 bg-background/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between transition-all">
         <div>
@@ -145,7 +154,7 @@ export function ProductForm({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* Navigation Sidebar (ScrollSpy-style hints) */}
+        {/* Navigation Sidebar */}
         <div className="hidden lg:block lg:col-span-3 space-y-4 sticky top-32 h-fit">
           <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 px-4">Sections</p>
           <nav className="flex flex-col gap-1">
@@ -169,18 +178,18 @@ export function ProductForm({
               <Package className="h-5 w-5 text-indigo-400" />
               <h2 className="text-xl font-bold">Primary Information</h2>
             </div>
-            <Card className="border-white/10 bg-muted/20 backdrop-blur-sm overflow-hidden border-none shadow-2xl">
+            <Card className="border-white/10 bg-muted/20 backdrop-blur-sm border-none shadow-2xl">
               <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <Label htmlFor="nameEn" className="text-sm font-semibold opacity-70">English Name</Label>
                   <Input
                     id="nameEn"
                     {...register('nameEn')}
-                    className="bg-background/50 h-12 rounded-xl border-white/5 focus:border-indigo-500/50 transition-all"
+                    className={`bg-background/50 h-12 rounded-xl border-white/5 focus:border-indigo-500/50 transition-all ${errors.nameEn ? 'border-red-500/50 hover:border-red-500' : ''}`}
                     placeholder="e.g. Wireless Headset"
                   />
                   {errors.nameEn && (
-                    <p className="text-xs text-destructive">{errors.nameEn.message}</p>
+                    <p className="text-xs text-red-500 font-medium animate-in fade-in slide-in-from-top-1">{errors.nameEn.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -188,12 +197,12 @@ export function ProductForm({
                   <Input
                     id="nameAr"
                     {...register('nameAr')}
-                    className="bg-background/50 h-12 rounded-xl border-white/5 text-right focus:border-indigo-500/50 transition-all"
+                    className={`bg-background/50 h-12 rounded-xl border-white/5 text-right focus:border-indigo-500/50 transition-all ${errors.nameAr ? 'border-red-500/50 hover:border-red-500' : ''}`}
                     dir="rtl"
                     placeholder="مثلاً: سماعة لاسلكية"
                   />
                   {errors.nameAr && (
-                    <p className="text-xs text-destructive">{errors.nameAr.message}</p>
+                    <p className="text-xs text-red-500 font-medium animate-in fade-in slide-in-from-top-1">{errors.nameAr.message}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -201,18 +210,24 @@ export function ProductForm({
                   <Input
                     id="slug"
                     {...register('slug')}
-                    className="bg-background/50 h-12 rounded-xl border-white/5 focus:border-indigo-500/50 transition-all"
+                    className={`bg-background/50 h-12 rounded-xl border-white/5 focus:border-indigo-500/50 transition-all ${errors.slug ? 'border-red-500/50 hover:border-red-500' : ''}`}
                     placeholder="wireless-headset"
                   />
+                  {errors.slug && (
+                    <p className="text-xs text-red-500 font-medium animate-in fade-in slide-in-from-top-1">{errors.slug.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="sku" className="text-sm font-semibold opacity-70">SKU</Label>
                   <Input
                     id="sku"
                     {...register('sku')}
-                    className="bg-background/50 h-12 rounded-xl border-white/5 focus:border-indigo-500/50 transition-all"
+                    className={`bg-background/50 h-12 rounded-xl border-white/5 focus:border-indigo-500/50 transition-all ${errors.sku ? 'border-red-500/50 hover:border-red-500' : ''}`}
                     placeholder="WH-1000-XM5"
                   />
+                  {errors.sku && (
+                    <p className="text-xs text-red-500 font-medium animate-in fade-in slide-in-from-top-1">{errors.sku.message}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -227,14 +242,17 @@ export function ProductForm({
             <Card className="border-white/10 bg-muted/20 backdrop-blur-sm border-none shadow-2xl">
               <CardContent className="p-8 grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div className="space-y-2">
-                  <Label htmlFor="basePrice" className="text-sm font-semibold opacity-70">Base Price ($)</Label>
+                  <Label htmlFor="basePrice" className="text-sm font-semibold opacity-70">Price ($)</Label>
                   <Input
                     id="basePrice"
                     type="number"
                     step="0.01"
-                    {...register('basePrice')}
-                    className="bg-background/50 h-12 rounded-xl border-white/5"
+                    {...register('basePrice', { valueAsNumber: true })}
+                    className={`bg-background/50 h-12 rounded-xl border-white/5 ${errors.basePrice ? 'border-red-500/50' : ''}`}
                   />
+                  {errors.basePrice && (
+                    <p className="text-xs text-red-500">{errors.basePrice.message}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="salePrice" className="text-sm font-semibold opacity-70">Sale Price ($)</Label>
@@ -242,7 +260,7 @@ export function ProductForm({
                     id="salePrice"
                     type="number"
                     step="0.01"
-                    {...register('salePrice')}
+                    {...register('salePrice', { valueAsNumber: true })}
                     className="bg-background/50 h-12 rounded-xl border-white/5"
                   />
                 </div>
@@ -251,18 +269,21 @@ export function ProductForm({
                   <Input
                     id="taxPercentage"
                     type="number"
-                    {...register('taxPercentage')}
+                    {...register('taxPercentage', { valueAsNumber: true })}
                     className="bg-background/50 h-12 rounded-xl border-white/5"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="stockQuantity" className="text-sm font-semibold opacity-70">Stock Level</Label>
+                  <Label htmlFor="stockQuantity" className="text-sm font-semibold opacity-70">Stock</Label>
                   <Input
                     id="stockQuantity"
                     type="number"
-                    {...register('stockQuantity')}
-                    className="bg-background/50 h-12 rounded-xl border-white/5"
+                    {...register('stockQuantity', { valueAsNumber: true })}
+                    className={`bg-background/50 h-12 rounded-xl border-white/5 ${errors.stockQuantity ? 'border-red-500/50' : ''}`}
                   />
+                  {errors.stockQuantity && (
+                    <p className="text-xs text-red-500">{errors.stockQuantity.message}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -282,13 +303,13 @@ export function ProductForm({
                     id="weight"
                     type="number"
                     step="0.001"
-                    {...register('weight')}
+                    {...register('weight', { valueAsNumber: true })}
                     className="bg-background/50 h-12 rounded-xl border-white/5"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="country" className="text-sm font-semibold opacity-70">Origin</Label>
-                  <Select>
+                  <Select onValueChange={(v) => setValue('countryOfOrigin', v)}>
                     <SelectTrigger className="bg-background/50 h-12 rounded-xl border-white/5">
                       <SelectValue placeholder="Select Country" />
                     </SelectTrigger>
@@ -312,7 +333,12 @@ export function ProductForm({
             <Card className="border-white/10 bg-muted/20 backdrop-blur-sm border-none shadow-2xl">
               <CardContent className="p-8 space-y-8">
                 <div className="space-y-4">
-                  <Label className="text-sm font-semibold opacity-70">Visual Assets</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold opacity-70">Visual Assets</Label>
+                    {errors.mainImage && (
+                      <p className="text-xs text-red-500 font-bold animate-pulse">! Main image is required</p>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
                     <button
                       type="button"
@@ -327,28 +353,48 @@ export function ProductForm({
                       type="file"
                       className="hidden"
                       multiple
+                      accept="image/*"
                       onChange={async (e) => {
                         const files = e.target.files;
                         if (!files) return;
+                        
                         for (const file of Array.from(files)) {
+                          const tempId = Math.random().toString(36).substring(7);
+                          const localPreview = URL.createObjectURL(file);
+                          
+                          // 1. Optimistic Update (Show preview immediately)
+                          const current = watch('galleryImages') || [];
+                          const newImages = [...current, { url: localPreview, altText: file.name, order: current.length }];
+                          setValue('galleryImages', newImages);
+                          setUploading(prev => ({ ...prev, [localPreview]: true }));
+
                           try {
                             const { uploadUrl, publicUrl } = await apiFetch<{
                               uploadUrl: string;
                               publicUrl: string;
                             }>(`/merchant/media/products/upload-url?contentType=${file.type}`);
+                            
                             await fetch(uploadUrl, {
                               method: 'PUT',
                               body: file,
                               headers: { 'Content-Type': file.type },
                             });
-                            const current = watch('galleryImages') || [];
-                            const newImage = { url: publicUrl, altText: file.name, order: current.length };
-                            setValue('galleryImages', [...current, newImage]);
-                            if (!watch('mainImage') || current.length === 0) {
-                              setValue('mainImage', publicUrl);
-                            }
+
+                            // 2. Finalize (Replace blob URL with public URL)
+                            const gallery = watch('galleryImages');
+                            const finalGallery = gallery.map(img => 
+                              img.url === localPreview ? { ...img, url: publicUrl } : img
+                            );
+                            setValue('galleryImages', finalGallery);
+                            if (!watch('mainImage')) setValue('mainImage', publicUrl);
+                            
                           } catch (err) {
-                            console.error('Upload failed', err);
+                            toast.error(`Failed to upload ${file.name}`);
+                            const gallery = watch('galleryImages');
+                            setValue('galleryImages', gallery.filter(img => img.url !== localPreview));
+                          } finally {
+                            setUploading(prev => ({ ...prev, [localPreview]: false }));
+                            URL.revokeObjectURL(localPreview);
                           }
                         }
                       }}
@@ -356,33 +402,44 @@ export function ProductForm({
 
                     {watch('galleryImages')?.map((img, idx) => (
                       <div key={img.url} className="relative aspect-square rounded-2xl overflow-hidden group border border-white/10 shadow-lg">
-                        <Image src={img.url} alt={`Gallery ${idx + 1}`} fill className="object-cover transition-transform group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={watch('mainImage') === img.url ? 'default' : 'secondary'}
-                            className="h-8 text-[10px] rounded-lg px-2"
-                            onClick={() => setValue('mainImage', img.url)}
-                          >
-                            {watch('mainImage') === img.url ? 'PRIMARY IMAGE' : 'SET AS PRIMARY'}
-                          </Button>
-                          <button
-                            type="button"
-                            className="p-2 bg-red-500/80 hover:bg-red-500 rounded-xl transition-colors shadow-lg"
-                            onClick={async () => {
-                              await apiFetch(`/merchant/media/products?url=${encodeURIComponent(img.url)}`, { method: 'DELETE' });
-                              const current = watch('galleryImages');
-                              const newGallery = current.filter((_, i) => i !== idx);
-                              setValue('galleryImages', newGallery);
-                              if (watch('mainImage') === img.url) {
-                                setValue('mainImage', newGallery[0]?.url || '');
-                              }
-                            }}
-                          >
-                            <X className="w-4 h-4 text-white" />
-                          </button>
-                        </div>
+                        <Image src={img.url} alt={`Gallery ${idx + 1}`} fill className={`object-cover transition-all ${uploading[img.url] ? 'blur-md grayscale opacity-50' : 'group-hover:scale-105'}`} />
+                        
+                        {uploading[img.url] && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 animate-spin text-white" />
+                          </div>
+                        )}
+
+                        {!uploading[img.url] && (
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={watch('mainImage') === img.url ? 'default' : 'secondary'}
+                              className="h-8 text-[10px] rounded-lg px-2"
+                              onClick={() => setValue('mainImage', img.url)}
+                            >
+                              {watch('mainImage') === img.url ? 'PRIMARY IMAGE' : 'SET AS PRIMARY'}
+                            </Button>
+                            <button
+                              type="button"
+                              className="p-2 bg-red-500/80 hover:bg-red-500 rounded-xl transition-colors shadow-lg"
+                              onClick={async () => {
+                                if (!img.url.startsWith('blob:')) {
+                                  await apiFetch(`/merchant/media/products?url=${encodeURIComponent(img.url)}`, { method: 'DELETE' });
+                                }
+                                const current = watch('galleryImages');
+                                const newGallery = current.filter((_, i) => i !== idx);
+                                setValue('galleryImages', newGallery);
+                                if (watch('mainImage') === img.url) {
+                                  setValue('mainImage', newGallery[0]?.url || '');
+                                }
+                              }}
+                            >
+                              <X className="w-4 h-4 text-white" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
