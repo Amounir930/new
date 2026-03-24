@@ -372,7 +372,7 @@ export function ProductForm({
                             const { uploadUrl, publicUrl } = await apiFetch<{
                               uploadUrl: string;
                               publicUrl: string;
-                            }>(`/merchant/media/products/upload-url?contentType=${file.type}`);
+                            }>(`/merchant/media/products/upload-url?contentType=${encodeURIComponent(file.type)}`);
                             
                             await fetch(uploadUrl, {
                               method: 'PUT',

@@ -76,9 +76,12 @@ export class ProductMediaController {
       'image/svg+xml': 'svg',
     };
 
-    const extension = ALLOWED_MIME_TYPES[contentType];
+    const normalizedType = contentType.replace(/\s/g, '+'); // Handle space-to-plus decoding artifacts
+    const extension = ALLOWED_MIME_TYPES[normalizedType] || ALLOWED_MIME_TYPES[contentType];
+
     if (!extension) {
-      throw new BadRequestException('Unsupported file type');
+      this.logger.warn(`UNSUPPORTED_MIME_TYPE: Received '${contentType}', Normalized '${normalizedType}'`);
+      throw new BadRequestException(`Unsupported file type: ${contentType}`);
     }
 
     const tempId = crypto.randomUUID();
