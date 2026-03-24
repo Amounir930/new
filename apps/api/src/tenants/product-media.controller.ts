@@ -89,7 +89,7 @@ export class ProductMediaController {
 
     try {
       const s3Client = new S3Client({
-        endpoint: env.STORAGE_PUBLIC_URL,
+        endpoint: env.MINIO_ENDPOINT || 'http://apex-minio:9000',
         region: env.MINIO_REGION || 'us-east-1',
         credentials: {
           accessKeyId: env.MINIO_ACCESS_KEY || '',

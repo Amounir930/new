@@ -88,6 +88,7 @@ export class TenantSessionInterceptor implements NestInterceptor {
       // 4. Wrap execution in AsyncLocalStorage scope
       // By wrapping the return of next.handle(), we ensure the controller execution
       // starts within the context and remains sticky through its async lifecycle.
+      req.tenantContext = tenantContext; // 🛡️ S2 Fix: Propagate to request object for downstream interceptors (e.g. Quota)
       return tenantStorage.run(tenantContext, () => {
         return next.handle().pipe(
           finalize(async () => {
