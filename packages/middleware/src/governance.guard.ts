@@ -43,8 +43,8 @@ export class GovernanceGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<TenantRequest>();
     const user = request.user;
     
-    // ROOT CAUSE FIX: Read tenantId from cryptographically verified JWT authority
-    // NOT from the middleware's domain resolution (which sets 'system' for admin domains)
+    // S2 FIX (Architectural Correction): Strictly prioritize cryptographically verified tenantId
+    // Never fallback to req.tenantContext for sensitive authorization gates.
     const tenantId = user?.tenantId;
 
     // Super Admin Bypass
@@ -52,7 +52,7 @@ export class GovernanceGuard implements CanActivate {
       return true;
     }
 
-    // Bypass feature gates for System contexts
+    // Bypass feature gates ONLY for authenticated System/Root contexts
     if (!tenantId || tenantId === SYSTEM_TENANT_ID) {
       return true;
     }

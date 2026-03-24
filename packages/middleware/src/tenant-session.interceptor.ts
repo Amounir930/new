@@ -34,21 +34,25 @@ export class TenantSessionInterceptor implements NestInterceptor {
     const req = http.getRequest<TenantRequest & { user?: any }>();
 
     const baseContext = req.tenantContext;
+    const jwtTenantId = req.user?.tenantId;
+    const isMerchantToken = jwtTenantId && jwtTenantId !== SYSTEM_TENANT_ID;
 
-    // S2 Lean Fix: Prioritize JWT authority over Domain authority if domain is 'system'
-    const isSystemContext = baseContext?.tenantId === SYSTEM_TENANT_ID;
-    const hasMerchantIdentity = req.user?.tenantId && req.user.tenantId !== SYSTEM_TENANT_ID;
-
-    // 1. Bypass only if truly no tenant identity is possible
-    if (!baseContext || (isSystemContext && !hasMerchantIdentity)) {
+    // S2 FIX (Architectural Correction): Prioritize JWT Identity over Domain Inference
+    // If the user has a verified Merchant JWT, it COMPLETELY overrides the domain-based context.
+    const activeTenantId = isMerchantToken ? jwtTenantId : baseContext?.tenantId;
+    
+    // Safety Fallback: If no tenant identity can be established, bypass session initialization
+    if (!activeTenantId) {
       return next.handle();
     }
 
-    // 2. Resolve Active Identities (Lean Upgrade)
-    const activeTenantId = hasMerchantIdentity ? req.user.tenantId : baseContext.tenantId;
-    const activeSchema = hasMerchantIdentity && req.user.subdomain 
-      ? toSchemaName(req.user.subdomain) 
-      : baseContext.schemaName;
+    const activeSchema = (isMerchantToken && req.user.subdomain)
+      ? toSchemaName(req.user.subdomain)
+      : (baseContext?.schemaName || 'public');
+
+    const activeSubdomain = (isMerchantToken && req.user.subdomain)
+      ? req.user.subdomain
+      : (baseContext?.subdomain || 'root');
 
     // 3. Establish Database Session
     // We use tenantPool (50 max) instead of adminPool (10 max) for high-concurrency merchant requests
@@ -70,9 +74,14 @@ export class TenantSessionInterceptor implements NestInterceptor {
 
       const scopedDb = drizzle(client);
       const tenantContext: TenantContext = {
-        ...baseContext,
         tenantId: activeTenantId,
         schemaName: safeSchema,
+        subdomain: activeSubdomain,
+        plan: baseContext?.plan || 'free',
+        features: baseContext?.features || [],
+        createdAt: baseContext?.createdAt || new Date(),
+        isActive: baseContext?.isActive !== false,
+        isSuspended: baseContext?.isSuspended === true,
         executor: toExecutor(scopedDb),
       };
 
