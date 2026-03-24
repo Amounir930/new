@@ -546,8 +546,9 @@ services:
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--providers.docker=true"
-      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.endpoint=tcp://docker-proxy:2375"
       - "--providers.docker.exposedbydefault=true"
+      - "--providers.docker.network=apex-public"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
@@ -568,6 +569,7 @@ services:
       - "80:80"
       - "443:443"
     environment:
+      - "DOCKER_API_VERSION=1.41"
       - "CLOUDFLARE_EMAIL=${CF_API_EMAIL}"
       - "CLOUDFLARE_DNS_API_TOKEN=${CF_DNS_API_TOKEN}"
       - "CLOUDFLARE_ZONE_API_TOKEN=${CF_ZONE_ID}"
