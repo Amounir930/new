@@ -12,7 +12,6 @@ import {
   brandsInStorefront,
   cartItemsInStorefront,
   cartsInStorefront,
-  categories,
   categoriesInStorefront,
   couponsInStorefront,
   couponUsagesInStorefront,
@@ -724,13 +723,3 @@ export const appInstallationsInStorefrontRelations = relations(
   })
 );
 
-export const categoriesRelations = relations(categories, ({ one, many }) => ({
-  category: one(categories, {
-    fields: [categories.parentId],
-    references: [categories.id],
-    relationName: 'categories_parentId_categories_id',
-  }),
-  categories: many(categories, {
-    relationName: 'categories_parentId_categories_id',
-  }),
-}));
