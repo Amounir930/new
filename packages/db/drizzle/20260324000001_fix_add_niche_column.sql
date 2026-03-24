@@ -4,4 +4,4 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
-ALTER TABLE "storefront"."products" ADD COLUMN IF NOT EXISTS "niche" "niche_type" DEFAULT 'retail' NOT NULL;
+ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "niche" "niche_type" DEFAULT 'retail' NOT NULL;
