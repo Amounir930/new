@@ -55,7 +55,7 @@ async function handleAuthRedirect(request: NextRequest, token?: string) {
   return NextResponse.next();
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const token = request.cookies.get('adm_tkn')?.value;
   const { pathname } = request.nextUrl;
 

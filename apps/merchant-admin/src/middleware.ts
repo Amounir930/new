@@ -41,7 +41,7 @@ function isMerchantAuthorized(payload: any): boolean {
  * 🛡️ Edge-Level Proxy Middleware
  * Enforces route protection and session integrity
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // Strictly enforce production cookie: adm_tkn
