@@ -530,7 +530,7 @@ services:
   # ═══════════════════════════════════════════════════════════════
   traefik:
     image: traefik:2.11.10
-    container_name: apex-traefik
+    container_name: apex-traefik-v2
     user: root
     restart: always
     command:
