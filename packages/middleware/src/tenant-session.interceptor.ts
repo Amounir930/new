@@ -56,7 +56,7 @@ export class TenantSessionInterceptor implements NestInterceptor {
 
     try {
       // S2/Arch-Core-04: Strict Tenant Isolation in Session
-      await client.query("SELECT set_config('app.current_tenant', $1, true)", [
+      await client.query("SELECT set_config('app.current_tenant_id', $1, true)", [
         activeTenantId,
       ]);
 
@@ -87,7 +87,7 @@ export class TenantSessionInterceptor implements NestInterceptor {
             // S2: Robust cleanup - ROLLBACK ensures we aren't stuck in a failed transaction
             await client.query('ROLLBACK').catch(() => {});
             await client.query(`
-              RESET app.current_tenant;
+              RESET app.current_tenant_id;
               RESET app.role;
               RESET search_path;
               RESET ALL;
