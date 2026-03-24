@@ -65,12 +65,12 @@ http:
         addVaryHeader: true
     apex-dash-redirect:
       redirectRegex:
-        regex: "^https://traefik.60sec.shop/$$"
-        replacement: "https://traefik.60sec.shop/dashboard/"
+        regex: '^https://traefik.60sec.shop/$'
+        replacement: 'https://traefik.60sec.shop/dashboard/'
     apex-api-version-bridge:
       redirectRegex:
-        regex: "^https://api.60sec.shop/?$$"
-        replacement: "https://api.60sec.shop/api/v1/health"
+        regex: '^https://api.60sec.shop/?$'
+        replacement: 'https://api.60sec.shop/api/v1/health'
   # ═══════════════════════════════════════════════════════════════
   # DECOUPLING LAYER: Static Routers & Services
   # Bypasses Docker Provider handshake bugs on Engine 29.3
