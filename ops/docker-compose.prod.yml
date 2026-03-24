@@ -190,22 +190,21 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       SKIP_S1_COMPLEXITY_CHECK: "true"
     networks:
+      - apex-public
       - apex-internal
       - apex-data
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=apex-internal"
-      - "traefik.http.routers.api-public.rule=Host(`api.60sec.shop`) && PathPrefix(`/api`)"
+      - "traefik.docker.network=apex-public"
+      - "traefik.http.routers.api-public.rule=Host('api.60sec.shop') && PathPrefix('/api')"
       - "traefik.http.routers.api-public.priority=5500"
       - "traefik.http.routers.api-public.entrypoints=websecure"
       - "traefik.http.routers.api-public.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api-public.middlewares=apex-api-version-bridge@file,apex-api-ratelimit@file,apex-security-headers@file"
       - "traefik.http.routers.api-public.service=apex-api"
-      - "traefik.http.routers.api-shielded.rule=Host(`api.60sec.shop`) || Host(`blue.60sec.shop`) || Host(`green.60sec.shop`)"
+      - "traefik.http.routers.api-shielded.rule=Host('api.60sec.shop') || Host('blue.60sec.shop') || Host('green.60sec.shop')"
       - "traefik.http.routers.api-shielded.priority=5000"
       - "traefik.http.routers.api-shielded.entrypoints=websecure"
       - "traefik.http.routers.api-shielded.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.api-shielded.middlewares=apex-api-ratelimit@file,apex-basic-auth@file,apex-security-headers@file"
       - "traefik.http.routers.api-shielded.service=apex-api"
       - "traefik.http.services.apex-api.loadbalancer.server.port=3000"
 
@@ -348,18 +347,16 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      - "traefik.http.routers.merchant-admin.rule=Host(`admin.60sec.shop`)"
+      - "traefik.http.routers.merchant-admin.rule=Host('admin.60sec.shop')"
       - "traefik.http.routers.merchant-admin.priority=4000"
       - "traefik.http.routers.merchant-admin.entrypoints=websecure"
       - "traefik.http.routers.merchant-admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.merchant-admin.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.routers.merchant-admin.service=apex-merchant-admin"
       - "traefik.http.services.apex-merchant-admin.loadbalancer.server.port=3001"
-      - "traefik.http.routers.merchant-tenant.rule=(HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`) || Host(`60sec.shop`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/orders`) || PathPrefix(`/onboarding`) || PathPrefix(`/login`))"
+      - "traefik.http.routers.merchant-tenant.rule=(HostRegexp('{subdomain:[a-z0-9-]+}.60sec.shop') || Host('60sec.shop')) && (PathPrefix('/dashboard') || PathPrefix('/orders') || PathPrefix('/onboarding') || PathPrefix('/login'))"
       - "traefik.http.routers.merchant-tenant.priority=4500"
       - "traefik.http.routers.merchant-tenant.entrypoints=websecure"
       - "traefik.http.routers.merchant-tenant.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.merchant-tenant.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.routers.merchant-tenant.service=apex-merchant-admin"
     healthcheck:
       test: ["CMD-SHELL", "bun -e \"fetch('http://localhost:3001/').then(()=>process.exit(0)).catch(()=>process.exit(1))\""]
@@ -408,11 +405,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=apex-public"
-      - "traefik.http.routers.super-admin.rule=Host(`super-admin.60sec.shop`)"
+      - "traefik.http.routers.super-admin.rule=Host('super-admin.60sec.shop')"
       - "traefik.http.routers.super-admin.priority=5000"
       - "traefik.http.routers.super-admin.entrypoints=websecure"
       - "traefik.http.routers.super-admin.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.super-admin.middlewares=apex-admin-ratelimit@file,apex-security-headers@file"
       - "traefik.http.routers.super-admin.service=apex-super-admin"
       - "traefik.http.services.apex-super-admin.loadbalancer.server.port=3001"
     healthcheck:
@@ -540,8 +536,6 @@ services:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--api.dashboard=true"
-      - "--providers.file.filename=/etc/traefik/traefik-dynamic.yml"
-      - "--providers.file.watch=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
