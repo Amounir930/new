@@ -51,8 +51,6 @@ RUN groupadd -g 1001 node-group && \
 COPY --from=builder /app/apps/merchant-admin/.next/standalone ./
 COPY --from=builder /app/apps/merchant-admin/.next/static ./apps/merchant-admin/.next/static
 COPY --from=builder /app/apps/merchant-admin/public ./apps/merchant-admin/public
-# Critical: Copy the server entrypoint from the standalone workspace
-COPY --from=builder /app/apps/merchant-admin/.next/standalone/apps/merchant-admin/server.js ./apps/merchant-admin/server.js
 
 # Secure permissions
 RUN chown -R node-user:node-group /app
@@ -63,5 +61,6 @@ ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-WORKDIR /app/apps/merchant-admin
-CMD ["bun", "server.js"]
+# We must run from the root of the standalone folder to ensure node_modules are resolved
+WORKDIR /app
+CMD ["bun", "apps/merchant-admin/server.js"]
