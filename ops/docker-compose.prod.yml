@@ -547,7 +547,7 @@ services:
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--providers.docker=true"
-      - "--providers.docker.endpoint=tcp://docker-proxy:2375"
+      - "--providers.docker.endpoint=tcp://apex-docker-proxy:2375"
       - "--providers.docker.exposedbydefault=true"
       - "--providers.docker.network=apex-public"
       - "--providers.file.directory=/etc/traefik/dynamic"
