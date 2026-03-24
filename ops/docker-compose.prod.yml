@@ -494,13 +494,14 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
+      - DOCKER_API_VERSION=1.41
       - CONTAINERS=1
       - NETWORKS=1
       - EVENTS=1
       - INFO=1
       - VERSION=1
-      - SERVICES=0
-      - TASKS=0
+      - SERVICES=1
+      - TASKS=1
       - EXEC=0
       - POST=0
     networks:
@@ -533,12 +534,15 @@ services:
     container_name: apex-traefik-v2
     user: root
     restart: always
+    depends_on:
+      docker-proxy:
+        condition: service_healthy
     command:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--providers.docker=true"
-      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.endpoint=http://docker-proxy:2375"
       - "--providers.docker.exposedbydefault=true"
       - "--providers.docker.network=apex-public"
       - "--entrypoints.web.address=:80"
