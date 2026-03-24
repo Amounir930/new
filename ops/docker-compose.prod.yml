@@ -166,8 +166,8 @@ services:
       PGHOST: apex-postgres
       DB_SSL: "false"
       DB_SSL_OPTIONAL: "true"
-      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB}?sslmode=require"
-      REDIS_URL: "rediss://:${REDIS_PASSWORD}@apex-redis:6379"
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      REDIS_URL: "redis://:${REDIS_PASSWORD}@apex-redis:6379"
       PGUSER: ${POSTGRES_USER}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB}
