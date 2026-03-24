@@ -77,31 +77,19 @@ http:
   # ═══════════════════════════════════════════════════════════════
 
   routers:
-    # Merchant Admin Portal
     merchant-admin:
       rule: "Host('admin.60sec.shop')"
-      priority: 4000
-      entryPoints: ["websecure"]
       service: merchant-admin-svc
       tls:
         certResolver: letsencrypt
-
-    # Super Admin Portal
     super-admin:
       rule: "Host('super-admin.60sec.shop')"
-      priority: 5000
-      entryPoints: ["websecure"]
       service: super-admin-svc
       tls:
         certResolver: letsencrypt
-
-    # API Backend (Direct)
     api-direct:
       rule: "Host('api.60sec.shop')"
-      priority: 6000
-      entryPoints: ["websecure"]
       service: api-svc
-      middlewares: ["apex-api-version-bridge"]
       tls:
         certResolver: letsencrypt
 
