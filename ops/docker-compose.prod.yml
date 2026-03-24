@@ -532,16 +532,19 @@ services:
   # Traefik (Reverse Proxy)
   # ═══════════════════════════════════════════════════════════════
   traefik:
-    image: traefik:latest
+    image: traefik:v3.1
     container_name: apex-traefik-v2
     user: root
     restart: always
+    depends_on:
+      docker-proxy:
+        condition: service_healthy
     command:
       - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--providers.docker=true"
-      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.endpoint=http://docker-proxy:2375"
       - "--providers.docker.exposedbydefault=true"
       - "--providers.docker.network=apex-public"
       - "--entrypoints.web.address=:80"
@@ -558,12 +561,12 @@ services:
       - "80:80"
       - "443:443"
     environment:
+      - "DOCKER_API_VERSION=1.41"
       - "CLOUDFLARE_EMAIL=${CF_API_EMAIL}"
       - "CLOUDFLARE_DNS_API_TOKEN=${CF_DNS_API_TOKEN}"
       - "CLOUDFLARE_ZONE_API_TOKEN=${CF_ZONE_ID}"
     volumes:
       - ./htpasswd:/etc/traefik/htpasswd:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./acme.json:/etc/traefik/acme.json
       - letsencrypt_data:/letsencrypt
       - ./logs/traefik:/var/log/traefik
