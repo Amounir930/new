@@ -80,11 +80,13 @@ http:
     # Merchant Admin
     merchant-admin-http:
       rule: "Host(`admin.60sec.shop`)"
+      priority: 100
       entryPoints:
         - web
       service: merchant-admin-svc
     merchant-admin-https:
       rule: "Host(`admin.60sec.shop`)"
+      priority: 100
       entryPoints:
         - websecure
       service: merchant-admin-svc
@@ -94,11 +96,13 @@ http:
     # Super Admin
     super-admin-http:
       rule: "Host(`super-admin.60sec.shop`)"
+      priority: 100
       entryPoints:
         - web
       service: super-admin-svc
     super-admin-https:
       rule: "Host(`super-admin.60sec.shop`)"
+      priority: 100
       entryPoints:
         - websecure
       service: super-admin-svc
@@ -108,11 +112,13 @@ http:
     # API
     api-http:
       rule: "Host(`api.60sec.shop`)"
+      priority: 100
       entryPoints:
         - web
       service: api-svc
     api-https:
       rule: "Host(`api.60sec.shop`)"
+      priority: 100
       entryPoints:
         - websecure
       service: api-svc
@@ -122,11 +128,13 @@ http:
     # MinIO Storage
     storage-http:
       rule: "Host(`storage.60sec.shop`)"
+      priority: 100
       entryPoints:
         - web
       service: storage-svc
     storage-https:
       rule: "Host(`storage.60sec.shop`)"
+      priority: 100
       entryPoints:
         - websecure
       service: storage-svc
@@ -138,11 +146,13 @@ http:
     # MinIO Console
     storage-admin-http:
       rule: "Host(`storage-admin.60sec.shop`)"
+      priority: 100
       entryPoints:
         - web
       service: storage-admin-svc
     storage-admin-https:
       rule: "Host(`storage-admin.60sec.shop`)"
+      priority: 100
       entryPoints:
         - websecure
       service: storage-admin-svc
@@ -152,11 +162,13 @@ http:
     # Database (Adminer)
     db-http:
       rule: "Host(`db.60sec.shop`)"
+      priority: 100
       entryPoints:
         - web
       service: db-svc
     db-https:
       rule: "Host(`db.60sec.shop`)"
+      priority: 100
       entryPoints:
         - websecure
       service: db-svc
@@ -169,6 +181,7 @@ http:
     # Traefik Dashboard
     traefik-http:
       rule: "Host(`traefik.60sec.shop`)"
+      priority: 100
       entryPoints:
         - web
       service: traefik-svc
@@ -176,6 +189,7 @@ http:
         - apex-dash-redirect@file
     traefik-https:
       rule: "Host(`traefik.60sec.shop`)"
+      priority: 100
       entryPoints:
         - websecure
       service: traefik-svc
@@ -184,14 +198,16 @@ http:
       middlewares:
         - apex-basic-auth@file
 
-    # Storefront (Main & Subdomains)
+    # Storefront (Main & Subdomains) - Low Priority
     store-http:
       rule: "Host(`60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      priority: 10
       entryPoints:
         - web
       service: store-svc
     store-https:
       rule: "Host(`60sec.shop`) || HostRegexp(`{subdomain:[a-z0-9-]+}.60sec.shop`)"
+      priority: 10
       entryPoints:
         - websecure
       service: store-svc
