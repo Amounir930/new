@@ -580,11 +580,6 @@ services:
     networks:
       - apex-public
       - apex-internal
-    healthcheck:
-      test: ["CMD", "traefik", "healthcheck", "--ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   # ═══════════════════════════════════════════════════════════════
   # Backups (Postgres & Gitea)
