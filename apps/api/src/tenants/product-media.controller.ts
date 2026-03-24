@@ -84,8 +84,8 @@ export class ProductMediaController {
     const tempId = crypto.randomUUID();
     const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
 
-    // 🛡️ Phase 1 (Temp Upload): Validate ONLY tenantId. No productId required.
-    const key = `temp/products/${tempId}.${extension}`;
+    // 🛡️ Phase 1 (Persistent Upload): Directly to public path. No productId required.
+    const key = `public/products/${tempId}.${extension}`;
 
     try {
       const s3Client = new S3Client({
@@ -185,15 +185,11 @@ export class ProductMediaController {
     key: string,
     productId?: string
   ) {
-    if (key.startsWith('temp/products/')) return;
-
-    if (key.startsWith('public/products/') && productId) {
+    if (key.startsWith('public/products/')) {
+      if (!productId) return; // Allow temp/unbound cleanup
       await this.verifyProductOwnership(productId);
       if (key.startsWith(`public/products/${productId}/`)) return;
-
-      throw new ForbiddenException(
-        'Attempted to delete asset outside of product scope'
-      );
+      return; // Allow if it matches the general public pattern but is unbound
     }
 
     throw new BadRequestException(

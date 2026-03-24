@@ -56,7 +56,7 @@ export class QuotaInterceptor implements NestInterceptor {
 
     const request = context.switchToHttp().getRequest<TenantRequest>();
     const user = request.user;
-    const tenantId = request.tenantContext?.tenantId;
+    const tenantId = user?.tenantId;
 
     // Super Admin Bypass
     if ((user as { role?: string } | undefined)?.role === 'super_admin') {
