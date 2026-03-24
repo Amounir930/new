@@ -53,12 +53,11 @@ git pull origin refactor/single-source-env
 # Purge insecure legacy secrets directory
 rm -rf ops/secrets/ 2>/dev/null || true
 
-# Execution Phase: Docker Compose atomic restart (Requires sudo for socket access)
-sudo docker compose -f ops/docker-compose.prod.yml build --no-cache
-sudo docker compose -f ops/docker-compose.prod.yml up -d --force-recreate
+# Execution Phase: Docker Compose smart rebuild and restart (Requires sudo for socket access)
+sudo docker compose -f ops/docker-compose.prod.yml up -d --build
 
 echo ""
-echo "🚀 GATE AUTHORIZED: All services synchronized with .env"
+echo "🚀 GATE AUTHORIZED: All services synchronized with .env and successfully updated."
 echo ""
-docker ps --format 'table {{.Names}}\t{{.Status}}'
+sudo docker ps --format 'table {{.Names}}\t{{.Status}}'
 REMOTE

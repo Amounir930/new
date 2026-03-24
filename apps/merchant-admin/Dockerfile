@@ -63,4 +63,5 @@ ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-CMD ["bun", "apps/merchant-admin/server.js"]
+WORKDIR /app/apps/merchant-admin
+CMD ["bun", "server.js"]

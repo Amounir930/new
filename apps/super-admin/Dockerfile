@@ -64,4 +64,5 @@ ENV PORT=3001
 ENV HOSTNAME="0.0.0.0"
 
 # 🏁 Final Command
-CMD ["bun", "apps/super-admin/server.js"]
+WORKDIR /app/apps/super-admin
+CMD ["bun", "server.js"]
