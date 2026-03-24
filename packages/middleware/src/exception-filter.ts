@@ -76,6 +76,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
   private reportToErrorTracking(exception: unknown, _request: Request) {
     // In production, we'd use GlitchTip/Sentry (S5)
     if (!env.GLITCHTIP_DSN && env.NODE_ENV === 'production') {
+      // S5 Protocol Transparency: Log raw exception to console for recovery
+      console.error('[CRITICAL-EXCEPTION]', exception);
+      
       this.logger.error(
         `[Sentry Fallback] Production error without DSN: ${JSON.stringify(exception)}`
       );
