@@ -79,7 +79,7 @@ http:
   routers:
     # Merchant Admin Portal
     merchant-admin:
-      rule: "Host(`admin.60sec.shop`)"
+      rule: "Host('admin.60sec.shop')"
       priority: 4000
       entryPoints: ["websecure"]
       service: merchant-admin-svc
@@ -88,7 +88,7 @@ http:
 
     # Super Admin Portal
     super-admin:
-      rule: "Host(`super-admin.60sec.shop`)"
+      rule: "Host('super-admin.60sec.shop')"
       priority: 5000
       entryPoints: ["websecure"]
       service: super-admin-svc
@@ -97,7 +97,7 @@ http:
 
     # API Backend (Direct)
     api-direct:
-      rule: "Host(`api.60sec.shop`)"
+      rule: "Host('api.60sec.shop')"
       priority: 6000
       entryPoints: ["websecure"]
       service: api-svc
