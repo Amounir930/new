@@ -86,7 +86,7 @@ export const serverEnvSchema = baseSchema.extend({
   // Redis Configuration
   REDIS_URL: z.string().refine((url) => {
     if (process.env['NODE_ENV'] === 'production') {
-      return /redis:\/\/[^:]*:[^@]+@/.test(url);
+      return /rediss?:\/\/[^:]*:[^@]+@/.test(url);
     }
     return true;
   }, 'S1 Violation: REDIS_URL must include credentials in production'),

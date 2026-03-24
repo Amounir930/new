@@ -166,11 +166,11 @@ services:
       PGHOST: apex-postgres
       DB_SSL: "false"
       DB_SSL_OPTIONAL: "true"
-      DATABASE_URL: "postgresql://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@apex-postgres:5432/$${POSTGRES_DB}?sslmode=require"
-      REDIS_URL: "rediss://:$${REDIS_PASSWORD}@apex-redis:6379"
-      PGUSER: $${POSTGRES_USER}
-      PGPASSWORD: $${POSTGRES_PASSWORD}
-      PGDATABASE: $${POSTGRES_DB}
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB}?sslmode=require"
+      REDIS_URL: "rediss://:${REDIS_PASSWORD}@apex-redis:6379"
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       BLIND_INDEX_PEPPER: ${BLIND_INDEX_PEPPER}
       INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
@@ -265,11 +265,11 @@ services:
       PGHOST: apex-postgres
       DB_SSL: "false"
       DB_SSL_OPTIONAL: "true"
-      DATABASE_URL: "postgresql://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@apex-postgres:5432/$${POSTGRES_DB}?sslmode=require"
-      REDIS_URL: "rediss://:$${REDIS_PASSWORD}@apex-redis:6379"
-      PGUSER: $${POSTGRES_USER}
-      PGPASSWORD: $${POSTGRES_PASSWORD}
-      PGDATABASE: $${POSTGRES_DB}
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@apex-postgres:5432/${POSTGRES_DB}?sslmode=require"
+      REDIS_URL: "rediss://:${REDIS_PASSWORD}@apex-redis:6379"
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       BLIND_INDEX_PEPPER: ${BLIND_INDEX_PEPPER}
       INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
