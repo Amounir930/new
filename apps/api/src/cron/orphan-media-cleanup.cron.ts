@@ -161,7 +161,7 @@ export class OrphanMediaCleanupCron {
         .where(and(
           eq(productsInStorefront.isActive, false),
           isNull(productsInStorefront.publishedAt),
-          lt(productsInStorefront.createdAt, cutoff)
+          lt(productsInStorefront.createdAt, cutoff.toISOString())
         ));
 
       if (stale.length === 0) { this.logger.log('DRAFT_GC_DONE: No abandoned drafts.'); return; }
