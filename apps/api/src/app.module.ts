@@ -37,6 +37,8 @@ import { SecurityModule } from './security/security.module';
 import { StorefrontModule } from './storefront/storefront.module';
 import { MerchantStatsController } from './tenants/merchant-stats.controller';
 import { TenantsModule } from './tenants/tenants.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { OrphanMediaCleanupCron } from './cron/orphan-media-cleanup.cron';
 
 @Module({
   imports: [
@@ -71,6 +73,8 @@ import { TenantsModule } from './tenants/tenants.module';
         'redis://localhost:6379',
       inject: [ConfigService],
     }),
+    // Scheduled Tasks: Orphaned media cleanup
+    ScheduleModule.forRoot(),
   ],
   providers: [
     {
@@ -85,6 +89,7 @@ import { TenantsModule } from './tenants/tenants.module';
       provide: APP_INTERCEPTOR,
       useClass: QuotaInterceptor,
     },
+    OrphanMediaCleanupCron,
   ],
   controllers: [AppController, HoneyTokensController, MerchantStatsController],
 })

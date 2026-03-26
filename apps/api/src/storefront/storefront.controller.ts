@@ -125,9 +125,11 @@ export class StorefrontController {
     // S2 Protocol: Priority 1: Query string (?tenantId=)
     // Priority 2: Header (x-tenant-id)
     // Priority 3: Ambient context (from subdomain)
-    // On shared domains ('system'), explicit overrides MUST take precedence.
+    // On shared domains ('system') or internal infrastructure calls, explicit overrides MUST take precedence.
     const rawId =
-      ambientId === 'system' || !ambientId
+      ambientId === 'system' ||
+      ambientId === '00000000-0000-0000-0000-000000000000' ||
+      !ambientId
         ? queryId || headerId
         : ambientId || queryId || headerId;
 

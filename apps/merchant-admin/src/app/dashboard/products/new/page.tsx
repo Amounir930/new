@@ -8,11 +8,22 @@ import { apiFetch } from '@/lib/api';
 export default function NewProductPage() {
   const router = useRouter();
 
+  /**
+   * Called by ProductForm.onSubmit when the merchant clicks Save.
+   * At this point, the draft was already created in the DB (product-form handles the POST /draft).
+   * We use PUT /:draftId to promote the draft → live product (sets is_active=true).
+   *
+   * data.id = the draft product_id returned from POST /draft and stored in the form state.
+   */
   const handleCreateProduct = async (data: any) => {
-    const toastId = toast.loading('Creating product...');
+    if (!data.draftProductId) {
+      toast.error('Product session lost. Please refresh and try again.');
+      return;
+    }
+    const toastId = toast.loading('Saving product...');
     try {
-      await apiFetch('/merchant/products', {
-        method: 'POST',
+      await apiFetch(`/merchant/products/${data.draftProductId}`, {
+        method: 'PUT',
         body: JSON.stringify(data),
       });
 

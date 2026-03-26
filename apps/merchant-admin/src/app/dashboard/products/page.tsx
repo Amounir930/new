@@ -4,6 +4,7 @@ import { Edit, Package, Plus, Search, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,26 +32,46 @@ interface Product {
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const data = await apiFetch<Product[]>('/merchant/products');
-        setProducts(data);
-      } catch (_error) {
-        /* 'Failed to fetch products:', error */
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchProducts();
   }, []);
 
+  async function fetchProducts() {
+    try {
+      const data = await apiFetch<Product[]>('/merchant/products');
+      setProducts(data);
+    } catch (_error) {
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete(product: Product) {
+    if (!window.confirm(`Delete "${product.nameEn}"?\n\nThis action cannot be undone.`)) return;
+
+    setDeletingId(product.id);
+    const toastId = toast.loading('Deleting product...');
+    try {
+      await apiFetch(`/merchant/products/${product.id}`, { method: 'DELETE' });
+      // Optimistic remove from list
+      setProducts((prev) => prev.filter((p) => p.id !== product.id));
+      toast.success('Product deleted', { id: toastId });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete product', { id: toastId });
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   function renderProductRow(product: Product) {
+    const isDeleting = deletingId === product.id;
     return (
       <TableRow
         key={product.id}
-        className="hover:bg-muted/20 transition-colors"
+        className={`hover:bg-muted/20 transition-colors ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
       >
         <TableCell>
           <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-white/5 relative">
@@ -106,6 +127,9 @@ export default function ProductsPage() {
               variant="ghost"
               size="icon"
               className="h-8 w-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={() => handleDelete(product)}
+              disabled={isDeleting}
+              aria-label={`Delete ${product.nameEn}`}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

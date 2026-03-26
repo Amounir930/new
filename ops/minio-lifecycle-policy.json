@@ -1,0 +1,17 @@
+{
+  "Rules": [
+    {
+      "ID": "CleanupOrphanedProductMedia",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "public/products/"
+      },
+      "Expiration": {
+        "Days": 1
+      },
+      "NoncurrentVersionExpiration": {
+        "NoncurrentDays": 1
+      }
+    }
+  ]
+}

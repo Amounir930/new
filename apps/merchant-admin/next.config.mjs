@@ -18,6 +18,15 @@ const nextConfig = {
     '@apex/test-utils',
   ],
   output: 'standalone',
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'storage.60sec.shop',
+      },
+    ],
+  },
   experimental: {
     // Protocol S11: Disable worker threads to resolve Bun "resourceLimits" incompatibility
     workerThreads: false,

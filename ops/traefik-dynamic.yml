@@ -26,7 +26,7 @@ http:
         burst: 200
     apex-store-csp:
       headers:
-        contentSecurityPolicy: "default-src 'self'"
+        contentSecurityPolicy: "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;"
     apex-basic-auth:
       basicAuth:
         usersFile: "/etc/traefik/htpasswd"

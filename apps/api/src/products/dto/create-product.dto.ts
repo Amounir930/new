@@ -1,52 +1,24 @@
-import { BaseCreateProductSchema } from '@apex/validation';
+import { BaseCreateProductSchema, BaseProductSchemaShape } from '@apex/validation';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
 /**
- * 7 Sections of Product Data
- * S3: Input Validation
- * Mandate: Shares BaseCreateProductSchema from @apex/validation
+ * 🛡️ S3: Input Validation — CreateProductDto
+ *
+ * ALLOWED: 35 merchant-submitted fields (see BaseCreateProductSchema)
+ * EXCLUDED (System-Managed — never accepted from merchant):
+ *   id, createdAt, updatedAt, deletedAt, publishedAt,
+ *   soldCount, viewCount, reviewCount, avgRating, embedding, version
  */
+export class CreateProductDto extends createZodDto(BaseCreateProductSchema) {}
 
-export class CreateProductDto {
-  nameAr!: string;
-  nameEn!: string;
-  slug!: string;
-  sku!: string;
-  brandId?: string;
-  categoryId?: string;
-  basePrice!: number;
-  salePrice?: number;
-  taxPercentage?: number;
-  stockQuantity?: number;
-  minOrderQty?: number;
-  trackInventory?: boolean;
-  weight?: number;
-  dimensions?: { h?: number; w?: number; l?: number };
-  videoUrl?: string;
-  packageContentsAr?: string;
-  packageContentsEn?: string;
-  countryOfOrigin?: string;
-  mainImage!: string;
-  galleryImages!: { url: string; altText?: string; order: number }[];
-  shortDescriptionAr?: string;
-  shortDescriptionEn?: string;
-  descriptionAr?: string;
-  descriptionEn?: string;
-  metaTitle?: string;
-  metaDescription?: string;
-  specifications!: Record<string, unknown>;
-  niche!:
-    | 'retail'
-    | 'wellness'
-    | 'education'
-    | 'services'
-    | 'hospitality'
-    | 'real_estate'
-    | 'creative';
-  attributes!: Record<string, unknown>;
-}
+export class UpdateProductDto extends createZodDto(
+  // Use the raw ZodObject (BaseProductSchemaShape) for .extend()
+  // BaseCreateProductSchema is ZodEffects (superRefine) which has no .extend()
+  BaseProductSchemaShape.extend({
+    version: z.number().int().positive('Version must be a positive integer'),
+  })
+) {}
 
-export class UpdateProductDto extends CreateProductDto {
-  version!: number;
-}
+// Re-export type for controller usage
+export type { CreateProductInput } from '@apex/validation';

@@ -9,6 +9,7 @@ import { eq, productsInStorefront } from '@apex/db';
 import { requireExecutor } from '@apex/middleware';
 import {
   DeleteObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -24,6 +25,7 @@ import {
   NotFoundException,
   Query,
   Req,
+  Param,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -60,7 +62,8 @@ export class ProductMediaController {
   @Get('upload-url')
   async getUploadUrl(
     @Req() req: AuthenticatedRequest,
-    @Query('contentType') contentType: string
+    @Query('contentType') contentType: string,
+    @Query('productId') productId: string,
   ) {
     const tenantId = req.user.tenantId;
     const subdomain = req.tenantContext?.subdomain;
@@ -69,14 +72,29 @@ export class ProductMediaController {
       throw new UnauthorizedException('Tenant context missing');
     }
 
+    // 🛡️ S3 Mandate: Backend must own all storage paths (no client-generated paths)
+    // productId MUST be a valid UUID referencing a real DB row (IDOR protection)
+    if (!productId) {
+      throw new BadRequestException('productId is required for media upload');
+    }
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(productId)) {
+      throw new BadRequestException('productId must be a valid UUID');
+    }
+
+    // 🛡️ Verify product exists and belongs to this tenant (IDOR guard)
+    await this.verifyProductOwnership(productId);
+
     const ALLOWED_MIME_TYPES: Record<string, string> = {
       'image/jpeg': 'jpg',
       'image/png': 'png',
       'image/webp': 'webp',
       'image/svg+xml': 'svg',
+      'video/mp4': 'mp4',
+      'video/webm': 'webm',
     };
 
-    const normalizedType = contentType.replace(/\s/g, '+'); // Handle space-to-plus decoding artifacts
+    const normalizedType = contentType.replace(/\s/g, '+');
     const extension = ALLOWED_MIME_TYPES[normalizedType] || ALLOWED_MIME_TYPES[contentType];
 
     if (!extension) {
@@ -84,15 +102,15 @@ export class ProductMediaController {
       throw new BadRequestException(`Unsupported file type: ${contentType}`);
     }
 
-    const tempId = crypto.randomUUID();
+    // 🛡️ Path is strictly backend-controlled: public/products/{real_product_id}/{fileUuid}.ext
+    // One folder per product, named after the real DB product_id (no client input into path)
+    const fileId     = crypto.randomUUID();
     const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
-
-    // 🛡️ Phase 1 (Persistent Upload): Directly to public path. No productId required.
-    const key = `public/products/${tempId}.${extension}`;
+    const key        = `public/products/${productId}/${fileId}.${extension}`;
 
     try {
       const s3Client = new S3Client({
-        endpoint: env.MINIO_ENDPOINT || 'http://apex-minio:9000',
+        endpoint: env.STORAGE_PUBLIC_URL,
         region: env.MINIO_REGION || 'us-east-1',
         credentials: {
           accessKeyId: env.MINIO_ACCESS_KEY || '',
@@ -107,21 +125,18 @@ export class ProductMediaController {
         ContentType: contentType,
       });
 
-      const uploadUrl = await getSignedUrl(s3Client, command, {
-        expiresIn: 300,
-      });
+      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
       const publicUrl = `${env.STORAGE_PUBLIC_URL}/${bucketName}/${key}`;
 
       return { uploadUrl, publicUrl, key };
     } catch (error) {
       this.logger.error(
-        `S3_TEMP_UPLOAD_URL_ERROR: ${error instanceof Error ? error.message : String(error)}`
+        `S3_UPLOAD_URL_ERROR: ${error instanceof Error ? error.message : String(error)}`
       );
-      throw new InternalServerErrorException(
-        'Failed to generate secure upload pipeline'
-      );
+      throw new InternalServerErrorException('Failed to generate secure upload pipeline');
     }
   }
+
 
   @Delete()
   async deleteMedia(
@@ -198,5 +213,60 @@ export class ProductMediaController {
     throw new BadRequestException(
       'Invalid asset path or missing productId for persistent asset'
     );
+  }
+
+  /**
+   * 🚛 Cascade Delete: Purge entire SKU folder
+   * When product deleted -> ALL files in /public/products/{sku}/ deleted
+   */
+  @Delete('product/:sku')
+  async deleteProductMedia(
+    @Req() req: AuthenticatedRequest,
+    @Param('sku') sku: string
+  ) {
+    const subdomain = req.tenantContext?.subdomain;
+    if (!subdomain) throw new UnauthorizedException('Tenant context missing');
+
+    const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
+    const prefix = `public/products/${sku}/`;
+
+    const s3Client = new S3Client({
+      endpoint: env.MINIO_ENDPOINT || 'http://apex-minio:9000',
+      region: env.MINIO_REGION || 'us-east-1',
+      credentials: {
+        accessKeyId: env.MINIO_ACCESS_KEY || '',
+        secretAccessKey: env.MINIO_SECRET_KEY || '',
+      },
+      forcePathStyle: true,
+    });
+
+    try {
+      // 1. List all files in SKU folder
+      const objects = await s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: bucketName,
+          Prefix: prefix,
+        })
+      );
+
+      // 2. Delete all files if any exist
+      if (objects.Contents && objects.Contents.length > 0) {
+        for (const obj of objects.Contents) {
+          if (obj.Key) {
+            await s3Client.send(
+              new DeleteObjectCommand({
+                Bucket: bucketName,
+                Key: obj.Key,
+              })
+            );
+          }
+        }
+      }
+
+      return { success: true, count: objects.Contents?.length || 0 };
+    } catch (error) {
+      this.logger.error(`CASCADE_DELETE_ERROR: ${error instanceof Error ? error.message : String(error)}`);
+      throw new InternalServerErrorException('Failed to purge SKU media folder');
+    }
   }
 }
