@@ -24,16 +24,16 @@
     "typecheck": "bun x tsc --noEmit"
   },
   "dependencies": {
-    "@nestjs/common": "^11.1.15",
-    "@nestjs/core": "^11.1.15",
+    "@nestjs/common": "^11.1.17",
+    "@nestjs/core": "^11.1.17",
     "bullmq": "^5.70.1",
-    "zod": "^3.22.4"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^25.5.0",
     "bun-types": "latest",
     "cross-env": "^10.1.0",
     "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "typescript": "^6.0.2"
   }
 }
