@@ -53,7 +53,7 @@ export class MerchantProductsController {
   constructor(
     @Inject('TENANT_CACHE_SERVICE')
     readonly _tenantCache: TenantCacheService
-  ) {}
+  ) { }
 
   // ══════════════════════════════════════════════════════════
   // GET /merchant/products — list all active products
@@ -76,7 +76,7 @@ export class MerchantProductsController {
   // ══════════════════════════════════════════════════════════
   // GET /merchant/products/:id — fetch single product for edit
   // ══════════════════════════════════════════════════════════
-  @Get(':id')
+  @Get(':id(uuid)')
   @RequireFeature('ecommerce')
   async findOne(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
     const db = requireExecutor();
@@ -109,7 +109,7 @@ export class MerchantProductsController {
 
     // Minimal row — dummy values overwritten when merchant saves
     const tempSlug = `draft-${crypto.randomUUID()}`;
-    const tempSku  = `DRAFT-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
+    const tempSku = `DRAFT-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
 
     const [draft] = await db
       .insert(productsInStorefront)
@@ -140,7 +140,7 @@ export class MerchantProductsController {
   // PUT /merchant/products/:id — Publish Draft (or update existing)
   // Validates full schema and sets is_active = true
   // ══════════════════════════════════════════════════════════
-  @Put(':id')
+  @Put(':id(uuid)')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_CREATED', entityType: 'product' })
   async publishDraft(
@@ -192,17 +192,17 @@ export class MerchantProductsController {
           ...rem,
           // S3 Defense: normalize empty strings to null
           countryOfOrigin: rem.countryOfOrigin || null,
-          barcode:         rem.barcode         || null,
-          videoUrl:        rem.videoUrl        || null,
-          digitalFileUrl:  rem.digitalFileUrl  || null,
+          barcode: rem.barcode || null,
+          videoUrl: rem.videoUrl || null,
+          digitalFileUrl: rem.digitalFileUrl || null,
           name: { ar: nameAr, en: nameEn },
           shortDescription: { ar: shortDescriptionAr || null, en: shortDescriptionEn || null },
-          longDescription:  { ar: descriptionAr || null,      en: descriptionEn || null },
-          taxBasisPoints:   Math.round((taxPercentage || 0) * 100),
-          basePrice:        String(basePrice),
-          salePrice:        salePrice      ? String(salePrice)      : null,
-          costPrice:        costPrice      ? String(costPrice)      : null,
-          compareAtPrice:   compareAtPrice ? String(compareAtPrice) : null,
+          longDescription: { ar: descriptionAr || null, en: descriptionEn || null },
+          taxBasisPoints: Math.round((taxPercentage || 0) * 100),
+          basePrice: String(basePrice),
+          salePrice: salePrice ? String(salePrice) : null,
+          costPrice: costPrice ? String(costPrice) : null,
+          compareAtPrice: compareAtPrice ? String(compareAtPrice) : null,
           isActive: true,     // ← Promotes draft → live product
           publishedAt: new Date().toISOString(),
           updatedAt: new Date(),
@@ -246,17 +246,17 @@ export class MerchantProductsController {
     const productData: InferInsertModel<typeof productsInStorefront> = {
       ...rem,
       countryOfOrigin: rem.countryOfOrigin || null,
-      barcode:         rem.barcode         || null,
-      videoUrl:        rem.videoUrl        || null,
-      digitalFileUrl:  rem.digitalFileUrl  || null,
+      barcode: rem.barcode || null,
+      videoUrl: rem.videoUrl || null,
+      digitalFileUrl: rem.digitalFileUrl || null,
       name: { ar: nameAr, en: nameEn },
       shortDescription: { ar: shortDescriptionAr || null, en: shortDescriptionEn || null },
-      longDescription:  { ar: descriptionAr || null,      en: descriptionEn || null },
-      taxBasisPoints:   Math.round((taxPercentage || 0) * 100),
-      basePrice:        String(basePrice),
-      salePrice:        salePrice      ? String(salePrice)      : null,
-      costPrice:        costPrice      ? String(costPrice)      : null,
-      compareAtPrice:   compareAtPrice ? String(compareAtPrice) : null,
+      longDescription: { ar: descriptionAr || null, en: descriptionEn || null },
+      taxBasisPoints: Math.round((taxPercentage || 0) * 100),
+      basePrice: String(basePrice),
+      salePrice: salePrice ? String(salePrice) : null,
+      costPrice: costPrice ? String(costPrice) : null,
+      compareAtPrice: compareAtPrice ? String(compareAtPrice) : null,
     };
 
     const db = requireExecutor();
@@ -280,7 +280,7 @@ export class MerchantProductsController {
       return { success: true, data: product };
     } catch (error) {
       const pgErr = error as Record<string, unknown>;
-      
+
       if (pgErr?.['code'] === '23514') {
         throw new BadRequestException('Invalid product data: Check barcode format');
       }
@@ -301,7 +301,7 @@ export class MerchantProductsController {
   // Accepts flat form fields, transforms to JSONB before DB write.
   // Uses optimistic concurrency locking via `version`.
   // ══════════════════════════════════════════════════════════
-  @Patch(':id')
+  @Patch(':id(uuid)')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_UPDATED', entityType: 'product' })
   async update(
@@ -325,18 +325,18 @@ export class MerchantProductsController {
     const mappedData: Partial<InferInsertModel<typeof productsInStorefront>> = {
       ...updateData,
       // S3 Defense: normalize empty strings → null
-      barcode:        (updateData.barcode        || null) as string | null,
-      countryOfOrigin:(updateData.countryOfOrigin || null) as string | null,
-      videoUrl:       (updateData.videoUrl        || null) as string | null,
-      digitalFileUrl: (updateData.digitalFileUrl  || null) as string | null,
+      barcode: (updateData.barcode || null) as string | null,
+      countryOfOrigin: (updateData.countryOfOrigin || null) as string | null,
+      videoUrl: (updateData.videoUrl || null) as string | null,
+      digitalFileUrl: (updateData.digitalFileUrl || null) as string | null,
       updatedAt: new Date().toISOString(),
     };
 
-    if (basePrice      !== undefined) mappedData.basePrice      = String(basePrice);
-    if (salePrice      !== undefined) mappedData.salePrice      = salePrice      ? String(salePrice)      : null;
-    if (costPrice      !== undefined) mappedData.costPrice      = costPrice      ? String(costPrice)      : null;
+    if (basePrice !== undefined) mappedData.basePrice = String(basePrice);
+    if (salePrice !== undefined) mappedData.salePrice = salePrice ? String(salePrice) : null;
+    if (costPrice !== undefined) mappedData.costPrice = costPrice ? String(costPrice) : null;
     if (compareAtPrice !== undefined) mappedData.compareAtPrice = compareAtPrice ? String(compareAtPrice) : null;
-    if (taxPercentage  !== undefined) mappedData.taxBasisPoints = Math.round(taxPercentage * 100);
+    if (taxPercentage !== undefined) mappedData.taxBasisPoints = Math.round(taxPercentage * 100);
 
     // JSONB: name — always update both languages together
     if (nameAr !== undefined || nameEn !== undefined) {
@@ -401,7 +401,7 @@ export class MerchantProductsController {
   //   → SOFT DELETE (deleted_at = NOW())
   //   → MinIO untouched (images needed for order history & invoices)
   // ══════════════════════════════════════════════════════════
-  @Delete(':id')
+  @Delete(':id(uuid)')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_DELETED', entityType: 'product' })
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
