@@ -185,32 +185,40 @@ export class MerchantProductsController {
       ...rem
     } = body;
 
-    const [saved] = await db
-      .update(productsInStorefront)
-      .set({
-        ...rem,
-        // S3 Defense: normalize empty strings to null
-        countryOfOrigin: rem.countryOfOrigin || null,
-        barcode:         rem.barcode         || null,
-        videoUrl:        rem.videoUrl        || null,
-        digitalFileUrl:  rem.digitalFileUrl  || null,
-        name: { ar: nameAr, en: nameEn },
-        shortDescription: { ar: shortDescriptionAr || null, en: shortDescriptionEn || null },
-        longDescription:  { ar: descriptionAr || null,      en: descriptionEn || null },
-        taxBasisPoints:   Math.round((taxPercentage || 0) * 100),
-        basePrice:        String(basePrice),
-        salePrice:        salePrice      ? String(salePrice)      : null,
-        costPrice:        costPrice      ? String(costPrice)      : null,
-        compareAtPrice:   compareAtPrice ? String(compareAtPrice) : null,
-        isActive: true,     // ← Promotes draft → live product
-        publishedAt: new Date().toISOString(),
-        updatedAt: new Date(),
-      })
-      .where(eq(productsInStorefront.id, id))
-      .returning();
+    try {
+      const [saved] = await db
+        .update(productsInStorefront)
+        .set({
+          ...rem,
+          // S3 Defense: normalize empty strings to null
+          countryOfOrigin: rem.countryOfOrigin || null,
+          barcode:         rem.barcode         || null,
+          videoUrl:        rem.videoUrl        || null,
+          digitalFileUrl:  rem.digitalFileUrl  || null,
+          name: { ar: nameAr, en: nameEn },
+          shortDescription: { ar: shortDescriptionAr || null, en: shortDescriptionEn || null },
+          longDescription:  { ar: descriptionAr || null,      en: descriptionEn || null },
+          taxBasisPoints:   Math.round((taxPercentage || 0) * 100),
+          basePrice:        String(basePrice),
+          salePrice:        salePrice      ? String(salePrice)      : null,
+          costPrice:        costPrice      ? String(costPrice)      : null,
+          compareAtPrice:   compareAtPrice ? String(compareAtPrice) : null,
+          isActive: true,     // ← Promotes draft → live product
+          publishedAt: new Date().toISOString(),
+          updatedAt: new Date(),
+        })
+        .where(eq(productsInStorefront.id, id))
+        .returning();
 
-    await this.syncCache(subdomain);
-    return { success: true, data: saved };
+      await this.syncCache(subdomain);
+      return { success: true, data: saved };
+    } catch (error) {
+      const pgErr = error as Record<string, unknown>;
+      if (pgErr?.['code'] === '23514') {
+        throw new BadRequestException('Invalid product data: Check barcode format');
+      }
+      throw error;
+    }
   }
 
   // ══════════════════════════════════════════════════════════
@@ -272,6 +280,11 @@ export class MerchantProductsController {
       return { success: true, data: product };
     } catch (error) {
       const pgErr = error as Record<string, unknown>;
+      
+      if (pgErr?.['code'] === '23514') {
+        throw new BadRequestException('Invalid product data: Check barcode format');
+      }
+
       this.logger.error(`PRODUCT_CREATE_FAILURE: ${JSON.stringify({
         message: pgErr['message'], code: pgErr['code'],
         detail: pgErr['detail'], constraint: pgErr['constraint'],

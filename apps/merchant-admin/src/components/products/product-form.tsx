@@ -547,13 +547,14 @@ export function ProductForm({
                       <Image src={mainImage as string} alt="Main product" width={96} height={96} className="h-full w-full object-cover" />
                     </div>
                   )}
-                  <label className={`flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm hover:bg-muted/50 ${errors.mainImage ? 'border-destructive text-destructive' : ''}`}>
+                  <label className={`flex items-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm ${draftInitializing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'} ${errors.mainImage ? 'border-destructive text-destructive' : ''}`}>
                     {uploadingKey === 'main' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                     {uploadingKey === 'main' ? 'Uploading...' : 'Upload Main Image'}
                     <input
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      disabled={draftInitializing}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) handleImageUpload(file, 'main', (url) => setValue('mainImage', url));
@@ -578,13 +579,14 @@ export function ProductForm({
                       >×</button>
                     </div>
                   ))}
-                  <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-xs text-muted-foreground hover:bg-muted/50">
+                  <label className={`flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-xs text-muted-foreground ${draftInitializing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted/50'}`}>
                     {uploadingKey === 'gallery' ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
                     Add Image
                     <input
                       type="file"
                       accept="image/*,video/mp4,video/webm"
                       className="hidden"
+                      disabled={draftInitializing}
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) handleImageUpload(file, 'gallery', (url) => {

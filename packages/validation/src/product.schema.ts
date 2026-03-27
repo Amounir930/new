@@ -104,7 +104,12 @@ export const BaseProductSchemaShape = z.object({
     .min(1, 'Slug is required')
     .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
   sku: z.string().min(1, 'SKU is required').max(100),
-  barcode: z.string().max(50).optional(),
+  barcode: z
+    .string()
+    .regex(/^[A-Za-z0-9-]{8,50}$/, 'Invalid barcode format')
+    .optional()
+    .or(z.literal(''))
+    .transform((val) => (val === '' ? undefined : val)),
   brandId: z.string().uuid('Invalid brand ID').optional(),
   categoryId: z.string().uuid('Invalid category ID').optional(),
   // Optional: empty string → undefined (DB rejects '' but accepts NULL)

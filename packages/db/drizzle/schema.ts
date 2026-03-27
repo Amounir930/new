@@ -1583,7 +1583,7 @@ export const productsInStorefront = pgTable(
     }).onDelete('restrict'),
     check(
       'chk_barcode_format',
-      sql`(barcode IS NULL) OR ((barcode)::text ~ '^[A-Z0-9-]{8,50} $'::text)`
+      sql`(barcode IS NULL) OR ((barcode)::text ~ '^[A-Za-z0-9-]{8,50}$'::text)`
     ),
     check(
       'chk_compare_price',
