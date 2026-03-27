@@ -37,10 +37,10 @@ import { ConfigModule, ConfigService } from '@apex/config';
     TenantsController,
     TenantsPublicController,
     MerchantConfigController,
-    MerchantProductsController,
+    BulkImportController,        // ← Specialized routes FIRST (prevents /export shadowing)
     MerchantUploadController,
     ProductMediaController,
-    BulkImportController,
+    MerchantProductsController,  // ← Wildcard /:id LAST
   ],
   providers: [
     ImportWorker,
@@ -48,5 +48,5 @@ import { ConfigModule, ConfigService } from '@apex/config';
     BulkImportTemplateService,
   ],
 })
-export class TenantsModule {}
+export class TenantsModule { }
 
