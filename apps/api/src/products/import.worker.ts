@@ -41,7 +41,7 @@ const ImportRowSchema = z.object({
   nameEn: z.string().min(2).max(255),
   sku: z.string().regex(/^[A-Z0-9_-]{3,50}$/, 'SKU must be uppercase letters, numbers, underscores, or hyphens (3-50 chars)'),
   basePrice: z.coerce.number().min(0),
-  niche: z.enum(['retail', 'food', 'digital', 'services']),
+  niche: z.enum(['retail', 'wellness', 'education', 'services', 'hospitality', 'real_estate', 'creative', 'food', 'digital']),
   slug: z.string().optional(),
   // Pricing
   salePrice: z.coerce.number().min(0).optional(),
@@ -299,7 +299,7 @@ export class ImportWorker {
           id: r._productId,
           name: { ar: r.nameAr, en: r.nameEn },
           sku: r.sku,
-          niche: r.niche,
+          niche: (r.niche === 'food' || r.niche === 'digital') ? 'retail' : r.niche,  // Map legacy niches to retail
           basePrice: String(r.basePrice),
           salePrice: r.salePrice != null ? String(r.salePrice) : null,
           costPrice: r.costPrice != null ? String(r.costPrice) : null,
@@ -334,7 +334,7 @@ export class ImportWorker {
           keywords: parseCommaSeparated(r.keywords)?.join(' ') ?? null,
           mainImage: (r._mainImageUrl || '') as string,  // S3 FIX: NOT NULL constraint - explicit string cast
           galleryImages: r._galleryUrls.length > 0 ? r._galleryUrls : [],
-          publishedAt: new Date(),
+          publishedAt: new Date().toISOString(),  // S3 FIX: Convert to string for DB compatibility
         }));
 
         await dbInsert.insert(productsInStorefront).values(inserts);
