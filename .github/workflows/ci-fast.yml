@@ -33,7 +33,7 @@ jobs:
     name: 'Secret Scanning'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Gitleaks Scan
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: secret-scan
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: secret-scan
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
@@ -156,7 +156,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: s1-compliance
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
@@ -193,7 +193,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [s1-compliance]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: IaC & Container Security Scan (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
@@ -211,7 +211,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [db-schema]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Verify Zod Usage
         run: |
           echo "🔍 Checking Zod Schema Compliance..."
@@ -243,7 +243,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [security-audit, boundary-check, zod-check]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
@@ -302,7 +302,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "latest"
@@ -339,7 +339,7 @@ jobs:
     needs: unit-tests
     if: always() && needs.unit-tests.result == 'success'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Download Coverage Reports
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -396,7 +396,7 @@ jobs:
           - 6379:6379
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -538,7 +538,7 @@ jobs:
           --health-retries 5
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       
       - name: Check Docker Files Exist
         run: |
