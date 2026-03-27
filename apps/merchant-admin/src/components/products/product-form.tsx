@@ -110,9 +110,11 @@ function TabNav({ active, onPrev, onNext }: { active: TabId; onPrev?: () => void
 export function ProductForm({
   initialData,
   onSubmit,
+  isEditMode = false,
 }: {
   initialData?: Partial<CreateProductInput>;
   onSubmit: (data: CreateProductInput) => Promise<void>;
+  isEditMode?: boolean;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
   const [loading, setLoading] = useState(false);
@@ -266,12 +268,19 @@ export function ProductForm({
       {/* HEADER */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">New Product</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Complete all sections to publish. <span className="text-destructive font-medium text-xs ml-1">* Required fields are marked with an asterisk</span></p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isEditMode ? 'Edit Product' : 'New Product'}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isEditMode
+              ? 'Update product details. SKU and slug are locked to preserve data integrity.'
+              : 'Complete all sections to publish.'}
+            {!isEditMode && <span className="text-destructive font-medium text-xs ml-1">* Required fields are marked with an asterisk</span>}
+          </p>
         </div>
         <Button type="submit" disabled={loading} size="lg" className="gap-2">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {loading ? 'Saving...' : 'Save Product'}
+          {loading ? 'Saving...' : isEditMode ? 'Update Product' : 'Save Product'}
         </Button>
       </div>
 
@@ -308,13 +317,31 @@ export function ProductForm({
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="slug">URL Slug <span className="text-destructive">*</span></Label>
-                  <Input id="slug" placeholder="my-product-slug" {...register('slug')} className={errors.slug ? 'border-destructive ring-destructive' : ''} />
+                  <Label htmlFor="slug" className="flex items-center gap-1.5">
+                    URL Slug <span className="text-destructive">*</span>
+                    {isEditMode && <span className="text-xs text-muted-foreground flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Read-only</span>}
+                  </Label>
+                  <Input
+                    id="slug"
+                    placeholder="my-product-slug"
+                    {...register('slug')}
+                    disabled={isEditMode}
+                    className={`${errors.slug ? 'border-destructive ring-destructive' : ''} ${isEditMode ? 'cursor-not-allowed opacity-60 bg-muted/20' : ''}`}
+                  />
                   {errors.slug && <p className="text-xs text-destructive">{errors.slug.message as string}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="sku">SKU <span className="text-destructive">*</span></Label>
-                  <Input id="sku" placeholder="WH-1000-XM5" {...register('sku')} className={errors.sku ? 'border-destructive ring-destructive' : ''} />
+                  <Label htmlFor="sku" className="flex items-center gap-1.5">
+                    SKU <span className="text-destructive">*</span>
+                    {isEditMode && <span className="text-xs text-muted-foreground flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Read-only</span>}
+                  </Label>
+                  <Input
+                    id="sku"
+                    placeholder="WH-1000-XM5"
+                    {...register('sku')}
+                    disabled={isEditMode}
+                    className={`${errors.sku ? 'border-destructive ring-destructive' : ''} ${isEditMode ? 'cursor-not-allowed opacity-60 bg-muted/20' : ''}`}
+                  />
                   {errors.sku && <p className="text-xs text-destructive">{errors.sku.message as string}</p>}
                 </div>
               </div>

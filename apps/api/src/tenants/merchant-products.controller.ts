@@ -297,7 +297,9 @@ export class MerchantProductsController {
   }
 
   // ══════════════════════════════════════════════════════════
-  // PATCH /merchant/products/:id — partial field update
+  // PATCH /merchant/products/:id — Full edit update
+  // Accepts flat form fields, transforms to JSONB before DB write.
+  // Uses optimistic concurrency locking via `version`.
   // ══════════════════════════════════════════════════════════
   @Patch(':id')
   @RequireFeature('ecommerce')
@@ -321,32 +323,62 @@ export class MerchantProductsController {
 
     const mappedData: Partial<InferInsertModel<typeof productsInStorefront>> = {
       ...updateData,
+      // S3 Defense: normalize empty strings → null
+      barcode:        (updateData.barcode        || null) as string | null,
+      countryOfOrigin:(updateData.countryOfOrigin || null) as string | null,
+      videoUrl:       (updateData.videoUrl        || null) as string | null,
+      digitalFileUrl: (updateData.digitalFileUrl  || null) as string | null,
+      updatedAt: new Date().toISOString(),
     };
 
-    if (basePrice    !== undefined) mappedData.basePrice    = String(basePrice);
-    if (salePrice    !== undefined) mappedData.salePrice    = salePrice    ? String(salePrice)    : null;
-    if (costPrice    !== undefined) mappedData.costPrice    = costPrice    ? String(costPrice)    : null;
+    if (basePrice      !== undefined) mappedData.basePrice      = String(basePrice);
+    if (salePrice      !== undefined) mappedData.salePrice      = salePrice      ? String(salePrice)      : null;
+    if (costPrice      !== undefined) mappedData.costPrice      = costPrice      ? String(costPrice)      : null;
     if (compareAtPrice !== undefined) mappedData.compareAtPrice = compareAtPrice ? String(compareAtPrice) : null;
     if (taxPercentage  !== undefined) mappedData.taxBasisPoints = Math.round(taxPercentage * 100);
-    if (nameAr || nameEn) mappedData.name = { ar: nameAr || '', en: nameEn || '' };
-    if (shortDescriptionAr !== undefined || shortDescriptionEn !== undefined)
-      mappedData.shortDescription = { ar: shortDescriptionAr || null, en: shortDescriptionEn || null };
-    if (descriptionAr !== undefined || descriptionEn !== undefined)
-      mappedData.longDescription = { ar: descriptionAr || null, en: descriptionEn || null };
+
+    // JSONB: name — always update both languages together
+    if (nameAr !== undefined || nameEn !== undefined) {
+      mappedData.name = { ar: nameAr ?? '', en: nameEn ?? '' };
+    }
+    if (shortDescriptionAr !== undefined || shortDescriptionEn !== undefined) {
+      mappedData.shortDescription = { ar: shortDescriptionAr ?? null, en: shortDescriptionEn ?? null };
+    }
+    if (descriptionAr !== undefined || descriptionEn !== undefined) {
+      mappedData.longDescription = { ar: descriptionAr ?? null, en: descriptionEn ?? null };
+    }
 
     const db = requireExecutor();
-    const [product] = await db
-      .update(productsInStorefront)
-      .set({ ...mappedData, version: version + 1 })
-      .where(and(
-        eq(productsInStorefront.id, id),
-        eq(productsInStorefront.version, version)
-      ))
-      .returning();
 
-    await this.syncCache(subdomain);
-    return { success: true, data: product };
+    try {
+      const [product] = await db
+        .update(productsInStorefront)
+        .set({ ...mappedData, version: (version ?? 0) + 1 })
+        .where(and(
+          eq(productsInStorefront.id, id),
+          isNull(productsInStorefront.deletedAt),
+          ...(version !== undefined ? [eq(productsInStorefront.version, version)] : [])
+        ))
+        .returning();
+
+      if (!product) {
+        // Optimistic lock miss — product updated concurrently
+        throw new BadRequestException('Product was modified by another session. Please refresh and try again.');
+      }
+
+      await this.syncCache(subdomain);
+      return { success: true, data: product };
+    } catch (error) {
+      const pgErr = error as Record<string, unknown>;
+      if (pgErr?.['code'] === '23514') {
+        throw new BadRequestException('Invalid product data: Check barcode format (8–50 alphanumeric characters)');
+      }
+      throw error instanceof BadRequestException
+        ? error
+        : new InternalServerErrorException('Failed to update product.');
+    }
   }
+
 
   // ══════════════════════════════════════════════════════════
   // DELETE /merchant/products/:id — Conditional Delete

@@ -20,13 +20,12 @@ import { apiFetch } from '@/lib/api';
 
 interface Product {
   id: string;
-  nameEn: string;
-  nameAr: string;
+  name: { ar: string; en: string };
   sku: string;
-  basePrice: number;
-  stockQuantity: number;
+  basePrice: string; // DB returns numeric as string
   isActive: boolean;
   mainImage?: string;
+  publishedAt?: string | null;
 }
 
 export default function ProductsPage() {
@@ -89,18 +88,18 @@ export default function ProductsPage() {
         </TableCell>
         <TableCell className="font-medium">
           <div>
-            <p>{product.nameEn}</p>
-            <p className="text-xs text-muted-foreground">{product.nameAr}</p>
+            <p>{product.name?.en ?? '—'}</p>
+            <p className="text-xs text-muted-foreground">{product.name?.ar ?? ''}</p>
           </div>
         </TableCell>
         <TableCell className="font-mono text-xs">{product.sku}</TableCell>
-        <TableCell>${product.basePrice}</TableCell>
+        <TableCell>${parseFloat(product.basePrice || '0').toFixed(2)}</TableCell>
         <TableCell>
           <Badge
-            variant={product.stockQuantity > 0 ? 'secondary' : 'destructive'}
+            variant={product.publishedAt ? 'secondary' : 'outline'}
             className="rounded-md"
           >
-            {product.stockQuantity} in stock
+            {product.publishedAt ? 'Live' : 'Draft'}
           </Badge>
         </TableCell>
         <TableCell>
