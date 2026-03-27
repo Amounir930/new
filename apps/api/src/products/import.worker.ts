@@ -135,7 +135,7 @@ export class ImportWorker {
   constructor(
     private readonly fileValidation: FileValidationService,
     readonly _crypto: EncryptionService,
-  ) {}
+  ) { }
 
   @Process('product-import')
   async handleImport(job: Job<JobData>) {
@@ -332,7 +332,7 @@ export class ImportWorker {
           specifications: parseDelimited(r.specifications),
           tags: parseCommaSeparated(r.tags),
           keywords: parseCommaSeparated(r.keywords)?.join(' ') ?? null,
-          mainImage: r._mainImageUrl ?? null,
+          mainImage: r._mainImageUrl ?? '',  // S3 FIX: NOT NULL constraint - use '' instead of null
           galleryImages: r._galleryUrls.length > 0 ? r._galleryUrls : [],
           publishedAt: new Date(),
         }));
@@ -463,7 +463,7 @@ export class ImportWorker {
       if ('hyperlink' in value && 'text' in value) {
         // Prefer the hyperlink URL for image fields, text for everything else
         return String((value as { hyperlink: string; text: string }).hyperlink ||
-                      (value as { hyperlink: string; text: string }).text);
+          (value as { hyperlink: string; text: string }).text);
       }
 
       // Formula: { formula: string; result: CellValue; date1904?: boolean }
