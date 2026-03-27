@@ -332,7 +332,7 @@ export class ImportWorker {
           specifications: parseDelimited(r.specifications),
           tags: parseCommaSeparated(r.tags),
           keywords: parseCommaSeparated(r.keywords)?.join(' ') ?? null,
-          mainImage: r._mainImageUrl ?? '',  // S3 FIX: NOT NULL constraint - use '' instead of null
+          mainImage: (r._mainImageUrl || '') as string,  // S3 FIX: NOT NULL constraint - explicit string cast
           galleryImages: r._galleryUrls.length > 0 ? r._galleryUrls : [],
           publishedAt: new Date(),
         }));
