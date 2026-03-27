@@ -93,10 +93,10 @@ function hydrateProductForForm(raw: RawProduct): Partial<CreateProductInput> & {
     requiresShipping: raw.requiresShipping ?? true,
     isDigital: raw.isDigital ?? false,
 
-    // Dimensions — JSONB {h, w, l} maps directly to form's nested dimensions field
-    dimensions: raw.dimensions
-      ? { h: raw.dimensions.h ?? 0, w: raw.dimensions.w ?? 0, l: raw.dimensions.l ?? 0 }
-      : { h: 0, w: 0, l: 0 },
+    // Flat dimensions (DB JSONB {h,w,l} → form fields dimHeight/dimWidth/dimLength)
+    dimHeight: raw.dimensions?.h ?? 0,
+    dimWidth: raw.dimensions?.w ?? 0,
+    dimLength: raw.dimensions?.l ?? 0,
 
     // Status flags
     isActive: raw.isActive ?? true,

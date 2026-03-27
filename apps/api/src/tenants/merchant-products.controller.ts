@@ -318,6 +318,7 @@ export class MerchantProductsController {
       descriptionAr, descriptionEn,
       taxPercentage,
       basePrice, salePrice, costPrice, compareAtPrice,
+      dimHeight, dimWidth, dimLength, // ← extract flat dims; NEVER pass to Drizzle directly
       ...updateData
     } = body;
 
@@ -346,6 +347,15 @@ export class MerchantProductsController {
     }
     if (descriptionAr !== undefined || descriptionEn !== undefined) {
       mappedData.longDescription = { ar: descriptionAr ?? null, en: descriptionEn ?? null };
+    }
+
+    // JSONB: reassemble flat dim fields → dimensions column
+    if (dimHeight !== undefined || dimWidth !== undefined || dimLength !== undefined) {
+      mappedData.dimensions = {
+        h: dimHeight ?? 0,
+        w: dimWidth ?? 0,
+        l: dimLength ?? 0,
+      };
     }
 
     const db = requireExecutor();

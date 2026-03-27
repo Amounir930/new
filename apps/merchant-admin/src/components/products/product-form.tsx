@@ -147,7 +147,9 @@ export function ProductForm({
       minOrderQty: 1,
       lowStockThreshold: 5,
       weight: undefined,
-      dimensions: { h: 0, w: 0, l: 0 },
+      dimHeight: 0,
+      dimWidth: 0,
+      dimLength: 0,
       trackInventory: true,
       requiresShipping: true,
       isDigital: false,
@@ -454,14 +456,19 @@ export function ProductForm({
                   <div className="space-y-2">
                     <Label>Dimensions (cm)</Label>
                     <div className="grid grid-cols-3 gap-3">
-                      {([['h', 'Height'], ['w', 'Width'], ['l', 'Length']] as const).map(([dim, lbl]) => (
-                        <div key={dim} className="space-y-1">
-                          <Label className="text-xs">{lbl}</Label>
-                          <Input type="number" min="0" step="0.1" placeholder="0" {...register(`dimensions.${dim}` as any)} className={errors.dimensions ? 'border-destructive ring-destructive' : ''} />
-                        </div>
-                      ))}
+                      <div className="space-y-1">
+                        <Label className="text-xs">Height</Label>
+                        <Input type="number" min="0" step="0.1" placeholder="0" {...register('dimHeight' as any)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Width</Label>
+                        <Input type="number" min="0" step="0.1" placeholder="0" {...register('dimWidth' as any)} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Length</Label>
+                        <Input type="number" min="0" step="0.1" placeholder="0" {...register('dimLength' as any)} />
+                      </div>
                     </div>
-                    {errors.dimensions && <p className="text-xs text-destructive mt-1">{errors.dimensions.message as string}</p>}
                   </div>
                 </>
               )}

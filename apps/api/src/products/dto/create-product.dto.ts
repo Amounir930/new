@@ -16,7 +16,11 @@ export class UpdateProductDto extends createZodDto(
   // Use the raw ZodObject (BaseProductSchemaShape) for .extend()
   // BaseCreateProductSchema is ZodEffects (superRefine) which has no .extend()
   BaseProductSchemaShape.extend({
-    version: z.number().int().positive('Version must be a positive integer'),
+    version: z.number().int().nonnegative().optional(),
+    // Flat dimension fields from edit form — reassembled to JSONB in controller
+    dimHeight: z.coerce.number().min(0).optional(),
+    dimWidth:  z.coerce.number().min(0).optional(),
+    dimLength: z.coerce.number().min(0).optional(),
   })
 ) {}
 
