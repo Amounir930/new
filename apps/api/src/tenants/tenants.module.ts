@@ -2,6 +2,7 @@ import { AuditModule } from '@apex/audit';
 import { TenantCacheModule } from '@apex/middleware';
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { BulkExportController } from '../products/bulk-export.controller';
 import { BulkImportController } from '../products/bulk-import.controller';
 import { BulkImportTemplateService } from '../products/bulk-import-template.service';
 import { ImportWorker } from '../products/import.worker';
@@ -37,7 +38,8 @@ import { ConfigModule, ConfigService } from '@apex/config';
     TenantsController,
     TenantsPublicController,
     MerchantConfigController,
-    BulkImportController,        // ← Specialized routes FIRST (prevents /export shadowing)
+    BulkImportController,        // ← Specialized routes FIRST
+    BulkExportController,        // ← RESTORED: Export endpoint
     MerchantUploadController,
     ProductMediaController,
     MerchantProductsController,  // ← Wildcard /:id LAST
