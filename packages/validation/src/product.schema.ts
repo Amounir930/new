@@ -143,6 +143,11 @@ export const BaseProductSchemaShape = z.object({
   requiresShipping: z.boolean().default(true),
   isDigital: z.boolean().default(false),
 
+  // Flat dimension fields — used by frontend forms & bulk import
+  dimHeight: z.coerce.number().min(0).optional().default(0),
+  dimWidth:  z.coerce.number().min(0).optional().default(0),
+  dimLength: z.coerce.number().min(0).optional().default(0),
+
   // === TAB 4: PRODUCT DETAILS ===
   shortDescriptionAr: z.string().max(1000).optional(),
   shortDescriptionEn: z.string().max(1000).optional(),
