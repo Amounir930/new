@@ -27,6 +27,7 @@ import type { Job } from 'bull';
 import AdmZip from 'adm-zip';
 import ExcelJS from 'exceljs';
 import { z } from 'zod';
+import { PRODUCT_NICHES } from '@apex/validation';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { FileValidationService } from './file-validation.service';
 
@@ -41,7 +42,7 @@ const ImportRowSchema = z.object({
   nameEn: z.string().min(2).max(255),
   sku: z.string().regex(/^[A-Z0-9_-]{3,50}$/, 'SKU must be uppercase letters, numbers, underscores, or hyphens (3-50 chars)'),
   basePrice: z.coerce.number().min(0),
-  niche: z.enum(['retail', 'wellness', 'education', 'services', 'hospitality', 'real_estate', 'creative', 'food', 'digital']),
+  niche: z.enum(PRODUCT_NICHES),
   slug: z.string().optional(),
   // Pricing
   salePrice: z.coerce.number().min(0).optional(),

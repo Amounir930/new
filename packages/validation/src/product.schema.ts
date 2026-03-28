@@ -1,8 +1,18 @@
 import { z } from 'zod';
 
-// ═══════════════════════════════════════════════════════════════
-// NICHE-SPECIFIC ATTRIBUTE SCHEMAS (S3 Validation)
-// ═══════════════════════════════════════════════════════════════
+export const PRODUCT_NICHES = [
+  'retail',
+  'food',
+  'digital',
+  'services',
+  'wellness',
+  'education',
+  'hospitality',
+  'real_estate',
+  'creative',
+] as const;
+
+export const EmptyAttributesSchema = z.object({}).catchall(z.unknown());
 
 export const RetailAttributes = z.object({
   material: z.string().max(500).optional(),
@@ -171,15 +181,7 @@ export const BaseProductSchemaShape = z.object({
   isReturnable: z.boolean().default(true),
 
   // === TAB 7: ADVANCED ===
-  niche: z.enum([
-    'retail',
-    'wellness',
-    'education',
-    'services',
-    'hospitality',
-    'real_estate',
-    'creative',
-  ]),
+  niche: z.enum(PRODUCT_NICHES),
   attributes: AttributesSchema.default({}),
   warrantyPeriod: z.coerce.number().int().positive().optional(),
   warrantyUnit: z.enum(['days', 'months', 'years']).optional(),
@@ -213,8 +215,10 @@ export const CreateProductSchema = BaseProductSchema
     }
 
     // Niche-specific attributes validation
-    const nicheSchemas: Record<string, z.ZodTypeAny> = {
+    const nicheSchemas: Record<(typeof PRODUCT_NICHES)[number], z.ZodTypeAny> = {
       retail: RetailAttributes,
+      food: EmptyAttributesSchema,
+      digital: EmptyAttributesSchema,
       wellness: WellnessAttributes,
       education: EducationAttributes,
       services: ServicesAttributes,
@@ -242,6 +246,8 @@ export const CreateProductSchema = BaseProductSchema
 // ═══════════════════════════════════════════════════════════════
 type AttributesType =
   | { niche: 'retail'; attributes: z.infer<typeof RetailAttributes> }
+  | { niche: 'food'; attributes: z.infer<typeof EmptyAttributesSchema> }
+  | { niche: 'digital'; attributes: z.infer<typeof EmptyAttributesSchema> }
   | { niche: 'wellness'; attributes: z.infer<typeof WellnessAttributes> }
   | { niche: 'education'; attributes: z.infer<typeof EducationAttributes> }
   | { niche: 'services'; attributes: z.infer<typeof ServicesAttributes> }

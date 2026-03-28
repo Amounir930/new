@@ -20,7 +20,7 @@ import { apiFetch } from '@/lib/api';
 
 interface Product {
   id: string;
-  name: { ar: string; en: string };
+  name: { ar?: string | null; en?: string | null } | null;
   sku: string;
   basePrice: string; // DB returns numeric as string
   isActive: boolean;
@@ -49,7 +49,7 @@ export default function ProductsPage() {
   }
 
   async function handleDelete(product: Product) {
-    if (!window.confirm(`Delete "${product.nameEn}"?\n\nThis action cannot be undone.`)) return;
+    if (!window.confirm(`Delete "${product.name?.en ?? product.name?.ar ?? 'Product'}"?\n\nThis action cannot be undone.`)) return;
 
     setDeletingId(product.id);
     const toastId = toast.loading('Deleting product...');
@@ -77,7 +77,7 @@ export default function ProductsPage() {
             {product.mainImage ? (
               <Image
                 src={product.mainImage}
-                alt={product.nameEn}
+                alt={product.name?.en ?? 'Product'}
                 fill
                 className="object-cover"
               />
@@ -128,7 +128,7 @@ export default function ProductsPage() {
               className="h-8 w-8 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={() => handleDelete(product)}
               disabled={isDeleting}
-              aria-label={`Delete ${product.nameEn}`}
+              aria-label={`Delete ${product.name?.en ?? product.name?.ar ?? 'Product'}`}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import { ProductForm } from '@/components/products/product-form';
 import { apiFetch } from '@/lib/api';
 import type { CreateProductInput } from '@apex/validation';
+import { PRODUCT_NICHES } from '@apex/validation';
+
+type Niche = (typeof PRODUCT_NICHES)[number];
 
 // ─── Raw DB Product shape ────────────────────────────────────────────────────
 interface RawProduct {
@@ -16,7 +19,7 @@ interface RawProduct {
   longDescription?: { ar?: string | null; en?: string | null } | null;
   sku: string;
   slug: string;
-  niche: string;
+  niche: Niche;
   barcode?: string | null;
   basePrice: string;
   salePrice?: string | null;
@@ -54,13 +57,13 @@ interface RawProduct {
 // ─── Hydration Mapper ─────────────────────────────────────────────────────────
 // Transforms the raw DB/API response shape → flat ProductForm defaultValues.
 // This is the critical bridge that prevents the rendering crash.
-function hydrateProductForForm(raw: RawProduct): Partial<CreateProductInput> & { id: string; version: number } {
-  return {
-    // Identity (passed through for edit mode detection + PATCH call)
+function hydrateProductForForm(raw: RawProduct): CreateProductInput & { id: string; version: number } {
+  const common = {
+    // Identity
     id: raw.id,
     version: raw.version,
 
-    // Flat name fields (DB returns nested JSONB { ar, en })
+    // Flat name fields
     nameAr: raw.name?.ar ?? '',
     nameEn: raw.name?.en ?? '',
 
@@ -70,7 +73,7 @@ function hydrateProductForForm(raw: RawProduct): Partial<CreateProductInput> & {
     descriptionAr: raw.longDescription?.ar ?? undefined,
     descriptionEn: raw.longDescription?.en ?? undefined,
 
-    // Identifiers — READ-ONLY in edit mode (locked at UI level)
+    // Identifiers
     sku: raw.sku,
     slug: raw.slug,
     barcode: raw.barcode ?? undefined,
@@ -78,7 +81,7 @@ function hydrateProductForForm(raw: RawProduct): Partial<CreateProductInput> & {
     categoryId: raw.categoryId ?? undefined,
     countryOfOrigin: raw.countryOfOrigin ?? undefined,
 
-    // Pricing — string → number
+    // Pricing
     basePrice: parseFloat(raw.basePrice ?? '0'),
     salePrice: raw.salePrice ? parseFloat(raw.salePrice) : undefined,
     costPrice: raw.costPrice ? parseFloat(raw.costPrice) : undefined,
@@ -93,7 +96,7 @@ function hydrateProductForForm(raw: RawProduct): Partial<CreateProductInput> & {
     requiresShipping: raw.requiresShipping ?? true,
     isDigital: raw.isDigital ?? false,
 
-    // Flat dimensions (DB JSONB {h,w,l} → form fields dimHeight/dimWidth/dimLength)
+    // Flat dimensions
     dimHeight: raw.dimensions?.h ?? 0,
     dimWidth: raw.dimensions?.w ?? 0,
     dimLength: raw.dimensions?.l ?? 0,
@@ -103,14 +106,10 @@ function hydrateProductForForm(raw: RawProduct): Partial<CreateProductInput> & {
     isFeatured: raw.isFeatured ?? false,
     isReturnable: raw.isReturnable ?? true,
 
-    // Niche
-    niche: (raw.niche ?? 'retail') as CreateProductInput['niche'],
-
-    // JSONB fields — pass as-is (form handles them natively)
-    attributes: (raw.attributes ?? {}) as CreateProductInput['attributes'],
-    specifications: (raw.specifications ?? {}) as Record<string, string>,
+    // JSONB fields
+    specifications: raw.specifications ?? {},
     tags: raw.tags ?? [],
-    galleryImages: (raw.galleryImages ?? []) as CreateProductInput['galleryImages'],
+    galleryImages: raw.galleryImages ?? [],
 
     // Media
     mainImage: raw.mainImage ?? '',
@@ -126,6 +125,21 @@ function hydrateProductForForm(raw: RawProduct): Partial<CreateProductInput> & {
     warrantyPeriod: raw.warrantyPeriod ?? undefined,
     warrantyUnit: (raw.warrantyUnit ?? undefined) as CreateProductInput['warrantyUnit'],
   };
+
+  const rawAttr = raw.attributes ?? {};
+
+  // STRICT UNION SATISFACTION WITH SPECIFIC ASSERTIONS (NO 'any')
+  switch (raw.niche) {
+    case 'retail':      return { ...common, niche: 'retail',      attributes: rawAttr as Extract<CreateProductInput, { niche: 'retail' }>['attributes'] };
+    case 'wellness':    return { ...common, niche: 'wellness',    attributes: rawAttr as Extract<CreateProductInput, { niche: 'wellness' }>['attributes'] };
+    case 'education':   return { ...common, niche: 'education',   attributes: rawAttr as Extract<CreateProductInput, { niche: 'education' }>['attributes'] };
+    case 'services':    return { ...common, niche: 'services',    attributes: rawAttr as Extract<CreateProductInput, { niche: 'services' }>['attributes'] };
+    case 'hospitality': return { ...common, niche: 'hospitality', attributes: rawAttr as Extract<CreateProductInput, { niche: 'hospitality' }>['attributes'] };
+    case 'real_estate': return { ...common, niche: 'real_estate', attributes: rawAttr as Extract<CreateProductInput, { niche: 'real_estate' }>['attributes'] };
+    case 'creative':    return { ...common, niche: 'creative',    attributes: rawAttr as Extract<CreateProductInput, { niche: 'creative' }>['attributes'] };
+    case 'food':        return { ...common, niche: 'food',        attributes: rawAttr as Extract<CreateProductInput, { niche: 'food' }>['attributes'] };
+    case 'digital':     return { ...common, niche: 'digital',     attributes: rawAttr as Extract<CreateProductInput, { niche: 'digital' }>['attributes'] };
+  }
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
