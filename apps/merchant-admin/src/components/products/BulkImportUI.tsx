@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Download, Upload, FileSpreadsheet } from 'lucide-react';
 
 export default function BulkImportUI() {
   const [file, setFile] = useState<File | null>(null);
@@ -31,28 +32,80 @@ export default function BulkImportUI() {
     }
   };
 
+  const downloadTemplate = async () => {
+    try {
+      const response = await fetch(`${config.apiUrl}/merchant/products/import/template`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adm_tkn') || ''}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to download template');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'product-import-template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Template download failed:', err);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch(`${config.apiUrl}/merchant/products/export`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adm_tkn') || ''}`,
+        },
+      });
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `products-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export error:', err);
+    }
+  };
+
   const startImport = async () => {
     if (!file) return;
     setLoading(true);
 
-    // Read file as base64 for simplicity in this demo (S8: Secure Upload)
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64 = e.target?.result as string;
+    const formData = new FormData();
+    formData.append('file', file); // 'file' matches the FileInterceptor('file') in backend
 
-      try {
-        const data = await apiFetch<{ jobId: string }>('/merchant/products/import', {
-          method: 'POST',
-          body: JSON.stringify({ fileData: base64 }),
-        });
-        setJobId(data.jobId);
-      } catch (_err) {
-        /* 'Import failed', err */
-      } finally {
-        setLoading(false);
+    try {
+      const response = await fetch(`${config.apiUrl}/merchant/products/import`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('adm_tkn') || ''}`,
+          // DO NOT SET Content-Type. The browser must set it automatically with the boundary for multipart/form-data.
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Import failed');
       }
-    };
-    reader.readAsDataURL(file);
+
+      const data = await response.json();
+      setJobId(data.jobId);
+    } catch (err) {
+      console.error('Import error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -87,14 +140,32 @@ export default function BulkImportUI() {
             Bulk Product Import
           </CardTitle>
           <CardDescription>
-            Upload a CSV file to import products in bulk.
+            Download the Excel template, fill it out, and upload to import products in bulk.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Download Template Button */}
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={downloadTemplate}
+              className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download Excel Template
+            </Button>
+            <p className="text-xs text-gray-500">
+              <FileSpreadsheet className="h-3 w-3 inline mr-1" />
+              Please use the provided template. Exported CSV files cannot be re-imported.
+            </p>
+          </div>
+
+          {/* File Upload */}
           <div className="flex items-center gap-4">
             <Input
               type="file"
-              accept=".csv"
+              accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, .zip, application/zip"
               onChange={handleFileChange}
               className="max-w-xs border-2 border-dashed border-gray-200 p-2 h-auto"
             />
@@ -105,11 +176,17 @@ export default function BulkImportUI() {
                 loading ||
                 (jobId !== null && status?.status !== 'completed')
               }
-              className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md hover:shadow-lg"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md hover:shadow-lg gap-2"
             >
+              <Upload className="h-4 w-4" />
               {loading ? 'Starting...' : 'Start Import'}
             </Button>
           </div>
+
+          {/* Helper Text */}
+          <p className="text-xs text-gray-500 mt-2">
+            Accepted formats: <strong>.xlsx</strong> (Excel) or <strong>.zip</strong> (compressed template)
+          </p>
 
           {status && (
             <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -171,9 +248,10 @@ export default function BulkImportUI() {
         <CardContent>
           <Button
             variant="outline"
-            onClick={() => window.open(`${config.apiUrl}/merchant/products/export`, '_blank')}
+            onClick={handleExport}
             className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
           >
+            <Download className="h-4 w-4 mr-2" />
             Export All to CSV
           </Button>
         </CardContent>
