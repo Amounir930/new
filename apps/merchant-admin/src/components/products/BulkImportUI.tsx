@@ -28,9 +28,21 @@ export default function BulkImportUI() {
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    const validExtensions = ['.xlsx', '.zip'];
+    const fileName = selectedFile.name;
+    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+
+    if (!validExtensions.includes(ext)) {
+      toast.error('Invalid file format. Please select an .xlsx or .zip template.');
+      e.target.value = ''; // Reset input so user can re-select
+      setFile(null);
+      return;
     }
+
+    setFile(selectedFile);
   };
 
   const downloadTemplate = async () => {

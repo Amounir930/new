@@ -46,9 +46,14 @@ export async function apiFetch<T>(
   const tenantId = await extractTenantFromHost();
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   };
+
+  // 🛡️ MULTIPART FIX: Only set application/json if not using FormData
+  // If FormData is present, the browser MUST set the boundary itself.
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // 🛡️ SSR Protocol Pivot: Use internal Docker URL for server-side fetches
   const isServer = typeof window === 'undefined';
