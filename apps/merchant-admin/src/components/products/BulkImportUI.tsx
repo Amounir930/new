@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { config } from '@/config';
+import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import {
   Card,
@@ -34,13 +35,9 @@ export default function BulkImportUI() {
 
   const downloadTemplate = async () => {
     try {
-      const response = await fetch(`${config.apiUrl}/merchant/products/import/template`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adm_tkn') || ''}`,
-        },
+      const blob = await apiFetch<Blob>('/merchant/products/import/template', {
+        responseType: 'blob',
       });
-      if (!response.ok) throw new Error('Failed to download template');
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -51,19 +48,16 @@ export default function BulkImportUI() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Template download failed:', err);
+      toast.error('Failed to download template');
     }
   };
 
   const handleExport = async () => {
     try {
-      const response = await fetch(`${config.apiUrl}/merchant/products/export`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adm_tkn') || ''}`,
-        },
+      const blob = await apiFetch<Blob>('/merchant/products/export', {
+        responseType: 'blob',
       });
-      if (!response.ok) throw new Error('Export failed');
 
-      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -74,6 +68,7 @@ export default function BulkImportUI() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Export error:', err);
+      toast.error('Failed to export products');
     }
   };
 
@@ -82,27 +77,23 @@ export default function BulkImportUI() {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append('file', file); // 'file' matches the FileInterceptor('file') in backend
+    formData.append('file', file);
 
     try {
-      const response = await fetch(`${config.apiUrl}/merchant/products/import`, {
+      const data = await apiFetch<{ jobId: string }>('/merchant/products/import', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('adm_tkn') || ''}`,
-          // DO NOT SET Content-Type. The browser must set it automatically with the boundary for multipart/form-data.
-        },
         body: formData,
+        // When using FormData with fetch, do NOT set Content-Type header.
+        // apiFetch only sets 'application/json' if it's not already overridden.
+        // But we need to make sure apiFetch doesn't force json if it's FormData.
+        headers: {}, 
       });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Import failed');
-      }
-
-      const data = await response.json();
       setJobId(data.jobId);
-    } catch (err) {
+      toast.success('Import started successfully');
+    } catch (err: any) {
       console.error('Import error:', err);
+      toast.error(err.message || 'Import failed');
     } finally {
       setLoading(false);
     }

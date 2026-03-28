@@ -35,6 +35,7 @@ export const setAuthToken = (token: string) => {
 
 interface FetchOptions extends RequestInit {
   token?: string;
+  responseType?: 'json' | 'blob';
 }
 
 export async function apiFetch<T>(
@@ -75,6 +76,10 @@ export async function apiFetch<T>(
   }
 
   if (res.status === 204) return {} as T;
+
+  if (options.responseType === 'blob') {
+    return (await res.blob()) as T;
+  }
 
   return res.json();
 }
