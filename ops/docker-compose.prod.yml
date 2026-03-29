@@ -232,6 +232,7 @@ services:
       context: /opt/apex-v2
       dockerfile: /opt/apex-v2/apps/api/Dockerfile
     restart: always
+    command: ["bun", "dist/apps/api/src/worker.js"]
     env_file: .env
     depends_on:
       apex-postgres:
@@ -275,7 +276,6 @@ services:
       MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       SKIP_S1_COMPLEXITY_CHECK: "true"
-    command: ["/bin/sh", "-c", "bun $(find dist -name worker.js | head -n 1)"]
     networks:
       - apex-internal
       - apex-data
