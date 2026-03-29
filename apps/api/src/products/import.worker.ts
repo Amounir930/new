@@ -67,7 +67,11 @@ const ImportRowSchema = z.object({
   warrantyPeriod: z.coerce.number().int().min(0).optional(),
   warrantyUnit: z.enum(['days', 'months', 'years']).optional(),
   // Flags
-  isActive: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
+  // Flags (C3 fix: Default to true if cell is empty, null, or undefined)
+  isActive: z.preprocess(
+    (v) => (v === null || v === undefined || v === '') ? true : String(v).toUpperCase() === 'TRUE',
+    z.boolean()
+  ).default(true),
   isFeatured: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
   isDigital: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
   requiresShipping: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
@@ -423,15 +427,16 @@ export class ImportWorker {
     const rows: Record<string, unknown>[] = [];
     sheet.eachRow((row, rowNum) => {
       if (rowNum === 1) return; // skip header row
-      // Skip the example/template row (row 2 — italicized guidance)
-      if (rowNum === 2) return;
-
       const obj: Record<string, unknown> = {};
       row.eachCell({ includeEmpty: false }, (cell, colNum) => {
         const key = headers[colNum - 1];
         if (!key) return;
         obj[key] = this.normalizeCellValue(cell.value);
       });
+
+      // Fix A: Content-aware placeholder skip. 
+      // Safely ignores the instruction row (APX-PH-001) without dropping Row 2 merchant data.
+      if (obj['sku'] === 'APX-PH-001') return;
 
       // Skip completely empty rows
       if (Object.values(obj).some((v) => v !== '' && v != null)) {

@@ -65,12 +65,7 @@ export class MerchantProductsController {
     return db
       .select()
       .from(productsInStorefront)
-      .where(
-        and(
-          eq(productsInStorefront.isActive, true),
-          isNull(productsInStorefront.deletedAt)
-        )
-      );
+      .where(isNull(productsInStorefront.deletedAt));
   }
 
   // ══════════════════════════════════════════════════════════
