@@ -291,7 +291,7 @@ export class ProvisioningService {
               | 'education'
               | 'services'
               | 'hospitality'
-              | 'real-estate'
+              | 'real_estate'
               | 'creative'
           ),
           eq(onboardingBlueprintsInGovernance.plan, options.plan)

@@ -157,7 +157,7 @@ async function seedGovernance() {
         | 'education'
         | 'services'
         | 'hospitality'
-        | 'real-estate'
+        | 'real_estate'
         | 'creative',
       status: bp.status as 'active' | 'paused',
     });

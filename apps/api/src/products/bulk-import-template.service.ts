@@ -164,7 +164,10 @@ export class BulkImportTemplateService {
 
     // Final adjustments
     instSheet.views = [{ activeCell: 'A1' }];
-    workbook.views = [{ activeTab: 0 }]; // Start on Instructions
+    workbook.views = [{ 
+      x: 0, y: 0, width: 10000, height: 10000, 
+      firstSheet: 0, activeTab: 0, visibility: 'visible' 
+    }]; // Start on Instructions
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);

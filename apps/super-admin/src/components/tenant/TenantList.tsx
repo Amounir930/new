@@ -48,7 +48,7 @@ export function TenantList() {
     'education',
     'services',
     'hospitality',
-    'real-estate',
+    'real_estate',
     'creative',
   ];
 

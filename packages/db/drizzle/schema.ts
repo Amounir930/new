@@ -151,6 +151,8 @@ export const nicheType = pgEnum('niche_type', [
   'hospitality',
   'real_estate',
   'creative',
+  'food',
+  'digital',
 ]);
 export const outboxStatus = pgEnum('outbox_status', [
   'pending',
@@ -226,8 +228,10 @@ export const tenantNiche = pgEnum('tenant_niche', [
   'education',
   'services',
   'hospitality',
-  'real-estate',
+  'real_estate',
   'creative',
+  'food',
+  'digital',
 ]);
 export const tenantPlan = pgEnum('tenant_plan', [
   'free',

@@ -63,7 +63,7 @@ export class BlueprintsService {
           | 'education'
           | 'services'
           | 'hospitality'
-          | 'real-estate'
+          | 'real_estate'
           | 'creative',
         status: (dto.status || 'active') as 'active' | 'paused',
         uiConfig: dto.uiConfig || {},
@@ -115,7 +115,7 @@ export class BlueprintsService {
           | 'education'
           | 'services'
           | 'hospitality'
-          | 'real-estate'
+          | 'real_estate'
           | 'creative'
           | undefined,
         status: dto.status as 'active' | 'paused' | undefined,

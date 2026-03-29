@@ -135,7 +135,7 @@ enum "audit_result_enum" {
 }
 enum "tenant_niche" {
   schema = schema.public
-  values = ["retail", "wellness", "education", "services", "hospitality", "real-estate", "creative"]
+  values = ["retail", "wellness", "education", "services", "hospitality", "real_estate", "creative"]
 }
 enum "tenant_plan" {
   schema = schema.public

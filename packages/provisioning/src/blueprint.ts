@@ -64,7 +64,7 @@ export async function createBlueprint(
         | 'education'
         | 'services'
         | 'hospitality'
-        | 'real-estate'
+        | 'real_estate'
         | 'creative',
       status: (options.status || 'active') as 'active' | 'paused',
       uiConfig: options.uiConfig || {}, // Ensure mandatory field is provided
@@ -242,7 +242,7 @@ export async function updateBlueprint(
       | 'education'
       | 'services'
       | 'hospitality'
-      | 'real-estate'
+      | 'real_estate'
       | 'creative';
   if (updates.status) updateData.status = updates.status as 'active' | 'paused';
   if (updates.uiConfig)

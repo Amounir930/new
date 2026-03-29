@@ -70,7 +70,7 @@ export class TenantsPublicController {
               | 'education'
               | 'services'
               | 'hospitality'
-              | 'real-estate'
+              | 'real_estate'
               | 'creative'
           )
         )

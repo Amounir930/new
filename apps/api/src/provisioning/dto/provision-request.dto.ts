@@ -25,7 +25,7 @@ export interface ProvisionRequest {
     | 'education'
     | 'services'
     | 'hospitality'
-    | 'real-estate'
+    | 'real_estate'
     | 'creative'
     | null;
   uiConfig: Record<string, unknown>;
@@ -100,7 +100,7 @@ export const ProvisionRequestSchema = z.object({
       'education',
       'services',
       'hospitality',
-      'real-estate',
+      'real_estate',
       'creative',
     ])
     .optional()
