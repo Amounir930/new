@@ -13,18 +13,28 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Download, Upload, FileSpreadsheet } from 'lucide-react';
+import { Download, Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+
+interface RowError {
+  row: number;
+  sku?: string;
+  errors: { field: string; message: string }[];
+}
+
+interface ImportStatus {
+  status?: string;
+  progress?: number;
+  totalRows?: number;
+  successRows?: number;
+  errorRows?: number;
+  errors?: RowError[];
+  cause?: string;
+}
 
 export default function BulkImportUI() {
   const [file, setFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState<{
-    status?: string;
-    progress?: number;
-    totalRows?: number;
-    successRows?: number;
-    errorRows?: number;
-  } | null>(null);
+  const [status, setStatus] = useState<ImportStatus | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,19 +126,23 @@ export default function BulkImportUI() {
 
     const interval = setInterval(async () => {
       try {
-        const data = await apiFetch<{
-          status?: string;
-          progress?: number;
-          totalRows?: number;
-          successRows?: number;
-          errorRows?: number;
-        }>(`/merchant/products/import/${jobId}`);
-        setStatus(data);
+        const data = await apiFetch<ImportStatus>(`/merchant/products/import/${jobId}`);
+        
+        // Sync importedCount (backend) to successRows (frontend)
+        // and errors.length to errorRows
+        const updatedStatus: ImportStatus = {
+          ...data,
+          successRows: (data as any).importedCount ?? data.successRows ?? 0,
+          errorRows: data.errors?.length ?? data.errorRows ?? 0,
+        };
+
+        setStatus(updatedStatus);
+        
         if (data.status === 'completed' || data.status === 'failed') {
           clearInterval(interval);
         }
       } catch (_err) {
-        /* 'Polling failed', err */
+        /* 'Polling failed' */
       }
     }, 2000);
 
@@ -235,6 +249,68 @@ export default function BulkImportUI() {
                   </p>
                 </div>
               </div>
+
+              {/* 🛡️ Live Error Inspector (Max 100) */}
+              {status.errors && status.errors.length > 0 && (
+                <div className="mt-6 border-t border-red-100 pt-6 animate-in zoom-in-95 duration-300">
+                  <div className="flex items-center gap-2 mb-4 text-red-700">
+                    <AlertCircle className="h-5 w-5" />
+                    <h3 className="font-bold">Error Report ({status.errors.length} issues)</h3>
+                  </div>
+                  
+                  <div className="bg-red-50/50 rounded-xl border border-red-100 overflow-hidden">
+                    <div className="max-h-[300px] overflow-y-auto divide-y divide-red-100 custom-scrollbar">
+                      {status.errors.slice(0, 100).map((err, idx) => (
+                        <div key={idx} className="p-3 hover:bg-red-50 transition-colors">
+                          <div className="flex items-start gap-3">
+                            <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5">
+                              ROW {err.row}
+                            </span>
+                            <div className="flex-1 space-y-1">
+                              {err.sku && (
+                                <p className="text-[10px] font-mono text-red-500 uppercase tracking-tight">
+                                  SKU: {err.sku}
+                                </p>
+                              )}
+                              <ul className="space-y-1">
+                                {err.errors.map((e, eIdx) => (
+                                  <li key={eIdx} className="text-sm text-red-900 leading-tight">
+                                    <span className="font-semibold text-red-700 capitalize">
+                                      {e.field.replace(/([A-Z])/g, ' $1')}:
+                                    </span>{' '}
+                                    {e.message}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {status.errors.length > 100 && (
+                        <div className="p-4 bg-red-100/50 text-center">
+                          <p className="text-sm text-red-700 font-medium">
+                            ...and {status.errors.length - 100} more errors. 
+                            <br />
+                            Please fix the above and re-upload.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ℹ️ General Failure Cause */}
+              {status.status === 'failed' && status.cause && !status.errors?.length && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 items-start">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-red-900">Import Job Errored</p>
+                    <p className="text-sm text-red-700 font-medium">{status.cause}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
