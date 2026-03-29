@@ -232,7 +232,6 @@ services:
       context: /opt/apex-v2
       dockerfile: /opt/apex-v2/apps/api/Dockerfile
     restart: always
-    command: ["bun", "dist/apps/api/src/worker.js"]
     env_file: .env
     depends_on:
       apex-postgres:
