@@ -210,6 +210,14 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
   },
 
   // === TAB 5: CONTENT & DESCRIPTIONS ===
+  tags: {
+    labelAr: 'الوسوم (Tags)',
+    labelEn: 'Product Tags',
+    descAr: 'كلمات دلالية لتصنيف المنتج، مفصولة بفاصلة (،). مثال: جديد، عرض، صيف',
+    descEn: 'Comma-separated labels to categorize the product (e.g., new, sale, summer).',
+    example: 'new, sale, electronics',
+    required: false,
+  },
   shortDescriptionAr: {
     labelAr: 'وصف قصير (عربي)',
     labelEn: 'Short Description (Arabic)',
@@ -251,6 +259,14 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     descEn: 'Direct link to the main product image. Must start with https://',
     example: 'https://cdn.apex.shop/img/prod-01.jpg',
     required: true,
+  },
+  galleryImages: {
+    labelAr: 'صور المعرض (URLs)',
+    labelEn: 'Gallery Images (URLs)',
+    descAr: 'قائمة روابط لصور إضافية للمنتج، مفصولة بـ | (الرمز العمودي).',
+    descEn: 'Pipe-separated list of additional product image URLs (e.g., img1.jpg | img2.jpg).',
+    example: 'https://cdn.shop/1.jpg | https://cdn.shop/2.jpg',
+    required: false,
   },
   videoUrl: {
     labelAr: 'رابط الفيديو (YouTube/Vimeo)',
@@ -311,6 +327,14 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     required: false,
   },
 
+  isReturnable: {
+    labelAr: 'قابل للإرجاع',
+    labelEn: 'Is Returnable',
+    descAr: 'هل يمكن للعميل إرجاع المنتج (TRUE أو FALSE).',
+    descEn: 'Whether the product can be returned by the customer (TRUE or FALSE).',
+    example: 'TRUE',
+    required: false,
+  },
   // === TAB 8: ADVANCED & ATTRIBUTES ===
   niche: {
     labelAr: 'التصنيف البيعي (Niche)',
