@@ -298,6 +298,12 @@ export class ImportWorker {
       }
 
       // ─── Phase 4: Bulk DB Transaction ─────────────────────────────────
+      if (resolvedRows.length === 0) {
+        this.logger.log(`[ImportWorker] Job ${jobId} completed with 0 new products (only examples/empty rows found).`);
+        await job.progress(100);
+        return { status: 'done', importedCount: 0, errors: [] };
+      }
+
       const { db: dbInsert, release: releaseInsert } = await getTenantDb(tenantId, schemaName);
       try {
         const inserts = resolvedRows.map((r) => ({
