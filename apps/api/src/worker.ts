@@ -23,6 +23,9 @@ async function bootstrap() {
   logger.log(
     '🏗️  Dedicated Worker Service Started (BullMQ + Persistent Events)'
   );
+  logger.log(
+    '✅  Background Consumer Engine Active (Ready for Import/Export Jobs)'
+  );
 
   // Keep the process alive
   process.on('SIGTERM', async () => {
