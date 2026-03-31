@@ -32,14 +32,12 @@ interface ReviewsSectionProps {
   reviewCount: number;
 }
 
+// Static skeleton items - order never changes
+const REVIEW_SKELETONS = ['review-sk-1', 'review-sk-2', 'review-sk-3'] as const;
+const RATING_DISTRIBUTION = [5, 4, 3, 2, 1] as const;
+
 /**
  * ── REVIEWS SECTION ──
- *
- * Features:
- * 1. Server-side initial render (ISR)
- * 2. Client-side pagination
- * 3. Verified purchase badges
- * 4. Rating distribution display
  */
 export function ReviewsSection({
   tenantId,
@@ -48,16 +46,9 @@ export function ReviewsSection({
   avgRating,
   reviewCount,
 }: ReviewsSectionProps) {
-  const [reviews, setReviews] = useState<Review[]>(
-    initialReviews?.reviews || []
-  );
+  const [reviews, setReviews] = useState<Review[]>(initialReviews?.reviews || []);
   const [pagination, setPagination] = useState<ReviewsPagination>(
-    initialReviews?.pagination || {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 0,
-    }
+    initialReviews?.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 }
   );
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,9 +86,9 @@ export function ReviewsSection({
           <div className="text-sm text-gray-500">{reviewCount} reviews</div>
         </div>
 
-        {/* Rating Distribution (placeholder - would need backend support) */}
+        {/* Rating Distribution */}
         <div className="flex-1 space-y-2">
-          {[5, 4, 3, 2, 1].map((stars) => (
+          {RATING_DISTRIBUTION.map((stars) => (
             <div key={stars} className="flex items-center gap-3">
               <span className="text-sm text-gray-600 w-8">{stars}★</span>
               <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -114,13 +105,8 @@ export function ReviewsSection({
       {/* Reviews List */}
       <div className="space-y-6">
         {isLoading ? (
-          // Loading skeleton
-          [...Array(3)].map((_, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
-            <div
-              key={`review-skeleton-${i}`}
-              className="animate-pulse p-6 bg-gray-50 rounded-2xl"
-            >
+          REVIEW_SKELETONS.map((id) => (
+            <div key={id} className="animate-pulse p-6 bg-gray-50 rounded-2xl">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-10 h-10 bg-gray-200 rounded-full" />
                 <div className="flex-1">
@@ -139,9 +125,7 @@ export function ReviewsSection({
             <p>No reviews yet. Be the first to review this product!</p>
           </div>
         ) : (
-          reviews.map((review) => (
-            <ReviewCard key={review.id} review={review} />
-          ))
+          reviews.map((review) => <ReviewCard key={review.id} review={review} />)
         )}
       </div>
 
@@ -156,11 +140,9 @@ export function ReviewsSection({
           >
             Previous
           </button>
-
           <span className="px-4 py-2 text-sm text-gray-500">
             Page {currentPage} of {pagination.totalPages}
           </span>
-
           <button
             type="button"
             onClick={() => loadPage(currentPage + 1)}
@@ -219,7 +201,6 @@ function ReviewCard({ review }: ReviewCardProps) {
           <span className="text-sm text-gray-500">{date}</span>
         </div>
       </div>
-
       {review.comment && (
         <p className="text-gray-700 leading-relaxed">{review.comment}</p>
       )}

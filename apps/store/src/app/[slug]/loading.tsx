@@ -2,6 +2,13 @@
  * ── PDP LOADING SKELETON ──
  * Provides visual feedback during ISR revalidation and initial load
  */
+
+// Static skeleton items - order never changes, safe to use index-based keys
+const THUMBNAIL_SKELETONS = ['sk-thumb-1', 'sk-thumb-2', 'sk-thumb-3', 'sk-thumb-4'] as const;
+const VARIANT_SKELETONS = ['sk-variant-1', 'sk-variant-2', 'sk-variant-3', 'sk-variant-4'] as const;
+const BADGE_SKELETONS = ['sk-badge-1', 'sk-badge-2', 'sk-badge-3'] as const;
+const RELATED_SKELETONS = ['sk-related-1', 'sk-related-2', 'sk-related-3', 'sk-related-4'] as const;
+
 export default function ProductLoading() {
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
@@ -20,10 +27,9 @@ export default function ProductLoading() {
         <div className="space-y-4">
           <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-200 animate-pulse" />
           <div className="flex gap-4 overflow-x-auto">
-            {[...Array(4)].map((_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
+            {THUMBNAIL_SKELETONS.map((id) => (
               <div
-                key={`thumbnail-${i}`}
+                key={id}
                 className="w-24 aspect-square bg-gray-200 rounded-xl animate-pulse flex-shrink-0"
               />
             ))}
@@ -55,10 +61,9 @@ export default function ProductLoading() {
           <div className="space-y-3">
             <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
             <div className="flex gap-3">
-              {[...Array(4)].map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
+              {VARIANT_SKELETONS.map((id) => (
                 <div
-                  key={`variant-${i}`}
+                  key={id}
                   className="w-20 h-10 bg-gray-200 rounded-xl animate-pulse"
                 />
               ))}
@@ -70,12 +75,8 @@ export default function ProductLoading() {
 
           {/* Trust Badges */}
           <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
-            {[...Array(3)].map((_, i) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
-              <div
-                key={`badge-${i}`}
-                className="flex items-center gap-3"
-              >
+            {BADGE_SKELETONS.map((id) => (
+              <div key={id} className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse" />
                 <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
               </div>
@@ -88,9 +89,8 @@ export default function ProductLoading() {
       <div className="mt-20">
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-8" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
-            <div key={`related-${i}`}>
+          {RELATED_SKELETONS.map((id) => (
+            <div key={id}>
               <div className="aspect-square bg-gray-200 rounded-2xl mb-4 animate-pulse" />
               <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse mb-2" />
               <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />

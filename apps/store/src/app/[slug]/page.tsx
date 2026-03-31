@@ -31,7 +31,9 @@ interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   const tenantId = await extractTenantFromHost();
 
@@ -41,14 +43,15 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     return { title: 'Product Not Found' };
   }
 
-  const productName = typeof product.name === 'object'
-    ? (product.name.en || product.name.ar || 'Product')
-    : product.name;
+  const productName =
+    typeof product.name === 'object'
+      ? product.name.en || product.name.ar || 'Product'
+      : product.name;
 
   const description = product.shortDescription
-    ? (typeof product.shortDescription === 'object'
-      ? (product.shortDescription.en || product.shortDescription.ar || '')
-      : product.shortDescription)
+    ? typeof product.shortDescription === 'object'
+      ? product.shortDescription.en || product.shortDescription.ar || ''
+      : product.shortDescription
     : '';
 
   return {
@@ -123,7 +126,11 @@ interface ProductActionsProps {
   variants?: ProductVariant[];
 }
 
-function ProductActions({ productId, minOrderQty, isReturnable, variants }: ProductActionsProps) {
+function ProductActions({
+  productId,
+  minOrderQty,
+  isReturnable,
+}: ProductActionsProps) {
   return (
     <div className="mt-8 space-y-4">
       <AddToCartButton
@@ -223,7 +230,8 @@ interface VariantSelectorsProps {
 }
 
 function VariantSelectors({ variants }: VariantSelectorsProps) {
-  const variantTypes = variants.length > 0 ? Object.keys(variants[0]?.options || {}) : [];
+  const variantTypes =
+    variants.length > 0 ? Object.keys(variants[0]?.options || {}) : [];
 
   if (variantTypes.length === 0) return null;
 
@@ -247,15 +255,19 @@ function VariantSelectorWrapper({
   variantType: string;
   variants: ProductVariant[];
 }) {
-  const { VariantSelector, parseVariantOptions } = require('@/components/pdp/variant-selector') as {
-    VariantSelector: React.ComponentType<{
-      variantType: string;
-      options: { id: string; name: string }[];
-      selectedOption: string | null;
-      onOptionSelect: (id: string) => void;
-    }>;
-    parseVariantOptions: (variants: ProductVariant[], type: string) => { id: string; name: string }[];
-  };
+  const { VariantSelector, parseVariantOptions } =
+    require('@/components/pdp/variant-selector') as {
+      VariantSelector: React.ComponentType<{
+        variantType: string;
+        options: { id: string; name: string }[];
+        selectedOption: string | null;
+        onOptionSelect: (id: string) => void;
+      }>;
+      parseVariantOptions: (
+        variants: ProductVariant[],
+        type: string
+      ) => { id: string; name: string }[];
+    };
 
   const options = parseVariantOptions(variants, variantType);
 
@@ -342,35 +354,43 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const [product, relatedProducts, reviews] = await Promise.all([
     getProductBySlug(tenantId, slug),
     getRelatedProducts(tenantId, 'placeholder', 8).catch(() => []),
-    getProductReviews(tenantId, 'placeholder', 1, 5).catch(() => ({ reviews: [], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } })),
+    getProductReviews(tenantId, 'placeholder', 1, 5).catch(() => ({
+      reviews: [],
+      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    })),
   ]);
 
   if (!product) {
     notFound();
   }
 
-  const productName = typeof product.name === 'object'
-    ? (product.name.en || product.name.ar || 'Product')
-    : product.name;
+  const productName =
+    typeof product.name === 'object'
+      ? product.name.en || product.name.ar || 'Product'
+      : product.name;
 
   const shortDescription = product.shortDescription
-    ? (typeof product.shortDescription === 'object'
-      ? (product.shortDescription.en || product.shortDescription.ar || '')
-      : product.shortDescription)
+    ? typeof product.shortDescription === 'object'
+      ? product.shortDescription.en || product.shortDescription.ar || ''
+      : product.shortDescription
     : '';
 
   const longDescription = product.longDescription
-    ? (typeof product.longDescription === 'object'
-      ? (product.longDescription.en || product.longDescription.ar || '')
-      : product.longDescription)
+    ? typeof product.longDescription === 'object'
+      ? product.longDescription.en || product.longDescription.ar || ''
+      : product.longDescription
     : '';
 
   const galleryImages = product.galleryImages || [];
   const mainImage = product.mainImage;
-  const allImages = [mainImage, ...galleryImages.map((img: { url: string }) => img.url)].filter(Boolean);
+  const allImages = [
+    mainImage,
+    ...galleryImages.map((img: { url: string }) => img.url),
+  ].filter(Boolean);
 
   const displayPrice = product.salePrice || product.basePrice;
-  const hasSale = product.salePrice && Number(product.salePrice) < Number(product.basePrice);
+  const hasSale =
+    product.salePrice && Number(product.salePrice) < Number(product.basePrice);
 
   const availableStock = product.inventory?.available
     ? product.inventory.available - (product.inventory.reserved || 0)
@@ -380,9 +400,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <div className="container mx-auto px-4 py-12 md:py-20">
       {/* Breadcrumb */}
       <nav className="mb-8 flex items-center text-sm font-medium text-gray-500">
-        <a href="/" className="hover:text-black transition-colors">Home</a>
+        <a href="/" className="hover:text-black transition-colors">
+          Home
+        </a>
         <span className="mx-2 text-gray-300">/</span>
-        <a href="/shop" className="hover:text-black transition-colors">Shop</a>
+        <a href="/shop" className="hover:text-black transition-colors">
+          Shop
+        </a>
         <span className="mx-2 text-gray-300">/</span>
         <span className="text-black truncate">{productName}</span>
       </nav>
@@ -408,12 +432,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </div>
 
             {product.trackInventory && (
-              <StockBadge availableStock={availableStock} trackInventory={product.trackInventory} />
+              <StockBadge
+                availableStock={availableStock}
+                trackInventory={product.trackInventory}
+              />
             )}
           </div>
 
           <div className="flex items-center gap-4 mb-6">
-            <span className="text-3xl font-black text-blue-600">${displayPrice}</span>
+            <span className="text-3xl font-black text-blue-600">
+              ${displayPrice}
+            </span>
             {hasSale && (
               <span className="text-xl text-gray-400 line-through font-bold">
                 ${product.basePrice}
@@ -448,8 +477,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
       {longDescription && (
         <section className="mt-20 max-w-4xl">
           <h2 className="text-2xl font-bold mb-6">Product Details</h2>
-          {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Content is from trusted database source (sanitized on input by merchant) */}
           <div
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is from trusted database source (sanitized on input by merchant)
             className="prose prose-lg max-w-none text-gray-600"
             dangerouslySetInnerHTML={{
               __html: longDescription.replace(/\n/g, '<br />'),

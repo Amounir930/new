@@ -15,24 +15,15 @@ interface AddToCartButtonProps {
 }
 
 /**
- * ── ADD TO CART BUTTON (OPTIMISTIC UI) ──
+ * Custom hook for add-to-cart logic
  */
-export function AddToCartButton({
-  productId,
-  variantId = null,
-  quantity = 1,
-  minOrderQty = 1,
-  disabled = false,
-  className = '',
-}: AddToCartButtonProps) {
+function useAddToCart(productId: string, variantId: string | null, quantity: number) {
   const cart = useMountedCart();
   const [isChecking, setIsChecking] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
   const handleStockCheck = useCallback(async (tenantId: string) => {
-    const stockResult = await checkStock(tenantId, [
-      { productId, variantId, quantity },
-    ]);
+    const stockResult = await checkStock(tenantId, [{ productId, variantId, quantity }]);
     return stockResult.items?.[0];
   }, [productId, variantId, quantity]);
 
@@ -43,44 +34,72 @@ export function AddToCartButton({
     }
   }, [cart, productId, variantId, quantity]);
 
-  const handleClick = useCallback(async () => {
-    if (isAdding || isChecking) return;
+  const handleClick = useCallback(
+    async (minOrderQty: number) => {
+      if (isAdding || isChecking) return false;
 
-    setIsChecking(true);
+      setIsChecking(true);
 
-    try {
-      const tenantId = await extractTenantFromHost();
-      const stockInfo = await handleStockCheck(tenantId);
+      try {
+        const tenantId = await extractTenantFromHost();
+        const stockInfo = await handleStockCheck(tenantId);
 
-      if (!stockInfo?.available) {
-        const available = stockInfo?.quantityAvailable || 0;
-        toast.error(
-          available > 0 ? `Only ${available} units available` : 'Sorry, this item is out of stock'
-        );
+        if (!stockInfo?.available) {
+          const available = stockInfo?.quantityAvailable || 0;
+          toast.error(
+            available > 0 ? `Only ${available} units available` : 'Sorry, this item is out of stock'
+          );
+          setIsChecking(false);
+          return false;
+        }
+
+        if (quantity < minOrderQty) {
+          toast.error(`Minimum order quantity is ${minOrderQty}`);
+          setIsChecking(false);
+          return false;
+        }
+
         setIsChecking(false);
-        return;
-      }
+        setIsAdding(true);
 
-      if (quantity < minOrderQty) {
-        toast.error(`Minimum order quantity is ${minOrderQty}`);
+        await handleAddToCart();
+        toast.success('Added to cart!', { duration: 2000, icon: '🛒' });
+        return true;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to add to cart';
+        toast.error(message);
+        return false;
+      } finally {
         setIsChecking(false);
-        return;
+        setIsAdding(false);
       }
+    },
+    [isAdding, isChecking, quantity, handleStockCheck, handleAddToCart]
+  );
 
-      setIsChecking(false);
-      setIsAdding(true);
+  return { isChecking, isAdding, handleClick };
+}
 
-      await handleAddToCart();
+/**
+ * ── ADD TO CART BUTTON (OPTIMISTIC UI) ──
+ */
+export function AddToCartButton({
+  productId,
+  variantId = null,
+  quantity = 1,
+  minOrderQty = 1,
+  disabled = false,
+  className = '',
+}: AddToCartButtonProps) {
+  const { isChecking, isAdding, handleClick } = useAddToCart(
+    productId,
+    variantId,
+    quantity
+  );
 
-      toast.success('Added to cart!', { duration: 2000, icon: '🛒' });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to add to cart';
-      toast.error(message);
-    } finally {
-      setIsChecking(false);
-      setIsAdding(false);
-    }
-  }, [isAdding, isChecking, quantity, minOrderQty, handleStockCheck, handleAddToCart]);
+  const handleButtonClick = () => {
+    handleClick(minOrderQty);
+  };
 
   const isDisabled = disabled || isChecking || isAdding;
 
@@ -91,7 +110,7 @@ export function AddToCartButton({
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={handleButtonClick}
       disabled={isDisabled}
       className={`
         flex-1 rounded-2xl px-8 py-5 text-base font-black shadow-2xl 
