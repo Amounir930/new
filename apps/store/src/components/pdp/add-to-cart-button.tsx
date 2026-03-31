@@ -16,13 +16,6 @@ interface AddToCartButtonProps {
 
 /**
  * ── ADD TO CART BUTTON (OPTIMISTIC UI) ──
- *
- * Features:
- * 1. Pre-click stock verification (on-demand, not polling)
- * 2. Optimistic UI update (instant feedback)
- * 3. Debounced background sync
- * 4. Error recovery (revert on failure)
- * 5. Loading states
  */
 export function AddToCartButton({
   productId,
@@ -36,34 +29,38 @@ export function AddToCartButton({
   const [isChecking, setIsChecking] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
+  const handleStockCheck = useCallback(async (tenantId: string) => {
+    const stockResult = await checkStock(tenantId, [
+      { productId, variantId, quantity },
+    ]);
+    return stockResult.items?.[0];
+  }, [productId, variantId, quantity]);
+
+  const handleAddToCart = useCallback(async () => {
+    await cart.addItem(productId, variantId, quantity);
+    if (!cart.isOpen) {
+      cart.toggleCart();
+    }
+  }, [cart, productId, variantId, quantity]);
+
   const handleClick = useCallback(async () => {
-    // Prevent double-clicks
     if (isAdding || isChecking) return;
 
     setIsChecking(true);
 
     try {
-      // ── STEP 1: PRE-CLICK STOCK VERIFICATION ──
       const tenantId = await extractTenantFromHost();
-
-      const stockResult = await checkStock(tenantId, [
-        { productId, variantId, quantity },
-      ]);
-
-      const stockInfo = stockResult.items?.[0];
+      const stockInfo = await handleStockCheck(tenantId);
 
       if (!stockInfo?.available) {
         const available = stockInfo?.quantityAvailable || 0;
         toast.error(
-          available > 0
-            ? `Only ${available} units available`
-            : 'Sorry, this item is out of stock'
+          available > 0 ? `Only ${available} units available` : 'Sorry, this item is out of stock'
         );
         setIsChecking(false);
         return;
       }
 
-      // Validate against minOrderQty
       if (quantity < minOrderQty) {
         toast.error(`Minimum order quantity is ${minOrderQty}`);
         setIsChecking(false);
@@ -73,42 +70,23 @@ export function AddToCartButton({
       setIsChecking(false);
       setIsAdding(true);
 
-      // ── STEP 2: OPTIMISTIC ADD TO CART ──
-      // The cart store handles optimistic update immediately
-      await cart.addItem(productId, variantId, quantity);
+      await handleAddToCart();
 
-      // ── STEP 3: SUCCESS FEEDBACK ──
-      toast.success('Added to cart!', {
-        duration: 2000,
-        icon: '🛒',
-      });
-
-      // Open cart drawer
-      if (!cart.isOpen) {
-        cart.toggleCart();
-      }
+      toast.success('Added to cart!', { duration: 2000, icon: '🛒' });
     } catch (error) {
-      // ── STEP 4: ERROR RECOVERY ──
-      const message =
-        error instanceof Error ? error.message : 'Failed to add to cart';
+      const message = error instanceof Error ? error.message : 'Failed to add to cart';
       toast.error(message);
-
-      // The cart store automatically reverts on sync failure
     } finally {
       setIsChecking(false);
       setIsAdding(false);
     }
-  }, [productId, variantId, quantity, minOrderQty, cart, isAdding, isChecking]);
+  }, [isAdding, isChecking, quantity, minOrderQty, handleStockCheck, handleAddToCart]);
 
-  // ── BUTTON STATES ──
   const isDisabled = disabled || isChecking || isAdding;
 
   let buttonContent = 'Add to Cart';
-  if (isChecking) {
-    buttonContent = 'Checking...';
-  } else if (isAdding) {
-    buttonContent = 'Adding...';
-  }
+  if (isChecking) buttonContent = 'Checking...';
+  else if (isAdding) buttonContent = 'Adding...';
 
   return (
     <button
@@ -118,10 +96,9 @@ export function AddToCartButton({
       className={`
         flex-1 rounded-2xl px-8 py-5 text-base font-black shadow-2xl 
         transition-all duration-200
-        ${
-          isDisabled
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-black text-white hover:bg-gray-800 hover:scale-[1.02] active:scale-95'
+        ${isDisabled
+          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          : 'bg-black text-white hover:bg-gray-800 hover:scale-[1.02] active:scale-95'
         }
         ${className}
       `}
@@ -156,8 +133,7 @@ export function AddToCartButton({
 }
 
 /**
- * ── STOCK BADGE COMPONENT ──
- * Displays stock status (In Stock / Low Stock / Out of Stock)
+ * ── STOCK BADGE ──
  */
 interface StockBadgeProps {
   availableStock?: number;
@@ -170,9 +146,7 @@ export function StockBadge({
   trackInventory = true,
   className = '',
 }: StockBadgeProps) {
-  if (!trackInventory || availableStock === undefined) {
-    return null;
-  }
+  if (!trackInventory || availableStock === undefined) return null;
 
   let badgeColor = 'bg-green-100 text-green-700';
   let badgeText = 'In Stock';
