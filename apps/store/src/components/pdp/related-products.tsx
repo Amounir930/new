@@ -58,6 +58,7 @@ export function RelatedProducts({
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
             <div key={`skeleton-${i}`} className="animate-pulse">
               <div className="aspect-square bg-gray-200 rounded-2xl mb-4" />
               <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />

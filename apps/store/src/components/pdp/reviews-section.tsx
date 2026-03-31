@@ -116,6 +116,7 @@ export function ReviewsSection({
         {isLoading ? (
           // Loading skeleton
           [...Array(3)].map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
             <div
               key={`review-skeleton-${i}`}
               className="animate-pulse p-6 bg-gray-50 rounded-2xl"

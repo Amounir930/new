@@ -21,6 +21,7 @@ export default function ProductLoading() {
           <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-200 animate-pulse" />
           <div className="flex gap-4 overflow-x-auto">
             {[...Array(4)].map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
               <div
                 key={`thumbnail-${i}`}
                 className="w-24 aspect-square bg-gray-200 rounded-xl animate-pulse flex-shrink-0"
@@ -55,6 +56,7 @@ export default function ProductLoading() {
             <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
             <div className="flex gap-3">
               {[...Array(4)].map((_, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
                 <div
                   key={`variant-${i}`}
                   className="w-20 h-10 bg-gray-200 rounded-xl animate-pulse"
@@ -69,7 +71,11 @@ export default function ProductLoading() {
           {/* Trust Badges */}
           <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
             {[...Array(3)].map((_, i) => (
-              <div key={`badge-${i}`} className="flex items-center gap-3">
+              // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
+              <div
+                key={`badge-${i}`}
+                className="flex items-center gap-3"
+              >
                 <div className="w-10 h-10 bg-gray-200 rounded-xl animate-pulse" />
                 <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
               </div>
@@ -83,6 +89,7 @@ export default function ProductLoading() {
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-8" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton loader - order never changes
             <div key={`related-${i}`}>
               <div className="aspect-square bg-gray-200 rounded-2xl mb-4 animate-pulse" />
               <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse mb-2" />
