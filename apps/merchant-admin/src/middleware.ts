@@ -28,13 +28,10 @@ async function verifyMerchantToken(token: string) {
  */
 function isMerchantAuthorized(payload: any): boolean {
   if (!payload || typeof payload !== 'object') return false;
-  
+
   // Strict check for admin-level authority
   const authorizedRoles = ['tenant_admin', 'super_admin', 'admin', 'staff'];
-  return (
-    authorizedRoles.includes(payload.role) &&
-    !!payload.tenantId
-  );
+  return authorizedRoles.includes(payload.role) && !!payload.tenantId;
 }
 
 /**
@@ -43,10 +40,10 @@ function isMerchantAuthorized(payload: any): boolean {
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Strictly enforce production cookie: adm_tkn
   const token = request.cookies.get('adm_tkn')?.value;
-  
+
   const isProtectedRoute = MERCHANT_PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );

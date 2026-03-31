@@ -1,10 +1,16 @@
 'use client';
 
+import {
+  AlertCircle,
+  CheckCircle2,
+  Download,
+  FileSpreadsheet,
+  Info,
+  Upload,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { config } from '@/config';
 import { toast } from 'sonner';
-import { apiFetch } from '@/lib/api';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -13,7 +19,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Download, Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { config } from '@/config';
+import { apiFetch } from '@/lib/api';
 
 interface RowError {
   row: number;
@@ -46,7 +53,9 @@ export default function BulkImportUI() {
     const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
 
     if (!validExtensions.includes(ext)) {
-      toast.error('Invalid file format. Please select an .xlsx or .zip template.');
+      toast.error(
+        'Invalid file format. Please select an .xlsx or .zip template.'
+      );
       e.target.value = ''; // Reset input so user can re-select
       setFile(null);
       return;
@@ -102,14 +111,17 @@ export default function BulkImportUI() {
     formData.append('file', file);
 
     try {
-      const data = await apiFetch<{ jobId: string }>('/merchant/products/import', {
-        method: 'POST',
-        body: formData,
-        // When using FormData with fetch, do NOT set Content-Type header.
-        // apiFetch only sets 'application/json' if it's not already overridden.
-        // But we need to make sure apiFetch doesn't force json if it's FormData.
-        headers: {}, 
-      });
+      const data = await apiFetch<{ jobId: string }>(
+        '/merchant/products/import',
+        {
+          method: 'POST',
+          body: formData,
+          // When using FormData with fetch, do NOT set Content-Type header.
+          // apiFetch only sets 'application/json' if it's not already overridden.
+          // But we need to make sure apiFetch doesn't force json if it's FormData.
+          headers: {},
+        }
+      );
 
       setJobId(data.jobId);
       toast.success('Import started successfully');
@@ -126,8 +138,10 @@ export default function BulkImportUI() {
 
     const interval = setInterval(async () => {
       try {
-        const data = await apiFetch<ImportStatus>(`/merchant/products/import/${jobId}`);
-        
+        const data = await apiFetch<ImportStatus>(
+          `/merchant/products/import/${jobId}`
+        );
+
         // Sync importedCount (backend) to successRows (frontend)
         // and errors.length to errorRows
         const updatedStatus: ImportStatus = {
@@ -137,7 +151,7 @@ export default function BulkImportUI() {
         };
 
         setStatus(updatedStatus);
-        
+
         if (data.status === 'completed' || data.status === 'failed') {
           clearInterval(interval);
         }
@@ -157,7 +171,8 @@ export default function BulkImportUI() {
             Bulk Product Import
           </CardTitle>
           <CardDescription>
-            Download the Excel template, fill it out, and upload to import products in bulk.
+            Download the Excel template, fill it out, and upload to import
+            products in bulk.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -174,7 +189,8 @@ export default function BulkImportUI() {
             </Button>
             <p className="text-xs text-gray-500">
               <FileSpreadsheet className="h-3 w-3 inline mr-1" />
-              Please use the provided template. Exported CSV files cannot be re-imported.
+              Please use the provided template. Exported CSV files cannot be
+              re-imported.
             </p>
           </div>
 
@@ -202,7 +218,8 @@ export default function BulkImportUI() {
 
           {/* Helper Text */}
           <p className="text-xs text-gray-500 mt-2">
-            Accepted formats: <strong>.xlsx</strong> (Excel) or <strong>.zip</strong> (compressed template)
+            Accepted formats: <strong>.xlsx</strong> (Excel) or{' '}
+            <strong>.zip</strong> (compressed template)
           </p>
 
           {status && (
@@ -255,13 +272,18 @@ export default function BulkImportUI() {
                 <div className="mt-6 border-t border-red-100 pt-6 animate-in zoom-in-95 duration-300">
                   <div className="flex items-center gap-2 mb-4 text-red-700">
                     <AlertCircle className="h-5 w-5" />
-                    <h3 className="font-bold">Error Report ({status.errors.length} issues)</h3>
+                    <h3 className="font-bold">
+                      Error Report ({status.errors.length} issues)
+                    </h3>
                   </div>
-                  
+
                   <div className="bg-red-50/50 rounded-xl border border-red-100 overflow-hidden">
                     <div className="max-h-[300px] overflow-y-auto divide-y divide-red-100 custom-scrollbar">
                       {status.errors.slice(0, 100).map((err, idx) => (
-                        <div key={idx} className="p-3 hover:bg-red-50 transition-colors">
+                        <div
+                          key={idx}
+                          className="p-3 hover:bg-red-50 transition-colors"
+                        >
                           <div className="flex items-start gap-3">
                             <span className="bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5">
                               ROW {err.row}
@@ -274,7 +296,10 @@ export default function BulkImportUI() {
                               )}
                               <ul className="space-y-1">
                                 {err.errors.map((e, eIdx) => (
-                                  <li key={eIdx} className="text-sm text-red-900 leading-tight">
+                                  <li
+                                    key={eIdx}
+                                    className="text-sm text-red-900 leading-tight"
+                                  >
                                     <span className="font-semibold text-red-700 capitalize">
                                       {e.field.replace(/([A-Z])/g, ' $1')}:
                                     </span>{' '}
@@ -286,11 +311,11 @@ export default function BulkImportUI() {
                           </div>
                         </div>
                       ))}
-                      
+
                       {status.errors.length > 100 && (
                         <div className="p-4 bg-red-100/50 text-center">
                           <p className="text-sm text-red-700 font-medium">
-                            ...and {status.errors.length - 100} more errors. 
+                            ...and {status.errors.length - 100} more errors.
                             <br />
                             Please fix the above and re-upload.
                           </p>
@@ -302,15 +327,21 @@ export default function BulkImportUI() {
               )}
 
               {/* ℹ️ General Failure Cause */}
-              {status.status === 'failed' && status.cause && !status.errors?.length && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 items-start">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-red-900">Import Job Errored</p>
-                    <p className="text-sm text-red-700 font-medium">{status.cause}</p>
+              {status.status === 'failed' &&
+                status.cause &&
+                !status.errors?.length && (
+                  <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl flex gap-3 items-start">
+                    <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-red-900">
+                        Import Job Errored
+                      </p>
+                      <p className="text-sm text-red-700 font-medium">
+                        {status.cause}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
         </CardContent>

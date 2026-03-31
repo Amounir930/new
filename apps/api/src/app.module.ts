@@ -25,10 +25,12 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { BlueprintsModule } from './blueprints/blueprints.module';
 import { MediaModule } from './common/media/media.module';
+import { OrphanMediaCleanupCron } from './cron/orphan-media-cleanup.cron';
 import { GovernanceModule } from './governance/governance.module';
 import { HealthModule } from './health/health.module';
 import { ProvisioningModule } from './provisioning/provisioning.module';
@@ -37,8 +39,6 @@ import { SecurityModule } from './security/security.module';
 import { StorefrontModule } from './storefront/storefront.module';
 import { MerchantStatsController } from './tenants/merchant-stats.controller';
 import { TenantsModule } from './tenants/tenants.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { OrphanMediaCleanupCron } from './cron/orphan-media-cleanup.cron';
 
 @Module({
   imports: [
@@ -137,9 +137,6 @@ export class AppModule implements NestModule {
         { path: 'robots.txt', method: RequestMethod.GET },
         { path: '/', method: RequestMethod.GET }
       )
-      .forRoutes(
-        { path: 'merchant/(.*)', method: RequestMethod.ALL },
-        '*'
-      );
+      .forRoutes({ path: 'merchant/(.*)', method: RequestMethod.ALL }, '*');
   }
 }

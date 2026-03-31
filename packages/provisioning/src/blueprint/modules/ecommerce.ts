@@ -20,7 +20,9 @@ export class EcommerceModule implements SeederModule {
       shipping_methods: ['standard'],
     };
 
-    process.stdout.write(`[EcommerceModule] Seeding default settings for ${context.subdomain}`);
+    process.stdout.write(
+      `[EcommerceModule] Seeding default settings for ${context.subdomain}`
+    );
 
     for (const [key, value] of Object.entries(defaultSettings)) {
       await db.execute(sql`

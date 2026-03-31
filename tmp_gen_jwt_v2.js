@@ -8,7 +8,7 @@ const payload = {
   tenantId: '88a0495b-e1dc-464d-bf80-0a0d32d07f37',
   subdomain: 'adel21', // CRITICAL: Added for Lean Fix verification
   role: 'tenant_admin',
-  jti: 'test-session-' + Date.now()
+  jti: 'test-session-' + Date.now(),
 };
 
 const token = jwt.sign(payload, SECRET, { expiresIn: '1d' });

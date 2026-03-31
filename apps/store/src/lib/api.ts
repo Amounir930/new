@@ -116,6 +116,142 @@ export async function getProductBySlug(tenantId: string, slug: string) {
   });
 }
 
+export async function getRelatedProducts(
+  tenantId: string,
+  productId: string,
+  limit: number = 8
+) {
+  return fetchStorefront(
+    `/storefront/products/${productId}/related?limit=${limit}`,
+    tenantId,
+    {
+      next: { revalidate: 300 },
+    }
+  );
+}
+
+export async function getProductReviews(
+  tenantId: string,
+  productId: string,
+  page: number = 1,
+  limit: number = 10
+) {
+  return fetchStorefront(
+    `/storefront/products/${productId}/reviews?page=${page}&limit=${limit}`,
+    tenantId,
+    {
+      next: { revalidate: 120 },
+    }
+  );
+}
+
+export async function checkStock(
+  tenantId: string,
+  items: Array<{
+    productId: string;
+    variantId: string | null;
+    quantity: number;
+  }>
+) {
+  // Client-side: always use public API
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/cart/stock-check`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId,
+    },
+    body: JSON.stringify({ items }),
+  });
+
+  if (!res.ok) {
+    const error = await res
+      .json()
+      .catch(() => ({ message: 'Stock check failed' }));
+    throw new Error(error.message);
+  }
+
+  return res.json();
+}
+
+export async function syncCart(
+  tenantId: string,
+  items: Array<{
+    productId: string;
+    variantId: string | null;
+    quantity: number;
+  }>,
+  sessionId?: string
+) {
+  // Client-side: always use public API
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/cart/sync`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId,
+      ...(sessionId ? { 'x-session-id': sessionId } : {}),
+    },
+    body: JSON.stringify({ items }),
+  });
+
+  if (!res.ok) {
+    const error = await res
+      .json()
+      .catch(() => ({ message: 'Cart sync failed' }));
+    throw new Error(error.message);
+  }
+
+  return res.json();
+}
+
+export async function addToCart(
+  tenantId: string,
+  productId: string,
+  variantId: string | null,
+  quantity: number,
+  sessionId?: string
+) {
+  // Client-side: always use public API
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/cart/add`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId,
+      ...(sessionId ? { 'x-session-id': sessionId } : {}),
+    },
+    body: JSON.stringify({ productId, variantId, quantity }),
+  });
+
+  if (!res.ok) {
+    const error = await res
+      .json()
+      .catch(() => ({ message: 'Add to cart failed' }));
+    throw new Error(error.message);
+  }
+
+  return res.json();
+}
+
+export async function getCart(tenantId: string, sessionId?: string) {
+  // Client-side: always use public API
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/cart`, {
+    headers: {
+      'x-tenant-id': tenantId,
+      ...(sessionId ? { 'x-session-id': sessionId } : {}),
+    },
+  });
+
+  if (!res.ok) {
+    return {
+      items: [],
+      subtotal: '0',
+      itemCount: 0,
+      lastSyncedAt: new Date().toISOString(),
+    };
+  }
+
+  return res.json();
+}
+
 /**
  * 🛡️ S2 FIX: Universal helper to extract tenant identifier from Host header (SSR) or hostname (Client)
  */

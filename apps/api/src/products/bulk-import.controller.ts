@@ -6,21 +6,21 @@
  *   GET  /merchant/products/import/:jobId    → Poll job status
  */
 
-import path from 'node:path';
-import fsp from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import type { Request } from 'express';
-import type { StorageEngine } from 'multer';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
 import { AuditLog } from '@apex/audit';
 import {
   type AuthenticatedRequest,
   JwtAuthGuard,
   TenantJwtMatchGuard,
 } from '@apex/auth';
+import { InjectQueue } from '@nestjs/bull';
 import {
   BadRequestException,
   Controller,
   Get,
+  Logger,
   Param,
   Post,
   Req,
@@ -28,14 +28,13 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
+import type { StorageEngine } from 'multer';
 import { diskStorage } from 'multer';
-import { BulkImportTemplateService } from './bulk-import-template.service';
+import type { BulkImportTemplateService } from './bulk-import-template.service';
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 const ALLOWED_MIMES = new Set([
@@ -52,7 +51,7 @@ export class BulkImportController {
 
   constructor(
     @InjectQueue('import-queue') private readonly importQueue: Queue,
-    private readonly templateService: BulkImportTemplateService,
+    private readonly templateService: BulkImportTemplateService
   ) {}
 
   // ─── Template Download ──────────────────────────────────────────────────
@@ -60,8 +59,10 @@ export class BulkImportController {
   async downloadTemplate(@Res() res: Response) {
     const buffer = await this.templateService.generateTemplate();
     res.set({
-      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Disposition': 'attachment; filename="apex-bulk-import-template.xlsx"',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition':
+        'attachment; filename="apex-bulk-import-template.xlsx"',
       'Content-Length': buffer.length,
     });
     res.end(buffer);
@@ -74,10 +75,18 @@ export class BulkImportController {
     FileInterceptor('file', {
       limits: { fileSize: MAX_FILE_SIZE_BYTES },
       storage: diskStorage({
-        destination: (_req: Request, _file: Express.Multer.File, cb: (err: Error | null, dest: string) => void) => {
+        destination: (
+          _req: Request,
+          _file: Express.Multer.File,
+          cb: (err: Error | null, dest: string) => void
+        ) => {
           cb(null, '/tmp');
         },
-        filename: (_req: Request, file: Express.Multer.File, cb: (err: Error | null, filename: string) => void) => {
+        filename: (
+          _req: Request,
+          file: Express.Multer.File,
+          cb: (err: Error | null, filename: string) => void
+        ) => {
           const ext = path.extname(file.originalname).toLowerCase() || '.xlsx';
           cb(null, `bulk_import_${randomUUID()}${ext}`);
         },
@@ -94,10 +103,12 @@ export class BulkImportController {
   )
   async startImport(
     @Req() req: AuthenticatedRequest,
-    @UploadedFile() file: Express.Multer.File & { path: string },
+    @UploadedFile() file: Express.Multer.File & { path: string }
   ) {
     if (!file) {
-      throw new BadRequestException('No file provided. Upload a .xlsx or .zip file.');
+      throw new BadRequestException(
+        'No file provided. Upload a .xlsx or .zip file.'
+      );
     }
 
     const subdomain = req.tenantContext?.subdomain;
@@ -127,7 +138,9 @@ export class BulkImportController {
       }
     );
 
-    this.logger.log(`[BulkImport] Queued job ${job.id} for tenant ${req.user.tenantId}`);
+    this.logger.log(
+      `[BulkImport] Queued job ${job.id} for tenant ${req.user.tenantId}`
+    );
 
     return {
       jobId: job.id,

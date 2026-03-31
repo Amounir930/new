@@ -30,7 +30,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'اسم المنتج (عربي)',
     labelEn: 'Product Name (Arabic)',
     descAr: 'الاسم المعروض للمنتج باللغة العربية. يجب أن يكون فريداً وجذاباً.',
-    descEn: 'The display name of the product in Arabic. Should be unique and catchy.',
+    descEn:
+      'The display name of the product in Arabic. Should be unique and catchy.',
     example: 'هاتف ذكي أيكس برو',
     required: true,
   },
@@ -46,15 +47,18 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'رمز SKU',
     labelEn: 'SKU Code',
     descAr: 'وحدة حفظ المخزون. معرف فريد للمنتج يستخدم لتتبع المخزون.',
-    descEn: 'Stock Keeping Unit. A unique identifier for the product used for inventory tracking.',
+    descEn:
+      'Stock Keeping Unit. A unique identifier for the product used for inventory tracking.',
     example: 'APX-PH-001',
     required: true,
   },
   slug: {
     labelAr: 'الرابط الدائم (Slug)',
     labelEn: 'SEO Slug',
-    descAr: 'جزء من الرابط (URL) الخاص بالمنتج. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.',
-    descEn: 'The product URL part. Must contain only lowercase letters, numbers, and hyphens.',
+    descAr:
+      'جزء من الرابط (URL) الخاص بالمنتج. يجب أن يحتوي على أحرف صغيرة وأرقام وشرطات فقط.',
+    descEn:
+      'The product URL part. Must contain only lowercase letters, numbers, and hyphens.',
     example: 'apex-pro-smartphone',
     required: true,
   },
@@ -69,16 +73,20 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
   brandId: {
     labelAr: 'معرف الماركة (Brand ID)',
     labelEn: 'Brand UUID',
-    descAr: 'لربط المنتج بماركة، يرجى نسخ الـ ID الخاص بها من صفحة الماركات في لوحة التحكم ولصقه هنا.',
-    descEn: 'To link a brand, navigate to the Brands page in your dashboard, copy the ID, and paste it here.',
+    descAr:
+      'لربط المنتج بماركة، يرجى نسخ الـ ID الخاص بها من صفحة الماركات في لوحة التحكم ولصقه هنا.',
+    descEn:
+      'To link a brand, navigate to the Brands page in your dashboard, copy the ID, and paste it here.',
     example: '550e8400-e29b-41d4-a716-446655440000',
     required: false,
   },
   categoryId: {
     labelAr: 'معرف التصنيف (Category ID)',
     labelEn: 'Category UUID',
-    descAr: 'لربط المنتج بتصنيف، يرجى نسخ الـ ID الخاص به من صفحة التصنيفات في لوحة التحكم ولصقه هنا.',
-    descEn: 'To link a category, navigate to the Categories page in your dashboard, copy the ID, and paste it here.',
+    descAr:
+      'لربط المنتج بتصنيف، يرجى نسخ الـ ID الخاص به من صفحة التصنيفات في لوحة التحكم ولصقه هنا.',
+    descEn:
+      'To link a category, navigate to the Categories page in your dashboard, copy the ID, and paste it here.',
     example: 'ad28f440-b3b3-4fbb-8e8e-d7d7d7d7d7d7',
     required: false,
   },
@@ -112,15 +120,18 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'السعر المشطوب (قبل الخصم)',
     labelEn: 'Compare At Price',
     descAr: 'يستخدم لعرض "سعر أصلي" بجانب سعر البيع لإظهار قيمة التوفير.',
-    descEn: 'Used to display an "original price" next to the sale price to show savings.',
+    descEn:
+      'Used to display an "original price" next to the sale price to show savings.',
     example: '1500.00',
     required: false,
   },
   costPrice: {
     labelAr: 'سعر التكلفة',
     labelEn: 'Cost Price',
-    descAr: 'تكلفة المنتج على المتجر (مخفي عن العملاء، يستخدم للتقارير الربحية).',
-    descEn: 'The cost of the product for the store (hidden from customers, used for profits reporting).',
+    descAr:
+      'تكلفة المنتج على المتجر (مخفي عن العملاء، يستخدم للتقارير الربحية).',
+    descEn:
+      'The cost of the product for the store (hidden from customers, used for profits reporting).',
     example: '750.00',
     required: false,
   },
@@ -170,7 +181,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'يتطلب شحن',
     labelEn: 'Requires Shipping',
     descAr: 'هل المنتج فيزيائي يحتاج لشحن (TRUE أو FALSE).',
-    descEn: 'Whether the product is physical and needs shipping (TRUE or FALSE).',
+    descEn:
+      'Whether the product is physical and needs shipping (TRUE or FALSE).',
     example: 'TRUE',
     required: false,
   },
@@ -178,7 +190,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'منتج رقمي',
     labelEn: 'Is Digital',
     descAr: 'هل المنتج رقمي (ملف، كود، اشتراك) (TRUE أو FALSE).',
-    descEn: 'Whether the product is digital (file, code, subscription) (TRUE or FALSE).',
+    descEn:
+      'Whether the product is digital (file, code, subscription) (TRUE or FALSE).',
     example: 'FALSE',
     required: false,
   },
@@ -213,8 +226,10 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
   tags: {
     labelAr: 'الوسوم (Tags)',
     labelEn: 'Product Tags',
-    descAr: 'كلمات دلالية لتصنيف المنتج، مفصولة بفاصلة (،). مثال: جديد، عرض، صيف',
-    descEn: 'Comma-separated labels to categorize the product (e.g., new, sale, summer).',
+    descAr:
+      'كلمات دلالية لتصنيف المنتج، مفصولة بفاصلة (،). مثال: جديد، عرض، صيف',
+    descEn:
+      'Comma-separated labels to categorize the product (e.g., new, sale, summer).',
     example: 'new, sale, electronics',
     required: false,
   },
@@ -238,7 +253,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'الوصف التفصيلي (عربي)',
     labelEn: 'Long Description (Arabic)',
     descAr: 'المواصفات الكاملة وتفاصيل المنتج (بحد أقصى 10000 حرف).',
-    descEn: 'Full specifications and product details in Arabic (max 10000 chars).',
+    descEn:
+      'Full specifications and product details in Arabic (max 10000 chars).',
     example: 'يتميز هذا الهاتف بمعالج ثماني النواة...',
     required: false,
   },
@@ -246,7 +262,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'الوصف التفصيلي (إنجليزي)',
     labelEn: 'Long Description (English)',
     descAr: 'Bilingual detailed description manual.',
-    descEn: 'Full specifications and product details in English (max 10000 chars).',
+    descEn:
+      'Full specifications and product details in English (max 10000 chars).',
     example: 'This phone features an octa-core processor...',
     required: false,
   },
@@ -264,7 +281,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'صور المعرض (URLs)',
     labelEn: 'Gallery Images (URLs)',
     descAr: 'قائمة روابط لصور إضافية للمنتج، مفصولة بـ | (الرمز العمودي).',
-    descEn: 'Pipe-separated list of additional product image URLs (e.g., img1.jpg | img2.jpg).',
+    descEn:
+      'Pipe-separated list of additional product image URLs (e.g., img1.jpg | img2.jpg).',
     example: 'https://cdn.shop/1.jpg | https://cdn.shop/2.jpg',
     required: false,
   },
@@ -279,8 +297,10 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
   digitalFileUrl: {
     labelAr: 'رابط الملف الرقمي',
     labelEn: 'Digital File URL',
-    descAr: 'إلزامي إذا كان المنتج رقمي. رابط الملف الذي سيتم تحميله بعد الشراء.',
-    descEn: 'Mandatory if the product is digital. The link to the file downloaded after purchase.',
+    descAr:
+      'إلزامي إذا كان المنتج رقمي. رابط الملف الذي سيتم تحميله بعد الشراء.',
+    descEn:
+      'Mandatory if the product is digital. The link to the file downloaded after purchase.',
     example: 'https://cdn.apex.shop/downloads/ebook.pdf',
     required: false,
   },
@@ -299,7 +319,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelEn: 'Meta Description',
     descAr: 'الوصف الذي يظهر في محركات البحث (بحد أقصى 160 حرفاً).',
     descEn: 'The description shown in search engines (max 160 chars).',
-    example: 'اكتشف مواصفات هاتف أيكس برو الجديد، ببطارية تدوم 48 ساعة وكاميرا 108 ميجابكسل.',
+    example:
+      'اكتشف مواصفات هاتف أيكس برو الجديد، ببطارية تدوم 48 ساعة وكاميرا 108 ميجابكسل.',
     required: false,
   },
   keywords: {
@@ -314,7 +335,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'نشط',
     labelEn: 'Is Active',
     descAr: 'هل المنتج متاح للعرض والبيع في المتجر (TRUE أو FALSE).',
-    descEn: 'Whether the product is available for view and sale (TRUE or FALSE).',
+    descEn:
+      'Whether the product is available for view and sale (TRUE or FALSE).',
     example: 'TRUE',
     required: false,
   },
@@ -322,7 +344,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'مميز',
     labelEn: 'Is Featured',
     descAr: 'هل يظهر المنتج في قسم "المنتجات المميزة" (TRUE أو FALSE).',
-    descEn: 'Whether the product appears in the "Featured Products" section (TRUE or FALSE).',
+    descEn:
+      'Whether the product appears in the "Featured Products" section (TRUE or FALSE).',
     example: 'FALSE',
     required: false,
   },
@@ -331,7 +354,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'قابل للإرجاع',
     labelEn: 'Is Returnable',
     descAr: 'هل يمكن للعميل إرجاع المنتج (TRUE أو FALSE).',
-    descEn: 'Whether the product can be returned by the customer (TRUE or FALSE).',
+    descEn:
+      'Whether the product can be returned by the customer (TRUE or FALSE).',
     example: 'TRUE',
     required: false,
   },
@@ -339,8 +363,10 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
   niche: {
     labelAr: 'التصنيف البيعي (Niche)',
     labelEn: 'Product Niche',
-    descAr: 'يحدد نوع المنتج والمواصفات المسموح بها. يجب الاختيار من القائمة المنسدلة.',
-    descEn: 'Determines product type and allowed attributes. Must choose from the dropdown.',
+    descAr:
+      'يحدد نوع المنتج والمواصفات المسموح بها. يجب الاختيار من القائمة المنسدلة.',
+    descEn:
+      'Determines product type and allowed attributes. Must choose from the dropdown.',
     example: 'retail',
     required: true,
     options: PRODUCT_NICHES,
@@ -349,7 +375,8 @@ export const FIELD_METADATA: Record<string, FieldMeta> = {
     labelAr: 'السمات المخصصة (Attributes)',
     labelEn: 'Custom Attributes',
     descAr: 'قائمة مفصولة بـ | للمفتاح والقيمة. مثال: Color:Red | Size:XL',
-    descEn: 'Pipe-separated list of Key:Value pairs. Example: Color:Red | Size:XL',
+    descEn:
+      'Pipe-separated list of Key:Value pairs. Example: Color:Red | Size:XL',
     example: 'Material:Leather | Style:Modern',
     required: false,
   },
@@ -425,14 +452,15 @@ export const CreativeAttributes = z.object({
 // ANTI-NOSQL INJECTION: Strict attribute value validation
 // Max 20 keys, max 500 chars per string, no deep nesting
 // ═══════════════════════════════════════════════════════════════
-export const AttributesSchema = z.record(
-  z.union([
-    z.string().max(500),
-    z.number(),
-    z.boolean(),
-    z.array(z.string().max(500)),
-  ])
-)
+export const AttributesSchema = z
+  .record(
+    z.union([
+      z.string().max(500),
+      z.number(),
+      z.boolean(),
+      z.array(z.string().max(500)),
+    ])
+  )
   .refine(
     (obj) => Object.keys(obj).length <= 20,
     'Attributes cannot have more than 20 keys'
@@ -478,7 +506,10 @@ export const BaseProductSchemaShape = z.object({
   slug: z
     .string()
     .min(1, 'Slug is required')
-    .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
+    .regex(
+      /^[a-z0-9-]+$/,
+      'Slug must contain only lowercase letters, numbers, and hyphens'
+    ),
   sku: z.string().min(1, 'SKU is required').max(100),
   barcode: z
     .string()
@@ -489,7 +520,8 @@ export const BaseProductSchemaShape = z.object({
   brandId: z.string().uuid('Invalid brand ID').optional(),
   categoryId: z.string().uuid('Invalid category ID').optional(),
   // Optional: empty string → undefined (DB rejects '' but accepts NULL)
-  countryOfOrigin: z.string()
+  countryOfOrigin: z
+    .string()
     .length(2, 'Must be a 2-letter country code')
     .optional()
     .or(z.literal(''))
@@ -498,14 +530,30 @@ export const BaseProductSchemaShape = z.object({
   // === TAB 2: PRICING ===
   basePrice: z.coerce.number().positive('Base price must be positive'),
   // Optional price fields: 0 is allowed (empty form input coerces to 0)
-  salePrice: z.coerce.number().min(0, 'Sale price must be 0 or greater').optional().or(z.literal(0)),
-  compareAtPrice: z.coerce.number().min(0, 'Compare-at price must be 0 or greater').optional().or(z.literal(0)),
-  costPrice: z.coerce.number().min(0, 'Cost price must be 0 or greater').optional().or(z.literal(0)),
+  salePrice: z.coerce
+    .number()
+    .min(0, 'Sale price must be 0 or greater')
+    .optional()
+    .or(z.literal(0)),
+  compareAtPrice: z.coerce
+    .number()
+    .min(0, 'Compare-at price must be 0 or greater')
+    .optional()
+    .or(z.literal(0)),
+  costPrice: z.coerce
+    .number()
+    .min(0, 'Cost price must be 0 or greater')
+    .optional()
+    .or(z.literal(0)),
   taxPercentage: z.coerce.number().min(0).max(100).default(0),
 
   // === TAB 3: INVENTORY & LOGISTICS ===
   // weight: 0 means not set (optional)
-  weight: z.coerce.number().min(0, 'Weight must be 0 or greater').optional().or(z.literal(0)),
+  weight: z.coerce
+    .number()
+    .min(0, 'Weight must be 0 or greater')
+    .optional()
+    .or(z.literal(0)),
   dimensions: z
     .object({
       h: z.coerce.number().min(0).optional().default(0),
@@ -539,8 +587,14 @@ export const BaseProductSchemaShape = z.object({
   digitalFileUrl: z.string().url().optional().or(z.literal('')),
 
   // === TAB 6: SEO & VISIBILITY ===
-  metaTitle: z.string().max(70, 'Meta title cannot exceed 70 characters').optional(),
-  metaDescription: z.string().max(160, 'Meta description cannot exceed 160 characters').optional(),
+  metaTitle: z
+    .string()
+    .max(70, 'Meta title cannot exceed 70 characters')
+    .optional(),
+  metaDescription: z
+    .string()
+    .max(160, 'Meta description cannot exceed 160 characters')
+    .optional(),
   keywords: z.string().max(500).optional(),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
@@ -554,23 +608,25 @@ export const BaseProductSchemaShape = z.object({
 });
 
 // Cross-field: warrantyUnit required when warrantyPeriod is set
-export const BaseProductSchema = BaseProductSchemaShape.superRefine((data, ctx) => {
-  if (data.warrantyPeriod && !data.warrantyUnit) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: 'Warranty unit is required when warranty period is set',
-      path: ['warrantyUnit'],
-    });
+export const BaseProductSchema = BaseProductSchemaShape.superRefine(
+  (data, ctx) => {
+    if (data.warrantyPeriod && !data.warrantyUnit) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Warranty unit is required when warranty period is set',
+        path: ['warrantyUnit'],
+      });
+    }
   }
-});
+);
 
 export const BaseCreateProductSchema = BaseProductSchema;
 
 // ═══════════════════════════════════════════════════════════════
 // FULL CREATE SCHEMA with niche-specific attribute validation
 // ═══════════════════════════════════════════════════════════════
-export const CreateProductSchema = BaseProductSchema
-  .superRefine((data, ctx) => {
+export const CreateProductSchema = BaseProductSchema.superRefine(
+  (data, ctx) => {
     // Digital product: digitalFileUrl is mandatory
     if (data.isDigital && !data.digitalFileUrl) {
       ctx.addIssue({
@@ -581,17 +637,18 @@ export const CreateProductSchema = BaseProductSchema
     }
 
     // Niche-specific attributes validation
-    const nicheSchemas: Record<(typeof PRODUCT_NICHES)[number], z.ZodTypeAny> = {
-      retail: RetailAttributes,
-      food: EmptyAttributesSchema,
-      digital: EmptyAttributesSchema,
-      wellness: WellnessAttributes,
-      education: EducationAttributes,
-      services: ServicesAttributes,
-      hospitality: HospitalityAttributes,
-      real_estate: RealEstateAttributes,
-      creative: CreativeAttributes,
-    };
+    const nicheSchemas: Record<(typeof PRODUCT_NICHES)[number], z.ZodTypeAny> =
+      {
+        retail: RetailAttributes,
+        food: EmptyAttributesSchema,
+        digital: EmptyAttributesSchema,
+        wellness: WellnessAttributes,
+        education: EducationAttributes,
+        services: ServicesAttributes,
+        hospitality: HospitalityAttributes,
+        real_estate: RealEstateAttributes,
+        creative: CreativeAttributes,
+      };
 
     const nicheSchema = nicheSchemas[data.niche];
     if (nicheSchema) {
@@ -605,7 +662,8 @@ export const CreateProductSchema = BaseProductSchema
         }
       }
     }
-  }) as z.ZodType<CreateProductInput>;
+  }
+) as z.ZodType<CreateProductInput>;
 
 // ═══════════════════════════════════════════════════════════════
 // TYPE EXPORTS
@@ -621,5 +679,6 @@ type AttributesType =
   | { niche: 'real_estate'; attributes: z.infer<typeof RealEstateAttributes> }
   | { niche: 'creative'; attributes: z.infer<typeof CreativeAttributes> };
 
-export type CreateProductInput = z.infer<typeof BaseProductSchema> & AttributesType;
+export type CreateProductInput = z.infer<typeof BaseProductSchema> &
+  AttributesType;
 export type GalleryImage = z.infer<typeof GalleryImageSchema>;

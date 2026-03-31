@@ -1,5 +1,11 @@
 import { env } from '@apex/config';
-import { adminDb, adminPool, eq, tenantsInGovernance, SYSTEM_TENANT_ID } from '@apex/db';
+import {
+  adminDb,
+  adminPool,
+  eq,
+  SYSTEM_TENANT_ID,
+  tenantsInGovernance,
+} from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -150,7 +156,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
         return next();
       }
       if (this.isBypassRoute(currentPath)) return next();
-      
+
       // 3. Resolution
       const finalIdentifier = await this.resolveFinalIdentifier(
         req,
@@ -163,7 +169,7 @@ export class TenantIsolationMiddleware implements NestMiddleware {
       const baseContext = await this.getValidatedContext(finalIdentifier);
       const isSuspended = await this.checkSuspension(finalIdentifier);
 
-      // S2/Arch-Core-04: Attach resolution context to request. 
+      // S2/Arch-Core-04: Attach resolution context to request.
       // The session/middleware lifecycle fix relocates DB connection to Global Interceptor.
       req.tenantContext = {
         ...baseContext,

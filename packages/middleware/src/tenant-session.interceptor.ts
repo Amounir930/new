@@ -1,4 +1,4 @@
-import { tenantPool, SYSTEM_TENANT_ID } from '@apex/db';
+import { SYSTEM_TENANT_ID, tenantPool } from '@apex/db';
 import {
   type CallHandler,
   type ExecutionContext,
@@ -7,7 +7,7 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import {
   type DrizzleExecutor,
@@ -39,20 +39,24 @@ export class TenantSessionInterceptor implements NestInterceptor {
 
     // S2 FIX (Architectural Correction): Prioritize JWT Identity over Domain Inference
     // If the user has a verified Merchant JWT, it COMPLETELY overrides the domain-based context.
-    const activeTenantId = isMerchantToken ? jwtTenantId : baseContext?.tenantId;
-    
+    const activeTenantId = isMerchantToken
+      ? jwtTenantId
+      : baseContext?.tenantId;
+
     // Safety Fallback: If no tenant identity can be established, bypass session initialization
     if (!activeTenantId) {
       return next.handle();
     }
 
-    const activeSchema = (isMerchantToken && req.user.subdomain)
-      ? toSchemaName(req.user.subdomain)
-      : (baseContext?.schemaName || 'public');
+    const activeSchema =
+      isMerchantToken && req.user.subdomain
+        ? toSchemaName(req.user.subdomain)
+        : baseContext?.schemaName || 'public';
 
-    const activeSubdomain = (isMerchantToken && req.user.subdomain)
-      ? req.user.subdomain
-      : (baseContext?.subdomain || 'root');
+    const activeSubdomain =
+      isMerchantToken && req.user.subdomain
+        ? req.user.subdomain
+        : baseContext?.subdomain || 'root';
 
     // 3. Establish Database Session
     // We use tenantPool (50 max) instead of adminPool (10 max) for high-concurrency merchant requests
@@ -60,13 +64,16 @@ export class TenantSessionInterceptor implements NestInterceptor {
 
     try {
       // S2/Arch-Core-04: Strict Tenant Isolation in Session
-      await client.query("SELECT set_config('app.current_tenant_id', $1, true)", [
-        activeTenantId,
-      ]);
+      await client.query(
+        "SELECT set_config('app.current_tenant_id', $1, true)",
+        [activeTenantId]
+      );
 
       const safeSchema = activeSchema.replace(/[^a-z0-9_]/g, '');
       if (!safeSchema.startsWith('tenant_') && safeSchema !== 'public') {
-        throw new Error(`S2 Security Violation: Invalid schema routing target (${safeSchema})`);
+        throw new Error(
+          `S2 Security Violation: Invalid schema routing target (${safeSchema})`
+        );
       }
 
       await client.query(`SET search_path TO "${safeSchema}", public`);

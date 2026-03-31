@@ -13,23 +13,22 @@
  * - V3: MinIO uploads decoupled from DB transaction
  */
 
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
-import { getTenantDb } from '@apex/db';
-import { productsInStorefront } from '@apex/db';
 import { env } from '@apex/config';
-import { EncryptionService } from '@apex/security';
-import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
-import { Injectable, Logger } from '@nestjs/common';
-import type { Job } from 'bull';
-import AdmZip from 'adm-zip';
-import ExcelJS from 'exceljs';
-import { z } from 'zod';
+import { getTenantDb, productsInStorefront } from '@apex/db';
+import type { EncryptionService } from '@apex/security';
 import { PRODUCT_NICHES } from '@apex/validation';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { FileValidationService } from './file-validation.service';
+import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
+import { Injectable, Logger } from '@nestjs/common';
+import AdmZip from 'adm-zip';
+import type { Job } from 'bull';
+import ExcelJS from 'exceljs';
+import { z } from 'zod';
+import type { FileValidationService } from './file-validation.service';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_ROWS = 500;
@@ -40,7 +39,12 @@ const MAX_UNCOMPRESSED_RATIO = 10;
 const ImportRowSchema = z.object({
   nameAr: z.string().min(2).max(255),
   nameEn: z.string().min(2).max(255),
-  sku: z.string().regex(/^[A-Z0-9_-]{3,50}$/, 'SKU must be uppercase letters, numbers, underscores, or hyphens (3-50 chars)'),
+  sku: z
+    .string()
+    .regex(
+      /^[A-Z0-9_-]{3,50}$/,
+      'SKU must be uppercase letters, numbers, underscores, or hyphens (3-50 chars)'
+    ),
   basePrice: z.coerce.number().min(0),
   niche: z.enum(PRODUCT_NICHES),
   slug: z.string().optional(),
@@ -49,7 +53,11 @@ const ImportRowSchema = z.object({
   costPrice: z.coerce.number().min(0).optional(),
   compareAtPrice: z.coerce.number().min(0).optional(),
   // Identifiers
-  barcode: z.string().regex(/^[A-Za-z0-9-]{8,50}$/).or(z.literal('')).optional(),
+  barcode: z
+    .string()
+    .regex(/^[A-Za-z0-9-]{8,50}$/)
+    .or(z.literal(''))
+    .optional(),
   // Descriptions
   shortDescAr: z.string().max(500).optional(),
   shortDescEn: z.string().max(500).optional(),
@@ -68,14 +76,27 @@ const ImportRowSchema = z.object({
   warrantyUnit: z.enum(['days', 'months', 'years']).optional(),
   // Flags
   // Flags (C3 fix: Default to true if cell is empty, null, or undefined)
-  isActive: z.preprocess(
-    (v) => (v === null || v === undefined || v === '') ? true : String(v).toUpperCase() === 'TRUE',
-    z.boolean()
-  ).default(true),
-  isFeatured: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
-  isDigital: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
-  requiresShipping: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
-  trackInventory: z.preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean()).optional(),
+  isActive: z
+    .preprocess(
+      (v) =>
+        v === null || v === undefined || v === ''
+          ? true
+          : String(v).toUpperCase() === 'TRUE',
+      z.boolean()
+    )
+    .default(true),
+  isFeatured: z
+    .preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean())
+    .optional(),
+  isDigital: z
+    .preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean())
+    .optional(),
+  requiresShipping: z
+    .preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean())
+    .optional(),
+  trackInventory: z
+    .preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean())
+    .optional(),
   // Flat dimensions (V1 fix)
   dimHeight: z.coerce.number().min(0).optional(),
   dimWidth: z.coerce.number().min(0).optional(),
@@ -102,33 +123,45 @@ interface JobData {
   tenantId: string;
   schemaName: string;
   subdomain: string;
-  filePath: string;   // disk path to uploaded file (.xlsx or .zip)
+  filePath: string; // disk path to uploaded file (.xlsx or .zip)
   isZip: boolean;
   jobId: string;
 }
 
 // ─── Delimiter Parser (V1 fix) ─────────────────────────────────────────────
-function parseDelimited(input: string | undefined): Record<string, string> | undefined {
+function parseDelimited(
+  input: string | undefined
+): Record<string, string> | undefined {
   if (!input?.trim()) return undefined;
   const result: Record<string, string> = {};
   for (const pair of input.split('|')) {
     const colonIdx = pair.indexOf(':');
     if (colonIdx === -1) continue;
     const key = pair.slice(0, colonIdx).trim().toLowerCase().slice(0, 100);
-    const val = pair.slice(colonIdx + 1).trim().slice(0, 1024);
+    const val = pair
+      .slice(colonIdx + 1)
+      .trim()
+      .slice(0, 1024);
     if (key) result[key] = val;
   }
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
-function parseDimensions(h?: number, w?: number, l?: number): Record<string, number> | undefined {
+function parseDimensions(
+  h?: number,
+  w?: number,
+  l?: number
+): Record<string, number> | undefined {
   if (h === undefined && w === undefined && l === undefined) return undefined;
   return { h: h ?? 0, w: w ?? 0, l: l ?? 0 };
 }
 
 function parseCommaSeparated(input?: string): string[] | undefined {
   if (!input?.trim()) return undefined;
-  return input.split(',').map((s) => s.trim()).filter(Boolean);
+  return input
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 // ─── Worker ───────────────────────────────────────────────────────────────
@@ -139,12 +172,13 @@ export class ImportWorker {
 
   constructor(
     private readonly fileValidation: FileValidationService,
-    readonly _crypto: EncryptionService,
-  ) { }
+    readonly _crypto: EncryptionService
+  ) {}
 
   @Process('product-import')
   async handleImport(job: Job<JobData>) {
-    const { tenantId, schemaName, subdomain, filePath, isZip, jobId } = job.data;
+    const { tenantId, schemaName, subdomain, filePath, isZip, jobId } =
+      job.data;
     const tmpDir = path.join('/tmp', `import_${jobId}`);
     const errors: RowError[] = [];
     let importedCount = 0;
@@ -157,7 +191,10 @@ export class ImportWorker {
       let imageDir: string | undefined;
 
       if (isZip) {
-        const { excelPath, imagesPath } = await this.extractZip(filePath, tmpDir);
+        const { excelPath, imagesPath } = await this.extractZip(
+          filePath,
+          tmpDir
+        );
         xlsxPath = excelPath;
         imageDir = imagesPath;
       } else {
@@ -167,7 +204,9 @@ export class ImportWorker {
       const rawRows = await this.parseExcel(xlsxPath);
 
       if (rawRows.length > MAX_ROWS) {
-        throw new Error(`Import exceeds max ${MAX_ROWS} rows (got ${rawRows.length})`);
+        throw new Error(
+          `Import exceeds max ${MAX_ROWS} rows (got ${rawRows.length})`
+        );
       }
 
       await job.progress(10);
@@ -192,7 +231,9 @@ export class ImportWorker {
 
       // Fail-fast: abort if any validation error
       if (errors.length > 0) {
-        this.logger.warn(`[ImportWorker] Validation failed: ${errors.length} row errors`);
+        this.logger.warn(
+          `[ImportWorker] Validation failed: ${errors.length} row errors`
+        );
         return { status: 'failed', errors, importedCount: 0 };
       }
 
@@ -207,7 +248,9 @@ export class ImportWorker {
           errors: duplicateSkus.map((sku) => ({
             row: -1,
             sku,
-            errors: [{ field: 'sku', message: `Duplicate SKU in sheet: ${sku}` }],
+            errors: [
+              { field: 'sku', message: `Duplicate SKU in sheet: ${sku}` },
+            ],
           })),
           importedCount: 0,
         };
@@ -224,7 +267,9 @@ export class ImportWorker {
           );
 
         if (existingSkuRows.length > 0) {
-          const existingSet = new Set(existingSkuRows.map((r: { sku: string }) => r.sku));
+          const existingSet = new Set(
+            existingSkuRows.map((r: { sku: string }) => r.sku)
+          );
           return {
             status: 'failed',
             errors: validRows
@@ -232,7 +277,9 @@ export class ImportWorker {
               .map((r) => ({
                 row: r.row,
                 sku: r.data.sku,
-                errors: [{ field: 'sku', message: `SKU already exists in database` }],
+                errors: [
+                  { field: 'sku', message: `SKU already exists in database` },
+                ],
               })),
             importedCount: 0,
           };
@@ -245,8 +292,14 @@ export class ImportWorker {
 
       // ─── Phase 3: MinIO Uploads (OUTSIDE DB) ──────────────────────────
       // S1 Guard: Validate credentials before S3 construction
-      if (!env.MINIO_ACCESS_KEY || !env.MINIO_SECRET_KEY || !env.STORAGE_PUBLIC_URL) {
-        throw new Error('S1 VIOLATION: MinIO credentials missing from environment');
+      if (
+        !env.MINIO_ACCESS_KEY ||
+        !env.MINIO_SECRET_KEY ||
+        !env.STORAGE_PUBLIC_URL
+      ) {
+        throw new Error(
+          'S1 VIOLATION: MinIO credentials missing from environment'
+        );
       }
       const s3 = new S3Client({
         endpoint: env.STORAGE_PUBLIC_URL,
@@ -272,15 +325,29 @@ export class ImportWorker {
         const baseKey = `public/products/${productId}`;
 
         const mainImageUrl = await this.uploadImage(
-          s3, bucketName, baseKey, data.mainImage, imageDir
+          s3,
+          bucketName,
+          baseKey,
+          data.mainImage,
+          imageDir
         );
 
-        const galleryUrls: { url: string; altText: string; order: number }[] = [];
+        const galleryUrls: { url: string; altText: string; order: number }[] =
+          [];
         if (data.galleryImages?.trim()) {
-          const filenames = data.galleryImages.split('|').map((s) => s.trim()).filter(Boolean);
+          const filenames = data.galleryImages
+            .split('|')
+            .map((s) => s.trim())
+            .filter(Boolean);
           let order = 0;
           for (const filename of filenames) {
-            const url = await this.uploadImage(s3, bucketName, baseKey, filename, imageDir);
+            const url = await this.uploadImage(
+              s3,
+              bucketName,
+              baseKey,
+              filename,
+              imageDir
+            );
             if (url) {
               galleryUrls.push({ url, altText: '', order: order++ });
             }
@@ -299,30 +366,44 @@ export class ImportWorker {
 
       // ─── Phase 4: Bulk DB Transaction ─────────────────────────────────
       if (resolvedRows.length === 0) {
-        this.logger.log(`[ImportWorker] Job ${jobId} completed with 0 new products (only examples/empty rows found).`);
+        this.logger.log(
+          `[ImportWorker] Job ${jobId} completed with 0 new products (only examples/empty rows found).`
+        );
         await job.progress(100);
         return { status: 'done', importedCount: 0, errors: [] };
       }
 
-      const { db: dbInsert, release: releaseInsert } = await getTenantDb(tenantId, schemaName);
+      const { db: dbInsert, release: releaseInsert } = await getTenantDb(
+        tenantId,
+        schemaName
+      );
       try {
         const inserts = resolvedRows.map((r) => ({
           id: r._productId,
           name: { ar: r.nameAr, en: r.nameEn },
           sku: r.sku,
-          niche: (r.niche === 'food' || r.niche === 'digital') ? 'retail' : r.niche,  // Map legacy niches to retail
+          niche:
+            r.niche === 'food' || r.niche === 'digital' ? 'retail' : r.niche, // Map legacy niches to retail
           basePrice: String(r.basePrice),
           salePrice: r.salePrice != null ? String(r.salePrice) : null,
           costPrice: r.costPrice != null ? String(r.costPrice) : null,
-          compareAtPrice: r.compareAtPrice != null ? String(r.compareAtPrice) : null,
+          compareAtPrice:
+            r.compareAtPrice != null ? String(r.compareAtPrice) : null,
           barcode: r.barcode || null,
-          slug: r.slug || r.nameEn.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
-          shortDescription: (r.shortDescAr || r.shortDescEn)
-            ? { ar: r.shortDescAr ?? '', en: r.shortDescEn ?? '' }
-            : null,
-          longDescription: (r.longDescAr || r.longDescEn)
-            ? { ar: r.longDescAr ?? '', en: r.longDescEn ?? '' }
-            : null,
+          slug:
+            r.slug ||
+            r.nameEn
+              .toLowerCase()
+              .replace(/\s+/g, '-')
+              .replace(/[^a-z0-9-]/g, ''),
+          shortDescription:
+            r.shortDescAr || r.shortDescEn
+              ? { ar: r.shortDescAr ?? '', en: r.shortDescEn ?? '' }
+              : null,
+          longDescription:
+            r.longDescAr || r.longDescEn
+              ? { ar: r.longDescAr ?? '', en: r.longDescEn ?? '' }
+              : null,
           metaTitle: r.metaTitle ?? null,
           metaDescription: r.metaDescription ?? null,
           weight: r.weight ?? null,
@@ -343,9 +424,9 @@ export class ImportWorker {
           specifications: parseDelimited(r.specifications),
           tags: parseCommaSeparated(r.tags),
           keywords: parseCommaSeparated(r.keywords)?.join(' ') ?? null,
-          mainImage: (r._mainImageUrl || '') as string,  // S3 FIX: NOT NULL constraint - explicit string cast
+          mainImage: (r._mainImageUrl || '') as string, // S3 FIX: NOT NULL constraint - explicit string cast
           galleryImages: r._galleryUrls.length > 0 ? r._galleryUrls : [],
-          publishedAt: new Date().toISOString(),  // S3 FIX: Convert to string for DB compatibility
+          publishedAt: new Date().toISOString(), // S3 FIX: Convert to string for DB compatibility
         }));
 
         await dbInsert.insert(productsInStorefront).values(inserts);
@@ -357,11 +438,21 @@ export class ImportWorker {
       await job.progress(100);
       return { status: 'done', importedCount, errors: [] };
     } catch (error) {
-      this.logger.error(`[ImportWorker] Job ${jobId} failed`, (error as Error).stack);
-      return { status: 'failed', errors, importedCount, cause: (error as Error).message };
+      this.logger.error(
+        `[ImportWorker] Job ${jobId} failed`,
+        (error as Error).stack
+      );
+      return {
+        status: 'failed',
+        errors,
+        importedCount,
+        cause: (error as Error).message,
+      };
     } finally {
       // ─── Cleanup (always runs) ─────────────────────────────────────────
-      await fsp.rm(tmpDir, { recursive: true, force: true }).catch(() => undefined);
+      await fsp
+        .rm(tmpDir, { recursive: true, force: true })
+        .catch(() => undefined);
       if (fs.existsSync(filePath)) {
         await fsp.rm(filePath, { force: true }).catch(() => undefined);
       }
@@ -386,7 +477,11 @@ export class ImportWorker {
       if (totalUncompressed / stats.size > MAX_UNCOMPRESSED_RATIO) {
         throw new Error('ZIP bomb detected: uncompressed ratio exceeds 10:1');
       }
-      if (!excelEntry && /\.(xlsx|csv)$/i.test(entry.entryName) && !entry.entryName.includes('/')) {
+      if (
+        !excelEntry &&
+        /\.(xlsx|csv)$/i.test(entry.entryName) &&
+        !entry.entryName.includes('/')
+      ) {
         excelEntry = entry;
       }
     }
@@ -409,13 +504,25 @@ export class ImportWorker {
     }
 
     const excelPath = path.join(tmpDir, excelEntry.entryName);
-    zip.extractEntryTo(excelEntry, tmpDir, false, true, false, excelEntry.entryName.split('/').pop());
+    zip.extractEntryTo(
+      excelEntry,
+      tmpDir,
+      false,
+      true,
+      false,
+      excelEntry.entryName.split('/').pop()
+    );
 
-    return { excelPath: path.join(tmpDir, excelEntry.entryName.split('/').pop() ?? ''), imagesPath };
+    return {
+      excelPath: path.join(tmpDir, excelEntry.entryName.split('/').pop() ?? ''),
+      imagesPath,
+    };
   }
 
   // ─── Excel Parser (Hardened — resolves all exceljs cell object types) ───
-  private async parseExcel(xlsxPath: string): Promise<Record<string, unknown>[]> {
+  private async parseExcel(
+    xlsxPath: string
+  ): Promise<Record<string, unknown>[]> {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(xlsxPath);
 
@@ -426,7 +533,9 @@ export class ImportWorker {
     sheet.getRow(1).eachCell((cell, colNum) => {
       // Strip ★ prefix from required headers, normalize to plain string
       const raw = this.normalizeCellValue(cell.value);
-      const val = String(raw ?? '').replace(/^★\s*/, '').trim();
+      const val = String(raw ?? '')
+        .replace(/^★\s*/, '')
+        .trim();
       headers[colNum - 1] = val;
     });
 
@@ -440,7 +549,7 @@ export class ImportWorker {
         obj[key] = this.normalizeCellValue(cell.value);
       });
 
-      // Fix A: Content-aware placeholder skip. 
+      // Fix A: Content-aware placeholder skip.
       // Safely ignores the instruction row (APX-PH-001) without dropping Row 2 merchant data.
       if (obj['sku'] === 'APX-PH-001') return;
 
@@ -458,7 +567,9 @@ export class ImportWorker {
    * Handles: strings, numbers, booleans, Dates, hyperlinks,
    *          formula results, rich text, and null/undefined.
    */
-  private normalizeCellValue(value: ExcelJS.CellValue): string | number | boolean | null {
+  private normalizeCellValue(
+    value: ExcelJS.CellValue
+  ): string | number | boolean | null {
     if (value == null) return null;
 
     // Primitive pass-through
@@ -474,8 +585,10 @@ export class ImportWorker {
       // Hyperlink: { text: string; hyperlink: string }
       if ('hyperlink' in value && 'text' in value) {
         // Prefer the hyperlink URL for image fields, text for everything else
-        return String((value as { hyperlink: string; text: string }).hyperlink ||
-          (value as { hyperlink: string; text: string }).text);
+        return String(
+          (value as { hyperlink: string; text: string }).hyperlink ||
+            (value as { hyperlink: string; text: string }).text
+        );
       }
 
       // Formula: { formula: string; result: CellValue; date1904?: boolean }
@@ -510,7 +623,7 @@ export class ImportWorker {
     bucket: string,
     baseKey: string,
     source: string | undefined,
-    imageDir: string | undefined,
+    imageDir: string | undefined
   ): Promise<string | undefined> {
     if (!source?.trim()) return undefined;
 

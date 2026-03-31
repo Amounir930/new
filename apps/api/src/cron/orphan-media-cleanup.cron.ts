@@ -10,17 +10,25 @@
  *  - Protocol B3: Fully unit-testable via Mock S3 adapter
  *  - Protocol B6: No synchronous blocking calls
  */
+
+import { env } from '@apex/config';
+import {
+  adminDb,
+  and,
+  eq,
+  isNotNull,
+  isNull,
+  lt,
+  productsInStorefront,
+  tenantsInGovernance,
+} from '@apex/db';
 import {
   DeleteObjectCommand,
   ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { env } from '@apex/config';
-import { adminDb, productsInStorefront, tenantsInGovernance, and, eq, isNotNull, isNull, lt } from '@apex/db';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-
-
 
 @Injectable()
 export class OrphanMediaCleanupCron {
@@ -93,7 +101,9 @@ export class OrphanMediaCleanupCron {
       (t) => `tenant-${t.subdomain.toLowerCase()}-assets`
     );
 
-    this.logger.log(`ORPHAN_CLEANUP: Discovered ${buckets.length} active tenant buckets.`);
+    this.logger.log(
+      `ORPHAN_CLEANUP: Discovered ${buckets.length} active tenant buckets.`
+    );
 
     if (buckets.length === 0) {
       this.logger.warn(
@@ -152,38 +162,59 @@ export class OrphanMediaCleanupCron {
    */
   @Cron('30 3 * * *')
   async cleanupAbandonedDrafts(): Promise<void> {
-    this.logger.log('DRAFT_GC_START: Purging abandoned drafts older than 24h...');
+    this.logger.log(
+      'DRAFT_GC_START: Purging abandoned drafts older than 24h...'
+    );
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
     try {
       const stale = await adminDb
         .select({ id: productsInStorefront.id })
         .from(productsInStorefront)
-        .where(and(
-          eq(productsInStorefront.isActive, false),
-          isNull(productsInStorefront.publishedAt),
-          lt(productsInStorefront.createdAt, cutoff.toISOString())
-        ));
+        .where(
+          and(
+            eq(productsInStorefront.isActive, false),
+            isNull(productsInStorefront.publishedAt),
+            lt(productsInStorefront.createdAt, cutoff.toISOString())
+          )
+        );
 
-      if (stale.length === 0) { this.logger.log('DRAFT_GC_DONE: No abandoned drafts.'); return; }
+      if (stale.length === 0) {
+        this.logger.log('DRAFT_GC_DONE: No abandoned drafts.');
+        return;
+      }
 
       const tenants = await adminDb
         .select({ subdomain: tenantsInGovernance.subdomain })
         .from(tenantsInGovernance)
-        .where(and(eq(tenantsInGovernance.status, 'active'), isNotNull(tenantsInGovernance.subdomain)));
+        .where(
+          and(
+            eq(tenantsInGovernance.status, 'active'),
+            isNotNull(tenantsInGovernance.subdomain)
+          )
+        );
 
       const { deletePrefix } = await import('@apex/provisioning');
 
       for (const draft of stale) {
-        await adminDb.delete(productsInStorefront).where(eq(productsInStorefront.id, draft.id));
+        await adminDb
+          .delete(productsInStorefront)
+          .where(eq(productsInStorefront.id, draft.id));
         for (const t of tenants) {
-          try { await deletePrefix(t.subdomain, 'public/products/' + draft.id); }
-          catch (e) { this.logger.warn('DRAFT_GC_MINIO_WARN: ' + draft.id); }
+          try {
+            await deletePrefix(t.subdomain, 'public/products/' + draft.id);
+          } catch (e) {
+            this.logger.warn('DRAFT_GC_MINIO_WARN: ' + draft.id);
+          }
         }
         this.logger.debug('DRAFT_GC_PURGED: ' + draft.id);
       }
-      this.logger.log('DRAFT_GC_DONE: Purged ' + stale.length + ' abandoned draft(s).');
+      this.logger.log(
+        'DRAFT_GC_DONE: Purged ' + stale.length + ' abandoned draft(s).'
+      );
     } catch (err) {
-      this.logger.error('DRAFT_GC_FATAL: ' + (err instanceof Error ? err.message : String(err)));
+      this.logger.error(
+        'DRAFT_GC_FATAL: ' + (err instanceof Error ? err.message : String(err))
+      );
     }
   }
 }

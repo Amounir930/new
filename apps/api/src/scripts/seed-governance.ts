@@ -31,7 +31,7 @@ async function main() {
         plan: 'enterprise',
         status: 'active',
         nicheType: 'system',
-      }
+      },
     ];
 
     for (const tenant of systemTenants) {
@@ -40,7 +40,7 @@ async function main() {
         .values(tenant as any)
         .onConflictDoUpdate({
           target: tenants.subdomain,
-          set: { status: 'active' }
+          set: { status: 'active' },
         });
       console.log(`✅ Seeded tenant: ${tenant.subdomain}`);
     }

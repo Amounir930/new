@@ -23,9 +23,9 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  Param,
   Query,
   Req,
-  Param,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
@@ -39,9 +39,7 @@ export class ProductMediaController {
    * 🛡️ Mandate 1: IDOR Protection (Persistent Assets)
    * Verify product existence and ownership ONLY for public products
    */
-  private async verifyProductOwnership(
-    productId: string
-  ) {
+  private async verifyProductOwnership(productId: string) {
     const db = requireExecutor();
     try {
       const [product] = await db
@@ -63,7 +61,7 @@ export class ProductMediaController {
   async getUploadUrl(
     @Req() req: AuthenticatedRequest,
     @Query('contentType') contentType: string,
-    @Query('productId') productId: string,
+    @Query('productId') productId: string
   ) {
     const tenantId = req.user.tenantId;
     const subdomain = req.tenantContext?.subdomain;
@@ -77,7 +75,8 @@ export class ProductMediaController {
     if (!productId) {
       throw new BadRequestException('productId is required for media upload');
     }
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const UUID_RE =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!UUID_RE.test(productId)) {
       throw new BadRequestException('productId must be a valid UUID');
     }
@@ -95,18 +94,21 @@ export class ProductMediaController {
     };
 
     const normalizedType = contentType.replace(/\s/g, '+');
-    const extension = ALLOWED_MIME_TYPES[normalizedType] || ALLOWED_MIME_TYPES[contentType];
+    const extension =
+      ALLOWED_MIME_TYPES[normalizedType] || ALLOWED_MIME_TYPES[contentType];
 
     if (!extension) {
-      this.logger.warn(`UNSUPPORTED_MIME_TYPE: Received '${contentType}', Normalized '${normalizedType}'`);
+      this.logger.warn(
+        `UNSUPPORTED_MIME_TYPE: Received '${contentType}', Normalized '${normalizedType}'`
+      );
       throw new BadRequestException(`Unsupported file type: ${contentType}`);
     }
 
     // 🛡️ Path is strictly backend-controlled: public/products/{real_product_id}/{fileUuid}.ext
     // One folder per product, named after the real DB product_id (no client input into path)
-    const fileId     = crypto.randomUUID();
+    const fileId = crypto.randomUUID();
     const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
-    const key        = `public/products/${productId}/${fileId}.${extension}`;
+    const key = `public/products/${productId}/${fileId}.${extension}`;
 
     try {
       const s3Client = new S3Client({
@@ -125,7 +127,9 @@ export class ProductMediaController {
         ContentType: contentType,
       });
 
-      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+      const uploadUrl = await getSignedUrl(s3Client, command, {
+        expiresIn: 300,
+      });
       const publicUrl = `${env.STORAGE_PUBLIC_URL}/${bucketName}/${key}`;
 
       return { uploadUrl, publicUrl, key };
@@ -133,10 +137,11 @@ export class ProductMediaController {
       this.logger.error(
         `S3_UPLOAD_URL_ERROR: ${error instanceof Error ? error.message : String(error)}`
       );
-      throw new InternalServerErrorException('Failed to generate secure upload pipeline');
+      throw new InternalServerErrorException(
+        'Failed to generate secure upload pipeline'
+      );
     }
   }
-
 
   @Delete()
   async deleteMedia(
@@ -199,10 +204,7 @@ export class ProductMediaController {
     }
   }
 
-  private async verifyDeletionAuthority(
-    key: string,
-    productId?: string
-  ) {
+  private async verifyDeletionAuthority(key: string, productId?: string) {
     if (key.startsWith('public/products/')) {
       if (!productId) return; // Allow temp/unbound cleanup
       await this.verifyProductOwnership(productId);
@@ -265,8 +267,12 @@ export class ProductMediaController {
 
       return { success: true, count: objects.Contents?.length || 0 };
     } catch (error) {
-      this.logger.error(`CASCADE_DELETE_ERROR: ${error instanceof Error ? error.message : String(error)}`);
-      throw new InternalServerErrorException('Failed to purge SKU media folder');
+      this.logger.error(
+        `CASCADE_DELETE_ERROR: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw new InternalServerErrorException(
+        'Failed to purge SKU media folder'
+      );
     }
   }
 }

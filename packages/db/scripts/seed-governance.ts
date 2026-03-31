@@ -209,13 +209,18 @@ async function seedGovernance() {
       }));
 
     if (featureGates.length > 0) {
-      console.log(`Syncing ${featureGates.length} gates for ${tenant.subdomain}...`);
+      console.log(
+        `Syncing ${featureGates.length} gates for ${tenant.subdomain}...`
+      );
       for (const gate of featureGates) {
         await adminDb
           .insert(featureGatesInGovernance)
           .values(gate)
           .onConflictDoUpdate({
-            target: [featureGatesInGovernance.tenantId, featureGatesInGovernance.featureKey],
+            target: [
+              featureGatesInGovernance.tenantId,
+              featureGatesInGovernance.featureKey,
+            ],
             set: {
               isEnabled: gate.isEnabled,
               planCode: gate.planCode,

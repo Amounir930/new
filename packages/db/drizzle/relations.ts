@@ -722,4 +722,3 @@ export const appInstallationsInStorefrontRelations = relations(
     webhookSubscriptionsInStorefronts: many(webhookSubscriptionsInStorefront),
   })
 );
-

@@ -1,4 +1,7 @@
-import { BaseCreateProductSchema, BaseProductSchemaShape } from '@apex/validation';
+import {
+  BaseCreateProductSchema,
+  BaseProductSchemaShape,
+} from '@apex/validation';
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
@@ -19,7 +22,7 @@ export class UpdateProductDto extends createZodDto(
     version: z.number().int().nonnegative().optional(),
     // Flat dimension fields from edit form — reassembled to JSONB in controller
     dimHeight: z.coerce.number().min(0).optional(),
-    dimWidth:  z.coerce.number().min(0).optional(),
+    dimWidth: z.coerce.number().min(0).optional(),
     dimLength: z.coerce.number().min(0).optional(),
   })
 ) {}

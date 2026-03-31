@@ -4,13 +4,13 @@
  * Prevents cross-tenant access using valid JWT from another tenant
  */
 
+import { SYSTEM_TENANT_ID } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { SYSTEM_TENANT_ID } from '@apex/db';
 import type { Request } from 'express';
 
 export interface TenantRequest extends Request {

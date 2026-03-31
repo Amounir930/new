@@ -1,13 +1,12 @@
 'use client';
 
+import type { CreateProductInput, PRODUCT_NICHES } from '@apex/validation';
 import { Loader2, Lock } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ProductForm } from '@/components/products/product-form';
 import { apiFetch } from '@/lib/api';
-import type { CreateProductInput } from '@apex/validation';
-import { PRODUCT_NICHES } from '@apex/validation';
 
 type Niche = (typeof PRODUCT_NICHES)[number];
 
@@ -57,7 +56,9 @@ interface RawProduct {
 // ─── Hydration Mapper ─────────────────────────────────────────────────────────
 // Transforms the raw DB/API response shape → flat ProductForm defaultValues.
 // This is the critical bridge that prevents the rendering crash.
-function hydrateProductForForm(raw: RawProduct): CreateProductInput & { id: string; version: number } {
+function hydrateProductForForm(
+  raw: RawProduct
+): CreateProductInput & { id: string; version: number } {
   const common = {
     // Identity
     id: raw.id,
@@ -85,7 +86,9 @@ function hydrateProductForForm(raw: RawProduct): CreateProductInput & { id: stri
     basePrice: parseFloat(raw.basePrice ?? '0'),
     salePrice: raw.salePrice ? parseFloat(raw.salePrice) : undefined,
     costPrice: raw.costPrice ? parseFloat(raw.costPrice) : undefined,
-    compareAtPrice: raw.compareAtPrice ? parseFloat(raw.compareAtPrice) : undefined,
+    compareAtPrice: raw.compareAtPrice
+      ? parseFloat(raw.compareAtPrice)
+      : undefined,
     taxPercentage: raw.taxBasisPoints ? raw.taxBasisPoints / 100 : 0,
 
     // Logistics
@@ -123,22 +126,95 @@ function hydrateProductForForm(raw: RawProduct): CreateProductInput & { id: stri
 
     // Warranty
     warrantyPeriod: raw.warrantyPeriod ?? undefined,
-    warrantyUnit: (raw.warrantyUnit ?? undefined) as CreateProductInput['warrantyUnit'],
+    warrantyUnit: (raw.warrantyUnit ??
+      undefined) as CreateProductInput['warrantyUnit'],
   };
 
   const rawAttr = raw.attributes ?? {};
 
   // STRICT UNION SATISFACTION WITH SPECIFIC ASSERTIONS (NO 'any')
   switch (raw.niche) {
-    case 'retail':      return { ...common, niche: 'retail',      attributes: rawAttr as Extract<CreateProductInput, { niche: 'retail' }>['attributes'] };
-    case 'wellness':    return { ...common, niche: 'wellness',    attributes: rawAttr as Extract<CreateProductInput, { niche: 'wellness' }>['attributes'] };
-    case 'education':   return { ...common, niche: 'education',   attributes: rawAttr as Extract<CreateProductInput, { niche: 'education' }>['attributes'] };
-    case 'services':    return { ...common, niche: 'services',    attributes: rawAttr as Extract<CreateProductInput, { niche: 'services' }>['attributes'] };
-    case 'hospitality': return { ...common, niche: 'hospitality', attributes: rawAttr as Extract<CreateProductInput, { niche: 'hospitality' }>['attributes'] };
-    case 'real_estate': return { ...common, niche: 'real_estate', attributes: rawAttr as Extract<CreateProductInput, { niche: 'real_estate' }>['attributes'] };
-    case 'creative':    return { ...common, niche: 'creative',    attributes: rawAttr as Extract<CreateProductInput, { niche: 'creative' }>['attributes'] };
-    case 'food':        return { ...common, niche: 'food',        attributes: rawAttr as Extract<CreateProductInput, { niche: 'food' }>['attributes'] };
-    case 'digital':     return { ...common, niche: 'digital',     attributes: rawAttr as Extract<CreateProductInput, { niche: 'digital' }>['attributes'] };
+    case 'retail':
+      return {
+        ...common,
+        niche: 'retail',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'retail' }
+        >['attributes'],
+      };
+    case 'wellness':
+      return {
+        ...common,
+        niche: 'wellness',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'wellness' }
+        >['attributes'],
+      };
+    case 'education':
+      return {
+        ...common,
+        niche: 'education',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'education' }
+        >['attributes'],
+      };
+    case 'services':
+      return {
+        ...common,
+        niche: 'services',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'services' }
+        >['attributes'],
+      };
+    case 'hospitality':
+      return {
+        ...common,
+        niche: 'hospitality',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'hospitality' }
+        >['attributes'],
+      };
+    case 'real_estate':
+      return {
+        ...common,
+        niche: 'real_estate',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'real_estate' }
+        >['attributes'],
+      };
+    case 'creative':
+      return {
+        ...common,
+        niche: 'creative',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'creative' }
+        >['attributes'],
+      };
+    case 'food':
+      return {
+        ...common,
+        niche: 'food',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'food' }
+        >['attributes'],
+      };
+    case 'digital':
+      return {
+        ...common,
+        niche: 'digital',
+        attributes: rawAttr as Extract<
+          CreateProductInput,
+          { niche: 'digital' }
+        >['attributes'],
+      };
   }
 }
 
@@ -148,7 +224,9 @@ export default function EditProductPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [initialData, setInitialData] = useState<ReturnType<typeof hydrateProductForForm> | null>(null);
+  const [initialData, setInitialData] = useState<ReturnType<
+    typeof hydrateProductForForm
+  > | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -170,7 +248,9 @@ export default function EditProductPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleUpdateProduct = async (data: CreateProductInput & { draftProductId?: string }) => {
+  const handleUpdateProduct = async (
+    data: CreateProductInput & { draftProductId?: string }
+  ) => {
     // draftProductId is the form's internal tracking field — not sent to API
     // version comes from the hydrated initialData
     const { draftProductId: _ignored, ...payload } = data;
@@ -187,7 +267,8 @@ export default function EditProductPage() {
       router.push('/dashboard/products');
       router.refresh();
     } catch (err) {
-      const message = (err as { message?: string })?.message ?? 'Failed to update product';
+      const message =
+        (err as { message?: string })?.message ?? 'Failed to update product';
       toast.error(message);
       // Re-throw so ProductForm can reset its loading state
       throw err;
@@ -230,7 +311,8 @@ export default function EditProductPage() {
       <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-400">
         <Lock className="h-4 w-4 shrink-0" />
         <span>
-          <strong>Edit Mode</strong> — SKU and Slug are read-only to preserve order references and SEO paths.
+          <strong>Edit Mode</strong> — SKU and Slug are read-only to preserve
+          order references and SEO paths.
         </span>
       </div>
 

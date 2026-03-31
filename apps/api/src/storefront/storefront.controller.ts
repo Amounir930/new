@@ -1,8 +1,9 @@
 import { AuditLog } from '@apex/audit';
+import { cartsInStorefront, eq, getTenantDb } from '@apex/db';
 import {
   isUuid,
   RateLimit,
-  TenantCacheService,
+  type TenantCacheService,
   type TenantRequest,
 } from '@apex/middleware';
 import {
@@ -20,6 +21,12 @@ import {
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
+import type {
+  AddToCartDto,
+  CartSyncDto,
+  RemoveCartItemDto,
+  StockCheckDto,
+} from './dto/cart.dto';
 import type { NewsletterSubscriptionDto } from './dto/newsletter.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { StorefrontService } from './storefront.service';
@@ -33,11 +40,18 @@ type TenantIdDto = z.infer<typeof TenantIdSchema>;
 const ProductsQuerySchema = z.object({
   featured: z.coerce.boolean().optional(),
   category: z.string().optional(),
-  limit: z.coerce.number().min(1).max(100).optional(), // S2 FIX 22C: Hard ceiling prevents OOM
+  limit: z.coerce.number().min(1).max(100).optional(),
   sort: z.enum(['newest', 'price_asc', 'price_desc']).optional(),
 });
 
 type ProductsQueryDto = z.infer<typeof ProductsQuerySchema>;
+
+const ReviewsQuerySchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(50).default(10),
+});
+
+type ReviewsQueryDto = z.infer<typeof ReviewsQuerySchema>;
 
 @Controller({ path: 'storefront', version: '1' })
 @UsePipes(ZodValidationPipe)
@@ -94,6 +108,57 @@ export class StorefrontController {
     return product;
   }
 
+  @Get('products/:id/related')
+  @AuditLog({ action: 'STOREFRONT_RELATED_PRODUCTS', entityType: 'product' })
+  async getRelatedProducts(
+    @Req() req: TenantRequest,
+    @Param('id') id: string,
+    @Query() query: TenantIdDto,
+    @Query('limit') limit?: number
+  ) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    if (!isUuid(id)) {
+      throw new BadRequestException('Invalid product ID format');
+    }
+
+    return this.storefrontService.getRelatedProducts(
+      tenantId,
+      schemaName,
+      id,
+      limit || 8
+    );
+  }
+
+  @Get('products/:id/reviews')
+  @AuditLog({ action: 'STOREFRONT_PRODUCT_REVIEWS', entityType: 'product' })
+  async getProductReviews(
+    @Req() req: TenantRequest,
+    @Param('id') id: string,
+    @Query() query: TenantIdDto,
+    @Query() reviewsQuery: ReviewsQueryDto
+  ) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    if (!isUuid(id)) {
+      throw new BadRequestException('Invalid product ID format');
+    }
+
+    return this.storefrontService.getProductReviews(
+      tenantId,
+      schemaName,
+      id,
+      reviewsQuery.page,
+      reviewsQuery.limit
+    );
+  }
+
   @Get('home')
   @AuditLog('STOREFRONT_HOME_VIEW')
   async getHome(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
@@ -113,6 +178,136 @@ export class StorefrontController {
     return this.storefrontService.getBootstrapData(tenantId, schemaName);
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // CART OPERATIONS (Zero-Trust Pricing)
+  // ═══════════════════════════════════════════════════════════════
+
+  @Post('cart/add')
+  @RateLimit({ requests: 5, windowMs: 60000 }) // 5 req/min - human threshold
+  @AuditLog('CART_ADD_ITEM')
+  async addToCart(
+    @Req() req: TenantRequest,
+    @Body() body: AddToCartDto,
+    @Query() query: TenantIdDto
+  ) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    const sessionId = this.getSessionId(req);
+
+    return this.storefrontService.addToCart(
+      tenantId,
+      schemaName,
+      body,
+      sessionId
+    );
+  }
+
+  @Post('cart/sync')
+  @RateLimit({ requests: 10, windowMs: 60000 }) // 10 req/min
+  @AuditLog('CART_SYNC')
+  async syncCart(
+    @Req() req: TenantRequest,
+    @Body() body: CartSyncDto,
+    @Query() query: TenantIdDto
+  ) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    const sessionId = this.getSessionId(req);
+
+    return this.storefrontService.syncCart(
+      tenantId,
+      schemaName,
+      body,
+      sessionId
+    );
+  }
+
+  @Post('cart/remove')
+  @RateLimit({ requests: 10, windowMs: 60000 }) // 10 req/min
+  @AuditLog('CART_REMOVE_ITEM')
+  async removeFromCart(
+    @Req() req: TenantRequest,
+    @Body() body: RemoveCartItemDto,
+    @Query() query: TenantIdDto
+  ) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    const sessionId = this.getSessionId(req);
+
+    return this.storefrontService.removeFromCart(
+      tenantId,
+      schemaName,
+      body.productId,
+      body.variantId,
+      sessionId
+    );
+  }
+
+  @Post('cart/stock-check')
+  @RateLimit({ requests: 20, windowMs: 60000 }) // 20 req/min
+  @AuditLog('CART_STOCK_CHECK')
+  async checkStock(
+    @Req() req: TenantRequest,
+    @Body() body: StockCheckDto,
+    @Query() query: TenantIdDto
+  ) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    return this.storefrontService.checkStock(tenantId, schemaName, body);
+  }
+
+  @Get('cart')
+  @AuditLog('CART_VIEW')
+  async getCart(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    const sessionId = this.getSessionId(req);
+
+    const { db, release } = await getTenantDb(tenantId, schemaName);
+
+    try {
+      const cart = await db
+        .select()
+        .from(cartsInStorefront)
+        .where(eq(cartsInStorefront.sessionId, sessionId))
+        .limit(1);
+
+      if (!cart.length) {
+        return {
+          items: [],
+          subtotal: '0',
+          itemCount: 0,
+          lastSyncedAt: new Date().toISOString(),
+        };
+      }
+
+      return {
+        items: cart[0].items || [],
+        subtotal: cart[0].subtotal || '0',
+        itemCount: (cart[0].items || []).length,
+        lastSyncedAt:
+          cart[0].updatedAt?.toISOString() || new Date().toISOString(),
+      };
+    } finally {
+      release();
+    }
+  }
+
   /**
    * 🛡️ Sovereign Translation Helper
    * Trace: Identifies if request is on a shared domain (system) and resolves the peer tenant.
@@ -122,10 +317,6 @@ export class StorefrontController {
     const ambientId = req.tenantContext?.tenantId;
     const headerId = req.headers['x-tenant-id'] as string;
 
-    // S2 Protocol: Priority 1: Query string (?tenantId=)
-    // Priority 2: Header (x-tenant-id)
-    // Priority 3: Ambient context (from subdomain)
-    // On shared domains ('system') or internal infrastructure calls, explicit overrides MUST take precedence.
     const rawId =
       ambientId === 'system' ||
       ambientId === '00000000-0000-0000-0000-000000000000' ||
@@ -133,7 +324,6 @@ export class StorefrontController {
         ? queryId || headerId
         : ambientId || queryId || headerId;
 
-    // S2 Protection: Reject generic/default identifiers which lack a real schema context.
     const isIP = /^\d{1,3}(\.\d{1,3}){3}$/.test(rawId || '');
     if (
       !rawId ||
@@ -147,7 +337,6 @@ export class StorefrontController {
       );
     }
 
-    // Attempt resolution through Smart Cache (handles ID and Subdomain)
     const context = await this.tenantCache.resolveTenant(rawId);
 
     if (!context || !isUuid(context.tenantId)) {
@@ -163,6 +352,28 @@ export class StorefrontController {
       tenantId: context.tenantId,
       schemaName: context.schemaName,
     };
+  }
+
+  /**
+   * Extract session ID from request (cookie or header)
+   * Used for cart association
+   */
+  private getSessionId(req: TenantRequest): string {
+    // Try header first
+    const headerSessionId = req.headers['x-session-id'] as string | undefined;
+    if (headerSessionId) {
+      return headerSessionId;
+    }
+
+    // Try cookie
+    const cookieSessionId = req.cookies?.sessionId as string | undefined;
+    if (cookieSessionId) {
+      return cookieSessionId;
+    }
+
+    // Generate new session ID if not present
+    const newSessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    return newSessionId;
   }
 
   @Post('newsletter')

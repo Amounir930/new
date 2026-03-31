@@ -4,7 +4,14 @@
  * Enforces feature-level access control based on plan and tenant specific gates.
  */
 
-import { SYSTEM_TENANT_ID, adminDb, and, eq, featureGatesInGovernance, sql } from '@apex/db';
+import {
+  adminDb,
+  and,
+  eq,
+  featureGatesInGovernance,
+  SYSTEM_TENANT_ID,
+  sql,
+} from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -42,7 +49,7 @@ export class GovernanceGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<TenantRequest>();
     const user = request.user;
-    
+
     // S2 FIX (Architectural Correction): Strictly prioritize cryptographically verified tenantId
     // Never fallback to req.tenantContext for sensitive authorization gates.
     const tenantId = user?.tenantId;

@@ -20,8 +20,8 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import * as bcrypt from 'bcrypt';
 import type { Response } from 'express';
-import { SovereignZodPipe } from '../common/pipes/zod-validation.pipe';
 import { z } from 'zod';
+import { SovereignZodPipe } from '../common/pipes/zod-validation.pipe';
 
 const LoginSchema = z.object({
   email: z.string().email(),

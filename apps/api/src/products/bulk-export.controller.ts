@@ -82,7 +82,10 @@ export class BulkExportController {
       );
 
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${filename}"`
+      );
 
       // Signal to the client that the export was capped at the MVP limit
       if (rowCount === EXPORT_ROW_LIMIT) {

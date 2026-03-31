@@ -57,9 +57,7 @@ export async function apiFetch<T>(
 
   // 🛡️ SSR Protocol Pivot: Use internal Docker URL for server-side fetches
   const isServer = typeof window === 'undefined';
-  const baseUrl = isServer 
-    ? (process.env.INTERNAL_API_URL || API_URL)
-    : API_URL;
+  const baseUrl = isServer ? process.env.INTERNAL_API_URL || API_URL : API_URL;
 
   if (tenantId) {
     headers['X-Tenant-ID'] = tenantId;

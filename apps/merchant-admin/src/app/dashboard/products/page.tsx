@@ -49,7 +49,12 @@ export default function ProductsPage() {
   }
 
   async function handleDelete(product: Product) {
-    if (!window.confirm(`Delete "${product.name?.en ?? product.name?.ar ?? 'Product'}"?\n\nThis action cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Delete "${product.name?.en ?? product.name?.ar ?? 'Product'}"?\n\nThis action cannot be undone.`
+      )
+    )
+      return;
 
     setDeletingId(product.id);
     const toastId = toast.loading('Deleting product...');
@@ -89,11 +94,15 @@ export default function ProductsPage() {
         <TableCell className="font-medium">
           <div>
             <p>{product.name?.en ?? '—'}</p>
-            <p className="text-xs text-muted-foreground">{product.name?.ar ?? ''}</p>
+            <p className="text-xs text-muted-foreground">
+              {product.name?.ar ?? ''}
+            </p>
           </div>
         </TableCell>
         <TableCell className="font-mono text-xs">{product.sku}</TableCell>
-        <TableCell>${parseFloat(product.basePrice || '0').toFixed(2)}</TableCell>
+        <TableCell>
+          ${parseFloat(product.basePrice || '0').toFixed(2)}
+        </TableCell>
         <TableCell>
           <Badge
             variant={product.publishedAt ? 'secondary' : 'outline'}

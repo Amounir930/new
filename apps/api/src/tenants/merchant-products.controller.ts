@@ -8,21 +8,22 @@ import { env } from '@apex/config';
 import {
   and,
   eq,
-  isNull,
   type InferInsertModel,
+  isNull,
   productsInStorefront,
 } from '@apex/db';
 import {
   CheckQuota,
   QuotaInterceptor,
   RequireFeature,
-  TenantCacheService,
-  TenantSessionInterceptor,
   requireExecutor,
+  type TenantCacheService,
+  TenantSessionInterceptor,
 } from '@apex/middleware';
 import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
 import { S3Client } from '@aws-sdk/client-s3';
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -38,7 +39,6 @@ import {
   Req,
   UseGuards,
   UseInterceptors,
-  BadRequestException,
 } from '@nestjs/common';
 import type {
   CreateProductDto,
@@ -53,7 +53,7 @@ export class MerchantProductsController {
   constructor(
     @Inject('TENANT_CACHE_SERVICE')
     readonly _tenantCache: TenantCacheService
-  ) { }
+  ) {}
 
   // ══════════════════════════════════════════════════════════
   // GET /merchant/products — list all active products
@@ -172,11 +172,17 @@ export class MerchantProductsController {
     }
 
     const {
-      nameAr, nameEn,
-      shortDescriptionAr, shortDescriptionEn,
-      descriptionAr, descriptionEn,
+      nameAr,
+      nameEn,
+      shortDescriptionAr,
+      shortDescriptionEn,
+      descriptionAr,
+      descriptionEn,
       taxPercentage,
-      basePrice, salePrice, costPrice, compareAtPrice,
+      basePrice,
+      salePrice,
+      costPrice,
+      compareAtPrice,
       ...rem
     } = body;
 
@@ -191,14 +197,20 @@ export class MerchantProductsController {
           videoUrl: rem.videoUrl || null,
           digitalFileUrl: rem.digitalFileUrl || null,
           name: { ar: nameAr, en: nameEn },
-          shortDescription: { ar: shortDescriptionAr || null, en: shortDescriptionEn || null },
-          longDescription: { ar: descriptionAr || null, en: descriptionEn || null },
+          shortDescription: {
+            ar: shortDescriptionAr || null,
+            en: shortDescriptionEn || null,
+          },
+          longDescription: {
+            ar: descriptionAr || null,
+            en: descriptionEn || null,
+          },
           taxBasisPoints: Math.round((taxPercentage || 0) * 100),
           basePrice: String(basePrice),
           salePrice: salePrice ? String(salePrice) : null,
           costPrice: costPrice ? String(costPrice) : null,
           compareAtPrice: compareAtPrice ? String(compareAtPrice) : null,
-          isActive: true,     // ← Promotes draft → live product
+          isActive: true, // ← Promotes draft → live product
           publishedAt: new Date().toISOString(),
           updatedAt: new Date(),
         })
@@ -210,7 +222,9 @@ export class MerchantProductsController {
     } catch (error) {
       const pgErr = error as Record<string, unknown>;
       if (pgErr?.['code'] === '23514') {
-        throw new BadRequestException('Invalid product data: Check barcode format');
+        throw new BadRequestException(
+          'Invalid product data: Check barcode format'
+        );
       }
       throw error;
     }
@@ -230,11 +244,17 @@ export class MerchantProductsController {
     const { subdomain } = this.getRequiredContext(req);
 
     const {
-      nameAr, nameEn,
-      shortDescriptionAr, shortDescriptionEn,
-      descriptionAr, descriptionEn,
+      nameAr,
+      nameEn,
+      shortDescriptionAr,
+      shortDescriptionEn,
+      descriptionAr,
+      descriptionEn,
       taxPercentage,
-      basePrice, salePrice, costPrice, compareAtPrice,
+      basePrice,
+      salePrice,
+      costPrice,
+      compareAtPrice,
       ...rem
     } = body;
 
@@ -245,7 +265,10 @@ export class MerchantProductsController {
       videoUrl: rem.videoUrl || null,
       digitalFileUrl: rem.digitalFileUrl || null,
       name: { ar: nameAr, en: nameEn },
-      shortDescription: { ar: shortDescriptionAr || null, en: shortDescriptionEn || null },
+      shortDescription: {
+        ar: shortDescriptionAr || null,
+        en: shortDescriptionEn || null,
+      },
       longDescription: { ar: descriptionAr || null, en: descriptionEn || null },
       taxBasisPoints: Math.round((taxPercentage || 0) * 100),
       basePrice: String(basePrice),
@@ -277,14 +300,20 @@ export class MerchantProductsController {
       const pgErr = error as Record<string, unknown>;
 
       if (pgErr?.['code'] === '23514') {
-        throw new BadRequestException('Invalid product data: Check barcode format');
+        throw new BadRequestException(
+          'Invalid product data: Check barcode format'
+        );
       }
 
-      this.logger.error(`PRODUCT_CREATE_FAILURE: ${JSON.stringify({
-        message: pgErr['message'], code: pgErr['code'],
-        detail: pgErr['detail'], constraint: pgErr['constraint'],
-        cause: (pgErr['cause'] as Record<string, unknown>)?.['message'],
-      })}`);
+      this.logger.error(
+        `PRODUCT_CREATE_FAILURE: ${JSON.stringify({
+          message: pgErr['message'],
+          code: pgErr['code'],
+          detail: pgErr['detail'],
+          constraint: pgErr['constraint'],
+          cause: (pgErr['cause'] as Record<string, unknown>)?.['message'],
+        })}`
+      );
       throw error instanceof BadRequestException
         ? error
         : new InternalServerErrorException('Failed to create product.');
@@ -308,12 +337,20 @@ export class MerchantProductsController {
 
     const {
       version,
-      nameAr, nameEn,
-      shortDescriptionAr, shortDescriptionEn,
-      descriptionAr, descriptionEn,
+      nameAr,
+      nameEn,
+      shortDescriptionAr,
+      shortDescriptionEn,
+      descriptionAr,
+      descriptionEn,
       taxPercentage,
-      basePrice, salePrice, costPrice, compareAtPrice,
-      dimHeight, dimWidth, dimLength, // ← extract flat dims; NEVER pass to Drizzle directly
+      basePrice,
+      salePrice,
+      costPrice,
+      compareAtPrice,
+      dimHeight,
+      dimWidth,
+      dimLength, // ← extract flat dims; NEVER pass to Drizzle directly
       ...updateData
     } = body;
 
@@ -328,24 +365,40 @@ export class MerchantProductsController {
     };
 
     if (basePrice !== undefined) mappedData.basePrice = String(basePrice);
-    if (salePrice !== undefined) mappedData.salePrice = salePrice ? String(salePrice) : null;
-    if (costPrice !== undefined) mappedData.costPrice = costPrice ? String(costPrice) : null;
-    if (compareAtPrice !== undefined) mappedData.compareAtPrice = compareAtPrice ? String(compareAtPrice) : null;
-    if (taxPercentage !== undefined) mappedData.taxBasisPoints = Math.round(taxPercentage * 100);
+    if (salePrice !== undefined)
+      mappedData.salePrice = salePrice ? String(salePrice) : null;
+    if (costPrice !== undefined)
+      mappedData.costPrice = costPrice ? String(costPrice) : null;
+    if (compareAtPrice !== undefined)
+      mappedData.compareAtPrice = compareAtPrice
+        ? String(compareAtPrice)
+        : null;
+    if (taxPercentage !== undefined)
+      mappedData.taxBasisPoints = Math.round(taxPercentage * 100);
 
     // JSONB: name — always update both languages together
     if (nameAr !== undefined || nameEn !== undefined) {
       mappedData.name = { ar: nameAr ?? '', en: nameEn ?? '' };
     }
     if (shortDescriptionAr !== undefined || shortDescriptionEn !== undefined) {
-      mappedData.shortDescription = { ar: shortDescriptionAr ?? null, en: shortDescriptionEn ?? null };
+      mappedData.shortDescription = {
+        ar: shortDescriptionAr ?? null,
+        en: shortDescriptionEn ?? null,
+      };
     }
     if (descriptionAr !== undefined || descriptionEn !== undefined) {
-      mappedData.longDescription = { ar: descriptionAr ?? null, en: descriptionEn ?? null };
+      mappedData.longDescription = {
+        ar: descriptionAr ?? null,
+        en: descriptionEn ?? null,
+      };
     }
 
     // JSONB: reassemble flat dim fields → dimensions column
-    if (dimHeight !== undefined || dimWidth !== undefined || dimLength !== undefined) {
+    if (
+      dimHeight !== undefined ||
+      dimWidth !== undefined ||
+      dimLength !== undefined
+    ) {
       mappedData.dimensions = {
         h: dimHeight ?? 0,
         w: dimWidth ?? 0,
@@ -359,16 +412,22 @@ export class MerchantProductsController {
       const [product] = await db
         .update(productsInStorefront)
         .set({ ...mappedData, version: (version ?? 0) + 1 })
-        .where(and(
-          eq(productsInStorefront.id, id),
-          isNull(productsInStorefront.deletedAt),
-          ...(version !== undefined ? [eq(productsInStorefront.version, version)] : [])
-        ))
+        .where(
+          and(
+            eq(productsInStorefront.id, id),
+            isNull(productsInStorefront.deletedAt),
+            ...(version !== undefined
+              ? [eq(productsInStorefront.version, version)]
+              : [])
+          )
+        )
         .returning();
 
       if (!product) {
         // Optimistic lock miss — product updated concurrently
-        throw new BadRequestException('Product was modified by another session. Please refresh and try again.');
+        throw new BadRequestException(
+          'Product was modified by another session. Please refresh and try again.'
+        );
       }
 
       await this.syncCache(subdomain);
@@ -376,14 +435,15 @@ export class MerchantProductsController {
     } catch (error) {
       const pgErr = error as Record<string, unknown>;
       if (pgErr?.['code'] === '23514') {
-        throw new BadRequestException('Invalid product data: Check barcode format (8–50 alphanumeric characters)');
+        throw new BadRequestException(
+          'Invalid product data: Check barcode format (8–50 alphanumeric characters)'
+        );
       }
       throw error instanceof BadRequestException
         ? error
         : new InternalServerErrorException('Failed to update product.');
     }
   }
-
 
   // ══════════════════════════════════════════════════════════
   // DELETE /merchant/products/:id — Conditional Delete
@@ -436,7 +496,9 @@ export class MerchantProductsController {
         .where(eq(productsInStorefront.id, id));
 
       // 🛡️ MinIO intentionally untouched — images needed for past invoices
-      this.logger.log(`PRODUCT_SOFT_DELETED: ${id} (images preserved for order history)`);
+      this.logger.log(
+        `PRODUCT_SOFT_DELETED: ${id} (images preserved for order history)`
+      );
     }
 
     await this.syncCache(subdomain);
@@ -464,7 +526,9 @@ export class MerchantProductsController {
         body: JSON.stringify({ tags: [`tenant-${subdomain.toLowerCase()}`] }),
       });
     } catch (err) {
-      this.logger.warn(`CACHE_SYNC_ERROR: ${err instanceof Error ? err.message : String(err)}`);
+      this.logger.warn(
+        `CACHE_SYNC_ERROR: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   }
 

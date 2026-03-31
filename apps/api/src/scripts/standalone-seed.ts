@@ -1,9 +1,12 @@
 import pg from 'pg';
+
 const { Client } = pg;
 
 async function main() {
   const client = new Client({
-    connectionString: process.env.DATABASE_URL || 'postgresql://apex:apex_secret@apex-postgres-dev:5432/apex_v2'
+    connectionString:
+      process.env.DATABASE_URL ||
+      'postgresql://apex:apex_secret@apex-postgres-dev:5432/apex_v2',
   });
 
   try {
@@ -16,14 +19,14 @@ async function main() {
       `INSERT INTO governance.tenants (subdomain, name, plan, status, niche_type) 
        VALUES ('admin', 'System Admin', 'enterprise', 'active', 'retail')
        ON CONFLICT (subdomain) WHERE deleted_at IS NULL DO UPDATE SET status = 'active';`,
-      
+
       `INSERT INTO governance.tenants (subdomain, name, plan, status, niche_type) 
        VALUES ('storage-admin', 'Storage Admin', 'enterprise', 'active', 'retail')
        ON CONFLICT (subdomain) WHERE deleted_at IS NULL DO UPDATE SET status = 'active';`,
 
       `INSERT INTO governance.tenants (subdomain, name, plan, status, niche_type) 
        VALUES ('super-admin', 'Super Admin', 'enterprise', 'active', 'retail')
-       ON CONFLICT (subdomain) WHERE deleted_at IS NULL DO UPDATE SET status = 'active';`
+       ON CONFLICT (subdomain) WHERE deleted_at IS NULL DO UPDATE SET status = 'active';`,
     ];
 
     for (const q of queries) {

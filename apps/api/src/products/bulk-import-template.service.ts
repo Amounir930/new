@@ -7,9 +7,9 @@
  * - Sheet 3: Hidden Reference Data
  */
 
+import { FIELD_METADATA } from '@apex/validation';
 import { Injectable } from '@nestjs/common';
 import ExcelJS from 'exceljs';
-import { FIELD_METADATA } from '@apex/validation';
 
 @Injectable()
 export class BulkImportTemplateService {
@@ -31,7 +31,7 @@ export class BulkImportTemplateService {
 
     // ─── SHEET 3: REFERENCE (HIDDEN) ─────────────────────────────────────────
     const refSheet = workbook.addWorksheet('Reference', { state: 'hidden' });
-    
+
     // Niche options
     const niches = FIELD_METADATA.niche.options || [];
     niches.forEach((n, i) => {
@@ -52,23 +52,47 @@ export class BulkImportTemplateService {
     instSheet.getColumn(4).width = 40; // Example
 
     // Title Section
-    const titleRow = instSheet.addRow(['APEX MERCHANT IMPORT GUIDE | دليل استيراد المنتجات']);
+    const titleRow = instSheet.addRow([
+      'APEX MERCHANT IMPORT GUIDE | دليل استيراد المنتجات',
+    ]);
     instSheet.mergeCells(1, 1, 1, 4);
     titleRow.height = 40;
-    titleRow.getCell(1).font = { bold: true, size: 18, color: { argb: COLORS.white } };
-    titleRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.primary } };
-    titleRow.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+    titleRow.getCell(1).font = {
+      bold: true,
+      size: 18,
+      color: { argb: COLORS.white },
+    };
+    titleRow.getCell(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: COLORS.primary },
+    };
+    titleRow.getCell(1).alignment = {
+      vertical: 'middle',
+      horizontal: 'center',
+    };
 
     instSheet.addRow(['']); // Spacer
 
     // Header Row
-    const instHeader = instSheet.addRow(['Field (الحقل)', 'Requirement (المتطلبات - عربي)', 'Description (الوصف - إنجليزي)', 'Format / Example (التنسيق / مثال)']);
+    const instHeader = instSheet.addRow([
+      'Field (الحقل)',
+      'Requirement (المتطلبات - عربي)',
+      'Description (الوصف - إنجليزي)',
+      'Format / Example (التنسيق / مثال)',
+    ]);
     instHeader.height = 30;
     instHeader.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: COLORS.white } };
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.secondary } };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: COLORS.secondary },
+      };
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
-      cell.border = { bottom: { style: 'medium', color: { argb: COLORS.primary } } };
+      cell.border = {
+        bottom: { style: 'medium', color: { argb: COLORS.primary } },
+      };
     });
 
     // Data Rows
@@ -77,24 +101,39 @@ export class BulkImportTemplateService {
         `${meta.required ? '★ ' : ''}${key}`,
         meta.descAr,
         meta.descEn,
-        meta.example
+        meta.example,
       ]);
       row.height = 45;
-      row.getCell(1).font = { bold: true, color: { argb: meta.required ? COLORS.required : 'FF374151' } };
-      row.getCell(2).alignment = { wrapText: true, vertical: 'middle', horizontal: 'right' };
-      row.getCell(3).alignment = { wrapText: true, vertical: 'middle', horizontal: 'left' };
+      row.getCell(1).font = {
+        bold: true,
+        color: { argb: meta.required ? COLORS.required : 'FF374151' },
+      };
+      row.getCell(2).alignment = {
+        wrapText: true,
+        vertical: 'middle',
+        horizontal: 'right',
+      };
+      row.getCell(3).alignment = {
+        wrapText: true,
+        vertical: 'middle',
+        horizontal: 'left',
+      };
       row.getCell(4).font = { italic: true, color: { argb: 'FF6B7280' } };
       row.getCell(4).alignment = { vertical: 'middle' };
 
       // Add borders to each cell
       row.eachCell((cell) => {
-        cell.border = { bottom: { style: 'thin', color: { argb: COLORS.border } } };
+        cell.border = {
+          bottom: { style: 'thin', color: { argb: COLORS.border } },
+        };
       });
     });
 
     // Final Tips
     instSheet.addRow(['']);
-    const tipRow = instSheet.addRow(['CRITICAL: To link a Category or Brand ID, copy the UUID from your dashboard and paste it into the respective column.']);
+    const tipRow = instSheet.addRow([
+      'CRITICAL: To link a Category or Brand ID, copy the UUID from your dashboard and paste it into the respective column.',
+    ]);
     instSheet.mergeCells(tipRow.number, 1, tipRow.number, 4);
     tipRow.getCell(1).font = { bold: true, color: { argb: COLORS.required } };
 
@@ -115,13 +154,20 @@ export class BulkImportTemplateService {
     prodHeader.height = 30;
     prodHeader.eachCell((cell, colNumber) => {
       const meta = fieldEntries[colNumber - 1][1];
-      cell.font = { bold: true, color: { argb: meta.required ? COLORS.required : 'FF374151' } };
+      cell.font = {
+        bold: true,
+        color: { argb: meta.required ? COLORS.required : 'FF374151' },
+      };
       cell.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: meta.required ? COLORS.requiredBg : COLORS.optionalBg },
+        fgColor: {
+          argb: meta.required ? COLORS.requiredBg : COLORS.optionalBg,
+        },
       };
-      cell.border = { bottom: { style: 'medium', color: { argb: COLORS.primary } } };
+      cell.border = {
+        bottom: { style: 'medium', color: { argb: COLORS.primary } },
+      };
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
     });
 
@@ -129,7 +175,7 @@ export class BulkImportTemplateService {
     const maxRows = 500;
     fieldEntries.forEach(([key, meta], colIdx) => {
       const colLetter = prodSheet.getColumn(colIdx + 1).letter;
-      
+
       if (key === 'niche') {
         const range = `$A$1:$A$${niches.length}`;
         for (let i = 2; i <= maxRows + 1; i++) {
@@ -164,10 +210,17 @@ export class BulkImportTemplateService {
 
     // Final adjustments
     instSheet.views = [{ activeCell: 'A1' }];
-    workbook.views = [{ 
-      x: 0, y: 0, width: 10000, height: 10000, 
-      firstSheet: 0, activeTab: 0, visibility: 'visible' 
-    }]; // Start on Instructions
+    workbook.views = [
+      {
+        x: 0,
+        y: 0,
+        width: 10000,
+        height: 10000,
+        firstSheet: 0,
+        activeTab: 0,
+        visibility: 'visible',
+      },
+    ]; // Start on Instructions
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);

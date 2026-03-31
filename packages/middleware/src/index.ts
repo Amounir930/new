@@ -21,8 +21,8 @@ export {
   getCurrentTenantId,
   getTenantContext,
   hasTenantContext,
-  requireTenantContext,
   requireExecutor,
+  requireTenantContext,
   runWithTenantContext,
   type TenantContext,
   tenantStorage,
@@ -86,7 +86,6 @@ export {
   type TenantRequest,
   TenantScopedGuard,
 } from './tenant-isolation.middleware';
-export { TenantSessionInterceptor } from './tenant-session.interceptor';
 export {
   extractTenantFromHeader,
   extractTenantFromHost,
@@ -94,4 +93,5 @@ export {
   resolveTenant,
   type TenantResolutionStrategy,
 } from './tenant-resolution';
+export { TenantSessionInterceptor } from './tenant-session.interceptor';
 export { isUuid } from './utils';

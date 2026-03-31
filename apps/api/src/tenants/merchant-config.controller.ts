@@ -9,12 +9,12 @@ interface RequestWithLogger extends AuthenticatedRequest {
 }
 
 import { env } from '@apex/config';
-import { eq, sql, tenantConfigInStorefront } from '@apex/db';
-import { 
-  RedisRateLimitStore, 
-  TenantCacheService, 
-  TenantSessionInterceptor, 
-  requireExecutor 
+import { eq, tenantConfigInStorefront } from '@apex/db';
+import {
+  type RedisRateLimitStore,
+  requireExecutor,
+  type TenantCacheService,
+  TenantSessionInterceptor,
 } from '@apex/middleware';
 import { deleteObject } from '@apex/provisioning';
 import {
@@ -72,7 +72,7 @@ export class MerchantConfigController {
         logo_url: (config.logo_url as string) || '',
       };
     } catch (e) {
-       throw e;
+      throw e;
     }
   }
 

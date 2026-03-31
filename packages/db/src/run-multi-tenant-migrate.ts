@@ -1,6 +1,6 @@
 /**
  * @apex/db — Multi-Tenant Migration Runner
- * 
+ *
  * Securely applies SQL migrations across all isolated tenant schemas (S2 Protocol).
  * Iterates through all schemas matching 'tenant_%' and executes migrations in order.
  */
@@ -19,14 +19,17 @@ if (!DATABASE_URL) {
 }
 
 // Support override for read-only containers
-const DRIZZLE_DIR = process.env.DRIZZLE_DIR || join(import.meta.dir, '..', 'drizzle');
+const DRIZZLE_DIR =
+  process.env.DRIZZLE_DIR || join(import.meta.dir, '..', 'drizzle');
 
 /**
  * Get ordered list of SQL migration files
  */
 function getSqlFiles(): string[] {
   return readdirSync(DRIZZLE_DIR)
-    .filter((f) => f.endsWith('.sql') && f !== 'relations.ts' && f !== 'schema.ts')
+    .filter(
+      (f) => f.endsWith('.sql') && f !== 'relations.ts' && f !== 'schema.ts'
+    )
     .sort();
 }
 
@@ -47,12 +50,16 @@ async function runMultiTenantMigrations() {
       WHERE schema_name LIKE 'tenant_%'
       ORDER BY schema_name
     `);
-    
-    const schemas = schemaResult.rows.map(r => r.schema_name);
-    process.stdout.write(`📋 Found ${schemas.length} tenant schemas to process.\n`);
+
+    const schemas = schemaResult.rows.map((r) => r.schema_name);
+    process.stdout.write(
+      `📋 Found ${schemas.length} tenant schemas to process.\n`
+    );
 
     const files = getSqlFiles();
-    process.stdout.write(`📜 Found ${files.length} migration files to apply.\n`);
+    process.stdout.write(
+      `📜 Found ${files.length} migration files to apply.\n`
+    );
 
     for (const schemaName of schemas) {
       process.stdout.write(`\n🚀 Processing Schema: ${schemaName}\n`);
@@ -83,10 +90,10 @@ async function runMultiTenantMigrations() {
 
         try {
           await client.query('BEGIN');
-          
+
           // CRITICAL S2: Scope execution to tenant schema
           await client.query(`SET search_path TO "${schemaName}", "public"`);
-          
+
           // Execute migration SQL
           await client.query(sql);
 
@@ -101,9 +108,11 @@ async function runMultiTenantMigrations() {
         } catch (err) {
           await client.query('ROLLBACK');
           process.stderr.write(`❌ FAILED ${filename}: ${String(err)}\n`);
-          process.stderr.write(`🛑 Rollback complete for ${schemaName}. Continuing to next tenant...\n`);
+          process.stderr.write(
+            `🛑 Rollback complete for ${schemaName}. Continuing to next tenant...\n`
+          );
           // We continue to next tenant even if one fails to isolate failures (S2 Protocol)
-          break; 
+          break;
         } finally {
           await client.query('SET search_path TO public');
         }
@@ -116,7 +125,7 @@ async function runMultiTenantMigrations() {
   }
 }
 
-runMultiTenantMigrations().catch(err => {
+runMultiTenantMigrations().catch((err) => {
   process.stderr.write(`❌ UNHANDLED ERROR: ${String(err)}\n`);
   process.exit(1);
 });
