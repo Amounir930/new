@@ -29,6 +29,17 @@ const MAX_ROWS = 500;
 const MAX_ZIP_COMPRESSED_BYTES = 500 * 1024 * 1024; // 500MB
 const MAX_UNCOMPRESSED_RATIO = 10;
 
+// ─── Schema Helpers ────────────────────────────────────────────────────────
+const coerceNumber = z.preprocess((val) => {
+  if (typeof val === 'string' && val.trim() === '') return undefined;
+  return val;
+}, z.coerce.number().min(0));
+
+const coerceInt = z.preprocess((val) => {
+  if (typeof val === 'string' && val.trim() === '') return undefined;
+  return val;
+}, z.coerce.number().int());
+
 // ─── Row Schema (mirrors CreateProductSchema, flat fields) ─────────────────
 const ImportRowSchema = z.object({
   nameAr: z.string().min(2).max(255),
@@ -39,13 +50,13 @@ const ImportRowSchema = z.object({
       /^[A-Z0-9_-]{3,50}$/,
       'SKU must be uppercase letters, numbers, underscores, or hyphens (3-50 chars)'
     ),
-  basePrice: z.coerce.number().min(0),
+  basePrice: coerceNumber,
   niche: z.enum(PRODUCT_NICHES),
   slug: z.string().optional(),
   // Pricing
-  salePrice: z.coerce.number().min(0).optional(),
-  costPrice: z.coerce.number().min(0).optional(),
-  compareAtPrice: z.coerce.number().min(0).optional(),
+  salePrice: coerceNumber.optional(),
+  costPrice: coerceNumber.optional(),
+  compareAtPrice: coerceNumber.optional(),
   // Identifiers
   barcode: z
     .string()
@@ -61,12 +72,12 @@ const ImportRowSchema = z.object({
   metaTitle: z.string().max(60).optional(),
   metaDescription: z.string().max(160).optional(),
   // Logistics
-  weight: z.coerce.number().int().min(0).optional(),
-  minOrderQty: z.coerce.number().int().min(1).optional(),
-  lowStockThreshold: z.coerce.number().int().min(0).optional(),
-  taxBasisPoints: z.coerce.number().int().min(0).max(10000).optional(),
+  weight: coerceInt.min(0).optional(),
+  minOrderQty: coerceInt.min(1).optional(),
+  lowStockThreshold: coerceInt.min(0).optional(),
+  taxBasisPoints: coerceInt.min(0).max(10000).optional(),
   countryOfOrigin: z.string().length(2).toUpperCase().optional(),
-  warrantyPeriod: z.coerce.number().int().min(0).optional(),
+  warrantyPeriod: coerceInt.min(0).optional(),
   warrantyUnit: z.enum(['days', 'months', 'years']).optional(),
   // Flags
   isActive: z
@@ -91,9 +102,9 @@ const ImportRowSchema = z.object({
     .preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean())
     .optional(),
   // Flat dimensions (V1 fix)
-  dimHeight: z.coerce.number().min(0).optional(),
-  dimWidth: z.coerce.number().min(0).optional(),
-  dimLength: z.coerce.number().min(0).optional(),
+  dimHeight: coerceNumber.optional(),
+  dimWidth: coerceNumber.optional(),
+  dimLength: coerceNumber.optional(),
   // Delimited fields (V1 fix)
   attributes: z.string().optional(),
   specifications: z.string().optional(),
@@ -541,8 +552,16 @@ export class ImportWorker {
         if (!key) return;
         obj[key] = this.normalizeCellValue(cell.value);
       });
-      if (obj['sku'] === 'APX-PH-001') return;
-      if (Object.values(obj).some((v) => v !== '' && v != null)) {
+
+      // 🛡️ S15 Defense: Aggressive Ghost-Row filtering (Problem B Fixed)
+      // Check if the row has any non-whitespace content.
+      const hasContent = Object.values(obj).some((v) => {
+        if (v == null) return false;
+        if (typeof v === 'string') return v.trim() !== '';
+        return true; // Numbers/Booleans are valid content
+      });
+
+      if (hasContent) {
         rows.push(obj);
       }
     });
