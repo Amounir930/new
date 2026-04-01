@@ -30,15 +30,15 @@ const MAX_ZIP_COMPRESSED_BYTES = 500 * 1024 * 1024; // 500MB
 const MAX_UNCOMPRESSED_RATIO = 10;
 
 // ─── Schema Helpers ────────────────────────────────────────────────────────
-const coerceNumber = z.preprocess((val) => {
-  if (typeof val === 'string' && val.trim() === '') return undefined;
-  return val;
-}, z.coerce.number().min(0));
-
-const coerceInt = z.preprocess((val) => {
-  if (typeof val === 'string' && val.trim() === '') return undefined;
-  return val;
-}, z.coerce.number().int());
+/**
+ * 🛡️ S11 Defense: Sanitizes empty/whitespace strings into undefined before Zod coercion.
+ * Prevents NaN crashes while preserving Zod method chaining (min, int, etc.).
+ */
+const withEmptyToUndefined = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((val) => {
+    if (typeof val === 'string' && val.trim() === '') return undefined;
+    return val;
+  }, schema);
 
 // ─── Row Schema (mirrors CreateProductSchema, flat fields) ─────────────────
 const ImportRowSchema = z.object({
@@ -50,13 +50,13 @@ const ImportRowSchema = z.object({
       /^[A-Z0-9_-]{3,50}$/,
       'SKU must be uppercase letters, numbers, underscores, or hyphens (3-50 chars)'
     ),
-  basePrice: coerceNumber,
+  basePrice: withEmptyToUndefined(z.coerce.number().min(0)),
   niche: z.enum(PRODUCT_NICHES),
   slug: z.string().optional(),
   // Pricing
-  salePrice: coerceNumber.optional(),
-  costPrice: coerceNumber.optional(),
-  compareAtPrice: coerceNumber.optional(),
+  salePrice: withEmptyToUndefined(z.coerce.number().min(0)).optional(),
+  costPrice: withEmptyToUndefined(z.coerce.number().min(0)).optional(),
+  compareAtPrice: withEmptyToUndefined(z.coerce.number().min(0)).optional(),
   // Identifiers
   barcode: z
     .string()
@@ -72,12 +72,16 @@ const ImportRowSchema = z.object({
   metaTitle: z.string().max(60).optional(),
   metaDescription: z.string().max(160).optional(),
   // Logistics
-  weight: coerceInt.min(0).optional(),
-  minOrderQty: coerceInt.min(1).optional(),
-  lowStockThreshold: coerceInt.min(0).optional(),
-  taxBasisPoints: coerceInt.min(0).max(10000).optional(),
+  weight: withEmptyToUndefined(z.coerce.number().int().min(0)).optional(),
+  minOrderQty: withEmptyToUndefined(z.coerce.number().int().min(1)).optional(),
+  lowStockThreshold: withEmptyToUndefined(
+    z.coerce.number().int().min(0)
+  ).optional(),
+  taxBasisPoints: withEmptyToUndefined(
+    z.coerce.number().int().min(0).max(10000)
+  ).optional(),
   countryOfOrigin: z.string().length(2).toUpperCase().optional(),
-  warrantyPeriod: coerceInt.min(0).optional(),
+  warrantyPeriod: withEmptyToUndefined(z.coerce.number().int().min(0)).optional(),
   warrantyUnit: z.enum(['days', 'months', 'years']).optional(),
   // Flags
   isActive: z
@@ -102,9 +106,9 @@ const ImportRowSchema = z.object({
     .preprocess((v) => String(v).toUpperCase() === 'TRUE', z.boolean())
     .optional(),
   // Flat dimensions (V1 fix)
-  dimHeight: coerceNumber.optional(),
-  dimWidth: coerceNumber.optional(),
-  dimLength: coerceNumber.optional(),
+  dimHeight: withEmptyToUndefined(z.coerce.number().min(0)).optional(),
+  dimWidth: withEmptyToUndefined(z.coerce.number().min(0)).optional(),
+  dimLength: withEmptyToUndefined(z.coerce.number().min(0)).optional(),
   // Delimited fields (V1 fix)
   attributes: z.string().optional(),
   specifications: z.string().optional(),
