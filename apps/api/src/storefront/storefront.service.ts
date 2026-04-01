@@ -31,7 +31,7 @@ import type {
   StockCheckItemDto,
 } from './dto/cart.dto';
 
-interface ProductWithVariants {
+export interface ProductWithVariants {
   id: string;
   slug: string;
   name: Record<string, string>;
@@ -91,7 +91,7 @@ interface ProductWithVariants {
   } | null;
 }
 
-interface RelatedProduct {
+export interface RelatedProduct {
   id: string;
   slug: string;
   name: Record<string, string>;
@@ -222,6 +222,7 @@ export class StorefrontService {
         const inv = inventoryLevels.find((i) => i.variantId === variant.id);
         return {
           ...variant,
+          options: variant.options as Record<string, string>,
           inventory: inv
             ? { available: inv.available, reserved: inv.reserved }
             : null,
@@ -252,7 +253,11 @@ export class StorefrontService {
         .limit(1);
 
       const result: ProductWithVariants = {
-        ...product,
+        ...(product as any),
+        name: product.name as Record<string, string>,
+        shortDescription: product.shortDescription as Record<string, string> | null,
+        longDescription: product.longDescription as Record<string, string> | null,
+        attributes: (product.specifications || {}) as Record<string, unknown>,
         variants: variantsWithInventory,
         inventory: productInventory[0] || null,
       };
@@ -346,7 +351,7 @@ export class StorefrontService {
       const result = related.map((r) => ({
         id: r.id,
         slug: r.slug,
-        name: r.name,
+        name: r.name as Record<string, string>,
         price: r.price,
         imageUrl: r.imageUrl,
         similarity: Number(r.similarity),
@@ -411,7 +416,7 @@ export class StorefrontService {
         return bestsellers.map((r) => ({
           id: r.id,
           slug: r.slug,
-          name: r.name,
+          name: r.name as Record<string, string>,
           price: r.price,
           imageUrl: r.imageUrl,
         }));
@@ -441,7 +446,7 @@ export class StorefrontService {
       return related.map((r) => ({
         id: r.id,
         slug: r.slug,
-        name: r.name,
+        name: r.name as Record<string, string>,
         price: r.price,
         imageUrl: r.imageUrl,
       }));
@@ -717,7 +722,7 @@ export class StorefrontService {
         .set({
           items: currentItems,
           subtotal,
-          updatedAt: new Date(),
+          updatedAt: new Date().toISOString(),
         })
         .where(eq(cartsInStorefront.id, cart[0].id));
 
@@ -748,6 +753,7 @@ export class StorefrontService {
           mainImage: productsInStorefront.mainImage,
           minOrderQty: productsInStorefront.minOrderQty,
           trackInventory: productsInStorefront.trackInventory,
+          hasVariants: sql<boolean>`exists (select 1 from ${productVariantsInStorefront} v where v.product_id = ${productsInStorefront.id} and v.deleted_at is null)`,
         })
         .from(productsInStorefront)
         .where(
@@ -757,7 +763,16 @@ export class StorefrontService {
           )
         );
 
-      const productMap = new Map(products.map((p) => [p.id, p]));
+      const productMap = new Map<string, ProductPriceData>(
+        products.map((p) => [
+          p.id,
+          {
+            ...p,
+            name: p.name as Record<string, string>,
+            hasVariants: !!p.hasVariants,
+          },
+        ])
+      );
 
       // ── BATCH QUERY 2: Fetch all variant inventories ──
       const variantIds = dto.items
@@ -861,7 +876,7 @@ export class StorefrontService {
           .set({
             items: validatedItems,
             subtotal,
-            updatedAt: new Date(),
+            updatedAt: new Date().toISOString(),
           })
           .where(eq(cartsInStorefront.id, cart[0].id));
       }
@@ -901,12 +916,20 @@ export class StorefrontService {
         productId: string;
         variantId: string | null;
         quantity: number;
+        unitPrice: string;
       }>;
 
-      const updatedItems = currentItems.filter(
-        (item) =>
-          !(item.productId === productId && item.variantId === variantId)
-      );
+      const updatedItems = currentItems
+        .filter(
+          (item) =>
+            !(item.productId === productId && item.variantId === variantId)
+        )
+        .map((item) => ({
+          productId: item.productId,
+          variantId: item.variantId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice || '0',
+        }));
 
       const subtotal = this.calculateSubtotal(updatedItems);
 
@@ -915,7 +938,7 @@ export class StorefrontService {
         .set({
           items: updatedItems,
           subtotal,
-          updatedAt: new Date(),
+          updatedAt: new Date().toISOString(),
         })
         .where(eq(cartsInStorefront.id, cart[0].id));
 

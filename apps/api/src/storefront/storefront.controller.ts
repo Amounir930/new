@@ -29,7 +29,7 @@ import type {
 } from './dto/cart.dto';
 import type { NewsletterSubscriptionDto } from './dto/newsletter.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { StorefrontService } from './storefront.service';
+import { StorefrontService, type ProductWithVariants, type RelatedProduct } from './storefront.service';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
@@ -292,16 +292,17 @@ export class StorefrontController {
           items: [],
           subtotal: '0',
           itemCount: 0,
-          lastSyncedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         };
       }
 
+      const items = (cart[0].items || []) as any[];
+
       return {
-        items: cart[0].items || [],
+        items,
         subtotal: cart[0].subtotal || '0',
-        itemCount: (cart[0].items || []).length,
-        lastSyncedAt:
-          cart[0].updatedAt?.toISOString() || new Date().toISOString(),
+        itemCount: items.length,
+        lastSyncedAt: cart[0].updatedAt || new Date().toISOString(),
       };
     } finally {
       release();
