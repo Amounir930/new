@@ -4,6 +4,7 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { inArray } from 'drizzle-orm';
 import { env } from '@apex/config';
 import { getTenantDb, productsInStorefront } from '@apex/db';
 import { EncryptionService } from '@apex/security';
@@ -269,13 +270,11 @@ export class ImportWorker {
 
       const { db, release } = await getTenantDb(tenantId, schemaName);
       try {
+        // S15: Correct Drizzle ORM inArray implementation (Strict Typing)
         const existingSkuRows = await db
           .select({ sku: productsInStorefront.sku })
           .from(productsInStorefront)
-          .where(
-            // biome-ignore lint/suspicious/noExplicitAny: drizzle helper
-            (productsInStorefront.sku as any).in(skus)
-          );
+          .where(inArray(productsInStorefront.sku, skus));
 
         if (existingSkuRows.length > 0) {
           const existingSet = new Set(

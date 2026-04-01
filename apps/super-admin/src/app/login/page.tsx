@@ -47,7 +47,6 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     try {
-      // Assuming apiFetch handles the base URL correctly
       const res = await apiFetch<{
         accessToken: string;
         managementKey?: string;
@@ -61,16 +60,16 @@ export default function LoginPage() {
         if (res.managementKey) {
           sessionStorage.setItem('X-SUPER-ADMIN-KEY', res.managementKey);
         }
-        // Redirect to dashboard
+        // Redirect to dashboard (Loading stays true until navigation)
         router.push('/dashboard');
       } else {
-        throw new Error('No token received');
+        throw new Error('Authentication Protocol Failure: No token received');
       }
-    } catch (err: unknown) {
-      void err;
-      setError('Invalid credentials or server error');
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      // S11: Precise Error Surfacing (No Zombie UIs)
+      const message = err instanceof Error ? err.message : 'Critical Authentication Failure';
+      setError(message);
+      setLoading(false); // Revoke loading only on failure
     }
   };
 

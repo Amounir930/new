@@ -51,14 +51,16 @@ export default function LoginPage() {
       if (res?.accessToken) {
         setAuthToken(res.accessToken);
         // S21: Use window.location for hard reload to ensure middleware catches the new cookie
+        // Redirecting... loading stays true to prevent flicker
         window.location.href = '/dashboard';
       } else {
-        throw new Error('Authentication failed');
+        throw new Error('Authentication Protocol Failure: No token received');
       }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid credentials');
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      // S11: Precise Error Surfacing (Zombie UI Prevention)
+      const message = err instanceof Error ? err.message : 'Critical Authentication Failure';
+      setError(message);
+      setLoading(false); // Revoke only on failure
     }
   };
 
