@@ -225,7 +225,7 @@ export class AuditService {
 // 🛡️ Note: These are legacy wrappers around the AuditService.
 // They use a default instance for backward compatibility in tests.
 
-import { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config/service';
 
 let defaultService: AuditService | null = null;
 function getService(): AuditService {

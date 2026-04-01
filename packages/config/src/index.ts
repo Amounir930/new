@@ -8,19 +8,7 @@ import { type EnvConfig, EnvSchema } from './schema';
 import { enforceS1Compliance, validateEnv } from './validator';
 
 export * from './schema';
-export { validateEnv, enforceS1Compliance };
-
-// Auto-execute on import for fail-fast behavior
-if (
-  process.env['NODE_ENV'] !== 'test' &&
-  process.env['SKIP_ENV_VALIDATION'] !== 'true'
-) {
-  if (process.env['NODE_ENV'] === 'production') {
-    enforceS1Compliance();
-  } else if (process.env['ENABLE_S1_ENFORCEMENT'] !== 'false') {
-    enforceS1Compliance();
-  }
-}
+export * from './validator';
 
 /**
  * Global validated environment configuration
@@ -62,5 +50,3 @@ export const env: EnvConfig = (() => {
 if (import.meta.main || process.argv[1]?.includes('index.ts')) {
   console.log('✅ S1 PROTOCOL: Environment Verified Successfully');
 }
-
-export * from './config.service';

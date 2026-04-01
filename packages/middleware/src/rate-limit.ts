@@ -5,7 +5,7 @@
  * CRITICAL FIX: Using Redis for distributed rate limiting (multi-instance support)
  */
 
-import { ConfigModule } from '@apex/config';
+import { ConfigModule } from '@apex/config/service';
 import {
   type CanActivate,
   type ExecutionContext,

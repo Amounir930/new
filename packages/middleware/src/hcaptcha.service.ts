@@ -1,5 +1,5 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config/service';
 import { Injectable, Logger } from '@nestjs/common';
 
 interface HCaptchaResponse {

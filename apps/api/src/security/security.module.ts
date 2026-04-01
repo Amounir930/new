@@ -1,4 +1,4 @@
-import { ConfigModule } from '@apex/config';
+import { ConfigModule } from '@apex/config/service';
 import { Global, Module } from '@nestjs/common';
 import { SecurityService } from './security.service';
 import { CloudflareService } from './cloudflare.service';

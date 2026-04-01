@@ -1,18 +1,37 @@
-import { existsSync, readFileSync } from 'node:fs';
+/**
+ * Multi-Runtime File System Adapter
+ * S1: Supported in Node.js/Bun. No-op in Edge/Browser.
+ */
+const fs = (() => {
+  try {
+    // 🛡️ S1 Escape Hatch: Dynamic requirement to prevent Webpack static analysis.
+    // This ensures that 'node:fs' is NOT bundled in Edge/Browser environments.
+    if (typeof process !== 'undefined' && process.env?.['NEXT_RUNTIME'] === 'edge') {
+      return null;
+    }
+    const fsName = 'node:fs';
+    return require(fsName);
+  } catch (_e) {
+    return null;
+  }
+})();
+
 import { type EnvConfig, EnvSchema } from './schema';
 
 /**
  * Resolves *_FILE variables into their corresponding environment values
  */
 function resolveFileSecrets(secretEnv: Record<string, string | undefined>) {
+  if (!fs) return;
+
   for (const key of Object.keys(secretEnv)) {
     if (key.endsWith('_FILE')) {
       const filePath = secretEnv[key];
       const targetKey = key.replace('_FILE', '');
 
-      if (filePath && existsSync(filePath)) {
+      if (filePath && fs.existsSync(filePath)) {
         try {
-          secretEnv[targetKey] = readFileSync(filePath, 'utf8').trim();
+          secretEnv[targetKey] = fs.readFileSync(filePath, 'utf8').trim();
         } catch (err) {
           console['warn'](`⚠️ Failed to read secret file at ${filePath}:`, err);
         }
@@ -132,6 +151,15 @@ export function enforceS1Compliance(): void {
     console['warn'](
       'Application startup aborted. Check your secrets and environment.'
     );
-    process.exit(1);
+    // 🛡️ S1 Escape Hatch: process.exit is Node-only.
+    // In Edge Runtime, we throw a fatal error to halt execution.
+    if (
+      typeof process !== 'undefined' &&
+      typeof process.exit === 'function' &&
+      process.env?.['NEXT_RUNTIME'] !== 'edge'
+    ) {
+      process.exit(1);
+    }
+    throw new Error('🛑 S1 VIOLATION: Application Halted');
   }
 }

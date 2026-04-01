@@ -6,7 +6,7 @@
 
 import { AuditModule } from '@apex/audit';
 import { AuthModule } from '@apex/auth';
-import { ConfigModule } from '@apex/config';
+import { ConfigModule } from '@apex/config/service';
 import { Module } from '@nestjs/common';
 import { ExportController } from './export.controller';
 import { ExportService } from './export.service';

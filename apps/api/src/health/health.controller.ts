@@ -1,6 +1,6 @@
 import { Public } from '@apex/auth';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config/service';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { RedisRateLimitStore } from '@apex/middleware';
 import {

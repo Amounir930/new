@@ -9,7 +9,7 @@ import { readFile, rm } from 'node:fs/promises';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
-import { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config/service';
 import {
   GetObjectCommand,
   PutObjectCommand,

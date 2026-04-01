@@ -1,5 +1,5 @@
 import { AuditModule } from '@apex/audit';
-import { ConfigModule, ConfigService } from '@apex/config';
+import { ConfigModule, ConfigService } from '@apex/config/service';
 import { TenantCacheModule } from '@apex/middleware';
 import { BullModule } from '@nestjs/bull';
 import { forwardRef, Module } from '@nestjs/common';

@@ -1,4 +1,4 @@
-import { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config/service';
 import { ImgproxyService } from '@apex/media';
 import { Global, Module } from '@nestjs/common';
 

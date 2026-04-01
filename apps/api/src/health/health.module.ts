@@ -1,4 +1,4 @@
-import { ConfigModule } from '@apex/config';
+import { ConfigModule } from '@apex/config/service';
 import { RateLimitModule } from '@apex/middleware';
 import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';

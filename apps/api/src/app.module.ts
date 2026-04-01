@@ -4,7 +4,7 @@
  */
 
 import { AuditModule } from '@apex/audit';
-import { ConfigModule, ConfigService } from '@apex/config';
+import { ConfigModule, ConfigService } from '@apex/config/service';
 import { EventsModule } from '@apex/events';
 import { ExportModule } from '@apex/export';
 import {

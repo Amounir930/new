@@ -1,4 +1,4 @@
-import { ConfigModule, ConfigService } from '@apex/config';
+import { ConfigModule, ConfigService } from '@apex/config/service';
 import { Module } from '@nestjs/common';
 import { JwtModule, type JwtModuleOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';

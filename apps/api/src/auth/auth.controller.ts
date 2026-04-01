@@ -2,7 +2,7 @@
 import { AuditService } from '@apex/audit';
 import { AuthService, type AuthUser } from '@apex/auth';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config/service';
 import { adminDb, eq, tenantsInGovernance, usersInGovernance } from '@apex/db';
 import { hashSensitiveData } from '@apex/security';
 import {

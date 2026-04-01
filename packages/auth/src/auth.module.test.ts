@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, expect, it, mock } from 'bun:test';
-import { ConfigService } from '@apex/config';
+import { ConfigService } from '@apex/config/service';
 import { Global, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AuthModule } from './auth.module';
