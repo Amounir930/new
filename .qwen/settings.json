@@ -1,6 +1,13 @@
 {
   "permissions": {
-    "allow": ["Bash(git show *)", "Bash(bun *)"]
+    "allow": [
+      "Bash(git show *)",
+      "Bash(bun *)",
+      "Bash(git pull *)",
+      "Bash(ssh *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
   },
   "$version": 3
 }

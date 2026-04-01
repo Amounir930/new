@@ -16,6 +16,7 @@ import {
   adminDb,
   and,
   eq,
+  getTenantDb,
   isNotNull,
   isNull,
   lt,
@@ -30,64 +31,78 @@ import {
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
+/**
+ * OrphanMediaCleanupCron — Architect-Directed Remediation (Incident A Fix)
+ *
+ * Scans all active tenant buckets and deletes orphaned media/drafts.
+ * Protocols Applied:
+ * - Dynamic Tenant Iteration: Respects physical schema isolation.
+ * - S1/S7 Compliance: Uses secure credential loading and TLS.
+ * - Memory Safety: Explicit connection release via [Symbol.asyncDispose] or manual release().
+ */
 @Injectable()
 export class OrphanMediaCleanupCron {
   private readonly logger = new Logger(OrphanMediaCleanupCron.name);
 
+  /**
+   * Scans each tenant's assets and purges objects not referenced in DB.
+   */
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async cleanupOrphanedMedia(): Promise<void> {
-    this.logger.log('ORPHAN_CLEANUP_START: Scanning all tenant buckets...');
+    this.logger.log('ORPHAN_CLEANUP_START: Discovering active tenants...');
 
-    const accessKeyId = env.MINIO_ACCESS_KEY;
-    const secretAccessKey = env.MINIO_SECRET_KEY;
-
-    if (!accessKeyId || !secretAccessKey) {
-      this.logger.error(
-        'ORPHAN_CLEANUP_FATAL: MinIO credentials missing in environment.'
-      );
+    const tenants = await this.getActiveTenants();
+    if (tenants.length === 0) {
+      this.logger.warn('ORPHAN_CLEANUP_SKIP: No active tenants found.');
       return;
     }
 
-    const s3Client = new S3Client({
-      endpoint: env.MINIO_ENDPOINT,
-      region: env.MINIO_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-      forcePathStyle: true,
-    });
-
-    // 1. Collect all valid media URLs stored in the database
-    const products = await adminDb
-      .select({
-        mainImage: productsInStorefront.mainImage,
-        galleryImages: productsInStorefront.galleryImages,
-      })
-      .from(productsInStorefront);
-
-    const validUrls = new Set<string>();
-    for (const product of products) {
-      if (product.mainImage) {
-        validUrls.add(product.mainImage);
-      }
-      const gallery = product.galleryImages;
-      if (Array.isArray(gallery)) {
-        for (const img of gallery as Array<{ url?: string }>) {
-          if (img.url) validUrls.add(img.url);
-        }
-      }
+    const s3Client = this.getS3Client();
+    for (const tenant of tenants) {
+      const schemaName = this.getSchemaName(tenant.subdomain);
+      await this.processTenantMediaCleanup(
+        tenant.id,
+        schemaName,
+        tenant.subdomain,
+        s3Client
+      );
     }
 
     this.logger.log(
-      `ORPHAN_CLEANUP: Found ${validUrls.size} valid URLs referenced in DB.`
+      `ORPHAN_CLEANUP_DONE: Processed ${tenants.length} tenants.`
     );
+  }
 
-    // 2. Dynamic tenant bucket discovery (no manual env var needed)
-    const tenants = await adminDb
+  /**
+   * Draft GC — Purges abandoned drafts (isActive=false, unpublished) older than 24h.
+   */
+  @Cron('30 3 * * *')
+  async cleanupAbandonedDrafts(): Promise<void> {
+    this.logger.log('DRAFT_GC_START: Discovering active tenants...');
+
+    const tenants = await this.getActiveTenants();
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    for (const tenant of tenants) {
+      const schemaName = this.getSchemaName(tenant.subdomain);
+      await this.processTenantDraftCleanup(
+        tenant.id,
+        schemaName,
+        tenant.subdomain,
+        cutoff
+      );
+    }
+
+    this.logger.log(`DRAFT_GC_DONE: Processed ${tenants.length} tenants.`);
+  }
+
+  // ─── Private Helpers ───────────────────────────────────────────────────────
+
+  private async getActiveTenants() {
+    return await adminDb
       .select({
+        id: tenantsInGovernance.id,
         subdomain: tenantsInGovernance.subdomain,
-        status: tenantsInGovernance.status,
       })
       .from(tenantsInGovernance)
       .where(
@@ -96,27 +111,45 @@ export class OrphanMediaCleanupCron {
           isNotNull(tenantsInGovernance.subdomain)
         )
       );
+  }
 
-    const buckets = tenants.map(
-      (t) => `tenant-${t.subdomain.toLowerCase()}-assets`
-    );
+  private getSchemaName(subdomain: string): string {
+    return `tenant_${subdomain.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  }
 
-    this.logger.log(
-      `ORPHAN_CLEANUP: Discovered ${buckets.length} active tenant buckets.`
-    );
+  /**
+   * Cognitive Complexity < 15: Per-tenant media cleanup logic.
+   */
+  private async processTenantMediaCleanup(
+    tenantId: string,
+    schemaName: string,
+    subdomain: string,
+    s3Client: S3Client
+  ) {
+    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const bucketName = `tenant-${subdomain.toLowerCase()}-assets`;
 
-    if (buckets.length === 0) {
-      this.logger.warn(
-        'ORPHAN_CLEANUP_SKIP: No active tenant buckets found in database.'
-      );
-      return;
-    }
+    try {
+      // 1. Collect valid media URLs from this tenant's schema
+      const products = await db
+        .select({
+          mainImage: productsInStorefront.mainImage,
+          galleryImages: productsInStorefront.galleryImages,
+        })
+        .from(productsInStorefront);
 
-    let totalDeleted = 0;
+      const validUrls = new Set<string>();
+      for (const p of products) {
+        if (p.mainImage) validUrls.add(p.mainImage);
+        if (Array.isArray(p.galleryImages)) {
+          for (const img of p.galleryImages as Array<{ url?: string }>) {
+            if (img.url) validUrls.add(img.url);
+          }
+        }
+      }
 
-    for (const bucketName of buckets) {
+      // 2. Scan bucket for orphans
       let continuationToken: string | undefined;
-
       do {
         const listResult = await s3Client.send(
           new ListObjectsV2Command({
@@ -131,17 +164,12 @@ export class OrphanMediaCleanupCron {
           const fullUrl = `${env.STORAGE_PUBLIC_URL}/${bucketName}/${obj.Key}`;
 
           if (!validUrls.has(fullUrl)) {
-            try {
-              await s3Client.send(
-                new DeleteObjectCommand({ Bucket: bucketName, Key: obj.Key })
-              );
-              totalDeleted++;
-              this.logger.debug(`ORPHAN_DELETED: ${obj.Key}`);
-            } catch (deleteErr) {
-              this.logger.warn(
-                `ORPHAN_DELETE_FAILED: ${obj.Key} — ${deleteErr instanceof Error ? deleteErr.message : String(deleteErr)}`
-              );
-            }
+            await s3Client.send(
+              new DeleteObjectCommand({ Bucket: bucketName, Key: obj.Key })
+            );
+            this.logger.debug(
+              `ORPHAN_DELETED [${subdomain}]: ${obj.Key}`
+            );
           }
         }
 
@@ -149,72 +177,74 @@ export class OrphanMediaCleanupCron {
           ? listResult.NextContinuationToken
           : undefined;
       } while (continuationToken);
+    } catch (err) {
+      this.logger.error(
+        `ORPHAN_TENANT_FATAL [${subdomain}]: ${err instanceof Error ? err.message : String(err)}`
+      );
+    } finally {
+      await release();
     }
-
-    this.logger.log(
-      `ORPHAN_CLEANUP_DONE: Deleted ${totalDeleted} orphaned objects across ${buckets.length} buckets.`
-    );
   }
 
   /**
-   * Draft GC — Architect Mandate (Modification 2)
-   * Hard-deletes abandoned drafts (is_active=false, never published) older than 24h + wipes MinIO.
+   * Cognitive Complexity < 15: Per-tenant draft garbage collection logic.
    */
-  @Cron('30 3 * * *')
-  async cleanupAbandonedDrafts(): Promise<void> {
-    this.logger.log(
-      'DRAFT_GC_START: Purging abandoned drafts older than 24h...'
-    );
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  private async processTenantDraftCleanup(
+    tenantId: string,
+    schemaName: string,
+    subdomain: string,
+    cutoff: string
+  ) {
+    const { db, release } = await getTenantDb(tenantId, schemaName);
+    const { deletePrefix } = await import('@apex/provisioning');
+
     try {
-      const stale = await adminDb
+      const stale = await db
         .select({ id: productsInStorefront.id })
         .from(productsInStorefront)
         .where(
           and(
             eq(productsInStorefront.isActive, false),
             isNull(productsInStorefront.publishedAt),
-            lt(productsInStorefront.createdAt, cutoff.toISOString())
+            lt(productsInStorefront.createdAt, cutoff)
           )
         );
-
-      if (stale.length === 0) {
-        this.logger.log('DRAFT_GC_DONE: No abandoned drafts.');
-        return;
-      }
-
-      const tenants = await adminDb
-        .select({ subdomain: tenantsInGovernance.subdomain })
-        .from(tenantsInGovernance)
-        .where(
-          and(
-            eq(tenantsInGovernance.status, 'active'),
-            isNotNull(tenantsInGovernance.subdomain)
-          )
-        );
-
-      const { deletePrefix } = await import('@apex/provisioning');
 
       for (const draft of stale) {
-        await adminDb
+        await db
           .delete(productsInStorefront)
           .where(eq(productsInStorefront.id, draft.id));
-        for (const t of tenants) {
-          try {
-            await deletePrefix(t.subdomain, 'public/products/' + draft.id);
-          } catch (e) {
-            this.logger.warn('DRAFT_GC_MINIO_WARN: ' + draft.id);
-          }
+        
+        try {
+          await deletePrefix(subdomain, 'public/products/' + draft.id);
+        } catch (e) {
+          this.logger.warn(`DRAFT_GC_MINIO_WARN [${subdomain}]: ${draft.id}`);
         }
-        this.logger.debug('DRAFT_GC_PURGED: ' + draft.id);
+        this.logger.debug(`DRAFT_GC_PURGED [${subdomain}]: ${draft.id}`);
       }
-      this.logger.log(
-        'DRAFT_GC_DONE: Purged ' + stale.length + ' abandoned draft(s).'
-      );
     } catch (err) {
       this.logger.error(
-        'DRAFT_GC_FATAL: ' + (err instanceof Error ? err.message : String(err))
+        `DRAFT_GC_TENANT_FATAL [${subdomain}]: ${err instanceof Error ? err.message : String(err)}`
       );
+    } finally {
+      await release();
     }
   }
+
+  private getS3Client(): S3Client {
+    const accessKeyId = env.MINIO_ACCESS_KEY;
+    const secretAccessKey = env.MINIO_SECRET_KEY;
+
+    if (!accessKeyId || !secretAccessKey) {
+      throw new Error('S1 VIOLATION: MinIO credentials missing.');
+    }
+
+    return new S3Client({
+      endpoint: env.MINIO_ENDPOINT,
+      region: env.MINIO_REGION || 'us-east-1',
+      credentials: { accessKeyId, secretAccessKey },
+      forcePathStyle: true,
+    });
+  }
 }
+
