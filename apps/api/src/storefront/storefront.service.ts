@@ -16,8 +16,8 @@ import {
   sql,
   tenantConfigInStorefront,
 } from '@apex/db';
-import type { RedisRateLimitStore } from '@apex/middleware';
-import type { EncryptionService } from '@apex/security';
+import { RedisRateLimitStore } from '@apex/middleware';
+import { EncryptionService } from '@apex/security';
 import {
   BadRequestException,
   Injectable,
