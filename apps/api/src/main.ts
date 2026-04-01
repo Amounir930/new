@@ -51,7 +51,8 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, options);
 
   // S15: Enable Trust Proxy for correct IP extraction (Cloudflare -> Traefik -> NestJS)
-  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+  // Trusting 172.0.0.0/8 covers typical Docker internal bridge networks
+  app.set('trust proxy', 'loopback, linklocal, uniquelocal, 172.0.0.0/8');
 
   // S8: CORS Configuration (Elevated Priority)
   app.enableCors(defaultCorsConfig);

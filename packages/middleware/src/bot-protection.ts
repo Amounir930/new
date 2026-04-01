@@ -117,8 +117,6 @@ export class BotProtectionMiddleware implements NestMiddleware {
       const captchaToken = req.headers['x-hcaptcha-token'] as string;
       const isProd = env.NODE_ENV === 'production';
 
-      // S11 FIX: If hCaptcha secret is not configured, bypass challenge
-      // (allows admin panel logins which don't include the token)
       const hasHcaptchaSecret = !!env.HCAPTCHA_SECRET_KEY;
       if (!hasHcaptchaSecret) {
         Logger.warn(
@@ -128,22 +126,30 @@ export class BotProtectionMiddleware implements NestMiddleware {
         return;
       }
 
-      if (isProd || captchaToken) {
-        const isValid = await this.captchaService.verify(
-          captchaToken,
-          clientIp
-        );
-        if (!isValid) {
-          Logger.warn(
-            `S11: hCaptcha failed for sensitive route: ${path} | IP: ${clientIp}`,
-            'BotProtection'
-          );
-          throw new ForbiddenException(
-            'S11 Violation: hCaptcha validation required for this action'
-          );
+      // S11 STABILITY FIX: If no token provided, reject IMMEDIATELY instead of hanging on fetch
+      if (!captchaToken) {
+        if (isProd) {
+          Logger.warn(`S11: Denying production login attempt without hCaptcha token | IP: ${clientIp}`, 'BotProtection');
+          throw new ForbiddenException('S11 Violation: hCaptcha validation required for login');
         }
-        Logger.log(`S11: hCaptcha verified for ${path}`, 'BotProtection');
+        return; // Allow in development
       }
+
+      const isValid = await this.captchaService.verify(
+        captchaToken,
+        clientIp
+      );
+
+      if (!isValid) {
+        Logger.warn(
+          `S11: hCaptcha failed for sensitive route: ${path} | IP: ${clientIp}`,
+          'BotProtection'
+        );
+        throw new ForbiddenException(
+          'S11 Violation: hCaptcha validation failed'
+        );
+      }
+      Logger.log(`S11: hCaptcha verified for ${path}`, 'BotProtection');
     }
   }
 

@@ -1,13 +1,12 @@
 import { ConfigModule } from '@apex/config';
 import { Global, Module } from '@nestjs/common';
-import { RateLimitModule } from '@apex/middleware';
 import { SecurityService } from './security.service';
 import { CloudflareService } from './cloudflare.service';
 import { ActiveDefenseService } from './active-defense.service';
 
 @Global()
 @Module({
-  imports: [ConfigModule, RateLimitModule],
+  imports: [ConfigModule],
   providers: [
     SecurityService,
     CloudflareService,
