@@ -21,6 +21,7 @@ import type { Job } from 'bull';
 import ExcelJS from 'exceljs';
 import { z } from 'zod';
 import { FileValidationService } from './file-validation.service';
+import { StorageService } from '../storage/storage.service';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_ROWS = 500;
@@ -450,7 +451,7 @@ export class ImportWorker {
       // 2. Cleanup MinIO buffer object (Critical for statelessness)
       await s3
         .send(new DeleteObjectCommand({ Bucket: s3Bucket, Key: s3Key }))
-        .catch((e) =>
+        .catch((e: any) =>
           this.logger.warn(`[ImportWorker] MinIO Cleanup Failed: ${e.message}`)
         );
     }
