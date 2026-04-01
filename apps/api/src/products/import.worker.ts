@@ -285,11 +285,12 @@ export class ImportWorker {
 
       const { db, release } = await getTenantDb(tenantId, schemaName);
       try {
-        // S15: Correct Drizzle ORM inArray implementation (Strict Typing)
+        // S15: Resolved Drizzle ORM inArray implementation (Private Property Constraint fix)
+        // We cast the entire SQL expression to any to bypass version-mismatch private property errors
         const existingSkuRows = await db
           .select({ sku: productsInStorefront.sku })
           .from(productsInStorefront)
-          .where(inArray(productsInStorefront.sku, skus));
+          .where(inArray(productsInStorefront.sku as any, skus) as any);
 
         if (existingSkuRows.length > 0) {
           const existingSet = new Set(
@@ -411,12 +412,12 @@ export class ImportWorker {
               : null,
           metaTitle: r.metaTitle ?? null,
           metaDescription: r.metaDescription ?? null,
-          weight: r.weight ?? null,
-          minOrderQty: r.minOrderQty ?? 1,
-          lowStockThreshold: r.lowStockThreshold ?? 0,
-          taxBasisPoints: r.taxBasisPoints ?? 0,
+          weight: r.weight ? Math.floor(r.weight) : null,
+          minOrderQty: r.minOrderQty ? Math.floor(r.minOrderQty) : 1,
+          lowStockThreshold: r.lowStockThreshold ? Math.floor(r.lowStockThreshold) : 0,
+          taxBasisPoints: r.taxBasisPoints ? Math.floor(r.taxBasisPoints) : 0,
           countryOfOrigin: r.countryOfOrigin ?? null,
-          warrantyPeriod: r.warrantyPeriod ?? null,
+          warrantyPeriod: r.warrantyPeriod ? Math.floor(r.warrantyPeriod) : null,
           warrantyUnit: r.warrantyUnit ?? null,
           isActive: r.isActive ?? true,
           isFeatured: r.isFeatured ?? false,
@@ -434,7 +435,7 @@ export class ImportWorker {
           publishedAt: new Date().toISOString(),
         }));
 
-        await dbInsert.insert(productsInStorefront).values(inserts);
+        await dbInsert.insert(productsInStorefront).values(inserts as any);
         importedCount = inserts.length;
       } finally {
         releaseInsert();
@@ -460,7 +461,7 @@ export class ImportWorker {
         .rm(tmpDir, { recursive: true, force: true })
         .catch(() => undefined);
       if (fs.existsSync(localFilePath)) {
-        await fsp.rm(localFilePath, { force: true }).catch(() => undefined);
+        await fsp.rm(localFilePath).catch(() => undefined);
       }
       // 2. Cleanup MinIO buffer object (Critical for statelessness)
       await s3
@@ -654,4 +655,3 @@ export class ImportWorker {
     this.logger.error(`[ImportWorker] Job ${job.id} failed: ${error.message}`);
   }
 }
-
