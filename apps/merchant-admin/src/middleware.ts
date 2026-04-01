@@ -1,19 +1,23 @@
+import { env } from '@apex/config';
 import { jwtVerify } from 'jose';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const MERCHANT_PROTECTED_ROUTES = ['/dashboard', '/orders', '/products'];
 
 /**
  * 🛡️ Cryptographic JWT Verification
  * S7 Protocol: AES-256-GCM / HMAC Integrity
+ * S1: Uses validated env.JWT_SECRET
  */
 async function verifyMerchantToken(token: string) {
-  if (!JWT_SECRET) {
-    throw new Error('S1 Violation: JWT_SECRET missing from environment');
+  const secretKey = env.JWT_SECRET;
+  if (!secretKey) {
+    throw new Error(
+      'S1 Violation: JWT_SECRET missing from environment registry'
+    );
   }
   try {
-    const secret = new TextEncoder().encode(JWT_SECRET);
+    const secret = new TextEncoder().encode(secretKey);
     const { payload } = await jwtVerify(token, secret, {
       requiredClaims: ['exp', 'role', 'tenantId'],
     });

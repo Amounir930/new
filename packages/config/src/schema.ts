@@ -120,13 +120,6 @@ export const serverEnvSchema = baseSchema.extend({
   MEILISEARCH_MASTER_KEY: z.string().optional(),
 
   // Infrastructure & Security Secrets
-  API_KEY_SECRET: z.string().optional(),
-  BLIND_INDEX_PEPPER: z.string().optional(),
-  SESSION_SALT: z.string().optional(),
-  INTERNAL_API_SECRET: z.string().optional(),
-  WEBHOOK_SECRET: z.string().optional(),
-  BACKUP_ENCRYPTION_KEY: z.string().optional(),
-
   // Cloudflare & ACME
   CF_API_EMAIL: z.string().email().optional(),
   CF_DNS_API_TOKEN: z.string().optional(),
@@ -143,7 +136,8 @@ export const serverEnvSchema = baseSchema.extend({
   // Tenant Isolation
   TENANT_ISOLATION_MODE: z.enum(['strict', 'flexible']).default('strict'),
 
-  // Error Tracking
+  INTERNAL_API_URL: z.string().url().default('http://api:3000/api/v1'),
+  INTERNAL_API_SECRET: z.string().min(32, 'S1: INTERNAL_API_SECRET must be 32+ chars').optional(),
   GLITCHTIP_DSN: z.string().url().optional(),
   ALLOWED_ORIGINS: z.string().optional(),
 

@@ -10,172 +10,120 @@ interface AddToCartButtonProps {
   variantId?: string | null;
   quantity?: number;
   minOrderQty?: number;
-  disabled?: boolean;
+  isSelectionComplete?: boolean;
+  onDisabledClick?: () => void;
   className?: string;
 }
 
 /**
- * Validate stock info and return error message if invalid
- */
-function validateStockInfo(
-  stockInfo: unknown,
-  minOrderQty: number,
-  quantity: number
-): string | null {
-  const info = stockInfo as {
-    available?: boolean;
-    quantityAvailable?: number;
-  } | null;
-
-  if (!info?.available) {
-    const available = info?.quantityAvailable || 0;
-    return available > 0
-      ? `Only ${available} units available`
-      : 'Sorry, this item is out of stock';
-  }
-
-  if (quantity < minOrderQty) {
-    return `Minimum order quantity is ${minOrderQty}`;
-  }
-
-  return null;
-}
-
-/**
- * Custom hook for add-to-cart logic
- */
-function useAddToCart(
-  productId: string,
-  variantId: string | null,
-  quantity: number
-) {
-  const cart = useMountedCart();
-  const [isChecking, setIsChecking] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleStockCheck = useCallback(
-    async (tenantId: string) => {
-      const stockResult = await checkStock(tenantId, [
-        { productId, variantId, quantity },
-      ]);
-      return stockResult.items?.[0];
-    },
-    [productId, variantId, quantity]
-  );
-
-  const handleAddToCart = useCallback(async () => {
-    await cart.addItem(productId, variantId, quantity);
-    if (!cart.isOpen) {
-      cart.toggleCart();
-    }
-  }, [cart, productId, variantId, quantity]);
-
-  const handleClick = useCallback(
-    async (localMinOrderQty: number) => {
-      if (isAdding || isChecking) return false;
-
-      setIsChecking(true);
-
-      try {
-        const tenantId = await extractTenantFromHost();
-        const stockInfo = await handleStockCheck(tenantId);
-        const error = validateStockInfo(stockInfo, localMinOrderQty, quantity);
-
-        if (error) {
-          toast.error(error);
-          setIsChecking(false);
-          return false;
-        }
-
-        setIsChecking(false);
-        setIsAdding(true);
-
-        await handleAddToCart();
-        toast.success('Added to cart!', { duration: 2000, icon: '🛒' });
-        return true;
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : 'Failed to add to cart';
-        toast.error(message);
-        return false;
-      } finally {
-        setIsChecking(false);
-        setIsAdding(false);
-      }
-    },
-    [isAdding, isChecking, quantity, handleStockCheck, handleAddToCart]
-  );
-
-  return { isChecking, isAdding, handleClick };
-}
-
-/**
- * ── ADD TO CART BUTTON (OPTIMISTIC UI) ──
+ * 🛒 THE OPTIMISTIC "ADD TO BAG" ENGINE
+ * 
+ * Features:
+ * 1. Validation Guard: Block if variants not selected.
+ * 2. Pre-flight Check: Verify stock before opening cart.
+ * 3. Optimistic UI: Micro-animations and loaders.
  */
 export function AddToCartButton({
   productId,
   variantId = null,
   quantity = 1,
   minOrderQty = 1,
-  disabled = false,
+  isSelectionComplete = true,
+  onDisabledClick,
   className = '',
 }: AddToCartButtonProps) {
-  const { isChecking, isAdding, handleClick } = useAddToCart(
-    productId,
-    variantId,
-    quantity
-  );
+  const cart = useMountedCart();
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleButtonClick = () => {
-    handleClick(minOrderQty);
-  };
+  const handleAdd = useCallback(async () => {
+    // ⚔️ Validation Guard (Protocol Delta Requirements)
+    if (!isSelectionComplete) {
+      if (onDisabledClick) onDisabledClick();
+      else toast.error('Please select all product options!');
+      return;
+    }
 
-  const isDisabled = disabled || isChecking || isAdding;
+    if (isAdding) return;
+    setIsAdding(true);
 
-  let buttonContent = 'Add to Cart';
-  if (isChecking) buttonContent = 'Checking...';
-  else if (isAdding) buttonContent = 'Adding...';
+    try {
+      const tenantId = await extractTenantFromHost();
+      if (!tenantId) {
+        toast.error('Could not identify store context.');
+        setIsAdding(false);
+        return;
+      }
+      
+      // Stock Pre-flight
+      const stockResult = await checkStock(tenantId, [
+        { productId, variantId, quantity },
+      ]);
+      const status = stockResult.items?.[0];
+
+      if (!status?.available) {
+        toast.error('Product is currently out of stock.');
+        setIsAdding(false);
+        return;
+      }
+
+      // Optimistic Cart Sync
+      await cart.addItem(productId, variantId, quantity);
+      
+      toast.success('Successfully added to your bag!');
+      
+      // Dynamic Cart Feedback
+      if (!cart.isOpen) {
+        setTimeout(() => cart.toggleCart(), 300);
+      }
+    } catch (error) {
+      console.warn(`[AddToCartButton] Error adding item:`, error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsAdding(false);
+    }
+  }, [productId, variantId, quantity, isSelectionComplete, isAdding, cart, onDisabledClick]);
 
   return (
     <button
       type="button"
-      onClick={handleButtonClick}
-      disabled={isDisabled}
+      onClick={handleAdd}
+      disabled={isAdding}
       className={`
-        flex-1 rounded-2xl px-8 py-5 text-base font-black shadow-2xl 
-        transition-all duration-200
+        relative overflow-hidden flex items-center justify-center
+        h-14 md:h-16 rounded-2xl md:rounded-3xl
+        text-base font-black tracking-widest uppercase
+        transition-all duration-300 shadow-xl
+        active:scale-95
         ${
-          isDisabled
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-black text-white hover:bg-gray-800 hover:scale-[1.02] active:scale-95'
+          !isSelectionComplete
+            ? 'bg-gray-100 text-gray-400 cursor-pointer border border-gray-200'
+            : 'bg-black text-white hover:bg-gray-800 hover:shadow-black/20 hover:-translate-y-1'
         }
+        ${isAdding ? 'pointer-events-none' : ''}
         ${className}
       `}
     >
-      <span className="flex items-center justify-center gap-2">
-        {isAdding && (
-          <svg
-            className="animate-spin h-5 w-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
+      {/* Premium Loader Overlay */}
+      {isAdding && (
+        <span className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
+          <svg className="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-        )}
-        {buttonContent}
+        </span>
+      )}
+
+      <span className={`flex items-center gap-3 ${isAdding ? 'opacity-0' : 'opacity-100'}`}>
+        {!isSelectionComplete ? 'Complete Selection' : 'Add to Bag'}
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth="2.5"
+        >
+          <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
       </span>
     </button>
   );
@@ -197,29 +145,15 @@ export function StockBadge({
 }: StockBadgeProps) {
   if (!trackInventory || availableStock === undefined) return null;
 
-  let badgeColor = 'bg-green-100 text-green-700';
-  let badgeText = 'In Stock';
-
-  if (availableStock === 0) {
-    badgeColor = 'bg-red-100 text-red-700';
-    badgeText = 'Out of Stock';
-  } else if (availableStock <= 5) {
-    badgeColor = 'bg-amber-100 text-amber-700';
-    badgeText = `Only ${availableStock} left`;
-  } else if (availableStock <= 20) {
-    badgeColor = 'bg-yellow-100 text-yellow-700';
-    badgeText = 'Low Stock';
-  }
+  const isLow = availableStock > 0 && availableStock < 10;
+  const isOut = availableStock === 0;
 
   return (
-    <span
-      className={`
-        inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-        ${badgeColor}
-        ${className}
-      `}
-    >
-      {badgeText}
-    </span>
+    <div className={`flex items-center gap-2 ${className}`}>
+      <span className={`flex h-2 w-2 rounded-full ${isOut ? 'bg-red-500' : isLow ? 'bg-amber-400' : 'bg-emerald-500'}`} />
+      <span className={`text-xs font-black uppercase tracking-tighter ${isOut ? 'text-red-500' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
+        {isOut ? 'Sold Out' : isLow ? `Only ${availableStock} Left` : 'Available to ship'}
+      </span>
+    </div>
   );
 }

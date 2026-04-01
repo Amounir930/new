@@ -1,5 +1,16 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { env } from '@apex/config';
+
+/**
+ * 🛡️ S5 Protocol: Internal Error Masking
+ * Prevents raw backend stack traces or messages from leaking to the frontend.
+ */
+function maskInternalError(tenant: string, error: unknown) {
+  // S4: Log internally for forensics (Not visible to Browser/Client)
+  // Mask the message for the response
+  return `[S5-SHIELD] Internal Processing Error for tenant: ${tenant}. Please contact support with Ref: ${crypto.randomUUID().slice(0, 8)}`;
+}
 
 /**
  * S2 HOTFIX: Multi-tenant Middleware with Subdomain Rewrite
@@ -84,7 +95,7 @@ export async function proxy(request: NextRequest) {
   if (tenantIdentifier && !isInfra) {
     // Protocol S11: Forensic Tenant Validation (Check if tenant exists in Registry)
     try {
-      const apiUrl = process.env.INTERNAL_API_URL || 'http://api:3000/api/v1';
+      const apiUrl = env.INTERNAL_API_URL;
       // Edge-compatible fetch caching relies on standard Cache-Control headers from your backend
       // S12 FIX: Removed invalid 'next.revalidate' logic from Edge context to prevent Self-DDoS
       const checkRes = await fetch(
@@ -105,13 +116,11 @@ export async function proxy(request: NextRequest) {
       }
 
       if (!checkRes.ok) {
-        throw new Error(`API returned status ${checkRes.status}`);
+        throw new Error(`API Hub returned status ${checkRes.status}`);
       }
     } catch (err) {
-      console.error(
-        `[CRITICAL] Middleware failed to validate tenant ${tenantIdentifier}:`,
-        err
-      );
+      // 🛡️ S5 Mandate: Mask raw errors before they reach the browser engine
+      const maskedMessage = maskInternalError(tenantIdentifier, err);
       // S11 Mandate: Fail-Closed. Show a 503 Service Unavailable page if backend is unreachable.
       const url = request.nextUrl.clone();
       url.pathname = '/503'; // Architectural Requirement: Prevent Fail-Open leaks
@@ -146,7 +155,7 @@ export async function proxy(request: NextRequest) {
     sessionId = crypto.randomUUID();
     response.cookies.set('cart_sid', sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });

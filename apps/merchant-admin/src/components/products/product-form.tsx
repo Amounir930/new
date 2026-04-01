@@ -1,6 +1,10 @@
 'use client';
 
-import { type CreateProductInput, CreateProductSchema } from '@apex/validation';
+import {
+  type CreateProductInput,
+  CreateProductSchema,
+  PRODUCT_NICHES,
+} from '@apex/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertCircle,
@@ -18,8 +22,8 @@ import {
   Truck,
 } from 'lucide-react';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useCallback, useEffect, useState } from 'react';
+import { type FieldError, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,6 +47,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { apiFetch } from '@/lib/api';
+import { NicheAttributes } from './niche-attributes';
 
 // ─── Tab Definitions ──────────────────────────────────────────
 const TABS = [
@@ -99,9 +104,8 @@ const TAB_FIELD_MAP: Record<string, TabId> = {
 // ─── Error Banner ─────────────────────────────────────────────
 function ErrorBanner({ errors }: { errors: Record<string, unknown> }) {
   const msgs = Object.values(errors)
-    .map((e: any) => e?.message as string | undefined)
-    .filter(Boolean)
-    .slice(0, 5) as string[];
+    .map((e) => (e as FieldError | undefined)?.message)
+    .filter(Boolean) as string[];
   if (!msgs.length) return null;
   return (
     <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/20 dark:text-red-400">
@@ -156,13 +160,19 @@ function TabNav({
 // ═══════════════════════════════════════════════════════════════
 // MAIN PRODUCT FORM
 // ═══════════════════════════════════════════════════════════════
+// 🛡️ Protocol Delta: Reified Form Types
+export type ProductFormValues = CreateProductInput & {
+  id?: string;
+  version?: number;
+};
+
 export function ProductForm({
   initialData,
   onSubmit,
   isEditMode = false,
 }: {
-  initialData?: Partial<CreateProductInput>;
-  onSubmit: (data: CreateProductInput) => Promise<void>;
+  initialData?: Partial<ProductFormValues>;
+  onSubmit: (data: ProductFormValues) => Promise<void>;
   isEditMode?: boolean;
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('general');
@@ -171,16 +181,14 @@ export function ProductForm({
   const [tagInput, setTagInput] = useState('');
   const [specKey, setSpecKey] = useState('');
   const [specVal, setSpecVal] = useState('');
-  // 🏗️ Draft Product ID — obtained from backend on mount (create mode)
-  // Backend creates a draft DB row first so all images use the real product_id as folder
-  const [draftProductId, setDraftProductId] = useState<string | null>(
-    (initialData as any)?.id ?? null // edit mode: reuse existing id
-  );
-  const [draftInitializing, setDraftInitializing] = useState(
-    !(initialData as any)?.id
-  );
 
-  const form = useForm<CreateProductInput>({
+  // 🏗️ Draft Product ID — derived for media isolation
+  const [draftProductId, setDraftProductId] = useState<string | null>(
+    initialData?.id ?? null
+  );
+  const [draftInitializing, setDraftInitializing] = useState(!initialData?.id);
+
+  const form = useForm<ProductFormValues>({
     resolver: zodResolver(CreateProductSchema),
     defaultValues: {
       nameAr: '',
@@ -190,7 +198,6 @@ export function ProductForm({
       barcode: undefined,
       countryOfOrigin: undefined,
       basePrice: 0,
-      // Optional price fields: must default to undefined so they are not validated
       salePrice: undefined,
       compareAtPrice: undefined,
       costPrice: undefined,
@@ -213,7 +220,7 @@ export function ProductForm({
       galleryImages: [],
       tags: [],
       ...initialData,
-    },
+    } as ProductFormValues,
   });
 
   const {
@@ -221,39 +228,47 @@ export function ProductForm({
     handleSubmit,
     setValue,
     getValues,
+    watch,
     control,
     formState: { errors },
   } = form;
 
-  // 🏗️ Draft Initialization: create-mode only
-  // Immediately reserve a real DB product_id so all media uploads use one unified folder
+  // 🏗️ Draft Initialization: ensures unified product media folder
   useEffect(() => {
-    if ((initialData as any)?.id) return; // edit mode — already has an id
+    if (initialData?.id) return;
+
+    let isMounted = true;
     apiFetch<{ id: string }>('/merchant/products/draft', { method: 'POST' })
       .then(({ id }) => {
-        setDraftProductId(id);
-        setDraftInitializing(false);
+        if (isMounted) {
+          setDraftProductId(id);
+          setDraftInitializing(false);
+        }
       })
       .catch(() => {
-        setDraftInitializing(false); // degrade gracefully — upload will fail with 400
-        toast.error('Could not initialise product session. Please refresh.');
+        if (isMounted) {
+          setDraftInitializing(false);
+          toast.error('Could not initialise product session. Please refresh.');
+        }
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  const isDigital = useWatch({ control, name: 'isDigital' });
-  const niche = useWatch({ control, name: 'niche' });
-  const mainImage = useWatch({ control, name: 'mainImage' });
-  const galleryImages = useWatch({ control, name: 'galleryImages' }) ?? [];
-  const tags = useWatch({ control, name: 'tags' }) ?? [];
-  const specifications = useWatch({ control, name: 'specifications' }) ?? {};
-  const attributes = useWatch({ control, name: 'attributes' }) ?? {};
-  const trackInventory = useWatch({ control, name: 'trackInventory' });
-  const requiresShipping = useWatch({ control, name: 'requiresShipping' });
-  const isActive = useWatch({ control, name: 'isActive' });
-  const isFeatured = useWatch({ control, name: 'isFeatured' });
-  const isReturnable = useWatch({ control, name: 'isReturnable' });
-  const warrantyUnit = useWatch({ control, name: 'warrantyUnit' });
+    return () => {
+      isMounted = false;
+    };
+  }, [initialData?.id]);
+
+  const niche = watch('niche');
+  const mainImage = watch('mainImage');
+  const galleryImages = watch('galleryImages') ?? [];
+  const tags = watch('tags') ?? [];
+  const specifications = watch('specifications') ?? {};
+  const isDigital = watch('isDigital');
+  const warrantyUnit = watch('warrantyUnit');
+  const trackInventory = watch('trackInventory');
+  const requiresShipping = watch('requiresShipping');
+  const isActive = watch('isActive');
+  const isFeatured = watch('isFeatured');
+  const isReturnable = watch('isReturnable');
 
   // ─── Upload Handler ──────────────────────────────────────────
   async function handleImageUpload(
@@ -268,7 +283,6 @@ export function ProductForm({
     try {
       setUploadingKey(key);
       const ct = encodeURIComponent(file.type);
-      // productId MUST be passed — backend uses it as the folder name (no random client UUIDs)
       const endpoint = `/merchant/media/products/upload-url?contentType=${ct}&productId=${draftProductId}`;
       const { uploadUrl, publicUrl } = await apiFetch<{
         uploadUrl: string;
@@ -320,7 +334,7 @@ export function ProductForm({
   function removeGalleryImage(idx: number) {
     setValue(
       'galleryImages',
-      (galleryImages as any[]).filter((_, i) => i !== idx)
+      galleryImages.filter((_, i) => i !== idx)
     );
   }
 
@@ -329,8 +343,7 @@ export function ProductForm({
     async (data) => {
       setLoading(true);
       try {
-        // Inject draftProductId so the page's onSubmit can call PUT /:draftId
-        await onSubmit({ ...data, draftProductId } as any);
+        await onSubmit({ ...data, id: draftProductId ?? undefined });
       } finally {
         setLoading(false);
       }
@@ -348,7 +361,6 @@ export function ProductForm({
 
   return (
     <form onSubmit={handleFormSubmit} noValidate>
-      {/* HEADER */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -358,14 +370,14 @@ export function ProductForm({
             {isEditMode
               ? 'Update product details. SKU and slug are locked to preserve data integrity.'
               : 'Complete all sections to publish.'}
-            {!isEditMode && (
-              <span className="text-destructive font-medium text-xs ml-1">
-                * Required fields are marked with an asterisk
-              </span>
-            )}
           </p>
         </div>
-        <Button type="submit" disabled={loading} size="lg" className="gap-2">
+        <Button
+          type="submit"
+          disabled={loading || draftInitializing}
+          size="lg"
+          className="gap-2"
+        >
           {loading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
@@ -393,7 +405,6 @@ export function ProductForm({
           ))}
         </TabsList>
 
-        {/* ── TAB 1: GENERAL ── */}
         <TabsContent value="general">
           <Card>
             <CardHeader>
@@ -401,26 +412,13 @@ export function ProductForm({
                 <Package className="h-5 w-5" />
                 General Information
               </CardTitle>
-              <CardDescription>
-                Product identity — names, SKU, and origin
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <ErrorBanner errors={errors as Record<string, unknown>} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="nameAr">
-                    Arabic Name <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    id="nameAr"
-                    dir="rtl"
-                    placeholder="اسم المنتج"
-                    {...register('nameAr')}
-                    className={
-                      errors.nameAr ? 'border-destructive ring-destructive' : ''
-                    }
-                  />
+                  <Label htmlFor="nameAr">Arabic Name</Label>
+                  <Input id="nameAr" dir="rtl" {...register('nameAr')} />
                   {errors.nameAr && (
                     <p className="text-xs text-destructive">
                       {errors.nameAr.message as string}
@@ -805,7 +803,7 @@ export function ProductForm({
                           min="0"
                           step="0.1"
                           placeholder="0"
-                          {...register('dimHeight' as any)}
+                          {...register('dimHeight')}
                         />
                       </div>
                       <div className="space-y-1">
@@ -815,7 +813,7 @@ export function ProductForm({
                           min="0"
                           step="0.1"
                           placeholder="0"
-                          {...register('dimWidth' as any)}
+                          {...register('dimWidth')}
                         />
                       </div>
                       <div className="space-y-1">
@@ -825,7 +823,7 @@ export function ProductForm({
                           min="0"
                           step="0.1"
                           placeholder="0"
-                          {...register('dimLength' as any)}
+                          {...register('dimLength')}
                         />
                       </div>
                     </div>
@@ -1349,62 +1347,52 @@ export function ProductForm({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-1.5">
-                <Label htmlFor="niche">
-                  Product Niche <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={niche ?? 'retail'}
-                  onValueChange={(v) => {
-                    setValue('niche', v as any);
-                    setValue('attributes', {} as any);
-                  }}
-                >
-                  <SelectTrigger
-                    id="niche"
-                    className={
-                      errors.niche ? 'border-destructive ring-destructive' : ''
-                    }
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="niche">
+                    Product Niche <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={niche ?? 'retail'}
+                    onValueChange={(v: (typeof PRODUCT_NICHES)[number]) => {
+                      setValue('niche', v);
+                      setValue(
+                        'attributes',
+                        {} as ProductFormValues['attributes']
+                      );
+                    }}
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(
-                      [
-                        'retail',
-                        'wellness',
-                        'education',
-                        'services',
-                        'hospitality',
-                        'real_estate',
-                        'creative',
-                      ] as const
-                    ).map((n) => (
-                      <SelectItem key={n} value={n}>
-                        {n.charAt(0).toUpperCase() +
-                          n.slice(1).replace('_', ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.niche && (
-                  <p className="text-xs text-destructive mt-1">
-                    {errors.niche.message as string}
-                  </p>
-                )}
-              </div>
+                    <SelectTrigger
+                      id="niche"
+                      className={
+                        errors.niche
+                          ? 'border-destructive ring-destructive'
+                          : ''
+                      }
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PRODUCT_NICHES.map((n) => (
+                        <SelectItem key={n} value={n}>
+                          {n.charAt(0).toUpperCase() +
+                            n.slice(1).replace('_', ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Dynamic niche attributes — all watchers already hoisted above */}
-              <NicheAttributesPanel
-                niche={niche as string}
-                attributes={attributes as Record<string, unknown>}
-                onAttributeChange={(key, value) =>
-                  setValue('attributes', {
-                    ...(attributes as Record<string, unknown>),
-                    [key]: value,
-                  } as any)
-                }
-              />
+                <div className="rounded-lg border bg-muted/30 p-4">
+                  <NicheAttributes
+                    niche={niche}
+                    register={register}
+                    errors={errors}
+                    setValue={setValue}
+                    watch={watch}
+                  />
+                </div>
+              </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
@@ -1421,7 +1409,9 @@ export function ProductForm({
                   <Label htmlFor="warrantyUnit">Warranty Unit</Label>
                   <Select
                     value={warrantyUnit ?? ''}
-                    onValueChange={(v) => setValue('warrantyUnit', v as any)}
+                    onValueChange={(v: 'days' | 'months' | 'years') =>
+                      setValue('warrantyUnit', v)
+                    }
                   >
                     <SelectTrigger id="warrantyUnit">
                       <SelectValue placeholder="Select unit" />
@@ -1459,289 +1449,4 @@ export function ProductForm({
       </Tabs>
     </form>
   );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// NICHE ATTRIBUTES PANEL (pure component, no hooks)
-// ═══════════════════════════════════════════════════════════════
-function NicheAttributesPanel({
-  niche,
-  attributes,
-  onAttributeChange,
-}: {
-  niche: string;
-  attributes: Record<string, unknown>;
-  onAttributeChange: (key: string, value: unknown) => void;
-}) {
-  if (!niche || niche === 'retail')
-    return (
-      <div className="space-y-3">
-        <Label>Retail Attributes</Label>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {(
-            [
-              ['material', 'Material'],
-              ['color', 'Color'],
-              ['size', 'Size'],
-            ] as const
-          ).map(([key, label]) => (
-            <div key={key} className="space-y-1.5">
-              <Label className="text-xs">{label}</Label>
-              <Input
-                placeholder={label}
-                value={String(attributes[key] ?? '')}
-                onChange={(e) => onAttributeChange(key, e.target.value)}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-
-  if (niche === 'wellness')
-    return (
-      <div className="space-y-3">
-        <Label>Wellness Attributes</Label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Duration (min) <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              type="number"
-              min="1"
-              placeholder="60"
-              value={String(attributes.duration_min ?? '')}
-              onChange={(e) =>
-                onAttributeChange('duration_min', Number(e.target.value))
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Practitioner</Label>
-            <Input
-              placeholder="Dr. Smith"
-              value={String(attributes.practitioner ?? '')}
-              onChange={(e) =>
-                onAttributeChange('practitioner', e.target.value)
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Session Type <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={String(attributes.session_type ?? '')}
-              onValueChange={(v) => onAttributeChange('session_type', v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {['one-on-one', 'group', 'workshop'].map((v) => (
-                  <SelectItem key={v} value={v}>
-                    {v}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-    );
-
-  if (niche === 'education')
-    return (
-      <div className="space-y-3">
-        <Label>Education Attributes</Label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Instructor <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              placeholder="Instructor Name"
-              value={String(attributes.instructor ?? '')}
-              onChange={(e) => onAttributeChange('instructor', e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Lessons Count <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              type="number"
-              min="1"
-              placeholder="10"
-              value={String(attributes.lessons_count ?? '')}
-              onChange={(e) =>
-                onAttributeChange('lessons_count', Number(e.target.value))
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Level <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={String(attributes.level ?? '')}
-              onValueChange={(v) => onAttributeChange('level', v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select level" />
-              </SelectTrigger>
-              <SelectContent>
-                {['beginner', 'intermediate', 'advanced'].map((v) => (
-                  <SelectItem key={v} value={v}>
-                    {v}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <Label className="text-xs">Has Certificate</Label>
-            <Switch
-              checked={Boolean(attributes.has_certificate)}
-              onCheckedChange={(v) => onAttributeChange('has_certificate', v)}
-            />
-          </div>
-        </div>
-      </div>
-    );
-
-  if (niche === 'real_estate')
-    return (
-      <div className="space-y-3">
-        <Label>Real Estate Attributes</Label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {(
-            [
-              ['bedrooms', 'Bedrooms'],
-              ['bathrooms', 'Bathrooms'],
-              ['sqft', 'Area (sqft)'],
-            ] as const
-          ).map(([key, label]) => (
-            <div key={key} className="space-y-1.5">
-              <Label className="text-xs">
-                {label} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                type="number"
-                min="0"
-                placeholder="0"
-                value={String(attributes[key] ?? '')}
-                onChange={(e) => onAttributeChange(key, Number(e.target.value))}
-              />
-            </div>
-          ))}
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Property Type <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={String(attributes.property_type ?? '')}
-              onValueChange={(v) => onAttributeChange('property_type', v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                {['apartment', 'house', 'commercial', 'land'].map((v) => (
-                  <SelectItem key={v} value={v}>
-                    {v}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-    );
-
-  if (niche === 'services')
-    return (
-      <div className="space-y-3">
-        <Label>Services Attributes</Label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Service Category <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              placeholder="e.g. Consulting"
-              value={String(attributes.service_category ?? '')}
-              onChange={(e) =>
-                onAttributeChange('service_category', e.target.value)
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Hourly Rate</Label>
-            <Input
-              type="number"
-              min="0"
-              placeholder="0.00"
-              value={String(attributes.hourly_rate ?? '')}
-              onChange={(e) =>
-                onAttributeChange('hourly_rate', Number(e.target.value))
-              }
-            />
-          </div>
-        </div>
-      </div>
-    );
-
-  if (niche === 'creative')
-    return (
-      <div className="space-y-3">
-        <Label>Creative Attributes</Label>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs">
-              Medium <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              placeholder="e.g. Oil on Canvas"
-              value={String(attributes.medium ?? '')}
-              onChange={(e) => onAttributeChange('medium', e.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Dimensions (cm)</Label>
-            <Input
-              placeholder="50x70"
-              value={String(attributes.dimensions_cm ?? '')}
-              onChange={(e) =>
-                onAttributeChange('dimensions_cm', e.target.value)
-              }
-            />
-          </div>
-        </div>
-      </div>
-    );
-
-  if (niche === 'hospitality')
-    return (
-      <div className="space-y-3">
-        <Label>Hospitality Attributes</Label>
-        <div className="space-y-1.5">
-          <Label className="text-xs">
-            Capacity <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            type="number"
-            min="1"
-            placeholder="50"
-            value={String(attributes.capacity ?? '')}
-            onChange={(e) =>
-              onAttributeChange('capacity', Number(e.target.value))
-            }
-          />
-        </div>
-      </div>
-    );
-
-  return null;
 }

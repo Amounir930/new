@@ -232,9 +232,15 @@ export const useCartStore = create<CartState>()(
     }),
     {
       name: 'cart-storage',
-      storage: createJSONStorage(() =>
-        typeof window !== 'undefined' ? localStorage : undefined
-      ),
+      storage: createJSONStorage(() => {
+        if (typeof window !== 'undefined') return localStorage;
+        // SSR No-op storage to satisfy TypeScript/Zustand requirements
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        };
+      }),
       // ⚠️ HYDRATION SAFETY: Only persist client-state, not server-state
       partialize: (state) => ({
         items: state.items,

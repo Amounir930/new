@@ -4,9 +4,16 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { inArray } from 'drizzle-orm';
+import { type InferInsertModel, inArray } from 'drizzle-orm';
 import { env } from '@apex/config';
-import { getTenantDb, productsInStorefront } from '@apex/db';
+import {
+  getTenantDb,
+  productImagesInStorefront,
+  productsInStorefront,
+} from '@apex/db';
+
+type InsertProduct = InferInsertModel<typeof productsInStorefront>;
+type InsertMedia = InferInsertModel<typeof productImagesInStorefront>;
 import { EncryptionService } from '@apex/security';
 import { PRODUCT_NICHES } from '@apex/validation';
 import {
@@ -285,12 +292,10 @@ export class ImportWorker {
 
       const { db, release } = await getTenantDb(tenantId, schemaName);
       try {
-        // S15: Resolved Drizzle ORM inArray implementation (Private Property Constraint fix)
-        // We cast the entire SQL expression to any to bypass version-mismatch private property errors
         const existingSkuRows = await db
           .select({ sku: productsInStorefront.sku })
           .from(productsInStorefront)
-          .where(inArray(productsInStorefront.sku as any, skus) as any);
+          .where(inArray(productsInStorefront.sku, skus));
 
         if (existingSkuRows.length > 0) {
           const existingSet = new Set(
@@ -324,6 +329,7 @@ export class ImportWorker {
         _mainImageUrl: string | undefined;
         _galleryUrls: { url: string; altText: string; order: number }[];
       })[] = [];
+      const mediaInserts: any[] = [];
 
       for (let i = 0; i < validRows.length; i++) {
         const { data } = validRows[i];
@@ -337,6 +343,16 @@ export class ImportWorker {
           data.mainImage,
           imageDir
         );
+
+        if (mainImageUrl) {
+          mediaInserts.push({
+            id: randomUUID(),
+            productId,
+            url: mainImageUrl,
+            isPrimary: true,
+            sortOrder: 0,
+          });
+        }
 
         const galleryUrls: { url: string; altText: string; order: number }[] =
           [];
@@ -356,6 +372,13 @@ export class ImportWorker {
             );
             if (url) {
               galleryUrls.push({ url, altText: '', order: order++ });
+              mediaInserts.push({
+                id: randomUUID(),
+                productId,
+                url,
+                isPrimary: false,
+                sortOrder: order,
+              });
             }
           }
         }
@@ -384,8 +407,9 @@ export class ImportWorker {
         schemaName
       );
       try {
-        const inserts = resolvedRows.map((r) => ({
+        const productInserts: InsertProduct[] = resolvedRows.map((r) => ({
           id: r._productId,
+          tenantId: merchant.tenantId,
           name: { ar: r.nameAr, en: r.nameEn },
           sku: r.sku,
           niche:
@@ -429,14 +453,24 @@ export class ImportWorker {
           attributes: parseDelimited(r.attributes),
           specifications: parseDelimited(r.specifications),
           tags: parseCommaSeparated(r.tags),
-          keywords: parseCommaSeparated(r.keywords)?.join(' ') ?? null,
-          mainImage: (r._mainImageUrl || '') as string,
-          galleryImages: r._galleryUrls.length > 0 ? r._galleryUrls : [],
+          keywords: (parseCommaSeparated(r.keywords) ?? []).join(' '),
+          mainImage: r._mainImageUrl || '',
+          galleryImages: r._galleryUrls || [],
           publishedAt: new Date().toISOString(),
         }));
 
-        await dbInsert.insert(productsInStorefront).values(inserts as any);
-        importedCount = inserts.length;
+        // S15: Execution of Atomic Dual-Write Transaction
+        // Ensures both Product and Media Registry are committed together, preventing orphans
+        await dbInsert.transaction(async (tx) => {
+          await tx.insert(productsInStorefront).values(productInserts);
+          if (mediaInserts.length > 0) {
+            await tx
+              .insert(productImagesInStorefront)
+              .values(mediaInserts);
+          }
+        });
+
+        importedCount = productInserts.length;
       } finally {
         releaseInsert();
       }

@@ -1,188 +1,190 @@
 'use client';
 
-interface VariantOption {
-  id: string;
+import { useMemo } from 'react';
+
+export interface OptionValue {
+  value: string;
+  isAvailable: boolean;
+  isCompatible: boolean;
+}
+
+export interface OptionType {
   name: string;
-  price?: string;
-  compareAtPrice?: string;
-  available: boolean;
-  stock?: number;
+  values: OptionValue[];
 }
 
 interface VariantSelectorProps {
-  variantType: 'color' | 'size' | 'material' | string;
-  options: VariantOption[];
-  selectedOption?: string | null;
-  onOptionSelect: (variantId: string) => void;
+  options: OptionType[];
+  selectedOptions: Record<string, string>;
+  onOptionSelect: (key: string, value: string) => void;
   className?: string;
 }
 
 /**
- * ── VARIANT SELECTOR ──
- *
+ * ── VARIANT SELECTOR (SWATCHES & PILLS) ──
+ * 
  * Features:
- * 1. Stock-aware disabling (gray out unavailable variants)
- * 2. Visual feedback for selection
- * 3. Support for color swatches and text options
- * 4. Accessible (keyboard navigation, ARIA)
+ * 1. Automatic Swatch/Pill Detection: If option name is 'Color', use swatches.
+ * 2. Visual Strikethrough for out-of-stock items.
+ * 3. Accessibility: ARIA roles and labels.
  */
 export function VariantSelector({
-  variantType,
   options,
-  selectedOption,
+  selectedOptions,
   onOptionSelect,
   className = '',
 }: VariantSelectorProps) {
-  const isColorType = variantType.toLowerCase() === 'color';
-
-  const handleSelect = (option: VariantOption) => {
-    if (!option.available) return;
-    onOptionSelect(option.id);
-  };
+  if (!options.length) return null;
 
   return (
-    <div className={`space-y-3 ${className}`}>
-      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900">
-        {variantType}
-      </h3>
-      <div
-        className={`flex flex-wrap gap-3 ${isColorType ? 'items-center' : ''}`}
-        role="radiogroup"
-        aria-label={`Select ${variantType}`}
-      >
-        {options.map((option) => {
-          const isSelected = selectedOption === option.id;
-          const isDisabled = !option.available;
-
-          return (
-            <button
-              key={option.id}
-              type="button"
-              aria-pressed={isSelected}
-              aria-disabled={isDisabled}
-              onClick={() => handleSelect(option)}
-              disabled={isDisabled}
-              className={`
-                relative px-5 py-2.5 text-sm font-bold rounded-xl
-                transition-all duration-200
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black
-                ${
-                  isSelected
-                    ? 'border-2 border-black bg-black text-white'
-                    : 'border-2 border-gray-100 text-gray-900 hover:border-gray-300'
-                }
-                ${
-                  isDisabled
-                    ? 'opacity-50 cursor-not-allowed bg-gray-50'
-                    : 'active:scale-95 cursor-pointer'
-                }
-                ${isColorType ? 'w-12 h-12 rounded-full p-0' : ''}
-              `}
-            >
-              {isColorType ? (
-                <span
-                  className="block w-full h-full rounded-full border border-gray-200"
-                  style={{ backgroundColor: option.name }}
-                />
-              ) : (
-                <span className="flex items-center gap-2">
-                  {option.name}
-                  {option.price && option.price !== '0' && (
-                    <span className="text-xs text-gray-500">
-                      (+${option.price})
-                    </span>
-                  )}
-                </span>
-              )}
-
-              {/* Out of stock indicator */}
-              {isDisabled && (
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-gray-400 opacity-50"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    aria-hidden="true"
-                  >
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Helper text for out of stock */}
-      {options.some((o) => !o.available) && (
-        <p className="text-xs text-gray-500">
-          <span className="font-semibold">Note:</span> Grayed out options are
-          currently unavailable
-        </p>
-      )}
+    <div className={`space-y-8 ${className}`}>
+      {options.map((optionType) => (
+        <OptionGroup
+          key={optionType.name}
+          optionType={optionType}
+          selectedOption={selectedOptions[optionType.name]}
+          onSelect={(val) => onOptionSelect(optionType.name, val)}
+        />
+      ))}
     </div>
   );
 }
 
-/**
- * ── VARIANT OPTION PARSER ──
- * Converts product variant data into selector options
- */
-export interface ProductVariant {
-  id: string;
-  sku: string;
-  price: string;
-  compareAtPrice: string | null;
-  options: Record<string, string>; // e.g., { color: 'Red', size: 'M' }
-  inventory?: {
-    available: number;
-    reserved: number;
-  } | null;
+interface OptionGroupProps {
+  optionType: OptionType;
+  selectedOption: string | undefined;
+  onSelect: (val: string) => void;
 }
 
-export function parseVariantOptions(
-  variants: ProductVariant[],
-  variantType: string
-): VariantOption[] {
-  // Extract unique values for the specified variant type
-  const optionMap = new Map<
-    string,
-    {
-      id: string;
-      name: string;
-      price: string;
-      available: boolean;
-      stock?: number;
-    }
-  >();
+function OptionGroup({ optionType, selectedOption, onSelect }: OptionGroupProps) {
+  const isColor = optionType.name.toLowerCase() === 'color';
 
-  for (const variant of variants) {
-    const optionValue = variant.options[variantType];
-    if (!optionValue) continue;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-black uppercase tracking-[0.2em] text-gray-900">
+          {optionType.name}
+        </h3>
+        {selectedOption && (
+          <span className="text-xs font-bold text-blue-600">
+            Selected: {selectedOption}
+          </span>
+        )}
+      </div>
 
-    const available =
-      (variant.inventory?.available || 0) - (variant.inventory?.reserved || 0) >
-      0;
-    const stock = variant.inventory?.available || 0;
+      <div className="flex flex-wrap gap-3" role="radiogroup" aria-label={`Select ${optionType.name}`}>
+        {optionType.values.map((opt) => {
+          const isSelected = selectedOption === opt.value;
+          const isDisabled = !opt.isCompatible;
+          const isOutOfStock = !opt.isAvailable && opt.isCompatible;
 
-    // If this option already exists, check if any variant with this option is available
-    const existing = optionMap.get(optionValue);
-    if (existing) {
-      if (available) {
-        existing.available = true;
-        existing.stock = (existing.stock || 0) + (stock || 0);
-      }
-    } else {
-      optionMap.set(optionValue, {
-        id: variant.id,
-        name: optionValue,
-        price: variant.price,
-        available,
-        stock,
-      });
-    }
-  }
+          if (isColor) {
+            return (
+              <Swatch
+                key={opt.value}
+                color={opt.value}
+                isSelected={isSelected}
+                isDisabled={isDisabled}
+                isOutOfStock={isOutOfStock}
+                onClick={() => onSelect(opt.value)}
+              />
+            );
+          }
 
-  return Array.from(optionMap.values());
+          return (
+            <Pill
+              key={opt.value}
+              label={opt.value}
+              isSelected={isSelected}
+              isDisabled={isDisabled}
+              isOutOfStock={isOutOfStock}
+              onClick={() => onSelect(opt.value)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Swatch({
+  color,
+  isSelected,
+  isDisabled,
+  isOutOfStock,
+  onClick,
+}: {
+  color: string;
+  isSelected: boolean;
+  isDisabled: boolean;
+  isOutOfStock: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isDisabled}
+      aria-label={`Select color ${color}`}
+      className={`
+        relative w-12 h-12 rounded-full p-1.5 transition-all duration-300
+        ${isDisabled ? 'opacity-20 cursor-not-allowed scale-90' : 'hover:scale-110 active:scale-95'}
+        ${isSelected ? 'ring-2 ring-black ring-offset-2' : 'ring-1 ring-gray-100'}
+      `}
+    >
+      <span
+        className="block w-full h-full rounded-full border border-black/5 shadow-inner"
+        style={{ backgroundColor: color }}
+      />
+      {isOutOfStock && (
+        <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[1px] h-full bg-red-400 rotate-45 opacity-60" />
+        </span>
+      )}
+      {isSelected && (
+        <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] text-white">
+          ✓
+        </span>
+      )}
+    </button>
+  );
+}
+
+function Pill({
+  label,
+  isSelected,
+  isDisabled,
+  isOutOfStock,
+  onClick,
+}: {
+  label: string;
+  isSelected: boolean;
+  isDisabled: boolean;
+  isOutOfStock: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={isDisabled}
+      className={`
+        relative min-w-[3.5rem] px-6 py-3 text-sm font-black rounded-2xl
+        transition-all duration-300 border-2
+        ${isDisabled ? 'opacity-20 bg-gray-50 border-gray-100 cursor-not-allowed text-gray-400 grayscale' : ''}
+        ${!isDisabled && isOutOfStock ? 'border-gray-100 text-gray-400 bg-gray-50/50' : ''}
+        ${!isDisabled && !isSelected && !isOutOfStock ? 'border-gray-100 text-gray-900 hover:border-black active:bg-gray-50' : ''}
+        ${isSelected ? 'border-black bg-black text-white shadow-xl -translate-y-0.5' : ''}
+      `}
+    >
+      <span className={isOutOfStock ? 'line-through decoration-red-400/50' : ''}>
+        {label}
+      </span>
+      {isOutOfStock && (
+        <span className="absolute -top-2 -right-1 px-1.5 py-0.5 rounded-full bg-red-50 text-[10px] text-red-600 font-bold uppercase tracking-tighter">
+          Out
+        </span>
+      )}
+    </button>
+  );
 }

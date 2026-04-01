@@ -93,7 +93,9 @@ export async function apiFetch<T>(
     return res.json();
   } catch (err: any) {
     if (err.name === 'AbortError') {
-      throw new Error('API Request Timed Out (15s). Please check your connection.');
+      throw new Error(
+        'API Request Timed Out (15s). Please check your connection.'
+      );
     }
     throw err;
   } finally {

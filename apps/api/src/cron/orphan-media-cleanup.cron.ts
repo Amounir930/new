@@ -20,6 +20,7 @@ import {
   isNotNull,
   isNull,
   lt,
+  productImagesInStorefront,
   productsInStorefront,
   tenantsInGovernance,
 } from '@apex/db';
@@ -131,6 +132,9 @@ export class OrphanMediaCleanupCron {
 
     try {
       // 1. Collect valid media URLs from this tenant's schema
+      const validUrls = new Set<string>();
+
+      // A. Scan main product table (Legacy/JSON references)
       const products = await db
         .select({
           mainImage: productsInStorefront.mainImage,
@@ -138,7 +142,6 @@ export class OrphanMediaCleanupCron {
         })
         .from(productsInStorefront);
 
-      const validUrls = new Set<string>();
       for (const p of products) {
         if (p.mainImage) validUrls.add(p.mainImage);
         if (Array.isArray(p.galleryImages)) {
@@ -148,7 +151,19 @@ export class OrphanMediaCleanupCron {
         }
       }
 
+      // B. Scan specific product_images registry (Sovereign/Dual-Write references)
+      const registeredImages = await db
+        .select({ url: productImagesInStorefront.url })
+        .from(productImagesInStorefront);
+
+      for (const img of registeredImages) {
+        if (img.url) validUrls.add(img.url);
+      }
+
       // 2. Scan bucket for orphans
+      const GRACE_PERIOD_MS = 60 * 60 * 1000; // 1 Hour Grace Period
+      const now = Date.now();
+
       let continuationToken: string | undefined;
       do {
         const listResult = await s3Client.send(
@@ -163,12 +178,23 @@ export class OrphanMediaCleanupCron {
           if (!obj.Key) continue;
           const fullUrl = `${env.STORAGE_PUBLIC_URL}/${bucketName}/${obj.Key}`;
 
-          if (!validUrls.has(fullUrl)) {
+          // S15: Defensive Deletion
+          // Only delete if the URL is not in any DB registry AND it's older than the grace period
+          const isOrphan = !validUrls.has(fullUrl);
+          const isStale = obj.LastModified
+            ? now - obj.LastModified.getTime() > GRACE_PERIOD_MS
+            : true;
+
+          if (isOrphan && isStale) {
             await s3Client.send(
               new DeleteObjectCommand({ Bucket: bucketName, Key: obj.Key })
             );
             this.logger.debug(
-              `ORPHAN_DELETED [${subdomain}]: ${obj.Key}`
+              `ORPHAN_DELETED [${subdomain}]: ${obj.Key} (Stale Orphan)`
+            );
+          } else if (isOrphan && !isStale) {
+            this.logger.debug(
+              `ORPHAN_SKIP_GRACE [${subdomain}]: ${obj.Key} (Recent Upload)`
             );
           }
         }
