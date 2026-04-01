@@ -3,7 +3,7 @@ import { cartsInStorefront, eq, getTenantDb } from '@apex/db';
 import {
   isUuid,
   RateLimit,
-  type TenantCacheService,
+  TenantCacheService,
   type TenantRequest,
 } from '@apex/middleware';
 import {

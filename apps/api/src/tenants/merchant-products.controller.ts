@@ -17,7 +17,7 @@ import {
   QuotaInterceptor,
   RequireFeature,
   requireExecutor,
-  type TenantCacheService,
+  TenantCacheService,
   TenantSessionInterceptor,
 } from '@apex/middleware';
 import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
