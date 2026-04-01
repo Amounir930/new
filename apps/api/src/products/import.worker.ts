@@ -536,24 +536,50 @@ export class ImportWorker {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(xlsxPath);
 
-    const sheet = workbook.getWorksheet(1) ?? workbook.worksheets[0];
-    if (!sheet) throw new Error('No worksheet found in file');
+    // ─── Phase 1: Dynamic Sheet Discovery (Signature Hunt) ───────────────
+    // Required headers to identify the "Products" data sheet
+    const REQUIRED_SIGNATURE = ['sku', 'nameAr', 'basePrice', 'niche'];
+    let dataSheet: ExcelJS.Worksheet | undefined;
+    let dataHeaders: string[] = [];
 
-    const headers: string[] = [];
-    sheet.getRow(1).eachCell((cell, colNum) => {
-      const raw = this.normalizeCellValue(cell.value);
-      const val = String(raw ?? '')
-        .replace(/^★\s*/, '')
-        .trim();
-      headers[colNum - 1] = val;
-    });
+    this.logger.log(`[ImportWorker] Hunting for data sheet in workbook...`);
+
+    for (const sheet of workbook.worksheets) {
+      const headers: string[] = [];
+      sheet.getRow(1).eachCell((cell, colNum) => {
+        const raw = this.normalizeCellValue(cell.value);
+        // Normalization Integrity (Protocol Requirement)
+        const val = String(raw ?? '')
+          .replace(/^★\s*/, '')
+          .trim();
+        headers[colNum - 1] = val;
+      });
+
+      // Verification: Check if this sheet matches the signature
+      const isMatch = REQUIRED_SIGNATURE.every((req) => headers.includes(req));
+      if (isMatch) {
+        dataSheet = sheet;
+        dataHeaders = headers;
+        break;
+      }
+    }
+
+    if (!dataSheet) {
+      // Clean Throw: Descriptive for Merchant UI
+      throw new Error(
+        'INVALID_TEMPLATE: Could not find a worksheet matching the product upload signature. ' +
+          'Ensure Row 1 contains the headers: SKU, nameAr, basePrice, niche.'
+      );
+    }
+
+    this.logger.log(`[ImportWorker] Active Data Sheet: "${dataSheet.name}"`);
 
     const rows: Record<string, unknown>[] = [];
-    sheet.eachRow((row, rowNum) => {
+    dataSheet.eachRow((row, rowNum) => {
       if (rowNum === 1) return;
       const obj: Record<string, unknown> = {};
       row.eachCell({ includeEmpty: false }, (cell, colNum) => {
-        const key = headers[colNum - 1];
+        const key = dataHeaders[colNum - 1];
         if (!key) return;
         obj[key] = this.normalizeCellValue(cell.value);
       });
