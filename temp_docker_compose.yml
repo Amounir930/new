@@ -133,7 +133,7 @@ services:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/new}/admin:latest
     build:
       context: .
-      dockerfile: apps/admin/Dockerfile
+      dockerfile: apps/super-admin/Dockerfile
     restart: always
     environment:
       NODE_ENV: production
