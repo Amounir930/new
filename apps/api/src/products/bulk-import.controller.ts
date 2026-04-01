@@ -26,7 +26,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Queue } from 'bull';
 import type { Response } from 'express';
 import { memoryStorage } from 'multer';
-import type { BulkImportTemplateService } from './bulk-import-template.service';
+import { BulkImportTemplateService } from './bulk-import-template.service';
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 const TEMP_IMPORT_BUCKET = 'system-temp-imports';

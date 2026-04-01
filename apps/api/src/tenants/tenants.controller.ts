@@ -9,7 +9,8 @@ import {
   sql,
   tenantsInGovernance,
 } from '@apex/db';
-import type { DrizzleExecutor, TenantCacheService } from '@apex/middleware';
+import { TenantCacheService } from '@apex/middleware';
+import type { DrizzleExecutor } from '@apex/middleware';
 import { decrypt, type EncryptedData } from '@apex/security';
 import {
   BadRequestException,
@@ -26,8 +27,8 @@ import {
 } from '@nestjs/common';
 import { z } from 'zod';
 import { SovereignZodPipe } from '../common/pipes/zod-validation.pipe';
-import type { ProvisioningService } from '../provisioning/provisioning.service';
-import type { SecurityService } from '../security/security.service';
+import { ProvisioningService } from '../provisioning/provisioning.service';
+import { SecurityService } from '../security/security.service';
 
 const UpdateTenantSchema = z.object({
   plan: z.string().optional(),

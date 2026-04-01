@@ -6,7 +6,7 @@ import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { env } from '@apex/config';
 import { getTenantDb, productsInStorefront } from '@apex/db';
-import type { EncryptionService } from '@apex/security';
+import { EncryptionService } from '@apex/security';
 import { PRODUCT_NICHES } from '@apex/validation';
 import {
   DeleteObjectCommand,
@@ -20,7 +20,7 @@ import AdmZip from 'adm-zip';
 import type { Job } from 'bull';
 import ExcelJS from 'exceljs';
 import { z } from 'zod';
-import type { FileValidationService } from './file-validation.service';
+import { FileValidationService } from './file-validation.service';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_ROWS = 500;

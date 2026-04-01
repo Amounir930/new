@@ -1,5 +1,5 @@
-import type { AuditService } from '@apex/audit';
-import type { AuthService } from '@apex/auth';
+import { AuditService } from '@apex/audit';
+import { AuthService } from '@apex/auth';
 import { env } from '@apex/config';
 import {
   adminDb,
@@ -31,7 +31,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { z } from 'zod';
-import type { SecurityService } from '../security/security.service';
+import { SecurityService } from '../security/security.service';
 
 export interface ProvisioningOptions {
   subdomain: string;

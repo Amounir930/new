@@ -4,7 +4,7 @@ import {
   onboardingBlueprintsInGovernance,
   tenantsInGovernance,
 } from '@apex/db';
-import type { TenantCacheService } from '@apex/middleware';
+import { TenantCacheService } from '@apex/middleware';
 import {
   Controller,
   ForbiddenException,
