@@ -409,7 +409,6 @@ export class ImportWorker {
       try {
         const productInserts: InsertProduct[] = resolvedRows.map((r) => ({
           id: r._productId,
-          tenantId: merchant.tenantId,
           name: { ar: r.nameAr, en: r.nameEn },
           sku: r.sku,
           niche:
