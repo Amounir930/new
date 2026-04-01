@@ -1,27 +1,19 @@
-/**
- * ImportWorker — Bulk Product Import Processing Pipeline
- *
- * Architecture (Per Approved Blueprint):
- * Phase 1: Parse & Validate (full Zod, batch SKU check)
- * Phase 2: MinIO uploads (OUTSIDE DB transaction)
- * Phase 3: Bulk DB INSERT (single fast transaction)
- * Phase 4: Disk cleanup
- *
- * Vetoes Applied:
- * - V1: Delimiter parsing for attributes/specs, flat dims
- * - V2: Disk-based ZIP (not in-memory), with zip-bomb guard
- * - V3: MinIO uploads decoupled from DB transaction
- */
-
 import { randomUUID } from 'node:crypto';
-import fs from 'node:fs';
+import fs, { createWriteStream } from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
+import type { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { env } from '@apex/config';
 import { getTenantDb, productsInStorefront } from '@apex/db';
 import type { EncryptionService } from '@apex/security';
 import { PRODUCT_NICHES } from '@apex/validation';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { OnQueueActive, OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import AdmZip from 'adm-zip';
@@ -75,7 +67,6 @@ const ImportRowSchema = z.object({
   warrantyPeriod: z.coerce.number().int().min(0).optional(),
   warrantyUnit: z.enum(['days', 'months', 'years']).optional(),
   // Flags
-  // Flags (C3 fix: Default to true if cell is empty, null, or undefined)
   isActive: z
     .preprocess(
       (v) =>
@@ -123,7 +114,8 @@ interface JobData {
   tenantId: string;
   schemaName: string;
   subdomain: string;
-  filePath: string; // disk path to uploaded file (.xlsx or .zip)
+  s3Bucket: string;
+  s3Key: string;
   isZip: boolean;
   jobId: string;
 }
@@ -177,13 +169,44 @@ export class ImportWorker {
 
   @Process('product-import')
   async handleImport(job: Job<JobData>) {
-    const { tenantId, schemaName, subdomain, filePath, isZip, jobId } =
+    const { tenantId, schemaName, subdomain, s3Bucket, s3Key, isZip, jobId } =
       job.data;
     const tmpDir = path.join('/tmp', `import_${jobId}`);
+    const localFilePath = path.join('/tmp', `bulk_import_${jobId}`);
     const errors: RowError[] = [];
     let importedCount = 0;
 
+    // S1 Guard: Validate credentials before S3 construction
+    if (
+      !env.MINIO_ACCESS_KEY ||
+      !env.MINIO_SECRET_KEY ||
+      !env.STORAGE_PUBLIC_URL
+    ) {
+      throw new Error(
+        'S1 VIOLATION: MinIO credentials missing from environment'
+      );
+    }
+    const s3 = new S3Client({
+      endpoint: env.STORAGE_PUBLIC_URL,
+      region: env.MINIO_REGION ?? 'us-east-1',
+      credentials: {
+        accessKeyId: env.MINIO_ACCESS_KEY,
+        secretAccessKey: env.MINIO_SECRET_KEY,
+      },
+      forcePathStyle: true,
+    });
+
     try {
+      // ─── Phase 0: Download from MinIO (Stateless Handshake) ──────────────
+      this.logger.log(`[ImportWorker] Downloading buffered file: ${s3Key}`);
+      const downloadResult = await s3.send(
+        new GetObjectCommand({ Bucket: s3Bucket, Key: s3Key })
+      );
+      await pipeline(
+        downloadResult.Body as Readable,
+        createWriteStream(localFilePath)
+      );
+
       // ─── Phase 1: Extract & Parse ──────────────────────────────────────
       await fsp.mkdir(tmpDir, { recursive: true });
 
@@ -192,13 +215,13 @@ export class ImportWorker {
 
       if (isZip) {
         const { excelPath, imagesPath } = await this.extractZip(
-          filePath,
+          localFilePath,
           tmpDir
         );
         xlsxPath = excelPath;
         imageDir = imagesPath;
       } else {
-        xlsxPath = filePath;
+        xlsxPath = localFilePath;
       }
 
       const rawRows = await this.parseExcel(xlsxPath);
@@ -262,7 +285,7 @@ export class ImportWorker {
           .select({ sku: productsInStorefront.sku })
           .from(productsInStorefront)
           .where(
-            // biome-ignore lint/suspicious/noExplicitAny: drizzle doesn't expose inArray easily here
+            // biome-ignore lint/suspicious/noExplicitAny: drizzle helper
             (productsInStorefront.sku as any).in(skus)
           );
 
@@ -290,27 +313,7 @@ export class ImportWorker {
 
       await job.progress(40);
 
-      // ─── Phase 3: MinIO Uploads (OUTSIDE DB) ──────────────────────────
-      // S1 Guard: Validate credentials before S3 construction
-      if (
-        !env.MINIO_ACCESS_KEY ||
-        !env.MINIO_SECRET_KEY ||
-        !env.STORAGE_PUBLIC_URL
-      ) {
-        throw new Error(
-          'S1 VIOLATION: MinIO credentials missing from environment'
-        );
-      }
-      const s3 = new S3Client({
-        endpoint: env.STORAGE_PUBLIC_URL,
-        region: env.MINIO_REGION ?? 'us-east-1',
-        credentials: {
-          accessKeyId: env.MINIO_ACCESS_KEY,
-          secretAccessKey: env.MINIO_SECRET_KEY,
-        },
-        forcePathStyle: true,
-      });
-
+      // ─── Phase 3: MinIO Product Uploads ───────────────────────────────
       const bucketName = `tenant-${subdomain.toLowerCase().replace(/[^a-z0-9]/g, '')}-assets`;
 
       const resolvedRows: (ImportRow & {
@@ -367,7 +370,7 @@ export class ImportWorker {
       // ─── Phase 4: Bulk DB Transaction ─────────────────────────────────
       if (resolvedRows.length === 0) {
         this.logger.log(
-          `[ImportWorker] Job ${jobId} completed with 0 new products (only examples/empty rows found).`
+          `[ImportWorker] Job ${jobId} completed with 0 rows.`
         );
         await job.progress(100);
         return { status: 'done', importedCount: 0, errors: [] };
@@ -383,7 +386,7 @@ export class ImportWorker {
           name: { ar: r.nameAr, en: r.nameEn },
           sku: r.sku,
           niche:
-            r.niche === 'food' || r.niche === 'digital' ? 'retail' : r.niche, // Map legacy niches to retail
+            r.niche === 'food' || r.niche === 'digital' ? 'retail' : r.niche,
           basePrice: String(r.basePrice),
           salePrice: r.salePrice != null ? String(r.salePrice) : null,
           costPrice: r.costPrice != null ? String(r.costPrice) : null,
@@ -424,9 +427,9 @@ export class ImportWorker {
           specifications: parseDelimited(r.specifications),
           tags: parseCommaSeparated(r.tags),
           keywords: parseCommaSeparated(r.keywords)?.join(' ') ?? null,
-          mainImage: (r._mainImageUrl || '') as string, // S3 FIX: NOT NULL constraint - explicit string cast
+          mainImage: (r._mainImageUrl || '') as string,
           galleryImages: r._galleryUrls.length > 0 ? r._galleryUrls : [],
-          publishedAt: new Date().toISOString(), // S3 FIX: Convert to string for DB compatibility
+          publishedAt: new Date().toISOString(),
         }));
 
         await dbInsert.insert(productsInStorefront).values(inserts);
@@ -449,17 +452,23 @@ export class ImportWorker {
         cause: (error as Error).message,
       };
     } finally {
-      // ─── Cleanup (always runs) ─────────────────────────────────────────
+      // ─── Phase 5: Zero-Waste Cleanup (Mandatory) ───────────────────────
+      // 1. Cleanup local worker directories
       await fsp
         .rm(tmpDir, { recursive: true, force: true })
         .catch(() => undefined);
-      if (fs.existsSync(filePath)) {
-        await fsp.rm(filePath, { force: true }).catch(() => undefined);
+      if (fs.existsSync(localFilePath)) {
+        await fsp.rm(localFilePath, { force: true }).catch(() => undefined);
       }
+      // 2. Cleanup MinIO buffer object (Critical for statelessness)
+      await s3
+        .send(new DeleteObjectCommand({ Bucket: s3Bucket, Key: s3Key }))
+        .catch((e) =>
+          this.logger.warn(`[ImportWorker] MinIO Cleanup Failed: ${e.message}`)
+        );
     }
   }
 
-  // ─── ZIP Extraction (Disk-based — V2 fix) ────────────────────────────
   private async extractZip(zipPath: string, tmpDir: string) {
     const stats = await fsp.stat(zipPath);
     if (stats.size > MAX_ZIP_COMPRESSED_BYTES) {
@@ -493,7 +502,6 @@ export class ImportWorker {
     const imagesPath = path.join(tmpDir, 'images');
     await fsp.mkdir(imagesPath, { recursive: true });
 
-    // Extract images only (from images/ folder)
     for (const entry of entries) {
       if (entry.isDirectory) continue;
       const normalized = entry.entryName.replace(/\\/g, '/');
@@ -519,7 +527,6 @@ export class ImportWorker {
     };
   }
 
-  // ─── Excel Parser (Hardened — resolves all exceljs cell object types) ───
   private async parseExcel(
     xlsxPath: string
   ): Promise<Record<string, unknown>[]> {
@@ -531,7 +538,6 @@ export class ImportWorker {
 
     const headers: string[] = [];
     sheet.getRow(1).eachCell((cell, colNum) => {
-      // Strip ★ prefix from required headers, normalize to plain string
       const raw = this.normalizeCellValue(cell.value);
       const val = String(raw ?? '')
         .replace(/^★\s*/, '')
@@ -541,19 +547,14 @@ export class ImportWorker {
 
     const rows: Record<string, unknown>[] = [];
     sheet.eachRow((row, rowNum) => {
-      if (rowNum === 1) return; // skip header row
+      if (rowNum === 1) return;
       const obj: Record<string, unknown> = {};
       row.eachCell({ includeEmpty: false }, (cell, colNum) => {
         const key = headers[colNum - 1];
         if (!key) return;
         obj[key] = this.normalizeCellValue(cell.value);
       });
-
-      // Fix A: Content-aware placeholder skip.
-      // Safely ignores the instruction row (APX-PH-001) without dropping Row 2 merchant data.
       if (obj['sku'] === 'APX-PH-001') return;
-
-      // Skip completely empty rows
       if (Object.values(obj).some((v) => v !== '' && v != null)) {
         rows.push(obj);
       }
@@ -562,62 +563,40 @@ export class ImportWorker {
     return rows;
   }
 
-  /**
-   * Normalizes any exceljs cell value to a safe primitive.
-   * Handles: strings, numbers, booleans, Dates, hyperlinks,
-   *          formula results, rich text, and null/undefined.
-   */
   private normalizeCellValue(
     value: ExcelJS.CellValue
   ): string | number | boolean | null {
     if (value == null) return null;
-
-    // Primitive pass-through
     if (typeof value === 'string') return value;
     if (typeof value === 'number') return value;
     if (typeof value === 'boolean') return value;
-
-    // Date → ISO string
     if (value instanceof Date) return value.toISOString();
-
-    // ExcelJS object types (all extend object)
     if (typeof value === 'object') {
-      // Hyperlink: { text: string; hyperlink: string }
       if ('hyperlink' in value && 'text' in value) {
-        // Prefer the hyperlink URL for image fields, text for everything else
         return String(
           (value as { hyperlink: string; text: string }).hyperlink ||
             (value as { hyperlink: string; text: string }).text
         );
       }
-
-      // Formula: { formula: string; result: CellValue; date1904?: boolean }
       if ('result' in value) {
         return this.normalizeCellValue(
           (value as { formula: string; result: ExcelJS.CellValue }).result
         );
       }
-
-      // Rich text: { richText: { text: string; font?: ... }[] }
       if ('richText' in value) {
         return (value as { richText: { text: string }[] }).richText
           .map((rt) => rt.text)
           .join('');
       }
-
-      // Shared formula: { sharedFormula: string; result: CellValue }
       if ('sharedFormula' in value && 'result' in value) {
         return this.normalizeCellValue(
           (value as { sharedFormula: string; result: ExcelJS.CellValue }).result
         );
       }
     }
-
-    // Fallback — coerce whatever remains to string
     return String(value);
   }
 
-  // ─── Image Uploader ───────────────────────────────────────────────────
   private async uploadImage(
     s3: S3Client,
     bucket: string,
@@ -626,27 +605,16 @@ export class ImportWorker {
     imageDir: string | undefined
   ): Promise<string | undefined> {
     if (!source?.trim()) return undefined;
-
-    // Already a URL — return as-is after validation
-    if (source.startsWith('https://')) {
-      return source;
-    }
-
-    // Filename reference — locate on disk
+    if (source.startsWith('https://')) return source;
     if (!imageDir) return undefined;
-
     const diskPath = path.join(imageDir, path.basename(source));
-    if (!fs.existsSync(diskPath)) {
-      this.logger.warn(`[ImportWorker] Image not found in ZIP: ${source}`);
-      return undefined;
-    }
+    if (!fs.existsSync(diskPath)) return undefined;
 
     const buffer = await fsp.readFile(diskPath);
     let validated: { safeFilename: string; detectedMimeType: string };
     try {
       validated = this.fileValidation.validateAndSanitize(buffer, source);
     } catch {
-      this.logger.warn(`[ImportWorker] Invalid image type skipped: ${source}`);
       return undefined;
     }
 
@@ -659,11 +627,9 @@ export class ImportWorker {
         ContentType: validated.detectedMimeType,
       })
     );
-
     return `${env.STORAGE_PUBLIC_URL}/${bucket}/${key}`;
   }
 
-  // ─── Bull Hooks ───────────────────────────────────────────────────────
   @OnQueueActive()
   onActive(job: Job) {
     this.logger.log(`[ImportWorker] Job ${job.id} started`);
@@ -674,3 +640,4 @@ export class ImportWorker {
     this.logger.error(`[ImportWorker] Job ${job.id} failed: ${error.message}`);
   }
 }
+
