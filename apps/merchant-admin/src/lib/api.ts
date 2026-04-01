@@ -67,24 +67,38 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${baseUrl}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+  // 🛡️ S11: AbortController Timeout (Zombie UI Prevention)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(error.message || `API Error: ${res.status}`);
+  try {
+    const res = await fetch(`${baseUrl}${endpoint}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(error.message || `API Error: ${res.status}`);
+    }
+
+    if (res.status === 204) return {} as T;
+
+    if (options.responseType === 'blob') {
+      return (await res.blob()) as T;
+    }
+
+    return res.json();
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error('API Request Timed Out (15s). Please check your connection.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  if (res.status === 204) return {} as T;
-
-  if (options.responseType === 'blob') {
-    return (await res.blob()) as T;
-  }
-
-  return res.json();
 }
 
 /**
