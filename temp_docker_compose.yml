@@ -75,7 +75,7 @@ services:
   api:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/new}/api:latest
     build:
-      context: ..
+      context: .
       dockerfile: apps/api/Dockerfile
     # container_name: apex-api # Removed to allow scaling
     restart: always
@@ -132,7 +132,7 @@ services:
   admin:
     image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/new}/admin:latest
     build:
-      context: ..
+      context: .
       dockerfile: apps/admin/Dockerfile
     restart: always
     environment:
