@@ -73,7 +73,7 @@ services:
   # Application Layer (Apex API)
   # ═══════════════════════════════════════════════════════════════
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY}/api:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/new}/api:latest
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
@@ -125,12 +125,12 @@ services:
         parallelism: 1
         delay: 10s
         order: start-first
-
+ 
   # ═══════════════════════════════════════════════════════════════
   # Admin UI (Super Admin Panel)
   # ═══════════════════════════════════════════════════════════════
   admin:
-    image: ghcr.io/${GITHUB_REPOSITORY}/admin:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-amounir930/new}/admin:latest
     build:
       context: ..
       dockerfile: apps/admin/Dockerfile
