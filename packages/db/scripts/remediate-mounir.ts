@@ -1,4 +1,4 @@
-import { adminDb, and, eq, featureGatesInGovernance } from '@apex/db';
+import { adminDb, featureGatesInGovernance } from '@apex/db';
 
 async function remediateMounir() {
   const MOUNIR_TENANT_ID = '20cd61b6-6573-4f99-bea6-f6439761177a';

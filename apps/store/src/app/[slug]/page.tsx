@@ -7,6 +7,7 @@ import {
 } from '@/components/pdp/add-to-cart-button';
 import { RelatedProducts } from '@/components/pdp/related-products';
 import { ReviewsSection } from '@/components/pdp/reviews-section';
+import { SafeHtmlContent } from '@/components/pdp/safe-html-content';
 import type { ProductVariant } from '@/components/pdp/variant-selector';
 import {
   extractTenantFromHost,
@@ -25,6 +26,53 @@ export async function generateStaticParams() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// HELPER: Extract product name
+// ═══════════════════════════════════════════════════════════════
+function getProductName(name: unknown): string {
+  if (typeof name === 'object' && name !== null) {
+    const obj = name as Record<string, string>;
+    return obj.en || obj.ar || 'Product';
+  }
+  return String(name);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER: Extract localized description
+// ═══════════════════════════════════════════════════════════════
+function getLocalizedDescription(desc: unknown): string {
+  if (!desc) return '';
+  if (typeof desc === 'object' && desc !== null) {
+    const obj = desc as Record<string, string>;
+    return obj.en || obj.ar || '';
+  }
+  return String(desc);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER: Build image array
+// ═══════════════════════════════════════════════════════════════
+function buildImageArray(
+  mainImage: string,
+  galleryImages: Array<{ url: string }>
+): string[] {
+  return [mainImage, ...galleryImages.map((img) => img.url)].filter(Boolean);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPER: Fetch PDP data
+// ═══════════════════════════════════════════════════════════════
+async function fetchPdpData(tenantId: string, slug: string) {
+  return Promise.all([
+    getProductBySlug(tenantId, slug),
+    getRelatedProducts(tenantId, 'placeholder', 8).catch(() => []),
+    getProductReviews(tenantId, 'placeholder', 1, 5).catch(() => ({
+      reviews: [],
+      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    })),
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SEO METADATA
 // ═══════════════════════════════════════════════════════════════
 interface ProductPageProps {
@@ -36,23 +84,14 @@ export async function generateMetadata({
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
   const tenantId = await extractTenantFromHost();
-
   const product = await getProductBySlug(tenantId, slug);
 
   if (!product) {
     return { title: 'Product Not Found' };
   }
 
-  const productName =
-    typeof product.name === 'object'
-      ? product.name.en || product.name.ar || 'Product'
-      : product.name;
-
-  const description = product.shortDescription
-    ? typeof product.shortDescription === 'object'
-      ? product.shortDescription.en || product.shortDescription.ar || ''
-      : product.shortDescription
-    : '';
+  const productName = getProductName(product.name);
+  const description = getLocalizedDescription(product.shortDescription);
 
   return {
     title: `${productName} | Store`,
@@ -67,7 +106,7 @@ export async function generateMetadata({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXTRACTED COMPONENT: PRODUCT GALLERY
+// COMPONENT: Product Gallery
 // ═══════════════════════════════════════════════════════════════
 interface ProductGalleryProps {
   images: string[];
@@ -80,7 +119,6 @@ function ProductGallery({ images, productName }: ProductGalleryProps) {
 
   return (
     <div className="space-y-4">
-      {/* Main Image */}
       <div className="relative aspect-square overflow-hidden rounded-3xl bg-gray-50 ring-1 ring-gray-100 shadow-sm">
         <Image
           src={mainImage || '/placeholder.png'}
@@ -92,18 +130,16 @@ function ProductGallery({ images, productName }: ProductGalleryProps) {
         />
       </div>
 
-      {/* Thumbnail Gallery */}
       {thumbnailImages.length > 0 && (
         <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-          {thumbnailImages.map((imgUrl, index) => (
+          {thumbnailImages.map((imgUrl) => (
             <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: Static gallery order defined by merchant
-              key={`thumbnail-${index}`}
-              className="relative w-24 aspect-square flex-shrink-0 rounded-xl overflow-hidden ring-1 ring-gray-100 transition-opacity hover:opacity-80 cursor-pointer flex-shrink-0"
+              key={imgUrl}
+              className="relative w-24 aspect-square flex-shrink-0 rounded-xl overflow-hidden ring-1 ring-gray-100 transition-opacity hover:opacity-80 cursor-pointer"
             >
               <Image
                 src={imgUrl}
-                alt={`${productName} view ${index + 2}`}
+                alt={productName}
                 fill
                 className="object-cover"
                 sizes="96px"
@@ -117,37 +153,7 @@ function ProductGallery({ images, productName }: ProductGalleryProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXTRACTED COMPONENT: PRODUCT ACTIONS
-// ═══════════════════════════════════════════════════════════════
-interface ProductActionsProps {
-  productId: string;
-  minOrderQty: number;
-  isReturnable: boolean;
-  variants?: ProductVariant[];
-}
-
-function ProductActions({
-  productId,
-  minOrderQty,
-  isReturnable,
-}: ProductActionsProps) {
-  return (
-    <div className="mt-8 space-y-4">
-      <AddToCartButton
-        productId={productId}
-        variantId={null}
-        quantity={1}
-        minOrderQty={minOrderQty}
-        className="w-full"
-      />
-
-      <TrustBadges isReturnable={isReturnable} />
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════
-// EXTRACTED COMPONENT: TRUST BADGES
+// COMPONENT: Trust Badges
 // ═══════════════════════════════════════════════════════════════
 interface TrustBadgesProps {
   isReturnable: boolean;
@@ -156,66 +162,20 @@ interface TrustBadgesProps {
 function TrustBadges({ isReturnable }: TrustBadgesProps) {
   return (
     <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
-      <TrustBadge
-        icon={
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        }
-        label="Secure Payment"
-      />
-      <TrustBadge
-        icon={
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M20 12H4"
-          />
-        }
-        label="Free Shipping"
-      />
+      <TrustBadge icon={<SecurePaymentIcon />} label="Secure Payment" />
+      <TrustBadge icon={<FreeShippingIcon />} label="Free Shipping" />
       {isReturnable && (
-        <TrustBadge
-          icon={
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          }
-          label="Free Returns"
-        />
+        <TrustBadge icon={<FreeReturnsIcon />} label="Free Returns" />
       )}
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// EXTRACTED COMPONENT: TRUST BADGE
-// ═══════════════════════════════════════════════════════════════
-interface TrustBadgeProps {
-  icon: React.ReactNode;
-  label: string;
-}
-
-function TrustBadge({ icon, label }: TrustBadgeProps) {
+function TrustBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div className="flex items-center gap-3">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-        <svg
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          aria-hidden="true"
-        >
-          {icon}
-        </svg>
+        {icon}
       </div>
       <span className="text-sm font-bold text-gray-900">{label}</span>
     </div>
@@ -223,16 +183,72 @@ function TrustBadge({ icon, label }: TrustBadgeProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXTRACTED COMPONENT: VARIANT SELECTORS
+// SVG ICONS
 // ═══════════════════════════════════════════════════════════════
-interface VariantSelectorsProps {
-  variants: ProductVariant[];
+function SecurePaymentIcon() {
+  return (
+    <svg
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 13l4 4L19 7"
+      />
+    </svg>
+  );
 }
 
-function VariantSelectors({ variants }: VariantSelectorsProps) {
-  const variantTypes =
-    variants.length > 0 ? Object.keys(variants[0]?.options || {}) : [];
+function FreeShippingIcon() {
+  return (
+    <svg
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M20 12H4"
+      />
+    </svg>
+  );
+}
 
+function FreeReturnsIcon() {
+  return (
+    <svg
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+      />
+    </svg>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPONENT: Variant Selectors
+// ═══════════════════════════════════════════════════════════════
+function VariantSelectors({ variants }: { variants: ProductVariant[] }) {
+  if (variants.length === 0) return null;
+
+  const variantTypes = Object.keys(variants[0]?.options || {});
   if (variantTypes.length === 0) return null;
 
   return (
@@ -276,23 +292,25 @@ function VariantSelectorWrapper({
       variantType={variantType}
       options={options}
       selectedOption={null}
-      onOptionSelect={(variantId: string) => {
-        console.log('Selected variant:', variantId);
-      }}
+      onOptionSelect={(variantId: string) =>
+        console.log('Selected variant:', variantId)
+      }
     />
   );
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXTRACTED COMPONENT: PRODUCT META
+// COMPONENT: Product Meta
 // ═══════════════════════════════════════════════════════════════
-interface ProductMetaProps {
+function ProductMeta({
+  sku,
+  brandId,
+  categoryId,
+}: {
   sku?: string | null;
   brandId?: string | null;
   categoryId?: string | null;
-}
-
-function ProductMeta({ sku, brandId, categoryId }: ProductMetaProps) {
+}) {
   return (
     <div className="mt-8 pt-8 border-t border-gray-100 space-y-2 text-sm text-gray-500">
       {sku && (
@@ -318,13 +336,13 @@ function ProductMeta({ sku, brandId, categoryId }: ProductMetaProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EXTRACTED COMPONENT: SPECIFICATIONS
+// COMPONENT: Specifications
 // ═══════════════════════════════════════════════════════════════
-interface SpecificationsProps {
+function Specifications({
+  specifications,
+}: {
   specifications: Record<string, unknown>;
-}
-
-function Specifications({ specifications }: SpecificationsProps) {
+}) {
   if (!specifications || Object.keys(specifications).length === 0) return null;
 
   return (
@@ -345,60 +363,52 @@ function Specifications({ specifications }: SpecificationsProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// HELPER: Transform PDP product data
+// ═══════════════════════════════════════════════════════════════
+function transformPdpProduct(
+  product: Awaited<ReturnType<typeof getProductBySlug>>
+) {
+  if (!product) return null;
+
+  return {
+    name: getProductName(product.name),
+    shortDescription: getLocalizedDescription(product.shortDescription),
+    longDescription: getLocalizedDescription(product.longDescription),
+    allImages: buildImageArray(product.mainImage, product.galleryImages || []),
+    displayPrice: product.salePrice || product.basePrice,
+    hasSale:
+      product.salePrice &&
+      Number(product.salePrice) < Number(product.basePrice),
+    availableStock: product.inventory?.available
+      ? product.inventory.available - (product.inventory.reserved || 0)
+      : undefined,
+    ...product,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN PDP COMPONENT (SERVER COMPONENT)
 // ═══════════════════════════════════════════════════════════════
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const tenantId = await extractTenantFromHost();
 
-  const [product, relatedProducts, reviews] = await Promise.all([
-    getProductBySlug(tenantId, slug),
-    getRelatedProducts(tenantId, 'placeholder', 8).catch(() => []),
-    getProductReviews(tenantId, 'placeholder', 1, 5).catch(() => ({
-      reviews: [],
-      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
-    })),
-  ]);
+  const [product, relatedProducts, reviews] = await fetchPdpData(
+    tenantId,
+    slug
+  );
 
   if (!product) {
     notFound();
   }
 
-  const productName =
-    typeof product.name === 'object'
-      ? product.name.en || product.name.ar || 'Product'
-      : product.name;
-
-  const shortDescription = product.shortDescription
-    ? typeof product.shortDescription === 'object'
-      ? product.shortDescription.en || product.shortDescription.ar || ''
-      : product.shortDescription
-    : '';
-
-  const longDescription = product.longDescription
-    ? typeof product.longDescription === 'object'
-      ? product.longDescription.en || product.longDescription.ar || ''
-      : product.longDescription
-    : '';
-
-  const galleryImages = product.galleryImages || [];
-  const mainImage = product.mainImage;
-  const allImages = [
-    mainImage,
-    ...galleryImages.map((img: { url: string }) => img.url),
-  ].filter(Boolean);
-
-  const displayPrice = product.salePrice || product.basePrice;
-  const hasSale =
-    product.salePrice && Number(product.salePrice) < Number(product.basePrice);
-
-  const availableStock = product.inventory?.available
-    ? product.inventory.available - (product.inventory.reserved || 0)
-    : undefined;
+  const transformed = transformPdpProduct(product);
+  if (!transformed) {
+    notFound();
+  }
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
-      {/* Breadcrumb */}
       <nav className="mb-8 flex items-center text-sm font-medium text-gray-500">
         <a href="/" className="hover:text-black transition-colors">
           Home
@@ -408,18 +418,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
           Shop
         </a>
         <span className="mx-2 text-gray-300">/</span>
-        <span className="text-black truncate">{productName}</span>
+        <span className="text-black truncate">{transformed.name}</span>
       </nav>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
-        {/* Image Gallery */}
-        <ProductGallery images={allImages} productName={productName} />
+        <ProductGallery
+          images={transformed.allImages}
+          productName={transformed.name}
+        />
 
-        {/* Product Info */}
         <div className="flex flex-col">
           <div className="space-y-4 mb-6">
             <h1 className="text-4xl font-black tracking-tight text-gray-900 md:text-5xl">
-              {productName}
+              {transformed.name}
             </h1>
 
             <div className="flex items-center gap-3">
@@ -433,7 +444,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             {product.trackInventory && (
               <StockBadge
-                availableStock={availableStock}
+                availableStock={transformed.availableStock}
                 trackInventory={product.trackInventory}
               />
             )}
@@ -441,29 +452,33 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           <div className="flex items-center gap-4 mb-6">
             <span className="text-3xl font-black text-blue-600">
-              ${displayPrice}
+              ${transformed.displayPrice}
             </span>
-            {hasSale && (
+            {transformed.hasSale && (
               <span className="text-xl text-gray-400 line-through font-bold">
                 ${product.basePrice}
               </span>
             )}
           </div>
 
-          {shortDescription && (
+          {transformed.shortDescription && (
             <p className="text-lg text-gray-600 leading-relaxed mb-6">
-              {shortDescription}
+              {transformed.shortDescription}
             </p>
           )}
 
           <VariantSelectors variants={product.variants || []} />
 
-          <ProductActions
-            productId={product.id}
-            minOrderQty={product.minOrderQty || 1}
-            isReturnable={product.isReturnable || false}
-            variants={product.variants}
-          />
+          <div className="mt-8 space-y-4">
+            <AddToCartButton
+              productId={product.id}
+              variantId={null}
+              quantity={1}
+              minOrderQty={product.minOrderQty || 1}
+              className="w-full"
+            />
+            <TrustBadges isReturnable={product.isReturnable || false} />
+          </div>
 
           <ProductMeta
             sku={product.sku}
@@ -473,31 +488,24 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
 
-      {/* Long Description */}
-      {longDescription && (
+      {transformed.longDescription && (
         <section className="mt-20 max-w-4xl">
           <h2 className="text-2xl font-bold mb-6">Product Details</h2>
-          <div
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is from trusted database source (sanitized on input by merchant)
+          <SafeHtmlContent
+            html={transformed.longDescription.replace(/\n/g, '<br />')}
             className="prose prose-lg max-w-none text-gray-600"
-            dangerouslySetInnerHTML={{
-              __html: longDescription.replace(/\n/g, '<br />'),
-            }}
           />
         </section>
       )}
 
-      {/* Specifications */}
       <Specifications specifications={product.specifications} />
 
-      {/* Related Products */}
       <RelatedProducts
         tenantId={tenantId}
         productId={product.id}
         initialRelated={relatedProducts}
       />
 
-      {/* Reviews Section */}
       <ReviewsSection
         tenantId={tenantId}
         productId={product.id}

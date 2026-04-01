@@ -1,11 +1,5 @@
 import { env } from '@apex/config';
-import {
-  adminDb,
-  adminPool,
-  eq,
-  SYSTEM_TENANT_ID,
-  tenantsInGovernance,
-} from '@apex/db';
+import { adminDb, eq, SYSTEM_TENANT_ID, tenantsInGovernance } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -14,17 +8,11 @@ import {
   type NestMiddleware,
   UnauthorizedException,
 } from '@nestjs/common';
-import { drizzle } from 'drizzle-orm/node-postgres';
 import type { NextFunction, Request, Response } from 'express';
-import type { PoolClient } from 'pg';
-import {
-  type DrizzleExecutor,
-  type TenantContext,
-  tenantStorage,
-} from './connection-context';
+import type { TenantContext } from './connection-context';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { TenantCacheService } from './tenant-cache.service';
-import { isUuid, toSchemaName } from './utils';
+import { toSchemaName } from './utils';
 
 export interface AuditService {
   log(data: {
@@ -34,14 +22,6 @@ export interface AuditService {
     metadata?: Record<string, unknown>;
     severity?: 'INFO' | 'WARNING' | 'CRITICAL' | 'SECURITY_ALERT';
   }): Promise<void>;
-}
-
-/**
- * 🛡️ Protocol Delta Guard: Safe type assertion for Drizzle executors
- */
-function toExecutor(db: unknown): DrizzleExecutor {
-  const isExecutor = (d: unknown): d is DrizzleExecutor => true;
-  return isExecutor(db) ? db : ({} as DrizzleExecutor);
 }
 
 export interface AuthenticatedUser {

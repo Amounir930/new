@@ -15,17 +15,53 @@ interface AddToCartButtonProps {
 }
 
 /**
+ * Validate stock info and return error message if invalid
+ */
+function validateStockInfo(
+  stockInfo: unknown,
+  minOrderQty: number,
+  quantity: number
+): string | null {
+  const info = stockInfo as {
+    available?: boolean;
+    quantityAvailable?: number;
+  } | null;
+
+  if (!info?.available) {
+    const available = info?.quantityAvailable || 0;
+    return available > 0
+      ? `Only ${available} units available`
+      : 'Sorry, this item is out of stock';
+  }
+
+  if (quantity < minOrderQty) {
+    return `Minimum order quantity is ${minOrderQty}`;
+  }
+
+  return null;
+}
+
+/**
  * Custom hook for add-to-cart logic
  */
-function useAddToCart(productId: string, variantId: string | null, quantity: number) {
+function useAddToCart(
+  productId: string,
+  variantId: string | null,
+  quantity: number
+) {
   const cart = useMountedCart();
   const [isChecking, setIsChecking] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
-  const handleStockCheck = useCallback(async (tenantId: string) => {
-    const stockResult = await checkStock(tenantId, [{ productId, variantId, quantity }]);
-    return stockResult.items?.[0];
-  }, [productId, variantId, quantity]);
+  const handleStockCheck = useCallback(
+    async (tenantId: string) => {
+      const stockResult = await checkStock(tenantId, [
+        { productId, variantId, quantity },
+      ]);
+      return stockResult.items?.[0];
+    },
+    [productId, variantId, quantity]
+  );
 
   const handleAddToCart = useCallback(async () => {
     await cart.addItem(productId, variantId, quantity);
@@ -35,7 +71,7 @@ function useAddToCart(productId: string, variantId: string | null, quantity: num
   }, [cart, productId, variantId, quantity]);
 
   const handleClick = useCallback(
-    async (minOrderQty: number) => {
+    async (localMinOrderQty: number) => {
       if (isAdding || isChecking) return false;
 
       setIsChecking(true);
@@ -43,18 +79,10 @@ function useAddToCart(productId: string, variantId: string | null, quantity: num
       try {
         const tenantId = await extractTenantFromHost();
         const stockInfo = await handleStockCheck(tenantId);
+        const error = validateStockInfo(stockInfo, localMinOrderQty, quantity);
 
-        if (!stockInfo?.available) {
-          const available = stockInfo?.quantityAvailable || 0;
-          toast.error(
-            available > 0 ? `Only ${available} units available` : 'Sorry, this item is out of stock'
-          );
-          setIsChecking(false);
-          return false;
-        }
-
-        if (quantity < minOrderQty) {
-          toast.error(`Minimum order quantity is ${minOrderQty}`);
+        if (error) {
+          toast.error(error);
           setIsChecking(false);
           return false;
         }
@@ -66,7 +94,8 @@ function useAddToCart(productId: string, variantId: string | null, quantity: num
         toast.success('Added to cart!', { duration: 2000, icon: '🛒' });
         return true;
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to add to cart';
+        const message =
+          error instanceof Error ? error.message : 'Failed to add to cart';
         toast.error(message);
         return false;
       } finally {
@@ -115,9 +144,10 @@ export function AddToCartButton({
       className={`
         flex-1 rounded-2xl px-8 py-5 text-base font-black shadow-2xl 
         transition-all duration-200
-        ${isDisabled
-          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          : 'bg-black text-white hover:bg-gray-800 hover:scale-[1.02] active:scale-95'
+        ${
+          isDisabled
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-black text-white hover:bg-gray-800 hover:scale-[1.02] active:scale-95'
         }
         ${className}
       `}

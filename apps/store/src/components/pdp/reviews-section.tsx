@@ -46,9 +46,16 @@ export function ReviewsSection({
   avgRating,
   reviewCount,
 }: ReviewsSectionProps) {
-  const [reviews, setReviews] = useState<Review[]>(initialReviews?.reviews || []);
+  const [reviews, setReviews] = useState<Review[]>(
+    initialReviews?.reviews || []
+  );
   const [pagination, setPagination] = useState<ReviewsPagination>(
-    initialReviews?.pagination || { page: 1, limit: 10, total: 0, totalPages: 0 }
+    initialReviews?.pagination || {
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+    }
   );
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,7 +132,9 @@ export function ReviewsSection({
             <p>No reviews yet. Be the first to review this product!</p>
           </div>
         ) : (
-          reviews.map((review) => <ReviewCard key={review.id} review={review} />)
+          reviews.map((review) => (
+            <ReviewCard key={review.id} review={review} />
+          ))
         )}
       </div>
 

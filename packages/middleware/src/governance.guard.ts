@@ -10,7 +10,6 @@ import {
   eq,
   featureGatesInGovernance,
   SYSTEM_TENANT_ID,
-  sql,
 } from '@apex/db';
 import {
   type CanActivate,

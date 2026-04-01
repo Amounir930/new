@@ -4,10 +4,25 @@
  */
 
 // Static skeleton items - order never changes, safe to use index-based keys
-const THUMBNAIL_SKELETONS = ['sk-thumb-1', 'sk-thumb-2', 'sk-thumb-3', 'sk-thumb-4'] as const;
-const VARIANT_SKELETONS = ['sk-variant-1', 'sk-variant-2', 'sk-variant-3', 'sk-variant-4'] as const;
+const THUMBNAIL_SKELETONS = [
+  'sk-thumb-1',
+  'sk-thumb-2',
+  'sk-thumb-3',
+  'sk-thumb-4',
+] as const;
+const VARIANT_SKELETONS = [
+  'sk-variant-1',
+  'sk-variant-2',
+  'sk-variant-3',
+  'sk-variant-4',
+] as const;
 const BADGE_SKELETONS = ['sk-badge-1', 'sk-badge-2', 'sk-badge-3'] as const;
-const RELATED_SKELETONS = ['sk-related-1', 'sk-related-2', 'sk-related-3', 'sk-related-4'] as const;
+const RELATED_SKELETONS = [
+  'sk-related-1',
+  'sk-related-2',
+  'sk-related-3',
+  'sk-related-4',
+] as const;
 
 export default function ProductLoading() {
   return (
