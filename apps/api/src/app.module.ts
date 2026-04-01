@@ -36,6 +36,7 @@ import { HealthModule } from './health/health.module';
 import { ProvisioningModule } from './provisioning/provisioning.module';
 import { HoneyTokensController } from './security/honey-tokens.controller';
 import { SecurityModule } from './security/security.module';
+import { StorageModule } from './storage/storage.module';
 import { StorefrontModule } from './storefront/storefront.module';
 import { MerchantStatsController } from './tenants/merchant-stats.controller';
 import { TenantsModule } from './tenants/tenants.module';
@@ -44,6 +45,9 @@ import { TenantsModule } from './tenants/tenants.module';
   imports: [
     // S15: Security Module (Global) - Register FIRST
     SecurityModule,
+
+    // Storage Infrastructure (Global)
+    StorageModule,
 
     // Core Data Module removed in favor of Drizzle connection pools
 

@@ -27,6 +27,7 @@ import type { Queue } from 'bull';
 import type { Response } from 'express';
 import { memoryStorage } from 'multer';
 import { BulkImportTemplateService } from './bulk-import-template.service';
+import { StorageService } from '../storage/storage.service';
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 const TEMP_IMPORT_BUCKET = 'system-temp-imports';
@@ -38,7 +39,8 @@ export class BulkImportController {
 
   constructor(
     @InjectQueue('import-queue') private readonly importQueue: Queue,
-    private readonly templateService: BulkImportTemplateService
+    private readonly templateService: BulkImportTemplateService,
+    private readonly storageService: StorageService
   ) {}
 
   // ─── Template Download ──────────────────────────────────────────────────
@@ -94,9 +96,12 @@ export class BulkImportController {
     // ─── Phase 1: Upload to MinIO Buffer (Stateless Persistence) ──────────
     // S3 Key Isolation: tenant-{id}/imports/{jobId}{ext}
     const s3Key = `tenant-${req.user.tenantId}/imports/${jobId}${ext}`;
-    const s3Client = this.getS3Client();
+    const s3Client = this.storageService.getClient();
 
     try {
+      // S15: Active Infrastructure Healing (JIT Provisioning)
+      await this.storageService.ensureBucketExists(TEMP_IMPORT_BUCKET);
+
       await s3Client.send(
         new PutObjectCommand({
           Bucket: TEMP_IMPORT_BUCKET,
@@ -105,10 +110,24 @@ export class BulkImportController {
           ContentType: file.mimetype,
         })
       );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(`[BulkImport] MinIO Upload Failed: ${message}`);
-      throw new BadRequestException('Failed to buffer import file to storage.');
+    } catch (err: any) {
+      // S15: Active Healing Retry Logic
+      if (err.name === 'NoSuchBucket' || err.code === 'NoSuchBucket') {
+        this.logger.warn(`Infrastructure Drift: Bucket ${TEMP_IMPORT_BUCKET} missing during upload. Retrying healing...`);
+        await this.storageService.ensureBucketExists(TEMP_IMPORT_BUCKET);
+        // Second attempt after manual healing
+        await s3Client.send(new PutObjectCommand({
+            Bucket: TEMP_IMPORT_BUCKET,
+            Key: s3Key,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          })
+        );
+      } else {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.error(`[BulkImport] MinIO Upload Failed: ${message}`);
+        throw new BadRequestException('Failed to buffer import file to storage.');
+      }
     }
 
     // ─── Phase 2: Queue Job with S3 Reference ─────────────────────────────
@@ -168,21 +187,6 @@ export class BulkImportController {
           }
         : { status: state === 'failed' ? 'failed' : 'processing' }),
     };
-  }
-
-  private getS3Client(): S3Client {
-    if (!env.MINIO_ACCESS_KEY || !env.MINIO_SECRET_KEY) {
-      throw new Error('S1 VIOLATION: MinIO credentials missing.');
-    }
-    return new S3Client({
-      endpoint: env.MINIO_ENDPOINT,
-      region: env.MINIO_REGION || 'us-east-1',
-      credentials: {
-        accessKeyId: env.MINIO_ACCESS_KEY,
-        secretAccessKey: env.MINIO_SECRET_KEY,
-      },
-      forcePathStyle: true,
-    });
   }
 }
 

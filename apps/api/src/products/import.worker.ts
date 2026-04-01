@@ -164,6 +164,7 @@ export class ImportWorker {
 
   constructor(
     private readonly fileValidation: FileValidationService,
+    private readonly storageService: StorageService,
     readonly _crypto: EncryptionService
   ) {}
 
@@ -176,29 +177,15 @@ export class ImportWorker {
     const errors: RowError[] = [];
     let importedCount = 0;
 
-    // S1 Guard: Validate credentials before S3 construction
-    if (
-      !env.MINIO_ACCESS_KEY ||
-      !env.MINIO_SECRET_KEY ||
-      !env.STORAGE_PUBLIC_URL
-    ) {
-      throw new Error(
-        'S1 VIOLATION: MinIO credentials missing from environment'
-      );
-    }
-    const s3 = new S3Client({
-      endpoint: env.STORAGE_PUBLIC_URL,
-      region: env.MINIO_REGION ?? 'us-east-1',
-      credentials: {
-        accessKeyId: env.MINIO_ACCESS_KEY,
-        secretAccessKey: env.MINIO_SECRET_KEY,
-      },
-      forcePathStyle: true,
-    });
+    const s3 = this.storageService.getClient();
 
     try {
       // ─── Phase 0: Download from MinIO (Stateless Handshake) ──────────────
       this.logger.log(`[ImportWorker] Downloading buffered file: ${s3Key}`);
+      
+      // S15: Active Healing for the temp buffer bucket
+      await this.storageService.ensureBucketExists(s3Bucket);
+
       const downloadResult = await s3.send(
         new GetObjectCommand({ Bucket: s3Bucket, Key: s3Key })
       );
@@ -619,6 +606,10 @@ export class ImportWorker {
     }
 
     const key = `${baseKey}/${validated.safeFilename}`;
+
+    // S15: Active Healing for the dynamic tenant asset bucket
+    await this.storageService.ensureBucketExists(bucket);
+
     await s3.send(
       new PutObjectCommand({
         Bucket: bucket,
