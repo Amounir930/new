@@ -17,6 +17,7 @@ import {
   VersioningType,
 } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import * as Sentry from '@sentry/nestjs';
 import cookieParser from 'cookie-parser';
 import type { NextFunction, Request, Response } from 'express';
@@ -47,7 +48,10 @@ async function bootstrap() {
     bodyParser: false, // S6 FIX 11A: Disable default bodyParser to allow custom limits
   };
 
-  const app = await NestFactory.create(AppModule, options);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, options);
+
+  // S15: Enable Trust Proxy for correct IP extraction (Cloudflare -> Traefik -> NestJS)
+  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 
   // S8: CORS Configuration (Elevated Priority)
   app.enableCors(defaultCorsConfig);

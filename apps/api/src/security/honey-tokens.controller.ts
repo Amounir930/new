@@ -9,6 +9,7 @@ import {
   Res,
 } from '@nestjs/common';
 import type * as express from 'express';
+import { ActiveDefenseService } from './active-defense.service';
 
 @Controller(['admin/login', 'wp-admin', 'config.php', 'wp-login.php', '.env']) // Array of fake endpoints
 export class HoneyTokensController {
@@ -16,7 +17,9 @@ export class HoneyTokensController {
 
   constructor(
     @Inject(AuditService)
-    private readonly auditService: AuditService
+    private readonly auditService: AuditService,
+    @Inject('ACTIVE_DEFENSE_SERVICE')
+    private readonly activeDefense: ActiveDefenseService
   ) {}
 
   /**
@@ -34,7 +37,8 @@ export class HoneyTokensController {
       Math.floor(crypto.getRandomValues(new Uint32Array(1))[0] % 8000) + 1000;
     await new Promise((resolve) => setTimeout(resolve, jitter));
 
-    const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    // Trust Proxy handles IP extraction from headers automatically if configured in main.ts
+    const clientIp = req.ip || 'unknown';
     const path = req.originalUrl || req.url;
     const userAgent = req.headers['user-agent'] || 'unknown';
 
@@ -54,12 +58,10 @@ export class HoneyTokensController {
       `🚨 S15 HONEYPOT TRIGGERED! IP: ${clientIp} | Path: ${path} | UA: ${userAgent}`
     );
 
-    // S15 FIX: Trigger automatic block in Redis/RateLimitStore (Simulated via logs)
-    this.logger.warn(
-      `S15: IP ${clientIp} scheduled for immediate blocking for 1 hour.`
-    );
+    // 3. Trigger S15 Active Defense Lifecycle (Automated Banning)
+    await this.activeDefense.trackViolation(clientIp, `Honeypot triggered at ${path}`);
 
-    // 3. Log High-Risk Security Event (S15 Activation)
+    // 4. Log High-Risk Security Event (S15 Activation)
     await this.auditService.log({
       tenantId: 'system',
       userId: 'anonymous-attacker',
@@ -75,7 +77,7 @@ export class HoneyTokensController {
       },
     });
 
-    // 4. Return standard 401
+    // 5. Return standard 401
     return res.status(401).json(responseBody);
   }
 }

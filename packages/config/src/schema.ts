@@ -131,6 +131,8 @@ export const serverEnvSchema = baseSchema.extend({
   CF_API_EMAIL: z.string().email().optional(),
   CF_DNS_API_TOKEN: z.string().optional(),
   CF_ZONE_ID: z.string().optional(),
+  CLOUDFLARE_API_TOKEN: z.string().optional(),
+  CLOUDFLARE_ZONE_ID: z.string().optional(),
   ACME_EMAIL: z.string().email().optional(),
 
   // Rate Limiting
