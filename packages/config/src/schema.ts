@@ -138,6 +138,8 @@ export const serverEnvSchema = baseSchema.extend({
 
   INTERNAL_API_URL: z.string().url().default('http://api:3000/api/v1'),
   INTERNAL_API_SECRET: z.string().min(32, 'S1: INTERNAL_API_SECRET must be 32+ chars').optional(),
+  BLIND_INDEX_PEPPER: z.string().default('development-pepper'),
+  API_KEY_SECRET: z.string().default('development-api-key-secret'),
   GLITCHTIP_DSN: z.string().url().optional(),
   ALLOWED_ORIGINS: z.string().optional(),
 

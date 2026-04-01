@@ -27,16 +27,16 @@ export class EncryptionService {
   private readonly isProduction: boolean;
 
   constructor(private readonly config: ConfigService) {
-    const key = this.config.get('ENCRYPTION_MASTER_KEY');
-    const pepper = this.config.get('BLIND_INDEX_PEPPER');
-    const secret = this.config.get('API_KEY_SECRET');
+    const key = this.config.get('ENCRYPTION_MASTER_KEY') as string | undefined;
+    const pepper = this.config.get('BLIND_INDEX_PEPPER') as string | undefined;
+    const secret = this.config.get('API_KEY_SECRET') as string | undefined;
 
     this.isProduction = this.config.get('NODE_ENV') === 'production';
 
     this.validateConfig(key, pepper, secret);
     this.masterKey = this.prepareMasterKey(key);
-    this.blindIndexPepper = pepper || 'test-pepper';
-    this.apiKeySecret = secret || 'test-secret';
+    this.blindIndexPepper = String(pepper || 'test-pepper');
+    this.apiKeySecret = String(secret || 'test-secret');
   }
 
   private validateConfig(key?: string, pepper?: string, secret?: string) {
@@ -175,7 +175,11 @@ function getStandaloneService(key?: string): EncryptionService {
 
   const standaloneConfig: Pick<ConfigService, 'get' | 'getWithDefault'> = {
     get: <K extends keyof EnvConfig>(k: K): EnvConfig[K] => {
-      return values[k] as EnvConfig[K];
+      const val = values[k];
+      if (val === undefined) {
+        throw new Error(`S1 Violation: Missing key ${String(k)} in standalone config`);
+      }
+      return val as EnvConfig[K];
     },
     getWithDefault: <K extends keyof EnvConfig>(
       k: K,
