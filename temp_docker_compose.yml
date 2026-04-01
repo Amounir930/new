@@ -4,7 +4,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   postgres:
     image: pgvector/pgvector:pg15
-    container_name: apex-postgres
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -33,7 +32,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   redis:
     image: redis:7-alpine
-    container_name: apex-redis
     restart: always
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
@@ -53,7 +51,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   minio:
     image: minio/minio:latest
-    container_name: apex-minio
     restart: always
     command: server /data --console-address ":9001"
     environment:
@@ -164,7 +161,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   docker-proxy:
     image: tecnativa/docker-socket-proxy:latest
-    container_name: apex-docker-proxy
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -193,7 +189,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   traefik:
     image: traefik:v2.11
-    container_name: apex-traefik
     restart: always
     depends_on:
       docker-proxy:
@@ -235,7 +230,6 @@ services:
   # ═══════════════════════════════════════════════════════════════
   mailpit:
     image: axllent/mailpit:latest
-    container_name: apex-mailpit
     restart: always
     environment:
       MP_SMTP_BIND_ADDR: 0.0.0.0:1025
