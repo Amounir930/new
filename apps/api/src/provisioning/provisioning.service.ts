@@ -163,7 +163,8 @@ export class ProvisioningService {
       adminEmail: payload.email,
       password: payload.password,
       storeName: payload.storeName,
-      plan: 'free', // Hardcoded for self-service
+      plan: payload.plan || 'free',
+      nicheType: payload.category || 'retail',
       superAdminKey: env.SUPER_ADMIN_KEY || 'OVERRIDE_FOR_SELF_SERVICE', 
     };
 

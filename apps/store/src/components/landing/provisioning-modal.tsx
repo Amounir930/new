@@ -14,6 +14,8 @@ const ProvisioningSchema = z.object({
   email: z.string().email('Valid email is required'),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
   confirmPassword: z.string(),
+  plan: z.enum(['free', 'pro'], { errorMap: () => ({ message: 'Please select a plan' }) }),
+  category: z.string().min(1, 'Please select a store category'),
   terms: z.literal(true, { errorMap: () => ({ message: 'You must accept the terms' }) }),
   turnstileToken: z.string().min(1, 'Please complete the CAPTCHA'),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -185,6 +187,37 @@ export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningMo
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Subscription Plan</label>
+                    <select
+                      {...registerProv('plan')}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                    >
+                      <option value="">Select Plan</option>
+                      <option value="free">Free ($0/mo)</option>
+                      <option value="pro">Pro ($29/mo)</option>
+                    </select>
+                    {provErrors.plan && <p className="text-red-400 text-xs mt-1">{provErrors.plan.message}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Store Category</label>
+                    <select
+                      {...registerProv('category')}
+                      className="w-full bg-gray-950 border border-gray-800 rounded-lg px-4 py-2.5 text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                    >
+                      <option value="">Select Category</option>
+                      <option value="retail">Retail & Shop</option>
+                      <option value="wellness">Wellness & Health</option>
+                      <option value="food">Food & Restaurant</option>
+                      <option value="education">Education</option>
+                      <option value="professional">Professional Services</option>
+                      <option value="digital">Digital Products</option>
+                    </select>
+                    {provErrors.category && <p className="text-red-400 text-xs mt-1">{provErrors.category.message}</p>}
+                  </div>
+                </div>
+
                 <div className="flex items-start mt-4 mb-4">
                   <div className="flex items-center h-5">
                     <input
@@ -201,13 +234,11 @@ export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningMo
                 {provErrors.terms && <p className="text-red-400 text-xs mt-1">{provErrors.terms.message}</p>}
 
                 <div className="my-4 flex justify-center">
-                  {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-                    <Turnstile
-                      siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                      onSuccess={(token) => setValue('turnstileToken', token, { shouldValidate: true })}
-                      options={{ theme: 'dark' }}
-                    />
-                  )}
+                  <Turnstile
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                    onSuccess={(token) => setValue('turnstileToken', token, { shouldValidate: true })}
+                    options={{ theme: 'dark' }}
+                  />
                 </div>
                 {provErrors.turnstileToken && <p className="text-red-400 text-xs text-center">{provErrors.turnstileToken.message}</p>}
 

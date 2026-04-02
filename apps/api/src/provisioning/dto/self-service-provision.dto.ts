@@ -10,6 +10,8 @@ export const InitProvisioningRequestSchema = z.object({
   storeName: z.string().min(2).max(100),
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
+  plan: z.enum(['free', 'pro']),
+  category: z.string().min(1, 'Store category is required'),
   turnstileToken: z.string().min(1, 'Turnstile token is required'),
 });
 
