@@ -11,6 +11,7 @@
       "default": "./dist/index.js"
     },
     "./client": {
+      "types": "./dist/client.d.ts",
       "import": "./dist/client.js",
       "default": "./dist/client.js"
     }
