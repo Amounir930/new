@@ -405,6 +405,7 @@ services:
       dockerfile: /opt/apex-v2/apps/store/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.60sec.shop/api/v1}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
     container_name: apex-store
     restart: always
     user: "1000:1000"
