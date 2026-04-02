@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description: 'High performance e-commerce by Apex v2',
 };
 
+
 export default async function RootLayout({
   children,
 }: {
@@ -18,16 +19,27 @@ export default async function RootLayout({
   const headersList = await headers();
   const tenantId = headersList.get('x-tenant-id') || 'public';
 
-  // S12 FIX: Fetch config for branding only if a valid tenant is detected.
-  // Root domain (60sec.shop) uses default branding to prevent 400 errors.
-  const bootstrap =
-    tenantId !== 'public' ? await getStoreBootstrap(tenantId) : null;
+  // 🛡️ ARCHITECTURAL ISOLATION (Protocol S2/S12)
+  // CASE 1: Apex Marketing Domain (60sec.shop)
+  if (tenantId === 'public') {
+    return (
+      <html lang="en">
+        <body className="antialiased font-sans bg-[#0A0A0A] text-white">
+          {/* 🚀 Pure Marketing Tree: Zero Providers, Zero E-commerce Bloat */}
+          {children}
+        </body>
+      </html>
+    );
+  }
+
+  // CASE 2: Tenant Storefront Domain (*.60sec.shop)
+  // Fetch config for branding ONLY in the storefront branch.
+  const bootstrap = await getStoreBootstrap(tenantId);
   const config = bootstrap?.config;
+  
   const storeName =
     config?.storeName ||
-    (tenantId !== 'public'
-      ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1)
-      : 'APEX STORE');
+    tenantId.charAt(0).toUpperCase() + tenantId.slice(1);
   const logoUrl = config?.logoUrl;
 
   return (
@@ -53,43 +65,15 @@ export default async function RootLayout({
                 </div>
               </div>
               <nav className="hidden md:flex items-center gap-8">
-                <a
-                  href="/"
-                  className="text-sm font-medium hover:text-blue-600 transition-colors"
-                >
-                  Home
-                </a>
-                <a
-                  href="/shop"
-                  className="text-sm font-medium hover:text-blue-600 transition-colors"
-                >
-                  Shop
-                </a>
-                <a
-                  href="/categories"
-                  className="text-sm font-medium hover:text-blue-600 transition-colors"
-                >
-                  Categories
-                </a>
+                <a href="/" className="text-sm font-medium hover:text-blue-600 transition-colors">Home</a>
+                <a href="/shop" className="text-sm font-medium hover:text-blue-600 transition-colors">Shop</a>
+                <a href="/categories" className="text-sm font-medium hover:text-blue-600 transition-colors">Categories</a>
               </nav>
               <div className="flex items-center gap-4">
-                <button
-                  type="button"
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                <button type="button" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <title>Search</title>
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </button>
                 <CartButton />
