@@ -188,6 +188,8 @@ services:
       APP_ROOT_DOMAIN: ${APP_ROOT_DOMAIN:-60sec.shop}
       MEILISEARCH_MASTER_KEY: ${MEILISEARCH_MASTER_KEY}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
       SKIP_S1_COMPLEXITY_CHECK: "true"
     networks:
       - apex-public
@@ -418,6 +420,7 @@ services:
       PORT: 3002
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       OTEL_SERVICE_NAME: apex-store
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
     networks:
       - apex-public
       - apex-internal
