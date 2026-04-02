@@ -31,6 +31,42 @@ interface ProductPageProps {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// HELPERS: Localized field resolution
+// ═══════════════════════════════════════════════════════════════
+function resolveLocalized(field: unknown, fallback = ''): string {
+  if (typeof field !== 'object' || !field)
+    return field ? String(field) : fallback;
+  const obj = field as LocalizedField;
+  return obj.en || obj.ar || fallback;
+}
+
+function resolveLocalizedAr(field: unknown, fallback = ''): string {
+  if (typeof field !== 'object' || !field)
+    return field ? String(field) : fallback;
+  const obj = field as LocalizedField;
+  return obj.ar || obj.en || fallback;
+}
+
+// Module-level constant — no need to recreate on every render
+const EMPTY_REVIEWS = {
+  reviews: [] as never[],
+  pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+};
+
+function getProductInfoProps(product: any) {
+  return {
+    id: product.id,
+    basePrice: product.basePrice,
+    salePrice: product.salePrice,
+    variants: (product.variants ??
+      []) as import('@/hooks/useProductOptions').ProductVariant[],
+    trackInventory: product.trackInventory ?? true,
+    minOrderQty: product.minOrderQty ?? 1,
+    isReturnable: product.isReturnable ?? true,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
 // SEO METADATA
 // ═══════════════════════════════════════════════════════════════
 export async function generateMetadata({
@@ -45,17 +81,8 @@ export async function generateMetadata({
   const product = await getProductBySlug(tenantId, slug);
   if (!product) return { title: 'Product Not Found' };
 
-  const nameObj = product.name as LocalizedField;
-  const name =
-    typeof nameObj === 'object'
-      ? nameObj.en || nameObj.ar
-      : String(product.name);
-
-  const descObj = product.shortDescription as LocalizedField;
-  const desc =
-    typeof descObj === 'object'
-      ? descObj.en || ''
-      : String(product.shortDescription || '');
+  const name = resolveLocalized(product.name);
+  const desc = resolveLocalized(product.shortDescription);
 
   return {
     title: `${name} | Official Store`,
@@ -82,31 +109,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const [product, relatedProducts, reviews] = await Promise.all([
     getProductBySlug(tenantId, slug),
     getRelatedProducts(tenantId, slug, 8).catch(() => []),
-    getProductReviews(tenantId, slug, 1, 5).catch(() => ({
-      reviews: [],
-      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
-    })),
+    getProductReviews(tenantId, slug, 1, 5).catch(() => EMPTY_REVIEWS),
   ]);
 
   if (!product) notFound();
 
-  const nameObj = product.name as LocalizedField;
-  const productName =
-    typeof nameObj === 'object'
-      ? nameObj.en || nameObj.ar
-      : String(product.name);
-
-  const shortDescObj = product.shortDescription as LocalizedField;
-  const shortDesc =
-    typeof shortDescObj === 'object'
-      ? shortDescObj.ar || shortDescObj.en
-      : String(product.shortDescription || '');
-
-  const longDescObj = product.longDescription as LocalizedField;
-  const longDesc =
-    typeof longDescObj === 'object'
-      ? longDescObj.ar || longDescObj.en
-      : String(product.longDescription || '');
+  const productName = resolveLocalized(product.name);
+  const shortDesc = resolveLocalizedAr(product.shortDescription);
+  const longDesc = resolveLocalizedAr(product.longDescription);
 
   return (
     <div className="bg-white min-h-screen">
@@ -142,7 +152,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {product.galleryImages?.length > 0 && (
               <div className="mt-8 flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
                 {product.galleryImages.map(
-                  (img: { url: string }, idx: number) => (
+                  (img: { url: string }, _idx: number) => (
                     <div
                       key={img.url}
                       className="relative w-28 h-28 aspect-square flex-shrink-0 rounded-2xl overflow-hidden ring-1 ring-gray-100 transition-all hover:ring-black cursor-pointer"
@@ -182,18 +192,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               </p>
             )}
 
-            <ProductInfoClient
-              product={{
-                id: product.id,
-                basePrice: product.basePrice,
-                salePrice: product.salePrice,
-                variants: (product.variants ||
-                  []) as import('@/hooks/useProductOptions').ProductVariant[],
-                trackInventory: product.trackInventory ?? true,
-                minOrderQty: product.minOrderQty || 1,
-                isReturnable: product.isReturnable ?? true,
-              }}
-            />
+            <ProductInfoClient product={getProductInfoProps(product)} />
           </div>
         </div>
 

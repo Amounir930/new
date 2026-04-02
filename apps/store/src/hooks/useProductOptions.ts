@@ -52,9 +52,6 @@ export function useProductOptions(variants: ProductVariant[]) {
       ).filter(Boolean);
 
       const values = uniqueValues.map((val): OptionValue => {
-        // Check if this value is available at all in any variant
-        const existsInAnyVariant = variants.some((v) => v.options[key] === val);
-
         // Check if this value is compatible with other currently selected options
         const otherSelections = { ...selectedOptions };
         delete otherSelections[key];

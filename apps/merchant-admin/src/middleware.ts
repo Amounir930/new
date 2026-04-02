@@ -1,4 +1,4 @@
-import { env } from '@apex/config/client';
+import { env } from '@apex/config/edge';
 import { jwtVerify } from 'jose';
 import { type NextRequest, NextResponse } from 'next/server';
 

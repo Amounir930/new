@@ -121,6 +121,7 @@ export function ProductInfoClient({ product }: ProductInfoClientProps) {
           <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <svg
+                aria-hidden="true"
                 className="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -138,6 +139,7 @@ export function ProductInfoClient({ product }: ProductInfoClientProps) {
             <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
                 <svg
+                  aria-hidden="true"
                   className="w-5 h-5"
                   fill="none"
                   viewBox="0 0 24 24"

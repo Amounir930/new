@@ -1,5 +1,6 @@
 import { validateServerEnv } from './validator';
-export { type EnvConfig } from './schema';
+
+export type { EnvConfig } from './schema';
 export { validateServerEnv };
 
 /**

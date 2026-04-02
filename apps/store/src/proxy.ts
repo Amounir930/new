@@ -121,7 +121,7 @@ export async function proxy(request: NextRequest) {
       }
     } catch (err) {
       // 🛡️ S5 Mandate: Mask raw errors before they reach the browser engine
-      const maskedMessage = maskInternalError(tenantIdentifier, err);
+      const _maskedMessage = maskInternalError(tenantIdentifier, err);
       // S11 Mandate: Fail-Closed. Show a 503 Service Unavailable page if backend is unreachable.
       const url = request.nextUrl.clone();
       url.pathname = '/503'; // Architectural Requirement: Prevent Fail-Open leaks

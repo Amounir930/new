@@ -17,6 +17,16 @@ const nextConfig = {
     '@apex/monitoring',
     '@apex/test-utils',
   ],
+  // S9: Prevent Webpack from bundling Node.js-only OpenTelemetry internals
+  // that use dynamic require() — avoids Critical dependency warnings in build.
+  serverExternalPackages: [
+    '@opentelemetry/instrumentation',
+    '@opentelemetry/instrumentation-undici',
+    '@opentelemetry/instrumentation-winston',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/auto-instrumentations-node',
+    'require-in-the-middle',
+  ],
   output: 'standalone',
   poweredByHeader: false,
   reactStrictMode: true,

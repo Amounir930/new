@@ -27,7 +27,6 @@ export function AddToCartButton({
   productId,
   variantId = null,
   quantity = 1,
-  minOrderQty = 1,
   isSelectionComplete = true,
   onDisabledClick,
   className = '',
@@ -115,6 +114,7 @@ export function AddToCartButton({
       {isAdding && (
         <span className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
           <svg
+            aria-hidden="true"
             className="animate-spin h-6 w-6 text-white"
             viewBox="0 0 24 24"
             fill="none"
@@ -141,6 +141,7 @@ export function AddToCartButton({
       >
         {!isSelectionComplete ? 'Complete Selection' : 'Add to Bag'}
         <svg
+          aria-hidden="true"
           className="w-5 h-5"
           fill="none"
           viewBox="0 0 24 24"
