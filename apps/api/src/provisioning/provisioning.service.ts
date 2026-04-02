@@ -51,7 +51,7 @@ export async function verifyTurnstileToken(token: string): Promise<boolean> {
       method: 'POST',
       body: formData,
     });
-    const data = await res.json();
+    const data = (await res.json()) as { success: boolean };
     return data.success === true;
   } catch (error) {
     Logger.error('Failed to verify Turnstile token', error);

@@ -37,13 +37,15 @@ export class NotificationsService {
     }
 
     try {
-      const response = await this.resend.emails.send({
+      const payload = {
         from: this.fromEmail,
         to: options.to,
         subject: options.subject,
         html: options.html,
         text: options.text,
-      });
+      } as import('resend').CreateEmailOptions;
+
+      const response = await this.resend.emails.send(payload);
 
       if (response.error) {
         this.logger.error(
