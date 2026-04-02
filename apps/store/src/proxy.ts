@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/edge';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 

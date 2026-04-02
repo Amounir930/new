@@ -11,6 +11,8 @@ const edgeEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_API_URL: z.string().url().optional(),
   NEXT_PUBLIC_IMGPROXY_URL: z.string().url().optional(),
+  INTERNAL_API_URL: z.string().url().default('http://api:3000/api/v1'),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 
 export type EdgeEnvConfig = z.infer<typeof edgeEnvSchema>;
@@ -26,6 +28,8 @@ function validateEdgeEnv(): EdgeEnvConfig {
     NEXT_PUBLIC_APP_URL: process.env['NEXT_PUBLIC_APP_URL'],
     NEXT_PUBLIC_API_URL: process.env['NEXT_PUBLIC_API_URL'],
     NEXT_PUBLIC_IMGPROXY_URL: process.env['NEXT_PUBLIC_IMGPROXY_URL'],
+    INTERNAL_API_URL: process.env['INTERNAL_API_URL'],
+    NODE_ENV: process.env['NODE_ENV'],
   });
 
   if (!result.success) {
