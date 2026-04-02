@@ -1,0 +1,379 @@
+[96msrc/app.module.ts[0m:[93m8[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/events' or its corresponding type declarations.
+
+[7m8[0m import { EventsModule } from '@apex/events';
+[7m [0m [91m                             ~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m9[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/export' or its corresponding type declarations.
+
+[7m9[0m import { ExportModule } from '@apex/export';
+[7m [0m [91m                             ~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m17[0m:[93m3[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'TenantCacheModule'.
+
+[7m17[0m   TenantCacheModule,
+[7m  [0m [91m  ~~~~~~~~~~~~~~~~~[0m
+[96msrc/app.module.ts[0m:[93m19[0m:[93m3[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'TenantSessionInterceptor'.
+
+[7m19[0m   TenantSessionInterceptor,
+[7m  [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m7[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/security' or its corresponding type declarations.
+
+[7m7[0m import { hashSensitiveData } from '@apex/security';
+[7m [0m [91m                                  ~~~~~~~~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m70[0m:[93m13[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'subdomain' does not exist in type 'AuthUser'.
+
+[7m70[0m             subdomain: 'admin',
+[7m  [0m [91m            ~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m115[0m:[93m13[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'subdomain' does not exist in type 'AuthUser'.
+
+[7m115[0m             subdomain: ownedTenant.subdomain,
+[7m   [0m [91m            ~~~~~~~~~[0m
+[96msrc/auth/auth.controller.ts[0m:[93m146[0m:[93m7[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'actorType' does not exist in type 'AuditLogEntry'.
+
+[7m146[0m       actorType: user.role === 'super_admin' ? 'super_admin' : 'tenant_admin',
+[7m   [0m [91m      ~~~~~~~~~[0m
+[96msrc/cron/orphan-media-cleanup.cron.ts[0m:[93m225[0m:[93m13[0m - [91merror[0m[90m TS2339: [0mProperty 'deletePrefix' does not exist on type '{ default: typeof import("C:/Users/Dell/Desktop/60sec.shop/packages/provisioning/dist/index"); MASTER_FEATURE_LIST: readonly ["home", "search", "pdp", "quickView", "cart", "checkout", ... 47 more ..., "b2b"]; ... 38 more ...; killSwitch(subdomain: string): Promise<...>; }'.
+
+[7m225[0m     const { deletePrefix } = await import('@apex/provisioning');
+[7m   [0m [91m            ~~~~~~~~~~~~[0m
+[96msrc/products/bulk-export.controller.ts[0m:[93m5[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'requireExecutor'.
+
+[7m5[0m import { requireExecutor } from '@apex/middleware';
+[7m [0m [91m         ~~~~~~~~~~~~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m10[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/validation' or its corresponding type declarations.
+
+[7m10[0m import { FIELD_METADATA } from '@apex/validation';
+[7m  [0m [91m                               ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m37[0m:[93m21[0m - [91merror[0m[90m TS7006: [0mParameter 'n' implicitly has an 'any' type.
+
+[7m37[0m     niches.forEach((n, i) => {
+[7m  [0m [91m                    ~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m37[0m:[93m24[0m - [91merror[0m[90m TS7006: [0mParameter 'i' implicitly has an 'any' type.
+
+[7m37[0m     niches.forEach((n, i) => {
+[7m  [0m [91m                       ~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m43[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'w' implicitly has an 'any' type.
+
+[7m43[0m     warrantyUnits.forEach((w, i) => {
+[7m  [0m [91m                           ~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m43[0m:[93m31[0m - [91merror[0m[90m TS7006: [0mParameter 'i' implicitly has an 'any' type.
+
+[7m43[0m     warrantyUnits.forEach((w, i) => {
+[7m  [0m [91m                              ~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m101[0m:[93m12[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m101[0m         `${meta.required ? '★ ' : ''}${key}`,
+[7m   [0m [91m           ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m102[0m:[93m9[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m102[0m         meta.descAr,
+[7m   [0m [91m        ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m103[0m:[93m9[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m103[0m         meta.descEn,
+[7m   [0m [91m        ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m104[0m:[93m9[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m104[0m         meta.example,
+[7m   [0m [91m        ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m109[0m:[93m24[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m109[0m         color: { argb: meta.required ? COLORS.required : 'FF374151' },
+[7m   [0m [91m                       ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m147[0m:[93m18[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m147[0m       header: `${meta.required ? '★ ' : ''}${key}`,
+[7m   [0m [91m                 ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m159[0m:[93m24[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m159[0m         color: { argb: meta.required ? COLORS.required : 'FF374151' },
+[7m   [0m [91m                       ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m165[0m:[93m17[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m165[0m           argb: meta.required ? COLORS.requiredBg : COLORS.optionalBg,
+[7m   [0m [91m                ~~~~[0m
+[96msrc/products/bulk-import-template.service.ts[0m:[93m208[0m:[93m50[0m - [91merror[0m[90m TS18046: [0m'meta' is of type 'unknown'.
+
+[7m208[0m       prodSheet.getCell(`${colLetter}2`).value = meta.example;
+[7m   [0m [91m                                                 ~~~~[0m
+[96msrc/products/dto/create-product.dto.ts[0m:[93m4[0m:[93m8[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/validation' or its corresponding type declarations.
+
+[7m4[0m } from '@apex/validation';
+[7m [0m [91m       ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/products/dto/create-product.dto.ts[0m:[93m31[0m:[93m41[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/validation' or its corresponding type declarations.
+
+[7m31[0m export type { CreateProductInput } from '@apex/validation';
+[7m  [0m [91m                                        ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m17[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/security' or its corresponding type declarations.
+
+[7m17[0m import { EncryptionService } from '@apex/security';
+[7m  [0m [91m                                  ~~~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m18[0m:[93m32[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/validation' or its corresponding type declarations.
+
+[7m18[0m import { PRODUCT_NICHES } from '@apex/validation';
+[7m  [0m [91m                               ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m298[0m:[93m18[0m - [91merror[0m[90m TS2769: [0mNo overload matches this call.
+  Overload 1 of 3, '(column: Aliased<unknown>, values: SQLWrapper | unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "sku"; tableName: "products"; dataType: "string"; columnType: "PgVarchar"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, { ...; }>' is not assignable to parameter of type 'Aliased<unknown>'.
+      Type 'PgColumn<{ name: "sku"; tableName: "products"; dataType: "string"; columnType: "PgVarchar"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, { ...; }>' is missing the following properties from type 'Aliased<unknown>': sql, fieldAlias
+  Overload 2 of 3, '(column: PgColumn<{ name: "sku"; tableName: "products"; dataType: "string"; columnType: "PgVarchar"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, { ...; }>, values: SQLWrapper | readonly (string | Placeholder<...>)[]): SQL<...>', gave the following error.
+    Argument of type 'unknown[]' is not assignable to parameter of type 'SQLWrapper | readonly (string | Placeholder<string, any>)[]'.
+      Type 'unknown[]' is not assignable to type 'readonly (string | Placeholder<string, any>)[]'.
+        Type 'unknown' is not assignable to type 'string | Placeholder<string, any>'.
+  Overload 3 of 3, '(column: never, values: SQLWrapper | readonly unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "sku"; tableName: "products"; dataType: "string"; columnType: "PgVarchar"; data: string; driverParam: string; notNull: true; hasDefault: false; isPrimaryKey: false; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, { ...; }>' is not assignable to parameter of type 'never'.
+
+[7m298[0m           .where(inArray(productsInStorefront.sku, skus));
+[7m   [0m [91m                 ~~~~~~~[0m
+
+[96msrc/products/import.worker.ts[0m:[93m307[0m:[93m46[0m - [91merror[0m[90m TS2345: [0mArgument of type 'unknown' is not assignable to parameter of type 'string'.
+
+[7m307[0m               .filter((r) => existingSet.has(r.data.sku))
+[7m   [0m [91m                                             ~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m343[0m:[93m11[0m - [91merror[0m[90m TS2345: [0mArgument of type 'unknown' is not assignable to parameter of type 'string | undefined'.
+
+[7m343[0m           data.mainImage,
+[7m   [0m [91m          ~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m359[0m:[93m33[0m - [91merror[0m[90m TS2339: [0mProperty 'trim' does not exist on type '{}'.
+
+[7m359[0m         if (data.galleryImages?.trim()) {
+[7m   [0m [91m                                ~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m361[0m:[93m14[0m - [91merror[0m[90m TS2339: [0mProperty 'split' does not exist on type '{}'.
+
+[7m361[0m             .split('|')
+[7m   [0m [91m             ~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m362[0m:[93m19[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m362[0m             .map((s) => s.trim())
+[7m   [0m [91m                  ~[0m
+[96msrc/products/import.worker.ts[0m:[93m410[0m:[93m15[0m - [91merror[0m[90m TS2322: [0mType '{ id: string; name: { ar: unknown; en: unknown; }; sku: unknown; niche: unknown; basePrice: string; salePrice: string | null; costPrice: string | null; compareAtPrice: string | null; barcode: {} | null; slug: any; shortDescription: { ...; } | null; ... 23 more ...; publishedAt: string; }[]' is not assignable to type '{ name: unknown; slug: string; basePrice: string; sku: string; mainImage: string; id?: string | undefined; createdAt?: string | undefined; updatedAt?: string | undefined; deletedAt?: string | null | undefined; ... 38 more ...; warrantyUnit?: string | ... 1 more ... | undefined; }[]'.
+  Type '{ id: string; name: { ar: unknown; en: unknown; }; sku: unknown; niche: unknown; basePrice: string; salePrice: string | null; costPrice: string | null; compareAtPrice: string | null; barcode: {} | null; slug: any; shortDescription: { ...; } | null; ... 23 more ...; publishedAt: string; }' is not assignable to type '{ name: unknown; slug: string; basePrice: string; sku: string; mainImage: string; id?: string | undefined; createdAt?: string | undefined; updatedAt?: string | undefined; deletedAt?: string | null | undefined; ... 38 more ...; warrantyUnit?: string | ... 1 more ... | undefined; }'.
+    Types of property 'sku' are incompatible.
+      Type 'unknown' is not assignable to type 'string'.
+
+[7m410[0m         const productInserts: InsertProduct[] = resolvedRows.map((r) => ({
+[7m   [0m [91m              ~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m424[0m:[93m13[0m - [91merror[0m[90m TS18046: [0m'r.nameEn' is of type 'unknown'.
+
+[7m424[0m             r.nameEn
+[7m   [0m [91m            ~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m438[0m:[93m41[0m - [91merror[0m[90m TS2345: [0mArgument of type '{}' is not assignable to parameter of type 'number'.
+
+[7m438[0m           weight: r.weight ? Math.floor(r.weight) : null,
+[7m   [0m [91m                                        ~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m439[0m:[93m51[0m - [91merror[0m[90m TS2345: [0mArgument of type '{}' is not assignable to parameter of type 'number'.
+
+[7m439[0m           minOrderQty: r.minOrderQty ? Math.floor(r.minOrderQty) : 1,
+[7m   [0m [91m                                                  ~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m440[0m:[93m63[0m - [91merror[0m[90m TS2345: [0mArgument of type '{}' is not assignable to parameter of type 'number'.
+
+[7m440[0m           lowStockThreshold: r.lowStockThreshold ? Math.floor(r.lowStockThreshold) : 0,
+[7m   [0m [91m                                                              ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m441[0m:[93m57[0m - [91merror[0m[90m TS2345: [0mArgument of type '{}' is not assignable to parameter of type 'number'.
+
+[7m441[0m           taxBasisPoints: r.taxBasisPoints ? Math.floor(r.taxBasisPoints) : 0,
+[7m   [0m [91m                                                        ~~~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m443[0m:[93m57[0m - [91merror[0m[90m TS2345: [0mArgument of type '{}' is not assignable to parameter of type 'number'.
+
+[7m443[0m           warrantyPeriod: r.warrantyPeriod ? Math.floor(r.warrantyPeriod) : null,
+[7m   [0m [91m                                                        ~~~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m451[0m:[93m39[0m - [91merror[0m[90m TS2345: [0mArgument of type 'unknown' is not assignable to parameter of type 'number | undefined'.
+
+[7m451[0m           dimensions: parseDimensions(r.dimHeight, r.dimWidth, r.dimLength),
+[7m   [0m [91m                                      ~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m452[0m:[93m38[0m - [91merror[0m[90m TS2345: [0mArgument of type 'unknown' is not assignable to parameter of type 'string | undefined'.
+
+[7m452[0m           attributes: parseDelimited(r.attributes),
+[7m   [0m [91m                                     ~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m453[0m:[93m42[0m - [91merror[0m[90m TS2345: [0mArgument of type 'unknown' is not assignable to parameter of type 'string | undefined'.
+
+[7m453[0m           specifications: parseDelimited(r.specifications),
+[7m   [0m [91m                                         ~~~~~~~~~~~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m454[0m:[93m37[0m - [91merror[0m[90m TS2345: [0mArgument of type 'unknown' is not assignable to parameter of type 'string | undefined'.
+
+[7m454[0m           tags: parseCommaSeparated(r.tags),
+[7m   [0m [91m                                    ~~~~~~[0m
+[96msrc/products/import.worker.ts[0m:[93m455[0m:[93m42[0m - [91merror[0m[90m TS2345: [0mArgument of type 'unknown' is not assignable to parameter of type 'string | undefined'.
+
+[7m455[0m           keywords: (parseCommaSeparated(r.keywords) ?? []).join(' '),
+[7m   [0m [91m                                         ~~~~~~~~~~[0m
+[96msrc/provisioning/provisioning.service.ts[0m:[93m15[0m:[93m15[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'DrizzleExecutor'.
+
+[7m15[0m import type { DrizzleExecutor } from '@apex/middleware';
+[7m  [0m [91m              ~~~~~~~~~~~~~~~[0m
+[96msrc/provisioning/provisioning.service.ts[0m:[93m149[0m:[93m46[0m - [91merror[0m[90m TS2339: [0mProperty 'registerMerchant' does not exist on type 'AuthService'.
+
+[7m149[0m       const adminId = await this.authService.registerMerchant(
+[7m   [0m [91m                                             ~~~~~~~~~~~~~~~~[0m
+[96msrc/provisioning/provisioning.service.ts[0m:[93m161[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'adminId' does not exist in type 'SeedOptions'.
+
+[7m161[0m         adminId: adminId,
+[7m   [0m [91m        ~~~~~~~[0m
+[96msrc/storefront/dto/cart.dto.ts[0m:[93m8[0m:[93m8[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/validation' or its corresponding type declarations.
+
+[7m8[0m } from '@apex/validation';
+[7m [0m [91m       ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/storefront/storefront.controller.ts[0m:[93m4[0m:[93m3[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'isUuid'.
+
+[7m4[0m   isUuid,
+[7m [0m [91m  ~~~~~~[0m
+[96msrc/storefront/storefront.controller.ts[0m:[93m341[0m:[93m44[0m - [91merror[0m[90m TS2339: [0mProperty 'resolveTenant' does not exist on type 'TenantCacheService'.
+
+[7m341[0m     const context = await this.tenantCache.resolveTenant(rawId);
+[7m   [0m [91m                                           ~~~~~~~~~~~~~[0m
+[96msrc/storefront/storefront.module.ts[0m:[93m2[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'TenantCacheModule'.
+
+[7m2[0m import { TenantCacheModule } from '@apex/middleware';
+[7m [0m [91m         ~~~~~~~~~~~~~~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m20[0m:[93m35[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/security' or its corresponding type declarations.
+
+[7m20[0m import { EncryptionService } from '@apex/security';
+[7m  [0m [91m                                  ~~~~~~~~~~~~~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m510[0m:[93m53[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m510[0m       const productIds = [...new Set(dto.items.map((item) => item.productId))];
+[7m   [0m [91m                                                    ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m521[0m:[93m13[0m - [91merror[0m[90m TS2769: [0mNo overload matches this call.
+  Overload 1 of 3, '(column: Aliased<unknown>, values: SQLWrapper | unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<unknown>'.
+      Type 'PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<unknown>': sql, fieldAlias
+  Overload 2 of 3, '(column: PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>, values: SQLWrapper | readonly (string | Placeholder<...>)[]): SQL<...>', gave the following error.
+    Argument of type 'unknown[]' is not assignable to parameter of type 'SQLWrapper | readonly (string | Placeholder<string, any>)[]'.
+      Type 'unknown[]' is not assignable to type 'readonly (string | Placeholder<string, any>)[]'.
+        Type 'unknown' is not assignable to type 'string | Placeholder<string, any>'.
+  Overload 3 of 3, '(column: never, values: SQLWrapper | readonly unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+
+[7m521[0m             inArray(productsInStorefront.id, productIds),
+[7m   [0m [91m            ~~~~~~~[0m
+
+[96msrc/storefront/storefront.service.ts[0m:[93m530[0m:[93m18[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m530[0m         .filter((item) => item.variantId !== null)
+[7m   [0m [91m                 ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m531[0m:[93m15[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m531[0m         .map((item) => item.variantId!);
+[7m   [0m [91m              ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m563[0m:[93m18[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m563[0m         .filter((item) => item.variantId === null)
+[7m   [0m [91m                 ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m564[0m:[93m15[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m564[0m         .map((item) => item.productId);
+[7m   [0m [91m              ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m592[0m:[93m38[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m592[0m       const results = dto.items.map((item) => {
+[7m   [0m [91m                                     ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m644[0m:[93m38[0m - [91merror[0m[90m TS7006: [0mParameter 'r' implicitly has an 'any' type.
+
+[7m644[0m         allAvailable: results.every((r) => r.available),
+[7m   [0m [91m                                     ~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m665[0m:[93m58[0m - [91merror[0m[90m TS2345: [0mArgument of type 'AddToCartDto' is not assignable to parameter of type '{ productId: string; variantId: string | null; quantity: number; }'.
+  Type 'AddToCartDto' is missing the following properties from type '{ productId: string; variantId: string | null; quantity: number; }': productId, variantId, quantity
+
+[7m665[0m       const validation = await this.validateCartItem(db, dto);
+[7m   [0m [91m                                                         ~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m745[0m:[93m53[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m745[0m       const productIds = [...new Set(dto.items.map((item) => item.productId))];
+[7m   [0m [91m                                                    ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m761[0m:[93m13[0m - [91merror[0m[90m TS2769: [0mNo overload matches this call.
+  Overload 1 of 3, '(column: Aliased<unknown>, values: SQLWrapper | unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'Aliased<unknown>'.
+      Type 'PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is missing the following properties from type 'Aliased<unknown>': sql, fieldAlias
+  Overload 2 of 3, '(column: PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>, values: SQLWrapper | readonly (string | Placeholder<...>)[]): SQL<...>', gave the following error.
+    Argument of type 'unknown[]' is not assignable to parameter of type 'SQLWrapper | readonly (string | Placeholder<string, any>)[]'.
+      Type 'unknown[]' is not assignable to type 'readonly (string | Placeholder<string, any>)[]'.
+        Type 'unknown' is not assignable to type 'string | Placeholder<string, any>'.
+  Overload 3 of 3, '(column: never, values: SQLWrapper | readonly unknown[]): SQL<unknown>', gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "products"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+
+[7m761[0m             inArray(productsInStorefront.id, productIds),
+[7m   [0m [91m            ~~~~~~~[0m
+
+[96msrc/storefront/storefront.service.ts[0m:[93m779[0m:[93m18[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m779[0m         .filter((item) => item.variantId !== null)
+[7m   [0m [91m                 ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m780[0m:[93m15[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m780[0m         .map((item) => item.variantId!);
+[7m   [0m [91m              ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m811[0m:[93m18[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m811[0m         .filter((item) => item.variantId === null)
+[7m   [0m [91m                 ~~~~[0m
+[96msrc/storefront/storefront.service.ts[0m:[93m812[0m:[93m15[0m - [91merror[0m[90m TS7006: [0mParameter 'item' implicitly has an 'any' type.
+
+[7m812[0m         .map((item) => item.productId);
+[7m   [0m [91m              ~~~~[0m
+[96msrc/tenants/merchant-config.controller.ts[0m:[93m15[0m:[93m3[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'requireExecutor'.
+
+[7m15[0m   requireExecutor,
+[7m  [0m [91m  ~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-config.controller.ts[0m:[93m17[0m:[93m3[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'TenantSessionInterceptor'.
+
+[7m17[0m   TenantSessionInterceptor,
+[7m  [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-config.controller.ts[0m:[93m94[0m:[93m50[0m - [91merror[0m[90m TS2339: [0mProperty 'resolveTenantById' does not exist on type 'TenantCacheService'.
+
+[7m94[0m     const tenantContext = await this.tenantCache.resolveTenantById(tenantId);
+[7m  [0m [91m                                                 ~~~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-config.controller.ts[0m:[93m115[0m:[93m35[0m - [91merror[0m[90m TS7006: [0mParameter 'tx' implicitly has an 'any' type.
+
+[7m115[0m       await db.transaction(async (tx) => {
+[7m   [0m [91m                                  ~~[0m
+[96msrc/tenants/merchant-products.controller.ts[0m:[93m19[0m:[93m3[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'requireExecutor'.
+
+[7m19[0m   requireExecutor,
+[7m  [0m [91m  ~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-products.controller.ts[0m:[93m21[0m:[93m3[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'TenantSessionInterceptor'.
+
+[7m21[0m   TenantSessionInterceptor,
+[7m  [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-products.controller.ts[0m:[93m23[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/provisioning"' has no exported member 'deletePrefix'.
+
+[7m23[0m import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
+[7m  [0m [91m         ~~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-products.controller.ts[0m:[93m23[0m:[93m24[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/provisioning"' has no exported member 'migrateProductMedia'.
+
+[7m23[0m import { deletePrefix, migrateProductMedia } from '@apex/provisioning';
+[7m  [0m [91m                       ~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-products.controller.ts[0m:[93m261[0m:[93m11[0m - [91merror[0m[90m TS2739: [0mType '{ countryOfOrigin: any; barcode: any; videoUrl: any; digitalFileUrl: any; name: { ar: any; en: any; }; shortDescription: { ar: any; en: any; }; longDescription: { ar: any; en: any; }; taxBasisPoints: number; basePrice: string; salePrice: string | null; costPrice: string | null; compareAtPrice: string | null; }' is missing the following properties from type '{ name: unknown; slug: string; basePrice: string; sku: string; mainImage: string; id?: string | undefined; createdAt?: string | undefined; updatedAt?: string | undefined; deletedAt?: string | null | undefined; ... 38 more ...; warrantyUnit?: string | ... 1 more ... | undefined; }': slug, sku, mainImage
+
+[7m261[0m     const productData: InferInsertModel<typeof productsInStorefront> = {
+[7m   [0m [91m          ~~~~~~~~~~~[0m
+[96msrc/tenants/merchant-stats.controller.ts[0m:[93m10[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'isUuid'.
+
+[7m10[0m import { isUuid, requireExecutor } from '@apex/middleware';
+[7m  [0m [91m         ~~~~~~[0m
+[96msrc/tenants/merchant-stats.controller.ts[0m:[93m10[0m:[93m18[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'requireExecutor'.
+
+[7m10[0m import { isUuid, requireExecutor } from '@apex/middleware';
+[7m  [0m [91m                 ~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/product-media.controller.ts[0m:[93m9[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'requireExecutor'.
+
+[7m9[0m import { requireExecutor } from '@apex/middleware';
+[7m [0m [91m         ~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/tenants-public.controller.ts[0m:[93m32[0m:[93m43[0m - [91merror[0m[90m TS2339: [0mProperty 'getCustom' does not exist on type 'TenantCacheService'.
+
+[7m32[0m     const cached = await this.tenantCache.getCustom(cacheKey);
+[7m  [0m [91m                                          ~~~~~~~~~[0m
+[96msrc/tenants/tenants-public.controller.ts[0m:[93m91[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'setCustom' does not exist on type 'TenantCacheService'.
+
+[7m91[0m     await this.tenantCache.setCustom(cacheKey, JSON.stringify(result), {
+[7m  [0m [91m                           ~~~~~~~~~[0m
+[96msrc/tenants/tenants.controller.ts[0m:[93m13[0m:[93m15[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'DrizzleExecutor'.
+
+[7m13[0m import type { DrizzleExecutor } from '@apex/middleware';
+[7m  [0m [91m              ~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/tenants.controller.ts[0m:[93m14[0m:[93m45[0m - [91merror[0m[90m TS2307: [0mCannot find module '@apex/security' or its corresponding type declarations.
+
+[7m14[0m import { decrypt, type EncryptedData } from '@apex/security';
+[7m  [0m [91m                                            ~~~~~~~~~~~~~~~~[0m
+[96msrc/tenants/tenants.module.ts[0m:[93m3[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@apex/middleware"' has no exported member 'TenantCacheModule'.
+
+[7m3[0m import { TenantCacheModule } from '@apex/middleware';
+[7m [0m [91m         ~~~~~~~~~~~~~~~~~[0m
+

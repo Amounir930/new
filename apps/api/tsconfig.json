@@ -8,10 +8,13 @@
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "paths": {
       "@apex/config/server": ["../../packages/config/src/server.ts"],
+      "@apex/config/edge": ["../../packages/config/src/edge.ts"],
       "@apex/config/service": ["../../packages/config/src/config.service.ts"],
       "@apex/config": ["../../packages/config/src/index.ts"],
       "@apex/*": ["../../packages/*/src/index.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": [

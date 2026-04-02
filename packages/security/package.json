@@ -4,16 +4,20 @@
   "description": "Advanced security modules for KIMI - mTLS, secrets rotation, penetration testing",
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.js"
     },
     "./mtls": {
+      "types": "./dist/mtls/index.d.ts",
       "import": "./dist/mtls/index.js",
       "require": "./dist/mtls/index.js"
     },
     "./secrets": {
+      "types": "./dist/secrets/index.d.ts",
       "import": "./dist/secrets/index.js",
       "require": "./dist/secrets/index.js"
     }
