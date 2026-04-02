@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
  */
 async function handle(
   request: NextRequest,
-  { params }: any // Use any to avoid build-time type conflicts in Next.js 16 (Canary)
+  { params }: { params: Promise<{ path?: string[] }> }
 ) {
   try {
     const resolvedParams = await params;
@@ -16,6 +16,7 @@ async function handle(
     const pathString = pathSegments.join('/');
     const searchParams = request.nextUrl.searchParams.toString();
     
+    // Resolve Backend URL
     const backendUrl = process.env.INTERNAL_API_URL || 'http://api:3000/api/v1';
     const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
     const targetUrl = `${baseUrl}/${pathString}${searchParams ? '?' + searchParams : ''}`;
@@ -55,7 +56,7 @@ async function handle(
   } catch (error: any) {
     console.error('[API-PROXY-ERROR]:', error);
     return NextResponse.json(
-      { error: 'Internal API Gateway Error', message: error.message || 'Failed to reach backend.' },
+      { error: 'Internal API Gateway Error', message: 'Failed to reach backend.' },
       { status: 502 }
     );
   }
