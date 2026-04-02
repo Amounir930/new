@@ -152,6 +152,13 @@ export const serverEnvSchema = baseSchema.extend({
   HCAPTCHA_SECRET_KEY: z.string().optional(),
   HCAPTCHA_SITE_KEY: z.string().optional(),
 
+  // Cloudflare Turnstile (S3: Anti-bot CAPTCHA for public provisioning)
+  TURNSTILE_SECRET_KEY: z.string().optional(),
+
+  // Transactional Email: Resend (primary provider, AWS SES suspended)
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().email().default('noreply@60sec.shop'),
+
   // Gitea & Webhook
   GITEA_DB_PASSWORD: z.string().optional(),
 
@@ -180,6 +187,8 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
   NEXT_PUBLIC_API_URL: z.string().url().optional(),
   NEXT_PUBLIC_IMGPROXY_URL: z.string().url().optional(),
+  // Cloudflare Turnstile site key (safe to expose to browser)
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
 });
 
 // Combined Schema for validation on server startup

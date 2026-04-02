@@ -1,4 +1,5 @@
 import { createRequire } from 'module';
+
 const require = createRequire(import.meta.url);
 
 /** @type {import('next').NextConfig} */
@@ -55,7 +56,9 @@ const nextConfig = {
     // from symlinked workspace packages.
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@apex/config/edge': require.resolve('../../packages/config/dist/edge.js'),
+      '@apex/config/edge': require.resolve(
+        '../../packages/config/dist/edge.js'
+      ),
     };
     return config;
   },

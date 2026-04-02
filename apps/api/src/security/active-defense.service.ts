@@ -1,5 +1,5 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
 import { RedisRateLimitStore } from '@apex/middleware';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CloudflareService } from './cloudflare.service';
 
 @Injectable()
@@ -20,7 +20,9 @@ export class ActiveDefenseService {
   async trackViolation(ip: string, evidence: string): Promise<void> {
     const redis = await this.redisStore.getClient();
     if (!redis) {
-      this.logger.warn(`S15: Redis unavailable. Failed to track violation for IP: ${ip}`);
+      this.logger.warn(
+        `S15: Redis unavailable. Failed to track violation for IP: ${ip}`
+      );
       return;
     }
 
@@ -29,21 +31,27 @@ export class ActiveDefenseService {
     try {
       // Increment violation count
       const count = await redis.incr(key);
-      
+
       // Set expiration if it's the first violation
       if (count === 1) {
         await redis.expire(key, this.BAN_DURATION_SECONDS);
       }
 
-      this.logger.warn(`S15 Violation Detected! IP: ${ip} | Count: ${count}/${this.VIOLATION_THRESHOLD} | Evidence: ${evidence}`);
+      this.logger.warn(
+        `S15 Violation Detected! IP: ${ip} | Count: ${count}/${this.VIOLATION_THRESHOLD} | Evidence: ${evidence}`
+      );
 
       // Check if threshold is reached
       if (count >= this.VIOLATION_THRESHOLD) {
-        this.logger.error(`S15 CRITICAL: Threshold reached for IP ${ip}. Triggering automated edge ban.`);
+        this.logger.error(
+          `S15 CRITICAL: Threshold reached for IP ${ip}. Triggering automated edge ban.`
+        );
         await this.executeEdgeBan(ip, evidence);
       }
     } catch (error) {
-      this.logger.error(`S15: Error tracking violation for IP ${ip}: ${(error as Error).message}`);
+      this.logger.error(
+        `S15: Error tracking violation for IP ${ip}: ${(error as Error).message}`
+      );
     }
   }
 
@@ -52,12 +60,19 @@ export class ActiveDefenseService {
    */
   private async executeEdgeBan(ip: string, evidence: string): Promise<void> {
     // 1. Trigger Cloudflare API Ban
-    const success = await this.cloudflareService.blockIp(ip, `Honeytoken Violation: ${evidence}`);
-    
+    const success = await this.cloudflareService.blockIp(
+      ip,
+      `Honeytoken Violation: ${evidence}`
+    );
+
     if (success) {
-      this.logger.log(`🛡️ S15: IP ${ip} has been successfully dropped at the Cloudflare edge.`);
+      this.logger.log(
+        `🛡️ S15: IP ${ip} has been successfully dropped at the Cloudflare edge.`
+      );
     } else {
-      this.logger.error(`❌ S15: Automated Cloudflare ban FAILED for IP ${ip}. Manual intervention required.`);
+      this.logger.error(
+        `❌ S15: Automated Cloudflare ban FAILED for IP ${ip}. Manual intervention required.`
+      );
     }
   }
 }

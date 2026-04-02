@@ -31,6 +31,8 @@ import { AuthModule } from './auth/auth.module';
 import { BlueprintsModule } from './blueprints/blueprints.module';
 import { MediaModule } from './common/media/media.module';
 import { OrphanMediaCleanupCron } from './cron/orphan-media-cleanup.cron';
+import { NotificationsModule } from './common/notifications/notifications.module';
+import { ContactModule } from './contact/contact.module';
 import { GovernanceModule } from './governance/governance.module';
 import { HealthModule } from './health/health.module';
 import { ProvisioningModule } from './provisioning/provisioning.module';
@@ -69,6 +71,8 @@ import { TenantsModule } from './tenants/tenants.module';
     AuditModule,
     ExportModule,
     GovernanceModule,
+    NotificationsModule,
+    ContactModule,
     // S14.7: Persistent Event Bus (Rule 1.3)
     EventsModule.registerAsync({
       imports: [ConfigModule],

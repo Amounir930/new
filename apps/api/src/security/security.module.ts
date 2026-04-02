@@ -1,8 +1,8 @@
 import { ConfigModule } from '@apex/config/service';
 import { Global, Module } from '@nestjs/common';
-import { SecurityService } from './security.service';
-import { CloudflareService } from './cloudflare.service';
 import { ActiveDefenseService } from './active-defense.service';
+import { CloudflareService } from './cloudflare.service';
+import { SecurityService } from './security.service';
 
 @Global()
 @Module({

@@ -32,6 +32,32 @@ import {
 } from '@nestjs/common';
 import { z } from 'zod';
 import { SecurityService } from '../security/security.service';
+import { NotificationsService } from '../common/notifications/notifications.service';
+import { OTPService, RedisRateLimitStore } from '@apex/middleware';
+import crypto from 'crypto';
+
+export async function verifyTurnstileToken(token: string): Promise<boolean> {
+  if (!env.TURNSTILE_SECRET_KEY) {
+    Logger.warn('TURNSTILE_SECRET_KEY is missing. Skiping CAPTCHA verification (not recommended for production).');
+    return true; // Bypass if not configured
+  }
+
+  try {
+    const formData = new URLSearchParams();
+    formData.append('secret', env.TURNSTILE_SECRET_KEY);
+    formData.append('response', token);
+
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    return data.success === true;
+  } catch (error) {
+    Logger.error('Failed to verify Turnstile token', error);
+    return false;
+  }
+}
 
 export interface ProvisioningOptions {
   subdomain: string;
@@ -59,8 +85,94 @@ export class ProvisioningService {
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
     private readonly authService: AuthService,
     @Inject('SECURITY_SERVICE')
-    private readonly security: SecurityService
+    private readonly security: SecurityService,
+    private readonly notifications: NotificationsService,
+    private readonly otpService: OTPService,
+    private readonly redisStore: RedisRateLimitStore
   ) {}
+
+  /**
+   * Public Self-Service Step 1: Initialize, Verify Turnstile, and generate OTP
+   */
+  async initProvisioningRequest(payload: any) {
+    // 1. Verify Turnstile
+    const isValid = await verifyTurnstileToken(payload.turnstileToken);
+    if (!isValid) {
+      throw new BadRequestException('Security check failed. Please try again.');
+    }
+
+    // 2. Generate Request ID and OTP
+    const requestId = crypto.randomUUID();
+    const otp = await this.otpService.generateOTP(`prov-${requestId}`);
+
+    // 3. Store payload in Redis (5 min TTL)
+    const client = await this.redisStore.getClient();
+    if (!client) {
+      throw new InternalServerErrorException('System temporarily unavailable');
+    }
+
+    // Clean payload for storage
+    const { turnstileToken, ...cleanPayload } = payload;
+    await client.setEx(`prov-data:${requestId}`, 300, JSON.stringify(cleanPayload));
+
+    // 4. Send OTP Email
+    await this.notifications.sendEmail({
+      to: payload.email,
+      subject: 'Your 60sec.shop Verification Code',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px;">
+          <h2>Welcome to 60sec.shop!</h2>
+          <p>Your verification code to create your store is:</p>
+          <h1 style="font-size: 32px; letter-spacing: 5px; color: #4F46E5;">${otp}</h1>
+          <p>This code will expire in 5 minutes.</p>
+        </div>
+      `,
+      text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
+    });
+
+    return { requestId, message: 'OTP sent successfully' };
+  }
+
+  /**
+   * Public Self-Service Step 2: Verify OTP and trigger provisioning
+   */
+  async selfServiceProvision(requestId: string, otp: string) {
+    // 1. Verify OTP
+    const isValid = await this.otpService.verifyOTP(`prov-${requestId}`, otp);
+    if (!isValid) {
+      throw new BadRequestException('Invalid or expired verification code.');
+    }
+
+    // 2. Fetch payload from Redis
+    const client = await this.redisStore.getClient();
+    if (!client) {
+      throw new InternalServerErrorException('System temporarily unavailable');
+    }
+
+    const dataRaw = await client.get(`prov-data:${requestId}`);
+    if (!dataRaw) {
+      throw new BadRequestException('Provisioning request expired. Please start over.');
+    }
+
+    const payload = JSON.parse(dataRaw);
+    await client.del(`prov-data:${requestId}`); // Clear it
+
+    // 3. Re-map to internal provisioning options
+    const options: ProvisioningOptions = {
+      subdomain: payload.username.toLowerCase(),
+      adminEmail: payload.email,
+      password: payload.password,
+      storeName: payload.storeName,
+      plan: 'free', // Hardcoded for self-service
+      superAdminKey: env.SUPER_ADMIN_KEY || 'OVERRIDE_FOR_SELF_SERVICE', 
+    };
+
+    // We temporarly patch the superAdminKey requirement by passing the actual key from env 
+    // because selfServiceProvision is essentially calling the protected provision method on behalf of the user
+    // after they have verified their email and captcha.
+
+    return this.provision(options);
+  }
 
   /**
    * Provision a new store in under 60 seconds

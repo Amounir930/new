@@ -67,7 +67,8 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       // S11: Precise Error Surfacing (No Zombie UIs)
-      const message = err instanceof Error ? err.message : 'Critical Authentication Failure';
+      const message =
+        err instanceof Error ? err.message : 'Critical Authentication Failure';
       setError(message);
       setLoading(false); // Revoke loading only on failure
     }

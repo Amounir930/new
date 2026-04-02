@@ -9,8 +9,8 @@ import {
   sql,
   tenantsInGovernance,
 } from '@apex/db';
-import { TenantCacheService } from '@apex/middleware';
 import type { DrizzleExecutor } from '@apex/middleware';
+import { TenantCacheService } from '@apex/middleware';
 import { decrypt, type EncryptedData } from '@apex/security';
 import {
   BadRequestException,

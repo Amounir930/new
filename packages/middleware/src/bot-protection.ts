@@ -129,16 +129,18 @@ export class BotProtectionMiddleware implements NestMiddleware {
       // S11 STABILITY FIX: If no token provided, reject IMMEDIATELY instead of hanging on fetch
       if (!captchaToken) {
         if (isProd) {
-          Logger.warn(`S11: Denying production login attempt without hCaptcha token | IP: ${clientIp}`, 'BotProtection');
-          throw new ForbiddenException('S11 Violation: hCaptcha validation required for login');
+          Logger.warn(
+            `S11: Denying production login attempt without hCaptcha token | IP: ${clientIp}`,
+            'BotProtection'
+          );
+          throw new ForbiddenException(
+            'S11 Violation: hCaptcha validation required for login'
+          );
         }
         return; // Allow in development
       }
 
-      const isValid = await this.captchaService.verify(
-        captchaToken,
-        clientIp
-      );
+      const isValid = await this.captchaService.verify(captchaToken, clientIp);
 
       if (!isValid) {
         Logger.warn(

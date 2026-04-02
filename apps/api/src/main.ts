@@ -48,7 +48,10 @@ async function bootstrap() {
     bodyParser: false, // S6 FIX 11A: Disable default bodyParser to allow custom limits
   };
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, options);
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule,
+    options
+  );
 
   // S15: Enable Trust Proxy for correct IP extraction (Cloudflare -> Traefik -> NestJS)
   // Trusting 172.0.0.0/8 covers typical Docker internal bridge networks

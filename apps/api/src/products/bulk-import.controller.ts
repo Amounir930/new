@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { env } from '@apex/config/server';
 import { AuditLog } from '@apex/audit';
 import {
   type AuthenticatedRequest,
   JwtAuthGuard,
   TenantJwtMatchGuard,
 } from '@apex/auth';
+import { env } from '@apex/config/server';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { InjectQueue } from '@nestjs/bull';
 import {
@@ -26,8 +26,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Queue } from 'bull';
 import type { Response } from 'express';
 import { memoryStorage } from 'multer';
-import { BulkImportTemplateService } from './bulk-import-template.service';
 import { StorageService } from '../storage/storage.service';
+import { BulkImportTemplateService } from './bulk-import-template.service';
 
 const MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024; // 500MB
 const TEMP_IMPORT_BUCKET = 'system-temp-imports';
@@ -113,10 +113,13 @@ export class BulkImportController {
     } catch (err: any) {
       // S15: Active Healing Retry Logic
       if (err.name === 'NoSuchBucket' || err.code === 'NoSuchBucket') {
-        this.logger.warn(`Infrastructure Drift: Bucket ${TEMP_IMPORT_BUCKET} missing during upload. Retrying healing...`);
+        this.logger.warn(
+          `Infrastructure Drift: Bucket ${TEMP_IMPORT_BUCKET} missing during upload. Retrying healing...`
+        );
         await this.storageService.ensureBucketExists(TEMP_IMPORT_BUCKET);
         // Second attempt after manual healing
-        await s3Client.send(new PutObjectCommand({
+        await s3Client.send(
+          new PutObjectCommand({
             Bucket: TEMP_IMPORT_BUCKET,
             Key: s3Key,
             Body: file.buffer,
@@ -126,7 +129,9 @@ export class BulkImportController {
       } else {
         const message = err instanceof Error ? err.message : String(err);
         this.logger.error(`[BulkImport] MinIO Upload Failed: ${message}`);
-        throw new BadRequestException('Failed to buffer import file to storage.');
+        throw new BadRequestException(
+          'Failed to buffer import file to storage.'
+        );
       }
     }
 
@@ -189,4 +194,3 @@ export class BulkImportController {
     };
   }
 }
-

@@ -59,7 +59,10 @@ export class HoneyTokensController {
     );
 
     // 3. Trigger S15 Active Defense Lifecycle (Automated Banning)
-    await this.activeDefense.trackViolation(clientIp, `Honeypot triggered at ${path}`);
+    await this.activeDefense.trackViolation(
+      clientIp,
+      `Honeypot triggered at ${path}`
+    );
 
     // 4. Log High-Risk Security Event (S15 Activation)
     await this.auditService.log({

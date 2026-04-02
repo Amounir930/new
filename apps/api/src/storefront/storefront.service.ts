@@ -255,8 +255,14 @@ export class StorefrontService {
       const result: ProductWithVariants = {
         ...(product as any),
         name: product.name as Record<string, string>,
-        shortDescription: product.shortDescription as Record<string, string> | null,
-        longDescription: product.longDescription as Record<string, string> | null,
+        shortDescription: product.shortDescription as Record<
+          string,
+          string
+        > | null,
+        longDescription: product.longDescription as Record<
+          string,
+          string
+        > | null,
         attributes: (product.specifications || {}) as Record<string, unknown>,
         variants: variantsWithInventory,
         inventory: productInventory[0] || null,

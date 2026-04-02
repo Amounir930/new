@@ -4,16 +4,17 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { type InferInsertModel, inArray } from 'drizzle-orm';
 import { env } from '@apex/config/server';
 import {
   getTenantDb,
   productImagesInStorefront,
   productsInStorefront,
 } from '@apex/db';
+import { type InferInsertModel, inArray } from 'drizzle-orm';
 
 type InsertProduct = InferInsertModel<typeof productsInStorefront>;
 type InsertMedia = InferInsertModel<typeof productImagesInStorefront>;
+
 import { EncryptionService } from '@apex/security';
 import { PRODUCT_NICHES } from '@apex/validation';
 import {
@@ -28,8 +29,8 @@ import AdmZip from 'adm-zip';
 import type { Job } from 'bull';
 import ExcelJS from 'exceljs';
 import { z } from 'zod';
-import { FileValidationService } from './file-validation.service';
 import { StorageService } from '../storage/storage.service';
+import { FileValidationService } from './file-validation.service';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const MAX_ROWS = 500;
@@ -88,7 +89,9 @@ const ImportRowSchema = z.object({
     z.coerce.number().int().min(0).max(10000)
   ).optional(),
   countryOfOrigin: z.string().length(2).toUpperCase().optional(),
-  warrantyPeriod: withEmptyToUndefined(z.coerce.number().int().min(0)).optional(),
+  warrantyPeriod: withEmptyToUndefined(
+    z.coerce.number().int().min(0)
+  ).optional(),
   warrantyUnit: z.enum(['days', 'months', 'years']).optional(),
   // Flags
   isActive: z
@@ -206,7 +209,7 @@ export class ImportWorker {
     try {
       // ─── Phase 0: Download from MinIO (Stateless Handshake) ──────────────
       this.logger.log(`[ImportWorker] Downloading buffered file: ${s3Key}`);
-      
+
       // S15: Active Healing for the temp buffer bucket
       await this.storageService.ensureBucketExists(s3Bucket);
 
@@ -395,9 +398,7 @@ export class ImportWorker {
 
       // ─── Phase 4: Bulk DB Transaction ─────────────────────────────────
       if (resolvedRows.length === 0) {
-        this.logger.log(
-          `[ImportWorker] Job ${jobId} completed with 0 rows.`
-        );
+        this.logger.log(`[ImportWorker] Job ${jobId} completed with 0 rows.`);
         await job.progress(100);
         return { status: 'done', importedCount: 0, errors: [] };
       }
@@ -437,10 +438,14 @@ export class ImportWorker {
           metaDescription: r.metaDescription ?? null,
           weight: r.weight ? Math.floor(r.weight) : null,
           minOrderQty: r.minOrderQty ? Math.floor(r.minOrderQty) : 1,
-          lowStockThreshold: r.lowStockThreshold ? Math.floor(r.lowStockThreshold) : 0,
+          lowStockThreshold: r.lowStockThreshold
+            ? Math.floor(r.lowStockThreshold)
+            : 0,
           taxBasisPoints: r.taxBasisPoints ? Math.floor(r.taxBasisPoints) : 0,
           countryOfOrigin: r.countryOfOrigin ?? null,
-          warrantyPeriod: r.warrantyPeriod ? Math.floor(r.warrantyPeriod) : null,
+          warrantyPeriod: r.warrantyPeriod
+            ? Math.floor(r.warrantyPeriod)
+            : null,
           warrantyUnit: r.warrantyUnit ?? null,
           isActive: r.isActive ?? true,
           isFeatured: r.isFeatured ?? false,
@@ -463,9 +468,7 @@ export class ImportWorker {
         await dbInsert.transaction(async (tx) => {
           await tx.insert(productsInStorefront).values(productInserts);
           if (mediaInserts.length > 0) {
-            await tx
-              .insert(productImagesInStorefront)
-              .values(mediaInserts);
+            await tx.insert(productImagesInStorefront).values(mediaInserts);
           }
         });
 

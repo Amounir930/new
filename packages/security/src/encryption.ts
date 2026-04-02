@@ -6,7 +6,7 @@ import {
 } from 'node:crypto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { type EnvConfig, env } from '@apex/config/server';
-import { ConfigService } from '@apex/config/service';
+import type { ConfigService } from '@apex/config/service';
 import { Injectable } from '@nestjs/common';
 
 export interface EncryptedData {
@@ -178,7 +178,9 @@ function getStandaloneService(key?: string): EncryptionService {
     get: <K extends keyof EnvConfig>(k: K): EnvConfig[K] => {
       const val = values[k];
       if (val === undefined) {
-        throw new Error(`S1 Violation: Missing key ${String(k)} in standalone config`);
+        throw new Error(
+          `S1 Violation: Missing key ${String(k)} in standalone config`
+        );
       }
       return val as EnvConfig[K];
     },

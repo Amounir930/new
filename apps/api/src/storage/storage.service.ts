@@ -1,10 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { env } from '@apex/config/server';
 import {
   CreateBucketCommand,
   HeadBucketCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { env } from '@apex/config/server';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class StorageService {
@@ -24,7 +24,9 @@ export class StorageService {
     });
 
     if (!env.MINIO_ACCESS_KEY || !env.MINIO_SECRET_KEY) {
-      this.logger.error('S1 VIOLATION: MinIO credentials missing in environment.');
+      this.logger.error(
+        'S1 VIOLATION: MinIO credentials missing in environment.'
+      );
     }
   }
 
@@ -52,24 +54,37 @@ export class StorageService {
     } catch (err: any) {
       // 2. If 404, we must provision (Active Healing)
       if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
-        this.logger.warn(`Infrastructure Drift: Bucket "${bucketName}" not found. Provisioning now...`);
-        
+        this.logger.warn(
+          `Infrastructure Drift: Bucket "${bucketName}" not found. Provisioning now...`
+        );
+
         try {
-          await this.s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
+          await this.s3Client.send(
+            new CreateBucketCommand({ Bucket: bucketName })
+          );
           this.provisionedBuckets.add(bucketName);
-          this.logger.log(`Active Healing: Bucket "${bucketName}" successfully provisioned.`);
+          this.logger.log(
+            `Active Healing: Bucket "${bucketName}" successfully provisioned.`
+          );
         } catch (createErr: any) {
           // Handle race conditions: if another request created it simultaneously
-          if (createErr.name === 'BucketAlreadyOwnedByYou' || createErr.name === 'BucketAlreadyExists') {
+          if (
+            createErr.name === 'BucketAlreadyOwnedByYou' ||
+            createErr.name === 'BucketAlreadyExists'
+          ) {
             this.provisionedBuckets.add(bucketName);
             return;
           }
-          this.logger.error(`Critical Infrastructure Failure: Could not create bucket "${bucketName}": ${createErr.message}`);
+          this.logger.error(
+            `Critical Infrastructure Failure: Could not create bucket "${bucketName}": ${createErr.message}`
+          );
           throw createErr;
         }
       } else {
         // Unexpected error (Permission/Network)
-        this.logger.error(`Storage Error: Pre-flight check for "${bucketName}" failed: ${err.message}`);
+        this.logger.error(
+          `Storage Error: Pre-flight check for "${bucketName}" failed: ${err.message}`
+        );
         throw err;
       }
     }

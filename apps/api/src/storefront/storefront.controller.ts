@@ -29,7 +29,11 @@ import type {
 } from './dto/cart.dto';
 import type { NewsletterSubscriptionDto } from './dto/newsletter.dto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { StorefrontService, type ProductWithVariants, type RelatedProduct } from './storefront.service';
+import {
+  type ProductWithVariants,
+  type RelatedProduct,
+  StorefrontService,
+} from './storefront.service';
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),

@@ -240,7 +240,7 @@ export class OrphanMediaCleanupCron {
         await db
           .delete(productsInStorefront)
           .where(eq(productsInStorefront.id, draft.id));
-        
+
         try {
           await deletePrefix(subdomain, 'public/products/' + draft.id);
         } catch (e) {
@@ -273,4 +273,3 @@ export class OrphanMediaCleanupCron {
     });
   }
 }
-

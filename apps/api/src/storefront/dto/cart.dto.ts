@@ -2,8 +2,8 @@ import {
   AddToCartSchema,
   CartSyncSchema,
   RemoveCartItemSchema,
-  StockCheckSchema,
   StockCheckItemSchema,
+  StockCheckSchema,
   UpdateCartItemSchema,
 } from '@apex/validation';
 import { createZodDto } from 'nestjs-zod';
