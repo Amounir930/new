@@ -20,12 +20,12 @@
     "typecheck": "bun x tsc --noEmit"
   },
   "dependencies": {
-    "@nestjs/common": "10.4.16",
-    "zod": "^3.22.4"
+    "@nestjs/common": "11.1.17",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.3.3",
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2",
     "bun-types": "latest"
   }
 }
