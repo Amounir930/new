@@ -5,7 +5,7 @@ import {
   randomBytes,
 } from 'node:crypto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
-import { type EnvConfig, env } from '@apex/config';
+import { type EnvConfig, env } from '@apex/config/server';
 import { ConfigService } from '@apex/config/service';
 import { Injectable } from '@nestjs/common';
 

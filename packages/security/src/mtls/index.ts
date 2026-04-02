@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { createServer, type Server, type ServerOptions } from 'node:https';
 import { join } from 'node:path';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 
 export interface MTLSConfig {
   /** Path to CA certificate */

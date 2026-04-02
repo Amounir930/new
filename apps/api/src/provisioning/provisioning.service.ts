@@ -1,6 +1,6 @@
 import { AuditService } from '@apex/audit';
 import { AuthService } from '@apex/auth';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import {
   adminDb,
   and,

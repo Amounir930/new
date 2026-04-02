@@ -17,7 +17,7 @@ interface AddToCartButtonProps {
 
 /**
  * 🛒 THE OPTIMISTIC "ADD TO BAG" ENGINE
- * 
+ *
  * Features:
  * 1. Validation Guard: Block if variants not selected.
  * 2. Pre-flight Check: Verify stock before opening cart.
@@ -53,7 +53,7 @@ export function AddToCartButton({
         setIsAdding(false);
         return;
       }
-      
+
       // Stock Pre-flight
       const stockResult = await checkStock(tenantId, [
         { productId, variantId, quantity },
@@ -68,9 +68,9 @@ export function AddToCartButton({
 
       // Optimistic Cart Sync
       await cart.addItem(productId, variantId, quantity);
-      
+
       toast.success('Successfully added to your bag!');
-      
+
       // Dynamic Cart Feedback
       if (!cart.isOpen) {
         setTimeout(() => cart.toggleCart(), 300);
@@ -81,7 +81,15 @@ export function AddToCartButton({
     } finally {
       setIsAdding(false);
     }
-  }, [productId, variantId, quantity, isSelectionComplete, isAdding, cart, onDisabledClick]);
+  }, [
+    productId,
+    variantId,
+    quantity,
+    isSelectionComplete,
+    isAdding,
+    cart,
+    onDisabledClick,
+  ]);
 
   return (
     <button
@@ -106,14 +114,31 @@ export function AddToCartButton({
       {/* Premium Loader Overlay */}
       {isAdding && (
         <span className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[2px]">
-          <svg className="animate-spin h-6 w-6 text-white" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <svg
+            className="animate-spin h-6 w-6 text-white"
+            viewBox="0 0 24 24"
+            fill="none"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
         </span>
       )}
 
-      <span className={`flex items-center gap-3 ${isAdding ? 'opacity-0' : 'opacity-100'}`}>
+      <span
+        className={`flex items-center gap-3 ${isAdding ? 'opacity-0' : 'opacity-100'}`}
+      >
         {!isSelectionComplete ? 'Complete Selection' : 'Add to Bag'}
         <svg
           className="w-5 h-5"
@@ -150,9 +175,17 @@ export function StockBadge({
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <span className={`flex h-2 w-2 rounded-full ${isOut ? 'bg-red-500' : isLow ? 'bg-amber-400' : 'bg-emerald-500'}`} />
-      <span className={`text-xs font-black uppercase tracking-tighter ${isOut ? 'text-red-500' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
-        {isOut ? 'Sold Out' : isLow ? `Only ${availableStock} Left` : 'Available to ship'}
+      <span
+        className={`flex h-2 w-2 rounded-full ${isOut ? 'bg-red-500' : isLow ? 'bg-amber-400' : 'bg-emerald-500'}`}
+      />
+      <span
+        className={`text-xs font-black uppercase tracking-tighter ${isOut ? 'text-red-500' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}
+      >
+        {isOut
+          ? 'Sold Out'
+          : isLow
+            ? `Only ${availableStock} Left`
+            : 'Available to ship'}
       </span>
     </div>
   );

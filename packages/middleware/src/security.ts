@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { Injectable, Logger, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 

@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { ImgproxyService } from '@apex/media';
 
 const key = env.IMGPROXY_KEY;

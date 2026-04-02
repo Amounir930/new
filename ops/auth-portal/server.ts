@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { serve } from 'bun';
 
 const PORT = 8080;

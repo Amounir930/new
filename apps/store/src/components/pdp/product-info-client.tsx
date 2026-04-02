@@ -1,9 +1,15 @@
 'use client';
 
-import { useProductOptions, ProductVariant } from '@/hooks/useProductOptions';
-import { VariantSelector } from '@/components/pdp/variant-selector';
-import { AddToCartButton, StockBadge } from '@/components/pdp/add-to-cart-button';
 import { useMemo } from 'react';
+import {
+  AddToCartButton,
+  StockBadge,
+} from '@/components/pdp/add-to-cart-button';
+import { VariantSelector } from '@/components/pdp/variant-selector';
+import {
+  type ProductVariant,
+  useProductOptions,
+} from '@/hooks/useProductOptions';
 
 interface ProductInfoClientProps {
   product: {
@@ -38,7 +44,9 @@ export function ProductInfoClient({ product }: ProductInfoClientProps) {
         Number(selectedVariant.compareAtPrice) > Number(selectedVariant.price)
       );
     }
-    return product.salePrice && Number(product.salePrice) < Number(product.basePrice);
+    return (
+      product.salePrice && Number(product.salePrice) < Number(product.basePrice)
+    );
   }, [selectedVariant, product]);
 
   const compareAtPrice = useMemo(() => {
@@ -48,11 +56,15 @@ export function ProductInfoClient({ product }: ProductInfoClientProps) {
 
   const availableStock = useMemo(() => {
     if (selectedVariant) {
-      return (selectedVariant.inventory?.available || 0) - (selectedVariant.inventory?.reserved || 0);
+      return (
+        (selectedVariant.inventory?.available || 0) -
+        (selectedVariant.inventory?.reserved || 0)
+      );
     }
     // Aggregate stock for all variants if none selected?
     return product.variants.reduce(
-      (acc, v) => acc + (v.inventory?.available || 0) - (v.inventory?.reserved || 0),
+      (acc, v) =>
+        acc + (v.inventory?.available || 0) - (v.inventory?.reserved || 0),
       0
     );
   }, [selectedVariant, product.variants]);
@@ -103,25 +115,41 @@ export function ProductInfoClient({ product }: ProductInfoClientProps) {
           minOrderQty={product.minOrderQty}
           className="w-full"
         />
-        
+
         {/* Trust Messaging */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
                 <path d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Secure Assets</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              Secure Assets
+            </span>
           </div>
           {product.isReturnable && (
             <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-50 flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                >
                   <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Free Returns</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                Free Returns
+              </span>
             </div>
           )}
         </div>

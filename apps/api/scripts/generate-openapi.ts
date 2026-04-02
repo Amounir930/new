@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 
 // 🛡️ S1 Compliance: Enforce environment variables only.
 // No hardcoded mock secrets allowed in source control.

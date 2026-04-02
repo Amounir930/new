@@ -8,7 +8,7 @@ interface RequestWithLogger extends AuthenticatedRequest {
   auditTenantId?: string;
 }
 
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { eq, tenantConfigInStorefront } from '@apex/db';
 import {
   RedisRateLimitStore,

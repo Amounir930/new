@@ -1,4 +1,4 @@
-import type { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config/server';
 import { type ExecutionContext, HttpException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { createClient } from 'redis';

@@ -36,7 +36,8 @@ interface ProductPageProps {
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
   const tenantId = await extractTenantFromHost();
 
   if (!tenantId) return { title: 'Store Not Found' };
@@ -45,10 +46,16 @@ export async function generateMetadata({
   if (!product) return { title: 'Product Not Found' };
 
   const nameObj = product.name as LocalizedField;
-  const name = typeof nameObj === 'object' ? nameObj.en || nameObj.ar : String(product.name);
-  
+  const name =
+    typeof nameObj === 'object'
+      ? nameObj.en || nameObj.ar
+      : String(product.name);
+
   const descObj = product.shortDescription as LocalizedField;
-  const desc = typeof descObj === 'object' ? descObj.en || '' : String(product.shortDescription || '');
+  const desc =
+    typeof descObj === 'object'
+      ? descObj.en || ''
+      : String(product.shortDescription || '');
 
   return {
     title: `${name} | Official Store`,
@@ -66,7 +73,8 @@ export async function generateMetadata({
 // MAIN PDP (SERVER COMPONENT)
 // ═══════════════════════════════════════════════════════════════
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { slug } = await params;
+  const resolvedParams = await params;
+  const { slug } = resolvedParams;
   const tenantId = await extractTenantFromHost();
 
   if (!tenantId) notFound();
@@ -83,22 +91,35 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) notFound();
 
   const nameObj = product.name as LocalizedField;
-  const productName = typeof nameObj === 'object' ? nameObj.en || nameObj.ar : String(product.name);
-  
+  const productName =
+    typeof nameObj === 'object'
+      ? nameObj.en || nameObj.ar
+      : String(product.name);
+
   const shortDescObj = product.shortDescription as LocalizedField;
-  const shortDesc = typeof shortDescObj === 'object' ? shortDescObj.ar || shortDescObj.en : String(product.shortDescription || '');
-  
+  const shortDesc =
+    typeof shortDescObj === 'object'
+      ? shortDescObj.ar || shortDescObj.en
+      : String(product.shortDescription || '');
+
   const longDescObj = product.longDescription as LocalizedField;
-  const longDesc = typeof longDescObj === 'object' ? longDescObj.ar || longDescObj.en : String(product.longDescription || '');
+  const longDesc =
+    typeof longDescObj === 'object'
+      ? longDescObj.ar || longDescObj.en
+      : String(product.longDescription || '');
 
   return (
     <div className="bg-white min-h-screen">
       <main className="container mx-auto px-4 py-8 lg:py-16">
         {/* Navigation Breadcrumbs */}
         <nav className="mb-12 flex items-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-          <a href="/" className="hover:text-black transition-colors">Home</a>
+          <a href="/" className="hover:text-black transition-colors">
+            Home
+          </a>
           <span className="mx-4">/</span>
-          <a href="/shop" className="hover:text-black transition-colors">Curated Shop</a>
+          <a href="/shop" className="hover:text-black transition-colors">
+            Curated Shop
+          </a>
           <span className="mx-4">/</span>
           <span className="text-black truncate">{productName}</span>
         </nav>
@@ -120,11 +141,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
             {/* Thumbnail Loop */}
             {product.galleryImages?.length > 0 && (
               <div className="mt-8 flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-                {product.galleryImages.map((img: { url: string }, idx: number) => (
-                  <div key={idx} className="relative w-28 h-28 aspect-square flex-shrink-0 rounded-2xl overflow-hidden ring-1 ring-gray-100 transition-all hover:ring-black cursor-pointer">
-                    <Image src={img.url} alt={productName || 'Product Image'} fill className="object-cover" sizes="112px" />
-                  </div>
-                ))}
+                {product.galleryImages.map(
+                  (img: { url: string }, idx: number) => (
+                    <div
+                      key={img.url}
+                      className="relative w-28 h-28 aspect-square flex-shrink-0 rounded-2xl overflow-hidden ring-1 ring-gray-100 transition-all hover:ring-black cursor-pointer"
+                    >
+                      <Image
+                        src={img.url}
+                        alt={productName || 'Product Image'}
+                        fill
+                        className="object-cover"
+                        sizes="112px"
+                      />
+                    </div>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -155,7 +187,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 id: product.id,
                 basePrice: product.basePrice,
                 salePrice: product.salePrice,
-                variants: (product.variants || []) as import('@/hooks/useProductOptions').ProductVariant[],
+                variants: (product.variants ||
+                  []) as import('@/hooks/useProductOptions').ProductVariant[],
                 trackInventory: product.trackInventory ?? true,
                 minOrderQty: product.minOrderQty || 1,
                 isReturnable: product.isReturnable ?? true,
@@ -167,27 +200,46 @@ export default async function ProductPage({ params }: ProductPageProps) {
         {/* Bottom Sections: Details, Specs, Related, Reviews */}
         <section className="mt-24 lg:mt-32 grid grid-cols-1 lg:grid-cols-2 gap-24 border-t border-gray-100 pt-24">
           <div>
-            <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 mb-8 underline decoration-blue-500 decoration-4 underline-offset-8">Description</h2>
+            <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 mb-8 underline decoration-blue-500 decoration-4 underline-offset-8">
+              Description
+            </h2>
             <div className="prose prose-xl prose-slate max-w-none prose-headings:font-black prose-p:leading-loose text-gray-600">
-              <SafeHtmlContent html={(longDesc || '').replace(/\n/g, '<br />')} />
+              <SafeHtmlContent
+                html={(longDesc || '').replace(/\n/g, '<br />')}
+              />
             </div>
           </div>
 
           <div>
-            <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 mb-8 underline decoration-amber-400 decoration-4 underline-offset-8">Specifications</h2>
+            <h2 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 mb-8 underline decoration-amber-400 decoration-4 underline-offset-8">
+              Specifications
+            </h2>
             <dl className="grid grid-cols-1 gap-4">
-              {Object.entries(product.specifications || {}).map(([key, val]) => (
-                <div key={key} className="flex items-baseline justify-between p-6 bg-gray-50 rounded-3xl">
-                  <dt className="text-xs font-black uppercase tracking-widest text-gray-400">{key}</dt>
-                  <dd className="text-sm font-bold text-gray-900">{String(val)}</dd>
-                </div>
-              ))}
+              {Object.entries(product.specifications || {}).map(
+                ([key, val]) => (
+                  <div
+                    key={key}
+                    className="flex items-baseline justify-between p-6 bg-gray-50 rounded-3xl"
+                  >
+                    <dt className="text-xs font-black uppercase tracking-widest text-gray-400">
+                      {key}
+                    </dt>
+                    <dd className="text-sm font-bold text-gray-900">
+                      {String(val)}
+                    </dd>
+                  </div>
+                )
+              )}
             </dl>
           </div>
         </section>
 
-        <RelatedProducts tenantId={tenantId} productId={product.id} initialRelated={relatedProducts} />
-        
+        <RelatedProducts
+          tenantId={tenantId}
+          productId={product.id}
+          initialRelated={relatedProducts}
+        />
+
         <ReviewsSection
           tenantId={tenantId}
           productId={product.id}

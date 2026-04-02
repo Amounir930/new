@@ -137,7 +137,10 @@ export const serverEnvSchema = baseSchema.extend({
   TENANT_ISOLATION_MODE: z.enum(['strict', 'flexible']).default('strict'),
 
   INTERNAL_API_URL: z.string().url().default('http://api:3000/api/v1'),
-  INTERNAL_API_SECRET: z.string().min(32, 'S1: INTERNAL_API_SECRET must be 32+ chars').optional(),
+  INTERNAL_API_SECRET: z
+    .string()
+    .min(32, 'S1: INTERNAL_API_SECRET must be 32+ chars')
+    .optional(),
   BLIND_INDEX_PEPPER: z.string().default('development-pepper'),
   API_KEY_SECRET: z.string().default('development-api-key-secret'),
   WEBHOOK_SECRET: z.string().default('development-webhook-secret'),

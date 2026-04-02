@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 
 /**
  * S6.3 - Active Throttling Stress Test

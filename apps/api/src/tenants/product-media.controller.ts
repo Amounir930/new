@@ -4,7 +4,7 @@ import {
   JwtAuthGuard,
   TenantJwtMatchGuard,
 } from '@apex/auth';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { eq, productsInStorefront } from '@apex/db';
 import { requireExecutor } from '@apex/middleware';
 import {

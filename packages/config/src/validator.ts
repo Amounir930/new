@@ -6,7 +6,10 @@ const fs = (() => {
   try {
     // 🛡️ S1 Escape Hatch: Dynamic requirement to prevent Webpack static analysis.
     // This ensures that 'node:fs' is NOT bundled in Edge/Browser environments.
-    if (typeof process !== 'undefined' && process.env?.['NEXT_RUNTIME'] === 'edge') {
+    if (
+      typeof process !== 'undefined' &&
+      process.env?.['NEXT_RUNTIME'] === 'edge'
+    ) {
       return null;
     }
     const fsName = 'node:fs';
@@ -16,7 +19,8 @@ const fs = (() => {
   }
 })();
 
-import { type EnvConfig, EnvSchema } from './schema';
+import type { z } from 'zod';
+import { clientEnvSchema, type EnvConfig, EnvSchema } from './schema';
 
 /**
  * Resolves *_FILE variables into their corresponding environment values
@@ -88,33 +92,39 @@ function resolveSecretFiles() {
   return secretEnv;
 }
 
+/**
+ * 🏗️ Front-end Validation (Strictly Typed)
+ * S1: Validates ONLY NEXT_PUBLIC_* variables.
+ * Used by Edge Runtime and Client Bundles.
+ */
+export function validateClientEnv(): z.infer<typeof clientEnvSchema> {
+  const resolvedEnv = resolveSecretFiles();
+  // 🛡️ z.parse() ensures 100% type safety without coercion
+  return clientEnvSchema.parse(resolvedEnv);
+}
+
+/**
+ * 🏗️ Back-end Validation (Strictly Typed)
+ * S1: Validates the full monolithic schema (Servers + Secrets).
+ * Used by API, Workers, and Node.js Runtimes.
+ */
+export function validateServerEnv(): EnvConfig {
+  const resolvedEnv = resolveSecretFiles();
+  // 🛡️ process.env is updated only on the server side
+  Object.assign(process.env, resolvedEnv);
+
+  const result = EnvSchema.parse(resolvedEnv);
+
+  // S1 Security Gate: Mandatory Post-Parsing Checks (Military Compliance)
+  enforceProductionChecks(result);
+  enforceGenericChecks(result);
+
+  return result;
+}
+
 export function validateEnv(): EnvConfig {
-  try {
-    const resolvedEnv = resolveSecretFiles();
-    Object.assign(process.env, resolvedEnv);
-
-    const result = EnvSchema.safeParse(resolvedEnv);
-
-    if (!result.success) {
-      const messages = result.error.issues
-        .map((i) => `${i.path.join('.')}: ${i.message}`)
-        .join('\n');
-      throw new Error(`🛑 S1 VIOLATION DETECTED:\n${messages}`);
-    }
-
-    // S1 Security Gate: Mandatory Post-Parsing Checks (Military Compliance)
-    enforceGenericChecks(result.data);
-    enforceProductionChecks(result.data);
-
-    return result.data;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('🛑 S1 VIOLATION')) {
-      throw error;
-    }
-    throw new Error(
-      `🛑 S1 VIOLATION DETECTED: Unknown validation error - ${(error as Error).message}`
-    );
-  }
+  // Legacy support for index.ts internal boot, will be removed after full migration
+  return validateServerEnv();
 }
 
 function enforceProductionChecks(parsed: EnvConfig): void {
@@ -124,10 +134,6 @@ function enforceProductionChecks(parsed: EnvConfig): void {
     throw new Error(
       'S1 Violation: JWT_SECRET must be at least 32 characters in production'
     );
-  }
-
-  if (parsed.DATABASE_URL?.includes('localhost')) {
-    // Localhost check for prod
   }
 }
 
@@ -144,7 +150,7 @@ function enforceGenericChecks(parsed: EnvConfig): void {
 
 export function enforceS1Compliance(): void {
   try {
-    validateEnv();
+    validateServerEnv();
   } catch (error) {
     console['warn']('❌ CRITICAL: S1 Protocol Violation');
     console['warn'](error instanceof Error ? error.message : 'Unknown error');

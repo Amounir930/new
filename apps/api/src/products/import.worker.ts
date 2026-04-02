@@ -5,7 +5,7 @@ import path from 'node:path';
 import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { type InferInsertModel, inArray } from 'drizzle-orm';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import {
   getTenantDb,
   productImagesInStorefront,

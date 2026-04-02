@@ -24,7 +24,9 @@ function getProductPrice(price: number | string): number {
 export function ProductCard({ product }: { product: Product }) {
   const productName = getProductName(product.name);
   const productPrice = getProductPrice(product.price);
-  const compareAtPrice = product.compareAtPrice ? getProductPrice(product.compareAtPrice) : undefined;
+  const compareAtPrice = product.compareAtPrice
+    ? getProductPrice(product.compareAtPrice)
+    : undefined;
   const hasSale = compareAtPrice && compareAtPrice > productPrice;
 
   return (

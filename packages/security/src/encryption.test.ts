@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 // Restore any lingering mocks from previous test files (e.g., seeder.test.ts)
 mock.restore();
 
-import type { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config/server';
 import type { Mocked } from '@apex/test-utils';
 import {
   type EncryptedData,

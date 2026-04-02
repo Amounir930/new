@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { adminDb, eq, tenantsInGovernance } from '@apex/db';
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';

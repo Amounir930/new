@@ -9,7 +9,7 @@ import {
   JwtAuthGuard,
   SuperAdminGuard,
 } from '@apex/auth';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import {
   Body,
   Controller,

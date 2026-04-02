@@ -5,7 +5,7 @@
  */
 
 import { type EnvConfig, EnvSchema } from './schema';
-import { enforceS1Compliance, validateEnv } from './validator';
+import { validateEnv } from './validator';
 
 export * from './schema';
 export * from './validator';

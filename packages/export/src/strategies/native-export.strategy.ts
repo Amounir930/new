@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { Injectable, Logger } from '@nestjs/common';
 import type {
   ExportManifest,

@@ -16,7 +16,10 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./*"],
-      "@apex/provisioning/client": ["./packages/provisioning/src/client.ts"],
+      "@apex/config/client": ["./packages/config/src/client.ts"],
+      "@apex/config/server": ["./packages/config/src/server.ts"],
+      "@apex/config/service": ["./packages/config/src/config.service.ts"],
+      "@apex/config": ["./packages/config/src/index.ts"],
       "@apex/*": ["./packages/*/src"]
     }
   },

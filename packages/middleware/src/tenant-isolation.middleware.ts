@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { adminDb, eq, SYSTEM_TENANT_ID, tenantsInGovernance } from '@apex/db';
 import {
   type CanActivate,

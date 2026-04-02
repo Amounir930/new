@@ -3,7 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
-import type { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config/server';
 import { MockFactory } from '@apex/test-utils';
 import { UnauthorizedException } from '@nestjs/common';
 import type { JwtPayload } from '../auth.service';

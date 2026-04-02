@@ -1,7 +1,5 @@
 'use client';
 
-import { useMemo } from 'react';
-
 export interface OptionValue {
   value: string;
   isAvailable: boolean;
@@ -22,7 +20,7 @@ interface VariantSelectorProps {
 
 /**
  * ── VARIANT SELECTOR (SWATCHES & PILLS) ──
- * 
+ *
  * Features:
  * 1. Automatic Swatch/Pill Detection: If option name is 'Color', use swatches.
  * 2. Visual Strikethrough for out-of-stock items.
@@ -56,7 +54,11 @@ interface OptionGroupProps {
   onSelect: (val: string) => void;
 }
 
-function OptionGroup({ optionType, selectedOption, onSelect }: OptionGroupProps) {
+function OptionGroup({
+  optionType,
+  selectedOption,
+  onSelect,
+}: OptionGroupProps) {
   const isColor = optionType.name.toLowerCase() === 'color';
 
   return (
@@ -72,7 +74,11 @@ function OptionGroup({ optionType, selectedOption, onSelect }: OptionGroupProps)
         )}
       </div>
 
-      <div className="flex flex-wrap gap-3" role="radiogroup" aria-label={`Select ${optionType.name}`}>
+      <div
+        className="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-label={`Select ${optionType.name}`}
+      >
         {optionType.values.map((opt) => {
           const isSelected = selectedOption === opt.value;
           const isDisabled = !opt.isCompatible;
@@ -177,7 +183,9 @@ function Pill({
         ${isSelected ? 'border-black bg-black text-white shadow-xl -translate-y-0.5' : ''}
       `}
     >
-      <span className={isOutOfStock ? 'line-through decoration-red-400/50' : ''}>
+      <span
+        className={isOutOfStock ? 'line-through decoration-red-400/50' : ''}
+      >
         {label}
       </span>
       {isOutOfStock && (

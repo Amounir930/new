@@ -11,7 +11,7 @@
  *  - Protocol B6: No synchronous blocking calls
  */
 
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import {
   adminDb,
   and,

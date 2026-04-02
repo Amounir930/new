@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 
 @Injectable()
 export class CloudflareService {

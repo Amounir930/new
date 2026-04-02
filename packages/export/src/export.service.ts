@@ -9,7 +9,7 @@
 import { randomUUID } from 'node:crypto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import (S1-S15 Compliance)
 import { AuditService } from '@apex/audit';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import {
   Inject,
   Injectable,

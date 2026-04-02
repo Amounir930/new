@@ -1,13 +1,14 @@
+import { env } from '@apex/config';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { env } from '@apex/config';
 
 /**
  * 🛡️ S5 Protocol: Internal Error Masking
  * Prevents raw backend stack traces or messages from leaking to the frontend.
  */
-function maskInternalError(tenant: string, error: unknown) {
+function maskInternalError(tenant: string, _error: unknown) {
   // S4: Log internally for forensics (Not visible to Browser/Client)
+  console['error'](`[S5-FORENSICS] Tenant: ${tenant} | Error:`, _error);
   // Mask the message for the response
   return `[S5-SHIELD] Internal Processing Error for tenant: ${tenant}. Please contact support with Ref: ${crypto.randomUUID().slice(0, 8)}`;
 }

@@ -4,7 +4,7 @@ import {
   JwtAuthGuard,
   TenantJwtMatchGuard,
 } from '@apex/auth';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {

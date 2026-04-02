@@ -7,7 +7,7 @@ import {
   type Mock,
   mock,
 } from 'bun:test';
-import type { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config/server';
 import { type Mocked, MockFactory } from '@apex/test-utils';
 import { createClient, type RedisClientType } from 'redis';
 import { RedisRateLimitStore } from './redis-rate-limit-store';

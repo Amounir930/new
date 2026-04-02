@@ -4,7 +4,7 @@ import {
   HeadBucketCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 
 @Injectable()
 export class StorageService {

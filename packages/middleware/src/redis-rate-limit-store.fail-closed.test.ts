@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from 'bun:test';
-import type { ConfigService } from '@apex/config';
+import type { ConfigService } from '@apex/config/server';
 import { MockFactory } from '@apex/test-utils';
 import type { HttpException } from '@nestjs/common';
 import { RedisRateLimitStore } from './redis-rate-limit-store';

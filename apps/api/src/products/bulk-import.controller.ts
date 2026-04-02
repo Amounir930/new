@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import { AuditLog } from '@apex/audit';
 import {
   type AuthenticatedRequest,

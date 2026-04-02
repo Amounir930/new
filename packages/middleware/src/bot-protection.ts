@@ -4,7 +4,7 @@
  * Purpose: Block known bot User-Agents and detect malicious automated patterns
  */
 
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import {
   ForbiddenException,
   Injectable,

@@ -1,4 +1,4 @@
-import { env } from '@apex/config';
+import { env } from '@apex/config/server';
 import * as Minio from 'minio';
 
 // Define types inline since types.ts doesn't exist
