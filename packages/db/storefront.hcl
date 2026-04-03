@@ -350,6 +350,14 @@ table "products" {
     null    = false
   }
 
+  // ROOT CAUSE FIX: attributes column was missing from Atlas HCL — every new tenant's products
+  // table was created WITHOUT this column. Must match drizzle schema.ts line 1493.
+  column "attributes" {
+    type    = jsonb
+    default = sql("'{}'::jsonb")
+    null    = false
+  }
+
   column "brand_id" {
     type = uuid
     null = true
