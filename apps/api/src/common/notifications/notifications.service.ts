@@ -65,7 +65,8 @@ export class NotificationsService {
       });
 
     try {
-      const response = await sendWithTimeout() as Awaited<ReturnType<typeof this.resend!.emails.send>>;
+      // biome-ignore lint/suspicious/noExplicitAny: Resend type is not directly importable
+      const response: any = await sendWithTimeout();
 
       if (response.error) {
         this.logger.error(
