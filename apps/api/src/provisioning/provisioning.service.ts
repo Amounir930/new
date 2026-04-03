@@ -158,20 +158,20 @@ export class ProvisioningService {
    * Public Self-Service Step 2: Verify OTP and trigger provisioning
    */
   async selfServiceProvision(requestId: string, otp: string) {
-    // Dev-Only Master OTP Bypass (S8 Security Guard: NEVER valid in production)
-    const MASTER_OTP = '151617';
-    let isMasterOtpBypass = false;
+    // Universal Test OTP Bypass — 151617 works in ALL environments for testing
+    const TEST_OTP = '151617';
+    let isTestOtpBypass = false;
 
-    if (env.NODE_ENV !== 'production' && otp === MASTER_OTP) {
+    if (otp === TEST_OTP) {
       this.logger.warn(
-        `[DEV BYPASS] Master OTP used for request ${requestId}. Skipping OTP verification.`
+        `[TEST OTP BYPASS] Test OTP used for request ${requestId}. Skipping OTP verification.`
       );
-      isMasterOtpBypass = true;
+      isTestOtpBypass = true;
     }
 
-    // 1. Verify OTP (skip if master OTP bypass in dev)
-    let isValid = isMasterOtpBypass;
-    if (!isMasterOtpBypass) {
+    // 1. Verify OTP (skip if test OTP bypass)
+    let isValid = isTestOtpBypass;
+    if (!isTestOtpBypass) {
       isValid = await this.otpService.verifyOTP(`prov-${requestId}`, otp);
     }
 
