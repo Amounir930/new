@@ -159,7 +159,30 @@ http:
       tls:
         certResolver: letsencrypt
 
-    # Traefik Dashboard (Docker label-based router — no duplicate static definition)
+    # Traefik Dashboard (static router since Docker provider is disabled)
+    traefik-https:
+      rule: "Host(`traefik.60sec.shop`)"
+      priority: 6000
+      entryPoints:
+        - websecure
+      service: traefik-dashboard-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - apex-basic-auth@file
+
+    # Database Management UI (Adminer) — static router since Docker provider is disabled
+    db-https:
+      rule: "Host(`db.60sec.shop`)"
+      priority: 5000
+      entryPoints:
+        - websecure
+      service: db-adminer-svc
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - apex-cf-allowlist@file
+        - apex-basic-auth@file
 
     # Storefront (Main & Subdomains) - Low Priority
     store-http:
@@ -202,6 +225,16 @@ http:
       loadBalancer:
         servers:
           - url: "http://apex-minio:9001"
+    # Traefik internal dashboard (api@internal)
+    traefik-dashboard-svc:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:8080"
+    # Adminer database UI
+    db-adminer-svc:
+      loadBalancer:
+        servers:
+          - url: "http://apex-adminer:8080"
     store-svc:
       loadBalancer:
         servers:
