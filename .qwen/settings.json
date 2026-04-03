@@ -7,7 +7,11 @@
       "Bash(ssh *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(node *)",
+      "Bash(del *)",
+      "Bash(findstr *)",
+      "Bash(git log *)"
     ]
   },
   "$version": 3
