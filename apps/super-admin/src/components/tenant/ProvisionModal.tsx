@@ -129,9 +129,10 @@ export function ProvisionModal({
     } catch (e: unknown) {
       if (e instanceof ApiError && e.data?.validationErrors) {
         const vErrors = e.data.validationErrors;
-        vErrors.forEach((err: { path?: string[]; message: string }) => {
-          const fieldName = err.path?.[0];
-          if (fieldName) {
+        vErrors.forEach((err: { path?: string; message: string }) => {
+          // Backend sends path as dot-joined string (e.g., "password"), not array
+          const fieldName = err.path?.split('.')[0];
+          if (fieldName && fieldName in errors) {
             setError(fieldName as keyof ProvisionFormValues, {
               type: 'server',
               message: err.message,
@@ -370,11 +371,10 @@ export function ProvisionModal({
               <Button
                 type="submit"
                 disabled={loading || !isValid}
-                className={`relative overflow-hidden transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 ${
-                  !isValid
+                className={`relative overflow-hidden transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 ${!isValid
                     ? 'opacity-50 grayscale cursor-not-allowed'
                     : 'hover:scale-[1.02] active:scale-[0.98]'
-                }`}
+                  }`}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <span className="relative z-10">

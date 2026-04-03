@@ -159,44 +159,7 @@ http:
       tls:
         certResolver: letsencrypt
 
-    # Database (Adminer)
-    db-http:
-      rule: "Host(`db.60sec.shop`)"
-      priority: 100
-      entryPoints:
-        - web
-      service: db-svc
-    db-https:
-      rule: "Host(`db.60sec.shop`)"
-      priority: 100
-      entryPoints:
-        - websecure
-      service: db-svc
-      tls:
-        certResolver: letsencrypt
-      middlewares:
-        - apex-cf-allowlist@file
-        - apex-basic-auth@file
-
-    # Traefik Dashboard
-    traefik-http:
-      rule: "Host(`traefik.60sec.shop`)"
-      priority: 100
-      entryPoints:
-        - web
-      service: traefik-svc
-      middlewares:
-        - apex-dash-redirect@file
-    traefik-https:
-      rule: "Host(`traefik.60sec.shop`)"
-      priority: 100
-      entryPoints:
-        - websecure
-      service: traefik-svc
-      tls:
-        certResolver: letsencrypt
-      middlewares:
-        - apex-basic-auth@file
+    # Traefik Dashboard (Docker label-based router — no duplicate static definition)
 
     # Storefront (Main & Subdomains) - Low Priority
     store-http:
@@ -239,14 +202,6 @@ http:
       loadBalancer:
         servers:
           - url: "http://apex-minio:9001"
-    db-svc:
-      loadBalancer:
-        servers:
-          - url: "http://apex-adminer:8080"
-    traefik-svc:
-      loadBalancer:
-        servers:
-          - url: "http://apex-traefik-v2:8080"
     store-svc:
       loadBalancer:
         servers:

@@ -12,7 +12,13 @@ const ProvisioningSchema = z.object({
   username: z.string().min(3).max(50).regex(/^[a-z0-9_-]+$/, 'Username can only contain lowercase letters, numbers, hyphens, and underscores.'),
   storeName: z.string().min(2).max(100, 'Store name is required'),
   email: z.string().email('Valid email is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters long'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[@$!%*?&]/, 'Password must contain at least one special character (@$!%*?&)'),
   confirmPassword: z.string(),
   plan: z.enum(['free', 'pro'], { errorMap: () => ({ message: 'Please select a plan' }) }),
   category: z.string().min(1, 'Please select a store category'),
@@ -69,7 +75,12 @@ export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningMo
       });
       const result = await res.json();
 
-      if (!res.ok) throw new Error(result.message || 'Failed to initialize request');
+      if (!res.ok) {
+        // Extract human-readable error from validationErrors array
+        const fieldError = result.validationErrors?.find((e: { path?: string }) => e.path?.includes('password'));
+        const humanMessage = fieldError?.message || result.message || 'Failed to initialize request';
+        throw new Error(humanMessage);
+      }
 
       setRequestId(result.requestId);
       setStep(2);
@@ -90,7 +101,11 @@ export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningMo
       });
       const result = await res.json();
 
-      if (!res.ok) throw new Error(result.message || 'Failed to verify code');
+      if (!res.ok) {
+        const fieldError = result.validationErrors?.find((e: { path?: string }) => e.path?.includes('otp'));
+        const humanMessage = fieldError?.message || result.message || 'Failed to verify code';
+        throw new Error(humanMessage);
+      }
 
       onSuccess({
         storeName: watch('storeName'),
