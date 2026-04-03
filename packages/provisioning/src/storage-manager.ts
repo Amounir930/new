@@ -163,23 +163,11 @@ async function setupBucket(
   plan: string,
   subdomain: string
 ): Promise<void> {
-  // 🛡️ Protocol Delta: Use interface extension to workaround broken SDK type definitions safely
+  // 🛡️ Protocol Delta: Use interface extension for MinIO methods not in the type definitions
   interface PatchedMinioClient extends Minio.Client {
     setBucketTagging(
       bucketName: string,
       tags: Record<string, string>
-    ): Promise<void>;
-    setBucketCors(
-      bucketName: string,
-      corsConfig: {
-        CORSRules: Array<{
-          AllowedHeaders?: string[];
-          AllowedMethods?: string[];
-          AllowedOrigins?: string[];
-          ExposeHeaders?: string[];
-          MaxAgeSeconds?: number;
-        }>;
-      }
     ): Promise<void>;
     setBucketLifecycle(
       bucketName: string,
@@ -195,26 +183,73 @@ async function setupBucket(
   const policy = await getPublicReadPolicy(bucketName);
   await client.setBucketPolicy(bucketName, JSON.stringify(policy));
 
-  // 2.5 Set CORS policy (S8 Mandate)
+  // 2.5 S8 Mandate: Set CORS policy via MinIO XML API
+  // FIX: minio package has no setBucketCors() method in its TypeScript API.
+  // MinIO supports the S3 PutBucketCors XML endpoint — we call it via fetch using
+  // presigned URL approach via the internal MinIO hostname.
   try {
-    const corsConfig = {
-      CORSRules: [
-        {
-          AllowedHeaders: ['*'],
-          AllowedMethods: ['GET', 'PUT', 'POST', 'DELETE', 'HEAD'],
-          AllowedOrigins: [
-            'https://admin.60sec.shop',
-            `https://${subdomain}.${env.APP_ROOT_DOMAIN}`,
-          ],
-          ExposeHeaders: ['ETag'],
-          MaxAgeSeconds: 3000,
-        },
-      ],
+    const corsXml = [
+      '<CORSConfiguration>',
+      '<CORSRule>',
+      '<AllowedOrigin>https://admin.60sec.shop</AllowedOrigin>',
+      `<AllowedOrigin>https://${subdomain}.${env.APP_ROOT_DOMAIN || '60sec.shop'}</AllowedOrigin>`,
+      '<AllowedMethod>GET</AllowedMethod>',
+      '<AllowedMethod>PUT</AllowedMethod>',
+      '<AllowedMethod>POST</AllowedMethod>',
+      '<AllowedMethod>DELETE</AllowedMethod>',
+      '<AllowedMethod>HEAD</AllowedMethod>',
+      '<AllowedHeader>*</AllowedHeader>',
+      '<ExposeHeader>ETag</ExposeHeader>',
+      '<MaxAgeSeconds>3000</MaxAgeSeconds>',
+      '</CORSRule>',
+      '</CORSConfiguration>',
+    ].join('');
+
+    // Use minio's internal presigned URL mechanism to build a signed PUT ?cors request
+    const xmlBuffer = Buffer.from(corsXml, 'utf-8');
+    const md5 = require('node:crypto')
+      .createHash('md5')
+      .update(xmlBuffer)
+      .digest('base64');
+
+    // MinIO client exposes makeRequest internally; type-cast to access it
+    const internalClient = client as Minio.Client & {
+      makeRequest(
+        opts: Record<string, unknown>,
+        payload: Buffer,
+        statusCodes: number[],
+        region: string,
+        returnResponse: boolean,
+        cb: (err: Error | null, res?: unknown) => void
+      ): void;
     };
-    await patchedClient.setBucketCors(bucketName, corsConfig);
+
+    await new Promise<void>((resolve, reject) => {
+      internalClient.makeRequest(
+        {
+          method: 'PUT',
+          bucketName,
+          query: 'cors',
+          headers: {
+            'Content-MD5': md5,
+            'Content-Type': 'application/xml',
+            'Content-Length': xmlBuffer.length,
+          },
+        },
+        xmlBuffer,
+        [200],
+        '',
+        false,
+        (err) => {
+          if (err) return reject(err);
+          resolve();
+        }
+      );
+    });
+    logger.info(`S8: CORS policy applied successfully for bucket ${bucketName}`);
   } catch (corsError) {
     logger.error(`S8 Warning: Failed to set CORS for bucket ${bucketName}`, {
-      corsError,
+      corsError: corsError instanceof Error ? corsError.message : String(corsError),
     });
   }
 
