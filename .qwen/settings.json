@@ -11,7 +11,8 @@
       "Bash(node *)",
       "Bash(del *)",
       "Bash(findstr *)",
-      "Bash(git log *)"
+      "Bash(git log *)",
+      "Bash(tr *)"
     ]
   },
   "$version": 3
