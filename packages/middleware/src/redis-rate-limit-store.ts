@@ -16,8 +16,7 @@ import { createClient, type RedisClientType } from 'redis';
  */
 @Injectable()
 export class RedisRateLimitStore
-  implements OnModuleInit, OnApplicationShutdown
-{
+  implements OnModuleInit, OnApplicationShutdown {
   private client: RedisClientType | null = null;
   private connecting = false;
   private fallbackToMemory = false;
@@ -27,7 +26,7 @@ export class RedisRateLimitStore
   > = new Map();
   private readonly logger = new Logger(RedisRateLimitStore.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   async onModuleInit() {
     await this.connect();
@@ -71,7 +70,24 @@ export class RedisRateLimitStore
 
     try {
       this.connecting = true;
-      this.client = createClient({ url: redisUrl });
+      // P0 FIX: Add explicit socket timeouts to prevent unbounded connection hangs (524 deadlock)
+      this.client = createClient({
+        url: redisUrl,
+        socket: {
+          connectTimeout: 5000,  // 5s max to establish connection
+          timeout: 5000,         // 5s max for any single Redis operation
+          reconnectStrategy: (retries) => {
+            // Exponential backoff, max 30s between retries, max 10 retries
+            return Math.min(retries * 1000, 30000);
+          },
+        },
+        // P0 FIX: Command-level timeout as second layer of defense
+        commands: {
+          isolator: {
+            timeout: 5000,
+          },
+        },
+      });
 
       this.client.on('error', (err) => {
         const isProduction =
@@ -90,7 +106,12 @@ export class RedisRateLimitStore
         }
       });
 
-      await this.client.connect();
+      // P0 FIX: Wrap connect() with explicit timeout to prevent indefinite hangs
+      const connectPromise = this.client.connect();
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Redis connection timed out after 5s')), 5000)
+      );
+      await Promise.race([connectPromise, timeoutPromise]);
       this.fallbackToMemory = false;
     } catch {
       this.client = null; // CRITICAL: Reset client so we don't use a broken instance

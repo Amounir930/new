@@ -36,16 +36,37 @@ export class NotificationsService {
       return true; // Simulate success
     }
 
-    try {
-      const payload = {
-        from: this.fromEmail,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-        text: options.text,
-      } as import('resend').CreateEmailOptions;
+    // P0 FIX: Promise.race timeout wrapper to prevent server deadlock (524)
+    // Resend SDK does not support AbortController, so we race against a timeout
+    const sendWithTimeout = () =>
+      new Promise<import('resend').SendEmailRequestSuccess>((resolve, reject) => {
+        const timeoutId = setTimeout(
+          () => reject(new Error('Email send timed out after 15s')),
+          15000
+        );
 
-      const response = await this.resend.emails.send(payload);
+        const payload = {
+          from: this.fromEmail,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+        } as import('resend').CreateEmailOptions;
+
+        this.resend!.emails
+          .send(payload)
+          .then((result) => {
+            clearTimeout(timeoutId);
+            resolve(result);
+          })
+          .catch((err) => {
+            clearTimeout(timeoutId);
+            reject(err);
+          });
+      });
+
+    try {
+      const response = await sendWithTimeout();
 
       if (response.error) {
         this.logger.error(
@@ -74,14 +95,14 @@ export class NotificationsService {
     } catch (error) {
       this.logger.error(`Exception while sending email to ${options.to}`, error);
 
-      // Dev-Only: If Resend throws, log OTP to console
+      // P0 FIX: Dev bypass on timeout/abort — extract OTP and allow flow to continue
       if (env.NODE_ENV !== 'production') {
         const otpMatch = (options.html || options.text || '').match(
           /([0-9]{6})/
         );
         if (otpMatch) {
           this.logger.warn(
-            `[DEV BYPASS] Resend exception. OTP for ${options.to}: ${otpMatch[1]}`
+            `[DEV BYPASS] Email send failed (timeout/network). OTP for ${options.to}: ${otpMatch[1]}`
           );
         }
         return true; // Simulate success in dev

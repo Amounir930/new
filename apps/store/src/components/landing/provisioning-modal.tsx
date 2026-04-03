@@ -73,6 +73,13 @@ export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningMo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+
+      // P2 FIX: Check Content-Type before parsing JSON to prevent "Unexpected token '<'" crash
+      const contentType = res.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        throw new Error(`Server error (${res.status}). Please try again later.`);
+      }
+
       const result = await res.json();
 
       if (!res.ok) {
@@ -99,6 +106,13 @@ export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningMo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId, otp: data.otp }),
       });
+
+      // P2 FIX: Check Content-Type before parsing JSON to prevent "Unexpected token '<'" crash
+      const contentType = res.headers.get('content-type');
+      if (!contentType?.includes('application/json')) {
+        throw new Error(`Server error (${res.status}). Please try again later.`);
+      }
+
       const result = await res.json();
 
       if (!res.ok) {

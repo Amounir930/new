@@ -47,12 +47,21 @@ export async function verifyTurnstileToken(token: string): Promise<boolean> {
     formData.append('secret', env.TURNSTILE_SECRET_KEY);
     formData.append('response', token);
 
-    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      body: formData,
-    });
-    const data = (await res.json()) as { success: boolean };
-    return data.success === true;
+    // P0 FIX: AbortController with 10s timeout to prevent server deadlock (524)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+      const data = (await res.json()) as { success: boolean };
+      return data.success === true;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   } catch (error) {
     Logger.error('Failed to verify Turnstile token', error);
     return false;
@@ -80,6 +89,8 @@ interface ProvisioningStep {
 @Injectable()
 export class ProvisioningService {
   private readonly logger = new Logger(ProvisioningService.name);
+  // P0 FIX: Dev memory fallback for provisioning payloads when Redis is down
+  private readonly devProvDataCache = new Map<string, { payload: any; expiry: number }>();
 
   constructor(
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
@@ -105,15 +116,25 @@ export class ProvisioningService {
     const requestId = crypto.randomUUID();
     const otp = await this.otpService.generateOTP(`prov-${requestId}`);
 
-    // 3. Store payload in Redis (5 min TTL)
+    // Clean payload for storage (remove turnstile token)
+    const { turnstileToken, ...cleanPayload } = payload;
+
+    // 3. Store payload in Redis (5 min TTL) — P0 FIX: Dev memory fallback when Redis unavailable
     const client = await this.redisStore.getClient();
     if (!client) {
-      throw new InternalServerErrorException('System temporarily unavailable');
+      // P0 FIX: In dev, store in memory so flow can continue even when Redis is down
+      if (env.NODE_ENV !== 'production') {
+        this.logger.warn('[DEV BYPASS] Redis unavailable, storing provisioning payload in memory');
+        this.devProvDataCache.set(requestId, {
+          payload: cleanPayload,
+          expiry: Date.now() + 300000, // 5 min TTL
+        });
+      } else {
+        throw new InternalServerErrorException('System temporarily unavailable');
+      }
+    } else {
+      await client.setEx(`prov-data:${requestId}`, 300, JSON.stringify(cleanPayload));
     }
-
-    // Clean payload for storage
-    const { turnstileToken, ...cleanPayload } = payload;
-    await client.setEx(`prov-data:${requestId}`, 300, JSON.stringify(cleanPayload));
 
     // 4. Send OTP Email
     await this.notifications.sendEmail({
@@ -158,19 +179,30 @@ export class ProvisioningService {
       throw new BadRequestException('Invalid or expired verification code.');
     }
 
-    // 2. Fetch payload from Redis (skip deletion for master OTP bypass since OTP was never stored)
+    // 2. Fetch payload from Redis
+    // P0 FIX: Dev memory fallback when Redis is down (works with Master OTP bypass too)
     const client = await this.redisStore.getClient();
-    if (!client) {
-      throw new InternalServerErrorException('System temporarily unavailable');
+    let dataRaw: string | null = null;
+
+    if (client) {
+      dataRaw = await client.get(`prov-data:${requestId}`);
+    } else if (env.NODE_ENV !== 'production') {
+      // P0 FIX: Try memory fallback in dev when Redis is down
+      const cached = this.devProvDataCache.get(requestId);
+      if (cached && cached.expiry > Date.now()) {
+        dataRaw = JSON.stringify(cached.payload);
+        this.devProvDataCache.delete(requestId); // Clean up after use
+      }
     }
 
-    const dataRaw = await client.get(`prov-data:${requestId}`);
     if (!dataRaw) {
       throw new BadRequestException('Provisioning request expired. Please start over.');
     }
 
     const payload = JSON.parse(dataRaw);
-    await client.del(`prov-data:${requestId}`); // Clear provisioning payload
+    if (client) {
+      await client.del(`prov-data:${requestId}`); // Clear provisioning payload from Redis
+    }
 
     // 3. Re-map to internal provisioning options
     const options: ProvisioningOptions = {
