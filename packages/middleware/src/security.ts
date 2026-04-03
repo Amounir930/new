@@ -20,7 +20,9 @@ export const securityHeaders = {
     "style-src 'self' 'unsafe-inline'", // CSS inline is lower risk
     "img-src 'self' data: https:",
     "font-src 'self'",
-    "connect-src 'self' https://*.60sec.shop https://api.60sec.shop wss://localhost:*", // wss for HMR
+    `connect-src 'self' https://${env.APP_DOMAIN || '60sec.shop'} https://*.${
+      env.APP_DOMAIN || '60sec.shop'
+    } https://api.60sec.shop wss://localhost:*`, // wss for HMR
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -113,7 +115,8 @@ export const defaultCorsConfig: CorsConfig = {
 
     // Production origins (explicitly whitelisted)
     const productionOrigins = [
-      'https://super-admin.60sec.shop', // ✅ Added Super Admin UI
+      `https://${env.APP_DOMAIN || '60sec.shop'}`, // ✅ Apex Domain
+      'https://super-admin.60sec.shop',
       'https://admin.60sec.shop',
       'https://staging.60sec.shop',
       'https://api.60sec.shop',
@@ -127,8 +130,16 @@ export const defaultCorsConfig: CorsConfig = {
 
     const whitelist = [...devOrigins, ...productionOrigins, ...allowedOrigins];
 
+    // S8: Strict Anchor Regex for Apex + Subdomains
+    const rootDomain = env.APP_DOMAIN || '60sec.shop';
+    const escapedDomain = rootDomain.replace(/\./g, '\\.');
+    const domainRegex = new RegExp(
+      `^https://([a-zA-Z0-9-]+\\.)*${escapedDomain}$`,
+      'i'
+    );
+
     // S8: Strict CORS Check
-    if (whitelist.includes(origin)) {
+    if (whitelist.includes(origin) || (origin && domainRegex.test(origin))) {
       callback(null, true);
     } else {
       Logger.warn(

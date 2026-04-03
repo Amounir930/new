@@ -117,7 +117,8 @@ async function bootstrap() {
           defaultSrc: ["'none'"],
           connectSrc: [
             "'self'",
-            'https://*.60sec.shop',
+            `https://${env.APP_DOMAIN || '60sec.shop'}`,
+            `https://*.${env.APP_DOMAIN || '60sec.shop'}`,
             'https://api.60sec.shop',
           ],
           frameAncestors: ["'none'"], // Item 41: Prevent clickjacking
