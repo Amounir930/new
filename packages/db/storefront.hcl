@@ -137,6 +137,12 @@ enum "tenant_niche" {
   schema = schema.public
   values = ["retail", "wellness", "education", "services", "hospitality", "real_estate", "creative"]
 }
+// ROOT CAUSE FIX: niche_type enum was missing from Atlas HCL — every new tenant's products table
+// was created WITHOUT the niche column. This matches packages/db/drizzle/schema.ts line 1487.
+enum "niche_type" {
+  schema = schema.public
+  values = ["retail", "wellness", "education", "services", "hospitality", "real_estate", "creative", "food", "digital"]
+}
 enum "tenant_plan" {
   schema = schema.public
   values = ["free", "basic", "pro", "enterprise"]
@@ -334,6 +340,14 @@ table "products" {
   column "id" {
     type    = uuid
     default = sql("gen_random_uuid()")
+  }
+
+  // ROOT CAUSE FIX: niche column was missing from Atlas HCL — Atlas creates the products table
+  // for every new tenant WITHOUT this column. Must match drizzle schema.ts line 1491.
+  column "niche" {
+    type    = enum.niche_type
+    default = "retail"
+    null    = false
   }
 
   column "brand_id" {
