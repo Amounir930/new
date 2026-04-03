@@ -77,14 +77,8 @@ export class RedisRateLimitStore
           connectTimeout: 5000,  // 5s max to establish connection
           timeout: 5000,         // 5s max for any single Redis operation
           reconnectStrategy: (retries) => {
-            // Exponential backoff, max 30s between retries, max 10 retries
+            // Exponential backoff, max 30s between retries
             return Math.min(retries * 1000, 30000);
-          },
-        },
-        // P0 FIX: Command-level timeout as second layer of defense
-        commands: {
-          isolator: {
-            timeout: 5000,
           },
         },
       });
