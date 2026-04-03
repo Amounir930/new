@@ -64,7 +64,7 @@ export async function seedTenantData(
     const config = buildBlueprintConfig(options, template);
 
     // Note: resolveStore needs to check governance/public registry
-    const storeId = await resolveStore(tenantScopedAdminDb, options);
+    const storeId = await resolveStore(tenantScopedAdminDb, options, template);
 
     const executor = new BlueprintExecutor();
 
@@ -191,10 +191,13 @@ function buildBlueprintConfig(
 
 /**
  * Helper to resolve store record (Idempotency)
+ * RISK 2 FIX: Accept pre-resolved blueprint template to avoid redundant DB fetch.
+ * Previously called resolveTemplate() independently, causing double blueprint queries.
  */
 async function resolveStore(
   _db: NodePgDatabase<Record<string, unknown>>,
-  options: SeedOptions
+  options: SeedOptions,
+  template: BlueprintTemplate
 ): Promise<string> {
   // Check global registry first
   const [existingTenant] = await adminDb
@@ -224,8 +227,7 @@ async function resolveStore(
     })
     .returning({ id: tenantsInGovernance.id });
 
-  // 2. S21 MANDATE: Logic Isolation - Seed Quotas from Blueprint!
-  const template = await resolveTemplate(options);
+  // 2. S21 MANDATE: Logic Isolation - Seed Quotas from Blueprint (no double fetch)
   const quotas = template.quotas || {};
 
   await adminDb.insert(tenantQuotasInGovernance).values({
