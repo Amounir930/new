@@ -13,7 +13,8 @@
       "Bash(findstr *)",
       "Bash(git log *)",
       "Bash(tr *)",
-      "Bash(scp *)"
+      "Bash(scp *)",
+      "Bash(printf *)"
     ]
   },
   "$version": 3

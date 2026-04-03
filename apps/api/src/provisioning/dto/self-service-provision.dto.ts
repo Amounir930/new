@@ -17,7 +17,13 @@ export const InitProvisioningRequestSchema = z.object({
     .regex(/[0-9]/, 'Password must contain at least one number')
     .regex(/[@$!%*?&]/, 'Password must contain at least one special character (@$!%*?&)'),
   plan: z.enum(['free', 'pro']),
-  category: z.string().min(1, 'Store category is required'),
+  // RISK 3 FIX: Strict Zod Enum validation — category must mathematically match
+  // the niche_type enum required by the Blueprint resolution engine.
+  // Prevents invalid categories from causing silent blueprint resolution failures.
+  category: z.enum(
+    ['retail', 'wellness', 'education', 'services', 'hospitality', 'real_estate', 'creative', 'food', 'digital'],
+    { errorMap: () => ({ message: 'Category must be one of: retail, wellness, education, services, hospitality, real_estate, creative, food, digital' }) }
+  ),
   turnstileToken: z.string().min(1, 'Turnstile token is required'),
 });
 

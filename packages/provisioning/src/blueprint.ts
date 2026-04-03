@@ -133,6 +133,8 @@ export async function getBlueprintById(
 
 /**
  * Get default blueprint for a plan
+ * RISK 1 FIX: Removed hardcoded fallback. Now hard-fails to trigger S5 monitoring
+ * if governance DB has no active blueprints for the requested plan.
  */
 export async function getDefaultBlueprint(
   plan: 'free' | 'basic' | 'pro' | 'enterprise' = 'free'
@@ -157,21 +159,9 @@ export async function getDefaultBlueprint(
       .limit(1);
 
     if (anyBlueprint.length === 0) {
-      // 🛡️ S21 FIX: Hardcoded fallback if database is empty
-      // PENDING: Remove after initial deployment migration guarantees DB is populated
-      return {
-        id: 'hardcoded-default',
-        name: defaultBlueprintTemplate.name,
-        description: defaultBlueprintTemplate.description || null,
-        blueprint: defaultBlueprintTemplate,
-        isDefault: true,
-        plan: plan as 'free' | 'basic' | 'pro' | 'enterprise',
-        status: 'active',
-        nicheType: null,
-        uiConfig: {},
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      // RISK 1 FIX: Hard-fail instead of silent degenerate provisioning
+      // This triggers S5 monitoring and prevents quota-less tenants
+      return null;
     }
 
     const first = anyBlueprint[0];
