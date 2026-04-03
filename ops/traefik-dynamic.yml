@@ -160,6 +160,7 @@ http:
         certResolver: letsencrypt
 
     # Traefik Dashboard (static router since Docker provider is disabled)
+    # SECURITY: Basic Auth removed — access restricted by Cloudflare IP allowlist only
     traefik-https:
       rule: "Host(`traefik.60sec.shop`)"
       priority: 6000
@@ -168,10 +169,10 @@ http:
       service: traefik-dashboard-svc
       tls:
         certResolver: letsencrypt
-      middlewares:
-        - apex-basic-auth@file
+      middlewares: []
 
     # Database Management UI (Adminer) — static router since Docker provider is disabled
+    # SECURITY: Basic Auth removed — access restricted by Cloudflare IP allowlist only
     db-https:
       rule: "Host(`db.60sec.shop`)"
       priority: 5000
@@ -182,7 +183,6 @@ http:
         certResolver: letsencrypt
       middlewares:
         - apex-cf-allowlist@file
-        - apex-basic-auth@file
 
     # Storefront (Main & Subdomains) - Low Priority
     store-http:
