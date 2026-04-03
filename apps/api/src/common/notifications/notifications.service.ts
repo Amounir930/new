@@ -52,6 +52,20 @@ export class NotificationsService {
           `Failed to send email to ${options.to}: ${response.error.message}`,
           response.error
         );
+
+        // Dev-Only: If Resend fails due to unverified domain, log OTP to console
+        if (env.NODE_ENV !== 'production') {
+          const otpMatch = (options.html || options.text || '').match(
+            /([0-9]{6})/
+          );
+          if (otpMatch) {
+            this.logger.warn(
+              `[DEV BYPASS] Resend domain unverified. OTP for ${options.to}: ${otpMatch[1]}`
+            );
+          }
+          return true; // Simulate success in dev
+        }
+
         return false;
       }
 
@@ -59,6 +73,20 @@ export class NotificationsService {
       return true;
     } catch (error) {
       this.logger.error(`Exception while sending email to ${options.to}`, error);
+
+      // Dev-Only: If Resend throws, log OTP to console
+      if (env.NODE_ENV !== 'production') {
+        const otpMatch = (options.html || options.text || '').match(
+          /([0-9]{6})/
+        );
+        if (otpMatch) {
+          this.logger.warn(
+            `[DEV BYPASS] Resend exception. OTP for ${options.to}: ${otpMatch[1]}`
+          );
+        }
+        return true; // Simulate success in dev
+      }
+
       return false;
     }
   }

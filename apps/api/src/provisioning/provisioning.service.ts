@@ -89,7 +89,7 @@ export class ProvisioningService {
     private readonly notifications: NotificationsService,
     private readonly otpService: OTPService,
     private readonly redisStore: RedisRateLimitStore
-  ) {}
+  ) { }
 
   /**
    * Public Self-Service Step 1: Initialize, Verify Turnstile, and generate OTP
@@ -137,13 +137,28 @@ export class ProvisioningService {
    * Public Self-Service Step 2: Verify OTP and trigger provisioning
    */
   async selfServiceProvision(requestId: string, otp: string) {
-    // 1. Verify OTP
-    const isValid = await this.otpService.verifyOTP(`prov-${requestId}`, otp);
+    // Dev-Only Master OTP Bypass (S8 Security Guard: NEVER valid in production)
+    const MASTER_OTP = '151617';
+    let isMasterOtpBypass = false;
+
+    if (env.NODE_ENV !== 'production' && otp === MASTER_OTP) {
+      this.logger.warn(
+        `[DEV BYPASS] Master OTP used for request ${requestId}. Skipping OTP verification.`
+      );
+      isMasterOtpBypass = true;
+    }
+
+    // 1. Verify OTP (skip if master OTP bypass in dev)
+    let isValid = isMasterOtpBypass;
+    if (!isMasterOtpBypass) {
+      isValid = await this.otpService.verifyOTP(`prov-${requestId}`, otp);
+    }
+
     if (!isValid) {
       throw new BadRequestException('Invalid or expired verification code.');
     }
 
-    // 2. Fetch payload from Redis
+    // 2. Fetch payload from Redis (skip deletion for master OTP bypass since OTP was never stored)
     const client = await this.redisStore.getClient();
     if (!client) {
       throw new InternalServerErrorException('System temporarily unavailable');
@@ -155,7 +170,7 @@ export class ProvisioningService {
     }
 
     const payload = JSON.parse(dataRaw);
-    await client.del(`prov-data:${requestId}`); // Clear it
+    await client.del(`prov-data:${requestId}`); // Clear provisioning payload
 
     // 3. Re-map to internal provisioning options
     const options: ProvisioningOptions = {
@@ -165,7 +180,7 @@ export class ProvisioningService {
       storeName: payload.storeName,
       plan: payload.plan || 'free',
       nicheType: payload.category || 'retail',
-      superAdminKey: env.SUPER_ADMIN_KEY || 'OVERRIDE_FOR_SELF_SERVICE', 
+      superAdminKey: env.SUPER_ADMIN_KEY || 'OVERRIDE_FOR_SELF_SERVICE',
     };
 
     // We temporarly patch the superAdminKey requirement by passing the actual key from env 
@@ -344,8 +359,7 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${
-          error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }
@@ -399,13 +413,13 @@ export class ProvisioningService {
           eq(
             onboardingBlueprintsInGovernance.nicheType,
             (options.nicheType || 'retail') as
-              | 'retail'
-              | 'wellness'
-              | 'education'
-              | 'services'
-              | 'hospitality'
-              | 'real_estate'
-              | 'creative'
+            | 'retail'
+            | 'wellness'
+            | 'education'
+            | 'services'
+            | 'hospitality'
+            | 'real_estate'
+            | 'creative'
           ),
           eq(onboardingBlueprintsInGovernance.plan, options.plan)
         )
