@@ -37,9 +37,8 @@ export class NotificationsService {
     }
 
     // P0 FIX: Promise.race timeout wrapper to prevent server deadlock (524)
-    // Resend SDK does not support AbortController, so we race against a timeout
-    const sendWithTimeout = () =>
-      new Promise<import('resend').SendEmailRequestSuccess>((resolve, reject) => {
+    const sendWithTimeout = (): Promise<unknown> =>
+      new Promise((resolve, reject) => {
         const timeoutId = setTimeout(
           () => reject(new Error('Email send timed out after 15s')),
           15000
@@ -66,7 +65,7 @@ export class NotificationsService {
       });
 
     try {
-      const response = await sendWithTimeout();
+      const response = await sendWithTimeout() as Awaited<ReturnType<typeof this.resend!.emails.send>>;
 
       if (response.error) {
         this.logger.error(
