@@ -9,6 +9,11 @@ export const tstzrange = customType<{ data: string }>({
     return 'tstzrange';
   },
 });
+export const byteaCol = customType<{ data: Buffer }>({
+  dataType() {
+    return 'bytea';
+  },
+});
 
 import { sql } from 'drizzle-orm';
 import {
@@ -532,6 +537,65 @@ export const marketingPagesInGovernance = governance.table(
       table.pageType.asc().nullsLast().op('text_ops')
     ),
     unique('uq_marketing_slug').on(table.slug),
+  ]
+);
+
+// 🔒 GHOST TABLE MAPPING: audit_logs is RANGE-partitioned by created_at in production.
+// Drizzle does not support partitioned tables, so we map it as a standard pgTable to
+// prevent drizzle-kit from attempting to DROP it. Partitioning is managed by SQL migrations.
+export const auditLogsInGovernance = governance.table(
+  'audit_logs',
+  {
+    id: uuid().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
+      .defaultNow()
+      .notNull(),
+    severity: severityEnum().default('INFO').notNull(),
+    result: auditResultEnum().default('SUCCESS').notNull(),
+    tenantId: uuid('tenant_id').notNull(),
+    actorType: actorType().default('tenant_admin').notNull(),
+    userId: text('user_id'),
+    userEmail: jsonb('user_email'),
+    entityType: varchar('entity_type', { length: 100 }),
+    entityId: varchar('entity_id', { length: 100 }),
+    action: text().notNull(),
+    publicKey: text('public_key').notNull(),
+    encryptedKey: byteaCol('encrypted_key').notNull(),
+    version: integer().default(1).notNull(),
+    userAgent: text('user_agent'),
+    oldValues: jsonb('old_values'),
+    newValues: jsonb('new_values'),
+    metadata: jsonb(),
+    impersonatorId: uuid('impersonator_id'),
+    checksum: text(),
+  },
+  (table) => [
+    index('idx_audit_action').using('btree', table.action.asc().nullsLast().op('text_ops')),
+    index('idx_audit_created_brin').using('brin', table.createdAt.asc().nullsLast().op('timestamptz_ops')),
+    index('idx_audit_entity').using(
+      'btree',
+      table.entityType.asc().nullsLast().op('text_ops'),
+      table.entityId.asc().nullsLast().op('text_ops')
+    ),
+    index('idx_audit_tenant').using('btree', table.tenantId.asc().nullsLast().op('uuid_ops')),
+    pgPolicy('tenant_isolation_policy', {
+      as: 'permissive',
+      for: 'all',
+      to: ['public'],
+      using: sql`(tenant_id = (current_setting('app.current_tenant_id'::text))::uuid)`,
+    }),
+    check(
+      'chk_audit_email_s7',
+      sql`(user_email IS NULL) OR ((jsonb_typeof(user_email) = 'object'::text) AND (user_email ? 'enc'::text) AND (user_email ? 'iv'::text) AND (user_email ? 'tag'::text) AND (user_email ? 'data'::text))`
+    ),
+    check(
+      'chk_audit_json_size',
+      sql`(pg_column_size(old_values) <= 102400) AND (pg_column_size(new_values) <= 102400)`
+    ),
+    check(
+      'chk_audit_sanitization',
+      sql`((old_values IS NULL) OR (NOT (old_values ?| ARRAY['password'::text, 'secret'::text, 'token'::text, 'cvv'::text, 'card_number'::text]))) AND ((new_values IS NULL) OR (NOT (new_values ?| ARRAY['password'::text, 'secret'::text, 'token'::text, 'cvv'::text, 'card_number'::text])))`
+    ),
   ]
 );
 
@@ -1621,7 +1685,6 @@ export const b2BPricingTiersInStorefront = pgTable(
     maxQuantity: integer('max_quantity'),
     price: numeric({ precision: 12, scale: 4 }),
     currency: char({ length: 3 }).default('SAR').notNull(),
-    // TODO: failed to parse database type 'int4range'
     quantityRange: int4range('quantity_range').notNull(),
     lockVersion: integer('lock_version').default(1).notNull(),
   },
@@ -2145,7 +2208,6 @@ export const flashSaleProductsInStorefront = pgTable(
     quantityLimit: integer('quantity_limit').notNull(),
     soldQuantity: integer('sold_quantity').default(0).notNull(),
     sortOrder: integer('sort_order').default(0).notNull(),
-    // TODO: failed to parse database type 'tstzrange'
     validDuring: tstzrange('valid_during'),
   },
   (table) => [
@@ -2823,7 +2885,6 @@ export const priceListsInStorefront = pgTable(
     marketId: uuid('market_id').notNull(),
     productId: uuid('product_id'),
     variantId: uuid('variant_id'),
-    // TODO: failed to parse database type 'int4range'
     quantityRange: int4range('quantity_range').notNull(),
     price: numeric({ precision: 12, scale: 4 }).notNull(),
     compareAtPrice: numeric('compare_at_price', { precision: 12, scale: 4 }),
@@ -3571,6 +3632,73 @@ export const webhookSubscriptionsInStorefront = pgTable(
     check(
       'webhook_secret_min_length',
       sql`(secret IS NULL) OR (octet_length((secret ->> 'enc'::text)) >= 32)`
+    ),
+  ]
+);
+
+// 🔒 GHOST TABLE MAPPING: outbox_events is RANGE-partitioned by created_at in production.
+// Mapped as standard pgTable to prevent drizzle-kit from dropping it.
+export const outboxEventsInStorefront = pgTable(
+  'outbox_events',
+  {
+    id: uuid().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
+      .defaultNow()
+      .notNull(),
+    processedAt: timestamp('processed_at', { withTimezone: true, mode: 'string' }),
+    retryCount: integer('retry_count').default(0).notNull(),
+    status: outboxStatus().default('pending').notNull(),
+    eventType: varchar('event_type', { length: 100 }).notNull(),
+    aggregateType: varchar('aggregate_type', { length: 50 }),
+    aggregateId: uuid('aggregate_id'),
+    payload: jsonb().notNull(),
+    traceId: varchar('trace_id', { length: 100 }),
+    lockedBy: varchar('locked_by', { length: 100 }),
+    lockedAt: timestamp('locked_at', { withTimezone: true, mode: 'string' }),
+  },
+  (table) => [
+    index('idx_outbox_created_brin').using('brin', table.createdAt.asc().nullsLast().op('timestamptz_ops')),
+    index('idx_outbox_pending').using(
+      'btree',
+      table.status.asc().nullsLast().op('enum_ops'),
+      table.createdAt.asc().nullsLast().op('timestamptz_ops')
+    ),
+    check('chk_payload_size', sql`pg_column_size(payload) <= 524288`),
+  ]
+);
+
+// 🔒 GHOST TABLE MAPPING: payment_logs is RANGE-partitioned by created_at in production.
+// Mapped as standard pgTable to prevent drizzle-kit from dropping it.
+export const paymentLogsInStorefront = pgTable(
+  'payment_logs',
+  {
+    id: uuid().notNull(),
+    orderId: uuid('order_id'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
+      .defaultNow()
+      .notNull(),
+    provider: varchar({ length: 50 }).notNull(),
+    transactionId: varchar('transaction_id', { length: 255 }),
+    providerReferenceId: varchar('provider_reference_id', { length: 255 }),
+    status: varchar({ length: 20 }).notNull(),
+    amount: numeric({ precision: 12, scale: 4 }).notNull(),
+    errorCode: varchar('error_code', { length: 100 }),
+    errorMessage: text('error_message'),
+    rawResponse: jsonb('raw_response'),
+    idempotencyKey: varchar('idempotency_key', { length: 100 }),
+    ipAddress: inet('ip_address'),
+  },
+  (table) => [
+    index('idx_payment_created_brin').using('brin', table.createdAt.asc().nullsLast().op('timestamptz_ops')),
+    index('idx_payment_logs_order').using('btree', table.orderId.asc().nullsLast().op('uuid_ops')),
+    foreignKey({
+      columns: [table.orderId],
+      foreignColumns: [ordersInStorefront.id],
+      name: 'fk_pl_order',
+    }).onDelete('restrict'),
+    check(
+      'chk_payment_pci_scrub',
+      sql`(raw_response IS NULL) OR (NOT (raw_response ?| ARRAY['cvv'::text, 'card_number'::text, 'pan'::text]))`
     ),
   ]
 );
