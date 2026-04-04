@@ -31,7 +31,7 @@ export class CustomerJwtAuthGuard extends AuthGuard('customer-jwt') implements C
       const message = err?.message || 'Customer authentication required';
       throw new UnauthorizedException(message);
     }
-    return user as CustomerUser;
+    return user as unknown as TUser;
   }
 }
 

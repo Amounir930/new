@@ -2,27 +2,16 @@ import {
   cartsInStorefront,
   customersInStorefront,
   getTenantDb,
-  hashSensitiveData,
 } from '@apex/db';
 import { and, eq, isNull } from '@apex/db';
-import { encrypt, decrypt } from '@apex/security';
+import { encrypt, decrypt, hashSensitiveData } from '@apex/security';
 import type { TenantCacheService } from '@apex/middleware';
 import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { CustomerUser } from '../strategies/customer-jwt.strategy';
+import type { CustomerUser } from './strategies/customer-jwt.strategy';
 
-/**
- * Customer JWT payload.
- */
-export interface CustomerJwtPayload {
-  sub: string;
-  email: string;
-  tenantId: string;
-  subdomain: string;
-  role: 'customer';
-  jti: string;
-}
+import type { CustomerJwtPayload } from './strategies/customer-jwt.strategy';
 
 /**
  * Customer registration input.
