@@ -227,17 +227,6 @@ export const severityEnum = pgEnum('severity_enum', [
   'CRITICAL',
   'SECURITY_ALERT',
 ]);
-export const tenantNiche = pgEnum('tenant_niche', [
-  'retail',
-  'wellness',
-  'education',
-  'services',
-  'hospitality',
-  'real_estate',
-  'creative',
-  'food',
-  'digital',
-]);
 export const tenantPlan = pgEnum('tenant_plan', [
   'free',
   'basic',
@@ -610,7 +599,7 @@ export const onboardingBlueprintsInGovernance = governance.table(
       .defaultNow()
       .notNull(),
     plan: tenantPlan().default('free').notNull(),
-    nicheType: tenantNiche('niche_type').default('retail').notNull(),
+    nicheType: nicheType('niche_type').default('retail').notNull(),
     status: blueprintStatus().default('active').notNull(),
     isDefault: boolean('is_default').default(false).notNull(),
     name: text().notNull(),

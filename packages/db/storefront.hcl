@@ -133,12 +133,6 @@ enum "audit_result_enum" {
   schema = schema.public
   values = ["SUCCESS", "FAILURE"]
 }
-enum "tenant_niche" {
-  schema = schema.public
-  values = ["retail", "wellness", "education", "services", "hospitality", "real_estate", "creative"]
-}
-// ROOT CAUSE FIX: niche_type enum was missing from Atlas HCL — every new tenant's products table
-// was created WITHOUT the niche column. This matches packages/db/drizzle/schema.ts line 1487.
 enum "niche_type" {
   schema = schema.public
   values = ["retail", "wellness", "education", "services", "hospitality", "real_estate", "creative", "food", "digital"]

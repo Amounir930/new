@@ -89,8 +89,8 @@ DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid 
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'tenant_plan' AND n.nspname = 'public') THEN CREATE TYPE "public"."tenant_plan" AS ENUM ('free', 'basic', 'pro', 'enterprise'); END IF; END $$;
 -- Create enum type "tenant_status"
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'tenant_status' AND n.nspname = 'public') THEN CREATE TYPE "public"."tenant_status" AS ENUM ('active', 'suspended', 'pending', 'archived'); END IF; END $$;
--- Create enum type "tenant_niche"
-DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'tenant_niche' AND n.nspname = 'public') THEN CREATE TYPE "public"."tenant_niche" AS ENUM ('retail', 'wellness', 'education', 'services', 'hospitality', 'real-estate', 'creative'); END IF; END $$;
+-- Create enum type "niche_type" (consolidated — tenant_niche removed)
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'niche_type' AND n.nspname = 'public') THEN CREATE TYPE "public"."niche_type" AS ENUM ('retail', 'wellness', 'education', 'services', 'hospitality', 'real_estate', 'creative', 'food', 'digital'); END IF; END $$;
 -- Create enum type "order_status"
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'order_status' AND n.nspname = 'public') THEN CREATE TYPE "public"."order_status" AS ENUM ('draft', 'awaiting_approval', 'pending', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'); END IF; END $$;
 -- Create enum type "payment_status"
@@ -270,7 +270,7 @@ CREATE TABLE IF NOT EXISTS "governance"."onboarding_blueprints" (
   "created_at" timestamptz NOT NULL DEFAULT now(),
   "updated_at" timestamptz NOT NULL DEFAULT now(),
   "plan" "public"."tenant_plan" NOT NULL DEFAULT 'free',
-  "niche_type" "public"."tenant_niche" NOT NULL DEFAULT 'retail',
+  "niche_type" "public"."niche_type" NOT NULL DEFAULT 'retail',
   "status" "public"."blueprint_status" NOT NULL DEFAULT 'active',
   "is_default" boolean NOT NULL DEFAULT false,
   "name" text NOT NULL,
