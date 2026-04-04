@@ -1,12 +1,11 @@
 import { AuditModule } from '@apex/audit';
-import { CustomerJwtStrategy } from '@apex/auth';
+import { CustomerAuthService, CustomerJwtStrategy } from '@apex/auth';
 import { ConfigModule, ConfigService } from '@apex/config/service';
 import { TenantCacheModule } from '@apex/middleware';
 import { JwtModule } from '@nestjs/jwt';
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { CustomerAuthController } from './customer-auth.controller';
-import { CustomerAuthService } from './customer-auth.service';
 import { StorefrontController } from './storefront.controller';
 import { StorefrontService } from './storefront.service';
 

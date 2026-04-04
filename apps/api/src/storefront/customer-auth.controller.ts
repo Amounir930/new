@@ -19,12 +19,11 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import {
+  CustomerAuthService,
   CustomerJwtAuthGuard,
   CustomerJwtMatchGuard,
+  type CustomerAuthenticatedRequest,
 } from '@apex/auth';
-// biome-ignore lint/style/useImportType: DI requires value import
-import { CustomerAuthService } from './customer-auth.service';
-import type { CustomerAuthenticatedRequest } from './customer-auth.types';
 
 // ═══════════════════════════════════════════════════════════════
 // ZOD SCHEMAS
