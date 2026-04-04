@@ -1,6 +1,7 @@
 'use client';
 
 import { Toaster } from 'react-hot-toast';
+import Link from 'next/link';
 import { useCartItemCount } from '@/lib/cart-store';
 
 /**
@@ -44,14 +45,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 /**
  * ── CART BUTTON ──
- * Client component with live item count
+ * Client component with live item count, links to /cart page.
  */
 export function CartButton() {
   const itemCount = useCartItemCount();
 
   return (
-    <button
-      type="button"
+    <Link
+      href="/cart"
       className="p-2 hover:bg-gray-100 rounded-full transition-colors relative"
     >
       <svg
@@ -73,6 +74,6 @@ export function CartButton() {
           {itemCount > 99 ? '99+' : itemCount}
         </span>
       )}
-    </button>
+    </Link>
   );
 }

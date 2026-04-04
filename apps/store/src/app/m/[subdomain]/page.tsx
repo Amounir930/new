@@ -66,7 +66,7 @@ export default async function TenantHome({ params }: TenantPageProps) {
             </p>
             <div className="flex justify-center gap-4">
               <a
-                href={heroBanner?.ctaLink || '/shop'}
+                href="/products"
                 className="rounded-full bg-white px-8 py-4 text-sm font-bold text-black shadow-xl ring-1 ring-black/5 transition-all hover:bg-gray-100 hover:scale-105 active:scale-95"
               >
                 {heroBanner?.ctaText || 'Shop Collection'}
@@ -89,7 +89,7 @@ export default async function TenantHome({ params }: TenantPageProps) {
               </h2>
             </div>
             <a
-              href="/shop?sort=bestsellers"
+              href="/products"
               className="group flex items-center gap-2 font-bold text-black transition-colors hover:text-blue-600"
             >
               See everything

@@ -80,7 +80,7 @@ export function RelatedProducts({
             return (
               <Link
                 key={product.id}
-                href={`/${product.slug}`}
+                href={`/products/${product.slug}`}
                 className="group"
               >
                 <div className="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 ring-1 ring-gray-100 transition-all group-hover:shadow-lg">

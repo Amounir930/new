@@ -38,7 +38,7 @@ export default async function RootLayout({
   // Fetch config for branding ONLY in the storefront branch.
   const bootstrap = await getStoreBootstrap(tenantId);
   const config = bootstrap?.config;
-  
+
   const storeName =
     config?.storeName ||
     tenantId.charAt(0).toUpperCase() + tenantId.slice(1);
@@ -68,7 +68,7 @@ export default async function RootLayout({
               </div>
               <nav className="hidden md:flex items-center gap-8">
                 <a href="/" className="text-sm font-medium hover:text-blue-600 transition-colors">Home</a>
-                <a href="/shop" className="text-sm font-medium hover:text-blue-600 transition-colors">Shop</a>
+                <a href="/products" className="text-sm font-medium hover:text-blue-600 transition-colors">Shop</a>
                 <a href="/categories" className="text-sm font-medium hover:text-blue-600 transition-colors">Categories</a>
               </nav>
               <div className="flex items-center gap-4">

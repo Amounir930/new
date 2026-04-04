@@ -30,7 +30,7 @@ export function ProductCard({ product }: { product: Product }) {
   const hasSale = compareAtPrice && compareAtPrice > productPrice;
 
   return (
-    <Link href={`/${product.slug}`} className="group block h-full">
+    <Link href={`/products/${product.slug}`} className="group block h-full">
       <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-50 ring-1 ring-gray-200 transition-all duration-300 group-hover:shadow-lg group-hover:ring-black/5">
         <Image
           src={product.imageUrl || '/placeholder.png'}

@@ -127,10 +127,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
             Home
           </a>
           <span className="mx-4">/</span>
-          <a href="/shop" className="hover:text-black transition-colors">
-            Curated Shop
-          </a>
-          <span className="mx-4">/</span>
           <span className="text-black truncate">{productName}</span>
         </nav>
 
