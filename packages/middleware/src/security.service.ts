@@ -22,7 +22,6 @@ export class SecurityService implements OnModuleInit {
       url: redisUrl,
       socket: {
         keepAlive: 5000,
-        keepAliveInitialDelay: 5000,
         connectTimeout: 5000,
         timeout: 5000,
         reconnectStrategy: (retries) => Math.min(retries * 1000, 30000),
