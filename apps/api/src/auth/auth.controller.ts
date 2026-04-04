@@ -39,7 +39,7 @@ export class AuthController {
     private readonly config: ConfigService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) {}
+  ) { }
 
   @Post('login')
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force
@@ -96,6 +96,8 @@ export class AuthController {
           .select({
             id: tenantsInGovernance.id,
             subdomain: tenantsInGovernance.subdomain,
+            deletedAt: tenantsInGovernance.deletedAt,
+            status: tenantsInGovernance.status,
           })
           .from(tenantsInGovernance)
           .where(eq(tenantsInGovernance.ownerEmailHash, emailHash))
@@ -104,6 +106,13 @@ export class AuthController {
         if (!ownedTenant) {
           throw new UnauthorizedException(
             'Account found but no active tenant association detected'
+          );
+        }
+
+        // 🔒 ZOMBIE TENANT GATEKEEPER: Block soft-deleted or suspended tenants
+        if (ownedTenant.deletedAt || ownedTenant.status !== 'active') {
+          throw new UnauthorizedException(
+            'This store has been deactivated or deleted.'
           );
         }
 

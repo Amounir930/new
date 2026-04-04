@@ -14,7 +14,9 @@
       "Bash(git log *)",
       "Bash(tr *)",
       "Bash(scp *)",
-      "Bash(printf *)"
+      "Bash(printf *)",
+      "Bash(npx *)",
+      "Bash(select-string *)"
     ]
   },
   "$version": 3
