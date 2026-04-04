@@ -3,6 +3,8 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import './globals.css';
 import { CartButton, ToastProvider } from '@/components/layout/toast-provider';
+import { UserMenu } from '@/components/layout/user-menu';
+import { LoginModal } from '@/components/auth/login-modal';
 import { getStoreBootstrap } from '@/lib/api';
 
 export const metadata: Metadata = {
@@ -78,6 +80,7 @@ export default async function RootLayout({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </button>
+                <UserMenu />
                 <CartButton />
               </div>
             </div>
@@ -89,6 +92,7 @@ export default async function RootLayout({
             </div>
           </footer>
         </ToastProvider>
+        <LoginModal />
       </body>
     </html>
   );

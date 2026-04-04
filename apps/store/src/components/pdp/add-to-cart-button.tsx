@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { checkStock, extractTenantFromHost } from '@/lib/api';
 import { useMountedCart } from '@/lib/cart-store';
+import { useMountedAuth } from '@/lib/auth-store';
 
 interface AddToCartButtonProps {
   productId: string;
@@ -19,9 +20,10 @@ interface AddToCartButtonProps {
  * 🛒 THE OPTIMISTIC "ADD TO BAG" ENGINE
  *
  * Features:
- * 1. Validation Guard: Block if variants not selected.
- * 2. Pre-flight Check: Verify stock before opening cart.
- * 3. Optimistic UI: Micro-animations and loaders.
+ * 1. Auth Gate: If not logged in, opens LoginModal with intent.
+ * 2. Validation Guard: Block if variants not selected.
+ * 3. Pre-flight Check: Verify stock before opening cart.
+ * 4. Optimistic UI: Micro-animations and loaders.
  */
 export function AddToCartButton({
   productId,
@@ -32,13 +34,38 @@ export function AddToCartButton({
   className = '',
 }: AddToCartButtonProps) {
   const cart = useMountedCart();
+  const { isAuthenticated, openLoginModal } = useMountedAuth();
   const [isAdding, setIsAdding] = useState(false);
+  const intentRef = useRef<boolean>(false);
+
+  // ─── Intent Executor (after login) ──────────────────────────
+  useEffect(() => {
+    if (!intentRef.current || !isAuthenticated) return;
+
+    // Intent was set — proceed with add
+    intentRef.current = false;
+    setIsAdding(false);
+    cart.addItem(productId, variantId, quantity);
+    toast.success('Item added to your bag!');
+    if (!cart.isOpen) {
+      setTimeout(() => cart.toggleCart(), 300);
+    }
+  }, [isAuthenticated, cart, productId, variantId, quantity]);
 
   const handleAdd = useCallback(async () => {
     // ⚔️ Validation Guard (Protocol Delta Requirements)
     if (!isSelectionComplete) {
       if (onDisabledClick) onDisabledClick();
       else toast.error('Please select all product options!');
+      return;
+    }
+
+    // 🔐 Auth Gate: Check if logged in
+    const hasAuthCookie =
+      typeof window !== 'undefined' && document.cookie.includes('cst_tkn=');
+    if (!hasAuthCookie && !isAuthenticated) {
+      intentRef.current = true;
+      openLoginModal();
       return;
     }
 
@@ -86,8 +113,10 @@ export function AddToCartButton({
     quantity,
     isSelectionComplete,
     isAdding,
+    isAuthenticated,
     cart,
     onDisabledClick,
+    openLoginModal,
   ]);
 
   return (
@@ -101,10 +130,9 @@ export function AddToCartButton({
         text-base font-black tracking-widest uppercase
         transition-all duration-300 shadow-xl
         active:scale-95
-        ${
-          !isSelectionComplete
-            ? 'bg-gray-100 text-gray-400 cursor-pointer border border-gray-200'
-            : 'bg-black text-white hover:bg-gray-800 hover:shadow-black/20 hover:-translate-y-1'
+        ${!isSelectionComplete
+          ? 'bg-gray-100 text-gray-400 cursor-pointer border border-gray-200'
+          : 'bg-black text-white hover:bg-gray-800 hover:shadow-black/20 hover:-translate-y-1'
         }
         ${isAdding ? 'pointer-events-none' : ''}
         ${className}

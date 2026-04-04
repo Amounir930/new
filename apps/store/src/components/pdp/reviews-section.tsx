@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { getProductReviews } from '@/lib/api';
+import { useMountedAuth } from '@/lib/auth-store';
+import toast from 'react-hot-toast';
 
 interface Review {
   id: string;
@@ -46,6 +48,7 @@ export function ReviewsSection({
   avgRating,
   reviewCount,
 }: ReviewsSectionProps) {
+  const { isAuthenticated, openLoginModal } = useMountedAuth();
   const [reviews, setReviews] = useState<Review[]>(
     initialReviews?.reviews || []
   );
@@ -78,7 +81,25 @@ export function ReviewsSection({
 
   return (
     <section className="mt-20 max-w-4xl">
-      <h2 className="text-2xl font-bold mb-8">Customer Reviews</h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-bold">Customer Reviews</h2>
+        <button
+          type="button"
+          onClick={() => {
+            const hasAuthCookie =
+              typeof window !== 'undefined' &&
+              document.cookie.includes('cst_tkn=');
+            if (!hasAuthCookie && !isAuthenticated) {
+              openLoginModal();
+            } else {
+              toast('Review submission coming soon!');
+            }
+          }}
+          className="rounded-xl bg-black px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
+        >
+          Write a Review
+        </button>
+      </div>
 
       {/* Rating Summary */}
       <div className="flex items-center gap-8 mb-8 p-6 bg-gray-50 rounded-2xl">

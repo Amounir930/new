@@ -283,3 +283,112 @@ export async function extractTenantFromHost(): Promise<string | null> {
   }
   return null;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOMER AUTHENTICATION HELPERS (Store-#13)
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Customer login — POST /api/v1/storefront/auth/login
+ */
+export async function loginCustomer(
+  email: string,
+  password: string
+): Promise<{ success: boolean; customer: { id: string; email: string; firstName: string; lastName: string; avatarUrl: string | null } }> {
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+    credentials: 'include', // Ensures httpOnly cst_tkn cookie is set
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: 'Login failed' }));
+    throw new Error(
+      error.message || error?.errors?.[0]?.message || 'Invalid credentials'
+    );
+  }
+
+  return res.json();
+}
+
+/**
+ * Customer registration — POST /api/v1/storefront/auth/register
+ */
+export async function registerCustomer(input: {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  acceptsMarketing?: boolean;
+}): Promise<{ success: boolean; customer: { id: string; email: string; firstName: string; lastName: string; avatarUrl: string | null } }> {
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const error = await res
+      .json()
+      .catch(() => ({ message: 'Registration failed' }));
+    throw new Error(
+      error.message || error?.errors?.[0]?.message || 'Registration failed'
+    );
+  }
+
+  return res.json();
+}
+
+/**
+ * Customer logout — POST /api/v1/storefront/auth/logout
+ */
+export async function logoutCustomer(): Promise<void> {
+  await fetch(`${PUBLIC_API_URL}/storefront/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+}
+
+/**
+ * Get current customer profile — GET /api/v1/storefront/auth/me
+ */
+export async function getCustomerMe(): Promise<{
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+} | null> {
+  try {
+    const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/me`, {
+      credentials: 'include',
+    });
+
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Merge session cart with customer cart — POST /api/v1/storefront/auth/cart/merge
+ */
+export async function mergeCustomerCart(sessionCartId?: string): Promise<{
+  success: boolean;
+}> {
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/cart/merge`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionCartId }),
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    throw new Error('Cart merge failed');
+  }
+
+  return res.json();
+}

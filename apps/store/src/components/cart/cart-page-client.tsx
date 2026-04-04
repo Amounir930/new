@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useMountedAuth } from '@/lib/auth-store';
 import { useMountedCart } from '@/lib/cart-store';
 
 /**
@@ -13,6 +14,7 @@ import { useMountedCart } from '@/lib/cart-store';
  */
 export function CartPageClient() {
   const cart = useMountedCart();
+  const { isAuthenticated, openLoginModal } = useMountedAuth();
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Wait for hydration before rendering cart contents
@@ -93,7 +95,7 @@ export function CartPageClient() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-12 md:py-16">
-        <h1 className="mb-10 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
+        <h1 className="mb-3 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
           Shopping Bag
           {displayItems && (
             <span className="ml-3 text-lg font-medium text-gray-400">
@@ -102,32 +104,47 @@ export function CartPageClient() {
           )}
         </h1>
 
+        {!isAuthenticated && (
+          <div className="mb-8 flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 px-5 py-3.5 dark:border-blue-800 dark:bg-blue-950/20">
+            <p className="text-sm text-blue-700 dark:text-blue-400">
+              <strong>Sign in</strong> to save your cart across devices.
+            </p>
+            <button
+              type="button"
+              onClick={() => openLoginModal()}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-700"
+            >
+              Sign In
+            </button>
+          </div>
+        )}
+
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Cart Items */}
           <div className="space-y-4 lg:col-span-2">
             {displayItems
               ? displayItems.map((item) => (
-                  <CartItemCard
-                    key={`${item.productId}-${item.variantId ?? 'novariant'}`}
-                    item={item}
-                    onRemove={() => cart.removeItem(item.productId, item.variantId)}
-                    onUpdateQty={(qty) =>
-                      cart.updateQuantity(item.productId, item.variantId, qty)
-                    }
-                  />
-                ))
+                <CartItemCard
+                  key={`${item.productId}-${item.variantId ?? 'novariant'}`}
+                  item={item}
+                  onRemove={() => cart.removeItem(item.productId, item.variantId)}
+                  onUpdateQty={(qty) =>
+                    cart.updateQuantity(item.productId, item.variantId, qty)
+                  }
+                />
+              ))
               : optimisticItems.map((item) => (
-                  <CartOptimisticItem
-                    key={`${item.productId}-${item.variantId ?? 'novariant'}`}
-                    item={item}
-                    onRemove={() =>
-                      cart.removeItem(item.productId, item.variantId)
-                    }
-                    onUpdateQty={(qty) =>
-                      cart.updateQuantity(item.productId, item.variantId, qty)
-                    }
-                  />
-                ))}
+                <CartOptimisticItem
+                  key={`${item.productId}-${item.variantId ?? 'novariant'}`}
+                  item={item}
+                  onRemove={() =>
+                    cart.removeItem(item.productId, item.variantId)
+                  }
+                  onUpdateQty={(qty) =>
+                    cart.updateQuantity(item.productId, item.variantId, qty)
+                  }
+                />
+              ))}
           </div>
 
           {/* Order Summary */}

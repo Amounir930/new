@@ -21,7 +21,11 @@ export * from './decorators/current-user.decorator';
 export * from './decorators/public.decorator';
 export * from './guards/super-admin.guard';
 export * from './guards/tenant-jwt-match.guard';
+export * from './guards/customer-jwt.guard';
+export * from './guards/customer-jwt-match.guard';
 export * from './strategies/jwt.strategy';
+export * from './strategies/customer-jwt.strategy';
+export * from './customer-auth.service';
 export type { TenantContext };
 
 export interface AuthenticatedRequest extends Request {
