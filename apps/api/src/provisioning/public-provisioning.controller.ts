@@ -10,11 +10,11 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { ProvisioningService } from './provisioning.service';
 import {
   InitProvisioningRequestDto,
   VerifyProvisioningRequestDto,
 } from './dto/self-service-provision.dto';
+import { ProvisioningService } from './provisioning.service';
 
 @Controller({ path: 'auth/register-tenant', version: '1' })
 export class PublicProvisioningController {
@@ -47,7 +47,7 @@ export class PublicProvisioningController {
    * Step 2: Verify OTP and trigger provisioning
    */
   @AuditLog({ action: 'SELF_SERVICE_PROVISION_VERIFY', entityType: 'tenant' })
-  @Throttle({ default: { limit: 5, ttl: 3600000 } }) 
+  @Throttle({ default: { limit: 5, ttl: 3600000 } })
   @Post('verify')
   @HttpCode(HttpStatus.CREATED)
   async verifyAndProvision(

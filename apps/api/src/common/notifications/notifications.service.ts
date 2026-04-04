@@ -29,7 +29,9 @@ export class NotificationsService {
 
   async sendEmail(options: SendEmailOptions): Promise<boolean> {
     if (!this.resend) {
-      this.logger.warn(`Simulating email to ${options.to}: [${options.subject}]`);
+      this.logger.warn(
+        `Simulating email to ${options.to}: [${options.subject}]`
+      );
       if (env.NODE_ENV !== 'production') {
         this.logger.debug(`Email content: ${options.html || options.text}`);
       }
@@ -52,8 +54,7 @@ export class NotificationsService {
           text: options.text,
         } as import('resend').CreateEmailOptions;
 
-        this.resend!.emails
-          .send(payload)
+        this.resend!.emails.send(payload)
           .then((result) => {
             clearTimeout(timeoutId);
             resolve(result);
@@ -90,10 +91,15 @@ export class NotificationsService {
         return false;
       }
 
-      this.logger.log(`Email successfully sent to ${options.to} (ID: ${response.data?.id})`);
+      this.logger.log(
+        `Email successfully sent to ${options.to} (ID: ${response.data?.id})`
+      );
       return true;
     } catch (error) {
-      this.logger.error(`Exception while sending email to ${options.to}`, error);
+      this.logger.error(
+        `Exception while sending email to ${options.to}`,
+        error
+      );
 
       // P0 FIX: Dev bypass on timeout/abort — extract OTP and allow flow to continue
       if (env.NODE_ENV !== 'production') {

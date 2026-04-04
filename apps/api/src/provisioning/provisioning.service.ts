@@ -13,6 +13,7 @@ import {
   tenantsInGovernance,
 } from '@apex/db';
 import type { DrizzleExecutor } from '@apex/middleware';
+import { OTPService, RedisRateLimitStore } from '@apex/middleware';
 import {
   type BlueprintTemplate,
   createStorageBucket,
@@ -30,15 +31,16 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { z } from 'zod';
-import { SecurityService } from '../security/security.service';
-import { NotificationsService } from '../common/notifications/notifications.service';
-import { OTPService, RedisRateLimitStore } from '@apex/middleware';
 import crypto from 'crypto';
+import { z } from 'zod';
+import { NotificationsService } from '../common/notifications/notifications.service';
+import { SecurityService } from '../security/security.service';
 
 export async function verifyTurnstileToken(token: string): Promise<boolean> {
   if (!env.TURNSTILE_SECRET_KEY) {
-    Logger.warn('TURNSTILE_SECRET_KEY is missing. Skiping CAPTCHA verification (not recommended for production).');
+    Logger.warn(
+      'TURNSTILE_SECRET_KEY is missing. Skiping CAPTCHA verification (not recommended for production).'
+    );
     return true; // Bypass if not configured
   }
 
@@ -52,11 +54,14 @@ export async function verifyTurnstileToken(token: string): Promise<boolean> {
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     try {
-      const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-        method: 'POST',
-        body: formData,
-        signal: controller.signal,
-      });
+      const res = await fetch(
+        'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        }
+      );
       const data = (await res.json()) as { success: boolean };
       return data.success === true;
     } finally {
@@ -90,7 +95,10 @@ interface ProvisioningStep {
 export class ProvisioningService {
   private readonly logger = new Logger(ProvisioningService.name);
   // P0 FIX: Dev memory fallback for provisioning payloads when Redis is down
-  private readonly devProvDataCache = new Map<string, { payload: any; expiry: number }>();
+  private readonly devProvDataCache = new Map<
+    string,
+    { payload: any; expiry: number }
+  >();
 
   constructor(
     @Inject('AUDIT_SERVICE') private readonly audit: AuditService,
@@ -100,7 +108,7 @@ export class ProvisioningService {
     private readonly notifications: NotificationsService,
     private readonly otpService: OTPService,
     private readonly redisStore: RedisRateLimitStore
-  ) { }
+  ) {}
 
   /**
    * Public Self-Service Step 1: Initialize, Verify Turnstile, and generate OTP
@@ -124,16 +132,24 @@ export class ProvisioningService {
     if (!client) {
       // P0 FIX: In dev, store in memory so flow can continue even when Redis is down
       if (env.NODE_ENV !== 'production') {
-        this.logger.warn('[DEV BYPASS] Redis unavailable, storing provisioning payload in memory');
+        this.logger.warn(
+          '[DEV BYPASS] Redis unavailable, storing provisioning payload in memory'
+        );
         this.devProvDataCache.set(requestId, {
           payload: cleanPayload,
           expiry: Date.now() + 300000, // 5 min TTL
         });
       } else {
-        throw new InternalServerErrorException('System temporarily unavailable');
+        throw new InternalServerErrorException(
+          'System temporarily unavailable'
+        );
       }
     } else {
-      await client.setEx(`prov-data:${requestId}`, 300, JSON.stringify(cleanPayload));
+      await client.setEx(
+        `prov-data:${requestId}`,
+        300,
+        JSON.stringify(cleanPayload)
+      );
     }
 
     // 4. Send OTP Email
@@ -196,7 +212,9 @@ export class ProvisioningService {
     }
 
     if (!dataRaw) {
-      throw new BadRequestException('Provisioning request expired. Please start over.');
+      throw new BadRequestException(
+        'Provisioning request expired. Please start over.'
+      );
     }
 
     const payload = JSON.parse(dataRaw);
@@ -215,7 +233,7 @@ export class ProvisioningService {
       superAdminKey: env.SUPER_ADMIN_KEY || 'OVERRIDE_FOR_SELF_SERVICE',
     };
 
-    // We temporarly patch the superAdminKey requirement by passing the actual key from env 
+    // We temporarly patch the superAdminKey requirement by passing the actual key from env
     // because selfServiceProvision is essentially calling the protected provision method on behalf of the user
     // after they have verified their email and captcha.
 
@@ -391,7 +409,8 @@ export class ProvisioningService {
       }
 
       throw new InternalServerErrorException(
-        `Provisioning Failed: ${error instanceof Error ? error.message : 'Unknown'
+        `Provisioning Failed: ${
+          error instanceof Error ? error.message : 'Unknown'
         }`
       );
     }
@@ -445,13 +464,13 @@ export class ProvisioningService {
           eq(
             onboardingBlueprintsInGovernance.nicheType,
             (options.nicheType || 'retail') as
-            | 'retail'
-            | 'wellness'
-            | 'education'
-            | 'services'
-            | 'hospitality'
-            | 'real_estate'
-            | 'creative'
+              | 'retail'
+              | 'wellness'
+              | 'education'
+              | 'services'
+              | 'hospitality'
+              | 'real_estate'
+              | 'creative'
           ),
           eq(onboardingBlueprintsInGovernance.plan, options.plan)
         )

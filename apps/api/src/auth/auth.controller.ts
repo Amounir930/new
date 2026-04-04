@@ -39,7 +39,7 @@ export class AuthController {
     private readonly config: ConfigService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) { }
+  ) {}
 
   @Post('login')
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force

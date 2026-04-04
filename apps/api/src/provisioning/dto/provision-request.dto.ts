@@ -20,16 +20,16 @@ export interface ProvisionRequest {
   password?: string; // S7: Initial merchant password
   plan: 'free' | 'basic' | 'pro' | 'enterprise';
   nicheType?:
-  | 'retail'
-  | 'wellness'
-  | 'education'
-  | 'services'
-  | 'hospitality'
-  | 'real_estate'
-  | 'creative'
-  | 'food'
-  | 'digital'
-  | null;
+    | 'retail'
+    | 'wellness'
+    | 'education'
+    | 'services'
+    | 'hospitality'
+    | 'real_estate'
+    | 'creative'
+    | 'food'
+    | 'digital'
+    | null;
   uiConfig: Record<string, unknown>;
   superAdminKey: string;
   blueprint?: BlueprintStructure;
@@ -149,4 +149,4 @@ export const ProvisionRequestSchema = z.object({
     .optional(),
 });
 
-export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) { }
+export class ProvisionRequestDto extends createZodDto(ProvisionRequestSchema) {}

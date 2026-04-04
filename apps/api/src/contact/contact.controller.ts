@@ -1,9 +1,16 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Logger } from '@nestjs/common';
-import { Throttle } from '@nestjs/throttler';
-import { z } from 'zod';
-import { createZodDto, ZodValidationPipe } from 'nestjs-zod';
-import { NotificationsService } from '../common/notifications/notifications.service';
 import { AuditLog } from '@apex/audit';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  Post,
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import { createZodDto, ZodValidationPipe } from 'nestjs-zod';
+import { z } from 'zod';
+import { NotificationsService } from '../common/notifications/notifications.service';
 
 const ContactRequestSchema = z.object({
   name: z.string().min(2).max(100),
@@ -44,6 +51,9 @@ export class ContactController {
       this.logger.error('Failed to dispatch contact form email.');
     }
 
-    return { message: 'Message received successfully. We will get back to you shortly.' };
+    return {
+      message:
+        'Message received successfully. We will get back to you shortly.',
+    };
   }
 }

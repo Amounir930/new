@@ -54,7 +54,7 @@ export class MerchantProductsController {
   constructor(
     @Inject('TENANT_CACHE_SERVICE')
     readonly _tenantCache: TenantCacheService
-  ) { }
+  ) {}
 
   // ══════════════════════════════════════════════════════════
   // GET /merchant/products — list all active products

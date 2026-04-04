@@ -78,14 +78,47 @@ export async function seedTenantData(
     // They have no backend execution class and must be excluded from the registry lookup
     // to prevent "Requested module not found. Skipping." warnings.
     const FRONTEND_ONLY_MODULES = new Set([
-      'home', 'search', 'pdp', 'quickView', 'cart', 'checkout',
-      'orderSuccess', 'paymentFailed', 'category', 'flashDeals', 'compare',
-      'locations', 'login', 'register', 'accountDashboard', 'myOrders',
-      'orderDetails', 'trackOrder', 'addresses', 'paymentMethods', 'wishlist',
-      'wallet', 'loyalty', 'referral', 'productReviews', 'returns',
-      'notifications', 'privacyPolicy', 'termsConditions', 'refundPolicy',
-      'aboutUs', 'contactUs', 'faq', 'blog', 'notFound', 'maintenanceMode',
-      'ajaxSearch', 'megaMenu', 'smartFilters', 'toast', 'newsletter',
+      'home',
+      'search',
+      'pdp',
+      'quickView',
+      'cart',
+      'checkout',
+      'orderSuccess',
+      'paymentFailed',
+      'category',
+      'flashDeals',
+      'compare',
+      'locations',
+      'login',
+      'register',
+      'accountDashboard',
+      'myOrders',
+      'orderDetails',
+      'trackOrder',
+      'addresses',
+      'paymentMethods',
+      'wishlist',
+      'wallet',
+      'loyalty',
+      'referral',
+      'productReviews',
+      'returns',
+      'notifications',
+      'privacyPolicy',
+      'termsConditions',
+      'refundPolicy',
+      'aboutUs',
+      'contactUs',
+      'faq',
+      'blog',
+      'notFound',
+      'maintenanceMode',
+      'ajaxSearch',
+      'megaMenu',
+      'smartFilters',
+      'toast',
+      'newsletter',
     ]);
 
     const moduleRegistry: Record<string, any> = {
@@ -99,7 +132,6 @@ export async function seedTenantData(
         executor.register(new moduleRegistry[moduleName]());
       }
     }
-
 
     await tenantScopedAdminDb.transaction(async (tx) => {
       // S2/Auth-04: Ensure the transaction also knows about the tenant context for RLS-protected tables

@@ -246,10 +246,13 @@ async function setupBucket(
         }
       );
     });
-    logger.info(`S8: CORS policy applied successfully for bucket ${bucketName}`);
+    logger.info(
+      `S8: CORS policy applied successfully for bucket ${bucketName}`
+    );
   } catch (corsError) {
     logger.error(`S8 Warning: Failed to set CORS for bucket ${bucketName}`, {
-      corsError: corsError instanceof Error ? corsError.message : String(corsError),
+      corsError:
+        corsError instanceof Error ? corsError.message : String(corsError),
     });
   }
 
