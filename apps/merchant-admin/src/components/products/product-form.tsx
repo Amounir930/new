@@ -417,7 +417,9 @@ export function ProductForm({
               <ErrorBanner errors={errors as Record<string, unknown>} />
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="nameAr">Arabic Name</Label>
+                  <Label htmlFor="nameAr">
+                    Arabic Name <span className="text-destructive">*</span>
+                  </Label>
                   <Input id="nameAr" dir="rtl" {...register('nameAr')} />
                   {errors.nameAr && (
                     <p className="text-xs text-destructive">
@@ -970,23 +972,23 @@ export function ProductForm({
                 </div>
                 {Object.entries(specifications as Record<string, unknown>)
                   .length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(
-                      specifications as Record<string, unknown>
-                    ).map(([k, v]) => (
-                      <Badge key={k} variant="secondary" className="gap-1">
-                        <span className="font-medium">{k}:</span> {String(v)}
-                        <button
-                          type="button"
-                          onClick={() => removeSpec(k)}
-                          className="ml-1 text-destructive"
-                        >
-                          ×
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(
+                        specifications as Record<string, unknown>
+                      ).map(([k, v]) => (
+                        <Badge key={k} variant="secondary" className="gap-1">
+                          <span className="font-medium">{k}:</span> {String(v)}
+                          <button
+                            type="button"
+                            onClick={() => removeSpec(k)}
+                            className="ml-1 text-destructive"
+                          >
+                            ×
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
               </div>
 
               {/* Tags */}

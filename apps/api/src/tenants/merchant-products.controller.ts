@@ -40,6 +40,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { z } from 'zod';
 import type {
   CreateProductDto,
   UpdateProductDto,
@@ -53,7 +54,7 @@ export class MerchantProductsController {
   constructor(
     @Inject('TENANT_CACHE_SERVICE')
     readonly _tenantCache: TenantCacheService
-  ) {}
+  ) { }
 
   // ══════════════════════════════════════════════════════════
   // GET /merchant/products — list all active products
@@ -71,9 +72,14 @@ export class MerchantProductsController {
   // ══════════════════════════════════════════════════════════
   // GET /merchant/products/:id — fetch single product for edit
   // ══════════════════════════════════════════════════════════
-  @Get(':id(uuid)')
+  @Get(':id')
   @RequireFeature('ecommerce')
   async findOne(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    const parsed = z.string().uuid().safeParse(id);
+    if (!parsed.success) {
+      throw new BadRequestException('Invalid product ID format');
+    }
+
     const db = requireExecutor();
     const [product] = await db
       .select()
@@ -86,7 +92,10 @@ export class MerchantProductsController {
       )
       .limit(1);
 
-    if (!product) throw new NotFoundException(`Product ${id} not found`);
+    if (!product) {
+      this.logger.warn(`PRODUCT_NOT_FOUND: id=${id}`);
+      throw new NotFoundException(`Product ${id} not found`);
+    }
     return product;
   }
 
@@ -135,7 +144,7 @@ export class MerchantProductsController {
   // PUT /merchant/products/:id — Publish Draft (or update existing)
   // Validates full schema and sets is_active = true
   // ══════════════════════════════════════════════════════════
-  @Put(':id(uuid)')
+  @Put(':id')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_CREATED', entityType: 'product' })
   async publishDraft(
@@ -143,6 +152,11 @@ export class MerchantProductsController {
     @Param('id') id: string,
     @Body() body: CreateProductDto
   ) {
+    const parsed = z.string().uuid().safeParse(id);
+    if (!parsed.success) {
+      throw new BadRequestException('Invalid product ID format');
+    }
+
     const { subdomain } = this.getRequiredContext(req);
     const db = requireExecutor();
 
@@ -325,7 +339,7 @@ export class MerchantProductsController {
   // Accepts flat form fields, transforms to JSONB before DB write.
   // Uses optimistic concurrency locking via `version`.
   // ══════════════════════════════════════════════════════════
-  @Patch(':id(uuid)')
+  @Patch(':id')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_UPDATED', entityType: 'product' })
   async update(
@@ -333,6 +347,11 @@ export class MerchantProductsController {
     @Param('id') id: string,
     @Body() body: UpdateProductDto
   ) {
+    const parsed = z.string().uuid().safeParse(id);
+    if (!parsed.success) {
+      throw new BadRequestException('Invalid product ID format');
+    }
+
     const { subdomain } = this.getRequiredContext(req);
 
     const {
@@ -456,10 +475,15 @@ export class MerchantProductsController {
   //   → SOFT DELETE (deleted_at = NOW())
   //   → MinIO untouched (images needed for order history & invoices)
   // ══════════════════════════════════════════════════════════
-  @Delete(':id(uuid)')
+  @Delete(':id')
   @RequireFeature('ecommerce')
   @AuditLog({ action: 'PRODUCT_DELETED', entityType: 'product' })
   async remove(@Req() req: AuthenticatedRequest, @Param('id') id: string) {
+    const parsed = z.string().uuid().safeParse(id);
+    if (!parsed.success) {
+      throw new BadRequestException('Invalid product ID format');
+    }
+
     const { subdomain } = this.getRequiredContext(req);
     const db = requireExecutor();
 

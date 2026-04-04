@@ -11,27 +11,30 @@ export default function NewProductPage() {
   /**
    * Called by ProductForm.onSubmit when the merchant clicks Save.
    * At this point, the draft was already created in the DB (product-form handles the POST /draft).
-   * We use PUT /:draftId to promote the draft → live product (sets is_active=true).
+   * We use PUT /:id to promote the draft → live product (sets is_active=true).
    *
    * data.id = the draft product_id returned from POST /draft and stored in the form state.
    */
-  const handleCreateProduct = async (data: any) => {
-    if (!data.draftProductId) {
+  const handleCreateProduct = async (data: { id?: string } & Record<string, unknown>) => {
+    if (!data.id) {
       toast.error('Product session lost. Please refresh and try again.');
       return;
     }
     const toastId = toast.loading('Saving product...');
     try {
-      await apiFetch(`/merchant/products/${data.draftProductId}`, {
+      const { id, ...payload } = data;
+      await apiFetch(`/merchant/products/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       toast.success('Product created successfully', { id: toastId });
       router.push('/dashboard/products');
       router.refresh();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create product', { id: toastId });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to create product';
+      toast.error(message, { id: toastId });
     }
   };
 

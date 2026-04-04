@@ -239,21 +239,28 @@ export default function EditProductPage() {
       })
       .catch((err) => {
         const status = (err as { status?: number })?.status;
+        const message =
+          (err as { message?: string })?.message ?? 'Unknown error';
+
         if (status === 404) {
           setNotFound(true);
+        } else if (status === 401 || status === 403) {
+          toast.error('Authentication error. Please sign in again.');
+        } else if (status === 400) {
+          toast.error(`Invalid request: ${message}`);
         } else {
-          toast.error('Failed to load product. Please refresh.');
+          toast.error(`Failed to load product: ${message}`);
         }
       })
       .finally(() => setLoading(false));
   }, [id]);
 
   const handleUpdateProduct = async (
-    data: CreateProductInput & { draftProductId?: string }
+    data: CreateProductInput & { id?: string }
   ) => {
-    // draftProductId is the form's internal tracking field — not sent to API
+    // `data.id` is the form's internal tracking field — edit mode uses the URL `id` instead
     // version comes from the hydrated initialData
-    const { draftProductId: _ignored, ...payload } = data;
+    const { id: _formId, ...payload } = data;
 
     try {
       await apiFetch(`/merchant/products/${id}`, {
