@@ -17,7 +17,7 @@ import { HCaptchaService } from './hcaptcha.service';
 
 @Injectable()
 export class BotProtectionMiddleware implements NestMiddleware {
-  constructor(private readonly captchaService: HCaptchaService) {}
+  constructor(private readonly captchaService: HCaptchaService) { }
 
   // Common bot and scraper User-Agent patterns
   private readonly botUserAgents = [
@@ -72,7 +72,21 @@ export class BotProtectionMiddleware implements NestMiddleware {
       clientIp === '127.0.0.1' ||
       clientIp === '::1';
 
-    return isHealthCheck || isInternal;
+    // Bypass auth endpoints — they have their own hCaptcha challenge
+    // via handleCaptchaChallenge(). Bot UA check here blocks legitimate
+    // browser logins when Traefik/Cloudflare obscure the real client IP.
+    const isAuthEndpoint =
+      /\/api\/v1\/auth\/login/i.test(path) ||
+      /\/api\/v1\/auth\/register/i.test(path);
+
+    // Bypass internal service-to-service calls from admin panels
+    // These come through Traefik and may not carry a browser User-Agent
+    const isAdminService =
+      /\/api\/v1\/merchant\/config/i.test(path) ||
+      /\/api\/v1\/merchant\/products/i.test(path) ||
+      /\/api\/v1\/merchant\/customers/i.test(path);
+
+    return isHealthCheck || isInternal || isAuthEndpoint || isAdminService;
   }
 
   private isBotUserAgent(
