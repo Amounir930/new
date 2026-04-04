@@ -57,6 +57,29 @@ export class CustomerJwtMatchGuard implements CanActivate {
       return true;
     }
 
+    // 🛡️ S2 FIX: When context is system/placeholder, trust JWT as authoritative source
+    // The JWT tenantId was resolved server-side via TenantCacheService at login time
+    // and is cryptographically signed — it overrides an ambiguous request context
+    const isSystemContext =
+      contextTenantId === 'system' ||
+      contextTenantId === '00000000-0000-0000-0000-000000000000';
+
+    if (isSystemContext) {
+      const subdomain = request.user.subdomain;
+      if (!subdomain) {
+        throw new UnauthorizedException(
+          'S2 Violation: Customer JWT missing subdomain for context resolution'
+        );
+      }
+
+      request.tenantContext = {
+        tenantId: jwtTenantId,
+        schemaName: `tenant_${subdomain}_v2`,
+        subdomain,
+      };
+      return true;
+    }
+
     // CRITICAL: Validate JWT tenant matches request tenant
     if (jwtTenantId !== contextTenantId) {
       process.stdout.write(

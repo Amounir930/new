@@ -137,7 +137,7 @@ export class StorefrontService {
   constructor(
     private readonly redisStore: RedisRateLimitStore,
     private readonly crypto: EncryptionService
-  ) {}
+  ) { }
 
   // ═══════════════════════════════════════════════════════════════
   // PDP DATA FETCHING
@@ -594,6 +594,42 @@ export class StorefrontService {
         variantCounts.map((vc) => [vc.productId, vc.count])
       );
 
+      // ── BATCH QUERY 4: Auto-resolve single-variant products ──
+      // For items with variantId=null but product has exactly 1 variant, auto-resolve it
+      const singleVariantProductIds = dto.items
+        .filter((item) => item.variantId === null)
+        .filter(
+          (item) => (variantCountMap.get(item.productId) ?? 0) === 1
+        )
+        .map((item) => item.productId);
+
+      let singleVariantResolved: Array<{
+        productId: string;
+        variantId: string;
+      }> = [];
+
+      if (singleVariantProductIds.length > 0) {
+        singleVariantResolved = await db
+          .select({
+            productId: productVariantsInStorefront.productId,
+            variantId: productVariantsInStorefront.id,
+          })
+          .from(productVariantsInStorefront)
+          .where(
+            and(
+              inArray(
+                productVariantsInStorefront.productId,
+                singleVariantProductIds
+              ),
+              isNull(productVariantsInStorefront.deletedAt)
+            )
+          );
+      }
+
+      const singleVariantMap = new Map(
+        singleVariantResolved.map((v) => [v.productId, v.variantId])
+      );
+
       // ── IN-MEMORY VALIDATION (No more DB queries) ──
       const results = dto.items.map((item) => {
         const product = productMap.get(item.productId);
@@ -624,11 +660,15 @@ export class StorefrontService {
           if (item.variantId) {
             const inv = inventoryMap.get(item.variantId);
             availableStock = inv ? inv.available - inv.reserved : 0;
+          } else if (singleVariantMap.has(item.productId)) {
+            // Auto-resolved single variant — check its inventory
+            const resolvedVariantId = singleVariantMap.get(item.productId)!;
+            const inv = inventoryMap.get(resolvedVariantId);
+            availableStock = inv ? inv.available - inv.reserved : 0;
           } else {
-            // Non-variant product: fetch aggregate inventory
-            // This requires a separate query for each product (unavoidable)
-            // But we only do this for non-variant items
-            throw new Error('Non-variant inventory requires separate handling');
+            // Zero-variant product — inventory not tracked at variant level
+            // Consistent with validateCartItem (line 1011): assume in stock
+            availableStock = Infinity;
           }
         }
 
@@ -1022,7 +1062,7 @@ export class StorefrontService {
     const productName =
       typeof product.name === 'object'
         ? (product.name as Record<string, string>).en ||
-          Object.values(product.name as Record<string, string>)[0]
+        Object.values(product.name as Record<string, string>)[0]
         : String(product.name);
 
     return {
@@ -1158,7 +1198,7 @@ export class StorefrontService {
     const productName =
       typeof prod.name === 'object'
         ? (prod.name as Record<string, string>).en ||
-          Object.values(prod.name as Record<string, string>)[0]
+        Object.values(prod.name as Record<string, string>)[0]
         : String(prod.name);
 
     return {
