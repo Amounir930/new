@@ -36,20 +36,23 @@ export function RelatedProducts({
   productId,
   initialRelated = [],
 }: RelatedProductsProps) {
-  const [products, setProducts] = useState<RelatedProduct[]>(initialRelated);
+  // Runtime guard: ensure initialRelated is always an array
+  const safeInitial = Array.isArray(initialRelated) ? initialRelated : [];
+
+  const [products, setProducts] = useState<RelatedProduct[]>(safeInitial);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (initialRelated.length === 0) {
+    if (safeInitial.length === 0) {
       setIsLoading(true);
       getRelatedProducts(tenantId, productId, 8)
         .then((data) => {
-          if (data) setProducts(data);
+          if (Array.isArray(data)) setProducts(data);
         })
         .catch(console.error)
         .finally(() => setIsLoading(false));
     }
-  }, [tenantId, productId, initialRelated.length]);
+  }, [tenantId, productId, safeInitial.length]);
 
   if (products.length === 0 && !isLoading) {
     return null;

@@ -1,5 +1,6 @@
 import { ProductCard } from '@/components/ProductCard';
 import { getProducts } from '@/lib/api';
+import { SortSelect } from './sort-select';
 
 // ═══════════════════════════════════════════════════════════════
 // ISR CONFIGURATION — per-tenant safe caching via subdomain path
@@ -43,7 +44,7 @@ export default async function ProductsPage({
 
   const sort =
     resolvedSearchParams.sort === 'price_asc' ||
-    resolvedSearchParams.sort === 'price_desc'
+      resolvedSearchParams.sort === 'price_desc'
       ? resolvedSearchParams.sort
       : 'newest';
 
@@ -52,13 +53,22 @@ export default async function ProductsPage({
     ? Math.min(parseInt(resolvedSearchParams.limit, 10), 100)
     : 40;
 
-  const products = await getProducts(subdomain, {
-    sort,
-    featured: isFeatured,
-    limit,
-  });
+  let products: unknown;
+  try {
+    products = await getProducts(subdomain, {
+      sort,
+      featured: isFeatured,
+      limit,
+    });
+  } catch (err) {
+    console.error('PLP: getProducts failed, falling back to empty array:', err);
+    products = [];
+  }
 
   const productList = Array.isArray(products) ? products : [];
+  if (!Array.isArray(products) && products) {
+    console.error('PLP: getProducts returned non-array:', products);
+  }
   const activeSortLabel = SORT_LABELS[sort] || 'Newest First';
 
   return (
@@ -84,20 +94,7 @@ export default async function ProductsPage({
             >
               Sort
             </label>
-            <select
-              id="sort-select"
-              defaultValue={sort}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              onChange={(e) => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('sort', e.target.value);
-                window.location.href = url.toString();
-              }}
-            >
-              <option value="newest">Newest First</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-            </select>
+            <SortSelect currentSort={sort} />
           </div>
         </div>
 

@@ -12,6 +12,7 @@ import { ImportWorker } from '../products/import.worker';
 import { ProvisioningModule } from '../provisioning/provisioning.module';
 import { SecurityModule } from '../security/security.module';
 import { MerchantConfigController } from './merchant-config.controller';
+import { MerchantCustomersController } from './merchant-customers.controller';
 import { MerchantProductsController } from './merchant-products.controller';
 import { MerchantUploadController } from './merchant-upload.controller';
 import { ProductMediaController } from './product-media.controller';
@@ -43,7 +44,8 @@ import { TenantsPublicController } from './tenants-public.controller';
     MerchantUploadController,
     ProductMediaController,
     MerchantProductsController, // ← Wildcard /:id LAST
+    MerchantCustomersController,
   ],
   providers: [ImportWorker, FileValidationService, BulkImportTemplateService],
 })
-export class TenantsModule {}
+export class TenantsModule { }

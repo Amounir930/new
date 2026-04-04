@@ -20,6 +20,21 @@ interface StorefrontFetchOptions extends RequestInit {
   };
 }
 
+export class StorefrontApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code: string,
+    message: string
+  ) {
+    super(message);
+    this.name = 'StorefrontApiError';
+  }
+}
+
+/**
+ * Core fetch helper — THROWS on non-OK responses so .catch() handlers work.
+ * Use fetchStorefrontSafe() when you want inline error-object returns.
+ */
 export async function fetchStorefront(
   path: string,
   tenantId?: string,
@@ -31,46 +46,51 @@ export async function fetchStorefront(
       ? (await extractTenantFromHost()) || 'public'
       : tenantId;
 
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        'x-tenant-id': resolvedTenantId, // Crucial for S2 Isolation in API
-        ...options.headers,
-      },
-      // S12: Cache policy with Vector 4 Tagging
-      cache: options.cache || (IS_SERVER ? 'force-cache' : 'default'),
-      next: {
-        revalidate: options.next?.revalidate,
-        tags: [
-          'storefront',
-          `tenant-${resolvedTenantId}`,
-          ...(tenantId && tenantId !== 'public' ? [`tenant-${tenantId}`] : []),
-          ...(options.next?.tags || []),
-        ],
-      },
-    });
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': resolvedTenantId, // Crucial for S2 Isolation in API
+      ...options.headers,
+    },
+    // S12: Cache policy with Vector 4 Tagging
+    cache: options.cache || (IS_SERVER ? 'force-cache' : 'default'),
+    next: {
+      revalidate: options.next?.revalidate,
+      tags: [
+        'storefront',
+        `tenant-${resolvedTenantId}`,
+        ...(tenantId && tenantId !== 'public' ? [`tenant-${tenantId}`] : []),
+        ...(options.next?.tags || []),
+      ],
+    },
+  });
 
-    if (!res.ok) {
-      // S5 Security: Mask internal URL to prevent infrastructure disclosure
-      const errorMsg = `API Error [${res.status}] | Tenant: ${tenantId}`;
-      void errorMsg;
-
-      if (res.status >= 500) {
-        return { error: 'INTERNAL_SERVER_ERROR', status: res.status };
-      }
-
-      if (res.status === 429) {
-        return { error: 'TOO_MANY_REQUESTS', status: res.status };
-      }
-
-      return { error: 'API_ERROR', status: res.status };
+  if (!res.ok) {
+    if (res.status >= 500) {
+      throw new StorefrontApiError(res.status, 'INTERNAL_SERVER_ERROR', `Server error [${res.status}]`);
     }
+    if (res.status === 429) {
+      throw new StorefrontApiError(res.status, 'TOO_MANY_REQUESTS', `Rate limited [${res.status}]`);
+    }
+    throw new StorefrontApiError(res.status, 'API_ERROR', `API error [${res.status}]`);
+  }
 
-    return res.json();
+  return res.json();
+}
+
+/**
+ * Safe variant — returns error objects instead of throwing.
+ * Use for OPTIONAL data fetches where a missing result is acceptable.
+ */
+export async function fetchStorefrontSafe(
+  path: string,
+  tenantId?: string,
+  options: StorefrontFetchOptions = {}
+): Promise<unknown | { error: string; status: number } | null> {
+  try {
+    return await fetchStorefront(path, tenantId, options);
   } catch (_error) {
-    /* `Fetch error: ${url} | Tenant: ${tenantId}`, error */
     return null;
   }
 }

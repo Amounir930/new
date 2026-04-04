@@ -140,3 +140,62 @@ async function extractTenantFromHost(): Promise<string | null> {
   }
   return null;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// MERCHANT CUSTOMERS API HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+export interface CustomerListItem {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  createdAt: string;
+  lastLoginAt: string | null;
+  totalOrdersCount: number;
+  totalSpentAmount: string;
+  walletBalance: string;
+  loyaltyPoints: number;
+  isVerified: boolean;
+  acceptsMarketing: boolean;
+  avatarUrl: string | null;
+}
+
+export interface CustomerListResponse {
+  customers: CustomerListItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface CustomerDetail extends CustomerListItem {
+  gender: string | null;
+  language: string;
+  notes: string | null;
+  tags: string | null;
+  dateOfBirth: string | null;
+}
+
+export async function getCustomers(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: 'newest' | 'oldest' | 'spent_desc' | 'name_asc';
+} = {}): Promise<CustomerListResponse> {
+  const query = new URLSearchParams();
+  if (params.page) query.set('page', String(params.page));
+  if (params.limit) query.set('limit', String(params.limit));
+  if (params.search) query.set('search', params.search);
+  if (params.sort) query.set('sort', params.sort);
+
+  const qs = query.toString();
+  return apiFetch<CustomerListResponse>(`/merchant/customers${qs ? `?${qs}` : ''}`);
+}
+
+export async function getCustomer(id: string): Promise<CustomerDetail> {
+  return apiFetch<CustomerDetail>(`/merchant/customers/${id}`);
+}

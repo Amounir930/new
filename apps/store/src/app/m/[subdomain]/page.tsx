@@ -113,10 +113,19 @@ export default async function TenantHome({ params }: TenantPageProps) {
           <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
             {bestSellers.length > 0 ? (
               bestSellers.map((p: Record<string, unknown>) => {
+                // JSONB resolver: name can be {ar, en} object or string
+                const rawName = p.name ?? p.title ?? '';
+                const resolvedName =
+                  rawName && typeof rawName === 'object'
+                    ? (rawName as Record<string, string>).en ||
+                    (rawName as Record<string, string>).ar ||
+                    'Product'
+                    : String(rawName);
+
                 const product = {
                   id: String(p.id ?? ''),
                   slug: String(p.slug ?? ''),
-                  name: String(p.name ?? p.title ?? ''),
+                  name: resolvedName,
                   price: Number(p.price ?? p.basePrice ?? 0),
                   compareAtPrice: p.compareAtPrice
                     ? Number(p.compareAtPrice)

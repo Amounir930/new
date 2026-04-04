@@ -16,7 +16,8 @@
       "Bash(scp *)",
       "Bash(printf *)",
       "Bash(npx *)",
-      "Bash(select-string *)"
+      "Bash(select-string *)",
+      "Bash(type *)"
     ]
   },
   "$version": 3

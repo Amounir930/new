@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ProductInfoClient } from '@/components/pdp/product-info-client';
 import { RelatedProducts } from '@/components/pdp/related-products';
 import { ReviewsSection } from '@/components/pdp/reviews-section';
+import type { Review, ReviewsPagination } from '@/components/pdp/reviews-section';
 import { SafeHtmlContent } from '@/components/pdp/safe-html-content';
 import {
   getProductBySlug,
@@ -99,13 +100,25 @@ export default async function TenantProductPage({
 }: TenantProductPageProps) {
   const { subdomain, slug } = await params;
 
+  // fetchStorefront now throws on non-OK, so .catch() actually fires
   const [product, relatedProducts, reviews] = await Promise.all([
-    getProductBySlug(subdomain, slug),
+    getProductBySlug(subdomain, slug).catch(() => null),
     getRelatedProducts(subdomain, slug, 8).catch(() => []),
     getProductReviews(subdomain, slug, 1, 5).catch(() => EMPTY_REVIEWS),
   ]);
 
   if (!product) notFound();
+
+  // Defensive: ensure relatedProducts is always an array
+  const safeRelated = Array.isArray(relatedProducts) ? relatedProducts : [];
+
+  // Defensive: ensure reviews has the expected shape
+  const safeReviews =
+    reviews &&
+      Array.isArray((reviews as { reviews?: unknown[] })?.reviews) &&
+      typeof (reviews as { pagination?: unknown })?.pagination === 'object'
+      ? (reviews as { reviews: Review[]; pagination: ReviewsPagination })
+      : EMPTY_REVIEWS;
 
   const productName = resolveLocalized(product.name);
   const shortDesc = resolveLocalizedAr(product.shortDescription);
@@ -229,13 +242,13 @@ export default async function TenantProductPage({
         <RelatedProducts
           tenantId={subdomain}
           productId={product.id}
-          initialRelated={relatedProducts}
+          initialRelated={safeRelated}
         />
 
         <ReviewsSection
           tenantId={subdomain}
           productId={product.id}
-          initialReviews={reviews}
+          initialReviews={safeReviews}
           avgRating={Number(product.avgRating) || 0}
           reviewCount={product.reviewCount || 0}
         />

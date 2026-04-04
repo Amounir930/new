@@ -5,7 +5,7 @@ import { getProductReviews } from '@/lib/api';
 import { useMountedAuth } from '@/lib/auth-store';
 import toast from 'react-hot-toast';
 
-interface Review {
+export interface Review {
   id: string;
   productId: string;
   customerId: string | null;
@@ -16,7 +16,7 @@ interface Review {
   sentimentScore: string | null;
 }
 
-interface ReviewsPagination {
+export interface ReviewsPagination {
   page: number;
   limit: number;
   total: number;
@@ -49,16 +49,18 @@ export function ReviewsSection({
   reviewCount,
 }: ReviewsSectionProps) {
   const { isAuthenticated, openLoginModal } = useMountedAuth();
+
+  // Runtime guard: ensure initialReviews has the expected shape
+  const safeInitialReviews =
+    initialReviews?.reviews && Array.isArray(initialReviews.reviews)
+      ? initialReviews
+      : { reviews: [] as Review[], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } as ReviewsPagination };
+
   const [reviews, setReviews] = useState<Review[]>(
-    initialReviews?.reviews || []
+    safeInitialReviews.reviews
   );
   const [pagination, setPagination] = useState<ReviewsPagination>(
-    initialReviews?.pagination || {
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 0,
-    }
+    safeInitialReviews.pagination
   );
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);

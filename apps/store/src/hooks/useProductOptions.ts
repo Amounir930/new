@@ -34,6 +34,17 @@ export interface OptionType {
  * 3. Final Matching: Identify the single ProductVariant that matches all selections.
  */
 export function useProductOptions(variants: ProductVariant[]) {
+  // Null guard: prevent crashes on undefined/null variants
+  if (!variants?.length) {
+    return {
+      options: [] as OptionType[],
+      selectedOptions: {} as Record<string, string>,
+      selectedVariant: null as ProductVariant | null,
+      updateOption: () => { },
+      isSelectionComplete: false,
+    };
+  }
+
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
   >({});
