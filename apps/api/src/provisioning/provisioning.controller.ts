@@ -72,7 +72,7 @@ export class ProvisioningController {
       data: {
         subdomain: result.subdomain,
         storefrontUrl: `https://${result.subdomain}.60sec.shop/`,
-        adminUrl: `https://${result.subdomain}.60sec.shop/`,
+        adminUrl: 'https://admin.60sec.shop/',
         durationMs: result.durationMs,
       },
     };
