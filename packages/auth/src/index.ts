@@ -26,6 +26,7 @@ export * from './guards/customer-jwt-match.guard';
 export * from './strategies/jwt.strategy';
 export * from './strategies/customer-jwt.strategy';
 export * from './customer-auth.service';
+export * from './customer-auth.module';
 export type { TenantContext };
 
 export interface AuthenticatedRequest extends Request {
