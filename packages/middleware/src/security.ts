@@ -20,8 +20,7 @@ export const securityHeaders = {
     "style-src 'self' 'unsafe-inline'", // CSS inline is lower risk
     "img-src 'self' data: https:",
     "font-src 'self'",
-    `connect-src 'self' https://${env.APP_DOMAIN || '60sec.shop'} https://*.${
-      env.APP_DOMAIN || '60sec.shop'
+    `connect-src 'self' https://${env.APP_DOMAIN || '60sec.shop'} https://*.${env.APP_DOMAIN || '60sec.shop'
     } https://api.60sec.shop wss://localhost:*`, // wss for HMR
     "frame-ancestors 'none'",
     "base-uri 'self'",
@@ -78,13 +77,13 @@ export class SecurityHeadersMiddleware implements NestMiddleware {
  */
 export interface CorsConfig {
   origin:
-    | string
-    | string[]
-    | boolean
-    | ((
-        origin: string | undefined,
-        callback: (err: Error | null, allow?: boolean) => void
-      ) => void);
+  | string
+  | string[]
+  | boolean
+  | ((
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => void);
   methods: string[];
   allowedHeaders: string[];
   exposedHeaders: string[];
@@ -156,6 +155,7 @@ export const defaultCorsConfig: CorsConfig = {
     'X-Request-ID',
     'X-Tenant-ID',
     'X-Super-Admin-Key',
+    'X-Session-ID',
     'Origin',
     'Accept',
   ],

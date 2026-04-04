@@ -229,6 +229,16 @@ export function LoginModal() {
           onKeyDown={handleKeyDown}
           className="fixed left-1/2 top-1/2 z-[101] w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-0 shadow-2xl focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
         >
+          {/* A11y: Radix requires Title + Description for screen readers */}
+          <Dialog.Title className="sr-only">
+            {activeTab === 'login' ? 'Sign In' : 'Create Account'}
+          </Dialog.Title>
+          <Dialog.Description className="sr-only">
+            {activeTab === 'login'
+              ? 'Enter your email and password to sign in.'
+              : 'Fill in the form to create your account.'}
+          </Dialog.Description>
+
           {/* Close button */}
           <Dialog.Close asChild>
             <button
@@ -248,11 +258,10 @@ export function LoginModal() {
                 setActiveTab('login');
                 setFieldErrors({});
               }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${
-                activeTab === 'login'
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${activeTab === 'login'
                   ? 'border-b-2 border-black text-gray-900'
                   : 'text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
             >
               Sign In
             </button>
@@ -262,11 +271,10 @@ export function LoginModal() {
                 setActiveTab('register');
                 setFieldErrors({});
               }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${
-                activeTab === 'register'
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${activeTab === 'register'
                   ? 'border-b-2 border-black text-gray-900'
                   : 'text-gray-400 hover:text-gray-600'
-              }`}
+                }`}
             >
               Create Account
             </button>
@@ -300,11 +308,10 @@ export function LoginModal() {
                       onChange={(e) => setLoginEmail(e.target.value)}
                       placeholder="you@example.com"
                       autoComplete="email"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
-                        fieldErrors.email
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.email
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                      }`}
+                        }`}
                     />
                   </div>
                   {fieldErrors.email && (
@@ -331,11 +338,10 @@ export function LoginModal() {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="Enter your password"
                       autoComplete="current-password"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
-                        fieldErrors.password
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.password
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                      }`}
+                        }`}
                     />
                     <button
                       type="button"
@@ -400,11 +406,10 @@ export function LoginModal() {
                         onChange={(e) => setRegFirstName(e.target.value)}
                         placeholder="Ahmed"
                         autoComplete="given-name"
-                        className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
-                          fieldErrors.firstName
+                        className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.firstName
                             ? 'border-red-300 bg-red-50'
                             : 'border-gray-200'
-                        }`}
+                          }`}
                       />
                     </div>
                     {fieldErrors.firstName && (
@@ -427,11 +432,10 @@ export function LoginModal() {
                       onChange={(e) => setRegLastName(e.target.value)}
                       placeholder="Al-Rashid"
                       autoComplete="family-name"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 px-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
-                        fieldErrors.lastName
+                      className={`w-full rounded-xl border bg-gray-50 py-3 px-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.lastName
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                      }`}
+                        }`}
                     />
                     {fieldErrors.lastName && (
                       <p className="mt-1 text-xs text-red-500">
@@ -458,11 +462,10 @@ export function LoginModal() {
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="you@example.com"
                       autoComplete="email"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
-                        fieldErrors.email
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.email
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                      }`}
+                        }`}
                     />
                   </div>
                   {fieldErrors.email && (
@@ -489,11 +492,10 @@ export function LoginModal() {
                       onChange={(e) => setRegPassword(e.target.value)}
                       placeholder="Min 8 chars, uppercase + number"
                       autoComplete="new-password"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
-                        fieldErrors.password
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.password
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                      }`}
+                        }`}
                     />
                     <button
                       type="button"

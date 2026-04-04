@@ -197,10 +197,19 @@ export const useCartStore = create<CartState>()(
         // Check if items changed during debounce
         const currentItems = get().items;
         if (JSON.stringify(items) !== JSON.stringify(currentItems)) {
-          return; // Another sync is in progress
+          // Items changed during debounce — another sync will handle it.
+          // CRITICAL: We did NOT set isSyncing=true, so no lock to release.
+          return;
         }
 
+        // 🔒 Lock AFTER debounce + change check — prevents permanent freeze
         set({ isSyncing: true });
+
+        // Timeout guard: force-unlock after 10s to prevent permanent lock
+        const unlockTimeout = setTimeout(() => {
+          set({ isSyncing: false });
+          console.warn('[Cart] syncWithServer timeout — force unlocked');
+        }, 10_000);
 
         try {
           const tenantId = await getTenantId();
@@ -209,6 +218,7 @@ export const useCartStore = create<CartState>()(
           const { syncCart } = await import('@/lib/api');
           const serverCart = await syncCart(tenantId, currentItems, sessionId);
 
+          clearTimeout(unlockTimeout);
           set({
             serverItems: serverCart.items || [],
             subtotal: serverCart.subtotal || '0',
@@ -217,6 +227,7 @@ export const useCartStore = create<CartState>()(
             isSyncing: false,
           });
         } catch (error) {
+          clearTimeout(unlockTimeout);
           console.error('Cart sync error:', error);
           // Revert optimistic update on error
           set((state) => ({
@@ -237,8 +248,8 @@ export const useCartStore = create<CartState>()(
         // SSR No-op storage to satisfy TypeScript/Zustand requirements
         return {
           getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {},
+          setItem: () => { },
+          removeItem: () => { },
         };
       }),
       // ⚠️ HYDRATION SAFETY: Only persist client-state, not server-state
@@ -277,13 +288,13 @@ export function useMountedCart() {
       isOpen: false,
       isSyncing: false,
       lastSyncedAt: null,
-      addItem: async () => {},
-      removeItem: async () => {},
-      updateQuantity: async () => {},
-      toggleCart: () => {},
-      clearCart: () => {},
-      refreshCart: async () => {},
-      syncWithServer: async () => {},
+      addItem: async () => { },
+      removeItem: async () => { },
+      updateQuantity: async () => { },
+      toggleCart: () => { },
+      clearCart: () => { },
+      refreshCart: async () => { },
+      syncWithServer: async () => { },
     };
   }
 

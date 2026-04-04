@@ -416,11 +416,20 @@ export async function mergeCustomerCart(sessionCartId?: string): Promise<{
   success: boolean;
 }> {
   const tenantId = await extractTenantFromHost();
+
+  // Extract customer token from cookie for Bearer auth
+  let authToken: string | null = null;
+  if (typeof window !== 'undefined') {
+    const match = document.cookie.match(/(?:^|; )cst_tkn=([^;]*)/);
+    authToken = match ? match[1] : null;
+  }
+
   const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/cart/merge`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-tenant-id': tenantId || '',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     },
     body: JSON.stringify({ sessionCartId }),
     credentials: 'include',
