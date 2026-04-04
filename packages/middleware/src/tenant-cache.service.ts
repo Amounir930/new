@@ -7,68 +7,136 @@ import { isUuid, toSchemaName } from './utils';
 
 @Injectable()
 export class TenantCacheService implements OnModuleInit {
-  private redis: RedisClientType;
+  private redis: RedisClientType | null = null;
+  private connecting = false;
   private readonly logger = new Logger(TenantCacheService.name);
   private readonly CACHE_TTL = 3600; // 1 hour
 
   constructor() {
     const redisUrl = env.REDIS_URL || 'redis://localhost:6379';
-    this.redis = createClient({ url: redisUrl });
+    this.redis = createClient({
+      url: redisUrl,
+      socket: {
+        keepAlive: 5000,
+        keepAliveInitialDelay: 5000,
+        connectTimeout: 5000,
+        timeout: 5000,
+        reconnectStrategy: (retries) => Math.min(retries * 1000, 30000),
+      },
+      pingInterval: 10000,
+    });
+
+    // 🛡️ P0 FIX: Prevent unhandled error events from crashing the process
+    this.redis.on('error', (err) => {
+      this.logger.warn(`Redis connection error: ${err.message}`);
+    });
+
+    this.redis.on('close', () => {
+      this.logger.warn('Redis connection closed — attempting reconnect');
+      this.attemptReconnect();
+    });
   }
 
   async onModuleInit() {
+    await this.connectWithRetry();
+  }
+
+  private async connectWithRetry() {
+    if (!this.redis || this.connecting) return;
     try {
+      this.connecting = true;
       await this.redis.connect();
       this.logger.log('Tenant Cache: Redis connection established');
     } catch (err) {
-      this.logger.error('Tenant Cache: Redis connection failed', err);
+      this.logger.error(
+        `Tenant Cache: Redis connection failed — ${err instanceof Error ? err.message : 'unknown error'}`
+      );
+      // Retry after 5s
+      setTimeout(() => this.attemptReconnect(), 5000);
+    } finally {
+      this.connecting = false;
+    }
+  }
+
+  private async attemptReconnect() {
+    if (!this.redis) return;
+    try {
+      if (!this.redis.isOpen) {
+        await this.redis.connect();
+        this.logger.log('Tenant Cache: Redis reconnected successfully');
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Tenant Cache: Redis reconnect failed — ${err instanceof Error ? err.message : 'unknown'}`
+      );
+      // Retry after 5s
+      setTimeout(() => this.attemptReconnect(), 5000);
+    }
+  }
+
+  /**
+   * Graceful Redis access — returns null if Redis is unavailable
+   * instead of throwing. Ensures the API stays alive.
+   */
+  private async safeExec<T>(
+    operation: () => Promise<T>,
+    fallback: T
+  ): Promise<T> {
+    if (!this.redis?.isOpen) return fallback;
+    try {
+      return await operation();
+    } catch (err) {
+      this.logger.warn(
+        `Tenant Cache: Redis operation failed — ${err instanceof Error ? err.message : 'unknown'}`
+      );
+      // Attempt reconnect in background
+      this.attemptReconnect();
+      return fallback;
     }
   }
 
   async getTenant(
     identifier: string
   ): Promise<Omit<TenantContext, 'executor'> | null> {
-    if (!this.redis.isOpen) return null;
+    return this.safeExec(async () => {
+      const key = `tenant:cache:${identifier.toLowerCase()}`;
+      const data = await this.redis!.get(key);
 
-    const key = `tenant:cache:${identifier.toLowerCase()}`;
-    const data = await this.redis.get(key);
+      if (!data) return null;
 
-    if (!data) return null;
-
-    try {
-      const parsed = JSON.parse(data);
-      // Item 44 Protocol: Restore Date objects from JSON
-      if (parsed.createdAt) parsed.createdAt = new Date(parsed.createdAt);
-      return parsed;
-    } catch {
-      return null;
-    }
+      try {
+        const parsed = JSON.parse(data);
+        if (parsed.createdAt) parsed.createdAt = new Date(parsed.createdAt);
+        return parsed;
+      } catch {
+        return null;
+      }
+    }, null);
   }
 
   async setTenant(
     identifier: string,
     context: Omit<TenantContext, 'executor'>
   ): Promise<void> {
-    if (!this.redis.isOpen) return;
-
-    const key = `tenant:cache:${identifier.toLowerCase()}`;
-    await this.redis.set(key, JSON.stringify(context), {
-      EX: this.CACHE_TTL,
-    });
+    await this.safeExec(async () => {
+      const key = `tenant:cache:${identifier.toLowerCase()}`;
+      await this.redis!.set(key, JSON.stringify(context), {
+        EX: this.CACHE_TTL,
+      });
+    }, undefined);
   }
 
   async invalidateTenant(identifier: string): Promise<void> {
-    if (!this.redis.isOpen) return;
-    const key = `tenant:cache:${identifier.toLowerCase()}`;
-    await this.redis.del(key);
+    await this.safeExec(async () => {
+      const key = `tenant:cache:${identifier.toLowerCase()}`;
+      await this.redis!.del(key);
+    }, undefined);
   }
 
-  /**
-   * Safe Generic Cache Access (Protocol Delta)
-   */
   async getCustom(key: string): Promise<string | null> {
-    if (!this.redis.isOpen) return null;
-    return this.redis.get(key);
+    return this.safeExec(async () => {
+      return await this.redis!.get(key);
+    }, null);
   }
 
   async setCustom(
@@ -76,8 +144,9 @@ export class TenantCacheService implements OnModuleInit {
     value: string,
     options?: { EX: number }
   ): Promise<void> {
-    if (!this.redis.isOpen) return;
-    await this.redis.set(key, value, options || {});
+    await this.safeExec(async () => {
+      await this.redis!.set(key, value, options || {});
+    }, undefined);
   }
 
   /**

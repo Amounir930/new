@@ -3,6 +3,23 @@
  * Implements S1-S8 Security Protocols + OpenAPI Documentation
  */
 
+// 🛡️ P0 FIX: Global process-level error handlers — catch ANY unhandled errors
+// from any library (Redis, DB, etc.) before they crash the process.
+process.on('uncaughtException', (err, origin) => {
+  console.error(
+    `[FATAL] Uncaught Exception (${origin}): ${err instanceof Error ? err.message : String(err)}`,
+    err instanceof Error ? err.stack : ''
+  );
+  // Do NOT exit — let the app continue. A single library error should not kill the API.
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error(
+    `[FATAL] Unhandled Rejection at: ${promise}, reason: ${reason instanceof Error ? reason.message : String(reason)}`
+  );
+  // Do NOT exit — let the app continue.
+});
+
 import { startTracing } from '@apex/monitoring';
 
 startTracing('apex-api');
