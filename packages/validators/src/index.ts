@@ -11,16 +11,19 @@ export * from './storefront/tenant-config.schema';
 
 /**
  * Platform Industry Niches (S2.5)
- * Centralized Enum to enforce strict industry-based logic and SDUI theme matching.
+ * Centralized Enum — MUST match public.niche_type PostgreSQL enum (9 values).
+ * Single source of truth after enum consolidation (tenant_niche eradicated).
  */
 export const NICHE_TYPES = [
   'retail',
   'wellness',
-  'professional',
-  'food',
   'education',
+  'services',
+  'hospitality',
   'real_estate',
-  'events',
+  'creative',
+  'food',
+  'digital',
 ] as const;
 
 export const NicheSchema = z.enum(NICHE_TYPES, {

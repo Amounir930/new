@@ -47,6 +47,8 @@ const SECTORS = [
   'hospitality',
   'real_estate',
   'creative',
+  'food',
+  'digital',
 ];
 
 const PLANS = ['free', 'basic', 'pro', 'enterprise'];

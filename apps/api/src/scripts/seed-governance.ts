@@ -16,21 +16,21 @@ async function main() {
         name: 'Apex Merchant Admin',
         plan: 'enterprise',
         status: 'active',
-        nicheType: 'system',
+        nicheType: 'retail',
       },
       {
         subdomain: 'storage-admin',
         name: 'Apex Storage Admin',
         plan: 'enterprise',
         status: 'active',
-        nicheType: 'system',
+        nicheType: 'retail',
       },
       {
         subdomain: 'super-admin',
         name: 'Apex Super Admin',
         plan: 'enterprise',
         status: 'active',
-        nicheType: 'system',
+        nicheType: 'retail',
       },
     ];
 

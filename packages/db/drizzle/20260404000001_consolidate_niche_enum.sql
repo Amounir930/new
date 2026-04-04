@@ -35,11 +35,20 @@ WHERE niche_type = 'real-estate';
 -- Uses explicit text→enum cast via USING clause.
 -- This is atomic: either succeeds fully or rolls back entirely.
 -- After this, the column is constrained by the 9-value niche_type enum.
+--
+-- NOTE: Must DROP DEFAULT first because PostgreSQL cannot auto-cast
+-- default values between different enum types.
 -- ──────────────────────────────────────────────────────────────
+
+ALTER TABLE governance.onboarding_blueprints
+  ALTER COLUMN niche_type DROP DEFAULT;
 
 ALTER TABLE governance.onboarding_blueprints
   ALTER COLUMN niche_type TYPE public.niche_type
   USING niche_type::text::public.niche_type;
+
+ALTER TABLE governance.onboarding_blueprints
+  ALTER COLUMN niche_type SET DEFAULT 'retail'::public.niche_type;
 
 -- ──────────────────────────────────────────────────────────────
 -- Step 4: Drop the obsolete tenant_niche enum

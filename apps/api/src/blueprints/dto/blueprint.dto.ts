@@ -54,7 +54,20 @@ export const createBlueprintSchema = z.object({
   name: z.string().min(3).max(100),
   description: z.string().optional(),
   plan: z.enum(['free', 'basic', 'pro', 'enterprise']).default('free'),
-  nicheType: z.string().optional().nullable(),
+  nicheType: z
+    .enum([
+      'retail',
+      'wellness',
+      'education',
+      'services',
+      'hospitality',
+      'real_estate',
+      'creative',
+      'food',
+      'digital',
+    ])
+    .optional()
+    .nullable(),
   uiConfig: z.record(z.unknown()).optional().default({}),
   isDefault: z.boolean().default(false),
   status: z.enum(['active', 'paused']).default('active'),
@@ -62,13 +75,13 @@ export const createBlueprintSchema = z.object({
 });
 
 export type CreateBlueprintInput = z.infer<typeof createBlueprintSchema>;
-export class CreateBlueprintDto extends createZodDto(createBlueprintSchema) {}
+export class CreateBlueprintDto extends createZodDto(createBlueprintSchema) { }
 
 // ─── Update Blueprint ─────────────────────────────────────────────────────────
 
 export const updateBlueprintSchema = createBlueprintSchema.partial();
 export type UpdateBlueprintInput = z.infer<typeof updateBlueprintSchema>;
-export class UpdateBlueprintDto extends createZodDto(updateBlueprintSchema) {}
+export class UpdateBlueprintDto extends createZodDto(updateBlueprintSchema) { }
 
 // ─── Snapshot Blueprint ───────────────────────────────────────────────────────
 
@@ -76,10 +89,22 @@ export const snapshotBlueprintSchema = z.object({
   subdomain: z.string().min(3),
   name: z.string().min(3),
   description: z.string().optional(),
-  nicheType: z.string().optional(),
+  nicheType: z
+    .enum([
+      'retail',
+      'wellness',
+      'education',
+      'services',
+      'hospitality',
+      'real_estate',
+      'creative',
+      'food',
+      'digital',
+    ])
+    .optional(),
 });
 
 export type SnapshotBlueprintInput = z.infer<typeof snapshotBlueprintSchema>;
 export class SnapshotBlueprintDto extends createZodDto(
   snapshotBlueprintSchema
-) {}
+) { }

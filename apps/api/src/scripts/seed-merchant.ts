@@ -28,7 +28,7 @@ async function main() {
         name: 'Adel Store',
         plan: 'pro',
         status: 'active',
-        nicheType: 'electronics',
+        nicheType: 'retail',
         uiConfig: {
           primaryColor: '#007bff',
           logo: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=200&h=200&auto=format&fit=crop',

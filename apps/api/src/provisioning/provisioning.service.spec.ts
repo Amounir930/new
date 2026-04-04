@@ -50,7 +50,7 @@ mock.module('@apex/db', () => ({
     id: 'id',
     blueprint: 'blueprint',
     status: 'status',
-    nicheType: 'nicheType',
+    nicheType: 'retail',
     plan: 'plan',
   },
   tenantQuotasInGovernance: {

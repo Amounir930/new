@@ -50,6 +50,8 @@ export function TenantList() {
     'hospitality',
     'real_estate',
     'creative',
+    'food',
+    'digital',
   ];
 
   const fetchTenants = useCallback(async () => {
@@ -200,11 +202,10 @@ export function TenantList() {
                   </TableCell>
                   <TableCell>
                     <select
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border-none cursor-pointer ${
-                        tenant.status === 'active'
+                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border-none cursor-pointer ${tenant.status === 'active'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
-                      }`}
+                        }`}
                       value={tenant.status}
                       disabled={updatingId === tenant.id}
                       onChange={(e) =>
