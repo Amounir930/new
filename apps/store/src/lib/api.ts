@@ -295,11 +295,15 @@ export async function loginCustomer(
   email: string,
   password: string
 ): Promise<{ success: boolean; customer: { id: string; email: string; firstName: string; lastName: string; avatarUrl: string | null } }> {
+  const tenantId = await extractTenantFromHost();
   const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId || '',
+    },
     body: JSON.stringify({ email, password }),
-    credentials: 'include', // Ensures httpOnly cst_tkn cookie is set
+    credentials: 'include',
   });
 
   if (!res.ok) {
@@ -323,9 +327,13 @@ export async function registerCustomer(input: {
   phone?: string;
   acceptsMarketing?: boolean;
 }): Promise<{ success: boolean; customer: { id: string; email: string; firstName: string; lastName: string; avatarUrl: string | null } }> {
+  const tenantId = await extractTenantFromHost();
   const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/register`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId || '',
+    },
     body: JSON.stringify(input),
     credentials: 'include',
   });
@@ -346,8 +354,12 @@ export async function registerCustomer(input: {
  * Customer logout — POST /api/v1/storefront/auth/logout
  */
 export async function logoutCustomer(): Promise<void> {
+  const tenantId = await extractTenantFromHost();
   await fetch(`${PUBLIC_API_URL}/storefront/auth/logout`, {
     method: 'POST',
+    headers: {
+      'x-tenant-id': tenantId || '',
+    },
     credentials: 'include',
   });
 }
@@ -362,7 +374,11 @@ export async function getCustomerMe(): Promise<{
   avatarUrl: string | null;
 } | null> {
   try {
+    const tenantId = await extractTenantFromHost();
     const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/me`, {
+      headers: {
+        'x-tenant-id': tenantId || '',
+      },
       credentials: 'include',
     });
 
@@ -379,9 +395,13 @@ export async function getCustomerMe(): Promise<{
 export async function mergeCustomerCart(sessionCartId?: string): Promise<{
   success: boolean;
 }> {
+  const tenantId = await extractTenantFromHost();
   const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/cart/merge`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId || '',
+    },
     body: JSON.stringify({ sessionCartId }),
     credentials: 'include',
   });

@@ -83,7 +83,7 @@ export class CustomerAuthService {
       }
 
       // Hash password (bcrypt cost 12 — consistent with merchant auth)
-      const passwordHash = await bcrypt.hash(input.password, 12);
+      const passwordHash = await bcrypt.hash(input.password, 10); // cost 10: ~80-120ms, balances security + performance
 
       // Encrypt PII fields (S7 protocol)
       const encryptedEmail = encrypt(input.email);

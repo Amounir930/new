@@ -36,7 +36,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) {}
+  ) { }
 
   /**
    * POST /api/provision
@@ -71,7 +71,8 @@ export class ProvisioningController {
       message: 'Store provisioned successfully',
       data: {
         subdomain: result.subdomain,
-        activationUrl: `https://${result.subdomain}.60sec.shop/admin/setup`,
+        storefrontUrl: `https://${result.subdomain}.60sec.shop/`,
+        adminUrl: `https://${result.subdomain}.60sec.shop/admin/setup`,
         durationMs: result.durationMs,
       },
     };

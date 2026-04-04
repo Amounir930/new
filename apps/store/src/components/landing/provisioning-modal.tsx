@@ -39,7 +39,7 @@ type OTPFormValues = z.infer<typeof OTPSchema>;
 interface ProvisioningModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (data: { storeName: string; adminUrl: string; email: string }) => void;
+  onSuccess: (data: { storeName: string; storefrontUrl: string; adminUrl: string; email: string }) => void;
 }
 
 export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningModalProps) {
@@ -123,7 +123,8 @@ export function ProvisioningModal({ isOpen, onClose, onSuccess }: ProvisioningMo
 
       onSuccess({
         storeName: watch('storeName'),
-        adminUrl: result.data.activationUrl,
+        storefrontUrl: result.data.storefrontUrl,
+        adminUrl: result.data.adminUrl,
         email: watch('email'),
       });
     } catch (err: any) {

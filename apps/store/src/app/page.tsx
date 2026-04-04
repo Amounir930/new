@@ -20,8 +20,8 @@ type ContactFormValues = z.infer<typeof ContactSchema>;
 
 export default function LandingPage() {
   const [isProvisioningOpen, setIsProvisioningOpen] = useState(false);
-  const [successData, setSuccessData] = useState<{ storeName: string; adminUrl: string; email: string } | null>(null);
-  
+  const [successData, setSuccessData] = useState<{ storeName: string; storefrontUrl: string; adminUrl: string; email: string } | null>(null);
+
   const [contactStatus, setContactStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [contactError, setContactError] = useState<string | null>(null);
 
@@ -100,7 +100,7 @@ export default function LandingPage() {
             <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
               Zero configuration. Military-grade security. Infinite scalability. Bring your products to the world with the fastest storefront engine ever built.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 onClick={() => setIsProvisioningOpen(true)}
@@ -142,7 +142,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay"></div>
         <div className="max-w-5xl mx-auto relative z-10">
           <h2 className="text-3xl md:text-5xl font-bold text-center mb-16">Simple, transparent pricing</h2>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             <PricingCard title="Free" price="$0" features={['1 Storefront', '50 Products', 'Community Support']} />
             <PricingCard title="Pro" price="$29" featured features={['Unlimited Products', 'Custom Domain', 'Priority Support', 'Advanced Analytics']} />
@@ -222,8 +222,8 @@ export default function LandingPage() {
         <p className="mt-2 text-sm text-gray-600">Built with S1-S15 Military-Grade Compliance.</p>
       </footer>
 
-      <ProvisioningModal 
-        isOpen={isProvisioningOpen} 
+      <ProvisioningModal
+        isOpen={isProvisioningOpen}
         onClose={() => setIsProvisioningOpen(false)}
         onSuccess={(data) => {
           setIsProvisioningOpen(false);
@@ -235,6 +235,7 @@ export default function LandingPage() {
         isOpen={!!successData}
         onClose={() => setSuccessData(null)}
         storeName={successData?.storeName || ''}
+        storefrontUrl={successData?.storefrontUrl || ''}
         adminUrl={successData?.adminUrl || ''}
         email={successData?.email || ''}
       />

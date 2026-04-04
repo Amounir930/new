@@ -229,16 +229,24 @@ export class CustomerAuthController {
   }
 
   private extractSubdomain(req: Request): string {
-    const host = (req.headers.host || '').split(':')[0];
-    const parts = host.split('.');
-
-    if (parts.length >= 3) return parts[0];
-
+    // Priority 1: x-tenant-id header (sent by storefront frontend)
     const headerTenant = req.headers['x-tenant-id'] as string | undefined;
     if (headerTenant) return headerTenant;
 
+    // Priority 2: Fallback to Host-based extraction
+    const host = (req.headers.host || '').split(':')[0];
+    const parts = host.split('.');
+    if (parts.length >= 3) {
+      const subdomain = parts[0];
+      // Reject system/infrastructure subdomains — they are never tenant stores
+      const systemSubdomains = ['api', 'admin', 'www', 'super-admin', 'staging'];
+      if (!systemSubdomains.includes(subdomain.toLowerCase())) {
+        return subdomain;
+      }
+    }
+
     throw new BadRequestException(
-      'Unable to determine store context from request'
+      'Unable to determine store context. Provide x-tenant-id header or access from a tenant subdomain.'
     );
   }
 
