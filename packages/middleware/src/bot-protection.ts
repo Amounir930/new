@@ -72,6 +72,11 @@ export class BotProtectionMiddleware implements NestMiddleware {
       clientIp === '127.0.0.1' ||
       clientIp === '::1';
 
+    // 🛡️ S11 FIX: Trusted IP whitelist bypass
+    // Allows specific IPs (comma-separated in ALLOWED_IPS env var) to skip bot protection
+    const allowedIPs = env.ALLOWED_IPS?.split(',').map((ip: string) => ip.trim()).filter(Boolean) || [];
+    const isTrustedIP = allowedIPs.includes(clientIp) || allowedIPs.includes(clientIp.replace('::ffff:', ''));
+
     // Bypass auth endpoints — they have their own hCaptcha challenge
     // via handleCaptchaChallenge(). Bot UA check here blocks legitimate
     // browser logins when Traefik/Cloudflare obscure the real client IP.
@@ -86,7 +91,7 @@ export class BotProtectionMiddleware implements NestMiddleware {
       /\/api\/v1\/merchant\/products/i.test(path) ||
       /\/api\/v1\/merchant\/customers/i.test(path);
 
-    return isHealthCheck || isInternal || isAuthEndpoint || isAdminService;
+    return isHealthCheck || isInternal || isTrustedIP || isAuthEndpoint || isAdminService;
   }
 
   private isBotUserAgent(

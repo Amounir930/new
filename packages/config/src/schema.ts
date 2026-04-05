@@ -152,6 +152,9 @@ export const serverEnvSchema = baseSchema.extend({
   HCAPTCHA_SECRET_KEY: z.string().optional(),
   HCAPTCHA_SITE_KEY: z.string().optional(),
 
+  // Trusted IP Whitelist (bypasses bot protection and rate limiting)
+  ALLOWED_IPS: z.string().optional(),
+
   // Cloudflare Turnstile (S3: Anti-bot CAPTCHA for public provisioning)
   TURNSTILE_SECRET_KEY: z.string().min(1, 'S1 Violation: TURNSTILE_SECRET_KEY is required'),
 
