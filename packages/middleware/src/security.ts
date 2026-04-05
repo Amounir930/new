@@ -129,11 +129,17 @@ export const defaultCorsConfig: CorsConfig = {
 
     const whitelist = [...devOrigins, ...productionOrigins, ...allowedOrigins];
 
-    // S8: Strict Anchor Regex for Apex + Subdomains
-    const rootDomain = env.APP_DOMAIN || '60sec.shop';
-    const escapedDomain = rootDomain.replace(/\./g, '\\.');
+    // S8 FIX: Sanitize root domain — strip whitespace, protocol, trailing slashes
+    // This prevents silent regex failures from env pollution
+    const rawDomain = (env.APP_DOMAIN || '60sec.shop')
+      .trim()
+      .replace(/^https?:\/\//, '')
+      .replace(/\/+$/, '');
+    const escapedDomain = rawDomain.replace(/\./g, '\\.');
+    // RFC 1035 compliant: matches https://60sec.shop and any depth of subdomains
+    // e.g. https://adel888.60sec.shop, https://store.us.60sec.shop
     const domainRegex = new RegExp(
-      `^https://([a-zA-Z0-9-]+\\.)*${escapedDomain}$`,
+      `^https://([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)*${escapedDomain}$`,
       'i'
     );
 
@@ -145,7 +151,10 @@ export const defaultCorsConfig: CorsConfig = {
         `[Security] S8 Violation: CORS blocked request from origin: ${origin}`,
         'SecurityHeaders'
       );
-      callback(new Error('Not allowed by CORS'));
+      // 🛡️ S8 FIX: Gracefully deny — never throw from origin callback.
+      // callback(null, false) tells Express CORS to skip CORS headers (204),
+      // preventing the GlobalExceptionFilter from catching this as a 500.
+      callback(null, false);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // Added OPTIONS for preflight
