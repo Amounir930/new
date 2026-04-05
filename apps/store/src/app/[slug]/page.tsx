@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ProductInfoClient } from '@/components/pdp/product-info-client';
 import { RelatedProducts } from '@/components/pdp/related-products';
@@ -123,9 +124,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <main className="container mx-auto px-4 py-8 lg:py-16">
         {/* Navigation Breadcrumbs */}
         <nav className="mb-12 flex items-center text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
-          <a href="/" className="hover:text-black transition-colors">
+          <Link href="/" className="hover:text-black transition-colors">
             Home
-          </a>
+          </Link>
           <span className="mx-4">/</span>
           <span className="text-black truncate">{productName}</span>
         </nav>

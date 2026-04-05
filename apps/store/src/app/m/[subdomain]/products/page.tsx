@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { ProductCard } from '@/components/ProductCard';
 import { getProducts } from '@/lib/api';
 import { SortSelect } from './sort-select';
@@ -141,12 +142,12 @@ export default async function ProductsPage({
             <p className="mt-2 text-sm text-gray-500">
               This store hasn&apos;t added any products yet.
             </p>
-            <a
+            <Link
               href="/"
               className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
             >
               ← Back to Home
-            </a>
+            </Link>
           </div>
         )}
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Image from 'next/image';
+import Link from 'next/link';
 import './globals.css';
 import { CartButton, ToastProvider } from '@/components/layout/toast-provider';
 import { UserMenu } from '@/components/layout/user-menu';
@@ -69,9 +70,9 @@ export default async function RootLayout({
                 </div>
               </div>
               <nav className="hidden md:flex items-center gap-8">
-                <a href="/" className="text-sm font-medium hover:text-blue-600 transition-colors">Home</a>
-                <a href="/products" className="text-sm font-medium hover:text-blue-600 transition-colors">Shop</a>
-                <a href="/categories" className="text-sm font-medium hover:text-blue-600 transition-colors">Categories</a>
+                <Link href="/" className="text-sm font-medium hover:text-blue-600 transition-colors">Home</Link>
+                <Link href="/products" className="text-sm font-medium hover:text-blue-600 transition-colors">Shop</Link>
+                <Link href="/categories" className="text-sm font-medium hover:text-blue-600 transition-colors">Categories</Link>
               </nav>
               <div className="flex items-center gap-4">
                 <button type="button" className="p-2 hover:bg-gray-100 rounded-full transition-colors">

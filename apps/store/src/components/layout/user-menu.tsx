@@ -19,12 +19,8 @@ export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [userName, setUserName] = useState('');
 
-  // Fetch customer profile on mount if cookie exists
+  // Probe server-side auth session on mount — HttpOnly cookie sent automatically
   useEffect(() => {
-    const hasAuthCookie =
-      typeof window !== 'undefined' && document.cookie.includes('cst_tkn=');
-    if (!hasAuthCookie) return;
-
     getCustomerMe().then((customer) => {
       if (customer) {
         setAuthenticated({

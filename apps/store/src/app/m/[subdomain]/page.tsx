@@ -4,6 +4,7 @@
 export const revalidate = 60;
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { NewsletterSection } from '@/components/NewsletterSection';
 import { ProductCard } from '@/components/ProductCard';
 import { getStoreBootstrap } from '@/lib/api';
@@ -65,12 +66,12 @@ export default async function TenantHome({ params }: TenantPageProps) {
                 'Experience the future of shopping with our curated collection of premium products.'}
             </p>
             <div className="flex justify-center gap-4">
-              <a
+              <Link
                 href="/products"
                 className="rounded-full bg-white px-8 py-4 text-sm font-bold text-black shadow-xl ring-1 ring-black/5 transition-all hover:bg-gray-100 hover:scale-105 active:scale-95"
               >
                 {heroBanner?.ctaText || 'Shop Collection'}
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -88,7 +89,7 @@ export default async function TenantHome({ params }: TenantPageProps) {
                 {homeData?.sectionTitle || 'Best Sellers'}
               </h2>
             </div>
-            <a
+            <Link
               href="/products"
               className="group flex items-center gap-2 font-bold text-black transition-colors hover:text-blue-600"
             >
@@ -107,7 +108,7 @@ export default async function TenantHome({ params }: TenantPageProps) {
                   d="M14 5l7 7m0 0l-7 7m7-7H3"
                 />
               </svg>
-            </a>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
