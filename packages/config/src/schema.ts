@@ -162,6 +162,10 @@ export const serverEnvSchema = baseSchema.extend({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().default('noreply@60sec.shop'),
 
+  // Stripe Payment Gateway
+  STRIPE_SECRET_KEY: z.string().min(1, 'S1 Violation: STRIPE_SECRET_KEY is required'),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1, 'S1 Violation: STRIPE_WEBHOOK_SECRET is required'),
+
   // Gitea & Webhook
   GITEA_DB_PASSWORD: z.string().optional(),
 

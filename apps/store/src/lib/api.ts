@@ -272,6 +272,85 @@ export async function getCart(tenantId: string, sessionId?: string) {
   return res.json();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// CHECKOUT (Store-#06)
+// ═══════════════════════════════════════════════════════════════
+
+export interface AddressInput {
+  name: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  state: string | null;
+  postalCode: string;
+  country: string;
+  phone: string | null;
+}
+
+export interface CheckoutCartItemInput {
+  productId: string;
+  variantId: string | null;
+  quantity: number;
+}
+
+export interface CheckoutResponse {
+  success: boolean;
+  orderId: string;
+  orderNumber: string;
+  total: string;
+  subtotal: string;
+  shipping: string;
+  tax: string;
+  clientSecret?: string;
+  items: Array<{
+    productId: string;
+    variantId: string | null;
+    name: string;
+    quantity: number;
+    price: string;
+    total: string;
+  }>;
+}
+
+/**
+ * Create an order via checkout.
+ * Server recalculates all prices from DB — client sends only product refs.
+ */
+export async function createCheckout(input: {
+  idempotencyKey: string;
+  shippingAddress: AddressInput;
+  billingAddress?: AddressInput;
+  sameAsShipping: boolean;
+  shippingMethod: 'standard' | 'express' | 'overnight';
+  paymentMethod: 'card' | 'cod' | 'wallet' | 'bnpl';
+  cartItems: CheckoutCartItemInput[];
+  notes?: string | null;
+  guestEmail?: string | null;
+}): Promise<CheckoutResponse> {
+  const tenantId = await extractTenantFromHost();
+
+  const res = await fetch(`${PUBLIC_API_URL}/storefront/checkout/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId || '',
+    },
+    body: JSON.stringify(input),
+    credentials: 'include',
+  });
+
+  if (!res.ok) {
+    const error = await res
+      .json()
+      .catch(() => ({ message: 'Checkout failed' }));
+    throw new Error(
+      error.message || error?.errors?.[0]?.message || 'Checkout failed'
+    );
+  }
+
+  return res.json();
+}
+
 /**
  * 🛡️ S2 FIX: Universal helper to extract tenant identifier from Host header (SSR) or hostname (Client)
  */

@@ -11,18 +11,20 @@
   },
   "dependencies": {
     "@apex/monitoring": "workspace:*",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@stripe/react-stripe-js": "^6.1.0",
+    "@stripe/stripe-js": "^9.0.1",
+    "@tanstack/react-query": "^5.28.14",
+    "clsx": "2.1.1",
+    "embla-carousel-react": "^8.0.0",
     "lucide-react": "0.475.0",
     "next": "16.1.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "clsx": "2.1.1",
+    "react-hot-toast": "^2.4.1",
     "tailwind-merge": "3.5.0",
     "zod": "3.24.1",
-    "zustand": "^4.5.2",
-    "@tanstack/react-query": "^5.28.14",
-    "@radix-ui/react-dialog": "^1.0.5",
-    "embla-carousel-react": "^8.0.0",
-    "react-hot-toast": "^2.4.1"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.0",

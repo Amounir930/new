@@ -7,6 +7,7 @@
 export * from './blueprint.schema';
 export * from './cart.schema';
 export * from './category.schema';
+export * from './checkout.schema';
 export * from './customer.schema';
 export * from './metafields.schema';
 export * from './order.schema';

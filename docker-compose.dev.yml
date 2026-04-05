@@ -122,6 +122,8 @@ services:
       - ops/.env
     environment:
       NODE_ENV: development
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_dummy_key_for_dev}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_dummy_webhook_secret_for_dev}
     ports:
       - "3000:3000"
     depends_on:
@@ -159,6 +161,7 @@ services:
       HUSKY: "0"
       NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
       INTERNAL_API_URL: http://api:3000/api/v1
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-pk_test_dummy_key_for_dev}
       PORT: 3002
     ports:
       - "3002:3002"
