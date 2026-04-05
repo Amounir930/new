@@ -157,8 +157,8 @@ services:
     environment:
       NODE_ENV: development
       HUSKY: "0"
-      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      INTERNAL_API_URL: http://api:3000/api
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
+      INTERNAL_API_URL: http://api:3000/api/v1
       PORT: 3002
     ports:
       - "3002:3002"
@@ -193,8 +193,8 @@ services:
     environment:
       NODE_ENV: development
       HUSKY: "0"
-      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      INTERNAL_API_URL: http://api:3000/api
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
+      INTERNAL_API_URL: http://api:3000/api/v1
       PORT: 3001
     ports:
       - "3001:3001"
@@ -229,8 +229,8 @@ services:
     environment:
       NODE_ENV: development
       HUSKY: "0"
-      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api
-      INTERNAL_API_URL: http://api:3000/api
+      NEXT_PUBLIC_API_URL: https://api.60sec.shop/api/v1
+      INTERNAL_API_URL: http://api:3000/api/v1
       PORT: 3001
     ports:
       - "3003:3001"
