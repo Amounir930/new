@@ -12,7 +12,7 @@ import { validateBlueprint } from './blueprint/executor';
 import type { BlueprintRecord, BlueprintTemplate } from './blueprint/types';
 
 // Fallback template for safety
-const defaultBlueprintTemplate: BlueprintTemplate = {
+const _defaultBlueprintTemplate: BlueprintTemplate = {
   name: 'Default Blueprint',
   version: '1.0',
   modules: {

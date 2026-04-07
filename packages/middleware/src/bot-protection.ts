@@ -17,7 +17,7 @@ import { HCaptchaService } from './hcaptcha.service';
 
 @Injectable()
 export class BotProtectionMiddleware implements NestMiddleware {
-  constructor(private readonly captchaService: HCaptchaService) { }
+  constructor(private readonly captchaService: HCaptchaService) {}
 
   // Common bot and scraper User-Agent patterns
   private readonly botUserAgents = [
@@ -74,8 +74,13 @@ export class BotProtectionMiddleware implements NestMiddleware {
 
     // 🛡️ S11 FIX: Trusted IP whitelist bypass
     // Allows specific IPs (comma-separated in ALLOWED_IPS env var) to skip bot protection
-    const allowedIPs = env.ALLOWED_IPS?.split(',').map((ip: string) => ip.trim()).filter(Boolean) || [];
-    const isTrustedIP = allowedIPs.includes(clientIp) || allowedIPs.includes(clientIp.replace('::ffff:', ''));
+    const allowedIPs =
+      env.ALLOWED_IPS?.split(',')
+        .map((ip: string) => ip.trim())
+        .filter(Boolean) || [];
+    const isTrustedIP =
+      allowedIPs.includes(clientIp) ||
+      allowedIPs.includes(clientIp.replace('::ffff:', ''));
 
     // Bypass auth endpoints — they have their own hCaptcha challenge
     // via handleCaptchaChallenge(). Bot UA check here blocks legitimate
@@ -91,7 +96,13 @@ export class BotProtectionMiddleware implements NestMiddleware {
       /\/api\/v1\/merchant\/products/i.test(path) ||
       /\/api\/v1\/merchant\/customers/i.test(path);
 
-    return isHealthCheck || isInternal || isTrustedIP || isAuthEndpoint || isAdminService;
+    return (
+      isHealthCheck ||
+      isInternal ||
+      isTrustedIP ||
+      isAuthEndpoint ||
+      isAdminService
+    );
   }
 
   private isBotUserAgent(

@@ -3,6 +3,7 @@ import { z } from 'zod';
 export * from './storefront/blueprint.schema';
 export * from './storefront/cart.schema';
 export * from './storefront/category.schema';
+export * from './storefront/checkout.schema';
 export * from './storefront/customer.schema';
 export * from './storefront/order.schema';
 export * from './storefront/product.schema';

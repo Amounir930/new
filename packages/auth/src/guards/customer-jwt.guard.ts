@@ -16,7 +16,10 @@ import type { CustomerUser } from '../strategies/customer-jwt.strategy';
  *   async someEndpoint(@Req() req: CustomerAuthenticatedRequest) { ... }
  */
 @Injectable()
-export class CustomerJwtAuthGuard extends AuthGuard('customer-jwt') implements CanActivate {
+export class CustomerJwtAuthGuard
+  extends AuthGuard('customer-jwt')
+  implements CanActivate
+{
   canActivate(
     context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {

@@ -559,14 +559,23 @@ export const auditLogsInGovernance = governance.table(
     checksum: text(),
   },
   (table) => [
-    index('idx_audit_action').using('btree', table.action.asc().nullsLast().op('text_ops')),
-    index('idx_audit_created_brin').using('brin', table.createdAt.asc().nullsLast().op('timestamptz_ops')),
+    index('idx_audit_action').using(
+      'btree',
+      table.action.asc().nullsLast().op('text_ops')
+    ),
+    index('idx_audit_created_brin').using(
+      'brin',
+      table.createdAt.asc().nullsLast().op('timestamptz_ops')
+    ),
     index('idx_audit_entity').using(
       'btree',
       table.entityType.asc().nullsLast().op('text_ops'),
       table.entityId.asc().nullsLast().op('text_ops')
     ),
-    index('idx_audit_tenant').using('btree', table.tenantId.asc().nullsLast().op('uuid_ops')),
+    index('idx_audit_tenant').using(
+      'btree',
+      table.tenantId.asc().nullsLast().op('uuid_ops')
+    ),
     pgPolicy('tenant_isolation_policy', {
       as: 'permissive',
       for: 'all',
@@ -3634,7 +3643,10 @@ export const outboxEventsInStorefront = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' })
       .defaultNow()
       .notNull(),
-    processedAt: timestamp('processed_at', { withTimezone: true, mode: 'string' }),
+    processedAt: timestamp('processed_at', {
+      withTimezone: true,
+      mode: 'string',
+    }),
     retryCount: integer('retry_count').default(0).notNull(),
     status: outboxStatus().default('pending').notNull(),
     eventType: varchar('event_type', { length: 100 }).notNull(),
@@ -3646,7 +3658,10 @@ export const outboxEventsInStorefront = pgTable(
     lockedAt: timestamp('locked_at', { withTimezone: true, mode: 'string' }),
   },
   (table) => [
-    index('idx_outbox_created_brin').using('brin', table.createdAt.asc().nullsLast().op('timestamptz_ops')),
+    index('idx_outbox_created_brin').using(
+      'brin',
+      table.createdAt.asc().nullsLast().op('timestamptz_ops')
+    ),
     index('idx_outbox_pending').using(
       'btree',
       table.status.asc().nullsLast().op('enum_ops'),
@@ -3678,8 +3693,14 @@ export const paymentLogsInStorefront = pgTable(
     ipAddress: inet('ip_address'),
   },
   (table) => [
-    index('idx_payment_created_brin').using('brin', table.createdAt.asc().nullsLast().op('timestamptz_ops')),
-    index('idx_payment_logs_order').using('btree', table.orderId.asc().nullsLast().op('uuid_ops')),
+    index('idx_payment_created_brin').using(
+      'brin',
+      table.createdAt.asc().nullsLast().op('timestamptz_ops')
+    ),
+    index('idx_payment_logs_order').using(
+      'btree',
+      table.orderId.asc().nullsLast().op('uuid_ops')
+    ),
     foreignKey({
       columns: [table.orderId],
       foreignColumns: [ordersInStorefront.id],

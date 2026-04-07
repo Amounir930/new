@@ -1,8 +1,6 @@
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { ConfigService } from '@apex/config/service';
 import {
-  HttpException,
-  HttpStatus,
   Injectable,
   Logger,
   type OnApplicationShutdown,
@@ -20,7 +18,8 @@ import { createClient, type RedisClientType } from 'redis';
  */
 @Injectable()
 export class RedisRateLimitStore
-  implements OnModuleInit, OnApplicationShutdown {
+  implements OnModuleInit, OnApplicationShutdown
+{
   private client: RedisClientType | null = null;
   private connecting = false;
   private fallbackToMemory = false;
@@ -30,7 +29,7 @@ export class RedisRateLimitStore
   > = new Map();
   private readonly logger = new Logger(RedisRateLimitStore.name);
 
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
     await this.connect();
@@ -91,7 +90,9 @@ export class RedisRateLimitStore
       });
 
       this.client.on('close', () => {
-        this.logger.warn('Redis rate limit connection closed — will reconnect on next request');
+        this.logger.warn(
+          'Redis rate limit connection closed — will reconnect on next request'
+        );
         this.client = null;
       });
 
@@ -105,7 +106,7 @@ export class RedisRateLimitStore
       );
       await Promise.race([connectPromise, timeoutPromise]);
       this.fallbackToMemory = false;
-    } catch (err) {
+    } catch (_err) {
       this.client = null;
       this.fallbackToMemory = false;
 

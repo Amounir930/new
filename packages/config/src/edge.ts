@@ -12,7 +12,9 @@ const edgeEnvSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().optional(),
   NEXT_PUBLIC_IMGPROXY_URL: z.string().url().optional(),
   INTERNAL_API_URL: z.string().url().default('http://api:3000/api/v1'),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
 });
 
 export type EdgeEnvConfig = z.infer<typeof edgeEnvSchema>;

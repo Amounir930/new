@@ -1,16 +1,21 @@
 import {
+  and,
   cartsInStorefront,
   customersInStorefront,
+  eq,
   getTenantDb,
+  isNull,
 } from '@apex/db';
-import { and, eq, isNull } from '@apex/db';
-import { encrypt, decrypt, hashSensitiveData } from '@apex/security';
 import type { TenantCacheService } from '@apex/middleware';
-import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { decrypt, encrypt, hashSensitiveData } from '@apex/security';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import type { CustomerUser } from './strategies/customer-jwt.strategy';
-
 import type { CustomerJwtPayload } from './strategies/customer-jwt.strategy';
 
 /**
@@ -41,7 +46,7 @@ export class CustomerAuthService {
     @Inject(JwtService) private readonly jwtService: JwtService,
     @Inject('TENANT_CACHE_SERVICE')
     private readonly tenantCache: TenantCacheService
-  ) { }
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════
   // CUSTOMER REGISTRATION
@@ -185,7 +190,10 @@ export class CustomerAuthService {
       }
 
       // Verify password
-      const isValid = await bcrypt.compare(input.password, customer.passwordHash);
+      const isValid = await bcrypt.compare(
+        input.password,
+        customer.passwordHash
+      );
       if (!isValid) {
         throw new UnauthorizedException('Invalid credentials');
       }
@@ -318,8 +326,10 @@ export class CustomerAuthService {
 
       if (customerCart) {
         // Merge: add session cart items to customer cart
-        const existingItems = (customerCart.items as Array<Record<string, unknown>>) || [];
-        const sessionItems = (sessionCart.items as Array<Record<string, unknown>>) || [];
+        const existingItems =
+          (customerCart.items as Array<Record<string, unknown>>) || [];
+        const sessionItems =
+          (sessionCart.items as Array<Record<string, unknown>>) || [];
 
         const mergedItems = [...existingItems];
         for (const sessionItem of sessionItems) {
@@ -383,7 +393,9 @@ export class CustomerAuthService {
     const crypto = await import('node:crypto');
 
     if (!customer.tenantId) {
-      throw new Error('S2 Violation: Cannot generate customer JWT without tenantId');
+      throw new Error(
+        'S2 Violation: Cannot generate customer JWT without tenantId'
+      );
     }
 
     const payload: CustomerJwtPayload = {

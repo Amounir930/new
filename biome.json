@@ -130,6 +130,32 @@
       "linter": {
         "enabled": false
       }
+    },
+    {
+      "includes": [
+        "apps/store/**"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": "off"
+          },
+          "correctness": {
+            "useHookAtTopLevel": "warn",
+            "noUnusedVariables": "warn",
+            "noUnusedImports": "warn"
+          },
+          "a11y": {
+            "noSvgWithoutTitle": "warn",
+            "noLabelWithoutControl": "warn",
+            "useButtonType": "warn",
+            "useAltText": "warn"
+          },
+          "suspicious": {
+            "noArrayIndexKey": "warn"
+          }
+        }
+      }
     }
   ]
 }

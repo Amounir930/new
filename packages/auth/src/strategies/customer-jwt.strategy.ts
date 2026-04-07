@@ -1,5 +1,10 @@
 import { ConfigService } from '@apex/config/service';
-import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -9,12 +14,12 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
  * Customers are scoped to a single tenant's storefront schema.
  */
 export interface CustomerJwtPayload {
-  sub: string;          // customerId (UUID in storefront.customers)
-  email: string;        // plaintext email (for display only)
-  tenantId: string;     // which tenant this customer belongs to
-  subdomain: string;    // tenant subdomain (for schema resolution)
-  role: 'customer';     // always 'customer'
-  jti: string;          // replay protection
+  sub: string; // customerId (UUID in storefront.customers)
+  email: string; // plaintext email (for display only)
+  tenantId: string; // which tenant this customer belongs to
+  subdomain: string; // tenant subdomain (for schema resolution)
+  role: 'customer'; // always 'customer'
+  jti: string; // replay protection
 }
 
 /**
@@ -37,12 +42,17 @@ export interface CustomerUser {
  * downstream by CustomerJwtMatchGuard + schema-per-tenant isolation.
  */
 @Injectable()
-export class CustomerJwtStrategy extends PassportStrategy(Strategy, 'customer-jwt') {
+export class CustomerJwtStrategy extends PassportStrategy(
+  Strategy,
+  'customer-jwt'
+) {
   private readonly logger = new Logger(CustomerJwtStrategy.name);
 
   constructor(@Inject(ConfigService) configService: ConfigService) {
     if (!configService) {
-      throw new Error('ConfigService is missing in CustomerJwtStrategy constructor');
+      throw new Error(
+        'ConfigService is missing in CustomerJwtStrategy constructor'
+      );
     }
 
     const jwtSecret = configService.get('JWT_SECRET');
@@ -58,7 +68,9 @@ export class CustomerJwtStrategy extends PassportStrategy(Strategy, 'customer-jw
         (req: Request & { cookies?: Record<string, unknown> }) => {
           let token: string | null = null;
           if (req?.cookies && typeof req.cookies === 'object') {
-            token = (req.cookies as Record<string, string | undefined>).cst_tkn ?? null;
+            token =
+              (req.cookies as Record<string, string | undefined>).cst_tkn ??
+              null;
           }
           return token;
         },
