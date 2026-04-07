@@ -159,6 +159,7 @@ export const serverEnvSchema = baseSchema.extend({
   TURNSTILE_SECRET_KEY: z
     .string()
     .optional()
+    .transform((v) => (v === '' ? undefined : v))
     .default('1x0000000000000000000000000000000AA'),
 
   // Transactional Email: Resend (primary provider, AWS SES suspended)
@@ -201,6 +202,7 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z
     .string()
     .optional()
+    .transform((v) => (v === '' ? undefined : v))
     .default('1x00000000000000000000AA'),
 });
 
