@@ -1,17 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { z } from 'zod';
-import { Loader2, X, Eye, EyeOff, Mail, Lock, User, CheckCircle2 } from 'lucide-react';
-import {
-  loginCustomer,
-  registerCustomer,
-  mergeCustomerCart,
-} from '@/lib/api';
-import { useAuthStore, useMountedAuth } from '@/lib/auth-store';
-import { useMountedCart } from '@/lib/cart-store';
+import { Eye, EyeOff, Loader2, Lock, Mail, User, X } from 'lucide-react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import toast from 'react-hot-toast';
+import { z } from 'zod';
+import { loginCustomer, mergeCustomerCart, registerCustomer } from '@/lib/api';
+import { useMountedAuth } from '@/lib/auth-store';
+import { useMountedCart } from '@/lib/cart-store';
 
 // ═══════════════════════════════════════════════════════════════
 // ZOD SCHEMAS (mirrors backend validation)
@@ -222,7 +218,10 @@ export function LoginModal() {
   const isLoading = isPending || isAuthenticating;
 
   return (
-    <Dialog.Root open={isLoginModalOpen} onOpenChange={(open) => !open && closeLoginModal()}>
+    <Dialog.Root
+      open={isLoginModalOpen}
+      onOpenChange={(open) => !open && closeLoginModal()}
+    >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
@@ -258,10 +257,11 @@ export function LoginModal() {
                 setActiveTab('login');
                 setFieldErrors({});
               }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${activeTab === 'login'
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${
+                activeTab === 'login'
                   ? 'border-b-2 border-black text-gray-900'
                   : 'text-gray-400 hover:text-gray-600'
-                }`}
+              }`}
             >
               Sign In
             </button>
@@ -271,10 +271,11 @@ export function LoginModal() {
                 setActiveTab('register');
                 setFieldErrors({});
               }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${activeTab === 'register'
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${
+                activeTab === 'register'
                   ? 'border-b-2 border-black text-gray-900'
                   : 'text-gray-400 hover:text-gray-600'
-                }`}
+              }`}
             >
               Create Account
             </button>
@@ -308,10 +309,11 @@ export function LoginModal() {
                       onChange={(e) => setLoginEmail(e.target.value)}
                       placeholder="you@example.com"
                       autoComplete="email"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.email
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
+                        fieldErrors.email
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                        }`}
+                      }`}
                     />
                   </div>
                   {fieldErrors.email && (
@@ -338,10 +340,11 @@ export function LoginModal() {
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="Enter your password"
                       autoComplete="current-password"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.password
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
+                        fieldErrors.password
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                        }`}
+                      }`}
                     />
                     <button
                       type="button"
@@ -406,10 +409,11 @@ export function LoginModal() {
                         onChange={(e) => setRegFirstName(e.target.value)}
                         placeholder="Ahmed"
                         autoComplete="given-name"
-                        className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.firstName
+                        className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
+                          fieldErrors.firstName
                             ? 'border-red-300 bg-red-50'
                             : 'border-gray-200'
-                          }`}
+                        }`}
                       />
                     </div>
                     {fieldErrors.firstName && (
@@ -432,10 +436,11 @@ export function LoginModal() {
                       onChange={(e) => setRegLastName(e.target.value)}
                       placeholder="Al-Rashid"
                       autoComplete="family-name"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 px-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.lastName
+                      className={`w-full rounded-xl border bg-gray-50 py-3 px-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
+                        fieldErrors.lastName
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                        }`}
+                      }`}
                     />
                     {fieldErrors.lastName && (
                       <p className="mt-1 text-xs text-red-500">
@@ -462,10 +467,11 @@ export function LoginModal() {
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="you@example.com"
                       autoComplete="email"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.email
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-4 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
+                        fieldErrors.email
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                        }`}
+                      }`}
                     />
                   </div>
                   {fieldErrors.email && (
@@ -492,10 +498,11 @@ export function LoginModal() {
                       onChange={(e) => setRegPassword(e.target.value)}
                       placeholder="Min 8 chars, uppercase + number"
                       autoComplete="new-password"
-                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.password
+                      className={`w-full rounded-xl border bg-gray-50 py-3 pl-10 pr-10 text-sm transition-colors focus:border-black focus:bg-white focus:outline-none focus:ring-1 focus:ring-black ${
+                        fieldErrors.password
                           ? 'border-red-300 bg-red-50'
                           : 'border-gray-200'
-                        }`}
+                      }`}
                     />
                     <button
                       type="button"

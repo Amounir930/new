@@ -1,11 +1,11 @@
 'use client';
 
+import { LogOut, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { User, LogOut } from 'lucide-react';
-import { logoutCustomer, getCustomerMe } from '@/lib/api';
+import toast from 'react-hot-toast';
+import { getCustomerMe, logoutCustomer } from '@/lib/api';
 import { useAuthStore, useMountedAuth } from '@/lib/auth-store';
 import { useMountedCart } from '@/lib/cart-store';
-import toast from 'react-hot-toast';
 
 /**
  * ── USER MENU ──

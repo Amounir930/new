@@ -28,7 +28,7 @@ const SORT_LABELS: Record<string, string> = {
   price_desc: 'Price: High to Low',
 };
 
-function getProductName(
+function _getProductName(
   name: string | { en?: string; ar?: string } | null
 ): string {
   if (typeof name === 'string') return name;
@@ -45,7 +45,7 @@ export default async function ProductsPage({
 
   const sort =
     resolvedSearchParams.sort === 'price_asc' ||
-      resolvedSearchParams.sort === 'price_desc'
+    resolvedSearchParams.sort === 'price_desc'
       ? resolvedSearchParams.sort
       : 'newest';
 

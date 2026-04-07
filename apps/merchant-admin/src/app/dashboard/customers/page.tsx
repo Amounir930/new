@@ -1,12 +1,12 @@
 'use client';
 
-import { Search, Users, ChevronDown } from 'lucide-react';
+import { ChevronDown, Search, Users } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { getCustomers } from '@/lib/api';
 import {
-  CustomerTable,
   type CustomerRow,
+  CustomerTable,
 } from '@/components/customers/customer-table';
+import { getCustomers } from '@/lib/api';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -26,7 +26,9 @@ export default function CustomersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [sort, setSort] = useState<'newest' | 'oldest' | 'spent_desc' | 'name_asc'>('newest');
+  const [sort, setSort] = useState<
+    'newest' | 'oldest' | 'spent_desc' | 'name_asc'
+  >('newest');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Debounce search

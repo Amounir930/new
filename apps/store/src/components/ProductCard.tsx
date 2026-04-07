@@ -71,10 +71,7 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
 
       {/* Action bar: quantity + add button */}
-      <ProductCardActions
-        productId={product.id}
-        productSlug={product.slug}
-      />
+      <ProductCardActions productId={product.id} productSlug={product.slug} />
     </div>
   );
 }

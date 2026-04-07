@@ -48,4 +48,4 @@ import { TenantsPublicController } from './tenants-public.controller';
   ],
   providers: [ImportWorker, FileValidationService, BulkImportTemplateService],
 })
-export class TenantsModule { }
+export class TenantsModule {}

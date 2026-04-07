@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ProductInfoClient } from '@/components/pdp/product-info-client';
 import { RelatedProducts } from '@/components/pdp/related-products';
+import type {
+  Review,
+  ReviewsPagination,
+} from '@/components/pdp/reviews-section';
 import { ReviewsSection } from '@/components/pdp/reviews-section';
-import type { Review, ReviewsPagination } from '@/components/pdp/reviews-section';
 import { SafeHtmlContent } from '@/components/pdp/safe-html-content';
 import {
   getProductBySlug,
@@ -116,8 +119,8 @@ export default async function TenantProductPage({
   // Defensive: ensure reviews has the expected shape
   const safeReviews =
     reviews &&
-      Array.isArray((reviews as { reviews?: unknown[] })?.reviews) &&
-      typeof (reviews as { pagination?: unknown })?.pagination === 'object'
+    Array.isArray((reviews as { reviews?: unknown[] })?.reviews) &&
+    typeof (reviews as { pagination?: unknown })?.pagination === 'object'
       ? (reviews as { reviews: Review[]; pagination: ReviewsPagination })
       : EMPTY_REVIEWS;
 

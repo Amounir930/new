@@ -1,9 +1,9 @@
 import {
-  CreateCheckoutSchema,
-  ShippingMethodSchema,
   CheckoutAddressSchema,
   CheckoutCartItemSchema,
   CheckoutPaymentMethodSchema,
+  CreateCheckoutSchema,
+  ShippingMethodSchema,
 } from '@apex/validation';
 import { createZodDto } from 'nestjs-zod';
 
@@ -11,7 +11,7 @@ import { createZodDto } from 'nestjs-zod';
 // CHECKOUT DTOs — Zero-Trust Order Creation (Store-#06)
 // ═══════════════════════════════════════════════════════════════
 
-export class CreateCheckoutDto extends createZodDto(CreateCheckoutSchema) { }
+export class CreateCheckoutDto extends createZodDto(CreateCheckoutSchema) {}
 
 // Re-export types for downstream use
 export type {

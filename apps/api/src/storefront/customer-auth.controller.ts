@@ -1,4 +1,10 @@
 import { AuditLog } from '@apex/audit';
+import {
+  type CustomerAuthenticatedRequest,
+  CustomerAuthService,
+  CustomerJwtAuthGuard,
+  CustomerJwtMatchGuard,
+} from '@apex/auth';
 import { TenantCacheService } from '@apex/middleware';
 import {
   BadRequestException,
@@ -18,12 +24,6 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import {
-  CustomerAuthService,
-  CustomerJwtAuthGuard,
-  CustomerJwtMatchGuard,
-  type CustomerAuthenticatedRequest,
-} from '@apex/auth';
 
 // ═══════════════════════════════════════════════════════════════
 // ZOD SCHEMAS
@@ -100,7 +100,10 @@ export class CustomerAuthController {
     }
 
     const subdomain = this.extractSubdomain(req);
-    const result = await this.customerAuthService.register(subdomain, parsed.data);
+    const result = await this.customerAuthService.register(
+      subdomain,
+      parsed.data
+    );
 
     this.setCustomerCookie(response, result.token);
 
@@ -239,7 +242,13 @@ export class CustomerAuthController {
     if (parts.length >= 3) {
       const subdomain = parts[0];
       // Reject system/infrastructure subdomains — they are never tenant stores
-      const systemSubdomains = ['api', 'admin', 'www', 'super-admin', 'staging'];
+      const systemSubdomains = [
+        'api',
+        'admin',
+        'www',
+        'super-admin',
+        'staging',
+      ];
       if (!systemSubdomains.includes(subdomain.toLowerCase())) {
         return subdomain;
       }

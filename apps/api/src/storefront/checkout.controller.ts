@@ -1,4 +1,5 @@
 import { AuditLog } from '@apex/audit';
+import type { TenantCacheService, TenantRequest } from '@apex/middleware';
 import {
   BadRequestException,
   Body,
@@ -9,7 +10,6 @@ import {
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
-import type { TenantCacheService, TenantRequest } from '@apex/middleware';
 import { CheckoutService } from './checkout.service';
 import { CreateCheckoutDto } from './dto/checkout.dto';
 
@@ -28,7 +28,7 @@ export class CheckoutController {
     private readonly checkoutService: CheckoutService,
     @Inject('TENANT_CACHE_SERVICE')
     private readonly tenantCache: TenantCacheService
-  ) { }
+  ) {}
 
   @Post('create')
   @AuditLog({ action: 'STOREFRONT_CHECKOUT_CREATE', entityType: 'order' })
@@ -67,9 +67,9 @@ export class CheckoutController {
       req.cookies?.sessionId ??
       (req.headers['x-session-id'] as string | undefined) ??
       null;
-    const ipAddress = (req.ip ??
-      req.headers['x-forwarded-for'] ??
-      null) as string | null;
+    const ipAddress = (req.ip ?? req.headers['x-forwarded-for'] ?? null) as
+      | string
+      | null;
     const userAgent = (req.headers['user-agent'] as string | undefined) ?? null;
 
     // Create order (atomic, zero-trust)

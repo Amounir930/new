@@ -40,7 +40,7 @@ export function useProductOptions(variants: ProductVariant[]) {
       options: [] as OptionType[],
       selectedOptions: {} as Record<string, string>,
       selectedVariant: null as ProductVariant | null,
-      updateOption: () => { },
+      updateOption: () => {},
       isSelectionComplete: false,
     };
   }

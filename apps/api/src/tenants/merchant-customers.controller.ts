@@ -3,6 +3,7 @@ import {
   JwtAuthGuard,
   TenantJwtMatchGuard,
 } from '@apex/auth';
+import type { InferSelectModel } from '@apex/db';
 import {
   and,
   asc,
@@ -12,6 +13,7 @@ import {
   isNull,
   sql,
 } from '@apex/db';
+import { requireExecutor } from '@apex/middleware';
 import { decrypt } from '@apex/security';
 import {
   BadRequestException,
@@ -26,8 +28,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
-import type { InferSelectModel } from '@apex/db';
-import { requireExecutor } from '@apex/middleware';
 
 type CustomerRow = InferSelectModel<typeof customersInStorefront>;
 
@@ -36,7 +36,9 @@ const CustomersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().optional(),
-  sort: z.enum(['newest', 'oldest', 'spent_desc', 'name_asc']).default('newest'),
+  sort: z
+    .enum(['newest', 'oldest', 'spent_desc', 'name_asc'])
+    .default('newest'),
 });
 
 // ── Safe decrypt helper ────────────────────────────────────────────

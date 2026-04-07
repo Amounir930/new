@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { checkStock, extractTenantFromHost } from '@/lib/api';
-import { useMountedCart } from '@/lib/cart-store';
 import { useMountedAuth } from '@/lib/auth-store';
+import { useMountedCart } from '@/lib/cart-store';
 
 interface AddToCartButtonProps {
   productId: string;
@@ -130,9 +130,10 @@ export function AddToCartButton({
         text-base font-black tracking-widest uppercase
         transition-all duration-300 shadow-xl
         active:scale-95
-        ${!isSelectionComplete
-          ? 'bg-gray-100 text-gray-400 cursor-pointer border border-gray-200'
-          : 'bg-black text-white hover:bg-gray-800 hover:shadow-black/20 hover:-translate-y-1'
+        ${
+          !isSelectionComplete
+            ? 'bg-gray-100 text-gray-400 cursor-pointer border border-gray-200'
+            : 'bg-black text-white hover:bg-gray-800 hover:shadow-black/20 hover:-translate-y-1'
         }
         ${isAdding ? 'pointer-events-none' : ''}
         ${className}

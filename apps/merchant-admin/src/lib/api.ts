@@ -180,12 +180,14 @@ export interface CustomerDetail extends CustomerListItem {
   dateOfBirth: string | null;
 }
 
-export async function getCustomers(params: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sort?: 'newest' | 'oldest' | 'spent_desc' | 'name_asc';
-} = {}): Promise<CustomerListResponse> {
+export async function getCustomers(
+  params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sort?: 'newest' | 'oldest' | 'spent_desc' | 'name_asc';
+  } = {}
+): Promise<CustomerListResponse> {
   const query = new URLSearchParams();
   if (params.page) query.set('page', String(params.page));
   if (params.limit) query.set('limit', String(params.limit));
@@ -193,7 +195,9 @@ export async function getCustomers(params: {
   if (params.sort) query.set('sort', params.sort);
 
   const qs = query.toString();
-  return apiFetch<CustomerListResponse>(`/merchant/customers${qs ? `?${qs}` : ''}`);
+  return apiFetch<CustomerListResponse>(
+    `/merchant/customers${qs ? `?${qs}` : ''}`
+  );
 }
 
 export async function getCustomer(id: string): Promise<CustomerDetail> {

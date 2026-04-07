@@ -1,8 +1,8 @@
 'use client';
 
-import { useMountedCart } from '@/lib/cart-store';
-import type { CartItemServer } from '@/lib/cart-store';
 import type { CheckoutResponse } from '@/lib/api';
+import type { CartItemServer } from '@/lib/cart-store';
+import { useMountedCart } from '@/lib/cart-store';
 
 /**
  * ── CHECKOUT SUMMARY SIDEBAR ──
@@ -34,12 +34,14 @@ export function CheckoutSummary({
 
   const displaySubtotal = orderData ? subtotal : cartSubtotal.toFixed(2);
   const displayShipping = orderData ? shipping : '0.00';
-  const displayTax = orderData
-    ? tax
-    : (cartSubtotal * 0.15).toFixed(2); // 15% VAT estimate
+  const displayTax = orderData ? tax : (cartSubtotal * 0.15).toFixed(2); // 15% VAT estimate
   const displayTotal = orderData
     ? total
-    : (Number(displaySubtotal) + Number(displayShipping) + Number(displayTax)).toFixed(2);
+    : (
+        Number(displaySubtotal) +
+        Number(displayShipping) +
+        Number(displayTax)
+      ).toFixed(2);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 sticky top-24">

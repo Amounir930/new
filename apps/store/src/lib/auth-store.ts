@@ -141,8 +141,8 @@ export const useAuthStore = create<AuthState>()(
         // SSR no-op storage to satisfy TypeScript/Zustand requirements
         return {
           getItem: () => null,
-          setItem: () => { },
-          removeItem: () => { },
+          setItem: () => {},
+          removeItem: () => {},
         };
       }),
       // Only persist core auth state — exclude UI/transient state
@@ -182,14 +182,14 @@ export function useMountedAuth() {
       pendingIntent: null,
       isLoginModalOpen: false,
       isHydrated: false,
-      setAuthenticated: () => { },
-      setUnauthenticated: () => { },
-      setAuthenticating: () => { },
-      setAuthIntent: () => { },
+      setAuthenticated: () => {},
+      setUnauthenticated: () => {},
+      setAuthenticating: () => {},
+      setAuthIntent: () => {},
       getAndClearAuthIntent: () => null,
-      openLoginModal: () => { },
-      closeLoginModal: () => { },
-      probeAuthSession: async () => { },
+      openLoginModal: () => {},
+      closeLoginModal: () => {},
+      probeAuthSession: async () => {},
     };
   }
 

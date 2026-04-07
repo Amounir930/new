@@ -23,8 +23,7 @@ export function CartPageClient() {
   }, []);
 
   // Use serverItems if available (price-validated), fall back to optimistic items
-  const displayItems =
-    cart.serverItems.length > 0 ? cart.serverItems : null;
+  const displayItems = cart.serverItems.length > 0 ? cart.serverItems : null;
 
   const optimisticItems = cart.items;
 
@@ -34,7 +33,10 @@ export function CartPageClient() {
         <div className="container mx-auto px-4 py-16">
           <div className="animate-pulse space-y-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex gap-6 rounded-2xl bg-white p-6 shadow-sm">
+              <div
+                key={i}
+                className="flex gap-6 rounded-2xl bg-white p-6 shadow-sm"
+              >
                 <div className="h-28 w-28 rounded-xl bg-gray-200" />
                 <div className="flex-1 space-y-3">
                   <div className="h-5 w-3/4 rounded bg-gray-200" />
@@ -124,35 +126,35 @@ export function CartPageClient() {
           <div className="space-y-4 lg:col-span-2">
             {displayItems
               ? displayItems.map((item) => (
-                <CartItemCard
-                  key={`${item.productId}-${item.variantId ?? 'novariant'}`}
-                  item={item}
-                  onRemove={() => cart.removeItem(item.productId, item.variantId)}
-                  onUpdateQty={(qty) =>
-                    cart.updateQuantity(item.productId, item.variantId, qty)
-                  }
-                />
-              ))
+                  <CartItemCard
+                    key={`${item.productId}-${item.variantId ?? 'novariant'}`}
+                    item={item}
+                    onRemove={() =>
+                      cart.removeItem(item.productId, item.variantId)
+                    }
+                    onUpdateQty={(qty) =>
+                      cart.updateQuantity(item.productId, item.variantId, qty)
+                    }
+                  />
+                ))
               : optimisticItems.map((item) => (
-                <CartOptimisticItem
-                  key={`${item.productId}-${item.variantId ?? 'novariant'}`}
-                  item={item}
-                  onRemove={() =>
-                    cart.removeItem(item.productId, item.variantId)
-                  }
-                  onUpdateQty={(qty) =>
-                    cart.updateQuantity(item.productId, item.variantId, qty)
-                  }
-                />
-              ))}
+                  <CartOptimisticItem
+                    key={`${item.productId}-${item.variantId ?? 'novariant'}`}
+                    item={item}
+                    onRemove={() =>
+                      cart.removeItem(item.productId, item.variantId)
+                    }
+                    onUpdateQty={(qty) =>
+                      cart.updateQuantity(item.productId, item.variantId, qty)
+                    }
+                  />
+                ))}
           </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-gray-900">
-                Order Summary
-              </h2>
+              <h2 className="text-lg font-bold text-gray-900">Order Summary</h2>
 
               <div className="mt-6 space-y-3 text-sm">
                 <div className="flex justify-between text-gray-600">
@@ -228,9 +230,19 @@ function CartItemCard({ item, onRemove, onUpdateQty }: CartItemCardProps) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-gray-300">
-            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              className="h-8 w-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
               <title>No image</title>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
           </div>
         )}
@@ -252,7 +264,9 @@ function CartItemCard({ item, onRemove, onUpdateQty }: CartItemCardProps) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => onUpdateQty(Math.max(item.minOrderQty, item.quantity - 1))}
+              onClick={() =>
+                onUpdateQty(Math.max(item.minOrderQty, item.quantity - 1))
+              }
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-bold text-gray-700 transition hover:bg-gray-50"
             >
               −
@@ -263,7 +277,11 @@ function CartItemCard({ item, onRemove, onUpdateQty }: CartItemCardProps) {
             <button
               type="button"
               onClick={() => {
-                if (item.availableStock > 0 && item.quantity >= item.availableStock) return;
+                if (
+                  item.availableStock > 0 &&
+                  item.quantity >= item.availableStock
+                )
+                  return;
                 onUpdateQty(item.quantity + 1);
               }}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-sm font-bold text-gray-700 transition hover:bg-gray-50"
@@ -326,7 +344,9 @@ function CartOptimisticItem({
         >
           −
         </button>
-        <span className="w-8 text-center text-sm font-bold">{item.quantity}</span>
+        <span className="w-8 text-center text-sm font-bold">
+          {item.quantity}
+        </span>
         <button
           type="button"
           onClick={() => onUpdateQty(item.quantity + 1)}

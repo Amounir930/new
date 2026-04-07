@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { checkStock, extractTenantFromHost } from '@/lib/api';
-import { useMountedCart } from '@/lib/cart-store';
 import { useMountedAuth } from '@/lib/auth-store';
+import { useMountedCart } from '@/lib/cart-store';
 
 interface ProductCardActionsProps {
   productId: string;
@@ -116,19 +116,35 @@ export function ProductCardActions({
         className={`
           flex-1 h-8 rounded-lg text-xs font-black uppercase tracking-wider
           transition-all duration-200 active:scale-95
-          ${hasVariants
-            ? 'bg-gray-900 text-white hover:bg-gray-800'
-            : isAdding
-              ? 'bg-gray-300 text-gray-500 cursor-wait'
-              : 'bg-black text-white hover:bg-gray-800 hover:shadow-md'
+          ${
+            hasVariants
+              ? 'bg-gray-900 text-white hover:bg-gray-800'
+              : isAdding
+                ? 'bg-gray-300 text-gray-500 cursor-wait'
+                : 'bg-black text-white hover:bg-gray-800 hover:shadow-md'
           }
         `}
       >
         {isAdding ? (
           <span className="inline-flex items-center justify-center">
-            <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            <svg
+              className="animate-spin h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
             </svg>
           </span>
         ) : hasVariants ? (

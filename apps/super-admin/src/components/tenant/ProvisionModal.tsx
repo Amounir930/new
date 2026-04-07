@@ -371,10 +371,11 @@ export function ProvisionModal({
               <Button
                 type="submit"
                 disabled={loading || !isValid}
-                className={`relative overflow-hidden transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 ${!isValid
+                className={`relative overflow-hidden transition-all duration-300 shadow-lg shadow-primary/20 hover:shadow-primary/40 ${
+                  !isValid
                     ? 'opacity-50 grayscale cursor-not-allowed'
                     : 'hover:scale-[1.02] active:scale-[0.98]'
-                  }`}
+                }`}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <span className="relative z-10">

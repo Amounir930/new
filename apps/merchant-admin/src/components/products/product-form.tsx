@@ -972,23 +972,23 @@ export function ProductForm({
                 </div>
                 {Object.entries(specifications as Record<string, unknown>)
                   .length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(
-                        specifications as Record<string, unknown>
-                      ).map(([k, v]) => (
-                        <Badge key={k} variant="secondary" className="gap-1">
-                          <span className="font-medium">{k}:</span> {String(v)}
-                          <button
-                            type="button"
-                            onClick={() => removeSpec(k)}
-                            className="ml-1 text-destructive"
-                          >
-                            ×
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(
+                      specifications as Record<string, unknown>
+                    ).map(([k, v]) => (
+                      <Badge key={k} variant="secondary" className="gap-1">
+                        <span className="font-medium">{k}:</span> {String(v)}
+                        <button
+                          type="button"
+                          onClick={() => removeSpec(k)}
+                          className="ml-1 text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Tags */}

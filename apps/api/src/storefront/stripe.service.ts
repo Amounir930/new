@@ -1,10 +1,10 @@
+import { env } from '@apex/config/server';
 import {
   BadRequestException,
   Injectable,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
-import { env } from '@apex/config/server';
 import Stripe from 'stripe';
 
 /**
@@ -62,8 +62,15 @@ export class StripeService implements OnModuleInit {
     customerId?: string | null;
     description?: string;
   }): Promise<{ clientSecret: string; paymentIntentId: string }> {
-    const { amount, currency, orderId, tenantId, schemaName, customerId, description } =
-      params;
+    const {
+      amount,
+      currency,
+      orderId,
+      tenantId,
+      schemaName,
+      customerId,
+      description,
+    } = params;
 
     const paymentIntent = await this.stripeClient.paymentIntents.create({
       amount,

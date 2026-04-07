@@ -137,7 +137,7 @@ export class StorefrontService {
   constructor(
     private readonly redisStore: RedisRateLimitStore,
     private readonly crypto: EncryptionService
-  ) { }
+  ) {}
 
   // ═══════════════════════════════════════════════════════════════
   // PDP DATA FETCHING
@@ -598,9 +598,7 @@ export class StorefrontService {
       // For items with variantId=null but product has exactly 1 variant, auto-resolve it
       const singleVariantProductIds = dto.items
         .filter((item) => item.variantId === null)
-        .filter(
-          (item) => (variantCountMap.get(item.productId) ?? 0) === 1
-        )
+        .filter((item) => (variantCountMap.get(item.productId) ?? 0) === 1)
         .map((item) => item.productId);
 
       let singleVariantResolved: Array<{
@@ -1062,7 +1060,7 @@ export class StorefrontService {
     const productName =
       typeof product.name === 'object'
         ? (product.name as Record<string, string>).en ||
-        Object.values(product.name as Record<string, string>)[0]
+          Object.values(product.name as Record<string, string>)[0]
         : String(product.name);
 
     return {
@@ -1198,7 +1196,7 @@ export class StorefrontService {
     const productName =
       typeof prod.name === 'object'
         ? (prod.name as Record<string, string>).en ||
-        Object.values(prod.name as Record<string, string>)[0]
+          Object.values(prod.name as Record<string, string>)[0]
         : String(prod.name);
 
     return {

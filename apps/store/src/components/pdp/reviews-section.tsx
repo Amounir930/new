@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { getProductReviews } from '@/lib/api';
 import { useMountedAuth } from '@/lib/auth-store';
-import toast from 'react-hot-toast';
 
 export interface Review {
   id: string;
@@ -54,11 +54,17 @@ export function ReviewsSection({
   const safeInitialReviews =
     initialReviews?.reviews && Array.isArray(initialReviews.reviews)
       ? initialReviews
-      : { reviews: [] as Review[], pagination: { page: 1, limit: 10, total: 0, totalPages: 0 } as ReviewsPagination };
+      : {
+          reviews: [] as Review[],
+          pagination: {
+            page: 1,
+            limit: 10,
+            total: 0,
+            totalPages: 0,
+          } as ReviewsPagination,
+        };
 
-  const [reviews, setReviews] = useState<Review[]>(
-    safeInitialReviews.reviews
-  );
+  const [reviews, setReviews] = useState<Review[]>(safeInitialReviews.reviews);
   const [pagination, setPagination] = useState<ReviewsPagination>(
     safeInitialReviews.pagination
   );

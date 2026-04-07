@@ -25,7 +25,7 @@ export class PublicProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) { }
+  ) {}
 
   /**
    * POST /api/v1/auth/register-tenant

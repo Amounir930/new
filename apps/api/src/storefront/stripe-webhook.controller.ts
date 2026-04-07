@@ -32,7 +32,7 @@ interface RawBodyReq extends Request {
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);
 
-  constructor(private readonly webhookService: StripeWebhookService) { }
+  constructor(private readonly webhookService: StripeWebhookService) {}
 
   @Post()
   async handleWebhook(
@@ -43,7 +43,9 @@ export class StripeWebhookController {
     const rawBody = req.rawBody;
 
     if (!rawBody) {
-      throw new BadRequestException('Raw body not available for webhook verification');
+      throw new BadRequestException(
+        'Raw body not available for webhook verification'
+      );
     }
 
     if (!signature) {

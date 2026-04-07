@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,7 +38,10 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('[OTP-VERIFY-PROXY-ERROR]:', error);
     return NextResponse.json(
-      { error: 'Internal API Gateway Error', message: 'Failed to reach OTP verification service.' },
+      {
+        error: 'Internal API Gateway Error',
+        message: 'Failed to reach OTP verification service.',
+      },
       { status: 502 }
     );
   }

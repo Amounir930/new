@@ -119,8 +119,8 @@ export default async function TenantHome({ params }: TenantPageProps) {
                 const resolvedName =
                   rawName && typeof rawName === 'object'
                     ? (rawName as Record<string, string>).en ||
-                    (rawName as Record<string, string>).ar ||
-                    'Product'
+                      (rawName as Record<string, string>).ar ||
+                      'Product'
                     : String(rawName);
 
                 const product = {

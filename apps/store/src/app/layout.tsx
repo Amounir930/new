@@ -3,16 +3,15 @@ import { headers } from 'next/headers';
 import Image from 'next/image';
 import Link from 'next/link';
 import './globals.css';
+import { LoginModal } from '@/components/auth/login-modal';
 import { CartButton, ToastProvider } from '@/components/layout/toast-provider';
 import { UserMenu } from '@/components/layout/user-menu';
-import { LoginModal } from '@/components/auth/login-modal';
 import { getStoreBootstrap } from '@/lib/api';
 
 export const metadata: Metadata = {
   title: 'Apex Storefront',
   description: 'High performance e-commerce by Apex v2',
 };
-
 
 export const dynamic = 'force-dynamic';
 
@@ -43,8 +42,7 @@ export default async function RootLayout({
   const config = bootstrap?.config;
 
   const storeName =
-    config?.storeName ||
-    tenantId.charAt(0).toUpperCase() + tenantId.slice(1);
+    config?.storeName || tenantId.charAt(0).toUpperCase() + tenantId.slice(1);
   const logoUrl = config?.logoUrl;
 
   return (
@@ -70,15 +68,43 @@ export default async function RootLayout({
                 </div>
               </div>
               <nav className="hidden md:flex items-center gap-8">
-                <Link href="/" className="text-sm font-medium hover:text-blue-600 transition-colors">Home</Link>
-                <Link href="/products" className="text-sm font-medium hover:text-blue-600 transition-colors">Shop</Link>
-                <Link href="/categories" className="text-sm font-medium hover:text-blue-600 transition-colors">Categories</Link>
+                <Link
+                  href="/"
+                  className="text-sm font-medium hover:text-blue-600 transition-colors"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/products"
+                  className="text-sm font-medium hover:text-blue-600 transition-colors"
+                >
+                  Shop
+                </Link>
+                <Link
+                  href="/categories"
+                  className="text-sm font-medium hover:text-blue-600 transition-colors"
+                >
+                  Categories
+                </Link>
               </nav>
               <div className="flex items-center gap-4">
-                <button type="button" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button
+                  type="button"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <title>Search</title>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </button>
                 <UserMenu />

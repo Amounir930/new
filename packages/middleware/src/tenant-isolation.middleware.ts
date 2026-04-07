@@ -115,7 +115,7 @@ async function validateTenant(
 
 @Injectable()
 export class TenantIsolationMiddleware implements NestMiddleware {
-  constructor(private readonly cache: TenantCacheService) { }
+  constructor(private readonly cache: TenantCacheService) {}
   async use(req: TenantRequest, res: Response, next: NextFunction) {
     if (req.method === 'OPTIONS') return next();
 

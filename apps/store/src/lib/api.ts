@@ -68,12 +68,24 @@ export async function fetchStorefront(
 
   if (!res.ok) {
     if (res.status >= 500) {
-      throw new StorefrontApiError(res.status, 'INTERNAL_SERVER_ERROR', `Server error [${res.status}]`);
+      throw new StorefrontApiError(
+        res.status,
+        'INTERNAL_SERVER_ERROR',
+        `Server error [${res.status}]`
+      );
     }
     if (res.status === 429) {
-      throw new StorefrontApiError(res.status, 'TOO_MANY_REQUESTS', `Rate limited [${res.status}]`);
+      throw new StorefrontApiError(
+        res.status,
+        'TOO_MANY_REQUESTS',
+        `Rate limited [${res.status}]`
+      );
     }
-    throw new StorefrontApiError(res.status, 'API_ERROR', `API error [${res.status}]`);
+    throw new StorefrontApiError(
+      res.status,
+      'API_ERROR',
+      `API error [${res.status}]`
+    );
   }
 
   return res.json();
@@ -393,7 +405,16 @@ export async function extractTenantFromHost(): Promise<string | null> {
 export async function loginCustomer(
   email: string,
   password: string
-): Promise<{ success: boolean; customer: { id: string; email: string; firstName: string; lastName: string; avatarUrl: string | null } }> {
+): Promise<{
+  success: boolean;
+  customer: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+  };
+}> {
   const tenantId = await extractTenantFromHost();
   const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/login`, {
     method: 'POST',
@@ -425,7 +446,16 @@ export async function registerCustomer(input: {
   lastName: string;
   phone?: string;
   acceptsMarketing?: boolean;
-}): Promise<{ success: boolean; customer: { id: string; email: string; firstName: string; lastName: string; avatarUrl: string | null } }> {
+}): Promise<{
+  success: boolean;
+  customer: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatarUrl: string | null;
+  };
+}> {
   const tenantId = await extractTenantFromHost();
   const res = await fetch(`${PUBLIC_API_URL}/storefront/auth/register`, {
     method: 'POST',

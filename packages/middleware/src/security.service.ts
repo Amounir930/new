@@ -100,22 +100,16 @@ export class SecurityService implements OnModuleInit {
 
     if (isLocked) {
       const lockedAt = Math.floor(Date.now() / 1000);
-      await this.safeExec(
-        async () => {
-          await this.redis!.set(key, JSON.stringify({ locked: true, lockedAt }));
-        },
-        undefined
-      );
+      await this.safeExec(async () => {
+        await this.redis!.set(key, JSON.stringify({ locked: true, lockedAt }));
+      }, undefined);
       this.logger.warn(
         `STEEL CONTROL: Tenant ${subdomain} LOCKED at ${lockedAt}${!this.redis?.isOpen ? ' (Redis unavailable — lock may not persist)' : ''}`
       );
     } else {
-      await this.safeExec(
-        async () => {
-          await this.redis!.del(key);
-        },
-        undefined
-      );
+      await this.safeExec(async () => {
+        await this.redis!.del(key);
+      }, undefined);
       this.logger.log(`STEEL CONTROL: Tenant ${subdomain} RELEASED`);
     }
   }

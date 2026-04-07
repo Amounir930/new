@@ -1,0 +1,45 @@
+ M .qwen/settings.json
+ M apps/merchant-admin/next.config.mjs
+ M apps/merchant-admin/src/app/dashboard/customers/page.tsx
+ M apps/merchant-admin/src/app/dashboard/products/new/page.tsx
+ M apps/merchant-admin/src/components/customers/customer-table.tsx
+ M apps/merchant-admin/src/components/products/product-form.tsx
+ M apps/merchant-admin/src/lib/api.ts
+ M apps/store/src/app/api/v1/auth/register-tenant/route.ts
+ M apps/store/src/app/api/v1/auth/register-tenant/verify/route.ts
+ M apps/store/src/app/layout.tsx
+ M apps/store/src/app/m/[subdomain]/page.tsx
+ M apps/store/src/app/m/[subdomain]/products/[slug]/page.tsx
+ M apps/store/src/app/m/[subdomain]/products/page.tsx
+ M apps/store/src/app/page.tsx
+ M apps/store/src/components/ProductCard.tsx
+ M apps/store/src/components/auth/login-modal.tsx
+ M apps/store/src/components/cart/cart-page-client.tsx
+ M apps/store/src/components/checkout/address-step.tsx
+ M apps/store/src/components/checkout/checkout-page.tsx
+ M apps/store/src/components/checkout/checkout-summary.tsx
+ M apps/store/src/components/checkout/shipping-step.tsx
+ M apps/store/src/components/checkout/step-indicator.tsx
+ M apps/store/src/components/landing/provisioning-modal.tsx
+ M apps/store/src/components/landing/success-modal.tsx
+ M apps/store/src/components/layout/toast-provider.tsx
+ M apps/store/src/components/layout/user-menu.tsx
+ M apps/store/src/components/pdp/add-to-cart-button.tsx
+ M apps/store/src/components/pdp/reviews-section.tsx
+ M apps/store/src/components/product-card-actions.tsx
+ M apps/store/src/hooks/useProductOptions.ts
+ M apps/store/src/lib/api.ts
+ M apps/store/src/lib/auth-store.ts
+ M apps/store/src/lib/cart-store.ts
+ M biome.json
+ M bun.lock
+ M package.json
+ M packages/auth/src/customer-auth.service.ts
+ M packages/auth/src/guards/customer-jwt.guard.ts
+ M packages/auth/src/index.ts
+ M packages/auth/src/strategies/customer-jwt.strategy.ts
+ M packages/config/src/edge.ts
+ M packages/config/src/schema.ts
+M  packages/validators/src/index.ts
+?? all_modified.txt
+?? modified_files.txt

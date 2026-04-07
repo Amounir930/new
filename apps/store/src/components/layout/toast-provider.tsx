@@ -1,7 +1,7 @@
 'use client';
 
-import { Toaster } from 'react-hot-toast';
 import Link from 'next/link';
+import { Toaster } from 'react-hot-toast';
 import { useCartItemCount } from '@/lib/cart-store';
 
 /**

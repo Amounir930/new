@@ -1,23 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import {
+  Elements,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements } from '@stripe/react-stripe-js';
-import { useMountedCart } from '@/lib/cart-store';
-import type { CartItem } from '@/lib/cart-store';
-import { createCheckout } from '@/lib/api';
+import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { AddressStep } from '@/components/checkout/address-step';
-import { ShippingStep } from '@/components/checkout/shipping-step';
 import { CheckoutSummary } from '@/components/checkout/checkout-summary';
+import { ShippingStep } from '@/components/checkout/shipping-step';
 import { StepIndicator } from '@/components/checkout/step-indicator';
-import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import type { AddressInput, CheckoutResponse } from '@/lib/api';
+import { createCheckout } from '@/lib/api';
+import type { CartItem } from '@/lib/cart-store';
+import { useMountedCart } from '@/lib/cart-store';
 
 // Initialize Stripe outside render to avoid recreation
 const stripePromise = loadStripe(
   process.env['NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'] ||
-  'pk_test_dummy_key_for_dev'
+    'pk_test_dummy_key_for_dev'
 );
 
 type CheckoutStep = 'address' | 'shipping' | 'payment';
@@ -68,10 +72,13 @@ export function CheckoutPageClient() {
   );
 
   // Step 2 → Step 3
-  const handleShippingComplete = useCallback((method: typeof shippingMethod) => {
-    setShippingMethod(method);
-    setStep('payment');
-  }, []);
+  const handleShippingComplete = useCallback(
+    (method: typeof shippingMethod) => {
+      setShippingMethod(method);
+      setStep('payment');
+    },
+    []
+  );
 
   // Step 3: Submit order → get clientSecret
   const handleSubmitOrder = useCallback(async () => {
@@ -90,7 +97,9 @@ export function CheckoutPageClient() {
       const result = await createCheckout({
         idempotencyKey,
         shippingAddress,
-        billingAddress: sameAsShipping ? undefined : billingAddress ?? undefined,
+        billingAddress: sameAsShipping
+          ? undefined
+          : (billingAddress ?? undefined),
         sameAsShipping,
         shippingMethod,
         paymentMethod: 'card',
@@ -214,7 +223,8 @@ function PaymentStep({
     <div className="bg-white rounded-xl border border-gray-200 p-6">
       <h2 className="text-lg font-bold text-gray-900 mb-4">Review Order</h2>
       <p className="text-sm text-gray-500 mb-6">
-        Review your order details and click &quot;Place Order&quot; to proceed to payment.
+        Review your order details and click &quot;Place Order&quot; to proceed
+        to payment.
       </p>
       <div className="flex gap-4">
         <button
@@ -276,7 +286,10 @@ function StripePaymentForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-xl border border-gray-200 p-6"
+    >
       <h2 className="text-lg font-bold text-gray-900 mb-4">Payment</h2>
       <p className="text-sm text-gray-500 mb-6">
         Enter your card details to complete the purchase.
@@ -298,8 +311,20 @@ function StripePaymentForm({
           {isProcessing ? (
             <>
               <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  fill="none"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
               Processing...
             </>

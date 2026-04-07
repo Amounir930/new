@@ -25,8 +25,8 @@ export function StepIndicator({
                   isCompleted
                     ? 'bg-black text-white'
                     : isCurrent
-                    ? 'bg-black text-white'
-                    : 'bg-gray-200 text-gray-500'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-200 text-gray-500'
                 }`}
               >
                 {isCompleted ? '✓' : index + 1}

@@ -1,7 +1,14 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Copy, ExternalLink, X, Store, Settings } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  CheckCircle,
+  Copy,
+  ExternalLink,
+  Settings,
+  Store,
+  X,
+} from 'lucide-react';
 import { useState } from 'react';
 
 interface SuccessModalProps {
@@ -21,7 +28,9 @@ export function SuccessModal({
   adminUrl,
   email,
 }: SuccessModalProps) {
-  const [copiedField, setCopiedField] = useState<'storefront' | 'admin' | null>(null);
+  const [copiedField, setCopiedField] = useState<'storefront' | 'admin' | null>(
+    null
+  );
 
   if (!isOpen) return null;
 
@@ -58,10 +67,14 @@ export function SuccessModal({
             <div className="mx-auto w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6">
               <CheckCircle className="w-8 h-8 text-emerald-500" />
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">Store Created!</h2>
+            <h2 className="text-3xl font-bold text-white mb-2">
+              Store Created!
+            </h2>
             <p className="text-gray-400 text-sm mb-8">
-              Congratulations! Your store <strong className="text-white">{storeName}</strong> is now live.
-              We&apos;ve sent the details to <strong className="text-white">{email}</strong>.
+              Congratulations! Your store{' '}
+              <strong className="text-white">{storeName}</strong> is now live.
+              We&apos;ve sent the details to{' '}
+              <strong className="text-white">{email}</strong>.
             </p>
           </div>
 
@@ -69,10 +82,14 @@ export function SuccessModal({
           <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 mb-4">
             <div className="flex items-center gap-2 mb-3">
               <Store className="w-4 h-4 text-blue-400" />
-              <p className="text-sm text-gray-400 font-medium uppercase tracking-wider">Public Storefront URL</p>
+              <p className="text-sm text-gray-400 font-medium uppercase tracking-wider">
+                Public Storefront URL
+              </p>
             </div>
             <div className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg p-3">
-              <p className="text-blue-400 font-mono text-sm break-all mr-4">{storefrontUrl}</p>
+              <p className="text-blue-400 font-mono text-sm break-all mr-4">
+                {storefrontUrl}
+              </p>
               <button
                 onClick={() => handleCopy(storefrontUrl, 'storefront')}
                 className="text-gray-400 hover:text-white transition flex-shrink-0"
@@ -100,10 +117,14 @@ export function SuccessModal({
           <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Settings className="w-4 h-4 text-emerald-400" />
-              <p className="text-sm text-gray-400 font-medium uppercase tracking-wider">Admin Dashboard URL</p>
+              <p className="text-sm text-gray-400 font-medium uppercase tracking-wider">
+                Admin Dashboard URL
+              </p>
             </div>
             <div className="flex items-center justify-between bg-gray-900 border border-gray-800 rounded-lg p-3">
-              <p className="text-emerald-400 font-mono text-sm break-all mr-4">{adminUrl}</p>
+              <p className="text-emerald-400 font-mono text-sm break-all mr-4">
+                {adminUrl}
+              </p>
               <button
                 onClick={() => handleCopy(adminUrl, 'admin')}
                 className="text-gray-400 hover:text-white transition flex-shrink-0"

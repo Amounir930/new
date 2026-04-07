@@ -1,9 +1,15 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { env } from '@apex/config/server';
-import { getTenantDb, ordersInStorefront, paymentLogsInStorefront, eq, sql } from '@apex/db';
+import {
+  eq,
+  getTenantDb,
+  ordersInStorefront,
+  paymentLogsInStorefront,
+  sql,
+} from '@apex/db';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import Stripe from 'stripe';
-import { StripeService } from './stripe.service';
 import { NotificationsService } from '../common/notifications/notifications.service';
+import { StripeService } from './stripe.service';
 
 /**
  * ── STRIPE WEBHOOK SERVICE ──
@@ -20,8 +26,8 @@ export class StripeWebhookService {
 
   constructor(
     private readonly stripeService: StripeService,
-    private readonly notificationsService: NotificationsService,
-  ) { }
+    private readonly notificationsService: NotificationsService
+  ) {}
 
   /**
    * Handle a raw webhook event from Stripe.
@@ -33,7 +39,9 @@ export class StripeWebhookService {
       env.STRIPE_WEBHOOK_SECRET
     );
 
-    this.logger.log(`Processing Stripe webhook: ${event.type} (id: ${event.id})`);
+    this.logger.log(
+      `Processing Stripe webhook: ${event.type} (id: ${event.id})`
+    );
 
     switch (event.type) {
       case 'payment_intent.succeeded':
@@ -134,9 +142,7 @@ export class StripeWebhookService {
     const { order_id, tenant_id, schema_name } = paymentIntent.metadata || {};
 
     if (!order_id || !tenant_id) {
-      this.logger.error(
-        `PaymentIntent ${paymentIntent.id} missing metadata`
-      );
+      this.logger.error(`PaymentIntent ${paymentIntent.id} missing metadata`);
       return;
     }
 
@@ -186,9 +192,7 @@ export class StripeWebhookService {
     const { order_id, tenant_id, schema_name } = paymentIntent.metadata || {};
 
     if (!order_id || !tenant_id) {
-      this.logger.error(
-        `PaymentIntent ${paymentIntent.id} missing metadata`
-      );
+      this.logger.error(`PaymentIntent ${paymentIntent.id} missing metadata`);
       return;
     }
 

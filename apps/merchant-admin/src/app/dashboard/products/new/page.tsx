@@ -15,7 +15,9 @@ export default function NewProductPage() {
    *
    * data.id = the draft product_id returned from POST /draft and stored in the form state.
    */
-  const handleCreateProduct = async (data: { id?: string } & Record<string, unknown>) => {
+  const handleCreateProduct = async (
+    data: { id?: string } & Record<string, unknown>
+  ) => {
     if (!data.id) {
       toast.error('Product session lost. Please refresh and try again.');
       return;

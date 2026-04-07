@@ -12,11 +12,7 @@ import { StripeWebhookController } from './stripe-webhook.controller';
 import { StripeWebhookService } from './stripe-webhook.service';
 
 @Module({
-  imports: [
-    AuditModule,
-    TenantCacheModule,
-    CustomerAuthModule,
-  ],
+  imports: [AuditModule, TenantCacheModule, CustomerAuthModule],
   controllers: [
     StorefrontController,
     CustomerAuthController,
@@ -33,6 +29,11 @@ import { StripeWebhookService } from './stripe-webhook.service';
     StripeService,
     StripeWebhookService,
   ],
-  exports: [StorefrontService, 'STOREFRONT_SERVICE', CheckoutService, StripeService],
+  exports: [
+    StorefrontService,
+    'STOREFRONT_SERVICE',
+    CheckoutService,
+    StripeService,
+  ],
 })
-export class StorefrontModule { }
+export class StorefrontModule {}

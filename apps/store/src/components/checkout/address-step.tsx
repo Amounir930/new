@@ -1,8 +1,8 @@
 'use client';
 
+import { CheckoutAddressSchema } from '@apex/validation';
 import { useState } from 'react';
 import { z } from 'zod';
-import { CheckoutAddressSchema } from '@apex/validation';
 import type { AddressInput } from '@/lib/api';
 
 const AddressFormSchema = CheckoutAddressSchema.extend({
@@ -10,7 +10,10 @@ const AddressFormSchema = CheckoutAddressSchema.extend({
   line1: z.string().min(1, 'Address line 1 is required'),
   city: z.string().min(1, 'City is required'),
   postalCode: z.string().min(1, 'Postal code is required'),
-  country: z.string().length(2, 'Country code must be 2 characters').toUpperCase(),
+  country: z
+    .string()
+    .length(2, 'Country code must be 2 characters')
+    .toUpperCase(),
 });
 
 type AddressFormData = z.infer<typeof AddressFormSchema>;
@@ -61,11 +64,9 @@ export function AddressStep({
 
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [showBilling, setShowBilling] = useState(false);
+  const [_showBilling, _setShowBilling] = useState(false);
 
-  const validateAddress = (
-    data: AddressFormData
-  ): Record<string, string> => {
+  const validateAddress = (data: AddressFormData): Record<string, string> => {
     const result = AddressFormSchema.safeParse(data);
     if (result.success) return {};
     const errs: Record<string, string> = {};
@@ -106,15 +107,15 @@ export function AddressStep({
     const billing = sameAsShipping
       ? undefined
       : ({
-        name: billingData.name,
-        line1: billingData.line1,
-        line2: billingData.line2 ?? null,
-        city: billingData.city,
-        state: billingData.state ?? null,
-        postalCode: billingData.postalCode,
-        country: billingData.country,
-        phone: billingData.phone ?? null,
-      } as AddressInput);
+          name: billingData.name,
+          line1: billingData.line1,
+          line2: billingData.line2 ?? null,
+          city: billingData.city,
+          state: billingData.state ?? null,
+          postalCode: billingData.postalCode,
+          country: billingData.country,
+          phone: billingData.phone ?? null,
+        } as AddressInput);
 
     onComplete(shipping, sameAsShipping, billing);
   };
@@ -165,7 +166,9 @@ export function AddressStep({
 
       {!sameAsShipping && (
         <>
-          <h3 className="text-md font-bold text-gray-900 mb-4">Billing Address</h3>
+          <h3 className="text-md font-bold text-gray-900 mb-4">
+            Billing Address
+          </h3>
           <AddressFormFields
             data={billingData}
             errors={errors}
@@ -203,7 +206,10 @@ function AddressFormFields({
     <div className="space-y-4">
       {/* Name */}
       <div>
-        <label htmlFor={`${prefix}name`} className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor={`${prefix}name`}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Full Name
         </label>
         <input
@@ -213,12 +219,17 @@ function AddressFormFields({
           onChange={(e) => onChange('name', e.target.value)}
           className={`w-full rounded-lg border px-3 py-2 text-sm ${error('name') ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
         />
-        {error('name') && <p className="mt-1 text-xs text-red-500">{error('name')}</p>}
+        {error('name') && (
+          <p className="mt-1 text-xs text-red-500">{error('name')}</p>
+        )}
       </div>
 
       {/* Line 1 */}
       <div>
-        <label htmlFor={`${prefix}line1`} className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor={`${prefix}line1`}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Address Line 1
         </label>
         <input
@@ -228,12 +239,17 @@ function AddressFormFields({
           onChange={(e) => onChange('line1', e.target.value)}
           className={`w-full rounded-lg border px-3 py-2 text-sm ${error('line1') ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
         />
-        {error('line1') && <p className="mt-1 text-xs text-red-500">{error('line1')}</p>}
+        {error('line1') && (
+          <p className="mt-1 text-xs text-red-500">{error('line1')}</p>
+        )}
       </div>
 
       {/* Line 2 */}
       <div>
-        <label htmlFor={`${prefix}line2`} className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor={`${prefix}line2`}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Address Line 2 (optional)
         </label>
         <input
@@ -248,7 +264,10 @@ function AddressFormFields({
       {/* City + State */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor={`${prefix}city`} className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor={`${prefix}city`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             City
           </label>
           <input
@@ -258,10 +277,15 @@ function AddressFormFields({
             onChange={(e) => onChange('city', e.target.value)}
             className={`w-full rounded-lg border px-3 py-2 text-sm ${error('city') ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
           />
-          {error('city') && <p className="mt-1 text-xs text-red-500">{error('city')}</p>}
+          {error('city') && (
+            <p className="mt-1 text-xs text-red-500">{error('city')}</p>
+          )}
         </div>
         <div>
-          <label htmlFor={`${prefix}state`} className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor={`${prefix}state`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             State (optional)
           </label>
           <input
@@ -277,7 +301,10 @@ function AddressFormFields({
       {/* Postal Code + Country */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor={`${prefix}postalCode`} className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor={`${prefix}postalCode`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Postal Code
           </label>
           <input
@@ -287,10 +314,15 @@ function AddressFormFields({
             onChange={(e) => onChange('postalCode', e.target.value)}
             className={`w-full rounded-lg border px-3 py-2 text-sm ${error('postalCode') ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
           />
-          {error('postalCode') && <p className="mt-1 text-xs text-red-500">{error('postalCode')}</p>}
+          {error('postalCode') && (
+            <p className="mt-1 text-xs text-red-500">{error('postalCode')}</p>
+          )}
         </div>
         <div>
-          <label htmlFor={`${prefix}country`} className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor={`${prefix}country`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Country
           </label>
           <select
@@ -305,13 +337,18 @@ function AddressFormFields({
               </option>
             ))}
           </select>
-          {error('country') && <p className="mt-1 text-xs text-red-500">{error('country')}</p>}
+          {error('country') && (
+            <p className="mt-1 text-xs text-red-500">{error('country')}</p>
+          )}
         </div>
       </div>
 
       {/* Phone */}
       <div>
-        <label htmlFor={`${prefix}phone`} className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor={`${prefix}phone`}
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Phone (optional)
         </label>
         <input

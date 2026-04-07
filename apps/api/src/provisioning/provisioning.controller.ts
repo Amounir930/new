@@ -36,7 +36,7 @@ export class ProvisioningController {
     private readonly provisioningService: ProvisioningService,
     @Inject('AUDIT_SERVICE')
     readonly _audit: AuditService
-  ) { }
+  ) {}
 
   /**
    * POST /api/provision

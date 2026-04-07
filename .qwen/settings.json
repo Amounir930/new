@@ -20,7 +20,8 @@
       "Bash(type *)",
       "Bash(docker compose *)",
       "Bash(runas *)",
-      "Bash(bunx *)"
+      "Bash(bunx *)",
+      "Bash(select-object *)"
     ]
   },
   "$version": 3

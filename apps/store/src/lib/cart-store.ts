@@ -248,8 +248,8 @@ export const useCartStore = create<CartState>()(
         // SSR No-op storage to satisfy TypeScript/Zustand requirements
         return {
           getItem: () => null,
-          setItem: () => { },
-          removeItem: () => { },
+          setItem: () => {},
+          removeItem: () => {},
         };
       }),
       // ⚠️ HYDRATION SAFETY: Only persist client-state, not server-state
@@ -288,13 +288,13 @@ export function useMountedCart() {
       isOpen: false,
       isSyncing: false,
       lastSyncedAt: null,
-      addItem: async () => { },
-      removeItem: async () => { },
-      updateQuantity: async () => { },
-      toggleCart: () => { },
-      clearCart: () => { },
-      refreshCart: async () => { },
-      syncWithServer: async () => { },
+      addItem: async () => {},
+      removeItem: async () => {},
+      updateQuantity: async () => {},
+      toggleCart: () => {},
+      clearCart: () => {},
+      refreshCart: async () => {},
+      syncWithServer: async () => {},
     };
   }
 

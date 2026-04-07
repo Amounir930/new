@@ -75,7 +75,7 @@ export class CheckoutService {
   constructor(
     private readonly tenantCache: TenantCacheService,
     private readonly stripeService: StripeService
-  ) { }
+  ) {}
 
   /**
    * Create an order from checkout form submission.
@@ -101,10 +101,7 @@ export class CheckoutService {
 
     try {
       // ── STEP 1: Validate cart items against DB (Zero-Trust Pricing) ──
-      const validatedItems = await this.validateCartItems(
-        db,
-        dto.cartItems
-      );
+      const validatedItems = await this.validateCartItems(db, dto.cartItems);
 
       // ── STEP 2: Compute pricing server-side ──
       const subtotal = this.sumLineTotals(validatedItems);
@@ -214,7 +211,14 @@ export class CheckoutService {
           ipAddress: ipAddress ?? null,
         });
 
-        return { orderId, orderNumber, total, subtotal, shippingCost, taxAmount };
+        return {
+          orderId,
+          orderNumber,
+          total,
+          subtotal,
+          shippingCost,
+          taxAmount,
+        };
       });
 
       // ── STEP 5: Create Stripe PaymentIntent (for card payments) ──
@@ -297,11 +301,7 @@ export class CheckoutService {
       );
 
     if (products.length !== productIds.length) {
-      const foundIds = new Set(
-        products.map(
-          (p: { id: string }) => p.id
-        )
-      );
+      const foundIds = new Set(products.map((p: { id: string }) => p.id));
       const missingIds = productIds.filter((id) => !foundIds.has(id));
       throw new BadRequestException(
         `Products not found or inactive: ${missingIds.join(', ')}`
@@ -309,7 +309,10 @@ export class CheckoutService {
     }
 
     // Batch fetch variants if any
-    const variantMap = new Map<string, { id: string; price: string; sku: string }>();
+    const variantMap = new Map<
+      string,
+      { id: string; price: string; sku: string }
+    >();
     if (variantIds.length > 0) {
       const variants = await db
         .select({
@@ -352,7 +355,7 @@ export class CheckoutService {
     }
 
     // Build product map
-    const productMap = new Map<string, typeof products[0]>();
+    const productMap = new Map<string, (typeof products)[0]>();
     for (const p of products) {
       productMap.set(p.id, p);
     }
@@ -478,9 +481,7 @@ export class CheckoutService {
   /**
    * Resolve product name from JSONB i18n field.
    */
-  private resolveName(
-    name: string | Record<string, string> | null
-  ): string {
+  private resolveName(name: string | Record<string, string> | null): string {
     if (typeof name === 'string') return name;
     if (name && typeof name === 'object') {
       return (
@@ -495,9 +496,7 @@ export class CheckoutService {
   /**
    * Sum all line totals (string arithmetic via numeric conversion).
    */
-  private sumLineTotals(
-    items: Array<{ lineTotal: string }>
-  ): string {
+  private sumLineTotals(items: Array<{ lineTotal: string }>): string {
     let sum = 0;
     for (const item of items) {
       sum += Number(item.lineTotal);
@@ -541,10 +540,7 @@ export class CheckoutService {
    */
   private generateOrderNumber(): string {
     const now = new Date();
-    const dateStr = now
-      .toISOString()
-      .replace(/[-:T]/g, '')
-      .slice(0, 8);
+    const dateStr = now.toISOString().replace(/[-:T]/g, '').slice(0, 8);
     const randomHex = randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase();
     return `ORD-${dateStr}-${randomHex}`;
   }

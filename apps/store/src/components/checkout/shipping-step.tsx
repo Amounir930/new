@@ -8,9 +8,24 @@ const SHIPPING_OPTIONS: Array<{
   price: string;
   delivery: string;
 }> = [
-  { method: 'standard', label: 'Standard Shipping', price: 'Free', delivery: '5-7 business days' },
-  { method: 'express', label: 'Express Shipping', price: 'SAR 50.00', delivery: '2-3 business days' },
-  { method: 'overnight', label: 'Overnight Shipping', price: 'SAR 150.00', delivery: 'Next business day' },
+  {
+    method: 'standard',
+    label: 'Standard Shipping',
+    price: 'Free',
+    delivery: '5-7 business days',
+  },
+  {
+    method: 'express',
+    label: 'Express Shipping',
+    price: 'SAR 50.00',
+    delivery: '2-3 business days',
+  },
+  {
+    method: 'overnight',
+    label: 'Overnight Shipping',
+    price: 'SAR 150.00',
+    delivery: 'Next business day',
+  },
 ];
 
 export function ShippingStep({
@@ -20,7 +35,9 @@ export function ShippingStep({
   onComplete: (method: 'standard' | 'express' | 'overnight') => void;
   onBack: () => void;
 }) {
-  const [selected, setSelected] = useState<'standard' | 'express' | 'overnight'>('standard');
+  const [selected, setSelected] = useState<
+    'standard' | 'express' | 'overnight'
+  >('standard');
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -46,11 +63,15 @@ export function ShippingStep({
                 className="h-4 w-4 text-black focus:ring-black"
               />
               <div>
-                <p className="text-sm font-medium text-gray-900">{option.label}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {option.label}
+                </p>
                 <p className="text-xs text-gray-500">{option.delivery}</p>
               </div>
             </div>
-            <span className="text-sm font-bold text-gray-900">{option.price}</span>
+            <span className="text-sm font-bold text-gray-900">
+              {option.price}
+            </span>
           </label>
         ))}
       </div>
