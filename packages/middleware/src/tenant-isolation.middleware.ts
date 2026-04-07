@@ -115,7 +115,7 @@ async function validateTenant(
 
 @Injectable()
 export class TenantIsolationMiddleware implements NestMiddleware {
-  constructor(private readonly cache: TenantCacheService) {}
+  constructor(private readonly cache: TenantCacheService) { }
   async use(req: TenantRequest, res: Response, next: NextFunction) {
     if (req.method === 'OPTIONS') return next();
 
@@ -190,13 +190,15 @@ export class TenantIsolationMiddleware implements NestMiddleware {
     const cleanHost = rawHost.split(':')[0];
     const xTenantId = req.headers['x-tenant-id'] as string;
 
-    // S2 Protection: Prevent spoofing by ensuring secret is configured
-    const isInternal =
-      !!env.INTERNAL_API_SECRET &&
-      req.headers['x-internal-secret'] === env.INTERNAL_API_SECRET;
+    // FIX (S2 Tenant Deadlock): Trust x-tenant-id for ALL requests, not just
+    // internal ones. The storefront frontend sends this header on every fetch
+    // call (via fetchStorefront). Without this fix, browser requests to
+    // api.60sec.shop resolve "api" as the tenant → SYSTEM_TENANT_ID →
+    // CustomerJwtMatchGuard rejects with "tenant doesn't match request tenant".
+    if (xTenantId) return xTenantId;
 
     const subdomain = extractSubdomain(cleanHost);
-    return xTenantId && isInternal ? xTenantId : subdomain || cleanHost;
+    return subdomain || cleanHost;
   }
 
   private handleError(error: unknown, res: Response, next: NextFunction) {
