@@ -205,6 +205,7 @@ export const clientEnvSchema = z.object({
 });
 
 // Combined Schema for validation on server startup
+// S1: Monolithic schema validation (Server + Client)
 export const EnvSchema = serverEnvSchema.merge(clientEnvSchema);
 
 export type EnvConfig = z.infer<typeof EnvSchema>;

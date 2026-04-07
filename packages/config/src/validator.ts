@@ -113,7 +113,7 @@ export function validateServerEnv(): EnvConfig {
   // 🛡️ process.env is updated only on the server side
   Object.assign(process.env, resolvedEnv);
 
-  const result = EnvSchema.parse(resolvedEnv);
+  const result = EnvSchema.parse(resolvedEnv) as EnvConfig;
 
   // S1 Security Gate: Mandatory Post-Parsing Checks (Military Compliance)
   enforceProductionChecks(result);
