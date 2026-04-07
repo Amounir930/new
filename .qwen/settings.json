@@ -21,7 +21,8 @@
       "Bash(docker compose *)",
       "Bash(runas *)",
       "Bash(bunx *)",
-      "Bash(select-object *)"
+      "Bash(select-object *)",
+      "Bash(git *)"
     ]
   },
   "$version": 3

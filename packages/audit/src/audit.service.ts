@@ -4,7 +4,7 @@ import * as crypto from 'node:crypto';
  * S4 Protocol: Immutable Audit Logs
  */
 
-import { adminPool } from '@apex/db';
+import { adminPool, SYSTEM_TENANT_ID } from '@apex/db';
 import { getCurrentTenantId } from '@apex/middleware';
 import { EncryptionService } from '@apex/security';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
@@ -102,7 +102,8 @@ export class AuditService {
    * @param entry - Audit log data
    */
   async log(entry: AuditLogEntry): Promise<void> {
-    const tenantId = entry.tenantId || getCurrentTenantId() || 'system';
+    const tenantId =
+      entry.tenantId || getCurrentTenantId() || SYSTEM_TENANT_ID;
     const timestamp = new Date();
 
     const encryptedMetadata = this.prepareMetadata(entry);
