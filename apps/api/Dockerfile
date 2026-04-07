@@ -22,6 +22,7 @@ COPY packages/middleware/package.json ./packages/middleware/
 COPY packages/provisioning/package.json ./packages/provisioning/
 COPY packages/security/package.json ./packages/security/
 COPY packages/test-utils/package.json ./packages/test-utils/
+COPY packages/validation/package.json ./packages/validation/
 COPY packages/validators/package.json ./packages/validators/
 COPY packages/monitoring/package.json ./packages/monitoring/
 COPY packages/media/package.json ./packages/media/
