@@ -2,21 +2,38 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "outDir": "./dist",
     "composite": false,
     "baseUrl": ".",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "paths": {
-      "@apex/config/server": ["../../packages/config/src/server.ts"],
-      "@apex/config/edge": ["../../packages/config/src/edge.ts"],
-      "@apex/config/service": ["../../packages/config/src/config.service.ts"],
-      "@apex/config": ["../../packages/config/src/index.ts"],
-      "@apex/*": ["../../packages/*/src/index.ts"]
+      "@apex/config/server": [
+        "../../packages/config/src/server.ts"
+      ],
+      "@apex/config/edge": [
+        "../../packages/config/src/edge.ts"
+      ],
+      "@apex/config/service": [
+        "../../packages/config/src/config.service.ts"
+      ],
+      "@apex/config": [
+        "../../packages/config/src/index.ts"
+      ],
+      "@apex/validation": [
+        "../../packages/validation/src/index.ts"
+      ],
+      "@apex/*": [
+        "../../packages/*/src/index.ts"
+      ]
     }
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "dist",
