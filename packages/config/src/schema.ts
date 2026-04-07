@@ -156,11 +156,10 @@ export const serverEnvSchema = baseSchema.extend({
   ALLOWED_IPS: z.string().optional(),
 
   // Cloudflare Turnstile (S3: Anti-bot CAPTCHA for public provisioning)
-  TURNSTILE_SECRET_KEY: z
-    .string()
-    .optional()
-    .transform((v) => (v === '' ? undefined : v))
-    .default('1x0000000000000000000000000000000AA'),
+  TURNSTILE_SECRET_KEY: z.preprocess(
+    (v) => (typeof v === 'string' && v === '' ? undefined : v),
+    z.string().optional().default('1x0000000000000000000000000000000AA')
+  ),
 
   // Transactional Email: Resend (primary provider, AWS SES suspended)
   RESEND_API_KEY: z.string().optional(),
@@ -199,11 +198,10 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().optional(),
   NEXT_PUBLIC_IMGPROXY_URL: z.string().url().optional(),
   // Cloudflare Turnstile site key (safe to expose to browser)
-  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z
-    .string()
-    .optional()
-    .transform((v) => (v === '' ? undefined : v))
-    .default('1x00000000000000000000AA'),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.preprocess(
+    (v) => (typeof v === 'string' && v === '' ? undefined : v),
+    z.string().optional().default('1x00000000000000000000AA')
+  ),
 });
 
 // Combined Schema for validation on server startup
