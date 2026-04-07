@@ -3,6 +3,7 @@ import { env } from '@apex/config/server';
 import { getTenantDb, ordersInStorefront, paymentLogsInStorefront, eq, sql } from '@apex/db';
 import Stripe from 'stripe';
 import { StripeService } from './stripe.service';
+import { NotificationsService } from '../common/notifications/notifications.service';
 
 /**
  * ── STRIPE WEBHOOK SERVICE ──
@@ -17,7 +18,10 @@ import { StripeService } from './stripe.service';
 export class StripeWebhookService {
   private readonly logger = new Logger(StripeWebhookService.name);
 
-  constructor(private readonly stripeService: StripeService) { }
+  constructor(
+    private readonly stripeService: StripeService,
+    private readonly notificationsService: NotificationsService,
+  ) { }
 
   /**
    * Handle a raw webhook event from Stripe.
@@ -97,6 +101,19 @@ export class StripeWebhookService {
       if (rowCount > 0) {
         this.logger.log(
           `Order ${order_id} marked as PAID (PaymentIntent: ${paymentIntent.id})`
+        );
+
+        // Dispatch order confirmation email (fire-and-forget — never block webhook)
+        this.dispatchOrderConfirmationEmail(
+          tenant_id,
+          schema_name,
+          order_id,
+          paymentIntent
+        ).catch((err) =>
+          this.logger.error(
+            `Failed to send order confirmation email for ${order_id}`,
+            err
+          )
         );
       } else {
         this.logger.log(
@@ -230,5 +247,90 @@ export class StripeWebhookService {
     }
 
     return scrubbed;
+  }
+
+  /**
+   * Dispatch order confirmation email after successful payment.
+   * Fire-and-forget — errors are logged but never thrown to avoid
+   * blocking the webhook response (Stripe expects a 200 within 3s).
+   */
+  private async dispatchOrderConfirmationEmail(
+    tenantId: string,
+    schemaName: string,
+    orderId: string,
+    paymentIntent: Stripe.PaymentIntent
+  ): Promise<void> {
+    try {
+      const { db, release } = await getTenantDb(tenantId, schemaName);
+
+      try {
+        // Fetch order with customer email info
+        const [order] = await db
+          .select({
+            orderNumber: ordersInStorefront.orderNumber,
+            total: ordersInStorefront.total,
+            guestEmail: ordersInStorefront.guestEmail,
+            customerId: ordersInStorefront.customerId,
+          })
+          .from(ordersInStorefront)
+          .where(eq(ordersInStorefront.id, orderId))
+          .limit(1);
+
+        if (!order) return;
+
+        // Resolve recipient email: guest email takes priority (it's the checkout email),
+        // otherwise we'd need to query the customers table for the customer's email.
+        // For guest checkouts, guestEmail is always populated.
+        const recipientEmail = order.guestEmail;
+        if (!recipientEmail) {
+          this.logger.debug(
+            `No email address for order ${orderId} (customerId=${order.customerId}) — skipping confirmation email`
+          );
+          return;
+        }
+
+        const amountCents = paymentIntent.amount;
+        const amountFormatted = amountCents
+          ? (amountCents / 100).toFixed(2)
+          : order.total;
+
+        const subject = `Order Confirmation — #${order.orderNumber}`;
+        const html = `
+          <div style="font-family:system-ui,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+            <h1 style="margin:0 0 16px;font-size:24px;">Thank you for your order!</h1>
+            <p style="color:#374151;margin:0 0 8px;">
+              Your order <strong>#${order.orderNumber}</strong> has been confirmed and is being processed.
+            </p>
+            <p style="color:#374151;margin:0 0 24px;">
+              Amount paid: <strong>$${amountFormatted}</strong>
+            </p>
+            <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+            <p style="color:#6b7280;font-size:14px;margin:0;">
+              Payment reference: <code>${paymentIntent.id}</code>
+            </p>
+          </div>
+        `;
+
+        const sent = await this.notificationsService.sendEmail({
+          to: recipientEmail,
+          subject,
+          html,
+          text: `Your order #${order.orderNumber} has been confirmed. Amount: $${amountFormatted}. Reference: ${paymentIntent.id}`,
+        });
+
+        if (sent) {
+          this.logger.log(
+            `Order confirmation email sent to ${recipientEmail} (Order ${order.orderNumber})`
+          );
+        }
+      } finally {
+        release();
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error dispatching order confirmation email for ${orderId}`,
+        error
+      );
+    }
   }
 }

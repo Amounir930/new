@@ -176,12 +176,12 @@ export function CartPageClient() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                className="mt-6 w-full rounded-xl bg-black px-6 py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
+              <Link
+                href="/checkout"
+                className="mt-6 block w-full rounded-xl bg-black px-6 py-4 text-center text-sm font-black uppercase tracking-widest text-white shadow-lg transition-all hover:bg-gray-800 hover:shadow-xl active:scale-[0.98]"
               >
                 Proceed to Checkout
-              </button>
+              </Link>
 
               <p className="mt-3 text-center text-xs text-gray-400">
                 Secure checkout powered by Apex v2
