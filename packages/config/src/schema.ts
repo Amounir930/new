@@ -158,6 +158,7 @@ export const serverEnvSchema = baseSchema.extend({
   // Cloudflare Turnstile (S3: Anti-bot CAPTCHA for public provisioning)
   TURNSTILE_SECRET_KEY: z
     .string()
+    .optional()
     .default('1x0000000000000000000000000000000AA'),
 
   // Transactional Email: Resend (primary provider, AWS SES suspended)
@@ -199,6 +200,7 @@ export const clientEnvSchema = z.object({
   // Cloudflare Turnstile site key (safe to expose to browser)
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z
     .string()
+    .optional()
     .default('1x00000000000000000000AA'),
 });
 
