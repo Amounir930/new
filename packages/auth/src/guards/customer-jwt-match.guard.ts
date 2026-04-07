@@ -5,6 +5,7 @@
  * Prevents a customer from store1.60sec.shop from accessing store2.60sec.shop data.
  */
 
+import { SYSTEM_TENANT_ID } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -57,12 +58,10 @@ export class CustomerJwtMatchGuard implements CanActivate {
       return true;
     }
 
-    // 🛡️ S2 FIX: When context is system/placeholder, trust JWT as authoritative source
+    // 🛡️ S2 FIX: When context is system UUID, trust JWT as authoritative source
     // The JWT tenantId was resolved server-side via TenantCacheService at login time
     // and is cryptographically signed — it overrides an ambiguous request context
-    const isSystemContext =
-      contextTenantId === 'system' ||
-      contextTenantId === '00000000-0000-0000-0000-000000000000';
+    const isSystemContext = contextTenantId === SYSTEM_TENANT_ID;
 
     if (isSystemContext) {
       const subdomain = request.user.subdomain;

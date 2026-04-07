@@ -6,6 +6,7 @@
  */
 
 import { ConfigModule } from '@apex/config/service';
+import { SYSTEM_TENANT_ID } from '@apex/db';
 import {
   type CanActivate,
   type ExecutionContext,
@@ -62,7 +63,7 @@ export class RateLimitGuard implements CanActivate {
   constructor(
     @Inject(REFLECTOR_TOKEN) private readonly reflector: Reflector,
     private readonly rateLimitStore: RedisRateLimitStore
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -97,7 +98,7 @@ export class RateLimitGuard implements CanActivate {
 
     // S6 FIX: Include tenantId in rate limit key for proper tenant isolation
     const tenantId =
-      (request as TenantRequest).tenantContext?.tenantId || 'system';
+      (request as TenantRequest).tenantContext?.tenantId || SYSTEM_TENANT_ID;
     const key = `ratelimit:${tenantId}:${identifier}`;
     const now = Date.now();
 
@@ -285,4 +286,4 @@ export const ThrottleConfig = {
     FraudGuard,
   ],
 })
-export class RateLimitModule {}
+export class RateLimitModule { }

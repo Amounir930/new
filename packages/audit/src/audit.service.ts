@@ -153,7 +153,7 @@ export class AuditService {
 
   private determineActorType(entry: AuditLogEntry, tenantId: string): string {
     if (entry.actorType) return entry.actorType;
-    if (tenantId === 'system' || entry.action.includes('SUPER_ADMIN')) {
+    if (tenantId === SYSTEM_TENANT_ID || entry.action.includes('SUPER_ADMIN')) {
       return 'super_admin';
     }
     return 'tenant_admin';

@@ -3,6 +3,7 @@
  * Purpose: Ensure events are correctly scoped to tenants
  */
 
+import { SYSTEM_TENANT_ID } from '@apex/db';
 import { Injectable, Logger } from '@nestjs/common';
 import { getCurrentTenantId } from './connection-context';
 
@@ -25,13 +26,12 @@ export class TenantEventService {
 
     if (!tenantId) {
       this.logger.warn(`S48: Event '${name}' emitted without tenant context`);
-      // For system events, we allow 'system'
     }
 
     const event: TenantEvent = {
       name,
       payload,
-      tenantId: tenantId || 'system',
+      tenantId: tenantId || SYSTEM_TENANT_ID,
       timestamp: new Date(),
     };
 
