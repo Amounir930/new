@@ -39,7 +39,7 @@ export class AuthController {
     private readonly config: ConfigService,
     @Inject('AUDIT_SERVICE')
     private readonly audit: AuditService
-  ) {}
+  ) { }
 
   @Post('login')
   @UseGuards(ThrottlerGuard) // Item 30: Prevent brute-force
@@ -66,7 +66,7 @@ export class AuthController {
           {
             id: 'super-admin-id',
             email: email,
-            tenantId: 'system',
+            tenantId: '00000000-0000-0000-0000-000000000000',
             subdomain: 'admin',
             role: 'super_admin',
           },
