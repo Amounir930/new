@@ -36,21 +36,21 @@
     "@apex/config": "workspace:*",
     "@apex/security": "workspace:*",
     "@apex/validators": "workspace:*",
-    "@nestjs/common": "10.4.16",
-    "drizzle-orm": "0.45.1",
-    "pg": "8.11.0",
-    "zod": "^3.22.4",
+    "@nestjs/common": "11.1.18",
+    "drizzle-orm": "0.45.2",
+    "pg": "8.20.0",
+    "zod": "^4.3.6",
     "dotenv": "^17.3.1"
   },
   "devDependencies": {
     "@swc/core": "^1.15.13",
     "@types/bun": "latest",
-    "@types/node": "^20.0.0",
-    "@types/pg": "8.11.0",
+    "@types/node": "^25.5.2",
+    "@types/pg": "8.20.0",
     "bun-types": "latest",
     "cross-env": "^10.1.0",
-    "drizzle-kit": "^0.30.4",
-    "typescript": "^5.3.3",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^6.0.2",
     "vite-tsconfig-paths": "^6.1.0"
   }
 }
