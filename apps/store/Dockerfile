@@ -1,5 +1,5 @@
 # 🏗️ Build Stage
-FROM oven/bun:1.1.25 AS builder
+FROM oven/bun:1.1.34 AS builder
 WORKDIR /app
 
 # Copy root manifests
@@ -39,7 +39,7 @@ ENV NODE_OPTIONS="--max-old-space-size=1536"
 RUN bun run build --filter=store
 
 # 🚀 Production Stage
-FROM oven/bun:1.1.25-slim
+FROM oven/bun:1.1.34-slim
 WORKDIR /app
 
 ENV NODE_ENV=production
