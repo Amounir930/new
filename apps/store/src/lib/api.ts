@@ -374,9 +374,14 @@ export async function extractTenantFromHost(): Promise<string | null> {
     host = window.location.hostname;
   } else {
     // Server-side (SSR)
-    const { headers } = await import('next/headers');
-    const headersList = await headers();
-    host = headersList.get('host') || '';
+    try {
+      const { headers } = await import('next/headers');
+      const headersList = await headers();
+      host = headersList.get('host') || '';
+    } catch (_e) {
+      // Build-time/Static generation context where headers() is unavailable
+      host = '';
+    }
   }
 
   const parts = host.split('.');

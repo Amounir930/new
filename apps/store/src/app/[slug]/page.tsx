@@ -22,6 +22,7 @@ interface LocalizedField {
 // ISR CONFIGURATION
 // ═══════════════════════════════════════════════════════════════
 export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   return [];

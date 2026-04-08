@@ -7,6 +7,7 @@ import { SortSelect } from './sort-select';
 // ISR CONFIGURATION — per-tenant safe caching via subdomain path
 // ═══════════════════════════════════════════════════════════════
 export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 
 export async function generateStaticParams() {
   return [];

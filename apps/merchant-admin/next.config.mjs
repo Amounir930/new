@@ -7,7 +7,6 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   transpilePackages: [
-    '@apex/ui',
     '@apex/db',
     '@apex/provisioning',
     '@apex/config',
@@ -34,11 +33,8 @@ const nextConfig = {
     ],
   },
   experimental: {
-    // Protocol S11: Disable worker threads to resolve Bun "resourceLimits" incompatibility
     workerThreads: false,
-    cpus: 1,
   },
-  turbopack: {},
   devIndicators: {
     appIsrStatus: false,
     buildActivity: false,
