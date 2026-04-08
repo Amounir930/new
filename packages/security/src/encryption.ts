@@ -6,7 +6,7 @@ import {
 } from 'node:crypto';
 // biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { type EnvConfig, env } from '@apex/config/server';
-import type { ConfigService } from '@apex/config/service';
+import { ConfigService } from '@apex/config/service';
 import { Injectable } from '@nestjs/common';
 
 export interface EncryptedData {

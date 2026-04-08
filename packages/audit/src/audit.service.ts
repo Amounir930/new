@@ -102,8 +102,8 @@ export class AuditService {
    * @param entry - Audit log data
    */
   async log(entry: AuditLogEntry): Promise<void> {
-    const tenantId =
-      entry.tenantId || getCurrentTenantId() || SYSTEM_TENANT_ID;
+    const rawTenantId = entry.tenantId || getCurrentTenantId() || SYSTEM_TENANT_ID;
+    const tenantId = this.normalizeTenantId(rawTenantId);
     const timestamp = new Date();
 
     const encryptedMetadata = this.prepareMetadata(entry);
@@ -219,6 +219,25 @@ export class AuditService {
       .createHmac('sha256', hmacKey)
       .update(JSON.stringify(data))
       .digest('hex');
+  }
+
+  /**
+   * S4: Normalize tenantId to handle "system" string or invalid formats
+   */
+  private normalizeTenantId(id: string | null | undefined): string {
+    if (!id || id === 'system' || id === 'admin') {
+      return SYSTEM_TENANT_ID;
+    }
+
+    // S4: Strict UUID pattern check
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      this.logger.warn(`S4: Received non-UUID tenantId: "${id}". Falling back to system.`);
+      return SYSTEM_TENANT_ID;
+    }
+
+    return id;
   }
 }
 
