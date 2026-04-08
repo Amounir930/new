@@ -15,8 +15,8 @@
 
 | Dependency | Vulnerability | Severity | Status | Mitigation |
 |-----------|--------------|----------|--------|------------|
-| `drizzle-orm` | SQL injection via improperly escaped identifiers | High | ⚠️ Accepted | Identifiers are not user-controlled; validated via Zod |
-| `@nestjs/core` | Injection (GHSA-36xv-jgw5-4q75) | Moderate | ⚠️ Accepted | Patched in NestJS <=11.1.17; awaiting upstream fix |
+| `drizzle-orm` | SQL injection via improperly escaped identifiers | High | ✅ **FIXED** | Updated to 0.45.2 |
+| `@nestjs/core` | Injection (GHSA-36xv-jgw5-4q75) | Moderate | ✅ **FIXED** | Updated to ^11.1.18 |
 
 ### Dependency Graph
 
