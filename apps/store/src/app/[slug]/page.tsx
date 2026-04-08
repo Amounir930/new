@@ -49,8 +49,11 @@ function resolveLocalizedAr(field: unknown, fallback = ''): string {
 }
 
 // Module-level constant — no need to recreate on every render
-const EMPTY_REVIEWS = {
-  reviews: [] as never[],
+const EMPTY_REVIEWS: {
+  reviews: import('@/components/pdp/reviews-section').Review[];
+  pagination: import('@/components/pdp/reviews-section').ReviewsPagination;
+} = {
+  reviews: [],
   pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
 };
 

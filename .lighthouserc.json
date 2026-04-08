@@ -6,7 +6,10 @@
       "url": [
         "http://localhost:3000",
         "http://localhost:3000/products",
-        "http://localhost:3000/cart"
+        "http://localhost:3000/cart",
+        "http://store1.localhost:3000",
+        "http://store1.localhost:3000/products",
+        "http://store1.localhost:3000/cart"
       ]
     },
     "assert": {

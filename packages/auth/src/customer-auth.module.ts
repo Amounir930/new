@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { CustomerAuthService } from './customer-auth.service';
 import { CustomerJwtStrategy } from './strategies/customer-jwt.strategy';
+import { GoogleCustomerStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { CustomerJwtStrategy } from './strategies/customer-jwt.strategy';
       inject: [ConfigService],
     }),
   ],
-  providers: [CustomerAuthService, CustomerJwtStrategy],
+  providers: [CustomerAuthService, CustomerJwtStrategy, GoogleCustomerStrategy],
   exports: [CustomerAuthService, CustomerJwtStrategy],
 })
 export class CustomerAuthModule {}

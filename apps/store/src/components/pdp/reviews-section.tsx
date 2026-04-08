@@ -4,6 +4,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { getProductReviews } from '@/lib/api';
 import { useMountedAuth } from '@/lib/auth-store';
+import { ReviewModal } from './review-modal';
 
 export interface Review {
   id: string;
@@ -55,14 +56,14 @@ export function ReviewsSection({
     initialReviews?.reviews && Array.isArray(initialReviews.reviews)
       ? initialReviews
       : {
-          reviews: [] as Review[],
-          pagination: {
-            page: 1,
-            limit: 10,
-            total: 0,
-            totalPages: 0,
-          } as ReviewsPagination,
-        };
+        reviews: [] as Review[],
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+        } as ReviewsPagination,
+      };
 
   const [reviews, setReviews] = useState<Review[]>(safeInitialReviews.reviews);
   const [pagination, setPagination] = useState<ReviewsPagination>(
@@ -70,6 +71,7 @@ export function ReviewsSection({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   const loadPage = async (page: number) => {
     setIsLoading(true);
@@ -87,6 +89,11 @@ export function ReviewsSection({
     }
   };
 
+  const handleReviewSuccess = () => {
+    // Reload the first page to show the new review
+    loadPage(1);
+  };
+
   return (
     <section className="mt-20 max-w-4xl">
       <div className="flex items-center justify-between mb-8">
@@ -100,7 +107,7 @@ export function ReviewsSection({
             if (!hasAuthCookie && !isAuthenticated) {
               openLoginModal();
             } else {
-              toast('Review submission coming soon!');
+              setIsReviewModalOpen(true);
             }
           }}
           className="rounded-xl bg-black px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-gray-800 active:scale-[0.98]"
@@ -191,6 +198,15 @@ export function ReviewsSection({
           </button>
         </div>
       )}
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        productId={productId}
+        tenantId={tenantId}
+        onSuccess={handleReviewSuccess}
+      />
     </section>
   );
 }

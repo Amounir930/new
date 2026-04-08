@@ -43,7 +43,8 @@ export function UserMenu() {
       cart.clearCart();
       toast.success('Signed out successfully');
       setIsOpen(false);
-    } catch {
+    } catch (error) {
+      console.error('Logout failed:', error);
       toast.error('Failed to sign out');
     }
   }, [setUnauthenticated, cart]);

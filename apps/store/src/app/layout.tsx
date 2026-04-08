@@ -6,6 +6,7 @@ import './globals.css';
 import { LoginModal } from '@/components/auth/login-modal';
 import { CartButton, ToastProvider } from '@/components/layout/toast-provider';
 import { UserMenu } from '@/components/layout/user-menu';
+import { generateRTLCSS, generateThemeCSS, sanitizeColor, getGoogleFontURL } from '@/lib/tenant-theme';
 import { getStoreBootstrap } from '@/lib/api';
 
 export const metadata: Metadata = {
@@ -44,9 +45,48 @@ export default async function RootLayout({
   const storeName =
     config?.storeName || tenantId.charAt(0).toUpperCase() + tenantId.slice(1);
   const logoUrl = config?.logoUrl;
+  
+  // 🎨 TENANT THEMING
+  const primaryColor = sanitizeColor(config?.primaryColor);
+  const secondaryColor = sanitizeColor(config?.secondaryColor);
+  const fontFamily = config?.fontFamily || 'Inter';
+  const rtlEnabled = config?.rtlEnabled === true;
+  
+  // Generate theme CSS
+  const themeCSS = generateThemeCSS({
+    primaryColor,
+    secondaryColor,
+    fontFamily,
+    rtlEnabled,
+  });
+  
+  // Generate RTL CSS if enabled
+  const rtlCSS = rtlEnabled ? generateRTLCSS() : '';
+  
+  // Google Font URL
+  const googleFontURL = getGoogleFontURL(fontFamily);
+  
+  // Determine language and direction
+  const lang = rtlEnabled ? 'ar' : 'en';
+  const dir = rtlEnabled ? 'rtl' : 'ltr';
 
   return (
-    <html lang="en">
+    <html lang={lang} dir={dir}>
+      <head>
+        {/* 🎨 Dynamic Theme Styles */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `${themeCSS}${rtlCSS}`,
+          }}
+        />
+        {/* 🔤 Google Font */}
+        {googleFontURL && (
+          <link rel="preload" href={googleFontURL} as="style" />
+        )}
+        {googleFontURL && (
+          <link rel="stylesheet" href={googleFontURL} />
+        )}
+      </head>
       <body className="antialiased font-sans bg-gray-50 text-gray-900">
         <ToastProvider>
           <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-md">

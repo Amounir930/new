@@ -1,23 +1,22 @@
 // S12 HOTFIX: Per-tenant ISR via subdomain URL rewrite
-// Middleware rewrites store1.60sec.shop/ -> /m/store1/ internally
-// Next.js caches each [subdomain] as a separate page - no poisoning
+// Middleware rewrites store1.60sec.shop/ → /m/store1/ internally
+// Next.js caches each [subdomain] as a separate page — no poisoning
 export const revalidate = 60;
 
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { BentoGridSection, type BentoGridData } from '@/components/bento-grid-section';
-import { FlashSalesSection, type FlashSaleProduct } from '@/components/flash-sales-section';
 import { NewsletterSection } from '@/components/NewsletterSection';
 import { ProductCard } from '@/components/ProductCard';
-import { TrustMarqueeSection, type TrustMarqueeData } from '@/components/trust-marquee-section';
 import { extractTenantFromHost, getStoreBootstrap } from '@/lib/api';
 
 interface TenantPageProps {
   params: Promise<{ subdomain: string }>;
 }
 
+// ═══════════════════════════════════════════════════════════════
 // SEO METADATA (per-tenant isolation)
+// ═══════════════════════════════════════════════════════════════
 export async function generateMetadata({
   params,
 }: TenantPageProps): Promise<Metadata> {
@@ -51,8 +50,11 @@ export async function generateMetadata({
 export default async function TenantHome({ params }: TenantPageProps) {
   const { subdomain } = await params;
 
+  // S12 FIX 12B: Use single aggregated bootstrap call (BFF Pattern)
+  // This prevents connection pool exhaustion by consolidating 2 requests into 1.
   const storeData = await getStoreBootstrap(subdomain);
 
+  // S5: Strict error handling for bootstrap failure (The "White Screen" prevention)
   if (!storeData || !storeData.config) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 p-4">
@@ -71,38 +73,6 @@ export default async function TenantHome({ params }: TenantPageProps) {
   const bestSellers = homeData?.bestSellers || [];
   const storeName = config?.storeName || 'APEX STORE';
   const heroBanner = config?.heroBanner;
-
-  // Parse blueprint sections
-  const flashSales = homeData?.flashSales || null;
-  const bentoGrid = homeData?.bentoGrid as BentoGridData | null;
-  const trust = homeData?.trust as TrustMarqueeData | null;
-
-  // Transform flash sale products for the component
-  const flashSaleProducts: FlashSaleProduct[] = (flashSales?.products || []).map(
-    (fp: { productId: string; discountPercentage: number; quantityLimit: number }) => {
-      const product = bestSellers.find(
-        (p: Record<string, unknown>) => p.id === fp.productId
-      );
-      if (!product) return null;
-
-      const rawName = product.name ?? product.title ?? '';
-      const resolvedName =
-        rawName && typeof rawName === 'object'
-          ? (rawName as Record<string, string>).en || (rawName as Record<string, string>).ar || 'Product'
-          : String(rawName);
-
-      return {
-        id: String(product.id ?? ''),
-        slug: String(product.slug ?? ''),
-        name: resolvedName,
-        price: Number(product.price ?? product.basePrice ?? 0),
-        compareAtPrice: product.compareAtPrice ? Number(product.compareAtPrice) : 0,
-        imageUrl: String(product.imageUrl ?? product.mainImage ?? ''),
-        discountPercentage: fp.discountPercentage,
-        quantityLimit: fp.quantityLimit,
-      };
-    }
-  ).filter(Boolean);
 
   return (
     <div className="space-y-16 pb-24">
@@ -142,14 +112,6 @@ export default async function TenantHome({ params }: TenantPageProps) {
       </section>
 
       <div className="container mx-auto px-4 space-y-20">
-        {/* Flash Sales Section */}
-        {flashSaleProducts.length > 0 && flashSales?.endTime && (
-          <FlashSalesSection
-            products={flashSaleProducts}
-            endTime={flashSales.endTime}
-          />
-        )}
-
         {/* Best Sellers */}
         <section>
           <div className="flex flex-col gap-2 mb-10 md:flex-row md:items-end md:justify-between">
@@ -186,6 +148,7 @@ export default async function TenantHome({ params }: TenantPageProps) {
           <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
             {bestSellers.length > 0 ? (
               bestSellers.map((p: Record<string, unknown>) => {
+                // JSONB resolver: name can be {ar, en} object or string
                 const rawName = p.name ?? p.title ?? '';
                 const resolvedName =
                   rawName && typeof rawName === 'object'
@@ -216,14 +179,6 @@ export default async function TenantHome({ params }: TenantPageProps) {
             )}
           </div>
         </section>
-
-        {/* Bento Grid Section */}
-        {bentoGrid && Object.keys(bentoGrid.slots || {}).length > 0 && (
-          <BentoGridSection data={bentoGrid} />
-        )}
-
-        {/* Trust Marquee Section */}
-        {trust && <TrustMarqueeSection data={trust} />}
 
         {/* Newsletter */}
         <NewsletterSection />

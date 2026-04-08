@@ -22,7 +22,11 @@
       "Bash(runas *)",
       "Bash(bunx *)",
       "Bash(select-object *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(timeout *)",
+      "Bash(dir *)",
+      "Bash(powershell *)",
+      "Bash(cmd *)"
     ]
   },
   "$version": 3

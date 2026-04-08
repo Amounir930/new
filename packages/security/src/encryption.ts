@@ -4,9 +4,8 @@ import {
   createHmac,
   randomBytes,
 } from 'node:crypto';
-// biome-ignore lint/style/useImportType: Dependency Injection requires value import
 import { type EnvConfig, env } from '@apex/config/server';
-import { ConfigService } from '@apex/config/service';
+import type { ConfigService } from '@apex/config/service';
 import { Injectable } from '@nestjs/common';
 
 export interface EncryptedData {
@@ -203,7 +202,17 @@ function getStandaloneService(key?: string): EncryptionService {
   throw new Error('S1 Violation: Configuration injection failure');
 }
 
-const globalEncryption = getStandaloneService();
+/**
+ * Lazy-loaded global encryption instance.
+ * S7: This avoids top-level side effects during module evaluation.
+ */
+let _globalEncryption: EncryptionService | null = null;
+function getGlobalEncryption(): EncryptionService {
+  if (!_globalEncryption) {
+    _globalEncryption = getStandaloneService();
+  }
+  return _globalEncryption;
+}
 
 /**
  * Legacy top-level encrypt.
@@ -211,7 +220,7 @@ const globalEncryption = getStandaloneService();
  */
 export function encrypt(value: string, key?: string): EncryptedData {
   if (key) return getStandaloneService(key).encrypt(value);
-  return globalEncryption.encrypt(value);
+  return getGlobalEncryption().encrypt(value);
 }
 
 /**
@@ -220,7 +229,7 @@ export function encrypt(value: string, key?: string): EncryptedData {
  */
 export function decrypt(data: EncryptedData, key?: string): string {
   if (key) return getStandaloneService(key).decrypt(data);
-  return globalEncryption.decrypt(data);
+  return getGlobalEncryption().decrypt(data);
 }
 
 /**
@@ -234,17 +243,17 @@ export function hashSensitiveData(
 ): string {
   if (pepper)
     return getStandaloneService(pepper).hashSensitiveData(value, salt);
-  return globalEncryption.hashSensitiveData(value, salt);
+  return getGlobalEncryption().hashSensitiveData(value, salt);
 }
 
 export function generateApiKey(): string {
-  return globalEncryption.generateApiKey();
+  return getGlobalEncryption().generateApiKey();
 }
 
 export function hashApiKey(apiKey: string): string {
-  return globalEncryption.hashApiKey(apiKey);
+  return getGlobalEncryption().hashApiKey(apiKey);
 }
 
 export function maskSensitive(value: string, visibleChars = 4): string {
-  return globalEncryption.mask(value, visibleChars);
+  return getGlobalEncryption().mask(value, visibleChars);
 }

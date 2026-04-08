@@ -15,10 +15,18 @@ export function CheckoutSummary({
 }) {
   const cart = useMountedCart();
 
-  const items: CartItemServer[] =
-    cart.serverItems.length > 0
-      ? cart.serverItems
-      : (cart.items as unknown as CartItemServer[]);
+  // Use server items if available, otherwise fall back to optimistic items
+  const items: CartItemServer[] = cart.serverItems.length > 0
+    ? cart.serverItems
+    : cart.items.map((item) => ({
+      ...item,
+      unitPrice: '0',
+      totalPrice: '0',
+      productName: 'Item',
+      imageUrl: '',
+      availableStock: 0,
+      minOrderQty: 1,
+    }));
 
   const subtotal = orderData?.subtotal ?? '0';
   const shipping = orderData?.shipping ?? '0';
@@ -38,10 +46,10 @@ export function CheckoutSummary({
   const displayTotal = orderData
     ? total
     : (
-        Number(displaySubtotal) +
-        Number(displayShipping) +
-        Number(displayTax)
-      ).toFixed(2);
+      Number(displaySubtotal) +
+      Number(displayShipping) +
+      Number(displayTax)
+    ).toFixed(2);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 sticky top-24">

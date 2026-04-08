@@ -2,6 +2,7 @@ import {
   and,
   bannersInStorefront,
   cartsInStorefront,
+  customersInStorefront,
   desc,
   eq,
   getTenantDb,
@@ -10,6 +11,8 @@ import {
   isNull,
   not,
   or,
+  orderItemsInStorefront,
+  ordersInStorefront,
   productsInStorefront,
   productVariantsInStorefront,
   reviewsInStorefront,
@@ -253,7 +256,9 @@ export class StorefrontService {
         .limit(1);
 
       const result: ProductWithVariants = {
-        ...(product as any),
+        // Core product fields (cast from DB row to interface)
+        id: product.id,
+        slug: product.slug,
         name: product.name as Record<string, string>,
         shortDescription: product.shortDescription as Record<
           string,
@@ -263,7 +268,44 @@ export class StorefrontService {
           string,
           string
         > | null,
+        basePrice: product.basePrice,
+        salePrice: product.salePrice,
+        compareAtPrice: product.compareAtPrice,
+        taxBasisPoints: product.taxBasisPoints,
+        minOrderQty: product.minOrderQty,
+        trackInventory: product.trackInventory,
+        isActive: product.isActive,
+        isFeatured: product.isFeatured,
+        isReturnable: product.isReturnable,
+        requiresShipping: product.requiresShipping,
+        isDigital: product.isDigital,
+        niche: product.niche,
         attributes: (product.specifications || {}) as Record<string, unknown>,
+        sku: product.sku,
+        barcode: product.barcode,
+        countryOfOrigin: product.countryOfOrigin,
+        metaTitle: product.metaTitle,
+        metaDescription: product.metaDescription,
+        mainImage: product.mainImage,
+        videoUrl: product.videoUrl,
+        digitalFileUrl: product.digitalFileUrl,
+        keywords: product.keywords,
+        tags: product.tags,
+        specifications: product.specifications as Record<string, unknown>,
+        dimensions: product.dimensions as Record<string, unknown> | null,
+        galleryImages: product.galleryImages as Array<{
+          url: string;
+          altText?: string;
+          order?: number;
+        }>,
+        avgRating: product.avgRating,
+        reviewCount: product.reviewCount,
+        soldCount: product.soldCount,
+        viewCount: product.viewCount,
+        weight: product.weight,
+        warrantyPeriod: product.warrantyPeriod,
+        warrantyUnit: product.warrantyUnit,
+        // Joined data
         variants: variantsWithInventory,
         inventory: productInventory[0] || null,
       };
@@ -505,6 +547,152 @@ export class StorefrontService {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // REVIEW CREATION
+  // ═══════════════════════════════════════════════════════════════
+
+  async createProductReview(
+    tenantId: string,
+    schemaName: string,
+    productId: string,
+    customerId: string,
+    dto: { rating: number; title?: string; content: string }
+  ) {
+    const { db, release } = await getTenantDb(tenantId, schemaName);
+
+    try {
+      // Verify product exists
+      const product = await db
+        .select({ id: productsInStorefront.id })
+        .from(productsInStorefront)
+        .where(
+          and(
+            eq(productsInStorefront.id, productId),
+            eq(productsInStorefront.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (!product.length) {
+        throw new NotFoundException('Product not found');
+      }
+
+      // Fetch customer info for name
+      const customers = await db
+        .select({
+          firstName: customersInStorefront.firstName,
+          lastName: customersInStorefront.lastName,
+          email: customersInStorefront.email,
+        })
+        .from(customersInStorefront)
+        .where(eq(customersInStorefront.id, customerId))
+        .limit(1);
+
+      if (!customers.length) {
+        throw new BadRequestException('Customer not found');
+      }
+
+      const customer = customers[0];
+
+      // Helper to resolve localized JSONB name fields safely
+      const resolveLocalizedName = (
+        value: unknown,
+        fallback: string
+      ): string => {
+        if (value === null || value === undefined) return fallback;
+        if (typeof value === 'string') return value || fallback;
+        if (typeof value === 'object') {
+          const obj = value as Record<string, string>;
+          return obj.en || obj.ar || fallback;
+        }
+        return fallback;
+      };
+
+      // Build customer name from JSONB fields
+      const firstName = resolveLocalizedName(customer.firstName, 'Customer');
+      const lastName = resolveLocalizedName(customer.lastName, '');
+      const customerName = `${firstName} ${lastName}`.trim() || 'Customer';
+
+      // Check if customer already reviewed this product
+      const existingReviews = await db
+        .select({ id: reviewsInStorefront.id })
+        .from(reviewsInStorefront)
+        .where(
+          and(
+            eq(reviewsInStorefront.productId, productId),
+            eq(reviewsInStorefront.customerId, customerId)
+          )
+        )
+        .limit(1);
+
+      if (existingReviews.length > 0) {
+        throw new BadRequestException('You have already reviewed this product');
+      }
+
+      // Check if customer purchased this product (for verified badge)
+      const orderItems = await db
+        .select({
+          id: orderItemsInStorefront.id,
+        })
+        .from(orderItemsInStorefront)
+        .innerJoin(
+          ordersInStorefront,
+          eq(orderItemsInStorefront.orderId, ordersInStorefront.id)
+        )
+        .where(
+          and(
+            eq(orderItemsInStorefront.productId, productId),
+            eq(ordersInStorefront.customerId, customerId),
+            eq(ordersInStorefront.paymentStatus, 'paid')
+          )
+        )
+        .limit(1);
+
+      const isVerified = orderItems.length > 0;
+
+      // Create the review
+      const [review] = await db
+        .insert(reviewsInStorefront)
+        .values({
+          productId,
+          customerId,
+          rating: dto.rating,
+          comment: dto.content,
+          isVerified,
+        })
+        .returning();
+
+      return {
+        success: true,
+        review: {
+          id: review.id,
+          productId: review.productId,
+          customerId: review.customerId,
+          customerName,
+          rating: review.rating,
+          title: dto.title || null,
+          content: review.comment,
+          verified: review.isVerified,
+          createdAt: review.createdAt,
+        },
+      };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to create review: ${error.message}`,
+        error.stack
+      );
+      throw new BadRequestException('Failed to create review');
+    } finally {
+      release();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
   // STOCK VALIDATION (BATCH-OPTIMIZED, NO N+1)
   // ═══════════════════════════════════════════════════════════════
 
@@ -533,8 +721,11 @@ export class StorefrontService {
 
       // ── BATCH QUERY 2: Fetch all variant inventories in single query ──
       const variantIds = dto.items
-        .filter((item) => item.variantId !== null)
-        .map((item) => item.variantId!);
+        .filter(
+          (item): item is typeof item & { variantId: string } =>
+            item.variantId !== null
+        )
+        .map((item) => item.variantId);
 
       let inventoryLevels: Array<{
         variantId: string;
@@ -660,9 +851,16 @@ export class StorefrontService {
             availableStock = inv ? inv.available - inv.reserved : 0;
           } else if (singleVariantMap.has(item.productId)) {
             // Auto-resolved single variant — check its inventory
-            const resolvedVariantId = singleVariantMap.get(item.productId)!;
-            const inv = inventoryMap.get(resolvedVariantId);
-            availableStock = inv ? inv.available - inv.reserved : 0;
+            const resolvedVariantId = singleVariantMap.get(item.productId);
+            if (!resolvedVariantId) {
+              this.logger.warn(
+                `No resolved variant for product ${item.productId}`
+              );
+              availableStock = 0;
+            } else {
+              const inv = inventoryMap.get(resolvedVariantId);
+              availableStock = inv ? inv.available - inv.reserved : 0;
+            }
           } else {
             // Zero-variant product — inventory not tracked at variant level
             // Consistent with validateCartItem (line 1011): assume in stock
@@ -820,8 +1018,11 @@ export class StorefrontService {
 
       // ── BATCH QUERY 2: Fetch all variant inventories ──
       const variantIds = dto.items
-        .filter((item) => item.variantId !== null)
-        .map((item) => item.variantId!);
+        .filter(
+          (item): item is typeof item & { variantId: string } =>
+            item.variantId !== null
+        )
+        .map((item) => item.variantId);
 
       let inventoryLevels: Array<{
         variantId: string;
@@ -1363,6 +1564,9 @@ export class StorefrontService {
         storeName: (config.store_name as string) || 'APEX STORE',
         logoUrl: config.logo_url as string | undefined,
         primaryColor: (config.primary_color as string) || '#000000',
+        secondaryColor: (config.secondary_color as string) || '#3B82F6',
+        fontFamily: (config.font_family as string) || 'Inter',
+        rtlEnabled: (config.rtl_enabled as boolean) === true,
         heroBanner: heroBanners[0],
       };
 
@@ -1445,6 +1649,7 @@ export class StorefrontService {
     try {
       const now = new Date();
 
+      // Fetch products
       const products = await db
         .select({
           id: productsInStorefront.id,
@@ -1466,6 +1671,7 @@ export class StorefrontService {
 
       const hasSales = products.some((p) => (p.soldCount ?? 0) > 0);
 
+      // Fetch active banners
       const activeBanners = await db
         .select()
         .from(bannersInStorefront)
@@ -1478,10 +1684,72 @@ export class StorefrontService {
         .limit(5)
         .orderBy(desc(bannersInStorefront.sortOrder));
 
+      // Fetch home page blueprint config (flash sales, bento grid, trust)
+      const blueprintConfig = await db
+        .select({
+          key: tenantConfigInStorefront.key,
+          value: tenantConfigInStorefront.value,
+        })
+        .from(tenantConfigInStorefront)
+        .where(eq(tenantConfigInStorefront.key, 'home_page_blueprint'))
+        .limit(1);
+
+      let blueprintData = null;
+      if (blueprintConfig.length > 0 && blueprintConfig[0].value) {
+        try {
+          blueprintData = blueprintConfig[0].value as Record<string, unknown>;
+        } catch (error) {
+          this.logger.warn(
+            `Failed to parse home_page_blueprint config: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+          // Continue with null blueprint — defaults will be applied
+        }
+      }
+
+      // If no blueprint exists, create default trust section
+      if (!blueprintData) {
+        blueprintData = {
+          trust: {
+            marqueeTexts: [
+              'Free Shipping on Orders Over $50',
+              '30-Day Hassle-Free Returns',
+              '24/7 Customer Support',
+              '100% Secure Checkout',
+            ],
+            serviceIcons: [
+              {
+                iconName: 'Package',
+                title: 'Free Shipping',
+                description: 'On orders over $50',
+              },
+              {
+                iconName: 'RefreshCcw',
+                title: 'Easy Returns',
+                description: '30-day return policy',
+              },
+              {
+                iconName: 'Headphones',
+                title: '24/7 Support',
+                description: 'Always here to help',
+              },
+              {
+                iconName: 'ShieldCheck',
+                title: 'Secure Payment',
+                description: '100% protected checkout',
+              },
+            ],
+          },
+        };
+      }
+
       const homeData = {
         banners: activeBanners,
         bestSellers: products,
         sectionTitle: hasSales ? 'Best Sellers' : 'New Arrivals',
+        // Blueprint sections
+        flashSales: blueprintData?.flashSales || null,
+        bentoGrid: blueprintData?.bentoGrid || null,
+        trust: blueprintData?.trust || null,
         meta: {
           lastUpdated: now.toISOString(),
           tenantId: _tenantId,
@@ -1529,5 +1797,61 @@ export class StorefrontService {
   ) {
     const encryptedEmail = this.crypto.encrypt(email).enc;
     return [{ id: 'mock', email: encryptedEmail }];
+  }
+
+  /**
+   * Invalidate all Redis cache keys for a tenant
+   * Called when products, banners, or config change
+   */
+  async invalidateCache(tenantId: string): Promise<void> {
+    const client = await this.redisStore.getClient();
+
+    if (!client) {
+      this.logger.warn(
+        `Redis not available, skipping cache invalidation for ${tenantId}`
+      );
+      return;
+    }
+
+    try {
+      // Beta 6 FIX: Use SCAN instead of KEYS to avoid blocking Redis
+      // KEYS is O(N) and blocks the entire Redis server
+      // SCAN is O(1) per call and safe for production
+      const pattern = `*:${tenantId}:*`;
+      const keys: string[] = [];
+      let cursor = 0;
+
+      do {
+        const result = await client.scan(cursor, {
+          MATCH: pattern,
+          COUNT: 100,
+        });
+        cursor = result.cursor;
+        keys.push(...result.keys);
+      } while (cursor !== 0);
+
+      if (keys.length > 0) {
+        await client.del(...keys);
+        this.logger.log(
+          `Invalidated ${keys.length} cache keys for tenant ${tenantId}`
+        );
+      }
+
+      // Also invalidate specific known keys
+      const specificKeys = [
+        `storefront:home:${tenantId}`,
+        `storefront:bootstrap:${tenantId}`,
+        `storefront:config:${tenantId}`,
+      ];
+
+      await client.del(...specificKeys);
+      this.logger.log(
+        `Invalidated ${specificKeys.length} specific keys for tenant ${tenantId}`
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to invalidate cache for tenant ${tenantId}: ${error.message}`
+      );
+    }
   }
 }

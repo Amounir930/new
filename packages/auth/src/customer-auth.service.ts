@@ -17,6 +17,13 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import type { CustomerJwtPayload } from './strategies/customer-jwt.strategy';
+import type { GoogleCustomerProfile } from './strategies/google.strategy';
+
+/**
+ * Type helper for encrypted JSONB values
+ * JSONB columns accept serialized data; this avoids 'as never' anti-pattern
+ */
+type EncryptedJSONB = ReturnType<typeof encrypt>;
 
 /**
  * Customer registration input.
@@ -101,12 +108,12 @@ export class CustomerAuthService {
       const [customer] = await db
         .insert(customersInStorefront)
         .values({
-          email: encryptedEmail as never,
+          email: encryptedEmail as EncryptedJSONB,
           emailHash,
           passwordHash,
-          firstName: encryptedFirstName as never,
-          lastName: encryptedLastName as never,
-          phone: encryptedPhone as never,
+          firstName: encryptedFirstName as EncryptedJSONB,
+          lastName: encryptedLastName as EncryptedJSONB,
+          phone: encryptedPhone as EncryptedJSONB | null,
           phoneHash,
           acceptsMarketing: input.acceptsMarketing ?? false,
           language: 'en',
@@ -201,15 +208,27 @@ export class CustomerAuthService {
       // Decrypt first name for display
       let firstName = '';
       try {
-        firstName = decrypt(customer.firstName as never) || '';
-      } catch {
+        firstName =
+          decrypt(
+            customer.firstName as import('@apex/security').EncryptedData
+          ) || '';
+      } catch (error) {
+        this.logger.warn(
+          `Failed to decrypt firstName for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         firstName = '';
       }
 
       let lastName = '';
       try {
-        lastName = decrypt(customer.lastName as never) || '';
-      } catch {
+        lastName =
+          decrypt(
+            customer.lastName as import('@apex/security').EncryptedData
+          ) || '';
+      } catch (error) {
+        this.logger.warn(
+          `Failed to decrypt lastName for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
         lastName = '';
       }
 
@@ -275,10 +294,18 @@ export class CustomerAuthService {
       let firstName = '';
       let lastName = '';
       try {
-        firstName = decrypt(customer.firstName as never) || '';
-        lastName = decrypt(customer.lastName as never) || '';
-      } catch {
-        /* best-effort decryption */
+        firstName =
+          decrypt(
+            customer.firstName as import('@apex/security').EncryptedData
+          ) || '';
+        lastName =
+          decrypt(
+            customer.lastName as import('@apex/security').EncryptedData
+          ) || '';
+      } catch (error) {
+        this.logger.warn(
+          `Failed to decrypt names for customer ${customer.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
 
       return {
@@ -287,6 +314,149 @@ export class CustomerAuthService {
         firstName,
         lastName,
         avatarUrl: customer.avatarUrl,
+      };
+    } finally {
+      release();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // GOOGLE OAUTH LOGIN / REGISTER (handles both new + returning)
+  // ═══════════════════════════════════════════════════════════════
+
+  async googleLogin(
+    profile: GoogleCustomerProfile
+  ): Promise<{ customer: RegisteredCustomer; token: string; isNew: boolean }> {
+    const tenantContext = await this.resolveTenant(profile.tenantSubdomain);
+    if (!tenantContext) {
+      throw new UnauthorizedException('Store not found');
+    }
+
+    const { db, release } = await getTenantDb(
+      tenantContext.tenantId,
+      tenantContext.schemaName
+    );
+
+    try {
+      const emailHash = hashSensitiveData(profile.email);
+
+      // Check if customer already exists
+      const [existing] = await db
+        .select()
+        .from(customersInStorefront)
+        .where(
+          and(
+            eq(customersInStorefront.emailHash, emailHash),
+            isNull(customersInStorefront.deletedAt)
+          )
+        )
+        .limit(1);
+
+      if (existing) {
+        // Returning customer — update Google ID if missing, update last_login
+        await db
+          .update(customersInStorefront)
+          .set({
+            lastLoginAt: new Date().toISOString(),
+            googleId: existing.googleId || profile.googleId,
+            avatarUrl: existing.avatarUrl || profile.avatarUrl,
+          })
+          .where(eq(customersInStorefront.id, existing.id));
+
+        let firstName = '';
+        let lastName = '';
+        try {
+          firstName =
+            decrypt(
+              existing.firstName as import('@apex/security').EncryptedData
+            ) || '';
+          lastName =
+            decrypt(
+              existing.lastName as import('@apex/security').EncryptedData
+            ) || '';
+        } catch (error) {
+          this.logger.warn(
+            `Failed to decrypt names for Google customer ${existing.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+
+        const token = await this.generateToken({
+          id: existing.id,
+          email: profile.email,
+          tenantId: tenantContext.tenantId,
+          subdomain: tenantContext.subdomain,
+          role: 'customer',
+        });
+
+        this.logger.log(
+          `GOOGLE_LOGIN_SUCCESS: id=${existing.id}, tenant=${tenantContext.subdomain}`
+        );
+
+        return {
+          customer: {
+            id: existing.id,
+            email: profile.email,
+            firstName,
+            lastName,
+            avatarUrl: existing.avatarUrl || profile.avatarUrl,
+          },
+          token,
+          isNew: false,
+        };
+      }
+
+      // New customer — create record with no password (Google-only auth)
+      const encryptedEmail = encrypt(profile.email);
+      const encryptedFirstName = encrypt(profile.firstName);
+      const encryptedLastName = encrypt(profile.lastName);
+
+      const [customer] = await db
+        .insert(customersInStorefront)
+        .values({
+          email: encryptedEmail as EncryptedJSONB,
+          emailHash,
+          passwordHash: null, // No password for Google-only accounts
+          firstName: encryptedFirstName as EncryptedJSONB,
+          lastName: encryptedLastName as EncryptedJSONB,
+          googleId: profile.googleId,
+          avatarUrl: profile.avatarUrl,
+          acceptsMarketing: false,
+          language: 'en',
+          isVerified: profile.emailVerified,
+        })
+        .returning();
+
+      if (!customer) {
+        throw new Error('Failed to create customer record from Google OAuth');
+      }
+
+      const token = await this.generateToken({
+        id: customer.id,
+        email: profile.email,
+        tenantId: tenantContext.tenantId,
+        subdomain: tenantContext.subdomain,
+        role: 'customer',
+      });
+
+      await db
+        .update(customersInStorefront)
+        .set({ lastLoginAt: new Date().toISOString() })
+        .where(eq(customersInStorefront.id, customer.id));
+
+      this.logger.log(
+        `GOOGLE_REGISTRATION_SUCCESS: id=${customer.id}, tenant=${tenantContext.subdomain}`
+      );
+
+      return {
+        customer: {
+          id: customer.id,
+          email: profile.email,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          avatarUrl: customer.avatarUrl,
+        },
+        token,
+        isNew: true,
       };
     } finally {
       release();
@@ -354,7 +524,7 @@ export class CustomerAuthService {
         await db
           .update(cartsInStorefront)
           .set({
-            items: mergedItems as never,
+            items: mergedItems,
             updatedAt: new Date().toISOString(),
           })
           .where(eq(cartsInStorefront.id, customerCart.id));

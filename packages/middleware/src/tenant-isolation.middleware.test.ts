@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { SYSTEM_TENANT_ID } from '@apex/db';
 import { type Mocked, MockFactory } from '@apex/test-utils';
 import type { Response } from 'express';
 import type { TenantIsolationMiddleware } from './tenant-isolation.middleware';
-import { SYSTEM_TENANT_ID } from '@apex/db';
 
 // MUST be before any other imports
 mock.module('@apex/config', () => ({
@@ -47,7 +47,7 @@ mock.module('./connection-context', () => ({
   tenantStorage: {
     run: mock((_ctx: unknown, cb: () => unknown) => cb()),
     getStore: mock(() => ({})),
-    setContext: mock(() => { }),
+    setContext: mock(() => {}),
   },
 }));
 
@@ -152,8 +152,8 @@ describe('Guards', () => {
           isExecutionContext(context)
             ? context
             : (() => {
-              throw new Error('Unreachable');
-            })()
+                throw new Error('Unreachable');
+              })()
         )
       ).toBe(true);
     });
@@ -166,8 +166,8 @@ describe('Guards', () => {
           isExecutionContext(context)
             ? context
             : (() => {
-              throw new Error('Unreachable');
-            })()
+                throw new Error('Unreachable');
+              })()
         )
       ).toThrow(UnauthorizedException);
     });
@@ -187,8 +187,8 @@ describe('Guards', () => {
           isExecutionContext(context)
             ? context
             : (() => {
-              throw new Error('Unreachable');
-            })()
+                throw new Error('Unreachable');
+              })()
         )
       ).toThrow('Cross-tenant access denied');
     });
@@ -204,8 +204,8 @@ describe('Guards', () => {
           isExecutionContext(context)
             ? context
             : (() => {
-              throw new Error('Unreachable');
-            })()
+                throw new Error('Unreachable');
+              })()
         )
       ).toBe(true);
     });

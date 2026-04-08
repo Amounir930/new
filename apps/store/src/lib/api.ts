@@ -513,7 +513,8 @@ export async function getCustomerMe(): Promise<{
 
     if (!res.ok) return null;
     return res.json();
-  } catch {
+  } catch (error) {
+    console.warn('Auth session probe failed:', error);
     return null;
   }
 }
@@ -546,6 +547,52 @@ export async function mergeCustomerCart(sessionCartId?: string): Promise<{
 
   if (!res.ok) {
     throw new Error('Cart merge failed');
+  }
+
+  return res.json();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REVIEW SUBMISSION
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Create a product review — POST /api/v1/storefront/products/:id/reviews
+ */
+export async function createProductReview(
+  tenantId: string,
+  productId: string,
+  data: { rating: number; title?: string; content: string }
+): Promise<{
+  success: boolean;
+  review: {
+    id: string;
+    productId: string;
+    customerId: string;
+    customerName: string;
+    rating: number;
+    title: string | null;
+    content: string;
+    verified: boolean;
+    createdAt: string;
+  };
+}> {
+  const res = await fetch(
+    `${PUBLIC_API_URL}/storefront/products/${productId}/reviews`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-tenant-id': tenantId || '',
+      },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    }
+  );
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: 'Review creation failed' }));
+    throw new Error(error.message || 'Review creation failed');
   }
 
   return res.json();

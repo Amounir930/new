@@ -18,6 +18,14 @@ export {
   hashSensitiveData,
   maskSensitive,
 } from './encryption';
+// Fraud Risk Scoring Module (S14)
+export {
+  calculateFraudRisk,
+  extractEmailDomain,
+  type FraudRiskContext,
+  type FraudRiskResult,
+  isBotUserAgent,
+} from './fraud-risk';
 // mTLS Module
 export {
   createMTLSClientConfig,
@@ -41,5 +49,4 @@ export {
   VaultIntegration,
   verifySecret,
 } from './secrets/index';
-
 export { SecurityModule } from './security.module';

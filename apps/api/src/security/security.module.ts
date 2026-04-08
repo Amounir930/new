@@ -22,4 +22,4 @@ import { SecurityService } from './security.service';
     'ACTIVE_DEFENSE_SERVICE',
   ],
 })
-export class SecurityModule {}
+export class LocalSecurityModule {}

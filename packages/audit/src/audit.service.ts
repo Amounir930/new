@@ -102,7 +102,8 @@ export class AuditService {
    * @param entry - Audit log data
    */
   async log(entry: AuditLogEntry): Promise<void> {
-    const rawTenantId = entry.tenantId || getCurrentTenantId() || SYSTEM_TENANT_ID;
+    const rawTenantId =
+      entry.tenantId || getCurrentTenantId() || SYSTEM_TENANT_ID;
     const tenantId = this.normalizeTenantId(rawTenantId);
     const timestamp = new Date();
 
@@ -233,7 +234,9 @@ export class AuditService {
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
-      this.logger.warn(`S4: Received non-UUID tenantId: "${id}". Falling back to system.`);
+      this.logger.warn(
+        `S4: Received non-UUID tenantId: "${id}". Falling back to system.`
+      );
       return SYSTEM_TENANT_ID;
     }
 

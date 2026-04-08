@@ -10,6 +10,8 @@ const baseSchema = z.object({
   PORT: z.coerce.number().default(3000),
   APP_DOMAIN: z.string().default('60sec.shop'),
   APP_ROOT_DOMAIN: z.string().default('60sec.shop'),
+  NEXT_PUBLIC_API_URL: z.string().default('http://localhost:3001/api/v1'),
+  INTERNAL_API_URL: z.string().default('http://api:3000/api/v1'),
 });
 
 /**
@@ -17,6 +19,10 @@ const baseSchema = z.object({
  * Contains sensitive secrets that MUST NEVER reach the client bundle.
  */
 export const serverEnvSchema = baseSchema.extend({
+  // Google OAuth (S2/S7 compliant)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().optional(),
   // Critical Security (S1/S7 Enforcement)
   JWT_SECRET: z.string().refine((key) => {
     if (process.env['NODE_ENV'] === 'production') {

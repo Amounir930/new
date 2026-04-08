@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
 import { SYSTEM_TENANT_ID } from '@apex/db';
+import jwt from 'jsonwebtoken';
 
 const token = jwt.sign(
   {

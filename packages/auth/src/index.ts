@@ -25,6 +25,7 @@ export * from './guards/customer-jwt.guard';
 export * from './guards/customer-jwt-match.guard';
 export * from './guards/super-admin.guard';
 export * from './guards/tenant-jwt-match.guard';
+export * from './oauth-state';
 export * from './strategies/customer-jwt.strategy';
 export * from './strategies/jwt.strategy';
 export type { TenantContext };
@@ -43,7 +44,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = unknown>(
+  handleRequest<TUser = AuthUser>(
     err: Error | null,
     user: TUser | false
   ): TUser {
@@ -54,7 +55,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
       const message = err?.message || 'Authentication required';
       throw new UnauthorizedException(message);
     }
-    return user;
+    return user as TUser;
   }
 }
 

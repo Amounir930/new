@@ -21,7 +21,7 @@ import { useMountedCart } from '@/lib/cart-store';
 // Initialize Stripe outside render to avoid recreation
 const stripePromise = loadStripe(
   process.env['NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'] ||
-    'pk_test_dummy_key_for_dev'
+  'pk_test_dummy_key_for_dev'
 );
 
 type CheckoutStep = 'address' | 'shipping' | 'payment';
@@ -86,7 +86,7 @@ export function CheckoutPageClient() {
     setIsLoading(true);
     try {
       const items = cart.serverItems.length > 0 ? cart.serverItems : cart.items;
-      const cartItems = (items as unknown as CartItem[]).map((item) => ({
+      const cartItems: CartItem[] = items.map((item) => ({
         productId: String(item.productId ?? ''),
         variantId: item.variantId ?? null,
         quantity: Number(item.quantity ?? 1),

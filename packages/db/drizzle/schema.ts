@@ -990,6 +990,7 @@ export const customersInStorefront = pgTable(
     email: jsonb().notNull(),
     emailHash: char('email_hash', { length: 64 }).notNull(),
     passwordHash: text('password_hash'),
+    googleId: text('google_id'),
     firstName: jsonb('first_name'),
     lastName: jsonb('last_name'),
     phone: jsonb(),

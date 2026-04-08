@@ -4,7 +4,6 @@
  */
 
 import { AuditModule } from '@apex/audit';
-import { SecurityModule as ApexSecurityModule } from '@apex/security';
 import { ConfigModule, ConfigService } from '@apex/config/service';
 import { EventsModule } from '@apex/events';
 import { ExportModule } from '@apex/export';
@@ -19,6 +18,7 @@ import {
   TenantIsolationMiddleware,
   TenantSessionInterceptor,
 } from '@apex/middleware';
+import { SecurityModule as ApexSecurityModule } from '@apex/security';
 import {
   type MiddlewareConsumer,
   Module,
@@ -38,7 +38,7 @@ import { GovernanceModule } from './governance/governance.module';
 import { HealthModule } from './health/health.module';
 import { ProvisioningModule } from './provisioning/provisioning.module';
 import { HoneyTokensController } from './security/honey-tokens.controller';
-import { SecurityModule } from './security/security.module';
+import { LocalSecurityModule } from './security/security.module';
 import { StorageModule } from './storage/storage.module';
 import { StorefrontModule } from './storefront/storefront.module';
 import { MerchantStatsController } from './tenants/merchant-stats.controller';
@@ -51,7 +51,7 @@ import { TenantsModule } from './tenants/tenants.module';
     ApexSecurityModule,
 
     // S15: Local Security Module (Global) - Honeytokens, CORS, Active Defense
-    SecurityModule,
+    LocalSecurityModule,
 
     // Storage Infrastructure (Global)
     StorageModule,

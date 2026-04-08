@@ -1,4 +1,9 @@
 import { AuditLog } from '@apex/audit';
+import {
+  type CustomerAuthenticatedRequest,
+  CustomerJwtAuthGuard,
+  CustomerJwtMatchGuard,
+} from '@apex/auth';
 import { cartsInStorefront, eq, getTenantDb } from '@apex/db';
 import {
   isUuid,
@@ -17,6 +22,7 @@ import {
   Post,
   Query,
   Req,
+  UseGuards,
   UsePipes,
 } from '@nestjs/common';
 import { ZodValidationPipe } from 'nestjs-zod';
@@ -34,6 +40,22 @@ import {
   type RelatedProduct,
   StorefrontService,
 } from './storefront.service';
+
+const CreateReviewSchema = z.object({
+  rating: z
+    .number()
+    .int('Rating must be an integer')
+    .min(1, 'Rating must be at least 1')
+    .max(5, 'Rating cannot exceed 5'),
+  title: z
+    .string()
+    .max(100, 'Review title cannot exceed 100 characters')
+    .optional(),
+  content: z
+    .string()
+    .min(10, 'Review must be at least 10 characters')
+    .max(2000, 'Review cannot exceed 2000 characters'),
+});
 
 const TenantIdSchema = z.object({
   tenantId: z.string().optional(),
@@ -163,6 +185,42 @@ export class StorefrontController {
     );
   }
 
+  @Post('products/:id/reviews')
+  @UseGuards(CustomerJwtAuthGuard, CustomerJwtMatchGuard)
+  @RateLimit({ requests: 10, windowMs: 3600000 }) // 10 req/hour - prevent spam
+  @AuditLog({ action: 'STOREFRONT_REVIEW_CREATE', entityType: 'review' })
+  async createProductReview(
+    @Req() req: CustomerAuthenticatedRequest,
+    @Param('id') id: string,
+    @Query() query: TenantIdDto,
+    @Body() body: unknown
+  ) {
+    const { tenantId, schemaName } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    if (!isUuid(id)) {
+      throw new BadRequestException('Invalid product ID format');
+    }
+
+    const parsed = CreateReviewSchema.safeParse(body);
+    if (!parsed.success) {
+      throw new BadRequestException({
+        message: 'Validation failed',
+        errors: parsed.error.errors,
+      });
+    }
+
+    return this.storefrontService.createProductReview(
+      tenantId,
+      schemaName,
+      id,
+      req.user.id,
+      parsed.data
+    );
+  }
+
   @Get('home')
   @AuditLog('STOREFRONT_HOME_VIEW')
   async getHome(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
@@ -174,6 +232,7 @@ export class StorefrontController {
   }
 
   @Get('bootstrap')
+  @AuditLog({ action: 'STOREFRONT_BOOTSTRAP', entityType: 'storefront' })
   async getBootstrap(@Req() req: TenantRequest, @Query() query: TenantIdDto) {
     const { tenantId, schemaName } = await this.resolveStorefrontContext(
       req,
@@ -300,7 +359,7 @@ export class StorefrontController {
         };
       }
 
-      const items = (cart[0].items || []) as any[];
+      const items = cart[0].items as Array<Record<string, unknown>>;
 
       return {
         items,
@@ -350,8 +409,8 @@ export class StorefrontController {
       );
     }
 
-    (req as unknown as Request & { auditTenantId?: string }).auditTenantId =
-      context.tenantId;
+    const auditableReq = req as Request & { auditTenantId?: string };
+    auditableReq.auditTenantId = context.tenantId;
 
     return {
       tenantId: context.tenantId,
@@ -396,7 +455,29 @@ export class StorefrontController {
     return this.storefrontService.subscribeToNewsletter(
       tenantId,
       schemaName,
-      body.email
+      body
     );
+  }
+
+  @Post('cache/invalidate')
+  @AuditLog('CACHE_INVALIDATION')
+  @RateLimit({ requests: 3, windowMs: 60000 }) // 3 req/min - admin only
+  async invalidateCache(
+    @Req() req: TenantRequest,
+    @Query() query: TenantIdDto
+  ) {
+    const { tenantId } = await this.resolveStorefrontContext(
+      req,
+      query.tenantId
+    );
+
+    // Invalidate Redis cache keys for this tenant
+    await this.storefrontService.invalidateCache(tenantId);
+
+    return {
+      success: true,
+      message: `Cache invalidated for tenant ${tenantId}`,
+      tenantId,
+    };
   }
 }

@@ -26,7 +26,7 @@ export class CustomerJwtAuthGuard
     return super.canActivate(context);
   }
 
-  handleRequest<TUser = unknown>(
+  handleRequest<TUser = CustomerUser>(
     err: Error | null,
     user: TUser | false
   ): TUser {
@@ -34,7 +34,8 @@ export class CustomerJwtAuthGuard
       const message = err?.message || 'Customer authentication required';
       throw new UnauthorizedException(message);
     }
-    return user as unknown as TUser;
+    // Type assertion is safe here: Passport strategy guarantees TUser matches the validated user
+    return user as TUser;
   }
 }
 
