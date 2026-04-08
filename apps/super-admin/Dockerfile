@@ -17,6 +17,7 @@ COPY packages/events/package.json ./packages/events/
 COPY packages/export/package.json ./packages/export/
 COPY packages/middleware/package.json ./packages/middleware/
 COPY packages/provisioning/package.json ./packages/provisioning/
+COPY packages/validation/package.json ./packages/validation/
 COPY packages/security/package.json ./packages/security/
 COPY packages/test-utils/package.json ./packages/test-utils/
 COPY packages/validators/package.json ./packages/validators/
