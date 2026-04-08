@@ -1,7 +1,9 @@
-# ═══════════════════════════════════════════════════════════════
 # 🏗️ Build Stage
 # ═══════════════════════════════════════════════════════════════
-FROM oven/bun:1.1.34 AS builder
+FROM node:20-alpine AS builder
+RUN apk add --no-cache curl bash && \
+    curl -fsSL https://bun.sh/install | bash && \
+    mv /root/.bun/bin/bun /usr/local/bin/bun
 WORKDIR /app
 
 # 📦 S1: Copy root manifests
