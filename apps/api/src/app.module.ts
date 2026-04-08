@@ -4,6 +4,7 @@
  */
 
 import { AuditModule } from '@apex/audit';
+import { SecurityModule as ApexSecurityModule } from '@apex/security';
 import { ConfigModule, ConfigService } from '@apex/config/service';
 import { EventsModule } from '@apex/events';
 import { ExportModule } from '@apex/export';
@@ -45,7 +46,11 @@ import { TenantsModule } from './tenants/tenants.module';
 
 @Module({
   imports: [
-    // S15: Security Module (Global) - Register FIRST
+    // S7: Apex Security Module (Global) — MUST be FIRST to provide EncryptionService globally
+    // This satisfies the EncryptionService dependency required by AuditModule
+    ApexSecurityModule,
+
+    // S15: Local Security Module (Global) - Honeytokens, CORS, Active Defense
     SecurityModule,
 
     // Storage Infrastructure (Global)
