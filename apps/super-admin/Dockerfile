@@ -1,5 +1,5 @@
 # 🏗️ Build Stage
-FROM oven/bun:1.1.25 AS builder
+FROM oven/bun:1.1.34 AS builder
 WORKDIR /app
 
 # Copy root manifests
@@ -40,7 +40,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN bun run build --filter=super-admin
 
 # 🚀 Production Stage
-FROM oven/bun:1.1.25-slim
+FROM oven/bun:1.1.34-slim
 WORKDIR /app
 
 ENV NODE_ENV=production

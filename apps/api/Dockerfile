@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════
 # 🏗️ Build Stage
 # ═══════════════════════════════════════════════════════════════
-FROM oven/bun:1.1.25 AS builder
+FROM oven/bun:1.1.34 AS builder
 WORKDIR /app
 
 # 📦 S1: Copy root manifests
@@ -40,7 +40,7 @@ RUN bun run build --filter=@apex/api
 # ═══════════════════════════════════════════════════════════════
 # 🚀 Production Stage (Hardened)
 # ═══════════════════════════════════════════════════════════════
-FROM oven/bun:1.1.25
+FROM oven/bun:1.1.34-slim
 # S1: Environment
 ENV NODE_ENV=production
 
